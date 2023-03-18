@@ -22,7 +22,7 @@ def calculate_top_entity_stats(year):
         )
         for message in stats:
             # yim stats are stored in postgres instead of couchdb so drop those messages for yim
-            if message["type"] == "couchdb_data_start" or message["type"] == "couchdb_data_end":
+            if message["type"] in ["couchdb_data_start", "couchdb_data_end"]:
                 continue
 
             message["year"] = year

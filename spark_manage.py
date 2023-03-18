@@ -13,7 +13,7 @@ def request_consumer():
     """ Invoke script responsible for the request consumer
     """
     from listenbrainz_spark.request_consumer.request_consumer import main
-    main('request-consumer-%s' % str(int(time.time())))
+    main(f'request-consumer-{int(time.time())}')
 
 
 if __name__ == '__main__':

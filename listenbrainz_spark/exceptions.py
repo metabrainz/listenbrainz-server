@@ -10,14 +10,18 @@ class DataFrameNotAppendedException(SparkException):
         failed to write a new dataframe to HDFS.
     """
     def __init__(self, message, schema):
-        self.error_msg = 'DataFrame with following schema not appended: \n{}\n{}'.format(schema, message)
+        self.error_msg = (
+            f'DataFrame with following schema not appended: \n{schema}\n{message}'
+        )
         super(DataFrameNotAppendedException, self).__init__(self.error_msg)
 
 class DataFrameNotCreatedException(SparkException):
     """ Failed to create a new dataframe.
     """
     def __init__(self, message, row):
-        self.error_msg = 'Cannot create dataframe for following row object: \n{}\n{}'.format(row, message)
+        self.error_msg = (
+            f'Cannot create dataframe for following row object: \n{row}\n{message}'
+        )
         super(DataFrameNotCreatedException, self).__init__(self.error_msg)
 
 class HDFSException(Exception):
@@ -31,28 +35,28 @@ class FileNotFetchedException(SparkException):
     """ Failed to fetch a file from secondary storage.
     """
     def __init__(self, message, file_path):
-        self.error_msg = 'File could not be fetched from {}\n{}'.format(file_path, message)
+        self.error_msg = f'File could not be fetched from {file_path}\n{message}'
         super(FileNotFetchedException, self).__init__(self.error_msg)
 
 class FileNotSavedException(SparkException):
     """ Failed to save a file to secondary storage.
     """
     def __init__(self, message, file_path):
-        self.error_msg = 'File could not be saved to {}\n{}'.format(file_path, message)
+        self.error_msg = f'File could not be saved to {file_path}\n{message}'
         super(FileNotSavedException, self).__init__(self.error_msg)
 
 class HDFSDirectoryNotDeletedException(HDFSException):
     """ Failed to delete an HDFS directory.
     """
     def __init__(self, message, file_path):
-        self.error_msg = 'Directory with the following path could not be deleted: {}\n{}'.format(file_path, message)
+        self.error_msg = f'Directory with the following path could not be deleted: {file_path}\n{message}'
         super(HDFSDirectoryNotDeletedException, self).__init__(self.error_msg)
 
 class PathNotFoundException(SparkException):
     """ Failed to find a given path in secondary storage.
     """
     def __init__(self, message, path):
-        self.error_msg = 'Path not found: {}\n{}'.format(path, message)
+        self.error_msg = f'Path not found: {path}\n{message}'
         super(PathNotFoundException, self).__init__(self.error_msg)
 
 class SQLException(SparkException):
@@ -64,14 +68,14 @@ class SparkSessionNotInitializedException(SparkException):
     """ Failed to initialze Spark session.
     """
     def __init__(self, message, app_name):
-        self.error_msg = 'Session {} not initialized\n{}'.format(app_name, message)
+        self.error_msg = f'Session {app_name} not initialized\n{message}'
         super(SparkSessionNotInitializedException, self).__init__(self.error_msg)
 
 class ViewNotRegisteredException(SparkException):
     """ Failed to register dataframe.
     """
     def __init__(self, message, table_name):
-        self.error_msg = 'Dataframe not registered {}\n{}'.format(table_name, message)
+        self.error_msg = f'Dataframe not registered {table_name}\n{message}'
         super(ViewNotRegisteredException, self).__init__(self.error_msg)
 
 class DumpNotFoundException(SparkException):

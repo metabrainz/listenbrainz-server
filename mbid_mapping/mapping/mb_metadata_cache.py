@@ -634,13 +634,9 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         try:
             with self.mb_conn.cursor() as curs:
                 self.config_postgres_join_limit(curs)
-                recording_mbids = set()
-
                 log("mb metadata cache: querying recording mbids to update")
                 curs.execute(recording_mbids_query, {"timestamp": timestamp})
-                for row in curs.fetchall():
-                    recording_mbids.add(row[0])
-
+                recording_mbids = {row[0] for row in curs.fetchall()}
                 log("mb metadata cache: querying artist mbids to update")
                 curs.execute(artist_mbids_query, {"timestamp": timestamp})
                 for row in curs.fetchall():

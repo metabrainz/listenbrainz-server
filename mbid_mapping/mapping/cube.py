@@ -9,4 +9,4 @@ class Cube(object):
 
 
 def adapt_cube(cube):
-    return AsIs("'(%s, %s, %s)'" % (adapt(cube.r), adapt(cube.g), adapt(cube.b)))
+    return AsIs(f"'({adapt(cube.r)}, {adapt(cube.g)}, {adapt(cube.b)})'")

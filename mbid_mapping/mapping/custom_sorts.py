@@ -112,9 +112,12 @@ def insert_rows(sort_index, curs, formats):
     '''
 
     for format_id, _ in formats:
-        curs.execute("""INSERT INTO mapping.format_sort
+        curs.execute(
+            """INSERT INTO mapping.format_sort
                                     (format, sort)
-                             VALUES (%s, %s);""",  tuple((format_id, sort_index)))
+                             VALUES (%s, %s);""",
+            (format_id, sort_index),
+        )
         sort_index += 1
 
     return sort_index
@@ -147,13 +150,13 @@ def create_custom_sort_tables(conn):
                                          sort INTEGER
                                        , secondary_type INTEGER)""")
 
-            sort_index = 1
-            for secondary_type_id, _ in RELEASE_GROUP_SECONDARY_TYPES:
-                curs.execute("""INSERT INTO mapping.release_group_secondary_type_sort
+            for sort_index, (secondary_type_id, _) in enumerate(RELEASE_GROUP_SECONDARY_TYPES, start=1):
+                curs.execute(
+                    """INSERT INTO mapping.release_group_secondary_type_sort
                                             (sort, secondary_type)
-                                     VALUES (%s, %s);""", tuple((sort_index, secondary_type_id)))
-                sort_index += 1
-
+                                     VALUES (%s, %s);""",
+                    (sort_index, secondary_type_id),
+                )
             curs.execute("""CREATE INDEX release_group_secondary_type_sort_ndx_secondary_type
                                       ON mapping.release_group_secondary_type_sort(secondary_type)""")
             curs.execute("""CREATE INDEX release_group_secondary_type_sort_ndx_sort

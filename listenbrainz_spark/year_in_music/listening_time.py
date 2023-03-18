@@ -8,7 +8,9 @@ def get_listening_time(year):
     """ Calculate the total listening time in seconds of the user for the given year. """
     setup_listens_for_year(year)
     metadata_table = "mb_metadata_cache"
-    metadata_df = listenbrainz_spark.sql_context.read.json(config.HDFS_CLUSTER_URI + "/mb_metadata_cache.jsonl")
+    metadata_df = listenbrainz_spark.sql_context.read.json(
+        f"{config.HDFS_CLUSTER_URI}/mb_metadata_cache.jsonl"
+    )
     metadata_df.createOrReplaceTempView(metadata_table)
 
     data = run_query(_get_total_listening_time()).collect()

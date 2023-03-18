@@ -290,7 +290,9 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None, use_transformed
         transformed_listencounts_df = utils.read_files_from_HDFS(
             path.RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME)
     except PathNotFoundException as err:
-        logger.error('{}\nConsider running create_dataframes.py'.format(str(err)), exc_info=True)
+        logger.error(
+            f'{str(err)}\nConsider running create_dataframes.py', exc_info=True
+        )
         raise
 
     context["time_load_playcounts"] = f"{(time.monotonic() - context['time_start']) / 60:.2f} mins"

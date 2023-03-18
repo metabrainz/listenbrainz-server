@@ -13,8 +13,9 @@ def create_path(path):
         os.makedirs(path)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
-            raise Exception("Failed to create directory structure %s. Error: %s" %
-                            (path, exception))
+            raise Exception(
+                f"Failed to create directory structure {path}. Error: {exception}"
+            )
 
 
 def connect_to_rabbitmq(username, password,

@@ -50,7 +50,9 @@ def main():
     print("number of rows: ", artist_popularity_df.count())
     artist_popularity_df.show()
     print("Saving...")
-    file_name = 'mlhd-artist-popularity-%s.csv' % datetime.now.strftime('%Y%m%d-%H%M%S')
+    file_name = (
+        f"mlhd-artist-popularity-{datetime.now.strftime('%Y%m%d-%H%M%S')}.csv"
+    )
     csv_path = config.HDFS_CLUSTER_URI + os.path.join(MLHD_DATA_PATH, 'csv', file_name)
     for _ in range(10):
         try:
@@ -62,4 +64,4 @@ def main():
         logger.critical("Could not write results to HDFS, exiting...")
         sys.exit(-1)
 
-    print("Saved to %s!" % csv_path)
+    print(f"Saved to {csv_path}!")

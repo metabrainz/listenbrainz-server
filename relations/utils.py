@@ -48,7 +48,7 @@ def insert_rows(curs, table, values):
         Use the bulk insert function to insert rows into the relations table.
     '''
 
-    query = ("INSERT INTO %s VALUES " % table) + ",".join(values)
+    query = f"INSERT INTO {table} VALUES " + ",".join(values)
     try:
         curs.execute(query)
     except psycopg2.OperationalError:

@@ -123,7 +123,7 @@ class CoverArtGenerator:
             return f"image size must be between {MIN_IMAGE_SIZE} and {MAX_IMAGE_SIZE}, inclusive."
 
         if not isinstance(self.skip_missing, bool):
-            return f"option skip-missing must be of type boolean."
+            return "option skip-missing must be of type boolean."
 
         if not isinstance(self.show_caa_image_for_missing_covers, bool):
             return f"option show-caa must be of type boolean."
@@ -282,10 +282,7 @@ class CoverArtGenerator:
         releases, _ = self.download_user_stats("releases", user_name, time_range)
         release_mbids = [r.release_mbid for r in releases]
         images = self.load_images(release_mbids, layout=layout)
-        if images is None:
-            return None, None
-
-        return images, releases
+        return (None, None) if images is None else (images, releases)
 
     def create_artist_stats_cover(self, user_name, time_range):
         """ Given a user name and a stats time range, make an artist stats cover. Return

@@ -34,15 +34,15 @@ def build_index():
 
     collection_name = COLLECTION_NAME_PREFIX + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     try:
-        log("typesense index: build index '%s'" % collection_name)
+        log(f"typesense index: build index '{collection_name}'")
         build(client, collection_name)
     except typesense.exceptions.TypesenseClientError as err:
         log("typesense index: Cannot build index: ", str(err))
         return -1
 
     try:
-        latest = COLLECTION_NAME_PREFIX + "latest"
-        log("typesense index: alias index '%s' to %s" % (collection_name, latest))
+        latest = f"{COLLECTION_NAME_PREFIX}latest"
+        log(f"typesense index: alias index '{collection_name}' to {latest}")
         aliased_collection = {"collection_name": collection_name}
         client.aliases.upsert(latest, aliased_collection)
     except typesense.exceptions.TypesenseClientError as err:
@@ -55,10 +55,10 @@ def build_index():
                 continue
 
             if collection["name"].startswith(COLLECTION_NAME_PREFIX):
-                log("typesense index: delete collection '%s'" % collection["name"])
+                log(f"""typesense index: delete collection '{collection["name"]}'""")
                 client.collections[collection["name"]].delete()
             else:
-                log("typesense index: ignore collection '%s'" % collection["name"])
+                log(f"""typesense index: ignore collection '{collection["name"]}'""")
 
     except typesense.exceptions.ObjectNotFound:
         log("typesense index: Failed to delete collection '%s'.", str(err))

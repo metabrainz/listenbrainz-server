@@ -78,10 +78,9 @@ def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, c
                            to_date=to_date, message_type=message_type, database=database)
 
 
-def parse_one_user_stats(entry, entity: str, stats_range: str) \
-        -> Optional[UserEntityRecords]:
+def parse_one_user_stats(entry, entity: str, stats_range: str) -> Optional[UserEntityRecords]:
     _dict = entry.asDict(recursive=True)
-    count_key = entity + "_count"
+    count_key = f"{entity}_count"
     total_entity_count = _dict[count_key]
 
     entity_list = []

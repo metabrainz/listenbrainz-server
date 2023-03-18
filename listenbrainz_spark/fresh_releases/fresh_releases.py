@@ -21,21 +21,25 @@ def load_all_releases():
     response = requests.get(FRESH_RELEASES_ENDPOINT)
     data = response.json()
 
-    releases = []
-    for release in data:
-        releases.append(Row(
+    releases = [
+        Row(
             release_date=release["release_date"],
             artist_credit_name=release["artist_credit_name"],
             artist_mbids=release["artist_mbids"],
             release_name=release["release_name"],
             release_mbid=release["release_mbid"],
             release_group_mbid=release["release_group_mbid"],
-            release_group_primary_type=release.get("release_group_primary_type"),
-            release_group_secondary_type=release.get("release_group_secondary_type"),
+            release_group_primary_type=release.get(
+                "release_group_primary_type"
+            ),
+            release_group_secondary_type=release.get(
+                "release_group_secondary_type"
+            ),
             caa_id=release.get("caa_id"),
-            caa_release_mbid=release.get("caa_release_mbid")
-        ))
-
+            caa_release_mbid=release.get("caa_release_mbid"),
+        )
+        for release in data
+    ]
     return listenbrainz_spark.session.createDataFrame(releases, schema=fresh_releases_schema)
 
 

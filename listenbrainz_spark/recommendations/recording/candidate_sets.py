@@ -17,11 +17,13 @@ The top artist and similar artist candidate set dataframes are saved to HDFS. Fo
 Note: users and recordings that are in candidate set but not in the training set will be discarded by the recommender.
 """
 
+
 import uuid
 import logging
 import time
 from datetime import datetime
 from collections import defaultdict
+from datetime import timezone
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
@@ -186,7 +188,7 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                                                  .where(top_artist_df.user_id.isin(users))
 
         if _is_empty_dataframe(top_artist_given_users_df):
-            logger.error('Top artists for {} not fetched'.format(users), exc_info=True)
+            logger.error(f'Top artists for {users} not fetched', exc_info=True)
             raise TopArtistNotFetchedException('Users inactive or data missing from msid->mbid mapping')
 
         return top_artist_given_users_df
@@ -477,8 +479,8 @@ def save_candidate_html(user_data, total_time, from_date, to_date):
             user_data (dict): Top and similar artists associated to users.
             total_time (str): time taken to generate candidate_sets
     """
-    date = datetime.utcnow().strftime('%Y-%m-%d-%H:%M')
-    candidate_html = 'Candidate-{}-{}.html'.format(date, uuid.uuid4())
+    date = datetime.now(timezone.utc).strftime('%Y-%m-%d-%H:%M')
+    candidate_html = f'Candidate-{date}-{uuid.uuid4()}.html'
     context = {
         'user_data': user_data,
         'total_time': total_time,

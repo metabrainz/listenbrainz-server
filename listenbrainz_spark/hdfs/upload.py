@@ -30,9 +30,9 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         """
         start_time = time.monotonic()
         df = utils.read_json(tmp_hdfs_path, schema=schema)
-        logger.info("Processing {} rows...".format(df.count()))
+        logger.info(f"Processing {df.count()} rows...")
 
-        logger.info("Uploading to {}...".format(dest_path))
+        logger.info(f"Uploading to {dest_path}...")
         utils.save_parquet(df, dest_path)
         logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
 

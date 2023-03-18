@@ -115,7 +115,7 @@ class RequestConsumer(ConsumerProducerMixin):
         ]
 
     def init_rabbitmq_connection(self):
-        connection_name = "spark-request-consumer-" + socket.gethostname()
+        connection_name = f"spark-request-consumer-{socket.gethostname()}"
         self.connection = Connection(
             hostname=config.RABBITMQ_HOST,
             userid=config.RABBITMQ_USERNAME,

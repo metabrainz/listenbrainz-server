@@ -120,7 +120,7 @@ def import_newest_incremental_dump_handler():
         imported_at = latest_full_dump["imported_at"]
         end_id = ListenbrainzDataDownloader().get_latest_dump_id(DumpType.INCREMENTAL) + 1
 
-        for dump_id in range(start_id, end_id, 1):
+        for dump_id in range(start_id, end_id):
             if not utils.search_dump(dump_id, DumpType.INCREMENTAL, imported_at):
                 try:
                     imported_dumps.append(import_incremental_dump_to_hdfs(dump_id))

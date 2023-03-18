@@ -28,7 +28,7 @@ class BulkInsertTable:
         """
 
         self.table_name = table_name
-        self.temp_table_name = table_name + "_TMP"
+        self.temp_table_name = f"{table_name}_TMP"
         self.mb_conn = mb_conn
         self.lb_conn = lb_conn
         self.insert_columns = []
@@ -146,10 +146,7 @@ class BulkInsertTable:
             with conn.cursor() as curs:
                 query = f"SELECT 1 FROM {self.table_name} LIMIT 1"
                 curs.execute(query)
-                if curs.rowcount > 0:
-                    return True
-                else:
-                    return False
+                return curs.rowcount > 0
         except psycopg2.errors.UndefinedTable as err:
             return False
 
@@ -178,7 +175,7 @@ class BulkInsertTable:
 
                 columns = []
                 for name, types in self.get_create_table_columns():
-                    columns.append("%s %s" % (name, types))
+                    columns.append(f"{name} {types}")
                     if name != "id" and types != "SERIAL":
                         self.insert_columns.append(name)
 
@@ -209,7 +206,7 @@ class BulkInsertTable:
                 for name, column_def, unique in self.get_index_names():
                     uniq = "UNIQUE" if unique else ""
                     if column_def.find("(") == -1:
-                        column_def = "(" + column_def + ")"
+                        column_def = f"({column_def})"
                     curs.execute(f"CREATE {uniq} INDEX {name}_tmp ON {self.temp_table_name} {column_def}")
 
                 for name, types in self.get_create_table_columns():
@@ -383,12 +380,12 @@ class BulkInsertTable:
                 query = db_query_vals[0][1]
                 vals = db_query_vals[1]
                 select_conn = None
-                if db == "MB":
-                    select_conn = self.mb_conn
-                elif db == "LB":
+                if db == "LB":
                     select_conn = self.lb_conn
+                elif db == "MB":
+                    select_conn = self.mb_conn
                 else:
-                    log("Invalid DB provided in create table data: '%s'" % query)
+                    log(f"Invalid DB provided in create table data: '{query}'")
                     raise RuntimeError
 
                 if select_conn is None:

@@ -23,7 +23,7 @@ def calculate_listens_per_day(year):
                             to_date=to_date, message_type="year_in_music_listens_per_day")
     for message in stats:
         # yim stats are stored in postgres instead of couchdb so drop those messages for yim
-        if message["type"] == "couchdb_data_start" or message["type"] == "couchdb_data_end":
+        if message["type"] in ["couchdb_data_start", "couchdb_data_end"]:
             continue
 
         message["year"] = year

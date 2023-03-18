@@ -40,7 +40,7 @@ def lock_cron(slug, msg):
        identified by slug."""
     sanity_check()
 
-    cron_lock_file = os.path.join(CRON_LOGS_DIR, "cron-%s.lock" % slug)
+    cron_lock_file = os.path.join(CRON_LOGS_DIR, f"cron-{slug}.lock")
     if os.path.exists(cron_lock_file):
         print("cron lock file exists. refusing to overwrite.")
         sys.exit(-1)
@@ -58,7 +58,7 @@ def unlock_cron(slug):
     """Unlock the cron container for the given slug"""
     sanity_check()
 
-    cron_lock_file = os.path.join(CRON_LOGS_DIR, "cron-%s.lock" % slug)
+    cron_lock_file = os.path.join(CRON_LOGS_DIR, f"cron-{slug}.lock")
     try:
         os.unlink(cron_lock_file)
     except FileNotFoundError:

@@ -252,7 +252,7 @@ def submit_release(user, token, releasembid):
     -t to specify a specific token.
     """
     if user is None and token is None:
-        raise click.ClickException(f"Need --user or --token")
+        raise click.ClickException("Need --user or --token")
     if user is not None:
         import listenbrainz.db.user
         application = webserver.create_app()

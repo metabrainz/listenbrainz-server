@@ -36,12 +36,13 @@ def create_messages(similar_users_df: DataFrame) -> dict:
         }
     """
     itr = similar_users_df.toLocalIterator()
-    message = {}
-    for row in itr:
-        message[row.user_id] = {
+    message = {
+        row.user_id: {
             user.other_user_id: (user.similarity, user.global_similarity)
             for user in row.similar_users
         }
+        for row in itr
+    }
     yield {
         'type': 'similar_users',
         'data': message
@@ -54,7 +55,7 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
         max_num_users other users.
     """
     rows, cols = matrix.shape
-    similar_users = list()
+    similar_users = []
 
     # Calculate the global similarity scale
     global_max_similarity = None

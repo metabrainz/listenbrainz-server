@@ -33,13 +33,16 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
                 req_dump (str): Name of the dump to be downloaded.
         """
         if dump_id:
-            req_dump = None
-            for dump_name in dump:
-                if int(dump_name.split('-')[dump_id_pos]) == dump_id:
-                    req_dump = dump_name
-                    break
+            req_dump = next(
+                (
+                    dump_name
+                    for dump_name in dump
+                    if int(dump_name.split('-')[dump_id_pos]) == dump_id
+                ),
+                None,
+            )
             if req_dump is None:
-                err_msg = "Could not find dump with ID: {}. Aborting...".format(dump_id)
+                err_msg = f"Could not find dump with ID: {dump_id}. Aborting..."
                 raise DumpNotFoundException(err_msg)
         else:
             req_dump = dump[-1]
@@ -54,7 +57,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 '' : Spark dump archive name.
         """
-        return dump_name + '.tar.bz2'
+        return f'{dump_name}.tar.bz2'
 
     def get_listens_dump_file_name(self, dump_name):
         """ Get the name of Spark listens dump name archive.
@@ -74,15 +77,15 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 mapping: list of mapping dump names in the current working directory.
         """
-        mapping = list()
+        mapping = []
         for mapping_name in dump:
-            mapping_pattern = '{}-\\d+-\\d+(.tar.bz2)$'.format(mapping_name_prefix)
+            mapping_pattern = f'{mapping_name_prefix}-\\d+-\\d+(.tar.bz2)$'
 
             if re.match(mapping_pattern, mapping_name):
                 mapping.append(mapping_name)
 
-        if len(mapping) == 0:
-            err_msg = '{} type mapping not found'.format(mapping_name_prefix)
+        if not mapping:
+            err_msg = f'{mapping_name_prefix} type mapping not found'
             raise DumpNotFoundException(err_msg)
 
         return mapping
@@ -114,7 +117,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         listens_file_name = self.get_listens_dump_file_name(req_listens_dump)
 
         t0 = time.monotonic()
-        logger.info('Downloading {} from FTP...'.format(listens_file_name))
+        logger.info(f'Downloading {listens_file_name} from FTP...')
         dest_path = self.download_dump(listens_file_name, directory)
         logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
         return dest_path, listens_file_name, int(dump_id)
@@ -139,7 +142,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         artist_relation_file_name = self.get_dump_archive_name(req_dump)
 
         t0 = time.monotonic()
-        logger.info('Downloading {} from FTP...'.format(artist_relation_file_name))
+        logger.info(f'Downloading {artist_relation_file_name} from FTP...')
         dest_path = self.download_dump(artist_relation_file_name, directory)
         logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
 

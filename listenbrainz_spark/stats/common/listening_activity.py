@@ -91,7 +91,14 @@ def _get_time_range_bounds(stats_range: str) -> Tuple[datetime, datetime, relati
 
     # "this" time ranges, these count stats for the ongoing time period till date
     if stats_range.startswith("this"):
-        if stats_range == "this_week":
+        if stats_range == "this_month":
+            # if today is 1st then 1st of 2 months ago otherwise the 1st of last month
+            from_offset = relativedelta(months=-2) if latest_listen_date.day == 1 else relativedelta(months=-1, day=1)
+            # compute listening activity for each day but no weekday
+            step = relativedelta(days=+1)
+            date_format = "%d %B %Y"
+            spark_date_format = "dd MMMM y"
+        elif stats_range == "this_week":
             # if today is a monday then from_offset is monday of 2 weeks ago
             # otherwise from_offset is monday of last week
             from_offset = relativedelta(weeks=-1, days=-1, weekday=MO(-1))
@@ -99,19 +106,14 @@ def _get_time_range_bounds(stats_range: str) -> Tuple[datetime, datetime, relati
             step = relativedelta(days=+1)
             date_format = "%A %d %B %Y"
             spark_date_format = "EEEE dd MMMM y"
-        elif stats_range == "this_month":
-            # if today is 1st then 1st of 2 months ago otherwise the 1st of last month
-            from_offset = relativedelta(months=-2) if latest_listen_date.day == 1 else relativedelta(months=-1, day=1)
-            # compute listening activity for each day but no weekday
-            step = relativedelta(days=+1)
-            date_format = "%d %B %Y"
-            spark_date_format = "dd MMMM y"
         else:
             # if today is the 1st of the year, then still show last year stats
-            if latest_listen_date.day == 1 and latest_listen_date.month == 1:
-                from_offset = relativedelta(years=-2)
-            else:
-                from_offset = relativedelta(years=-1, month=1, day=1)
+            from_offset = (
+                relativedelta(years=-2)
+                if latest_listen_date.day == 1
+                and latest_listen_date.month == 1
+                else relativedelta(years=-1, month=1, day=1)
+            )
             step = relativedelta(months=+1)
             # compute listening activity for each month
             date_format = "%B %Y"
@@ -129,13 +131,12 @@ def _get_time_range_bounds(stats_range: str) -> Tuple[datetime, datetime, relati
 
     # from_offset: this is applied to the latest_listen_date to get from_date
     # to_offset: this is applied to from_date to get to_date
-    if stats_range == "week":
-        from_offset = relativedelta(weeks=-2, weekday=MO(-1))
-        to_offset = relativedelta(weeks=+2)
-        # compute listening activity for each day, include weekday in date format
-        step = relativedelta(days=+1)
-        date_format = "%A %d %B %Y"
-        spark_date_format = "EEEE dd MMMM y"
+    if stats_range == "half_yearly":
+        from_offset = _get_half_year_offset(latest_listen_date)
+        to_offset = relativedelta(months=+12)
+        step = relativedelta(months=+1)
+        date_format = "%B %Y"
+        spark_date_format = "MMMM y"
     elif stats_range == "month":
         from_offset = relativedelta(months=-2, day=1)  # start of the previous to previous month
         to_offset = relativedelta(months=+2)
@@ -149,13 +150,14 @@ def _get_time_range_bounds(stats_range: str) -> Tuple[datetime, datetime, relati
         step = relativedelta(days=+1)
         date_format = "%d %B %Y"
         spark_date_format = "dd MMMM y"
-    elif stats_range == "half_yearly":
-        from_offset = _get_half_year_offset(latest_listen_date)
-        to_offset = relativedelta(months=+12)
-        step = relativedelta(months=+1)
-        date_format = "%B %Y"
-        spark_date_format = "MMMM y"
-    else:  # year
+    elif stats_range == "week":
+        from_offset = relativedelta(weeks=-2, weekday=MO(-1))
+        to_offset = relativedelta(weeks=+2)
+        # compute listening activity for each day, include weekday in date format
+        step = relativedelta(days=+1)
+        date_format = "%A %d %B %Y"
+        spark_date_format = "EEEE dd MMMM y"
+    else:
         from_offset = relativedelta(years=-2, month=1, day=1)  # start of the previous to previous year
         to_offset = relativedelta(years=+2)
         step = relativedelta(months=+1)

@@ -89,9 +89,8 @@ def get_artist_map_stats(year):
 def create_iso_country_codes_df():
     """ Create a dataframe mapping 2 letter iso codes to 3 letter iso country codes because
     MB stores the 2 letter iso code but the frontend needs the 3 letter iso code."""
-    iso_codes = []
-    for country in pycountry.countries:
-        iso_codes.append((country.alpha_2, country.alpha_3))
-
+    iso_codes = [
+        (country.alpha_2, country.alpha_3) for country in pycountry.countries
+    ]
     df = listenbrainz_spark.session.createDataFrame(iso_codes, schema=["alpha_2", "alpha_3"])
     df.createOrReplaceTempView("iso_codes")

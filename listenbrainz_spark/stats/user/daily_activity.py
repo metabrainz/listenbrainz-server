@@ -24,8 +24,8 @@ def calculate_daily_activity():
     """ Calculate number of listens for each user in each hour. """
 
     # Genarate a dataframe containing hours of all days of the week
-    weekdays = [calendar.day_name[day] for day in range(0, 7)]
-    hours = [hour for hour in range(0, 24)]
+    weekdays = [calendar.day_name[day] for day in range(7)]
+    hours = list(range(24))
     time_range = itertools.product(weekdays, hours)
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=["day", "hour"])
     time_range_df.createOrReplaceTempView("time_range")
