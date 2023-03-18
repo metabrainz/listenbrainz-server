@@ -93,7 +93,8 @@ def make_playlist_from_recommendations(user):
         "user_name": user,
         "upload": True,
         "token": token,
-        "created_for": user
+        "created_for": user,
+        "echo": False
     }
     for recs_type in ["top", "similar"]:
         # need to copy dict so that test mocks keep working
