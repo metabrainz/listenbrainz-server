@@ -157,5 +157,8 @@
     "webpack": "^5.76.0",
     "webpack-cli": "^5.0.1",
     "webpack-manifest-plugin": "^5.0.0"
+  },
+  "overrides": {
+    "d3-color": "^3.1.0"
   }
 }
