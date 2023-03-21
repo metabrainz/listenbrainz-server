@@ -97,7 +97,7 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  static defaultThumbnailSrc: string = "/static/img/cover-art-placeholder.jpg";
+  static addCoverArtThumbnailSrc: string = "/static/img/add-cover-art.svg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -349,19 +349,18 @@ export default class ListenCard extends React.Component<
       );
     } else if (releaseMBID) {
       thumbnail = (
-        <div className="listen-thumbnail">
-          <a
-            href={`https://musicbrainz.org/release/${releaseMBID}/cover-art`}
-            title="Add cover art in MusicBrainz"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src={ListenCard.defaultThumbnailSrc}
-              alt="Add cover art in MusicBrainz"
-            />
-          </a>
-        </div>
+        <a
+          href={`https://musicbrainz.org/release/${releaseMBID}/cover-art`}
+          title="Add cover art in MusicBrainz"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="listen-thumbnail add-cover-art"
+        >
+          <img
+            src={ListenCard.addCoverArtThumbnailSrc}
+            alt="Add cover art in MusicBrainz"
+          />
+        </a>
       );
     } else {
       const openModal = () => {
@@ -372,7 +371,7 @@ export default class ListenCard extends React.Component<
       };
       thumbnail = (
         <div
-          className="listen-thumbnail no-cover-art"
+          className="listen-thumbnail not-mapped"
           title="Link with MusicBrainz"
           onClick={openModal}
           onKeyDown={openModal}
