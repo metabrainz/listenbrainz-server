@@ -232,7 +232,8 @@
         margin-right: 10px;
         width: 56px;
         height: 56px;
-        &.not-mapped, &.add-cover-art{
+        &.not-mapped,
+        &.add-cover-art {
           min-width: 56px;
         }
       }
@@ -272,7 +273,8 @@
         width: inherit;
         aspect-ratio: 1/1;
       }
-      &.not-mapped, &.add-cover-art{
+      &.not-mapped,
+      &.add-cover-art {
         background-color: @gray-lighter;
         text-align: center;
         min-width: @cover-art-thumbnail-size;
@@ -282,10 +284,10 @@
       &.not-mapped > svg {
         max-width: 38px;
       }
-      &.add-cover-art{
+      &.add-cover-art {
         display: flex;
         justify-content: center;
-        > *{
+        > * {
           height: auto;
           width: 60%;
           aspect-ratio: unset;
