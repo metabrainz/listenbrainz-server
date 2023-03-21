@@ -6,13 +6,8 @@ const freshReleasesSitewideData = require("../__mocks__/freshReleasesSitewideDat
 
 const apiService = new APIService("foobar");
 
-// from https://github.com/kentor/flush-promises/blob/46f58770b14fb74ce1ff27da00837c7e722b9d06/index.js
-const scheduler =
-  typeof setImmediate === "function" ? setImmediate : setTimeout;
-
 function flushPromises() {
   return new Promise(function flushPromisesPromise(resolve) {
-    scheduler(resolve, 0);
   });
 }
 

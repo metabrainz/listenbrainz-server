@@ -359,7 +359,7 @@ describe("LastFMImporter", () => {
       // Flush all promises
       // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
       await new Promise((resolve) => {
-        setImmediate(resolve);
+        setTimeout(resolve, 0);
       });
 
       expect(instance.APIService.submitListens).toHaveBeenCalledTimes(1);
@@ -384,7 +384,7 @@ describe("LastFMImporter", () => {
       // Flush all promises
       // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
       await new Promise((resolve) => {
-        setImmediate(resolve);
+        setTimeout(resolve, 0);
       });
 
       expect(instance.updateRateLimitParameters).toHaveBeenCalledTimes(1);
