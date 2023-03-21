@@ -50,8 +50,6 @@ import CBReviewModal from "../cb-review/CBReviewModal";
 import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
 import ListenPayloadModal from "./ListenPayloadModal";
 
-export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
-
 export type ListenCardProps = {
   listen: Listen;
   className?: string;
