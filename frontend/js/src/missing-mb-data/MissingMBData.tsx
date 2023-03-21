@@ -193,7 +193,9 @@ export default class MissingMBDataPage extends React.Component<
                 let additionalActions;
                 const listen = missingMBDataAsListen[index];
                 if (currentUser?.auth_token) {
-                  const addToMB = (
+                  // Commenting this out for now because currently it leads to new eager users creating
+                  // a bunch of standalone recordings, and possible duplicates
+                  /* const addToMB = (
                     <ListenControl
                       buttonClassName="btn btn-sm"
                       icon={faPlus}
@@ -202,7 +204,7 @@ export default class MissingMBDataPage extends React.Component<
                       // eslint-disable-next-line react/jsx-no-bind
                       action={this.submitMissingData.bind(this, listen)}
                     />
-                  );
+                  ); */
 
                   if (listen?.track_metadata?.additional_info?.recording_msid) {
                     const linkWithMB = (
@@ -221,14 +223,7 @@ export default class MissingMBDataPage extends React.Component<
                         dataTarget="#MapToMusicBrainzRecordingModal"
                       />
                     );
-                    additionalActions = (
-                      <>
-                        {linkWithMB}
-                        {addToMB}
-                      </>
-                    );
-                  } else {
-                    additionalActions = addToMB;
+                    additionalActions = linkWithMB;
                   }
                 }
                 return (
