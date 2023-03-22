@@ -37,6 +37,8 @@ def insert(user_0: int, user_1: int, relationship_type: str) -> None:
         connection.execute(sqlalchemy.text("""
             INSERT INTO user_relationship (user_0, user_1, relationship_type)
                  VALUES (:user_0, :user_1, :relationship_type)
+            ON CONFLICT (user_0, user_1, relationship_type)
+             DO NOTHING
         """), {
             "user_0": user_0,
             "user_1": user_1,

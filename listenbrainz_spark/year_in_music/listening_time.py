@@ -1,5 +1,6 @@
 import listenbrainz_spark
 from listenbrainz_spark import config
+from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
@@ -7,10 +8,9 @@ from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 def get_listening_time(year):
     """ Calculate the total listening time in seconds of the user for the given year. """
     setup_listens_for_year(year)
-    metadata_table = "mb_metadata_cache"
-    metadata_df = listenbrainz_spark.sql_context.read.json(
-        f"{config.HDFS_CLUSTER_URI}/mb_metadata_cache.jsonl"
-    )
+
+    metadata_table = "recording_length"
+    metadata_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + RECORDING_LENGTH_DATAFRAME)
     metadata_df.createOrReplaceTempView(metadata_table)
 
     data = run_query(_get_total_listening_time()).collect()
@@ -22,14 +22,14 @@ def get_listening_time(year):
 
 
 def _get_total_listening_time():
-    # get recording length from mb_metadata_cache, if listen is unmapped default to 3 minutes.
+    # get recording length from recording table, if listen is unmapped default to 3 minutes.
     return """
           WITH listening_times AS (
                   SELECT user_id
-                       , sum(COALESCE(recording_data.length / 1000, BIGINT(180))) AS total_listening_time
+                       , sum(COALESCE(rl.length / 1000, BIGINT(180))) AS total_listening_time
                     FROM listens_of_year l
-               LEFT JOIN mb_metadata_cache rdd
-                      ON l.recording_mbid = rdd.recording_mbid
+               LEFT JOIN recording_length rl
+                      ON l.recording_mbid = rl.recording_mbid
                 GROUP BY user_id
           )
             SELECT to_json(
