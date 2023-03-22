@@ -100,6 +100,9 @@ body {
 				.icon-bar {
 					background-color: @blue;
 				}
+				&:not(.collapsed) {
+					position: fixed;
+				}
 			}
 		}
 	}
@@ -116,7 +119,7 @@ body {
 		> nav[role="navigation"] {
 			#side-nav {
 				transition: left 0.5s ease-out;
-				position: absolute;
+				position: fixed;
 				left: -@sidenav-width;
 				&.collapse.in{
 					left:0
