@@ -6,7 +6,7 @@ import sqlalchemy
 
 
 def save_token(user_id: int, service: ExternalServiceType, access_token: str, refresh_token: str,
-               token_expires_ts: int, record_listens: bool, scopes: List[str]):
+               token_expires_ts: int, record_listens: bool, scopes: List[str], external_user_id: str = None):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
     Args:
@@ -17,6 +17,7 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
         token_expires_ts: the unix timestamp at which the user_token will expire
         record_listens: True if user wishes to import listens, False otherwise
         scopes: the oauth scopes
+        external_user_id: the user's id in the external linked service
     """
     # regardless of whether a row is inserted or updated, the end result of the query
     # should remain the same. if not so, weird things can happen as it is likely we
@@ -29,12 +30,13 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
             INSERT INTO external_service_oauth
-            (user_id, service, access_token, refresh_token, token_expires, scopes)
+            (user_id, external_user_id, service, access_token, refresh_token, token_expires, scopes)
             VALUES
-            (:user_id, :service, :access_token, :refresh_token, :token_expires, :scopes)
+            (:user_id, :external_user_id, :service, :access_token, :refresh_token, :token_expires, :scopes)
             ON CONFLICT (user_id, service)
             DO UPDATE SET
                 user_id = EXCLUDED.user_id,
+                external_user_id = EXCLUDED.external_user_id,
                 service = EXCLUDED.service,
                 access_token = EXCLUDED.access_token,
                 refresh_token = EXCLUDED.refresh_token,
@@ -44,6 +46,7 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
             RETURNING id
             """), {
                 "user_id": user_id,
+                "external_user_id": external_user_id,
                 "service": service.value,
                 "access_token": access_token,
                 "refresh_token": refresh_token,
