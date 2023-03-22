@@ -6,7 +6,12 @@
 
 {% block content %}
 
-    <div id="react-container"></div>
+    <div class="secondary-nav">
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('explore.index') }}">Explore</a></li>
+            <li class="active">Huesound</li>
+        </ol>
+    </div>
 
 {% endblock %}
 

@@ -3,11 +3,23 @@
 <!-- these props are used in the navbar to highlight the navbar items -->
 {% set active_page = "explore" %}
 
-{% block profile_content %}
+{% block content %}
+  <div class="secondary-nav">
+    <ol class="breadcrumb">
+      <li class="active">Explore</li>
+    </ol>
+  </div>
+    
+  {% block profile_content %}
+    
+      <div id="react-container" ></div>
+    
+  {% endblock %}
 
-    <div id="react-container" ></div>
 
+  {{ super() }}
 {% endblock %}
+
 
 {% block scripts %}
   {{ super() }}

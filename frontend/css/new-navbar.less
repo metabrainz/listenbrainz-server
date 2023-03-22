@@ -162,12 +162,14 @@ body {
 @nav-tabs-background-color: #F3F3F3;
 @tabs-height: 42px;
 @tabs-height-mobile: 42px;
-.nav-tabs-container{
-	/* Tab container should be full width and scrollable if there is excess*/
+@nav-link-color: #1E1E1E;
+.secondary-nav{
+	/* Secondary nav container should be full width and scrollable if there is excess*/
 	width: calc(100% + @grid-gutter-width);
 	overflow-x: scroll;
 	margin-left:  ceil((@grid-gutter-width / -2));
 	margin-right: floor((@grid-gutter-width / -2));
+	margin-bottom: 1.5em;
 	/* But we want to hide the scrollbar: */
 	-ms-overflow-style: none;  /* Internet Explorer and Edge */
 	scrollbar-width: none;  /* Firefox */
@@ -175,9 +177,11 @@ body {
 		/* Chrome, Safari and Opera */
 		display: none;
 	}
+	> * {
+		background-color: @nav-tabs-background-color;
+	}
 	
 	.nav.nav-tabs {
-		background-color: @nav-tabs-background-color;
 		display: flex;
 		
 		> li{
@@ -185,7 +189,7 @@ body {
 			border-bottom: 1px solid @nav-tabs-border-color;
 			float:unset;
 			> a {
-				color: #1E1E1E;
+				color: @nav-link-color;
 				padding: @nav-tabs-link-padding;
 				border: 1px solid @nav-tabs-border-color;
 				border-top:none;
@@ -197,7 +201,7 @@ body {
 				}
 			}
 			&.active > a {
-				color: #1E1E1E;
+				color: @nav-link-color;
 				font-weight: 700;
 				border-bottom: 1px solid white;
 				margin-bottom: -1px;
@@ -211,8 +215,28 @@ body {
 				}
 			}
 		}
-		
-
+	}
+	
+	.breadcrumb {
+		padding: @nav-tabs-link-padding;
+		list-style: none;
+		border-bottom: 1px solid @nav-tabs-border-color;
+		>li{
+			display: inline-block;
+			color: @text-color;
+			> a {
+				color: @nav-link-color;
+				font-weight: initial;
+			}
+			&.active {
+				color: @blue;
+    			font-weight: 700;
+			}
+			&+li:before {
+				padding: 0 5px;
+				content: "\003E";
+			}
+		}
 	}
 	/* Styles for mobile devices */
 	@media (max-width: @offscreen-sidenav-breakpoint) {
@@ -227,12 +251,14 @@ body {
 			height: @tabs-height;
 			margin-top: -@tabs-height;
 		}
-	
 
 		.nav.nav-tabs > li {
 			> a, &.username > * {
 				padding: @nav-tabs-link-padding-mobile;
 			}
+		}
+		.breadcrumb {
+			padding: @nav-tabs-link-padding-mobile;
 		}
 	}
 }

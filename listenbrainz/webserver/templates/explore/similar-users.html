@@ -5,6 +5,13 @@
 {% set active_page = "explore" %}
 
 {%- block content -%}
+  <div class="secondary-nav">
+    <ol class="breadcrumb">
+      <li><a href="{{ url_for('explore.index') }}">Explore</a></li>
+      <li class="active">Similar Users</li>
+    </ol>
+  </div>
+
   <h2 class="page-title">Top Similar Users</h2>
 
   <p>

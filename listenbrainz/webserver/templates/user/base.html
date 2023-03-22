@@ -10,7 +10,7 @@
 {% set my_profile = current_user.id == user.id %}
 
 {% block content %}
-  <div class="nav-tabs-container">
+  <div class="secondary-nav">
     <ul class="nav nav-tabs" role="tablist">
       <li class="username"><div>{{ user.musicbrainz_id }}</div></li>
       <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>

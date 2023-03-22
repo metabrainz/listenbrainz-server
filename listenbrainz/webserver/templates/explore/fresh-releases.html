@@ -4,6 +4,17 @@
 {% set active_page = "explore" %}
 
 {%- block title -%}Fresh releases - ListenBrainz{%- endblock -%}
+
+{% block content %}
+
+    <div class="secondary-nav">
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('explore.index') }}">Explore</a></li>
+            <li class="active">Fresh Releases</li>
+        </ol>
+    </div>
+
+{% endblock %}
 {% block scripts %}
     {{ super() }}
     <script src="{{ get_static_path('freshReleases.js') }}" type="text/javascript"></script>
