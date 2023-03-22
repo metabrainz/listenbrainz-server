@@ -232,9 +232,13 @@
         margin-right: 10px;
         width: 56px;
         height: 56px;
-        &.not-mapped,
-        &.add-cover-art {
+        .not-mapped,
+        .add-cover-art,
+        .cover-art-fallback {
           min-width: 56px;
+        }
+        .add-cover-art > * {
+          height: auto;
         }
       }
     }
@@ -273,23 +277,19 @@
         width: inherit;
         aspect-ratio: 1/1;
       }
-      &.not-mapped,
-      &.add-cover-art {
+      .add-cover-art,
+      .not-mapped,
+      .cover-art-fallback {
         background-color: @gray-lighter;
-        text-align: center;
         min-width: @cover-art-thumbnail-size;
+        height: inherit;
+        display: flex;
         align-items: center;
         color: #cbcbcb;
-      }
-      &.not-mapped > svg {
-        max-width: 38px;
-      }
-      &.add-cover-art {
-        display: flex;
         justify-content: center;
         > * {
-          height: auto;
-          width: 60%;
+          font-size: @cover-art-thumbnail-size / 2;
+          max-width: @cover-art-thumbnail-size / 2;
           aspect-ratio: unset;
           border-radius: unset;
         }

@@ -355,10 +355,12 @@ export default class ListenCard extends React.Component<
           rel="noopener noreferrer"
           className="listen-thumbnail add-cover-art"
         >
-          <img
-            src={ListenCard.addCoverArtThumbnailSrc}
-            alt="Add cover art in MusicBrainz"
-          />
+          <div className="add-cover-art">
+            <img
+              src={ListenCard.addCoverArtThumbnailSrc}
+              alt="Add cover art in MusicBrainz"
+            />
+          </div>
         </a>
       );
     } else {
@@ -380,7 +382,9 @@ export default class ListenCard extends React.Component<
           data-toggle="modal"
           data-target="#MapToMusicBrainzRecordingModal"
         >
-          <FontAwesomeIcon icon={faLink} />
+          <div className="not-mapped">
+            <FontAwesomeIcon icon={faLink} />
+          </div>
         </div>
       );
     }
