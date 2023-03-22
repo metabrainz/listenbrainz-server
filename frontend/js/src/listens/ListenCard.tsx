@@ -49,6 +49,7 @@ import PinRecordingModal from "../pins/PinRecordingModal";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
 import ListenPayloadModal from "./ListenPayloadModal";
+import CoverArtWithFallback from "./CoverArtWithFallback";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -338,9 +339,9 @@ export default class ListenCard extends React.Component<
             target="_blank"
             rel="noopener noreferrer"
           >
-            <img
-              src={thumbnailSrc}
-              alt={listen.track_metadata?.release_name ?? "Cover art"}
+            <CoverArtWithFallback
+              imgSrc={thumbnailSrc}
+              altText={listen.track_metadata?.release_name}
             />
           </a>
         </div>
