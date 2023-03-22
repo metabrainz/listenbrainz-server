@@ -353,7 +353,7 @@ export default class ListenCard extends React.Component<
           title="Add cover art in MusicBrainz"
           target="_blank"
           rel="noopener noreferrer"
-          className="listen-thumbnail add-cover-art"
+          className="listen-thumbnail"
         >
           <div className="add-cover-art">
             <img
@@ -372,7 +372,7 @@ export default class ListenCard extends React.Component<
       };
       thumbnail = (
         <div
-          className="listen-thumbnail not-mapped"
+          className="listen-thumbnail"
           title="Link with MusicBrainz"
           onClick={openModal}
           onKeyDown={openModal}
