@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -13,26 +13,25 @@ export default function CoverArtWithFallback({
   altText,
 }: CoverArtWithFallbackProps) {
   const [error, setError] = useState(false);
-  const imageRef = useRef<HTMLImageElement>(null);
-  const { current } = imageRef;
-  useEffect(() => {
-    const handleError = () => {
-      setError(true);
-    };
-    // use of error event of the image tag
-    current?.addEventListener("error", handleError);
-
-    return () => {
-      current?.removeEventListener("error", handleError);
-    };
-  }, [current, setError]);
 
   if (error)
     return (
-      <div title="We could not load the album artwork">
+      <div
+        className="cover-art-fallback"
+        title="We could not load the album artwork"
+      >
         <FontAwesomeIcon icon={faExclamationTriangle} />
       </div>
     );
 
-  return <img ref={imageRef} src={imgSrc} alt={altText ?? "Cover art"} />;
+  return (
+    <img
+      src={imgSrc}
+      alt={altText ?? "Cover art"}
+      onError={(err) => {
+        console.error("error loading image!", err);
+        setError(true);
+      }}
+    />
+  );
 }
