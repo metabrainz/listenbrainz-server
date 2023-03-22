@@ -130,7 +130,22 @@ body {
 				position: fixed;
 				left: -@sidenav-width;
 				&.collapse.in{
-					left:0
+					left:0;
+				}
+			}
+			#side-nav-overlay {
+				content:"";
+				opacity: 0;
+				transition: opacity 0.3s ease-out;
+				position: fixed;
+				width: 100vw;
+				height: 100vh !important; // Using !important otherwise it gets overwritten by Bootstrap collapse plugin
+				top:0;
+				right: 0;
+				background:white;
+				z-index: 99;
+				&.collapse.in {
+					opacity: 0.8;
 				}
 			}
 			.navbar-header{
