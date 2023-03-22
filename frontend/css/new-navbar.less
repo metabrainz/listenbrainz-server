@@ -3,6 +3,7 @@
 @brainzplayer-height: 60px;
 @offscreen-sidenav-breakpoint: @grid-float-breakpoint-max;
 @navbar-height: 72px;
+@max-content-width: 1200px;
 
 body {
 	display: flex;
@@ -111,6 +112,13 @@ body {
 		margin-left: 1em;
 		// Leave some space for BrainzPlayer
 		padding-bottom: @brainzplayer-height;
+
+		width: 100%;
+		div[role="main"] {
+			max-width: @max-content-width;
+			margin-left: auto;
+			margin-right: auto;
+		}
 	}
 	
 	/* Styles for mobile devices */
