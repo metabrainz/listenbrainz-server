@@ -29,7 +29,6 @@ export default function CoverArtWithFallback({
       src={imgSrc}
       alt={altText ?? "Cover art"}
       onError={(err) => {
-        console.error("error loading image!", err);
         setError(true);
       }}
     />
