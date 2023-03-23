@@ -3,15 +3,16 @@
 {% block title %}User "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
 
 {% block content %}
-  <div id="cf-recommendations">
-    <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
-
-    <ul class="nav nav-tabs" role="tablist">
-        <li {{ 'class=active' if active_section=='info' }}><a href="{{ url_for('recommendations_cf_recording.info', user_name=user.musicbrainz_id) }}">Tracks you might like</a></li>
-        <li {{ 'class=active' if active_section=='top_artist' }}><a href="{{ url_for('recommendations_cf_recording.top_artist', user_name=user.musicbrainz_id) }}">Top Artist</a></li>
-        <li {{ 'class=active' if active_section=='similar_artist' }}><a href="{{ url_for('recommendations_cf_recording.similar_artist', user_name=user.musicbrainz_id) }}">Similar Artist</a></li>
-        <li {{ 'class=active' if active_section=='raw' }}><a href="{{ url_for('recommendations_cf_recording.raw', user_name=user.musicbrainz_id) }}">Raw Recommendations</a></li>
+  <div class="secondary-nav">
+    <ul class="nav nav-tabs scrollable nochilddrag" role="tablist">
+      <li class="username"><div>{{ user.musicbrainz_id }}</div></li>
+      <li {{ 'class=active' if active_section=='info' }}><a href="{{ url_for('recommendations_cf_recording.info', user_name=user.musicbrainz_id) }}">Tracks you might like</a></li>
+      <li {{ 'class=active' if active_section=='top_artist' }}><a href="{{ url_for('recommendations_cf_recording.top_artist', user_name=user.musicbrainz_id) }}">Top Artist</a></li>
+      <li {{ 'class=active' if active_section=='similar_artist' }}><a href="{{ url_for('recommendations_cf_recording.similar_artist', user_name=user.musicbrainz_id) }}">Similar Artist</a></li>
+      <li {{ 'class=active' if active_section=='raw' }}><a href="{{ url_for('recommendations_cf_recording.raw', user_name=user.musicbrainz_id) }}">Raw Recommendations</a></li>
     </ul>
+  </div>
+  <div id="cf-recommendations" role="main">
 
     {% block profile_content %}
         {% if not error_msg %}
@@ -36,4 +37,7 @@
 {% block scripts %}
   {{ super() }}
   <script src="{{ get_static_path('recommendationsPlayground.js') }}" type="text/javascript"></script>
+    
+  <!-- This dragscroll library will need to be replaced with a React hook once we move to a SPA -->
+  <script src="{{ url_for('static', filename='js/lib/dragscroll.js') }}"></script>
 {% endblock %}
