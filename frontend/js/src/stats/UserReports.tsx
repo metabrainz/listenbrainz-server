@@ -102,8 +102,8 @@ export default class UserReports extends React.Component<
 
     return (
       <div>
-        <div className="row mt-15 flex flex-wrap">
-          <div style={{ flex: "initial" }}>
+        <div className="tertiary-nav dragscroll">
+          <div>
             {Array.from(ranges, ([stat_type, stat_name]) => {
               return (
                 <Pill
@@ -116,7 +116,7 @@ export default class UserReports extends React.Component<
               );
             })}
           </div>
-          <div style={{ flex: "initial", marginLeft: "auto" }}>
+          <div>
             {Boolean(userStatsUrl) && (
               <a
                 href={userStatsUrl}

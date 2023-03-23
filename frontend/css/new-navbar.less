@@ -167,19 +167,11 @@ body {
 @tabs-height-mobile: 42px;
 @nav-link-color: #1E1E1E;
 .secondary-nav{
-	/* Secondary nav container should be full width and scrollable if there is excess*/
+	/* Secondary nav container should be full width and scrollable if there is excess */
 	width: calc(100% + @grid-gutter-width);
-	overflow-x: scroll;
 	margin-left:  ceil((@grid-gutter-width / -2));
 	margin-right: floor((@grid-gutter-width / -2));
 	margin-bottom: 1.5em;
-	/* But we want to hide the scrollbar: */
-	-ms-overflow-style: none;  /* Internet Explorer and Edge */
-	scrollbar-width: none;  /* Firefox */
-	&::-webkit-scrollbar {
-		/* Chrome, Safari and Opera */
-		display: none;
-	}
 	> * {
 		background-color: @nav-tabs-background-color;
 	}
@@ -233,7 +225,7 @@ body {
 			}
 			&.active {
 				color: @blue;
-    			font-weight: 700;
+				font-weight: 700;
 			}
 			&+li:before {
 				padding: 0 5px;
@@ -263,6 +255,27 @@ body {
 		.breadcrumb {
 			padding: @nav-tabs-link-padding-mobile;
 		}
+	}
+}
+.dragscroll {
+	/* We user the dragscroll library to handle dragging to scroll */
+	overflow-x: scroll;
+	/* But we want to hide the scrollbar: */
+	-ms-overflow-style: none;  /* Internet Explorer and Edge */
+	scrollbar-width: none;  /* Firefox */
+	&::-webkit-scrollbar {
+		/* Chrome, Safari and Opera */
+		display: none;
+	}
+}
+.tertiary-nav{
+	/* This tertiary nav (pills at the top of the page) should be max full width and scrollable */
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	
+	> * {
+		flex-shrink: 0;
 	}
 }
 .profile-on-mb{
