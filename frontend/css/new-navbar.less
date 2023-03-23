@@ -275,7 +275,9 @@ body {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: space-between;
-	
+	padding: 0 1em;
+	margin-left:  ceil((@grid-gutter-width / -2));
+	margin-right: floor((@grid-gutter-width / -2));
 	> * {
 		flex-shrink: 0;
 	}
