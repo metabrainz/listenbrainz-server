@@ -3,8 +3,8 @@
 {% block title %}User "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
 
 {% block content %}
-  <div class="secondary-nav">
-    <ul class="nav nav-tabs scrollable nochilddrag" role="tablist">
+  <div class="secondary-nav dragscroll nochilddrag">
+    <ul class="nav nav-tabs" role="tablist">
       <li class="username"><div>{{ user.musicbrainz_id }}</div></li>
       <li {{ 'class=active' if active_section=='info' }}><a href="{{ url_for('recommendations_cf_recording.info', user_name=user.musicbrainz_id) }}">Tracks you might like</a></li>
       <li {{ 'class=active' if active_section=='top_artist' }}><a href="{{ url_for('recommendations_cf_recording.top_artist', user_name=user.musicbrainz_id) }}">Top Artist</a></li>

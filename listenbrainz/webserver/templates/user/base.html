@@ -10,7 +10,7 @@
 {% set my_profile = current_user.id == user.id %}
 
 {% block content %}
-  <div class="secondary-nav">
+  <div class="secondary-nav dragscroll nochilddrag">
     <ul class="nav nav-tabs" role="tablist">
       <li class="username"><div>{{ user.musicbrainz_id }}</div></li>
       <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
@@ -43,4 +43,8 @@
 {% block scripts %}
   {{ super() }}
   <script src="{{ get_static_path('userPageHeading.js') }}" type="text/javascript"></script>
+  <script src="{{ get_static_path('userPageHeading.js') }}" type="text/javascript"></script>
+  
+  <!-- This dragscroll library will need to be replaced with a React hook once we move to a SPA -->
+  <script src="{{ url_for('static', filename='js/lib/dragscroll.js') }}"></script>
 {% endblock %}
