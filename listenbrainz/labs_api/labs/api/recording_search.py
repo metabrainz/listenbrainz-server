@@ -1,10 +1,6 @@
-import ujson
-
 import typesense
 import typesense.exceptions
 from datasethoster import Query
-from datasethoster.main import register_query
-from unidecode import unidecode
 
 from listenbrainz import config
 from listenbrainz.mbid_mapping_writer.mbid_mapper import prepare_query, COLLECTION_NAME

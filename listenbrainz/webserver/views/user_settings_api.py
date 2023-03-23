@@ -1,4 +1,4 @@
-import ujson
+import orjson
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request
 
@@ -29,7 +29,7 @@ def reset_timezone():
     """
     user = validate_auth_header()
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -60,7 +60,7 @@ def update_troi_prefs():
     """
     user = validate_auth_header()
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 

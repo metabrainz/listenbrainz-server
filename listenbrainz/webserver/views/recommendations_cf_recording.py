@@ -1,4 +1,4 @@
-import ujson
+import orjson
 from flask import Blueprint, render_template, current_app
 from psycopg2.extras import DictCursor
 
@@ -118,7 +118,7 @@ def _get_template(active_section, user):
         "recommendations_cf_recording/base.html",
         active_section=active_section,
         tracks_type=tracks_type,
-        props=ujson.dumps(props),
+        props=orjson.dumps(props).decode("utf-8"),
         user=user,
         last_updated=data.created.strftime('%d %b %Y')
     )

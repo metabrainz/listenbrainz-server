@@ -225,13 +225,13 @@ def delete_pending_listens():
         ts_delete_listens()
 
 
-@cli.command(name="delete_listens_and_update_metadata")
-def delete_listens_and_update_metadata():
+@cli.command(name="delete_listens")
+def complete_delete_listens():
     """ Complete all pending listen deletes and also run update script for
     updating listen metadata since last cron run """
     application = webserver.create_app()
     with application.app_context():
-        ts_delete_listens_and_update_user_listen_data()
+        ts_delete_listens()
 
 
 @cli.command(name="add_missing_to_listen_users_metadata")

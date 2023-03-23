@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, current_app
 from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.webserver.decorators import web_listenstore_needed
-import ujson
+import orjson
 
 metadata_viewer_bp = Blueprint("metadata_viewer", __name__)
 
@@ -30,5 +30,5 @@ def playing_now_metadata_viewer():
 
     return render_template(
         "player/metadata-viewer.html",
-        props=ujson.dumps(props)
+        props=orjson.dumps(props).decode("utf-8")
     )

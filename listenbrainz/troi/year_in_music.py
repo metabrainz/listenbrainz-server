@@ -1,4 +1,3 @@
-import ujson
 from flask import current_app
 from more_itertools import chunked
 from sqlalchemy import text

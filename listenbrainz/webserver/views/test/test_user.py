@@ -3,7 +3,7 @@ import logging
 import time
 from unittest import mock
 
-import ujson
+import orjson
 from flask import url_for
 from sqlalchemy import text
 
@@ -107,14 +107,14 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access(self):
@@ -128,7 +128,7 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
 
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
@@ -136,7 +136,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
@@ -147,14 +147,14 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable('props'))
+        props = orjson.loads(self.get_context_variable('props'))
         self.assertIsNone(props['logged_in_user_follows_user'])
 
         self.temporary_login(self.user.login_id)
         mock_is_following_user.return_value = False
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable('props'))
+        props = orjson.loads(self.get_context_variable('props'))
         self.assertFalse(props['logged_in_user_follows_user'])
 
     def _create_test_data(self, user_name):

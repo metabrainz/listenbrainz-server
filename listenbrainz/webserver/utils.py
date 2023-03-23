@@ -1,7 +1,7 @@
 import string
 import random
 
-import ujson
+import orjson
 from flask import current_app, request
 from flask_login import current_user
 
@@ -70,7 +70,7 @@ def get_global_props():
         "critiquebrainz": get_current_critiquebrainz_user(),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
     }
-    return ujson.dumps(props)
+    return orjson.dumps(props).decode("utf-8")
 
 
 def parse_boolean_arg(name, default=None):

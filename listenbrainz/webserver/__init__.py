@@ -19,6 +19,7 @@ deploy_env = os.environ.get('DEPLOY_ENV', '')
 
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60  # allow a skew of 1 hour in listened_at submissions
+RATELIMIT_PER_TOKEN = 100000 # a very high limit so that troi can make virtually unlimited requests
 
 
 def load_config(app):
@@ -132,8 +133,9 @@ def create_app(debug=None):
     from listenbrainz.webserver.errors import init_error_handlers
     init_error_handlers(app)
 
-    from brainzutils.ratelimit import inject_x_rate_headers, set_user_validation_function
+    from brainzutils.ratelimit import inject_x_rate_headers, set_user_validation_function, set_rate_limits, ratelimit_per_ip_default, ratelimit_window_default
     set_user_validation_function(check_ratelimit_token_whitelist)
+    set_rate_limits(RATELIMIT_PER_TOKEN, ratelimit_per_ip_default, ratelimit_window_default)
 
     @app.after_request
     def after_request_callbacks(response):

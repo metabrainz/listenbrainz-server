@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import sqlalchemy
-import ujson
+import orjson
 
 from datetime import datetime
 
@@ -53,7 +53,7 @@ def create_user_timeline_event(
                 """), {
                     'user_id': user_id,
                     'event_type': event_type.value,
-                    'metadata': ujson.dumps(metadata.dict()),
+                    'metadata': orjson.dumps(metadata.dict()).decode("utf-8"),
                 }
             )
 
