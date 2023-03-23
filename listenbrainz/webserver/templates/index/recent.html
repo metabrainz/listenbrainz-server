@@ -6,7 +6,7 @@
 {% block content %}
   <div class="secondary-nav">
     <ul class="nav nav-tabs" role="tablist">
-      <li ><a href="{{ url_for('index.feed') }}">My Feed</a></li>
+      <li {{ 'class=disabled' if not current_user.is_authenticated }}><a href="{{ url_for('index.feed') if current_user.is_authenticated else '#'}}">My Feed</a></li>
       <li class="active"><a href="{{ url_for('index.recent_listens') }}">Global</a></li>
     </ul>
   </div>
