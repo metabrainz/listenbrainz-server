@@ -62,9 +62,9 @@ export default class UserArtistMap extends React.Component<
   }
 
   componentDidUpdate(prevProps: UserArtistMapProps) {
-    const { range: prevRange } = prevProps;
-    const { range: currRange } = this.props;
-    if (prevRange !== currRange) {
+    const { range: prevRange, user: prevUser } = prevProps;
+    const { range: currRange, user: currUser } = this.props;
+    if (prevRange !== currRange || prevUser !== currUser) {
       if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,

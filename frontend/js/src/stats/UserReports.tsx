@@ -27,6 +27,7 @@ export type UserReportsProps = {
 
 export type UserReportsState = {
   range: UserStatsAPIRange;
+  user?: ListenBrainzUser;
 };
 
 export default class UserReports extends React.Component<
@@ -41,6 +42,7 @@ export default class UserReports extends React.Component<
 
     this.state = {
       range: "" as UserStatsAPIRange,
+      user: props.user,
     };
   }
 
@@ -58,6 +60,14 @@ export default class UserReports extends React.Component<
 
   componentWillUnmount() {
     window.removeEventListener("popstate", this.syncStateWithURL);
+  }
+
+  setUser(userName?: string) {
+    if (userName) {
+      this.setState({ user: { name: userName } });
+    } else {
+      this.setState({ user: undefined });
+    }
   }
 
   changeRange = (newRange: UserStatsAPIRange): void => {
@@ -86,19 +96,13 @@ export default class UserReports extends React.Component<
   };
 
   render() {
-    const { range } = this.state;
-    const { apiUrl, user, newAlert } = this.props;
+    const { range, user } = this.state;
+    const { apiUrl, newAlert } = this.props;
     const { currentUser } = this.context;
 
     const ranges = getAllStatRanges();
-    let userStatsUrl: string | undefined;
-    if (user?.name) {
-      userStatsUrl = `${window.location.origin}/user/${user.name}/stats/?range=${range}`;
-    } else if (currentUser?.name) {
-      userStatsUrl = `${window.location.origin}/user/${currentUser.name}/stats/?range=${range}`;
-    }
-
-    const globalStatsUrl = `${window.location.origin}/statistics/?range=${range}`;
+    const userOrLoggedInUser: string | undefined =
+      user?.name ?? currentUser?.name;
 
     return (
       <div>
@@ -117,21 +121,27 @@ export default class UserReports extends React.Component<
             })}
           </div>
           <div>
-            {Boolean(userStatsUrl) && (
-              <a
-                href={userStatsUrl}
+            {Boolean(userOrLoggedInUser) && (
+              <button
+                type="button"
+                onClick={() => {
+                  this.setUser(user?.name ?? currentUser?.name);
+                }}
                 className={`pill secondary ${user ? "active" : ""}`}
               >
                 <FontAwesomeIcon icon={faUser} />{" "}
                 {user?.name ?? currentUser?.name}
-              </a>
+              </button>
             )}
-            <a
-              href={globalStatsUrl}
+            <button
+              type="button"
+              onClick={() => {
+                this.setUser();
+              }}
               className={`pill secondary ${!user ? "active" : ""}`}
             >
               <FontAwesomeIcon icon={faGlobe} /> Global
-            </a>
+            </button>
           </div>
         </div>
         <section id="listening-activity">

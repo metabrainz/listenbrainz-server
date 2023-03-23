@@ -211,6 +211,12 @@ body {
 					padding: @nav-tabs-link-padding;
 				}
 			}
+			&.disabled {
+				background-color: darken(@nav-tabs-background-color,15%);
+				> a {
+					color: darken(@nav-tabs-background-color,35%);
+				}
+			}
 		}
 	}
 	
