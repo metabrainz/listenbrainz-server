@@ -26,7 +26,7 @@ body {
 			@blue,
 			@orange
 			) 1 100%;
-			padding: 2em 1em;
+			padding: 1.2em;
 			background-color: @white;
 			z-index: 100;
 			
@@ -50,8 +50,12 @@ body {
 			}
 
 			.main-nav {
-				line-height: 2.5em;
 				font-size: 18px;
+				flex-basis: 140px;
+				display: flex;
+				flex-direction: column;
+				justify-content: space-around;
+				margin-bottom: 1.5em;
 			}
 			.navbar-bottom {
 				margin-top:auto;
@@ -59,6 +63,24 @@ body {
 			}
 			.navbar-logo {
 				z-index: 102; // just above the toggle hamburger button
+			}
+			.search-bar{
+				position: relative;
+				input{
+					background-color: @nav-tabs-border-color;
+					color: @nav-link-color;
+					border-radius: 33px;
+					border: none;
+				}
+				button {
+					position: absolute;
+					right: 0.5em;
+					top: 0;
+					background: none;
+					border: none;
+					height: 100%;
+					font-size: 1.2em;
+				}
 			}
 		}
 		/* Sections of the sidebar navigation */
