@@ -5,10 +5,12 @@
 {% endblock %}
 
 <!-- these props are used in the navbar to highlight the navbar items -->
-{% set user = user or current_user if not current_user.is_anonymous %}
 {% set active_page = "profile" %}
 {% if user %}
+  {% set user = user %}
   {% set my_profile = current_user.id == user.id %}
+{% elif not current_user.is_anonymous%}
+  {% set user = current_user %}
 {% endif %}
 {% block content %}
   <div class="secondary-nav dragscroll nochilddrag">
