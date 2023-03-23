@@ -1,7 +1,7 @@
 <nav role="navigation">
   
   <div class="navbar-header">
-    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#side-nav,#side-nav-overlay">
+    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#side-nav,#side-nav-overlay">
       <span class="sr-only">Toggle navigation</span>
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
@@ -15,7 +15,7 @@
   {#- Collect the nav links, forms, and other content for toggling -#}
   
   {% if not hide_navbar_user_menu %}
-  <div id="side-nav">
+  <div id="side-nav" class="collapse">
     <a class="navbar-logo" href="{{ url_for('index.index') }}">
       <img src="{{ url_for('static', filename='img/listenbrainz_logo_icon.svg') }}" alt="ListenBrainz" />
     </a>
@@ -45,7 +45,7 @@
       </div>
     </div>
   </div>
-  <div id="side-nav-overlay"></div>
+  <div id="side-nav-overlay" class="collapse"></div>
   {% endif %}
   </div>
 </nav>

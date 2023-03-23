@@ -11,11 +11,12 @@ body {
 		#side-nav {
 			min-width: @sidenav-width;
 			// using important here to override Botostrap 3 collapse plugin setting height
-			height: 100vh !important;
+			height: auto !important;
 			display: flex;
 			position: sticky;
 			left: 0;
 			top: 0;
+			bottom:0;
 			text-align: right;
 			flex-direction: column;
 			align-items: flex-end;
@@ -126,26 +127,28 @@ body {
 		display: initial;
 		> nav[role="navigation"] {
 			#side-nav {
-				transition: left 0.5s ease-out;
+				transition: transform .3s ease-in-out;
 				position: fixed;
-				left: -@sidenav-width;
+				transform: translateX(-100%);
 				&.collapse.in{
-					left:0;
+					transform: none
 				}
 			}
 			#side-nav-overlay {
 				content:"";
 				opacity: 0;
-				transition: opacity 0.3s ease-out;
+				pointer-events: none;
+				transition: opacity .3s linear;
 				position: fixed;
 				width: 100vw;
-				height: 100vh !important; // Using !important otherwise it gets overwritten by Bootstrap collapse plugin
 				top:0;
+				bottom:0;
 				right: 0;
 				background:white;
 				z-index: 99;
 				&.collapse.in {
 					opacity: 0.8;
+					pointer-events: unset;
 				}
 			}
 			.navbar-header{
