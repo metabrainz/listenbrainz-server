@@ -414,6 +414,7 @@ export default class LastFmImporter extends React.Component<
       this.totalPages = await this.getNumberOfPages();
       this.userIsPrivate = await this.getUserPrivacy();
       this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
+      this.numCompleted = 0;
 
       await this.importLoop(); // import pages
     } catch (err) {
