@@ -11,7 +11,7 @@ body {
 		#side-nav {
 			min-width: @sidenav-width;
 			// using important here to override Botostrap 3 collapse plugin setting height
-			height: auto !important;
+			height: 100vh !important;
 			display: flex;
 			position: sticky;
 			left: 0;
@@ -129,6 +129,8 @@ body {
 			#side-nav {
 				transition: transform .3s ease-in-out;
 				position: fixed;
+				// using important here to override Botostrap 3 collapse plugin setting height
+				height: auto !important;
 				transform: translateX(-100%);
 				&.collapse.in{
 					transform: none
