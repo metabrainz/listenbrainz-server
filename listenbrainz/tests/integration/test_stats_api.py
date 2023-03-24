@@ -1,8 +1,6 @@
-import itertools
 import json
-import sys
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import patch
 
 import requests
@@ -16,9 +14,9 @@ import requests_mock
 from data.model.user_artist_map import UserArtistMapRecord
 from flask import url_for
 
-from listenbrainz import config
 from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.db import couchdb
+from listenbrainz.spark.handlers import handle_entity_listener
 from listenbrainz.tests.integration import IntegrationTestCase
 from redis import Redis
 from flask import current_app
@@ -507,3 +505,88 @@ class StatsAPITestCase(IntegrationTestCase):
                 db_stats.insert_sitewide_stats(f"{entity}_week_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint), query_string={'count': 200, 'range': 'week'})
                 self.assertSitewideStatEqual(payload, response, entity, "week", 100)
+
+    def _setup_listener_stats(self, file) -> dict:
+        with open(self.path_to_data_file(file), "r") as f:
+            data = json.load(f)
+        couchdb.create_database(data["database"])
+
+        for entity in data["data"]:
+            for listener in entity["listeners"]:
+                if listener["user_id"] == 1:
+                    listener["user_id"] = self.user["id"]
+                elif listener["user_id"] == 2:
+                    listener["user_id"] = self.another_user["id"]
+
+        handle_entity_listener(data)
+
+        return data
+
+    def test_artist_listeners_stats(self):
+        data = self._setup_listener_stats("artists_listeners_db_data_for_api_test.json")
+
+        response = self.client.get(url_for("stats_api_v1.get_artist_listeners", artist_mbid="056e4f3e-d505-4dad-8ec1-d04f521cbb56"))
+        self.assert200(response)
+        self.assertEqual(response.json["payload"], {
+            "artist_mbid": "056e4f3e-d505-4dad-8ec1-d04f521cbb56",
+            "artist_name": "Daft Punk",
+            "listeners": [
+                {
+                    "listen_count": 5,
+                    "user_name": self.another_user["musicbrainz_id"]
+                },
+                {
+                    "listen_count": 3,
+                    "user_name": self.user["musicbrainz_id"]
+                }
+            ],
+            "total_listen_count": 8,
+            "stats_range": "all_time",
+            "from_ts": data["from_ts"],
+            "last_updated": response.json["payload"]["last_updated"],
+            "to_ts": data["to_ts"],
+        })
+
+    def test_release_group_listeners_stats(self):
+        data = self._setup_listener_stats("release_groups_listeners_db_data_for_api_test.json")
+
+        response = self.client.get(url_for("stats_api_v1.get_release_group_listeners", release_group_mbid="f53bf269-4601-35a4-8aa7-ed54a1d58eed"))
+        self.assert200(response)
+        self.assertEqual(response.json["payload"], {
+            "total_listen_count": 7,
+            "listeners": [
+                {
+                    "user_name": self.user["musicbrainz_id"],
+                    "listen_count": 4
+                },
+                {
+                    "user_name": self.another_user["musicbrainz_id"],
+                    "listen_count": 3
+                }
+            ],
+            "release_group_mbid": "f53bf269-4601-35a4-8aa7-ed54a1d58eed",
+            "release_group_name": "Mickey Mouse Operation",
+            "artist_name": "Little People",
+            "caa_id": 27037140096,
+            "caa_release_mbid": "85655611-5af0-436c-b00f-6609afa502ff",
+            "artist_mbids": [
+                "78c94cba-761f-4212-8508-a24bda2e57dc"
+            ],
+            "from_ts": data["from_ts"],
+            "stats_range": "all_time",
+            "last_updated": response.json["payload"]["last_updated"],
+            "to_ts": data["to_ts"],
+        })
+
+    def test_entity_listeners_stats(self):
+        response = self.client.get(url_for("stats_api_v1.get_artist_listeners", artist_mbid="056e4f3e-d505-4dad-8ec1-d04f521cbb56", range="this_week"))
+        self.assertStatus(response, 204)
+
+        response = self.client.get(url_for("stats_api_v1.get_release_group_listeners", release_group_mbid="f53bf269-4601-35a4-8aa7-ed54a1d58eed", range="this_week"))
+        self.assertStatus(response, 204)
+
+        response = self.client.get(url_for("stats_api_v1.get_artist_listeners", artist_mbid="056e4f3e-d505-4dad-8ec1-d04f521cbb56", range="foobar"))
+        self.assert400(response)
+
+        response = self.client.get(url_for("stats_api_v1.get_release_group_listeners", release_group_mbid="f53bf269-4601-35a4-8aa7-ed54a1d58eed", range="foobar"))
+        self.assert400(response)

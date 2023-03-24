@@ -87,7 +87,7 @@ def send_request_to_spark_cluster(query, **params):
 
 
 @cli.command(name="request_user_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'listeners']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
@@ -100,12 +100,17 @@ def request_user_stats(type_, range_, entity, database):
     params = {
         "stats_range": range_
     }
-    if type_ == "entity" and entity:
+    if type_ in ["entity", "listener"] and entity:
         params["entity"] = entity
 
     if not database:
         today = date.today().strftime("%Y%m%d")
-        prefix = entity if type_ == "entity" else type_
+        if type_ == "entity":
+            prefix = entity
+        elif type_ == "listeners":
+            prefix = f"{entity}_listeners"
+        else:
+            prefix = type_
         database = f"{prefix}_{range_}_{today}"
 
     params["database"] = database
@@ -130,6 +135,33 @@ def request_sitewide_stats(type_, range_, entity):
         params["entity"] = entity
 
     send_request_to_spark_cluster(f"stats.sitewide.{type_}", **params)
+
+
+@cli.command(name="request_entity_stats")
+@click.option("--type", 'type_', type=click.Choice(['listeners']), help="Type of statistics to calculate", required=True)
+@click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
+              help="Time range of statistics to calculate", required=True)
+@click.option("--entity", type=click.Choice(['artists', 'release_groups']),
+              help="Entity for which statistics should be calculated")
+@click.option("--database", type=str, help="Name of the couchdb database to store data in")
+def request_entity_stats(type_, range_, entity, database):
+    """ Send an entity stats request to the spark cluster """
+    params = {
+        "stats_range": range_,
+        "entity": entity
+    }
+
+    if not database:
+        today = date.today().strftime("%Y%m%d")
+        if type_ == "listeners":
+            prefix = f"{entity}_listeners"
+        else:
+            prefix = type_
+        database = f"{prefix}_{range_}_{today}"
+
+    params["database"] = database
+
+    send_request_to_spark_cluster(f"stats.entity.{type_}", **params)
 
 
 @cli.command(name="request_yim_new_release_stats")
@@ -477,6 +509,9 @@ def cron_request_all_stats(ctx):
 
         for stat in ["listening_activity"]:
             ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)
+
+        for entity in ["artists", "release_groups"]:
+            ctx.invoke(request_entity_stats, type="listeners", range_=stats_range, entity=entity)
 
 
 @cli.command(name='cron_request_similar_users')
