@@ -19,7 +19,6 @@ export type UserDailyActivityProps = {
 export type UserDailyActivityState = {
   data: UserDailyActivityData;
   loading: boolean;
-  graphContainerWidth?: number;
   errorMessage: string;
   hasError: boolean;
 };
@@ -29,8 +28,6 @@ export default class UserDailyActivity extends React.Component<
   UserDailyActivityState
 > {
   APIService: APIService;
-
-  graphContainer: React.RefObject<HTMLDivElement>;
 
   constructor(props: UserDailyActivityProps) {
     super(props);
@@ -45,14 +42,6 @@ export default class UserDailyActivity extends React.Component<
       errorMessage: "",
       hasError: false,
     };
-
-    this.graphContainer = React.createRef();
-  }
-
-  componentDidMount() {
-    window.addEventListener("resize", this.handleResize);
-
-    this.handleResize();
   }
 
   componentDidUpdate(prevProps: UserDailyActivityProps) {
@@ -69,10 +58,6 @@ export default class UserDailyActivity extends React.Component<
         this.loadData();
       }
     }
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("resize", this.handleResize);
   }
 
   getData = async (): Promise<UserDailyActivityResponse> => {
@@ -166,29 +151,11 @@ export default class UserDailyActivity extends React.Component<
     return result;
   };
 
-  handleResize = () => {
-    this.setState({
-      graphContainerWidth: this.graphContainer.current?.offsetWidth,
-    });
-  };
-
   render() {
-    const {
-      data,
-      loading,
-      graphContainerWidth,
-      hasError,
-      errorMessage,
-    } = this.state;
+    const { data, loading, hasError, errorMessage } = this.state;
 
     return (
-      <Card
-        style={{
-          marginTop: 20,
-          minHeight: (graphContainerWidth || 1200) * 0.4,
-        }}
-        ref={this.graphContainer}
-      >
+      <Card className="user-stats-card">
         <div className="row">
           <div className="col-xs-10">
             <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
@@ -209,7 +176,7 @@ export default class UserDailyActivity extends React.Component<
           </div>
         </div>
         <Loader isLoading={loading}>
-          {hasError && (
+          {hasError ? (
             <div
               style={{
                 display: "flex",
@@ -223,13 +190,10 @@ export default class UserDailyActivity extends React.Component<
                 {errorMessage}
               </span>
             </div>
-          )}
-          {!hasError && (
+          ) : (
             <div className="row">
               <div className="col-xs-12">
-                {graphContainerWidth && (
-                  <HeatMap data={data} width={graphContainerWidth} />
-                )}
+                <HeatMap data={data} />
               </div>
             </div>
           )}

@@ -173,23 +173,6 @@ describe.each([
       expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
     });
 
-    it('adds event listener for "resize" event', () => {
-      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
-        context: GlobalContextMock,
-      });
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(window, "addEventListener");
-      spy.mockImplementationOnce(() => {});
-      instance.syncStateWithURL = jest.fn();
-      instance.handleResize = jest.fn();
-      act(() => {
-        instance.componentDidMount();
-      });
-
-      expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
-    });
-
     it("calls getURLParams once", () => {
       wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
@@ -255,20 +238,6 @@ describe.each([
       instance.componentWillUnmount();
 
       expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
-    });
-
-    it('removes "resize" event listener', () => {
-      wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
-        context: GlobalContextMock,
-      });
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(window, "removeEventListener");
-      spy.mockImplementationOnce(() => {});
-      instance.handleResize = jest.fn();
-      instance.componentWillUnmount();
-
-      expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
     });
   });
 

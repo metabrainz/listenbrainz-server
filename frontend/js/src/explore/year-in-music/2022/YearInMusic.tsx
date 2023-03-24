@@ -950,7 +950,6 @@ export default class YearInMusic extends React.Component<
                       </span>
                     </div>
                     <CustomChoropleth
-                      width={1000}
                       data={artistMapDataForGraph}
                       selectedMetric={selectedMetric}
                       colorScaleRange={[

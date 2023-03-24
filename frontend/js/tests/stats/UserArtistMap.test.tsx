@@ -54,7 +54,6 @@ describe.each([
         wrapper!.setState({
           selectedMetric: "artist",
           data: userArtistMapProcessedDataArtist,
-          graphContainerWidth: 1200,
           loading: false,
         });
       });
@@ -71,30 +70,6 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
-    });
-  });
-
-  describe("componentDidMount", () => {
-    it('adds event listener for "resize" event', () => {
-      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(window, "addEventListener");
-      spy.mockImplementationOnce(() => {});
-      instance.handleResize = jest.fn();
-      instance.componentDidMount();
-
-      expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
-    });
-
-    it('calls "handleResize" once', () => {
-      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      instance.handleResize = jest.fn();
-      instance.componentDidMount();
-
-      expect(instance.handleResize).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -125,20 +100,6 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(instance.loadData).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("componentWillUnmount", () => {
-    it('removes event listener for "resize" event', () => {
-      wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(window, "removeEventListener");
-      spy.mockImplementationOnce(() => {});
-      instance.handleResize = jest.fn();
-      instance.componentWillUnmount();
-
-      expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
     });
   });
 
