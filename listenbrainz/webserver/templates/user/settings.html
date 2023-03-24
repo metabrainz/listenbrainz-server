@@ -11,7 +11,10 @@
     <!-- Page content -->
 	<div class="secondary-nav">
 		<ol class="breadcrumb">
-			<li class="active">Settings</li>
+			<li {{ 'class=active' if active_settings_section == 'info'}}><a href="{{ url_for('profile.info') }}">Settings</a></li>
+			{% if not active_settings_section == 'info' %}
+			<li class="active">{{ active_settings_section|title }}</li>
+			{% endif %}
 		</ol>
 	</div>
 

@@ -110,6 +110,7 @@ def info():
         "profile/info.html",
         user=current_user,
         user_setting=user_setting,
+        active_settings_section="info"
     )
 
 
