@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz import db, utils
@@ -6,7 +6,7 @@ import sqlalchemy
 
 
 def save_token(user_id: int, service: ExternalServiceType, access_token: str, refresh_token: str,
-               token_expires_ts: int, record_listens: bool, scopes: List[str], external_user_id: str = None):
+               token_expires_ts: int, record_listens: bool, scopes: List[str], external_user_id: Optional[str] = None):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
     Args:
