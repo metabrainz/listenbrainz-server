@@ -74,7 +74,8 @@ def set_troi_prefs():
     current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
     return render_template(
         "profile/troi_prefs.html",
-        props=orjson.dumps({"troi_prefs": current_troi_prefs}).decode("utf-8")
+        props=orjson.dumps({"troi_prefs": current_troi_prefs}).decode("utf-8"),
+        active_settings_section = "playlist-preferences"
     )
 
 
@@ -147,6 +148,7 @@ def import_data():
         user=current_user,
         user_has_email=user_has_email,
         props=orjson.dumps(props).decode("utf-8"),
+        active_settings_section="import"
     )
 
 
@@ -208,7 +210,7 @@ def export_data():
         response.mimetype = "text/json"
         return response
     else:
-        return render_template("user/export.html", user=current_user)
+        return render_template("user/export.html", user=current_user, active_settings_section="export-data")
 
 
 @profile_bp.route("/export-feedback/", methods=["POST"])
@@ -261,7 +263,8 @@ def delete():
     return render_template(
         'profile/delete.html',
         user=current_user,
-        form=form
+        form=form,
+        active_settings_section = 'delete-account'
     )
 
 
@@ -343,7 +346,8 @@ def music_services_details():
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
         critiquebrainz_user=critiquebrainz_user,
-        current_critiquebrainz_permissions=current_critiquebrainz_permissions
+        current_critiquebrainz_permissions=current_critiquebrainz_permissions,
+        active_settings_section="connect-services"
     )
 
 

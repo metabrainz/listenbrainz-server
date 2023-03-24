@@ -1,0 +1,52 @@
+{% extends 'base-react.html' %}
+{%- block title -%}
+  {% if current_user.musicbrainz_id == user.musicbrainz_id %}
+  Your
+  {% else %}
+  {{ user.musicbrainz_id }}'s&nbsp;
+  {%- endif -%}
+   Listens - ListenBrainz
+{%- endblock-%}
+{%- block content -%}
+    <!-- Page content -->
+	<div class="secondary-nav">
+		<ol class="breadcrumb">
+			<li class="active">Settings</li>
+		</ol>
+	</div>
+
+	
+	<div class="flex flex-wrap" id="settings">
+		<div class="tertiary-nav-vertical">
+			<p>
+				Add Music
+			</p>
+			<ul>
+				<li {{ 'class=active' if active_settings_section == 'connect-services'}}><a href="{{ url_for('profile.music_services_details') }}">Connect Spotify</a></li>
+				<li {{ 'class=active' if active_settings_section == 'import'}}><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
+				<li {{ 'class=active' if active_settings_section == 'add-listens'}}><a href="{{ url_for('index.add_data_info') }}">Add listens</a></li>
+				<li {{ 'class=active' if active_settings_section == 'missing-musicbrainz-data'}}><a href="{{ url_for('user.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Missing data</a></li>
+			</ul>
+			<p>
+				Account
+			</p>
+			<ul>
+				<li {{ 'class=active' if active_settings_section == 'timezone'}}><a href="{{ url_for('profile.select_timezone') }}">Timezone</a></li>
+				<li {{ 'class=active' if active_settings_section == 'playlist-preferences'}}><a href="{{ url_for('profile.set_troi_prefs') }}">Playlist preferences</a></li>
+				<li {{ 'class=active' if active_settings_section == 'export-data'}}><a href="{{ url_for('profile.export_data') }}">Export data</a></li>
+				<li {{ 'class=active' if active_settings_section == 'delete-listens'}}><a href="{{ url_for('profile.delete_listens') }}">Delete listens</a></li>
+				<li {{ 'class=active' if active_settings_section == 'delete-account'}}><a href="{{ url_for('profile.delete') }}">Delete account</a></li>
+			</ul>
+			
+		</div>
+		<div role="main">
+			{% block settings_content %}
+			{% endblock %}
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+{% endblock %}
