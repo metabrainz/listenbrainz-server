@@ -36,16 +36,14 @@ SEARCH_USER_LIMIT = 10
 @crossdomain
 @ratelimit()
 def search_user():
+    """Search a ListenBrainz registered user.
+    """
     search_term = request.args.get("search_term")
     if search_term:
         users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT)
     else:
         users = []
-    return jsonify(
-        {
-            'users': users
-            }
-            )
+    return jsonify({'users': users})
 
 
 @api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
@@ -633,6 +631,27 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
                                                                           offset=offset)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
+@api_bp.route("/user/<user_name>/services", methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+def get_registered_services(user_name):
+    """Fetch a list of registered services for the user. Empty if none registered.
+
+    :param user_name: Name of the user.
+    :statuscode 404: User not found
+    """
+    user = db_user.get_by_mb_id(user_name)
+    
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
+    
+    from listenbrainz.domain.external_service import ExternalService
+
+    services = ExternalService().get_registered_services(user["id"])
+ 
+    return jsonify({"services": services})
 
 
 def _get_listen_type(listen_type):

@@ -154,3 +154,20 @@ def get_token(user_id: int, service: ExternalServiceType) -> Union[dict, None]:
                 'service': service.value
             })
         return result.mappings().first()
+
+
+def get_registered_services(user_id: int) -> Union[dict, None]:
+    """ Get a list services that are already registered by the user.
+
+    Args:
+        user_id: the ListenBrainz row ID of the user
+    """
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT service 
+              FROM external_service_oauth
+             WHERE user_id = :user_id
+            """), {
+                'user_id': user_id
+            })
+        return result.mappings().first()
