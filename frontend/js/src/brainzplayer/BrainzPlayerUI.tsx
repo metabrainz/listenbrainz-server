@@ -12,6 +12,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isNaN as _isNaN } from "lodash";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastMsg } from "./BrainzPlayer";
 import ProgressBar from "./ProgressBar";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import MenuOptions from "./MenuOptions";
@@ -33,11 +36,6 @@ type BrainzPlayerUIProps = {
   seekToPositionMs: (msTimeCode: number) => void;
   currentListen?: Listen | JSPFTrack;
   listenBrainzAPIBaseURI: string;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 type PlaybackControlButtonProps = {
@@ -71,7 +69,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     listenBrainzAPIBaseURI,
     currentListen,
     trackUrl,
-    newAlert,
   } = props;
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const { currentUser } = React.useContext(GlobalAppContext);
@@ -141,10 +138,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           throw response.statusText;
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Error while submitting feedback",
-          error?.message ?? error.toString()
+        toast.error(
+          <ToastMsg
+            title="Error while submitting feedback"
+            message={error?.message ?? error.toString()}
+          />
         );
       }
     }

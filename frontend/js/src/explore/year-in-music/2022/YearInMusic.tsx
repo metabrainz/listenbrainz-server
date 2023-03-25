@@ -1227,7 +1227,6 @@ export default class YearInMusic extends React.Component<
         </div>
         <BrainzPlayer
           listens={listens}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}

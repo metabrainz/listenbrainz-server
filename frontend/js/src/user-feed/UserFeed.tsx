@@ -888,7 +888,6 @@ export default class UserFeedPage extends React.Component<
           </div>
           <BrainzPlayer
             listens={listens}
-            newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}

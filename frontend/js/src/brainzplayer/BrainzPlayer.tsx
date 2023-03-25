@@ -14,6 +14,8 @@ import {
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import BrainzPlayerUI from "./BrainzPlayerUI";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
@@ -67,11 +69,6 @@ export type DataSourceProps = {
 
 export type BrainzPlayerProps = {
   listens: Array<Listen | JSPFTrack>;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
   refreshSpotifyToken: () => Promise<string>;
   refreshYoutubeToken: () => Promise<string>;
   listenBrainzAPIBaseURI: string;
@@ -93,6 +90,10 @@ export type BrainzPlayerState = {
   continuousPlaybackTime: number;
 };
 
+export type ToastMsgProps = {
+  title: string;
+  message: string | JSX.Element;
+};
 /**
  * Due to some issue with TypeScript when accessing static methods of an instance when you don't know
  * which class it is, we have to manually determine the class of the instance and call MyClass.staticMethod().
@@ -118,6 +119,14 @@ function isListenFromDatasource(
   return undefined;
 }
 
+export function ToastMsg({ title, message }: ToastMsgProps) {
+  return (
+    <div>
+      <b>{title}</b>
+      <p>{message}</p>
+    </div>
+  );
+}
 export default class BrainzPlayer extends React.Component<
   BrainzPlayerProps,
   BrainzPlayerState
@@ -318,34 +327,31 @@ export default class BrainzPlayer extends React.Component<
   };
 
   handleError = (error: BrainzPlayerError, title?: string): void => {
-    const { newAlert } = this.props;
     if (!error) {
       return;
     }
-    newAlert(
-      "danger",
-      title || "Playback error",
-      _isString(error)
-        ? error
-        : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${
-            error.message || error.statusText
-          }`
+    const message = _isString(error)
+      ? error
+      : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${
+          error.message || error.statusText
+        }`;
+    toast.error(
+      <ToastMsg title={title || "Playback error"} message={message} />
     );
   };
 
   handleWarning = (message: string | JSX.Element, title?: string): void => {
-    const { newAlert } = this.props;
-    newAlert("warning", title || "Playback error", message);
+    toast.warn(
+      <ToastMsg title={title || "Playback error"} message={message} />
+    );
   };
 
   handleSuccess = (message: string | JSX.Element, title?: string): void => {
-    const { newAlert } = this.props;
-    newAlert("success", title || "Success", message);
+    toast.success(<ToastMsg title={title || "Success"} message={message} />);
   };
 
   handleInfoMessage = (message: string | JSX.Element, title?: string): void => {
-    const { newAlert } = this.props;
-    newAlert("info", title || "", message);
+    toast.info(<ToastMsg title={title || ""} message={message} />);
   };
 
   invalidateDataSource = (
@@ -794,7 +800,6 @@ export default class BrainzPlayer extends React.Component<
       refreshSpotifyToken,
       refreshYoutubeToken,
       listenBrainzAPIBaseURI,
-      newAlert,
     } = this.props;
     const { youtubeAuth, spotifyAuth } = this.context;
 
@@ -821,7 +826,6 @@ export default class BrainzPlayer extends React.Component<
           currentDataSourceName={
             this.dataSources[currentDataSourceIndex]?.current?.name
           }
-          newAlert={newAlert}
         >
           <SpotifyPlayer
             show={
@@ -885,6 +889,16 @@ export default class BrainzPlayer extends React.Component<
             handleSuccess={this.handleSuccess}
           />
         </BrainzPlayerUI>
+        <ToastContainer
+          position="bottom-right"
+          autoClose={8000}
+          hideProgressBar
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnHover
+          theme="light"
+        />
       </div>
     );
   }

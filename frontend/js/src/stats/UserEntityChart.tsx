@@ -674,7 +674,6 @@ export default class UserEntityChart extends React.Component<
 
         <BrainzPlayer
           listens={listenableItems}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
