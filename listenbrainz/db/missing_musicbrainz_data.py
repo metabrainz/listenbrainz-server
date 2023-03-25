@@ -114,7 +114,7 @@ def get_user_missing_musicbrainz_data(user_id: int, source: str):
     except ValidationError:
         current_app.logger.error("""ValidationError when getting missing musicbrainz data for source "{source}"
                                  for user with user_id: {user_id}. Data: {data}""".format(source=source, user_id=user_id,
-                                 data=orjson.dumps(row['data'], indent=4)), exc_info=True)
+                                 data=orjson.dumps(row['data'], option=orjson.OPT_INDENT_2)), exc_info=True)
         return None, None
 
 
