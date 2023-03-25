@@ -37,6 +37,8 @@ SEARCH_USER_LIMIT = 10
 @ratelimit()
 def search_user():
     """Search a ListenBrainz registered user.
+
+    :param search_term: Input on which search operation is to be performed.
     """
     search_term = request.args.get("search_term")
     if search_term:
@@ -639,17 +641,17 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 def get_registered_services(user_name):
     """Fetch a list of registered services for the user. Empty if none registered.
 
-    :param user_name: Name of the user.
     :statuscode 404: User not found
     """
+
     user = db_user.get_by_mb_id(user_name)
     
     if not user:
         raise APINotFound("User %s not found" % user_name)
     
-    from listenbrainz.domain.external_service import ExternalService
+    from listenbrainz.db.external_service_oauth import get_registered_services
 
-    services = ExternalService().get_registered_services(user["id"])
+    services = get_registered_services(user["id"])
  
     return jsonify({"services": services})
 

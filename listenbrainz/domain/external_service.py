@@ -39,9 +39,6 @@ class ExternalService(ABC):
     def get_user(self, user_id: int) -> Union[dict, None]:
         return external_service_oauth.get_token(user_id=user_id, service=self.service)
 
-    def get_registered_services(self, user_id: int) -> Union[dict, None]:
-        return external_service_oauth.get_registered_services(user_id=user_id)
-
     def user_oauth_token_has_expired(self, user: dict, within_minutes: int = 5) -> bool:
         """Check if a user's oauth token has expired (within a threshold)
 
