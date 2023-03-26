@@ -15,7 +15,6 @@ import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import BrainzPlayerUI from "./BrainzPlayerUI";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";

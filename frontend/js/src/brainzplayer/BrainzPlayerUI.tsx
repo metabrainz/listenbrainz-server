@@ -13,7 +13,6 @@ import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslin
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { isNaN as _isNaN } from "lodash";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { ToastMsg } from "./BrainzPlayer";
 import ProgressBar from "./ProgressBar";
 import GlobalAppContext from "../utils/GlobalAppContext";
