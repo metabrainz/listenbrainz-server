@@ -148,6 +148,7 @@ def get_token(user_id: int, service: ExternalServiceType) -> Union[dict, None]:
                  , last_updated
                  , token_expires
                  , scopes
+                 , external_user_id
               FROM external_service_oauth
               JOIN "user"
                 ON "user".id = external_service_oauth.user_id
