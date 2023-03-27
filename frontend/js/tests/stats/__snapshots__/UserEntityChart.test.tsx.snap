@@ -32087,7 +32087,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -32307,7 +32307,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -32527,7 +32527,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -32747,7 +32747,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -32967,7 +32967,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -33187,7 +33187,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -33407,7 +33407,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -33627,7 +33627,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -33847,7 +33847,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -34067,7 +34067,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -34287,7 +34287,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -34507,7 +34507,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -34727,7 +34727,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -34947,7 +34947,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -35167,7 +35167,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -35387,7 +35387,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -35607,7 +35607,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -35827,7 +35827,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -36047,7 +36047,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -36267,7 +36267,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -36487,7 +36487,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -36707,7 +36707,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -36927,7 +36927,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -37147,7 +37147,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
@@ -37367,7 +37367,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     className="main-content"
                   >
                     <div
-                      className="listen-thumbnail not-mapped"
+                      className="listen-thumbnail"
                       data-target="#MapToMusicBrainzRecordingModal"
                       data-toggle="modal"
                       onClick={[Function]}
