@@ -14,7 +14,7 @@ markupsafe == 2.1.1
 psycopg2 == 2.9.5
 python-dateutil == 2.8.2
 ujson == 5.4.0
-redis == 4.3.3
+redis == 4.5.3
 yattag == 1.14.0
 xmltodict == 0.13.0
 oauth2client == 4.1.3
