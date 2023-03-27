@@ -222,6 +222,9 @@ export default class BrainzPlayer extends React.Component<
       case "play-listen":
         this.playListen(payload);
         break;
+      case "force-play":
+        this.togglePlay();
+        break;
       default:
       // do nothing
     }
