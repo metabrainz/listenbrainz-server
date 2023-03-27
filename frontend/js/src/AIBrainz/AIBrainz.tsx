@@ -11,22 +11,20 @@ import {
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getPageProps } from "../utils/utils";
 
-const totallyInnocentListen = {
+const totallyInnocentListen: Listen = {
   listened_at: 1654079332,
   track_metadata: {
     additional_info: {
+      youtube_id: "dQw4w9WgXcQ",
+      recording_mbid: "8f3471b5-7e6a-48da-86a9-c1c07a0f47ae",
+      recording_msid: "790b2544-5675-4f2b-b714-6b373fca0c80",
+      release_mbid: "bf9e91ea-8029-4a04-a26a-224e00a83266",
+    },
+    mbid_mapping: {
       artist_mbids: ["db92a151-1ac2-438b-bc43-b82e149ddd50"],
-      artists: [
-        {
-          artist_credit_name: "Rick Astley",
-          artist_mbid: "db92a151-1ac2-438b-bc43-b82e149ddd50",
-          join_phrase: "",
-        },
-      ],
       caa_id: 30721131344,
       caa_release_mbid: "bf9e91ea-8029-4a04-a26a-224e00a83266",
       recording_mbid: "8f3471b5-7e6a-48da-86a9-c1c07a0f47ae",
-      recording_msid: "790b2544-5675-4f2b-b714-6b373fca0c80",
       release_mbid: "bf9e91ea-8029-4a04-a26a-224e00a83266",
     },
     artist_name: "Rick Astley",
@@ -40,6 +38,7 @@ type AIBrainzComponentProps = {} & WithAlertNotificationsInjectedProps;
 function AIBrainzComponent(props: AIBrainzComponentProps) {
   const { newAlert } = props;
   const { APIService } = useContext(GlobalAppContext);
+  const [submitted, setSubmitted] = useState(false);
   const [inputs, setInputs] = useState({
     checkbox1: true,
     checkbox2: false,
@@ -57,11 +56,24 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
       // not confirmed
       return;
     }
+
     window.postMessage(
       { brainzplayer_event: "play-listen", payload: totallyInnocentListen },
       window.location.origin
     );
     window.postMessage({ aibrainz: "confetti-cannon" }, window.location.origin);
+    setSubmitted(true);
+    setInputs({
+      checkbox1: false,
+      checkbox2: false,
+      checkbox3: false,
+      checkbox4: false,
+      checkbox5: false,
+      checkbox6: false,
+      checkbox7: false,
+      checkbox8: false,
+      checkbox9: true,
+    });
     setTimeout(() => {
       // Jerry-rigged autoplay feature
       window.postMessage(
@@ -97,6 +109,7 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
         <br />
         <small>Customize your playlist accroding to your tastes</small>
       </p>
+      {submitted && <p>Never gonna…</p>}
       <table className="settings">
         <tr>
           <td>
@@ -109,7 +122,9 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
                 checked={inputs.checkbox1}
               />
               <div className="toggle-switch" />
-              <span className="toggle-label">Recent only</span>
+              <span className="toggle-label">
+                {submitted ? "Give you up" : "Recent only"}
+              </span>
             </label>
           </td>
           <td>
@@ -122,7 +137,9 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
                 checked={inputs.checkbox2}
               />
               <div className="toggle-switch" />
-              <span className="toggle-label">Lenticles</span>
+              <span className="toggle-label">
+                {submitted ? "Let you down" : "Lenticles"}
+              </span>
             </label>
           </td>
           <td>
@@ -135,7 +152,9 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
                 checked={inputs.checkbox3}
               />
               <div className="toggle-switch" />
-              <span className="toggle-label">Popular</span>
+              <span className="toggle-label">
+                {submitted ? "Let you down" : "Popular"}
+              </span>
             </label>
           </td>
           <td>
@@ -148,7 +167,9 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
                 checked={inputs.checkbox4}
               />
               <div className="toggle-switch" />
-              <span className="toggle-label">Upbeat</span>
+              <span className="toggle-label">
+                {submitted ? "Desert you" : "Upbeat"}
+              </span>
             </label>
           </td>
         </tr>
@@ -163,7 +184,9 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
                 checked={inputs.checkbox5}
               />
               <div className="toggle-switch" />
-              <span className="toggle-label">Personal data</span>
+              <span className="toggle-label">
+                {submitted ? "Make you cry" : "Personal data"}
+              </span>
             </label>
           </td>
           <td>
@@ -176,7 +199,9 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
                 checked={inputs.checkbox6}
               />
               <div className="toggle-switch" />
-              <span className="toggle-label">Debug mode</span>
+              <span className="toggle-label">
+                {submitted ? "Say goodbye" : "Debug mode"}
+              </span>
             </label>
           </td>
           <td>
@@ -189,7 +214,9 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
                 checked={inputs.checkbox7}
               />
               <div className="toggle-switch" />
-              <span className="toggle-label">Niche</span>
+              <span className="toggle-label">
+                {submitted ? "Tell a lie" : "Niche"}
+              </span>
             </label>
           </td>
           <td>
@@ -202,7 +229,9 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
                 checked={inputs.checkbox8}
               />
               <div className="toggle-switch" />
-              <span className="toggle-label">Downbeat</span>
+              <span className="toggle-label">
+                {submitted ? "Hurt you" : "Downbeat"}
+              </span>
             </label>
           </td>
         </tr>
