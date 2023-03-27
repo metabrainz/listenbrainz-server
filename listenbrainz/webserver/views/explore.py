@@ -63,3 +63,11 @@ def cover_art_collage(year: int = 2022):
     return render_template(
         "explore/cover-art-collage.html"
     )
+
+@explore_bp.route("/ai-brainz/")
+def ai_brainz():
+    """ Explore your love of Rick """
+
+    return render_template(
+        "explore/ai-brainz.html"
+    )

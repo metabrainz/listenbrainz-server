@@ -1,0 +1,97 @@
+{%- extends 'base-react.html' -%}
+
+{% block title %}
+AIBrainz
+{% endblock %}
+
+{% block head %}
+   {{ super() }}
+   
+   <style type="text/css">
+      #AIBrainz {
+        text-align: center;
+      }
+      
+      .toggle {
+        cursor: pointer;
+        display: inline-block;
+      }
+
+      .toggle-switch {
+        display: inline-block;
+        background: #ccc;
+        border-radius: 16px;
+        width: 42px;
+        height: 18px;
+        position: relative;
+        vertical-align: middle;
+        transition: background 0.25s;
+      }
+      .toggle-switch:before, .toggle-switch:after {
+        content: "";
+      }
+      .toggle-switch:before {
+        display: block;
+        background: linear-gradient(to bottom, #fff 0%, #eee 100%);
+        border-radius: 50%;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+        width: 19px;
+        height: 19px;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        transition: left 0.25s;
+      }
+      .toggle:hover .toggle-switch:before {
+        background: linear-gradient(to bottom, #fff 0%, #fff 100%);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+      }
+      .toggle-checkbox:checked + .toggle-switch {
+        background: #353070;
+      }
+      .toggle-checkbox:checked + .toggle-switch:before {
+        left: 23px;
+      }
+
+      .toggle-checkbox {
+        position: absolute;
+        visibility: hidden;
+      }
+
+      .toggle-label {
+        margin-left: 5px;
+        position: relative;
+        top: 2px;
+      }
+      .big-ai-button {
+        margin-top:1.5em;
+        margin-bottom:1.5em;
+        width: 200px;
+        min-height: 170px;
+        background-color: #353070;
+        color: white;
+        padding: 1em;
+        border-radius: 15px;
+        font-size: 2em;
+        text-align: center;
+      }
+      .settings{
+        margin-left: auto;
+        margin-right: auto;
+      }
+  </style>
+{% endblock %}
+
+<!-- these props are used in the navbar to highlight the navbar items -->
+{% set active_page = "explore" %}
+
+{% block content %}
+
+    <div id="react-container"></div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ get_static_path('AIBrainz.js') }}" type="text/javascript"></script>
+{% endblock %}
