@@ -2,6 +2,7 @@ import Sentry, { ErrorBoundary } from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import React, { useCallback, useContext, useState } from "react";
 import { createRoot } from "react-dom/client";
+import ReactTooltip from "react-tooltip";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
   withAlertNotifications,
@@ -48,12 +49,19 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
     checkbox6: false,
     checkbox7: true,
     checkbox8: false,
+    checkbox9: false,
   });
+  const isConfirmed = Boolean(inputs.checkbox9);
   const onConfirm = useCallback(() => {
+    if (!isConfirmed) {
+      // not confirmed
+      return;
+    }
     window.postMessage(
       { brainzplayer_event: "play-listen", payload: totallyInnocentListen },
       window.location.origin
     );
+    window.postMessage({ aibrainz: "confetti-cannon" }, window.location.origin);
     setTimeout(() => {
       // Jerry-rigged autoplay feature
       window.postMessage(
@@ -61,7 +69,7 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
         window.location.origin
       );
     }, 1000);
-  }, []);
+  }, [isConfirmed]);
 
   const onCheckboxChange = (
     checkboxEvent: React.ChangeEvent<HTMLInputElement>
@@ -199,7 +207,32 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
           </td>
         </tr>
       </table>
-      <button className="big-ai-button" type="button" onClick={onConfirm}>
+      <div className="flex confirmation">
+        <input
+          type="checkbox"
+          onChange={onCheckboxChange}
+          name="checkbox9"
+          checked={inputs.checkbox9}
+        />
+        <div>
+          I give my permission for AIBrainz to scan all my apps and devices, for
+          music history.
+          <br />
+          MetaBrainz is committed to open-source and data-privacy, and we will
+          delete all personal information as soon as the AI has completed it’s
+          playlist generation.
+        </div>
+      </div>
+      {!inputs.checkbox9 && (
+        <div className="alert alert-warning" style={{ marginTop: "1em" }}>
+          You must accept the permissions above before you can continue
+        </div>
+      )}
+      <button
+        className={`big-ai-button ${!inputs.checkbox9 ? "disabled" : ""}`}
+        type="button"
+        onClick={onConfirm}
+      >
         <svg
           width="45"
           height="46"
@@ -217,7 +250,6 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
       <p>
         Proudly powered by
         <br />
-        {/* AIBrainz logo */}
         <svg
           width="157"
           height="30"
