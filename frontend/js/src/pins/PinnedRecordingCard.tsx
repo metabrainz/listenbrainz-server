@@ -6,18 +6,13 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import {
-  preciseTimestamp,
-  getListenablePin,
   pinnedRecordingToListen,
   getArtistName,
   getTrackName,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import Card from "../components/Card";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
-
-export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type PinnedRecordingCardProps = {
   pinnedRecording: PinnedRecording;
