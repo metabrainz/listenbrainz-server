@@ -109,9 +109,7 @@ def delete_listens():
          RETURNING l.user_id, l.created
         ), update_counts AS (
             SELECT user_id
-                 -- count only listens which were created earlier than the the existing count high
-                 -- watermark in listen metadata table
-                 , count(*) FILTER (WHERE dl.created < lm.created) AS deleted_count
+                 , count(*) AS deleted_count
               FROM deleted_listens dl
               JOIN listen_user_metadata lm
              USING (user_id)

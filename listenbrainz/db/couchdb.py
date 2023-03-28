@@ -1,9 +1,9 @@
 import json
 import re
-from typing import TextIO
+from typing import BinaryIO
 
 import requests
-import ujson
+import orjson
 from requests.adapters import HTTPAdapter
 from sentry_sdk import start_span
 
@@ -133,7 +133,7 @@ def fetch_data(prefix: str, user_id: int):
 def insert_data(database: str, data: list[dict]):
     """ Insert the given data into the specified database. """
     with start_span(op="serializing", description="serialize data to json"):
-        docs = ujson.dumps({"docs": data})
+        docs = orjson.dumps({"docs": data})
 
     with start_span(op="http", description="insert docs in couchdb using api"):
         couchdb_url = f"{get_base_url()}/{database}/_bulk_docs"
@@ -207,7 +207,7 @@ def _get_requests_session():
     return http
 
 
-def dump_database(prefix: str, fp: TextIO):
+def dump_database(prefix: str, fp: BinaryIO):
     """ Dump the contents of the earliest database of the asked type.
 
         The earliest database of the type is chosen because its most probably the complete one while
@@ -239,7 +239,7 @@ def dump_database(prefix: str, fp: TextIO):
                     "limit": limit,
                     "include_docs": True
                 })
-                rows = ujson.loads(response.content)["rows"]
+                rows = orjson.loads(response.content)["rows"]
                 for row in rows:
                     doc = row["doc"]
                     doc.pop("_id", None)
@@ -250,7 +250,6 @@ def dump_database(prefix: str, fp: TextIO):
                     if not doc:
                         continue
 
-                    ujson.dump(doc, fp)
-                    fp.write("\n")
+                    fp.write(orjson.dumps(doc, option=orjson.OPT_APPEND_NEWLINE))
     finally:
         unlock_database(database)

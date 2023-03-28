@@ -142,7 +142,6 @@
       "contribution",
       "threshold",
       "limit",
-      "filter_artist_credit",
       "skip"
     ]
   },
@@ -155,7 +154,6 @@
       "contribution",
       "threshold",
       "limit",
-      "filter_artist_credit",
       "skip"
     ]
   },

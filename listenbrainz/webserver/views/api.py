@@ -1,8 +1,7 @@
-import time
 from operator import itemgetter
 
 import psycopg2
-import ujson
+import orjson
 from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify, current_app
@@ -83,7 +82,7 @@ def submit_listen():
         )
 
     try:
-        data = ujson.loads(raw_data.decode("utf-8"))
+        data = orjson.loads(raw_data.decode("utf-8"))
     except ValueError as e:
         log_raise_400("Cannot parse JSON document: %s" % e)
 
@@ -367,7 +366,7 @@ def latest_import():
         user = validate_auth_header()
 
         try:
-            data = ujson.loads(request.get_data())
+            data = orjson.loads(request.get_data())
             ts = int(data.get('ts', 0))
             service_name = data.get('service', 'lastfm')
             service = ExternalServiceType[service_name.upper()]

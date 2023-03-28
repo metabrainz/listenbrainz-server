@@ -12,13 +12,9 @@ import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
 import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import {
-  faCompactDisc,
-  faLink,
-  faTrashAlt,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -29,7 +25,7 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
-import AddListenModal from "../add-listen/add-listen-modal";
+import AddListenModal from "../add-listen/AddListenModal";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
@@ -42,8 +38,6 @@ import {
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCountCard from "../listens/ListenCountCard";
-import SimpleModal from "../utils/SimpleModal";
-import MbidMappingModal from "../mbid-mapping/MbidMappingModal";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -62,7 +56,6 @@ export interface ListensState {
   previousListenTs?: number;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
-  recordingToMapToMusicbrainz?: Listen;
   dateTimePickerValue: Date;
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
@@ -98,7 +91,6 @@ export default class Listens extends React.Component<
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
-      recordingToMapToMusicbrainz: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
       dateTimePickerValue: nextListenTs
@@ -253,7 +245,7 @@ export default class Listens extends React.Component<
         playingNow.track_metadata.artist_name,
         false
       );
-      playingNow.track_metadata.mbid_mapping = metadata as MbidMapping;
+      playingNow.track_metadata.mbid_mapping = metadata as MBIDMapping;
 
       await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {
@@ -538,10 +530,6 @@ export default class Listens extends React.Component<
       : 0;
   };
 
-  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
-    this.setState({ recordingToMapToMusicbrainz });
-  };
-
   deleteListen = async (listen: Listen) => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -674,22 +662,9 @@ export default class Listens extends React.Component<
       (Boolean(listenedAt) || listenedAt === 0) &&
       Boolean(recordingMSID);
 
-    const canManuallyMap = Boolean(recordingMSID);
-
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
 
-    if (canManuallyMap) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Link with MusicBrainz"
-          icon={faLink}
-          action={this.updateRecordingToMapToMusicbrainz.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#MapToMusicBrainzRecordingModal"
-        />
-      );
-    }
     if (canDelete) {
       additionalMenuItems.push(
         <ListenControl
@@ -738,7 +713,6 @@ export default class Listens extends React.Component<
       nextListenTs,
       previousListenTs,
       dateTimePickerValue,
-      recordingToMapToMusicbrainz,
       userPinnedRecording,
       playingNowListen,
     } = this.state;
@@ -770,6 +744,11 @@ export default class Listens extends React.Component<
             <button
               type="button"
               className="btn btn-primary add-listen-btn"
+              onClick={() => {
+                NiceModal.show(AddListenModal, {
+                  newAlert,
+                });
+              }}
               data-Toggle="modal"
               data-Target="#AddListenModal"
             >
@@ -946,17 +925,10 @@ export default class Listens extends React.Component<
                     </a>
                   </li>
                 </ul>
-                {currentUser && (
-                  <MbidMappingModal
-                    listenToMap={recordingToMapToMusicbrainz}
-                    newAlert={newAlert}
-                  />
-                )}
               </div>
             )}
           </div>
         </div>
-        {currentUser && <AddListenModal newAlert={newAlert} />}
         <BrainzPlayer
           listens={allListenables}
           newAlert={newAlert}
@@ -995,17 +967,11 @@ document.addEventListener("DOMContentLoaded", () => {
   } = reactProps;
 
   const ListensWithAlertNotifications = withAlertNotifications(Listens);
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <ListensWithAlertNotifications
             initialAlerts={optionalAlerts}

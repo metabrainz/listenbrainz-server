@@ -29,7 +29,7 @@ import {
   WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import SpotifyAPIService from "../utils/SpotifyAPIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
@@ -48,7 +48,6 @@ import {
   JSPFTrackToListen,
 } from "./utils";
 import { getPageProps } from "../utils/utils";
-import SimpleModal from "../utils/SimpleModal";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;
@@ -873,17 +872,10 @@ document.addEventListener("DOMContentLoaded", () => {
     PlaylistPage
   );
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <PlaylistPageWithAlertNotifications
             initialAlerts={optionalAlerts}

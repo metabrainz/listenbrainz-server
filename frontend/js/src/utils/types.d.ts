@@ -45,17 +45,17 @@ interface AdditionalInfo {
   work_mbids?: Array<string> | null;
 }
 
-declare type MbidMappingArtist = {
+declare type MBIDMappingArtist = {
   artist_mbid: string;
   artist_credit_name: string;
   join_phrase: string;
 };
 
-declare type MbidMapping = {
+declare type MBIDMapping = {
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
-  artists?: Array<MbidMappingArtist>;
+  artists?: Array<MBIDMappingArtist>;
   caa_id?: number;
   caa_release_mbid?: string;
 };
@@ -423,7 +423,7 @@ declare type TrackMetadata = {
   recording_msid?: string;
   release_mbid?: string;
   additional_info?: AdditionalInfo;
-  mbid_mapping?: MbidMapping;
+  mbid_mapping?: MBIDMapping;
 };
 
 declare type FeedbackResponseWithTrackMetadata = FeedbackResponse & {
@@ -681,4 +681,4 @@ type UserFreshReleasesResponse = {
 
 declare type SearchUser = {
   user_name: string;
-}
+};

@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
   WithAlertNotificationsInjectedProps,
@@ -26,7 +26,6 @@ import {
   userChartEntityToListen,
 } from "./utils";
 import ListenCard from "../listens/ListenCard";
-import SimpleModal from "../utils/SimpleModal";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -683,17 +682,10 @@ document.addEventListener("DOMContentLoaded", () => {
     UserEntityChart
   );
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <UserEntityChartWithAlertNotifications
             initialAlerts={optionalAlerts}

@@ -22,7 +22,7 @@ in listenbrainz.db.dump
 import subprocess
 import tarfile
 
-import ujson
+import orjson
 
 import listenbrainz.db as db
 import listenbrainz.db.dump as db_dump
@@ -87,7 +87,7 @@ class DumpTestCase(DatabaseTestCase):
                     found.add(file_name[:-6])
                 if file_name == "artists_week.jsonl":
                     f = tar.extractfile(member)
-                    found_stats = [ujson.loads(line) for line in f.read().splitlines()]
+                    found_stats = [orjson.loads(line) for line in f.read().splitlines()]
                     for stat in found_stats:
                         del stat["last_updated"]
 

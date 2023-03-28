@@ -7,7 +7,7 @@ from listenbrainz.webserver.login import User
 from listenbrainz.webserver.utils import generate_string
 from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
-import ujson
+import orjson
 
 _musicbrainz = None
 _session_key = None
@@ -39,7 +39,7 @@ def init(client_id, client_secret, session_key='musicbrainz'):
 def musicbrainz_auth_session_decoder(message):
     """Decode the json oauth response from MusicBrainz, returning {} if the response isn't valid json"""
     try:
-        return ujson.loads(message.decode("utf-8"))
+        return orjson.loads(message)
     except ValueError:
         return {}
 

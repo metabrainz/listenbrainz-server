@@ -2,7 +2,7 @@ from flask import render_template, make_response, jsonify, request, has_request_
     current_app, Response
 from yattag import Doc
 import yattag
-import ujson
+import orjson
 import collections
 
 from listenbrainz.webserver.decorators import crossdomain
@@ -229,10 +229,10 @@ class InvalidAPIUsage(Exception):
         return Response(data, mimetype=content_type)
 
     def to_json(self):
-        return ujson.dumps({
+        return orjson.dumps({
             "error": self.api_error.code,
             "message": self.api_error.message
-        }, indent=4)
+        }, indent=4).decode("utf-8")
 
     def to_xml(self):
         doc, tag, text = Doc().tagtext()

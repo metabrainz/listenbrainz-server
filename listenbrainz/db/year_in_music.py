@@ -6,7 +6,7 @@ import os
 
 import psycopg2
 import sqlalchemy
-import ujson
+import orjson
 from flask import current_app, render_template
 from psycopg2.extras import execute_values, DictCursor
 from brainzutils import musicbrainz_db
@@ -60,11 +60,11 @@ def insert(key, year, data):
                JOIN "user"
                  ON "user".id = user_id::int
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(year=Literal(year), key=Literal(key))
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, ujson.loads(data).items())
+            execute_values(cursor, query, orjson.loads(data).items())
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
@@ -77,8 +77,8 @@ def insert_new_releases_of_top_artists(user_id, year, data):
             INSERT INTO statistics.year_in_music (user_id, year, data)
                  VALUES (:user_id ::int, :year, jsonb_build_object('new_releases_of_top_artists', :data :: jsonb))
             ON CONFLICT (user_id, year)
-          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
-        """), {"user_id": user_id, "year": year, "data": ujson.dumps(data)})
+          DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{}'::jsonb) || EXCLUDED.data
+        """), {"user_id": user_id, "year": year, "data": orjson.dumps(data).decode("utf-8")})
 
 
 def insert_similar_recordings(year, data):
@@ -97,7 +97,7 @@ def insert_similar_recordings(year, data):
                  ON other_user.id = similar_user.user_id::int
            GROUP BY "user".id
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(year=Literal(year))
     try:
         with connection.cursor() as cursor:
@@ -120,11 +120,11 @@ def handle_multi_large_insert(key, year, data):
                JOIN "user"
                  ON "user".id = user_id::int
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(key=Literal(key), year=Literal(year))
     try:
         with connection.cursor() as cursor:
-            values = [(user["user_id"], ujson.dumps(user["data"])) for user in data]
+            values = [(user["user_id"], orjson.dumps(user["data"]).decode("utf-8")) for user in data]
             execute_values(cursor, query, values)
         connection.commit()
     except psycopg2.errors.OperationalError:
@@ -143,11 +143,11 @@ def handle_insert_top_stats(entity, year, data):
                JOIN "user"
                  ON "user".id = user_id::int
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(key=Literal(f"top_{entity}"), count_key=Literal(f"total_{entity}_count"), year=Literal(year))
     try:
         with connection.cursor() as cursor:
-            values = [(user["user_id"], user["count"], ujson.dumps(user["data"])) for user in data]
+            values = [(user["user_id"], user["count"], orjson.dumps(user["data"]).decode("utf-8")) for user in data]
             execute_values(cursor, query, values)
         connection.commit()
     except psycopg2.errors.OperationalError:
@@ -196,12 +196,12 @@ def insert_playlists(year, data):
                FROM (VALUES %s) AS t(user_id, slug, playlist)
            GROUP BY user_id
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(year=Literal(year))
 
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, [(user, slug, ujson.dumps(playlist)) for user, slug, playlist in data])
+            execute_values(cursor, query, [(user, slug, orjson.dumps(playlist).decode("utf-8")) for user, slug, playlist in data])
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()

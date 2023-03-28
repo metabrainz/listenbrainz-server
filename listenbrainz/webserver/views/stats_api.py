@@ -1,10 +1,8 @@
 import calendar
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Dict, List, Tuple, Iterable
 
-import ujson
-from pydantic import ValidationError
 from requests import HTTPError
 
 import listenbrainz.db.stats as db_stats

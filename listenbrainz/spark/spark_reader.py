@@ -2,7 +2,7 @@
 import json
 import time
 
-import ujson
+import orjson
 from kombu import Connection, Message, Consumer, Exchange, Queue
 from kombu.mixins import ConsumerMixin
 
@@ -116,7 +116,7 @@ class SparkReader(ConsumerMixin):
             insert into the database accordingly.
         """
         self.app.logger.debug("Received a message, processing...")
-        response = ujson.loads(message.body)
+        response = orjson.loads(message.body)
         self.process_response(response)
         message.ack()
         self.app.logger.debug("Done!")

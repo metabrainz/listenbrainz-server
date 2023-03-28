@@ -13,15 +13,14 @@ import {
 } from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import { getArtistName, getPageProps, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import Loader from "../components/Loader";
-import SimpleModal from "../utils/SimpleModal";
-import MbidMappingModal from "../mbid-mapping/MbidMappingModal";
+import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
@@ -30,7 +29,6 @@ export type MissingMBDataProps = {
 
 export interface MissingMBDataState {
   missingData: Array<MissingMBData>;
-  recordingToMapToMusicbrainz?: Listen;
 
   currPage?: number;
   totalPages: number;
@@ -85,10 +83,6 @@ export default class MissingMBDataPage extends React.Component<
       );
       window.history.pushState(null, "", `?page=${updatedPage}`);
     }
-  };
-
-  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
-    this.setState({ recordingToMapToMusicbrainz });
   };
 
   handleClickNext = () => {
@@ -163,13 +157,7 @@ export default class MissingMBDataPage extends React.Component<
   };
 
   render() {
-    const {
-      missingData,
-      currPage,
-      totalPages,
-      loading,
-      recordingToMapToMusicbrainz,
-    } = this.state;
+    const { missingData, currPage, totalPages, loading } = this.state;
     const { user, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const missingMBDataAsListen = missingData.map((data) => {
@@ -203,47 +191,39 @@ export default class MissingMBDataPage extends React.Component<
               </div>
               {missingData.map((data, index) => {
                 let additionalActions;
+                const listen = missingMBDataAsListen[index];
                 if (currentUser?.auth_token) {
-                  const addToMB = (
+                  // Commenting this out for now because currently it leads to new eager users creating
+                  // a bunch of standalone recordings, and possible duplicates
+                  /* const addToMB = (
                     <ListenControl
                       buttonClassName="btn btn-sm"
                       icon={faPlus}
                       title="Add missing recording"
                       text=""
                       // eslint-disable-next-line react/jsx-no-bind
-                      action={this.submitMissingData.bind(
-                        this,
-                        missingMBDataAsListen[index]
-                      )}
+                      action={this.submitMissingData.bind(this, listen)}
                     />
-                  );
+                  ); */
 
-                  if (
-                    missingMBDataAsListen[index]?.track_metadata
-                      ?.additional_info?.recording_msid
-                  ) {
+                  if (listen?.track_metadata?.additional_info?.recording_msid) {
                     const linkWithMB = (
                       <ListenControl
                         buttonClassName="btn btn-sm btn-success"
                         text=""
                         title="Link with MusicBrainz"
                         icon={faLink}
-                        action={this.updateRecordingToMapToMusicbrainz.bind(
-                          this,
-                          missingMBDataAsListen[index]
-                        )}
+                        action={() => {
+                          NiceModal.show(MBIDMappingModal, {
+                            listenToMap: listen,
+                            newAlert,
+                          });
+                        }}
                         dataToggle="modal"
                         dataTarget="#MapToMusicBrainzRecordingModal"
                       />
                     );
-                    additionalActions = (
-                      <>
-                        {linkWithMB}
-                        {addToMB}
-                      </>
-                    );
-                  } else {
-                    additionalActions = addToMB;
+                    additionalActions = linkWithMB;
                   }
                 }
                 return (
@@ -298,12 +278,6 @@ export default class MissingMBDataPage extends React.Component<
                 </a>
               </li>
             </ul>
-            {currentUser && (
-              <MbidMappingModal
-                listenToMap={recordingToMapToMusicbrainz}
-                newAlert={newAlert}
-              />
-            )}
           </div>
         </div>
         <BrainzPlayer
@@ -338,20 +312,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const { missingData, user } = reactProps;
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const MissingMBDataPageWithAlertNotification = withAlertNotifications(
     MissingMBDataPage
   );
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <MissingMBDataPageWithAlertNotification
             initialAlerts={optionalAlerts}
