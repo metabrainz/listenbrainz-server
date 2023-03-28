@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import * as React from "react";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+const { useState } = React;
 
 type CoverArtWithFallbackProps = { imgSrc: string; altText?: string };
 
