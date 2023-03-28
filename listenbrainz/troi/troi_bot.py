@@ -93,7 +93,8 @@ def make_playlist_from_recommendations(user):
         "user_name": user,
         "upload": True,
         "token": token,
-        "created_for": user
+        "created_for": user,
+        "echo": False
     }
     for recs_type in ["top", "similar"]:
         # need to copy dict so that test mocks keep working
@@ -145,7 +146,7 @@ def run_daily_jams(user, existing_url, service):
 
     playlist = generate_playlist(DailyJamsPatch(), args)
 
-    if len(playlist.playlists) > 0:
+    if playlist is not None and len(playlist.playlists) > 0:
         url = current_app.config["SERVER_ROOT_URL"] + "/playlist/" + playlist.playlists[0].mbid
         message = f"""Your daily-jams playlist has been updated. <a href="{url}">Give it a listen!</a>."""
 

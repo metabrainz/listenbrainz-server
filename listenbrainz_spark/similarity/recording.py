@@ -14,9 +14,8 @@ RECORDINGS_PER_MESSAGE = 10000
 DEFAULT_TRACK_LENGTH = 180
 
 
-def build_sessioned_index(listen_table, metadata_table, session, max_contribution, threshold, limit, _filter, skip_threshold):
+def build_sessioned_index(listen_table, metadata_table, session, max_contribution, threshold, limit, skip_threshold):
     # TODO: Handle case of unmatched recordings breaking sessions!
-    filter_artist_credit = "AND NOT arrays_overlap(s1.artist_credit_mbids, s2.artist_credit_mbids)" if _filter else ""
     return f"""
             WITH listens AS (
                  SELECT user_id
@@ -60,7 +59,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                   JOIN sessions_filtered s2
                  USING (user_id, session_id)
                  WHERE s1.recording_mbid != s2.recording_mbid
-                       {filter_artist_credit}
+                   AND NOT arrays_overlap(s1.artist_credit_mbids, s2.artist_credit_mbids)
             ), user_contribtion_mbids AS (
                 SELECT user_id
                      , lexical_mbid0 AS mbid0
@@ -93,7 +92,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
     """
 
 
-def main(days, session, contribution, threshold, limit, filter_artist_credit, skip):
+def main(days, session, contribution, threshold, limit, skip):
     """ Generate similar recordings based on user listening sessions.
 
     Args:
@@ -103,7 +102,6 @@ def main(days, session, contribution, threshold, limit, filter_artist_credit, sk
         threshold: the minimum similarity score for two recordings to be considered similar
         limit: the maximum number of similar recordings to request for a given recording
             (this limit is instructive only, upto 2x number of recordings may be returned)
-        filter_artist_credit: whether to filter out tracks by same artist from a listening session
         skip: the minimum threshold in seconds to mark a listen as skipped. we cannot just mark a negative difference
             as skip because there may be a difference in track length in MB and music services and also issues in
             timestamping listens.
@@ -120,10 +118,10 @@ def main(days, session, contribution, threshold, limit, filter_artist_credit, sk
     metadata_df.createOrReplaceTempView(metadata_table)
 
     skip_threshold = -skip
-    query = build_sessioned_index(table, metadata_table, session, contribution, threshold, limit, filter_artist_credit, skip_threshold)
+    query = build_sessioned_index(table, metadata_table, session, contribution, threshold, limit, skip_threshold)
     data = run_query(query).toLocalIterator()
 
-    algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_filter_{filter_artist_credit}_skip_{skip}"
+    algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]

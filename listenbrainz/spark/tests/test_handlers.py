@@ -394,8 +394,8 @@ class HandlersTestCase(DatabaseTestCase):
             mock_send_mail.assert_not_called()
 
             calls = [
-                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'type': 'top'}),
-                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'type': 'similar'}),
+                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'top'}),
+                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'similar'}),
             ]
             mock_gen_playlist.assert_has_calls(calls)
 

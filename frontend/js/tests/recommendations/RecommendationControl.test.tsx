@@ -29,6 +29,5 @@ describe("RecommendationControl", () => {
     expect(wrapper.props().title).toEqual("This is a bad recommendation");
     expect(wrapper.props().icon).toEqual(faMehRegular);
     expect(wrapper.props().iconHover).toEqual(faMeh);
-    wrapper.unmount();
   });
 });

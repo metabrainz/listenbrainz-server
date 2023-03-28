@@ -60,7 +60,7 @@ def insert(key, year, data):
                JOIN "user"
                  ON "user".id = user_id::int
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(year=Literal(year), key=Literal(key))
     try:
         with connection.cursor() as cursor:
@@ -77,7 +77,7 @@ def insert_new_releases_of_top_artists(user_id, year, data):
             INSERT INTO statistics.year_in_music (user_id, year, data)
                  VALUES (:user_id ::int, :year, jsonb_build_object('new_releases_of_top_artists', :data :: jsonb))
             ON CONFLICT (user_id, year)
-          DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+          DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{}'::jsonb) || EXCLUDED.data
         """), {"user_id": user_id, "year": year, "data": orjson.dumps(data).decode("utf-8")})
 
 
@@ -97,7 +97,7 @@ def insert_similar_recordings(year, data):
                  ON other_user.id = similar_user.user_id::int
            GROUP BY "user".id
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(year=Literal(year))
     try:
         with connection.cursor() as cursor:
@@ -120,7 +120,7 @@ def handle_multi_large_insert(key, year, data):
                JOIN "user"
                  ON "user".id = user_id::int
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(key=Literal(key), year=Literal(year))
     try:
         with connection.cursor() as cursor:
@@ -143,7 +143,7 @@ def handle_insert_top_stats(entity, year, data):
                JOIN "user"
                  ON "user".id = user_id::int
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(key=Literal(f"top_{entity}"), count_key=Literal(f"total_{entity}_count"), year=Literal(year))
     try:
         with connection.cursor() as cursor:
@@ -196,7 +196,7 @@ def insert_playlists(year, data):
                FROM (VALUES %s) AS t(user_id, slug, playlist)
            GROUP BY user_id
         ON CONFLICT (user_id, year)
-      DO UPDATE SET data = statistics.year_in_music.data || EXCLUDED.data
+      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
     """).format(year=Literal(year))
 
     try:
