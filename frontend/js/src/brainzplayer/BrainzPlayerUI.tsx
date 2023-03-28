@@ -150,9 +150,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     }
   }
 
-  function getURLFromID(trackUrl: string | undefined): string | undefined {
+  function getURLFromID(trackID: string | undefined): string | undefined {
     if (currentDataSourceName === "youtube") {
-      return `https://www.youtube.com/watch?v=${trackUrl}`;
+      return `https://www.youtube.com/watch?v=${trackID}`;
     }
 
     return undefined;
