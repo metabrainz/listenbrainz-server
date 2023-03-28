@@ -96,5 +96,6 @@ describe("Recentlistens", () => {
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
+    wrapper.unmount();
   });
 });

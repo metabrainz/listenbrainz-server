@@ -74,6 +74,7 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
     });
 
     it("renders correctly for releases", async () => {
@@ -96,6 +97,7 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
     });
 
     it("renders correctly for recording", async () => {
@@ -118,6 +120,7 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
     });
 
     it("renders correctly if stats are not calculated", async () => {
@@ -138,6 +141,7 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
     });
   });
 
@@ -156,6 +160,7 @@ describe.each([
       });
 
       expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
+      wrapper.unmount();
     });
 
     it('adds event listener for "resize" event', () => {
@@ -173,6 +178,7 @@ describe.each([
       });
 
       expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
+      wrapper.unmount();
     });
 
     it("calls getURLParams once", () => {
@@ -190,6 +196,7 @@ describe.each([
       });
 
       expect(instance.getURLParams).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
 
     it("calls replaceState with correct parameters", () => {
@@ -210,6 +217,7 @@ describe.each([
         "",
         "?page=1&range=all_time&entity=artist"
       );
+      wrapper.unmount();
     });
 
     it("calls syncStateWithURL", () => {
@@ -224,6 +232,7 @@ describe.each([
       });
 
       expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
   });
 
@@ -242,6 +251,7 @@ describe.each([
       });
 
       expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
+      wrapper.unmount();
     });
 
     it('removes "resize" event listener', () => {
@@ -258,6 +268,7 @@ describe.each([
       });
 
       expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
+      wrapper.unmount();
     });
   });
 
@@ -276,6 +287,7 @@ describe.each([
       });
 
       expect(instance.setURLParams).toHaveBeenCalledWith(2, "", "");
+      wrapper.unmount();
     });
 
     it("calls syncStateWithURL once", () => {
@@ -292,6 +304,7 @@ describe.each([
       });
 
       expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
   });
 
@@ -310,6 +323,7 @@ describe.each([
       });
 
       expect(instance.setURLParams).toHaveBeenCalledWith(1, "week", "");
+      wrapper.unmount();
     });
 
     it("calls syncStateWithURL once", () => {
@@ -326,6 +340,7 @@ describe.each([
       });
 
       expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
   });
 
@@ -343,6 +358,7 @@ describe.each([
       });
 
       expect(setURLParamsSpy).toHaveBeenCalledWith(1, "", "release");
+      wrapper.unmount();
     });
 
     it("calls syncStateWithURL once", () => {
@@ -358,6 +374,7 @@ describe.each([
       });
 
       expect(syncStateWithURLSpy).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
   });
 
@@ -373,7 +390,7 @@ describe.each([
         return Promise.resolve(userArtistsResponse);
       });
 
-      act(async () => {
+      await act(async () => {
         const {
           maxListens,
           totalPages,
@@ -392,6 +409,7 @@ describe.each([
           new Date(userArtistsResponse.payload.to_ts * 1000)
         );
       });
+      wrapper.unmount();
     });
 
     it("gets data correctly for release", async () => {
@@ -404,7 +422,7 @@ describe.each([
       spy.mockImplementation((): any => {
         return Promise.resolve(userReleasesResponse);
       });
-      act(async () => {
+      await act(async () => {
         const {
           maxListens,
           totalPages,
@@ -423,6 +441,7 @@ describe.each([
           new Date(userReleasesResponse.payload.to_ts * 1000)
         );
       });
+      wrapper.unmount();
     });
 
     it("gets data correctly for recording", async () => {
@@ -435,7 +454,7 @@ describe.each([
       spy.mockImplementation((): any => {
         return Promise.resolve(userRecordingsResponse);
       });
-      act(async () => {
+      await act(async () => {
         const {
           maxListens,
           totalPages,
@@ -454,6 +473,7 @@ describe.each([
           new Date(userRecordingsResponse.payload.to_ts * 1000)
         );
       });
+      wrapper.unmount();
     });
   });
 
@@ -468,7 +488,7 @@ describe.each([
       spy.mockImplementation((): any => {
         return Promise.resolve(userArtistsResponse);
       });
-      act(async () => {
+      await act(async () => {
         await instance.getData(2, "all_time", "release");
       });
 
@@ -480,11 +500,12 @@ describe.each([
         25,
         25
       );
+      wrapper.unmount();
     });
   });
 
   describe("processData", () => {
-    it("processes data correctly for top artists", () => {
+    it("processes data correctly for top artists", async () => {
       const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
       });
@@ -492,13 +513,14 @@ describe.each([
       act(() => {
         wrapper.setState({ entity: "artist" });
       });
-      act(async () => {
+      await act(async () => {
         const data = instance.processData(
           userArtistsResponse as UserArtistsResponse,
           1
         );
         expect(data).toEqual(userArtistsProcessDataOutput);
       });
+      wrapper.unmount();
     });
 
     it("processes data correctly for top releases", () => {
@@ -516,6 +538,7 @@ describe.each([
         );
         expect(data).toEqual(userReleasesProcessDataOutput);
       });
+      wrapper.unmount();
     });
 
     it("processes data correctly for top recordings", () => {
@@ -534,6 +557,7 @@ describe.each([
         );
         expect(data).toEqual(userRecordingsProcessDataOutput);
       });
+      wrapper.unmount();
     });
     it("returns an empty array if no payload", () => {
       const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
@@ -547,6 +571,7 @@ describe.each([
 
         expect(result).toEqual([]);
       });
+      wrapper.unmount();
     });
   });
 
@@ -598,6 +623,7 @@ describe.each([
         entityCount: 50,
         hasError: false,
       });
+      wrapper.unmount();
     });
 
     it("sets state correctly if stats haven't been calculated", async () => {
@@ -628,6 +654,7 @@ describe.each([
         hasError: true,
         errorMessage: "Statistics for the user have not been calculated",
       });
+      wrapper.unmount();
     });
 
     it("sets state correctly if range is incorrect", async () => {
@@ -654,6 +681,7 @@ describe.each([
         hasError: true,
         errorMessage: "Invalid range: invalid_range",
       });
+      wrapper.unmount();
     });
 
     it("sets state correctly if entity is incorrect", async () => {
@@ -680,6 +708,7 @@ describe.each([
         hasError: true,
         errorMessage: "Invalid entity: invalid_entity",
       });
+      wrapper.unmount();
     });
 
     it("sets state correctly if page is incorrect", async () => {
@@ -706,6 +735,7 @@ describe.each([
         hasError: true,
         errorMessage: "Invalid page: 1.5",
       });
+      wrapper.unmount();
     });
     it("throws error if fetch fails", async () => {
       const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
@@ -721,6 +751,7 @@ describe.each([
         await instance.syncStateWithURL();
       });
       expect(spy).toHaveBeenCalledWith(mockError);
+      wrapper.unmount();
     });
   });
 
@@ -736,6 +767,7 @@ describe.each([
       expect(page).toEqual(1);
       expect(range).toEqual("all_time");
       expect(entity).toEqual("artist");
+      wrapper.unmount();
     });
 
     it("gets parameters if provided in the URL", () => {
@@ -752,6 +784,7 @@ describe.each([
       expect(page).toEqual(2);
       expect(range).toEqual("week");
       expect(entity).toEqual("release");
+      wrapper.unmount();
     });
   });
 
@@ -771,6 +804,7 @@ describe.each([
         "",
         "?page=2&range=all_time&entity=release"
       );
+      wrapper.unmount();
     });
   });
 });

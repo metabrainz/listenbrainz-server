@@ -19,7 +19,7 @@ export default function Bar(props: BarProps) {
   const { data, maxValue } = props;
 
   const renderTickValue = (tick: AxisTickProps<any>): JSX.Element => {
-    const datum: UserEntityDatum = data[tick.tickIndex];
+    const datum: UserEntityDatum = data?.[tick.tickIndex];
     const { idx } = datum;
     return (
       <g transform={`translate(${tick.x - 10}, ${tick.y + 7})`}>
@@ -54,7 +54,7 @@ export default function Bar(props: BarProps) {
       },
     },
   };
-  const typescriptCompliantData: BarDatum[] = data.map((datum) =>
+  const typescriptCompliantData: BarDatum[] = data?.map((datum) =>
     omit(datum, [
       "entityMBID",
       "artist",
@@ -81,7 +81,7 @@ export default function Bar(props: BarProps) {
       }}
       axisLeft={{
         tickSize: 0,
-        tickValues: data.length,
+        tickValues: data?.length,
         tickPadding: 5,
         renderTick: renderTickValue,
       }}

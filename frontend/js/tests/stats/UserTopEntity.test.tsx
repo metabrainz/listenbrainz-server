@@ -47,6 +47,7 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
     });
 
     it("renders correctly for release", async () => {
@@ -62,6 +63,7 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
     });
 
     it("renders correctly for recording", async () => {
@@ -77,6 +79,7 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
     });
 
     it("renders corectly when range is invalid", async () => {
@@ -88,6 +91,7 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
     });
   });
 
@@ -104,6 +108,7 @@ describe.each([
         hasError: true,
         errorMessage: "Invalid range: invalid_range",
       });
+      wrapper.unmount();
     });
 
     it("calls loadData once if range is valid", async () => {
@@ -117,6 +122,7 @@ describe.each([
       await waitForComponentToPaint(wrapper);
 
       expect(instance.loadData).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
   });
 
@@ -131,6 +137,7 @@ describe.each([
       await instance.loadData();
 
       expect(instance.getData).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
 
     it("set state correctly", async () => {
@@ -146,6 +153,7 @@ describe.each([
         data: userArtists,
         loading: false,
       });
+      wrapper.unmount();
     });
   });
 
@@ -165,6 +173,7 @@ describe.each([
         0,
         10
       );
+      wrapper.unmount();
     });
 
     it("sets state correctly if data is not calculated", async () => {
@@ -184,6 +193,7 @@ describe.each([
         hasError: true,
         errorMessage: "Statistics for the user have not been calculated",
       });
+      wrapper.unmount();
     });
 
     it("throws error", async () => {
@@ -198,6 +208,7 @@ describe.each([
       spy.mockImplementation(() => Promise.reject(notFoundError));
 
       await expect(instance.getData()).rejects.toThrow("NOT FOUND");
+      wrapper.unmount();
     });
   });
 });
