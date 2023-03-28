@@ -74,30 +74,17 @@ const fakeDateNow = jest
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 describe("UserFeedback", () => {
-  let wrapper:
-    | ReactWrapper<UserFeedbackProps, UserFeedbackState, UserFeedback>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
-
   it("renders correctly", () => {
-    wrapper = mount<UserFeedback>(<UserFeedback {...props} />, mountOptions);
+    const wrapper = mount<UserFeedback>(
+      <UserFeedback {...props} />,
+      mountOptions
+    );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
   });
 
   it("loads user feedback from props if logged-in user on their profile", async () => {
-    wrapper = mount<UserFeedback>(
+    const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider
         value={{
           ...mountOptions.context,
@@ -124,7 +111,7 @@ describe("UserFeedback", () => {
   });
 
   it("loads user feedback from API for logged-in user", async () => {
-    wrapper = mount<UserFeedback>(
+    const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
@@ -161,7 +148,7 @@ describe("UserFeedback", () => {
   });
 
   it("loadFeedback does not do anything if no user is logged in", async () => {
-    wrapper = mount<UserFeedback>(
+    const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptionsWithoutUser.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
@@ -182,7 +169,7 @@ describe("UserFeedback", () => {
   });
 
   it("renders ListenCard items for each feedback item", async () => {
-    wrapper = mount<UserFeedback>(
+    const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
@@ -219,7 +206,7 @@ describe("UserFeedback", () => {
         },
       ],
     };
-    wrapper = mount<UserFeedback>(
+    const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...(withoutTrackNameProps as UserFeedbackProps)} />
       </GlobalAppContext.Provider>
@@ -229,7 +216,7 @@ describe("UserFeedback", () => {
   });
 
   it("shows feedback on the ListenCards according to recordingFeedbackMap", async () => {
-    wrapper = mount<UserFeedback>(
+    const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
@@ -304,7 +291,7 @@ describe("UserFeedback", () => {
     ).toBeFalsy();
   });
   it("updates recordingFeedbackMap when clicking on a feedback button", async () => {
-    wrapper = mount<UserFeedback>(
+    const wrapper = mount<UserFeedback>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <UserFeedback {...props} />
       </GlobalAppContext.Provider>
@@ -358,7 +345,7 @@ describe("UserFeedback", () => {
   });
   describe("getFeedbackItemsFromAPI", () => {
     it("calls the API with the right parameters", async () => {
-      wrapper = mount<UserFeedback>(
+      const wrapper = mount<UserFeedback>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <UserFeedback {...props} />
         </GlobalAppContext.Provider>
@@ -376,7 +363,7 @@ describe("UserFeedback", () => {
     });
 
     it("sets the state, loads feedback for user and updates browser history", async () => {
-      wrapper = mount<UserFeedback>(
+      const wrapper = mount<UserFeedback>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <UserFeedback {...props} />
         </GlobalAppContext.Provider>

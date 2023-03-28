@@ -57,29 +57,10 @@ const globalProps = {
 };
 
 describe("Recommendation feedback", () => {
-  let wrapper:
-    | ReactWrapper<
-        RecommendationFeedbackComponentProps,
-        {},
-        RecommendationFeedbackComponent
-      >
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   describe("submitRecommendationFeedback", () => {
     it("calls API, calls updateFeedbackCallback correctly", async () => {
       const updateFeedbackSpy = jest.fn();
-      wrapper = mount<RecommendationFeedbackComponent>(
+      const wrapper = mount<RecommendationFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
           <RecommendationFeedbackComponent
             {...props}
@@ -106,7 +87,7 @@ describe("Recommendation feedback", () => {
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
       const updateFeedbackSpy = jest.fn();
-      wrapper = mount<RecommendationFeedbackComponent>(
+      const wrapper = mount<RecommendationFeedbackComponent>(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
@@ -136,7 +117,7 @@ describe("Recommendation feedback", () => {
 
     it("doesn't call updateFeedback if status code is not 200", async () => {
       const updateFeedbackSpy = jest.fn();
-      wrapper = mount<RecommendationFeedbackComponent>(
+      const wrapper = mount<RecommendationFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
           <RecommendationFeedbackComponent
             {...props}
@@ -167,7 +148,7 @@ describe("Recommendation feedback", () => {
       const updateFeedbackSpy = jest.fn();
       const newAlertSpy = jest.fn();
 
-      wrapper = mount<RecommendationFeedbackComponent>(
+      const wrapper = mount<RecommendationFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
           <RecommendationFeedbackComponent
             {...props}
@@ -215,7 +196,7 @@ describe("Recommendation feedback", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'Hate' ", async () => {
-    wrapper = mount<RecommendationFeedbackComponent>(
+    const wrapper = mount<RecommendationFeedbackComponent>(
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationFeedbackComponent {...props} currentFeedback="hate" />
       </GlobalAppContext.Provider>
@@ -256,7 +237,7 @@ describe("Recommendation feedback", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'dislike' ", async () => {
-    wrapper = mount<RecommendationFeedbackComponent>(
+    const wrapper = mount<RecommendationFeedbackComponent>(
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationFeedbackComponent {...props} currentFeedback="dislike" />
       </GlobalAppContext.Provider>
@@ -295,7 +276,7 @@ describe("Recommendation feedback", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'like' ", async () => {
-    wrapper = mount<RecommendationFeedbackComponent>(
+    const wrapper = mount<RecommendationFeedbackComponent>(
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationFeedbackComponent {...props} currentFeedback="like" />
       </GlobalAppContext.Provider>
@@ -334,7 +315,7 @@ describe("Recommendation feedback", () => {
   });
 
   it("check button and dropdown values when currentFeedback == 'Love' ", async () => {
-    wrapper = mount<RecommendationFeedbackComponent>(
+    const wrapper = mount<RecommendationFeedbackComponent>(
       <GlobalAppContext.Provider value={globalProps}>
         <RecommendationFeedbackComponent {...props} currentFeedback="love" />
       </GlobalAppContext.Provider>

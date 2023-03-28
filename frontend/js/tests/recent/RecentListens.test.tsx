@@ -78,21 +78,6 @@ fetchMock.mockIf(
 );
 
 describe("Recentlistens", () => {
-  let wrapper:
-    | ReactWrapper<RecentListensProps, RecentListensState, RecentListens>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders the page correctly", () => {
     // Datepicker component uses current time at load as max date,
     // and PinnedRecordingModal component uses current time at load to display recording unpin date,
@@ -104,14 +89,13 @@ describe("Recentlistens", () => {
 
     // eslint-disable-next-line no-import-assign
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    wrapper = mount<RecentListens>(
+    const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <RecentListens {...props} />
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
+    wrapper.unmount();
   });
 });
-
-/* eslint-enable jest/no-disabled-tests */

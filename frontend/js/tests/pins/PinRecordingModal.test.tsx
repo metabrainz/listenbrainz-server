@@ -67,20 +67,8 @@ const submitPinRecordingSpy = jest
   );
 
 describe("PinRecordingModal", () => {
-  let wrapper: ReactWrapper<any>;
-  beforeEach(() => {
-    wrapper = undefined!;
-  });
   afterEach(() => {
-    submitPinRecordingSpy.mockClear();
-    newAlert.mockClear();
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
+    jest.clearAllMocks();
   });
   it("renders the prompt, input text area, track_name, and artist_name", () => {
     // This component uses current time at load to display,
@@ -90,7 +78,7 @@ describe("PinRecordingModal", () => {
       .spyOn(global.Date, "now")
       .mockImplementation(() => mockDate.getTime());
 
-    wrapper = mount(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={globalProps}>
         <NiceModal.Provider>
           <PinRecordingModal
@@ -107,7 +95,7 @@ describe("PinRecordingModal", () => {
 
   describe("submitPinRecording", () => {
     it("calls API, and creates a new alert on success", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <PinRecordingModal
@@ -136,7 +124,7 @@ describe("PinRecordingModal", () => {
     });
 
     it("sets default blurbContent in state on success", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <PinRecordingModal
@@ -170,7 +158,7 @@ describe("PinRecordingModal", () => {
     });
 
     it("does nothing if currentUser.authtoken is not set", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
@@ -197,7 +185,7 @@ describe("PinRecordingModal", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <PinRecordingModal
@@ -230,7 +218,7 @@ describe("PinRecordingModal", () => {
 
   describe("handleBlurbInputChange", () => {
     it("removes line breaks and excessive spaces from input before setting blurbContent in state ", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <PinRecordingModal
@@ -241,6 +229,7 @@ describe("PinRecordingModal", () => {
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
+      await waitForComponentToPaint(wrapper);
 
       const unparsedInput =
         "This string contains \n\n line breaks and multiple   consecutive   spaces.";
@@ -266,7 +255,7 @@ describe("PinRecordingModal", () => {
     });
 
     it("does not set blurbContent in state if input length is greater than MAX_BLURB_CONTENT_LENGTH ", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <PinRecordingModal
