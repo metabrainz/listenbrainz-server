@@ -21,6 +21,5 @@ describe("ListenCountCard", () => {
   it("renders correctly", () => {
     const wrapper = mount(<ListenControl {...props} />);
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 });

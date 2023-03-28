@@ -34,25 +34,10 @@ const props = {
 };
 
 describe("User settings", () => {
-  let wrapper:
-    | ReactWrapper<SelectTimezoneProps, SelectTimezoneState, SelectTimezone>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(async () => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   describe("submitTimezonePage", () => {
     it("renders correctly", () => {
       const extraProps = { ...props, newAlert: jest.fn() };
-      wrapper = mount<SelectTimezone>(
+      const wrapper = mount<SelectTimezone>(
         <GlobalAppContext.Provider value={globalProps}>
           <SelectTimezone {...extraProps} />
         </GlobalAppContext.Provider>
@@ -64,7 +49,7 @@ describe("User settings", () => {
 
   describe("resetTimezone", () => {
     it("calls API, and sets state + creates a new alert on success", async () => {
-      wrapper = mount<SelectTimezone>(
+      const wrapper = mount<SelectTimezone>(
         <GlobalAppContext.Provider value={globalProps}>
           <SelectTimezone {...{ ...props, newAlert: jest.fn() }} />
         </GlobalAppContext.Provider>
@@ -106,7 +91,7 @@ describe("User settings", () => {
     });
 
     it("calls newAlert", async () => {
-      wrapper = mount<SelectTimezone>(
+      const wrapper = mount<SelectTimezone>(
         <SelectTimezone {...{ ...props, newAlert: jest.fn() }} />
       );
       await waitForComponentToPaint(wrapper);

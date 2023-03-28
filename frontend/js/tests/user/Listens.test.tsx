@@ -75,20 +75,6 @@ fetchMock.mockIf(
   }
 );
 describe("Listens page", () => {
-  let wrapper: ReactWrapper<ListensProps, ListensState, Listens> | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
-
   it("renders correctly on the profile page", () => {
     // Datepicker component uses current time at load as max date,
     // and PinnedRecordingModal component uses current time at load to display recording unpin date,
@@ -100,7 +86,7 @@ describe("Listens page", () => {
 
     // eslint-disable-next-line no-import-assign
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    wrapper = mount<Listens>(
+    const wrapper = mount<Listens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <Listens {...props} />
       </GlobalAppContext.Provider>
@@ -111,7 +97,7 @@ describe("Listens page", () => {
 
   describe("componentDidMount", () => {
     it("calls connectWebsockets", () => {
-      wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
       instance.connectWebsockets = jest.fn();
 
@@ -123,7 +109,7 @@ describe("Listens page", () => {
     });
 
     it("calls getUserListenCount", async () => {
-      wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       const spy = jest.fn().mockImplementation(() => {
@@ -141,7 +127,7 @@ describe("Listens page", () => {
     });
 
     it("calls loadFeedback if user is logged in", () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Listens {...propsOneListen} />
         </GlobalAppContext.Provider>
@@ -157,7 +143,7 @@ describe("Listens page", () => {
     });
 
     it('does not fetch user feedback if user is not logged in"', () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider
           value={{
             ...mountOptions.context,
@@ -187,7 +173,7 @@ describe("Listens page", () => {
       jest.clearAllMocks();
     });
     it("calls io with correct parameters", () => {
-      wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
       act(() => {
         instance.createWebsocketsConnection();
@@ -215,7 +201,7 @@ describe("Listens page", () => {
 
   describe("addWebsocketsHandlers", () => {
     it('calls correct handler for "listen" event', () => {
-      wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       // eslint-disable-next-line dot-notation
@@ -240,7 +226,7 @@ describe("Listens page", () => {
     });
 
     it('calls correct event for "playing_now" event', () => {
-      wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       const instance = wrapper.instance();
 
       // eslint-disable-next-line dot-notation
@@ -278,7 +264,7 @@ describe("Listens page", () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <Listens
           {...(JSON.parse(
             JSON.stringify(recentListensPropsTooManyListens)
@@ -300,7 +286,7 @@ describe("Listens page", () => {
        * so that it doesn't get passed as a reference.
        */
       await act(() => {
-        wrapper!.setState({
+        wrapper.setState({
           listens: JSON.parse(
             JSON.stringify(recentListensPropsTooManyListens.listens)
           ),
@@ -318,7 +304,10 @@ describe("Listens page", () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
-      wrapper = mount<Listens>(<Listens {...propsOneListen} />, mountOptions);
+      const wrapper = mount<Listens>(
+        <Listens {...propsOneListen} />,
+        mountOptions
+      );
       const instance = wrapper.instance();
       const result: Array<Listen> = Array.from(
         recentListensPropsOneListen.listens
@@ -353,7 +342,7 @@ describe("Listens page", () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Listens
             {...(JSON.parse(
@@ -389,7 +378,7 @@ describe("Listens page", () => {
   describe("deleteListen", () => {
     it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
       const newAlertMock = jest.fn();
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Listens {...props} newAlert={newAlertMock} />
         </GlobalAppContext.Provider>
@@ -430,7 +419,7 @@ describe("Listens page", () => {
     });
 
     it("does nothing if isCurrentUser is false", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider
           value={{
             ...mountOptions.context,
@@ -458,7 +447,7 @@ describe("Listens page", () => {
     });
 
     it("does not render delete listen control if isCurrentUser is false", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider
           value={{
             ...mountOptions.context,
@@ -472,7 +461,7 @@ describe("Listens page", () => {
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider
           value={{
             ...mountOptions.context,
@@ -500,7 +489,7 @@ describe("Listens page", () => {
     });
 
     it("doesn't call removeListenFromListenList or update state if status code is not 200", async () => {
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Listens {...props} />
         </GlobalAppContext.Provider>
@@ -534,7 +523,7 @@ describe("Listens page", () => {
 
     it("calls newAlert if error is returned", async () => {
       const newAlertMock = jest.fn();
-      wrapper = mount<Listens>(
+      const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Listens {...props} newAlert={newAlertMock} />
         </GlobalAppContext.Provider>
@@ -571,10 +560,10 @@ describe("Listens page", () => {
 
     describe("handleClickOlder", () => {
       it("does nothing if there is no older listens timestamp", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({ nextListenTs: undefined });
+          wrapper.setState({ nextListenTs: undefined });
         });
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         instance.context.APIService.getListensForUser = spy;
@@ -589,10 +578,10 @@ describe("Listens page", () => {
       });
 
       it("calls the API to get older listens", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({ nextListenTs: 1586450000 });
+          wrapper.setState({ nextListenTs: 1586450000 });
         });
         const expectedListensArray = [
           {
@@ -620,10 +609,10 @@ describe("Listens page", () => {
       });
 
       it("sets nextListenTs to undefined if it receives no listens from API", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({ nextListenTs: 1586450000 });
+          wrapper.setState({ nextListenTs: 1586450000 });
         });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
@@ -641,13 +630,13 @@ describe("Listens page", () => {
       });
 
       it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
 
         await act(() => {
           // Random nextListenTs to ensure that is the value set in browser history
-          wrapper!.setProps({ latestListenTs: 1586623524 });
-          wrapper!.setState({ listens: [], nextListenTs: 1586440600 });
+          wrapper.setProps({ latestListenTs: 1586623524 });
+          wrapper.setState({ listens: [], nextListenTs: 1586440600 });
         });
 
         const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
@@ -679,9 +668,9 @@ describe("Listens page", () => {
       });
 
       it("disables 'next' pagination if returned less listens than expected", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />);
+        const wrapper = mount<Listens>(<Listens {...props} />);
         await act(() => {
-          wrapper!.setState({ nextListenTs: 1586440539 });
+          wrapper.setState({ nextListenTs: 1586440539 });
         });
         const instance = wrapper.instance();
 
@@ -717,10 +706,10 @@ describe("Listens page", () => {
 
     describe("handleClickNewer", () => {
       it("does nothing if there is no newer listens timestamp", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({ previousListenTs: undefined });
+          wrapper.setState({ previousListenTs: undefined });
         });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
@@ -736,10 +725,10 @@ describe("Listens page", () => {
       });
 
       it("calls the API to get older listens", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({ previousListenTs: 123456 });
+          wrapper.setState({ previousListenTs: 123456 });
         });
 
         const expectedListensArray = [
@@ -768,10 +757,10 @@ describe("Listens page", () => {
       });
 
       it("sets nextListenTs to undefined if it receives no listens from API", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({ previousListenTs: 123456 });
+          wrapper.setState({ previousListenTs: 123456 });
         });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
@@ -788,11 +777,11 @@ describe("Listens page", () => {
       });
 
       it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setProps({ latestListenTs: 1586623524 });
-          wrapper!.setState({ previousListenTs: 123456 });
+          wrapper.setProps({ latestListenTs: 1586623524 });
+          wrapper.setState({ previousListenTs: 123456 });
         });
 
         const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
@@ -819,10 +808,10 @@ describe("Listens page", () => {
         expect(scrollSpy).toHaveBeenCalled();
       });
       it("disables pagination if returned less listens than expected", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />);
+        const wrapper = mount<Listens>(<Listens {...props} />);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({ previousListenTs: 123456 });
+          wrapper.setState({ previousListenTs: 123456 });
         });
 
         const expectedListensArray = [
@@ -856,10 +845,10 @@ describe("Listens page", () => {
 
     describe("handleClickOldest", () => {
       it("does nothing if last listens is the oldest", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({
+          wrapper.setState({
             listens: [
               {
                 track_metadata: {
@@ -871,7 +860,7 @@ describe("Listens page", () => {
               },
             ],
           });
-          wrapper!.setProps({ oldestListenTs: 123456 });
+          wrapper.setProps({ oldestListenTs: 123456 });
         });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
@@ -895,7 +884,10 @@ describe("Listens page", () => {
           listened_at: 1586440600,
         };
         const extraProps = { ...props, listens: [listen] };
-        wrapper = mount<Listens>(<Listens {...extraProps} />, mountOptions);
+        const wrapper = mount<Listens>(
+          <Listens {...extraProps} />,
+          mountOptions
+        );
 
         const instance = wrapper.instance();
 
@@ -935,10 +927,10 @@ describe("Listens page", () => {
 
     describe("handleClickNewest", () => {
       it("does nothing if first listens is the newest", async () => {
-        wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
+        const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({
+          wrapper.setState({
             listens: [
               {
                 track_metadata: {
@@ -950,7 +942,7 @@ describe("Listens page", () => {
               },
             ],
           });
-          wrapper!.setProps({ latestListenTs: 123456 });
+          wrapper.setProps({ latestListenTs: 123456 });
         });
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
@@ -974,9 +966,12 @@ describe("Listens page", () => {
           listened_at: 123450,
         };
         const extraProps = { ...props, listens: [listen] };
-        wrapper = mount<Listens>(<Listens {...extraProps} />, mountOptions);
+        const wrapper = mount<Listens>(
+          <Listens {...extraProps} />,
+          mountOptions
+        );
         await act(() => {
-          wrapper!.setProps({ latestListenTs: 123456 });
+          wrapper.setProps({ latestListenTs: 123456 });
         });
         const instance = wrapper.instance();
 

@@ -32,22 +32,6 @@ const props = {
 };
 
 describe("LastFMImporter", () => {
-  let wrapper:
-    | ReactWrapper<ImporterProps, ImporterState, LastFmImporter>
-    | ShallowWrapper<ImporterProps, ImporterState, LastFmImporter>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   describe("encodeScrobbles", () => {
     it("encodes the given scrobbles correctly", () => {
       expect(LastFmImporter.encodeScrobbles(page)).toEqual(
@@ -60,7 +44,7 @@ describe("LastFMImporter", () => {
 
   describe("getNumberOfPages", () => {
     beforeEach(() => {
-      wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
       instance = wrapper.instance();
       instance.setState({ lastfmUsername: "dummyUser" });
       // Mock function for fetch
@@ -95,7 +79,7 @@ describe("LastFMImporter", () => {
 
   describe("getTotalNumberOfScrobbles", () => {
     beforeEach(() => {
-      wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
       instance = wrapper.instance();
       instance.setState({ lastfmUsername: "dummyUser" });
       // Mock function for fetch
@@ -187,7 +171,7 @@ describe("LastFMImporter", () => {
     });
 
     beforeEach(() => {
-      wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
       instance = wrapper.instance();
       instance.setState({ lastfmUsername: "dummyUser" });
       // Mock function for fetch
@@ -329,7 +313,7 @@ describe("LastFMImporter", () => {
 
   describe("submitPage", () => {
     beforeEach(() => {
-      wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
       instance = wrapper.instance();
       instance.setState({ lastfmUsername: "dummyUser" });
       instance.getRateLimitDelay = jest.fn().mockImplementation(() => 0);
@@ -409,7 +393,7 @@ describe("LastFMImporter", () => {
 
   describe("getUserPrivacy", () => {
     beforeEach(() => {
-      wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
       instance = wrapper.instance();
       instance.setState({ lastfmUsername: "dummyUser" });
 
@@ -489,12 +473,12 @@ describe("LastFMImporter", () => {
 
   describe("LastFmImporter Page", () => {
     it("renders", () => {
-      wrapper = mount(<LastFmImporter {...props} />);
+      const wrapper = mount(<LastFmImporter {...props} />);
       expect(wrapper.html()).toMatchSnapshot();
     });
 
     it("modal renders when button clicked", () => {
-      wrapper = shallow(<LastFmImporter {...props} />);
+      const wrapper = shallow(<LastFmImporter {...props} />);
       // Simulate submiting the form
       wrapper.find("form").simulate("submit", {
         preventDefault: () => null,
@@ -505,10 +489,10 @@ describe("LastFMImporter", () => {
     });
 
     it("submit button is disabled when input is empty", () => {
-      wrapper = shallow(<LastFmImporter {...props} />);
+      const wrapper = shallow(<LastFmImporter {...props} />);
       act(() => {
         // Make sure that the input is empty
-        wrapper!.setState({ lastfmUsername: "" });
+        wrapper.setState({ lastfmUsername: "" });
       });
 
       // Test if button is disabled
@@ -535,7 +519,7 @@ describe("LastFMImporter", () => {
 
   describe("importLoop", () => {
     beforeEach(() => {
-      wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
       instance = wrapper.instance();
       instance.setState({ lastfmUsername: "dummyUser" });
       // needed for startImport

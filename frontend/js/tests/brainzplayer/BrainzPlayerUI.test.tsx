@@ -25,6 +25,5 @@ describe("BrainzPlayerUI", () => {
   it("renders", () => {
     const wrapper = mount(<BrainzPlayerUI {...props} />);
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 });

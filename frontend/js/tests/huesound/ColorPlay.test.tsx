@@ -46,7 +46,6 @@ describe("ColorPlay", () => {
     const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
     // const instance = wrapper.instance();
     expect(wrapper.find(ColorWheel)).toHaveLength(1);
-    wrapper.unmount();
   });
 
   it("contains a BrainzPlayer instance when a release is selected", async () => {
@@ -59,7 +58,6 @@ describe("ColorPlay", () => {
       wrapper.setState({ selectedRelease: release });
     });
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
-    wrapper.unmount();
   });
   // xdescribe("selectRelease", () => {
   // it("selects the particular release and starts playing it in brainzplayer", async () => {

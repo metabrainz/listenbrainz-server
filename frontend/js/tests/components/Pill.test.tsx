@@ -7,18 +7,15 @@ describe("Pill", () => {
   it("renders correctly for primary active", () => {
     const wrapper = mount(<Pill active type="primary" />);
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 
   it("renders correctly for secondary active", () => {
     const wrapper = mount(<Pill active type="secondary" />);
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 
   it("renders correctly for inactive", () => {
     const wrapper = mount(<Pill />);
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 });

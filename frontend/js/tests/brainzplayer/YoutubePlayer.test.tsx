@@ -38,25 +38,9 @@ const props = {
 };
 
 describe("YoutubePlayer", () => {
-  let wrapper:
-    | ReactWrapper<YoutubePlayerProps, YoutubePlayerState, YoutubePlayer>
-    | ShallowWrapper<YoutubePlayerProps, YoutubePlayerState, YoutubePlayer>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders", () => {
     window.fetch = jest.fn();
-    wrapper = mount(<YoutubePlayer {...props} />);
+    const wrapper = mount(<YoutubePlayer {...props} />);
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -76,7 +60,7 @@ describe("YoutubePlayer", () => {
       const onPlayerPausedChange = jest.fn();
       const onProgressChange = jest.fn();
       const mockProps = { ...props, onPlayerPausedChange, onProgressChange };
-      wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
       const instance = wrapper.instance();
 
       await act(() => {
@@ -102,7 +86,7 @@ describe("YoutubePlayer", () => {
       const onTrackEnd = jest.fn();
       const onProgressChange = jest.fn();
       const mockProps = { ...props, onTrackEnd, onProgressChange };
-      wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
       const instance = wrapper.instance();
       await act(() => {
         instance.handlePlayerStateChanged({ ...youtubePlayerState, data: 0 });
@@ -123,7 +107,7 @@ describe("YoutubePlayer", () => {
         onDurationChange,
         onProgressChange,
       };
-      wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
       const instance = wrapper.instance();
       await act(() => {
         instance.handlePlayerStateChanged({ ...youtubePlayerState, data: -1 });
@@ -176,7 +160,7 @@ describe("YoutubePlayer", () => {
         onProgressChange,
         onTrackEnd,
       };
-      wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
       const instance = wrapper.instance();
       await act(() => {
         instance.handlePlayerStateChanged({ ...youtubePlayerState, data: -1 });
@@ -194,7 +178,7 @@ describe("YoutubePlayer", () => {
     const onPlayerPausedChange = jest.fn();
     const onProgressChange = jest.fn();
     const mockProps = { ...props, onPlayerPausedChange, onProgressChange };
-    wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
+    const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
     const instance = wrapper.instance();
 
     const pauseVideo = jest.fn();
@@ -211,7 +195,7 @@ describe("YoutubePlayer", () => {
     expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(true);
     onPlayerPausedChange.mockClear();
     await act(() => {
-      wrapper!.setProps({ playerPaused: true });
+      wrapper.setProps({ playerPaused: true });
       instance.togglePlay();
     });
     expect(playVideo).toHaveBeenCalledTimes(1);
@@ -220,7 +204,7 @@ describe("YoutubePlayer", () => {
   });
 
   it("should play from youtube URL if present on the listen", async () => {
-    wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...props} />);
+    const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...props} />);
     const instance = wrapper.instance();
     const playTrackById = jest.fn();
     instance.playTrackById = playTrackById;
