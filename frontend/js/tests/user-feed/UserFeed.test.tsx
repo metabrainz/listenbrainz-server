@@ -49,21 +49,6 @@ const GlobalContextMock = {
 };
 
 describe("UserFeed", () => {
-  let wrapper:
-    | ReactWrapper<UserFeedPageProps, UserFeedPageState, UserFeedPage>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(async () => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   beforeAll(() => {
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     // Font Awesome generates a random hash ID for each icon everytime.
@@ -72,7 +57,7 @@ describe("UserFeed", () => {
     jest.spyOn(global.Math, "random").mockImplementation(() => 0);
   });
   it("renders correctly", () => {
-    wrapper = mount<UserFeedPage>(
+    const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
@@ -81,7 +66,7 @@ describe("UserFeed", () => {
   });
 
   it("contains a UserSocialNetwork component", () => {
-    wrapper = mount<UserFeedPage>(
+    const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
@@ -91,7 +76,7 @@ describe("UserFeed", () => {
   });
 
   it("contains a BrainzPlayer instance", () => {
-    wrapper = mount<UserFeedPage>(
+    const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
@@ -100,7 +85,7 @@ describe("UserFeed", () => {
   });
 
   it("renders the correct number of timeline events", () => {
-    wrapper = mount<UserFeedPage>(
+    const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
@@ -116,7 +101,7 @@ describe("UserFeed", () => {
     const dateNowMock = jest
       .spyOn(Date, "now")
       .mockImplementation(() => date.getTime());
-    wrapper = mount<UserFeedPage>(
+    const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
@@ -137,7 +122,7 @@ describe("UserFeed", () => {
     const dateNowMock = jest
       .spyOn(Date, "now")
       .mockImplementation(() => date.getTime());
-    wrapper = mount<UserFeedPage>(
+    const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
@@ -165,7 +150,7 @@ describe("UserFeed", () => {
     const dateNowMock = jest
       .spyOn(Date, "now")
       .mockImplementation(() => date.getTime());
-    wrapper = mount<UserFeedPage>(
+    const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
@@ -193,7 +178,7 @@ describe("UserFeed", () => {
     const dateNowMock = jest
       .spyOn(Date, "now")
       .mockImplementation(() => date.getTime());
-    wrapper = mount<UserFeedPage>(
+    const wrapper = mount<UserFeedPage>(
       <GlobalAppContext.Provider value={GlobalContextMock}>
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
@@ -223,7 +208,7 @@ describe("UserFeed", () => {
     describe("handleClickOlder", () => {
       it("does nothing if there is no older events timestamp", async () => {
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-        wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />, {
+        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />, {
           context: {
             APIService: { getFeedForUser: spy },
           },
@@ -243,7 +228,7 @@ describe("UserFeed", () => {
       });
 
       it("calls the API to get older events", async () => {
-        wrapper = mount<UserFeedPage>(
+        const wrapper = mount<UserFeedPage>(
           <GlobalAppContext.Provider value={GlobalContextMock}>
             <UserFeedPage {...props} />
           </GlobalAppContext.Provider>
@@ -291,7 +276,7 @@ describe("UserFeed", () => {
         const propsCopy = { ...props };
         propsCopy.events[propsCopy.events.length - 1].created = timestamp;
 
-        wrapper = mount<UserFeedPage>(
+        const wrapper = mount<UserFeedPage>(
           <GlobalAppContext.Provider value={GlobalContextMock}>
             <UserFeedPage {...propsCopy} />
           </GlobalAppContext.Provider>
@@ -320,7 +305,7 @@ describe("UserFeed", () => {
       });
 
       it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
-        wrapper = mount<UserFeedPage>(
+        const wrapper = mount<UserFeedPage>(
           <GlobalAppContext.Provider value={GlobalContextMock}>
             <UserFeedPage {...props} />
           </GlobalAppContext.Provider>
@@ -365,7 +350,7 @@ describe("UserFeed", () => {
     describe("handleClickNewer", () => {
       it("does nothing if there is no newer events timestamp", async () => {
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-        wrapper = mount<UserFeedPage>(
+        const wrapper = mount<UserFeedPage>(
           <GlobalAppContext.Provider value={GlobalContextMock}>
             <UserFeedPage {...props} />
           </GlobalAppContext.Provider>
@@ -388,7 +373,7 @@ describe("UserFeed", () => {
       });
 
       it("calls the API to get newer events", async () => {
-        wrapper = mount<UserFeedPage>(
+        const wrapper = mount<UserFeedPage>(
           <GlobalAppContext.Provider value={GlobalContextMock}>
             <UserFeedPage {...props} />
           </GlobalAppContext.Provider>
@@ -433,7 +418,7 @@ describe("UserFeed", () => {
       });
 
       it("sets previousEventTs to undefined if it receives no events from API", async () => {
-        wrapper = mount<UserFeedPage>(
+        const wrapper = mount<UserFeedPage>(
           <GlobalAppContext.Provider value={GlobalContextMock}>
             <UserFeedPage {...props} />
           </GlobalAppContext.Provider>
@@ -442,7 +427,7 @@ describe("UserFeed", () => {
         const instance = wrapper.instance();
 
         await act(() => {
-          wrapper!.setState({ previousEventTs: 123456 });
+          wrapper.setState({ previousEventTs: 123456 });
         });
         expect(wrapper.state("previousEventTs")).toEqual(123456);
 
@@ -459,7 +444,7 @@ describe("UserFeed", () => {
       });
 
       it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
-        wrapper = mount<UserFeedPage>(
+        const wrapper = mount<UserFeedPage>(
           <GlobalAppContext.Provider value={GlobalContextMock}>
             <UserFeedPage {...props} />
           </GlobalAppContext.Provider>
@@ -468,7 +453,7 @@ describe("UserFeed", () => {
 
         const instance = wrapper.instance();
         await act(() => {
-          wrapper!.setState({ previousEventTs: 123456 });
+          wrapper.setState({ previousEventTs: 123456 });
         });
         expect(wrapper.state("previousEventTs")).toEqual(123456);
 

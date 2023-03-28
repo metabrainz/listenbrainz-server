@@ -69,23 +69,8 @@ const feedback = {
 };
 
 describe("Recommendations", () => {
-  let wrapper:
-    | ReactWrapper<RecommendationsProps, RecommendationsState, Recommendations>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders correctly on the recommendations page", () => {
-    wrapper = mount<Recommendations>(
+    const wrapper = mount<Recommendations>(
       <GlobalAppContext.Provider
         value={{ ...mountOptions.context, currentUser: props.user }}
       >
@@ -96,7 +81,7 @@ describe("Recommendations", () => {
   });
   describe("componentDidMount", () => {
     it('calls loadFeedback if user is the currentUser"', async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider
           value={{ ...mountOptions.context, currentUser: props.user }}
         >
@@ -114,7 +99,7 @@ describe("Recommendations", () => {
     });
 
     it("does not call loadFeedback if user is not the currentUser", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider
           value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
         >
@@ -133,7 +118,7 @@ describe("Recommendations", () => {
 
   describe("getFeedback", () => {
     it("calls the API correctly", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <Recommendations {...(propsOne as RecommendationsProps)} />
       );
 
@@ -157,7 +142,7 @@ describe("Recommendations", () => {
 
   describe("loadFeedback", () => {
     it("updates the recommendationFeedbackMap state", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Recommendations {...props} />
         </GlobalAppContext.Provider>
@@ -181,7 +166,7 @@ describe("Recommendations", () => {
 
   describe("getFeedbackForRecordingMbid", () => {
     it("returns the feedback after fetching from recommendationFeedbackMap state", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Recommendations {...props} />
         </GlobalAppContext.Provider>
@@ -194,7 +179,7 @@ describe("Recommendations", () => {
       };
       await waitForComponentToPaint(wrapper);
       await act(() => {
-        wrapper!.setState({ recommendationFeedbackMap });
+        wrapper.setState({ recommendationFeedbackMap });
       });
 
       const res = await instance.getFeedbackForRecordingMbid(
@@ -205,7 +190,7 @@ describe("Recommendations", () => {
     });
 
     it("returns null if the recording is not in recommendationFeedbackMap state", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Recommendations {...props} />
         </GlobalAppContext.Provider>
@@ -223,7 +208,7 @@ describe("Recommendations", () => {
 
   describe("updateFeedback", () => {
     it("updates the recommendationFeedbackMap state for particular recording", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Recommendations {...props} />
         </GlobalAppContext.Provider>
@@ -234,7 +219,7 @@ describe("Recommendations", () => {
         "973e5620-829d-46dd-89a8-760d87076287": "like",
       };
       await act(async () => {
-        wrapper!.setState({ recommendationFeedbackMap });
+        wrapper.setState({ recommendationFeedbackMap });
       });
       await instance.updateFeedback(
         "973e5620-829d-46dd-89a8-760d87076287",
@@ -254,7 +239,7 @@ describe("Recommendations", () => {
     });
 
     it("doesn't do anything if already on first page", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Recommendations {...props} />
         </GlobalAppContext.Provider>
@@ -275,7 +260,7 @@ describe("Recommendations", () => {
     });
 
     it("go to the previous page if not on first page", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Recommendations {...props} />
         </GlobalAppContext.Provider>
@@ -286,7 +271,7 @@ describe("Recommendations", () => {
         "afterRecommendationsDisplay"
       );
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           currRecPage: 3,
           recommendations: props.recommendations.slice(50, 73),
         });
@@ -307,7 +292,7 @@ describe("Recommendations", () => {
 
   describe("handleClickNext", () => {
     it("doesn't do anything if already on last page", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Recommendations {...props} />
         </GlobalAppContext.Provider>
@@ -318,7 +303,7 @@ describe("Recommendations", () => {
         "afterRecommendationsDisplay"
       );
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           currRecPage: 3,
           recommendations: props.recommendations.slice(50, 74),
         });
@@ -337,7 +322,7 @@ describe("Recommendations", () => {
     });
 
     it("go to the next page if not on last page", async () => {
-      wrapper = mount<Recommendations>(
+      const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Recommendations {...props} />
         </GlobalAppContext.Provider>
@@ -348,7 +333,7 @@ describe("Recommendations", () => {
         "afterRecommendationsDisplay"
       );
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           currRecPage: 2,
           recommendations: props.recommendations.slice(25, 50),
         });

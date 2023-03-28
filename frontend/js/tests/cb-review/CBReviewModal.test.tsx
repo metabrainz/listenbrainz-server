@@ -76,22 +76,11 @@ const niceModalProps: NiceModalHocProps = {
 };
 
 describe("CBReviewModal", () => {
-  let wrapper: ReactWrapper<typeof CBReviewModal>;
-  beforeEach(() => {
-    wrapper = undefined!;
-  });
   afterEach(() => {
     jest.clearAllMocks();
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
   });
   it("renders the modal correctly", async () => {
-    wrapper = mount(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={globalProps}>
         <NiceModal.Provider>
           <CBReviewModal {...niceModalProps} {...props} />
@@ -103,7 +92,7 @@ describe("CBReviewModal", () => {
   });
 
   it("submits the review and displays a success alert", async () => {
-    wrapper = mount(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={globalProps}>
         <NiceModal.Provider>
           <CBReviewModal {...niceModalProps} {...props} />
@@ -164,7 +153,7 @@ describe("CBReviewModal", () => {
   describe("getGroupMBIDFromRelease", () => {
     it("calls API and returns the correct release group MBID", async () => {
       const releaseMBID = "40ef0ae1-5626-43eb-838f-1b34187519bf";
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <CBReviewModal
@@ -202,7 +191,7 @@ describe("CBReviewModal", () => {
   describe("getRecordingMBIDFromTrack", () => {
     it("calls API and returns the correct recording MBID", async () => {
       const mbid = "0255f1ea-3199-49b4-8b5c-bdcc3716ebc9";
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <CBReviewModal
@@ -237,7 +226,7 @@ describe("CBReviewModal", () => {
 
   describe("submitReviewToCB", () => {
     it("can't submit if user hasn't authenticated with CritiqueBrainz", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
@@ -264,7 +253,7 @@ describe("CBReviewModal", () => {
     });
 
     it("does nothing if license was not accepted", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <CBReviewModal {...niceModalProps} {...props} />
@@ -295,7 +284,7 @@ describe("CBReviewModal", () => {
 
     it("does nothing if entityToReview is null", async () => {
       // Listen empty of data won't be able to find an entity to review
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <CBReviewModal
@@ -322,14 +311,14 @@ describe("CBReviewModal", () => {
     });
 
     it("shows an alert message and doesn't submit if textContent is too short", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <CBReviewModal {...niceModalProps} {...props} />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
-
+      await waitForComponentToPaint(wrapper);
       await act(() => {
         const textInputArea = wrapper.find("#review-text").first();
         const checkbox = wrapper.find("#acceptLicense").first();
@@ -362,7 +351,7 @@ describe("CBReviewModal", () => {
     });
 
     it("retries once if API throws invalid token error", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <CBReviewModal {...niceModalProps} {...props} />
@@ -382,7 +371,7 @@ describe("CBReviewModal", () => {
           target: { checked: true, type: "checkbox" },
         });
       });
-
+      await waitForComponentToPaint(wrapper);
       // mock api submit throwing invalid token error
       submitReviewToCBSpy.mockRejectedValueOnce({ message: "invalid_token" });
 
@@ -390,7 +379,7 @@ describe("CBReviewModal", () => {
         // Simulate submiting the form
         wrapper.find("form").first().simulate("submit");
       });
-
+      await waitForComponentToPaint(wrapper);
       expect(apiRefreshSpy).toHaveBeenCalledTimes(1); // a new token is requested once
       expect(apiRefreshSpy).toHaveBeenCalledWith("critiquebrainz");
 

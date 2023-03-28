@@ -73,21 +73,6 @@ const listen2: Listen = {
 };
 
 describe("BrainzPlayer", () => {
-  let wrapper:
-    | ReactWrapper<BrainzPlayerProps, BrainzPlayerState, BrainzPlayer>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   beforeAll(() => {
     window.location = {
       href: "http://nevergonnagiveyouup.com",
@@ -95,7 +80,7 @@ describe("BrainzPlayer", () => {
   });
 
   it("renders correctly", () => {
-    wrapper = mount<BrainzPlayer>(
+    const wrapper = mount<BrainzPlayer>(
       <BrainzPlayer {...props} />,
       GlobalContextMock
     );
@@ -106,7 +91,7 @@ describe("BrainzPlayer", () => {
     const mockProps = {
       ...props,
     };
-    wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />, {
+    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />, {
       context: { ...GlobalContextMock.context, spotifyUser: {} },
     });
     const instance = wrapper.instance();
@@ -116,7 +101,7 @@ describe("BrainzPlayer", () => {
   });
 
   it("creates a Spotify datasource when passed a spotify user with right permissions", () => {
-    wrapper = mount<BrainzPlayer>(
+    const wrapper = mount<BrainzPlayer>(
       <GlobalAppContext.Provider
         value={{
           ...GlobalContextMock.context,
@@ -131,7 +116,7 @@ describe("BrainzPlayer", () => {
   });
 
   it("removes a datasource when calling invalidateDataSource", () => {
-    wrapper = mount<BrainzPlayer>(
+    const wrapper = mount<BrainzPlayer>(
       <GlobalAppContext.Provider value={GlobalContextMock.context}>
         <BrainzPlayer {...props} />
       </GlobalAppContext.Provider>
@@ -155,7 +140,7 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Youtube as source when listen has a youtube URL", async () => {
-    wrapper = mount<BrainzPlayer>(
+    const wrapper = mount<BrainzPlayer>(
       <GlobalAppContext.Provider
         value={{
           ...GlobalContextMock.context,
@@ -185,7 +170,7 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Spotify as source when listen has listening_from = spotify", async () => {
-    wrapper = mount<BrainzPlayer>(
+    const wrapper = mount<BrainzPlayer>(
       <GlobalAppContext.Provider
         value={{
           ...GlobalContextMock.context,
@@ -219,7 +204,7 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Spotify as source when listen has a spotify_id", async () => {
-    wrapper = mount<BrainzPlayer>(
+    const wrapper = mount<BrainzPlayer>(
       <GlobalAppContext.Provider
         value={{
           ...GlobalContextMock.context,
@@ -253,7 +238,7 @@ describe("BrainzPlayer", () => {
   });
 
   it("selects Soundcloud as source when listen has a soundcloud URL", async () => {
-    wrapper = mount<BrainzPlayer>(
+    const wrapper = mount<BrainzPlayer>(
       <GlobalAppContext.Provider
         value={{
           ...GlobalContextMock.context,
@@ -285,7 +270,7 @@ describe("BrainzPlayer", () => {
 
   describe("stopOtherBrainzPlayers", () => {
     it("gets called when playing a track or unpausing", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
@@ -336,7 +321,7 @@ describe("BrainzPlayer", () => {
     });
 
     it("calls LocalStorage.setItem to fire event", () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
@@ -356,7 +341,7 @@ describe("BrainzPlayer", () => {
 
     it("reacts to a LocalStorage event and pauses the player if currently playing", async () => {
       const addEventListenerSpy = jest.spyOn(window, "addEventListener");
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
@@ -385,7 +370,7 @@ describe("BrainzPlayer", () => {
     });
     it("reacts to a LocalStorage event and does nothing if currently paused", async () => {
       const addEventListenerSpy = jest.spyOn(window, "addEventListener");
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
@@ -415,26 +400,26 @@ describe("BrainzPlayer", () => {
 
   describe("isCurrentlyPlaying", () => {
     it("returns true if currentListen and passed listen is same", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper!.setState({ currentListen: listen });
+        wrapper.setState({ currentListen: listen });
       });
 
       expect(instance.isCurrentlyPlaying(listen)).toBe(true);
     });
 
     it("returns false if currentListen is not set", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper!.setState({ currentListen: undefined });
+        wrapper.setState({ currentListen: undefined });
       });
 
       expect(instance.isCurrentlyPlaying({} as Listen)).toBeFalsy();
@@ -443,26 +428,26 @@ describe("BrainzPlayer", () => {
 
   describe("getCurrentTrackName", () => {
     it("returns the track name when it exists on a listen", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper!.setState({ currentListen: listen });
+        wrapper.setState({ currentListen: listen });
       });
 
       expect(instance.getCurrentTrackName()).toEqual("Bird's Lament");
     });
 
     it("returns an empty string if currentListen is not set", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper!.setState({ currentListen: undefined });
+        wrapper.setState({ currentListen: undefined });
       });
 
       expect(instance.getCurrentTrackName()).toEqual("");
@@ -471,26 +456,26 @@ describe("BrainzPlayer", () => {
 
   describe("getCurrentTrackArtists", () => {
     it("returns the track artists string when it exists on a listen", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper!.setState({ currentListen: listen });
+        wrapper.setState({ currentListen: listen });
       });
 
       expect(instance.getCurrentTrackArtists()).toEqual("Moondog");
     });
 
     it("returns an empty string if currentListen is not set", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper!.setState({ currentListen: undefined });
+        wrapper.setState({ currentListen: undefined });
       });
 
       expect(instance.getCurrentTrackArtists()).toEqual("");
@@ -502,7 +487,7 @@ describe("BrainzPlayer", () => {
         ...props,
         spotifyUser: {},
       };
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
         GlobalContextMock
       );
@@ -516,7 +501,7 @@ describe("BrainzPlayer", () => {
       instance.dataSources.push(fakeDatasource as any);
       const numberOfDatasourcesBefore = instance.dataSources.length;
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           currentDataSourceIndex: numberOfDatasourcesBefore - 1,
           isActivated: true,
         });
@@ -544,13 +529,13 @@ describe("BrainzPlayer", () => {
     });
 
     it("calls seekToPositionMs on the datasource", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(async () => {
-        wrapper!.setState({ isActivated: true });
+        wrapper.setState({ isActivated: true });
       });
       instance.invalidateDataSource = jest.fn();
       const fakeDatasource = {
@@ -575,7 +560,7 @@ describe("BrainzPlayer", () => {
 
   describe("failedToPlayTrack", () => {
     it("does nothing if isActivated is false", () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
@@ -586,13 +571,13 @@ describe("BrainzPlayer", () => {
     });
 
     it("tries to play the next track if currentListen is not set", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(async () => {
-        wrapper!.setState({ isActivated: true });
+        wrapper.setState({ isActivated: true });
       });
       instance.playNextTrack = jest.fn();
       await act(async () => {
@@ -605,13 +590,13 @@ describe("BrainzPlayer", () => {
       const mockProps = {
         ...props,
       };
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(async () => {
-        wrapper!.setState({ isActivated: true, currentListen: listen });
+        wrapper.setState({ isActivated: true, currentListen: listen });
       });
       instance.playNextTrack = jest.fn();
       instance.playListen = jest.fn();
@@ -627,13 +612,13 @@ describe("BrainzPlayer", () => {
         ...props,
         listens: [listen, listen2],
       };
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
       await act(async () => {
-        wrapper!.setState({
+        wrapper.setState({
           isActivated: true,
           currentDataSourceIndex: instance.dataSources.length - 1,
           currentListen: listen,
@@ -659,7 +644,7 @@ describe("BrainzPlayer", () => {
       jest.useRealTimers();
     });
     it("does nothing if user is not logged in", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...props} />,
         GlobalContextMock
       );
@@ -673,7 +658,7 @@ describe("BrainzPlayer", () => {
     });
 
     it("does nothing if datasource already submits listens", async () => {
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <GlobalAppContext.Provider
           value={{
             ...GlobalContextMock.context,
@@ -715,7 +700,7 @@ describe("BrainzPlayer", () => {
     it("submits a playing_now with the expected metadata", async () => {
       const dateNowMock = jest.fn().mockReturnValue(1234567890);
       Date.now = dateNowMock;
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <GlobalAppContext.Provider
           value={{
             ...GlobalContextMock.context,
@@ -785,7 +770,7 @@ describe("BrainzPlayer", () => {
       const dateNowMock = jest.fn().mockReturnValue(1234567890);
       Date.now = dateNowMock;
 
-      wrapper = mount<BrainzPlayer>(
+      const wrapper = mount<BrainzPlayer>(
         <GlobalAppContext.Provider
           value={{
             ...GlobalContextMock.context,

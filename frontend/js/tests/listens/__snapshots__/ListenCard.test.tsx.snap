@@ -39,21 +39,22 @@ exports[`ListenCard renders correctly 1`] = `
       <div
         className="main-content"
       >
-        <div
+        <a
           className="listen-thumbnail"
+          href="https://musicbrainz.org/release/foo/cover-art"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="Add cover art in MusicBrainz"
         >
-          <a
-            href="https://musicbrainz.org/release/foo/cover-art"
-            rel="noopener noreferrer"
-            target="_blank"
-            title="Add cover art in MusicBrainz"
+          <div
+            className="add-cover-art"
           >
             <img
               alt="Add cover art in MusicBrainz"
-              src="/static/img/cover-art-placeholder.jpg"
+              src="/static/img/add-cover-art.svg"
             />
-          </a>
-        </div>
+          </div>
+        </a>
         <div
           className="listen-details"
         >
@@ -996,21 +997,22 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
       <div
         className="main-content"
       >
-        <div
+        <a
           className="listen-thumbnail"
+          href="https://musicbrainz.org/release/foo/cover-art"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="Add cover art in MusicBrainz"
         >
-          <a
-            href="https://musicbrainz.org/release/foo/cover-art"
-            rel="noopener noreferrer"
-            target="_blank"
-            title="Add cover art in MusicBrainz"
+          <div
+            className="add-cover-art"
           >
             <img
               alt="Add cover art in MusicBrainz"
-              src="/static/img/cover-art-placeholder.jpg"
+              src="/static/img/add-cover-art.svg"
             />
-          </a>
-        </div>
+          </div>
+        </a>
         <div
           className="listen-details"
         >
@@ -1925,21 +1927,22 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
       <div
         className="main-content"
       >
-        <div
+        <a
           className="listen-thumbnail"
+          href="https://musicbrainz.org/release/foo/cover-art"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="Add cover art in MusicBrainz"
         >
-          <a
-            href="https://musicbrainz.org/release/foo/cover-art"
-            rel="noopener noreferrer"
-            target="_blank"
-            title="Add cover art in MusicBrainz"
+          <div
+            className="add-cover-art"
           >
             <img
               alt="Add cover art in MusicBrainz"
-              src="/static/img/cover-art-placeholder.jpg"
+              src="/static/img/add-cover-art.svg"
             />
-          </a>
-        </div>
+          </div>
+        </a>
         <div
           className="listen-details"
         >

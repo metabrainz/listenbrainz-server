@@ -7,6 +7,5 @@ describe("Card", () => {
   it("renders correctly", () => {
     const wrapper = mount(<Card>Test</Card>);
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 });
