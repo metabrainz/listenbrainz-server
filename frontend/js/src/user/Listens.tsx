@@ -254,7 +254,7 @@ export default class Listens extends React.Component<
         newAlert(
           "danger",
           "We could not load data for the now playing listen",
-          typeof error === "object" ? error.message : error
+          error.status ?? error.toString()
         );
       }
     }

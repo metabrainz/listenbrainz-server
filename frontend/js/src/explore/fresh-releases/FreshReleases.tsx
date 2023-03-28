@@ -84,7 +84,11 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
         setAllFilters(releaseTypes);
         setIsLoading(false);
       } catch (error) {
-        newAlert("danger", "Couldn't fetch fresh releases", error.toString());
+        newAlert(
+          "danger",
+          "Couldn't fetch fresh releases",
+          error.status ?? error.toString()
+        );
       }
     };
     // Call the async function defined above (useEffect can't return a Promise)
