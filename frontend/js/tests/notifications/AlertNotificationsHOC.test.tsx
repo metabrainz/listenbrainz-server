@@ -62,7 +62,6 @@ describe("AlertNotifications higher-order component", () => {
     expect(
       wrapper.find(".alert").at(2).contains("Time for *us* to hit the bar")
     ).toBeTruthy();
-    wrapper.unmount();
   });
 
   describe("newAlert", () => {
@@ -147,7 +146,6 @@ describe("AlertNotifications higher-order component", () => {
           message: <p>foobar</p>,
         },
       ]);
-      wrapper.unmount();
     });
     it("creates a new alert from child component", async () => {
       const WrappedComponent = withAlertNotifications(fakeComponent);
@@ -167,7 +165,6 @@ describe("AlertNotifications higher-order component", () => {
       expect(wrapper.state().alerts).toEqual([
         { id: 0, type: "warning", headline: "Test", message: "foobar" },
       ]);
-      wrapper.unmount();
     });
   });
 
@@ -205,7 +202,6 @@ describe("AlertNotifications higher-order component", () => {
       expect(wrapper.find(".alert").at(0).childAt(0).type()).toEqual("button");
       wrapper.find(".alert").at(0).childAt(0).simulate("click");
       expect(wrapper.state().alerts).toEqual([]);
-      wrapper.unmount();
     });
   });
 });

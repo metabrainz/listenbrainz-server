@@ -35,24 +35,9 @@ const props = {
 };
 
 describe("SoundcloudPlayer", () => {
-  let wrapper:
-    | ReactWrapper<DataSourceProps, SoundcloudPlayerState, SoundcloudPlayer>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders", () => {
     window.fetch = jest.fn();
-    wrapper = mount(<SoundcloudPlayer {...props} />);
+    const wrapper = mount(<SoundcloudPlayer {...props} />);
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -75,7 +60,9 @@ describe("SoundcloudPlayer", () => {
       onInvalidateDataSource,
       onTrackNotFound,
     };
-    wrapper = mount<SoundcloudPlayer>(<SoundcloudPlayer {...mockProps} />);
+    const wrapper = mount<SoundcloudPlayer>(
+      <SoundcloudPlayer {...mockProps} />
+    );
 
     const instance = wrapper.instance();
     if (!instance.soundcloudPlayer) {
@@ -111,7 +98,9 @@ describe("SoundcloudPlayer", () => {
       onInvalidateDataSource,
       onTrackNotFound,
     };
-    wrapper = mount<SoundcloudPlayer>(<SoundcloudPlayer {...mockProps} />);
+    const wrapper = mount<SoundcloudPlayer>(
+      <SoundcloudPlayer {...mockProps} />
+    );
     const instance = wrapper.instance();
 
     if (!instance.soundcloudPlayer) {
@@ -136,7 +125,9 @@ describe("SoundcloudPlayer", () => {
       onDurationChange,
       onProgressChange,
     };
-    wrapper = mount<SoundcloudPlayer>(<SoundcloudPlayer {...mockProps} />);
+    const wrapper = mount<SoundcloudPlayer>(
+      <SoundcloudPlayer {...mockProps} />
+    );
     const instance = wrapper.instance();
     await act(() => {
       instance.setState({ currentSoundId: 1 });
@@ -176,7 +167,7 @@ describe("SoundcloudPlayer", () => {
   });
 
   it("should instruct the player to toggle play if togglePlay is called", () => {
-    wrapper = mount<SoundcloudPlayer>(<SoundcloudPlayer {...props} />);
+    const wrapper = mount<SoundcloudPlayer>(<SoundcloudPlayer {...props} />);
     const instance = wrapper.instance();
     if (!instance.soundcloudPlayer) {
       throw new Error("no SoundcloudPlayer");
@@ -189,7 +180,7 @@ describe("SoundcloudPlayer", () => {
   });
 
   it("should instruct the player seek to a position if seekToPositionMs is called", () => {
-    wrapper = mount<SoundcloudPlayer>(<SoundcloudPlayer {...props} />);
+    const wrapper = mount<SoundcloudPlayer>(<SoundcloudPlayer {...props} />);
     const instance = wrapper.instance();
     if (!instance.soundcloudPlayer) {
       throw new Error("no SoundcloudPlayer");

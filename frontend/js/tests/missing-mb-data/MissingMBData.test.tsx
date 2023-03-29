@@ -42,7 +42,6 @@ describe("MissingMBDataPage", () => {
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
-    wrapper.unmount();
   });
 
   describe("handleClickPrevious", () => {
@@ -70,7 +69,6 @@ describe("MissingMBDataPage", () => {
         props.missingData.slice(0, 25)
       );
       expect(instance.afterDisplay).toHaveBeenCalledTimes(0);
-      wrapper.unmount();
     });
 
     it("goes to previous (first) page when on second page", async () => {
@@ -101,7 +99,6 @@ describe("MissingMBDataPage", () => {
         props.missingData.slice(0, 25)
       );
       expect(afterDisplaySpy).toHaveBeenCalledTimes(1);
-      wrapper.unmount();
     });
   });
 
@@ -138,7 +135,6 @@ describe("MissingMBDataPage", () => {
         props.missingData.slice(50, 73)
       );
       expect(instance.afterDisplay).toHaveBeenCalledTimes(0);
-      wrapper.unmount();
     });
 
     it("goes to next page when on first page", async () => {
@@ -163,7 +159,6 @@ describe("MissingMBDataPage", () => {
         props.missingData.slice(25, 50)
       );
       expect(afterDisplaySpy).toHaveBeenCalledTimes(1);
-      wrapper.unmount();
     });
   });
 });

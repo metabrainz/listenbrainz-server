@@ -65,7 +65,6 @@ describe("<FollowButton />", () => {
       </GlobalAppContext.Provider>
     );
     expect(wrapper.html()).toMatchSnapshot();
-    wrapper.unmount();
   });
 
   it("renders with the correct text based on the props", async () => {
@@ -95,7 +94,6 @@ describe("<FollowButton />", () => {
       wrapper.setState({ loggedInUserFollowsUser: true, hover: true });
     });
     expect(wrapper.contains("Unfollow")).toBeTruthy();
-    wrapper.unmount();
   });
 
   describe("handleButtonClick", () => {
@@ -132,7 +130,6 @@ describe("<FollowButton />", () => {
         clickButton(wrapper);
       });
       expect(spy).toHaveBeenCalledTimes(1);
-      wrapper.unmount();
     });
 
     it("unfollows the user if logged in user is already following the user", async () => {
@@ -148,7 +145,6 @@ describe("<FollowButton />", () => {
         clickButton(wrapper);
       });
       expect(spy).toHaveBeenCalledTimes(1);
-      wrapper.unmount();
     });
   });
 });
