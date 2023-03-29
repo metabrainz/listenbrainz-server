@@ -13,7 +13,7 @@
 		<ol class="breadcrumb">
 			<li {{ 'class=active' if active_settings_section == 'info'}}><a href="{{ url_for('profile.info') }}">Settings</a></li>
 			{% if not active_settings_section == 'info' %}
-			<li class="active">{{ active_settings_section|title }}</li>
+			<li class="active">{{ active_settings_section|replace("-", " ")|capitalize }}</li>
 			{% endif %}
 		</ol>
 	</div>
