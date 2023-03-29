@@ -69,11 +69,9 @@
 }
 .rc-slider-handle {
   position: absolute;
-  width: 3rem;
-  height: 3rem;
-  margin-top: -12px;
+  width: 5px;
+  height: 147px;
   background-color: @orange;
-  border-radius: 50%;
   cursor: pointer;
   cursor: -webkit-grab;
   cursor: grab;
@@ -186,7 +184,7 @@
   margin: 1rem 0 1rem 1rem;
 
   .rc-slider-rail {
-    width: 0.7rem;
+    width: 0.5rem;
     height: 100%;
     &:hover ~ .rc-slider-handle {
       border: solid 5px lighten(@orange, 10%);
@@ -198,19 +196,18 @@
     width: 4px;
   }
   .rc-slider-handle {
-    width: 3rem;
-    height: 3rem;
-    margin-top: 0;
+    width: 5px;
+    height: 147px;
     margin-left: -12px;
     touch-action: pan-y;
     z-index: 1;
     transition: all 0.5s cubic-bezier(0.46, 0.03, 0.52, 0.96) 0s;
   }
-  .rc-slider-mark {
-    top: 0;
-    left: 18px;
-    height: 100%;
-  }
+    .rc-slider-mark {
+      top: 0;
+      left: 18px;
+      height: 100%;
+    }
   .rc-slider-step {
     width: 4px;
     height: 100%;
