@@ -151,3 +151,4 @@ class SpotifyServiceTestCase(IntegrationTestCase):
         self.assertEqual(self.user_id, user['user_id'])
         self.assertEqual('access-token', user['access_token'])
         self.assertEqual('refresh-token', user['refresh_token'])
+        self.assertEqual("test_user_id", user["external_user_id"])
