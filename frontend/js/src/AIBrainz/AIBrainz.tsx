@@ -1,8 +1,6 @@
-import Sentry, { ErrorBoundary } from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
+import { ErrorBoundary } from "@sentry/react";
 import React, { useCallback, useContext, useState } from "react";
 import { createRoot } from "react-dom/client";
-import ReactTooltip from "react-tooltip";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
   withAlertNotifications,
@@ -352,25 +350,11 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+  const { domContainer, globalAppContext } = getPageProps();
 
   const AIBrainzComponentWithAlertNotifications = withAlertNotifications(
     AIBrainzComponent
   );
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
