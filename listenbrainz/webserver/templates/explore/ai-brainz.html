@@ -97,12 +97,15 @@ AIBrainz
 {% endblock %}
 
 <!-- these props are used in the navbar to highlight the navbar items -->
-{% set active_page = "explore" %}
 
 {% block content %}
-
-    <div id="react-container"></div>
-
+  <div class="secondary-nav">
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('explore.index') }}">Explore</a></li>
+        <li class="active">AI Brainz</li>
+    </ol>
+  </div>
+  {{ super() }}
 {% endblock %}
 
 {% block scripts %}

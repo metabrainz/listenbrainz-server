@@ -69,5 +69,6 @@ def ai_brainz():
     """ Explore your love of Rick """
 
     return render_template(
-        "explore/ai-brainz.html"
+        "explore/ai-brainz.html",
+        active_page="ai-brainz"
     )
