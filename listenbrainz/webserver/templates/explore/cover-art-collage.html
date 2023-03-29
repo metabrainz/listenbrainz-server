@@ -12,10 +12,13 @@ ListenBrainz Album covers of 2022
         body {
             padding-bottom: 0;
         }
-        body>.container {
-            margin:0;
+        body>:not(nav){
+            padding-bottom: 0;
+        }
+        #react-container {
+            margin: -21px -15px 0;
             padding:0;
-            width: 100%;
+            max-width: calc(100% - 160px);
         }
         section.footer{
             display: none;
@@ -27,7 +30,12 @@ ListenBrainz Album covers of 2022
 {% set active_page = "explore" %}
 
 {% block content %}
-
+    <div class="secondary-nav">
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('explore.index') }}">Explore</a></li>
+            <li class="active">Cover Art Collage</li>
+        </ol>
+    </div>
     <div id="react-container"></div>
 
 {% endblock %}

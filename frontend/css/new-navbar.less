@@ -4,6 +4,14 @@
 @offscreen-sidenav-breakpoint: @grid-float-breakpoint-max;
 @navbar-height: 72px;
 @max-content-width: 1200px;
+@nav-background-color: #F3F3F3;
+
+@nav-tabs-link-padding: 1em 1.5em;
+@nav-tabs-link-padding-mobile: 0.8em 1em;
+@nav-tabs-background-color: @nav-background-color;
+@tabs-height: 42px;
+@tabs-height-mobile: 42px;
+@nav-link-color: #1E1E1E;
 
 body {
 	display: flex;
@@ -17,6 +25,7 @@ body {
 			left: 0;
 			top: 0;
 			bottom:0;
+			font-family: "Roboto", sans-serif;
 			text-align: right;
 			flex-direction: column;
 			align-items: flex-end;
@@ -24,10 +33,10 @@ body {
 			border-image: linear-gradient(
 			to bottom,
 			@blue,
-			@orange
+			#ffa500
 			) 1 100%;
 			padding: 1.2em;
-			background-color: @white;
+			background-color: @nav-background-color;
 			z-index: 100;
 			
 			
@@ -43,6 +52,7 @@ body {
 				}
 				&.active{
 					text-decoration: underline;
+					text-decoration-thickness: 2px;
 					text-underline-offset: 6px;
 					font-style: italic;
 					font-weight: 700;
@@ -59,13 +69,15 @@ body {
 			}
 			.navbar-bottom {
 				margin-top:auto;
-				font-size: 12px;
+				font-size: 14px;
+				line-height: 1.5em;
 			}
 			.navbar-logo {
 				z-index: 102; // just above the toggle hamburger button
 			}
 			.search-bar{
 				position: relative;
+				margin-top: 1em;
 				input{
 					background-color: @nav-tabs-border-color;
 					color: @nav-link-color;
@@ -184,12 +196,6 @@ body {
 
 }
 
-@nav-tabs-link-padding: 1em 1.5em;
-@nav-tabs-link-padding-mobile: 0.8em 1em;
-@nav-tabs-background-color: #F3F3F3;
-@tabs-height: 42px;
-@tabs-height-mobile: 42px;
-@nav-link-color: #1E1E1E;
 .secondary-nav{
 	/* Secondary nav container should be full width and scrollable if there is excess */
 	width: calc(100% + @grid-gutter-width);
@@ -227,10 +233,13 @@ body {
 			}
 			&.username{
 				font-weight: 700;
-				background: linear-gradient(to right,@blue 10%,@orange 170%);
+				background: linear-gradient(288deg, #46433A 16.96%, @blue 98.91%);
 				color: @white;
 				> * {
 					padding: @nav-tabs-link-padding;
+				}
+				a, a:hover, a:visited, a:visited:hover{
+					color: @white;
 				}
 			}
 			&.disabled {

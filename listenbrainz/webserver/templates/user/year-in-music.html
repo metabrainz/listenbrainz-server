@@ -4,6 +4,8 @@
 ListenBrainz Year in Music {{ year }} for {{ user_name }}
 {% endblock %}
 
+{% set active_page = "explore" %}
+
 {% block head %}
    {{ super() }}
    <meta name="description" content="Check out the music review for {{ year }} that @ListenBrainz created from my listening history!" />
@@ -39,6 +41,12 @@ ListenBrainz Year in Music {{ year }} for {{ user_name }}
 {% endblock %}
 
 {% block content %}
+    <div class="secondary-nav">
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('explore.index') }}">Explore</a></li>
+            <li class="active">Year in Music {{ year }}</li>
+        </ol>
+    </div>
 
     <div id="react-container"></div>
 
