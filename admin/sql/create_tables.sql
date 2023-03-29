@@ -124,6 +124,7 @@ CREATE TABLE spotify_auth (
 CREATE TABLE external_service_oauth (
     id                      SERIAL,  -- PK
     user_id                 INTEGER NOT NULL,  -- FK to "user".id
+    external_user_id        TEXT,
     service                 external_service_oauth_type NOT NULL,
     access_token            TEXT NOT NULL,
     refresh_token           TEXT,
