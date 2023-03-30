@@ -82,8 +82,6 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   }, []);
 
   // ToolTip code starts
-
-  // eslint-disable-next-line react/no-unstable-nested-components @typescript-eslint/no-shadow
   function HandleTooltip(props: {
     value: number;
     children: React.ReactElement;
@@ -95,9 +93,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     let values;
 
     const tooltipArr = Object.entries(marks).slice(0).reverse();
-    // eslint-disable-next-line no-plusplus
     for (let i = 0; i < tooltipArr.length; i++) {
-      // eslint-disable-next-line prefer-destructuring
       if (value >= +tooltipArr[i][0]) {
         values = tooltipArr[i][1];
         break;
@@ -115,9 +111,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         {children}
       </Tooltip>
     );
-  }  // eslint-disable-next-line @typescript-eslint/no-shadow
+  } 
 
-  // eslint-disable-next-line react/destructuring-assignment
   const handleRender: SliderProps["handleRender"] = (node, props) => {
     return (
       <HandleTooltip value={props.value} visible={props.dragging}>
