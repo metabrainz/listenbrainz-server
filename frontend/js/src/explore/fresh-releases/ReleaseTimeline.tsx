@@ -1,5 +1,7 @@
 import * as React from "react";
 import Slider from "rc-slider";
+import type { SliderProps } from "rc-slider";
+import Tooltip from "rc-tooltip";
 import { countBy, debounce, zipObject } from "lodash";
 import { formatReleaseDate, useMediaQuery } from "./utils";
 
@@ -79,6 +81,53 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     };
   }, []);
 
+  // ToolTip code starts
+
+  // eslint-disable-next-line react/no-unstable-nested-components @typescript-eslint/no-shadow
+  function HandleTooltip(props: {
+    value: number;
+    children: React.ReactElement;
+    visible: boolean;
+  }) {
+    const { value, children, visible, ...restProps } = props;
+
+    let key;
+    let values;
+
+    const tooltipArr = Object.entries(marks).slice(0).reverse();
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < tooltipArr.length; i++) {
+      // eslint-disable-next-line prefer-destructuring
+      if (value >= +tooltipArr[i][0]) {
+        values = tooltipArr[i][1];
+        break;
+      }
+    }
+
+    return (
+      <Tooltip
+        placement="left"
+        overlay={<h3>{values}</h3>}
+        overlayInnerStyle={{ minHeight: "auto" }}
+        visible={visible}
+        {...restProps}
+      >
+        {children}
+      </Tooltip>
+    );
+  }  // eslint-disable-next-line @typescript-eslint/no-shadow
+
+  // eslint-disable-next-line react/destructuring-assignment
+  const handleRender: SliderProps["handleRender"] = (node, props) => {
+    return (
+      <HandleTooltip value={props.value} visible={props.dragging}>
+        {node}
+      </HandleTooltip>
+    );
+  };
+
+  // ToolTip code ends
+
   return (
     <div className="slider-container">
       <Slider
@@ -89,6 +138,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         marks={marks}
         value={currentValue}
         onChange={changeHandler}
+        handleRender={handleRender}
       />
     </div>
   );
