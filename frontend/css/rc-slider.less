@@ -13,6 +13,7 @@
 @border_color_4: #ccc;
 @border_color_5: transparent;
 @border_top_color_1: #6c6c6c;
+@tooltip_color: #353070;
 
 @keyframes rcSliderTooltipZoomDownIn {
   0% {
@@ -205,6 +206,34 @@
     touch-action: pan-y;
     z-index: 1;
     transition: all 0.5s cubic-bezier(0.46, 0.03, 0.52, 0.96) 0s;
+
+    .rc-custom-tooltip {
+      margin-top: -75px;
+      margin-left: -185px;
+      white-space: nowrap;
+      padding-right: 40px;
+      width: 185px;
+      height: 135px;
+      color: #d30909;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+      background-color: @tooltip_color;
+      clip-path: path('M121.457 116.741C108.557 128.065 91.2061 135 72.1242 135C32.2911 135 0 104.779 0 67.5C0 30.2208 32.2911 0 72.1242 0C89.4524 0 105.353 5.71905 117.79 15.2503L117.804 15.2534L170.098 55.5182C177.897 61.5228 177.897 73.2839 170.098 79.2885L121.457 116.741Z');
+      
+      h3{
+        padding-top: 35px;
+        color: white;
+        font-weight: 900;
+        font-size: 5rem;
+        line-height: 1;
+      }
+      h4{
+        font-size: 2rem;
+        color: #fff;
+        line-height: 0.5;
+      }
+  }
   }
   .rc-slider-mark {
     top: 0;

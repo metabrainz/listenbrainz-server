@@ -9,13 +9,43 @@ type ReleaseTimelineProps = {
 
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases } = props;
-
-  const [currentValue, setCurrentValue] = React.useState<number | number[]>();
+  const { Handle } = Slider;
+  const [currentValue, setCurrentValue] = React.useState<number>();
   const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 
-  const changeHandler = React.useCallback((percent: number | number[]) => {
+  const formatTooltip = (value: number): string => {
+    // let result = "";
+    // Object.entries(marks)
+    //   .reverse()
+    //   .forEach(([key, val]) => {
+    //     if (value >= +key && result === "") {
+    //       result = val;
+    //     }
+    //   });
+    // return result;
+    const tooltipArr = Object.entries(marks).reverse();
+    const [key, val] = tooltipArr.find(([k, _]) => value >= +k) || ["", ""];
+    return val;
+  };
+
+  const tooltipHandle = (props: any) => {
+    const { value, dragging, index, ...restProps } = props;
+    const tooltipDate = formatTooltip(value);
+    return (
+      <Handle value={value} {...restProps}>
+        {dragging && (
+          <div className="rc-custom-tooltip">
+            <h3>{tooltipDate.slice(0, 2)}</h3>
+            <h4>{tooltipDate.slice(2)}</h4>
+          </div>
+        )}
+      </Handle>
+    );
+  };
+
+  const changeHandler = React.useCallback((percent: number) => {
     setCurrentValue(percent);
     const element: HTMLElement | null = document.getElementById(
       "release-cards-grid"
@@ -34,6 +64,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     const datesArr = Object.keys(releasesPerDate).map((item) =>
       formatReleaseDate(item)
     );
+    // const percentArr1 = Object.values(releasesPerDate).map(
+    //   (item) => (item / data.length) * 100
+    // );
     const percentArr = Object.values(releasesPerDate)
       .map((item) => (item / data.length) * 100)
       .map((_, index, arr) =>
@@ -54,13 +87,13 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     // Scroll to the current date
     setCurrentValue(middle);
     window.scrollTo({ top: changeHandler(middle), behavior: "smooth" });
-
     return zipObject(percentArr, datesArr);
   }
 
   const handleScroll = React.useCallback(
     debounce(() => {
       // TODO change to relative position of #release-cards-grid instead of window
+      // calculate as per the height of the card
       const scrollPos =
         (window.scrollY / document.documentElement.scrollHeight) * 100;
       setCurrentValue(scrollPos);
@@ -89,6 +122,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         marks={marks}
         value={currentValue}
         onChange={changeHandler}
+        handle={tooltipHandle}
       />
     </div>
   );
