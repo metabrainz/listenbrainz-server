@@ -66,6 +66,7 @@ def get_user(user_id: int) -> Optional[dict]:
                  , "user".musicbrainz_id
                  , "user".musicbrainz_row_id
                  , external_service_oauth.service
+                 , external_user_id
                  , access_token
                  , refresh_token
                  , external_service_oauth.last_updated
