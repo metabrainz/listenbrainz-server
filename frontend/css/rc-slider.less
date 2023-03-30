@@ -51,6 +51,35 @@
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   }
 }
+.tooltip-div {
+  white-space: nowrap;
+  padding-right: 40px;
+  width: 185px;
+  height: 135px;
+  color: #d30909;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  background-color: @tooltip_color;
+  clip-path: path('M121.457 116.741C108.557 128.065 91.2061 135 72.1242 135C32.2911 135 0 104.779 0 67.5C0 30.2208 32.2911 0 72.1242 0C89.4524 0 105.353 5.71905 117.79 15.2503L117.804 15.2534L170.098 55.5182C177.897 61.5228 177.897 73.2839 170.098 79.2885L121.457 116.741Z');
+
+  .tooltip-text {
+    transform: translateY(25px);
+  }
+
+  h3 {
+    color: white;
+    font-weight: 900;
+    font-size: 5rem;
+    line-height: 1;
+  }
+
+  h4 {
+    font-size: 2rem;
+    color: #fff;
+    line-height: 1;
+  }
+}
 .rc-slider-rail {
   position: absolute;
   width: 100%;
@@ -180,6 +209,16 @@
 .rc-slider.slider-horizontal .rc-slider-mark-text {
   transform: translateY(4px) rotateZ(45deg) !important;
 }
+.rc-slider.slider-horizontal  .rc-custom-tooltip {
+      margin-left: -75px;
+      margin-top: -185px;
+      transform: rotateZ(90deg);
+      .tooltip-div();
+      .tooltip-text {
+        transform: translateY(25px) rotateZ(-90deg);
+      }
+}
+
 .rc-slider-vertical {
   width: 5rem;
   height: 100%;
@@ -210,29 +249,7 @@
     .rc-custom-tooltip {
       margin-top: -75px;
       margin-left: -185px;
-      white-space: nowrap;
-      padding-right: 40px;
-      width: 185px;
-      height: 135px;
-      color: #d30909;
-      font-weight: bold;
-      text-align: center;
-      text-decoration: none;
-      background-color: @tooltip_color;
-      clip-path: path('M121.457 116.741C108.557 128.065 91.2061 135 72.1242 135C32.2911 135 0 104.779 0 67.5C0 30.2208 32.2911 0 72.1242 0C89.4524 0 105.353 5.71905 117.79 15.2503L117.804 15.2534L170.098 55.5182C177.897 61.5228 177.897 73.2839 170.098 79.2885L121.457 116.741Z');
-      
-      h3{
-        padding-top: 35px;
-        color: white;
-        font-weight: 900;
-        font-size: 5rem;
-        line-height: 1;
-      }
-      h4{
-        font-size: 2rem;
-        color: #fff;
-        line-height: 0.5;
-      }
+      .tooltip-div()
   }
   }
   .rc-slider-mark {
@@ -328,3 +345,4 @@
   border-color: @border_color_5;
   border-style: solid;
 }
+

@@ -16,18 +16,15 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 
   const formatTooltip = (value: number): string => {
-    // let result = "";
-    // Object.entries(marks)
-    //   .reverse()
-    //   .forEach(([key, val]) => {
-    //     if (value >= +key && result === "") {
-    //       result = val;
-    //     }
-    //   });
-    // return result;
-    const tooltipArr = Object.entries(marks).reverse();
-    const [key, val] = tooltipArr.find(([k, _]) => value >= +k) || ["", ""];
-    return val;
+    let result = "";
+    Object.entries(marks)
+      .reverse()
+      .forEach(([key, val]) => {
+        if (value >= +key && result === "") {
+          result = val;
+        }
+      });
+    return result;
   };
 
   const tooltipHandle = (props: any) => {
@@ -37,8 +34,10 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       <Handle value={value} {...restProps}>
         {dragging && (
           <div className="rc-custom-tooltip">
-            <h3>{tooltipDate.slice(0, 2)}</h3>
-            <h4>{tooltipDate.slice(2)}</h4>
+            <div className="tooltip-text">
+              <h3>{tooltipDate.slice(0, 2)}</h3>
+              <h4>{tooltipDate.slice(2)}</h4>
+            </div>
           </div>
         )}
       </Handle>
@@ -64,9 +63,6 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     const datesArr = Object.keys(releasesPerDate).map((item) =>
       formatReleaseDate(item)
     );
-    // const percentArr1 = Object.values(releasesPerDate).map(
-    //   (item) => (item / data.length) * 100
-    // );
     const percentArr = Object.values(releasesPerDate)
       .map((item) => (item / data.length) * 100)
       .map((_, index, arr) =>
@@ -93,7 +89,6 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const handleScroll = React.useCallback(
     debounce(() => {
       // TODO change to relative position of #release-cards-grid instead of window
-      // calculate as per the height of the card
       const scrollPos =
         (window.scrollY / document.documentElement.scrollHeight) * 100;
       setCurrentValue(scrollPos);
