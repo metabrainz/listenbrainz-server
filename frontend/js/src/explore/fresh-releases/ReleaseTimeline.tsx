@@ -1,8 +1,8 @@
 import * as React from "react";
 import Slider from "rc-slider";
-import type { SliderProps } from "rc-slider";
-import Tooltip from "rc-tooltip";
 import { countBy, debounce, zipObject } from "lodash";
+// import type { SliderProps } from "rc-slider";
+import Tooltip from "rc-tooltip";
 import { formatReleaseDate, useMediaQuery } from "./utils";
 
 type ReleaseTimelineProps = {
@@ -81,48 +81,6 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     };
   }, []);
 
-  // ToolTip code starts
-  function HandleTooltip(props: {
-    value: number;
-    children: React.ReactElement;
-    visible: boolean;
-  }) {
-    const { value, children, visible, ...restProps } = props;
-
-    let key;
-    let values;
-
-    const tooltipArr = Object.entries(marks).slice(0).reverse();
-    for (let i = 0; i < tooltipArr.length; i++) {
-      if (value >= +tooltipArr[i][0]) {
-        values = tooltipArr[i][1];
-        break;
-      }
-    }
-
-    return (
-      <Tooltip
-        placement="left"
-        overlay={<h3>{values}</h3>}
-        overlayInnerStyle={{ minHeight: "auto" }}
-        visible={visible}
-        {...restProps}
-      >
-        {children}
-      </Tooltip>
-    );
-  } 
-
-  const handleRender: SliderProps["handleRender"] = (node, props) => {
-    return (
-      <HandleTooltip value={props.value} visible={props.dragging}>
-        {node}
-      </HandleTooltip>
-    );
-  };
-
-  // ToolTip code ends
-
   return (
     <div className="slider-container">
       <Slider
@@ -133,7 +91,30 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         marks={marks}
         value={currentValue}
         onChange={changeHandler}
-        handleRender={handleRender}
+        /* eslint-disable */
+        handleRender={(node, handleProps) => {
+          const { value } = handleProps;
+          let key;
+          let values;
+
+          const tooltipArr = Object.entries(marks).slice(0).reverse();
+          for (let i = 0; i < tooltipArr.length; i++) {
+            if (value >= +tooltipArr[i][0]) {
+              values = tooltipArr[i][1];
+              break;
+            }
+          }
+          return (
+            <Tooltip
+              overlayInnerStyle={{ minHeight: "auto" }}
+              overlay={<h3>{values}</h3>}
+              placement="left"
+            >
+              {node}
+            </Tooltip>
+          );
+        }}
+        /* eslint-enable */
       />
     </div>
   );
