@@ -113,7 +113,9 @@ def _get_spotify_details(user_id, service):
             return None
 
         sp = spotipy.Spotify(auth=token["access_token"])
-        spotify_user_id = sp.current_user()["id"]
+        # Retrieve the Spotify user ID from the external_service_oauth table
+        spotify_user_id = ExternalServiceOAuth.query.filter_by(user_id=user_id, service_name='spotify').first().external_user_id
+
         return {
             "is_public": True,
             "is_collaborative": False,
