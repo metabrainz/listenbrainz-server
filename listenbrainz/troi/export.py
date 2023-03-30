@@ -5,8 +5,10 @@ from troi.patches.playlist_from_listenbrainz import TransferPlaylistPatch
 
 def export_to_spotify(lb_token, spotify_token, playlist_mbid, is_public):
     sp = spotipy.Spotify(auth=spotify_token)
-    # TODO: store spotify user ids in external_service_oauth table
-    spotify_user_id = sp.current_user()["id"]
+    user_id = sp.current_user()["id"]
+    # Retrieve the Spotify user ID from the external_service_oauth table
+    spotify_user_id = ExternalServiceOAuth.query.filter_by(user_id=user_id, service_name='spotify').first().external_user_id
+
     args = {
         "mbid": playlist_mbid,
         "read_only_token": lb_token,
