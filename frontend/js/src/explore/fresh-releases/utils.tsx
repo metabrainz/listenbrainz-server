@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 
 export function formatReleaseDate(releaseDate: string) {
-  return new Intl.DateTimeFormat("en-US", {
+  const updatedDate = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
   })
     .formatToParts(new Date(Date.parse(releaseDate)))
-    .reverse()
-    .map((date_parts) => date_parts.value)
-    .join("");
+    .reverse();
+
+  updatedDate[0].value = updatedDate[0].value.padStart(2, "0");
+  return updatedDate.map((date_parts) => date_parts.value).join("");
 }
 
 // Originally from https://usehooks-ts.com/react-hook/use-media-query
