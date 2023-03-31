@@ -17,6 +17,9 @@
     // Preserving old behavior after moving to TypeScript ^4.4
     // https://www.typescriptlang.org/tsconfig#useUnknownInCatchVariables
     "useUnknownInCatchVariables": false,
+    "types": [
+      "./node_modules/network-information-types"
+    ]
   },
   "exclude": [
     "node_modules", "**/dist"
