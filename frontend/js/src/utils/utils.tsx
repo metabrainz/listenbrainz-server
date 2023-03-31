@@ -469,8 +469,6 @@ const getPageProps = (): {
       user_preferences,
     } = globalReactProps;
 
-    console.log(globalReactProps);
-
     if ("connection" in navigator) {
       if (navigator.connection?.saveData === true) {
         user_preferences!.saveDate = true;
