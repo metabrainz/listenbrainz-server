@@ -235,13 +235,14 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
         </tr>
       </table>
       <div className="flex confirmation">
-        <input
-          type="checkbox"
-          onChange={onCheckboxChange}
-          name="checkbox9"
-          checked={inputs.checkbox9}
-        />
         <div>
+          <input
+            type="checkbox"
+            onChange={onCheckboxChange}
+            name="checkbox9"
+            checked={inputs.checkbox9}
+            style={{ marginRight: "20px" }}
+          />
           I give my permission for AIBrainz to scan all my apps and devices, for
           music history.
           <br />
