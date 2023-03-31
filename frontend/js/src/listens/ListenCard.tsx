@@ -128,7 +128,7 @@ export default class ListenCard extends React.Component<
       !customThumbnail &&
       Boolean(listen) &&
       !isEqual(listen, oldProps.listen) &&
-      saveDataMode === true
+      saveDataMode !== true
     ) {
       await this.getCoverArt();
     }
