@@ -69,6 +69,7 @@ def get_global_props():
         "youtube": get_current_youtube_user(),
         "critiquebrainz": get_current_critiquebrainz_user(),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
+        "user_preferences": {},
     }
     return ujson.dumps(props)
 

@@ -419,7 +419,7 @@ type GlobalAppProps = {
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
   critiquebrainz?: CritiqueBrainzUser;
-  userPreferences?: UserPreferences;
+  user_preferences?: UserPreferences;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 
@@ -466,12 +466,14 @@ const getPageProps = (): {
       critiquebrainz,
       sentry_traces_sample_rate,
       sentry_dsn,
-      userPreferences
+      user_preferences,
     } = globalReactProps;
+
+    console.log(globalReactProps);
 
     if ("connection" in navigator) {
       if (navigator.connection?.saveData === true) {
-        userPreferences!.saveDate = true;
+        user_preferences!.saveDate = true;
       }
     }
 
@@ -484,7 +486,7 @@ const getPageProps = (): {
       spotifyAuth: spotify,
       youtubeAuth: youtube,
       critiquebrainzAuth: critiquebrainz,
-      userPreferences: userPreferences
+      userPreferences: user_preferences,
     };
     sentryProps = {
       sentry_dsn,

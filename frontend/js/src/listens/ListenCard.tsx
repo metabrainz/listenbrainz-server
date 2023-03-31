@@ -91,6 +91,7 @@ export type ListenCardProps = {
 export type ListenCardState = {
   isCurrentlyPlaying: boolean;
   thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
+  saveDataMode?: boolean;
 };
 
 export default class ListenCard extends React.Component<
@@ -106,20 +107,28 @@ export default class ListenCard extends React.Component<
 
     this.state = {
       isCurrentlyPlaying: false,
+      saveDataMode: false,
     };
   }
 
   async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-    await this.getCoverArt();
+    const { userPreferences } = this.context;
+    if (userPreferences?.saveDate) {
+      this.setState({ saveDataMode: true });
+    } else {
+      await this.getCoverArt();
+    }
   }
 
   async componentDidUpdate(oldProps: ListenCardProps) {
     const { listen, customThumbnail } = this.props;
+    const { saveDataMode } = this.state;
     if (
       !customThumbnail &&
       Boolean(listen) &&
-      !isEqual(listen, oldProps.listen)
+      !isEqual(listen, oldProps.listen) &&
+      saveDataMode === true
     ) {
       await this.getCoverArt();
     }
