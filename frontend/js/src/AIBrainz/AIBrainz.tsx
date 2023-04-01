@@ -105,7 +105,7 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
       <p>
         Settings
         <br />
-        <small>Customize your playlist accroding to your tastes</small>
+        <small>Customize your playlist according to your tastes</small>
       </p>
       {submitted && <p>Never gonna…</p>}
       <table className="settings">
