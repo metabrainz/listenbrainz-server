@@ -254,7 +254,7 @@ export default class Listens extends React.Component<
         newAlert(
           "danger",
           "We could not load data for the now playing listen",
-          error.status ?? error.toString()
+          typeof error === "object" ? error.message : error.toString()
         );
       }
     }
@@ -438,7 +438,6 @@ export default class Listens extends React.Component<
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const recordingMBID = getRecordingMBID(listen);
-
     if (!currentUser?.name || !recordingMBID) {
       return;
     }

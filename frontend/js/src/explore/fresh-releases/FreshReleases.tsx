@@ -87,7 +87,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
         newAlert(
           "danger",
           "Couldn't fetch fresh releases",
-          error.status ?? error.toString()
+          typeof error === "object" ? error.message : error.toString()
         );
       }
     };

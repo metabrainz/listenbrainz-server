@@ -1,9 +1,9 @@
 import datetime
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 
 import listenbrainz.db.fresh_releases
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import _parse_int_arg
 from listenbrainz.db.color import get_releases_for_color
 from brainzutils.ratelimit import ratelimit
@@ -59,8 +59,14 @@ def get_fresh_releases():
             raise APIBadRequest("Cannot parse date. Must be in YYYY-MM-DD format.")
     else:
         release_date = datetime.date.today()
+    
+    try:
+        db_releases = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days)   
+    except Exception as e:
+        current_app.logger.error("Server failed to get latest release: {}".format(e))
+        raise APIInternalServerError("Server failed to get latest release")
 
-    return jsonify([r.to_dict() for r in listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days)])
+    return jsonify([r.to_dict() for r in db_releases])
 
 
 @explore_api_bp.route("/color/<color>", methods=["GET", "OPTIONS"])

@@ -1,5 +1,5 @@
 from brainzutils.ratelimit import ratelimit
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify,current_app
 
 from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
 from listenbrainz.db.metadata import get_metadata_for_recording
@@ -7,7 +7,7 @@ from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.mbid_mapping_writer.mbid_mapper_metadata_api import MBIDMapperMetadataAPI
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header
 
@@ -142,15 +142,20 @@ def get_mbid_mapping():
         }
     ]
 
-    q = ArtistCreditRecordingLookupQuery(debug=False)
-    exact_results = q.fetch(params)
-    if exact_results:
-        return process_results(exact_results[0], metadata, incs)
+    try:
+        q = ArtistCreditRecordingLookupQuery(debug=False)
+        exact_results = q.fetch(params)
+        if exact_results:
+            return process_results(exact_results[0], metadata, incs)
 
-    q = MBIDMapperMetadataAPI(timeout=10, remove_stop_words=True, debug=False)
-    fuzzy_result = q.search(artist_name, recording_name)
-    if fuzzy_result:
-        return process_results(fuzzy_result, metadata, incs)
+        q = MBIDMapperMetadataAPI(timeout=10, remove_stop_words=True, debug=False)
+        fuzzy_result = q.search(artist_name, recording_name)
+        if fuzzy_result:
+            return process_results(fuzzy_result, metadata, incs)
+
+    except Exception as e:
+        current_app.logger.error("Server failed to lookup recording: {}".format(e))
+        raise APIInternalServerError("Server failed to lookup recording")
 
     return jsonify({})
 
