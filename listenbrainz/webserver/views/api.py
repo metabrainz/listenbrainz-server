@@ -18,7 +18,7 @@ from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
-    APIUnauthorized, ListenValidationError
+    APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
@@ -651,13 +651,14 @@ def get_service_details(user_name):
         }
 
     :param user_name: the MusicBrainz ID of the user whose similar users are being requested.
-    :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
+    :statuscode 200: Yay, you have data!
+    :statuscode 403: Forbidden, you do not have permissions to view this user's information.
     :statuscode 404: The requested user was not found.
     """
-    user = db_user.get_by_mb_id(user_name)
-    if not user:
-        raise APINotFound("User %s not found" % user_name)
+    user = validate_auth_header(fetch_email=True)
+    if user_name != user['musicbrainz_id']:
+        raise APIForbidden("You don't have permissions to view this user's information.")
 
     services = db_external_service_oauth.get_services(user["id"])
     return jsonify({'user_name': user_name, 'services': services})
