@@ -150,14 +150,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     }
   }
 
-  function getURLFromID(trackID: string | undefined): string | undefined {
-    if (currentDataSourceName === "youtube") {
-      return `https://www.youtube.com/watch?v=${trackID}`;
-    }
-
-    return undefined;
-  }
-
   const {
     children: dataSources,
     playerPaused,
@@ -228,7 +220,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       <div className="actions">
         {isPlayingATrack && currentDataSourceName && (
           <a
-            href={getURLFromID(trackUrl) ?? "#"}
+            href={trackUrl || "#"}
             aria-label={`Open in ${currentDataSourceName}`}
             title={`Open in ${currentDataSourceName}`}
             target="_blank"

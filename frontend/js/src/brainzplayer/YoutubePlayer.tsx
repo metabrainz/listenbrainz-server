@@ -97,6 +97,13 @@ export default class YoutubePlayer
     return images;
   }
 
+  static getURLFromVideoID(trackID: string): string {
+    if (trackID) {
+      return `https://www.youtube.com/watch?v=${trackID}`;
+    }
+    return "";
+  }
+
   static getURLFromListen(listen: Listen | JSPFTrack): string | undefined {
     const youtubeId = this.getVideoIDFromListen(listen);
     if (youtubeId) {
@@ -132,22 +139,18 @@ export default class YoutubePlayer
     const videoData =
       this.youtubePlayer?.getVideoData && this.youtubePlayer.getVideoData();
     let videoId: string = "";
+    let videoUrl: string = "";
     if (videoData) {
       title = videoData.title;
       videoId = videoData.video_id as string;
       images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
+      videoUrl = YoutubePlayer.getURLFromVideoID(videoId);
     } else {
       // Fallback to track name from the listen we are playing
       const { currentListen } = this.state;
       title = getTrackName(currentListen);
     }
-    onTrackInfoChange(
-      title,
-      `https://www.youtube.com/watch?v=${videoId}`,
-      undefined,
-      undefined,
-      images
-    );
+    onTrackInfoChange(title, videoUrl, undefined, undefined, images);
     const duration = this.youtubePlayer?.getDuration();
     if (duration) {
       onDurationChange(duration * 1000);
@@ -183,7 +186,8 @@ export default class YoutubePlayer
         const images: MediaImage[] = YoutubePlayer.getThumbnailsFromVideoid(
           videoId
         );
-        onTrackInfoChange(title, videoId, undefined, undefined, images);
+        const videoUrl = YoutubePlayer.getURLFromVideoID(videoId);
+        onTrackInfoChange(title, videoUrl, undefined, undefined, images);
       }
     }
     if (state === YouTube.PlayerState.PAUSED) {
