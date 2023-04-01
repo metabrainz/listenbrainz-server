@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get, isEqual, isNil, isNumber } from "lodash";
+import { get, isEmpty, isEqual, isNil, isNumber } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -549,7 +549,7 @@ export default class ListenCard extends React.Component<
                         dataTarget="#PersonalRecommendationModal"
                       />
                     )}
-                    {Boolean(currentUser) && Boolean(recordingMSID) && (
+                    {!isEmpty(currentUser) && Boolean(recordingMSID) && (
                       <ListenControl
                         text="Link with MusicBrainz"
                         icon={faLink}
