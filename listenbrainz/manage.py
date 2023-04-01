@@ -293,12 +293,13 @@ def msb_transfer_db():
 
 
 @cli.command()
-def run_daily_jams():
+@click.option("--create-all", is_flag=True, help="Create the daily jams for all users. if false (default), only for users according to timezone.")
+def run_daily_jams(create_all):
     """ Generate daily playlists for users soon after the new day begins in their timezone. This is an internal LB
     method and not a core function of troi.
     """
     with create_app().app_context():
-        run_daily_jams_troi_bot()
+        run_daily_jams_troi_bot(create_all)
 
 
 @cli.command()
