@@ -86,25 +86,40 @@
   padding: 0 9px 0 5px;
 }
 .rc-tooltip-inner {
-  > h3 {
-    transform: rotate(-45deg);
+  
+  >div{
+  >h1{
+    font-weight: bold;
+    font-size: 90px;
     color: #fff;
-    font-family: Roboto, Sintony, sans-serif;
-    font-weight: 300;
-    line-height: 1.3;
-    font-size: 24px;
-  }
-  padding: 8px 2px;
+    margin-right: 70px;
+    position: relative;
+    top: 25px;
+    
+}
+>h3{
+  margin-right: 70px;
+  font-weight: bold;
   color: #fff;
-  text-align: left;
+  position: relative;
+  bottom: 10px;
+}
+  }
+  height: 28rem;
+  width: 28rem;
+  @media (max-width:992px) {
+   clip-path: path("M27.9645 170.581C11.0084 152.504 0.623929 128.189 0.623929 101.449C0.623929 45.6282 45.8754 0.376709 101.696 0.376709C157.516 0.376709 202.768 45.6282 202.768 101.449C202.768 125.732 194.204 148.015 179.933 165.442L179.928 165.462L113.424 246.297C107.424 253.59 96.2574 253.59 90.257 246.297L27.9645 170.581Z");
+
+  }
+
+  @media (min-width:992px) {
+    clip-path: path("M170.204 174.803C152.127 191.759 127.812 202.144 101.072 202.144C45.2515 202.144 0 156.892 0 101.072C0 45.2515 45.2515 0 101.072 0C125.355 0 147.638 8.56349 165.066 22.8353L165.086 22.8399L245.92 89.3436C253.214 95.344 253.214 106.51 245.92 112.511L170.204 174.803Z");
+  }
+  color: #fff;
+  text-align: center;
   text-decoration: none;
   background-color: rgb(235, 116, 59);
-  border-radius: 80px;
-  border-top-right-radius: 0px;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.17);
-  min-height: 34px;
-  transform: rotate(45deg);
-  margin-right: 20px;
 }
 .rc-tooltip-arrow {
   position: absolute;

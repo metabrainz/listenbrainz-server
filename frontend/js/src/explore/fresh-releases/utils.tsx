@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export function formatReleaseDate(releaseDate: string) {
   const updatedDate = new Intl.DateTimeFormat("en-US", {
-    month: "short",
+    month: "long",
     day: "numeric",
   })
     .formatToParts(new Date(Date.parse(releaseDate)))

@@ -1,7 +1,6 @@
 import * as React from "react";
 import Slider from "rc-slider";
 import { countBy, debounce, zipObject } from "lodash";
-// import type { SliderProps } from "rc-slider";
 import Tooltip from "rc-tooltip";
 import { formatReleaseDate, useMediaQuery } from "./utils";
 
@@ -14,6 +13,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
 
   const [currentValue, setCurrentValue] = React.useState<number | number[]>();
   const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
+  const [longMonthMarks, setLongMonthMarks] = React.useState<{
+    [key: number]: string;
+  }>({});
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 
@@ -71,8 +73,15 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   );
 
   React.useEffect(() => {
-    setMarks(createMarks(releases));
+    setLongMonthMarks(createMarks(releases));
   }, [releases]);
+
+  React.useEffect(() => {
+    const newARR = Object.values(longMonthMarks).map((mark) => {
+      return mark.slice(0, 6);
+    });
+    setMarks(zipObject(Object.keys(longMonthMarks), newARR));
+  }, [longMonthMarks]);
 
   React.useEffect(() => {
     window.addEventListener("scroll", handleScroll);
@@ -94,21 +103,28 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         /* eslint-disable */
         handleRender={(node, handleProps) => {
           const { value } = handleProps;
-          let key;
+
+          // Formatting date from value of the slider 
+          
           let values;
 
-          const tooltipArr = Object.entries(marks).slice(0).reverse();
+          const tooltipArr = Object.entries(longMonthMarks).slice(0).reverse();
           for (let i = 0; i < tooltipArr.length; i++) {
             if (value >= +tooltipArr[i][0]) {
-              values = tooltipArr[i][1];
+                values = tooltipArr[i][1];
+              
               break;
             }
           }
+
           return (
             <Tooltip
               overlayInnerStyle={{ minHeight: "auto" }}
-              overlay={<h3>{values}</h3>}
-              placement="left"
+              overlay={
+              <div><h1>{values?.slice(0,2)}</h1>
+              <h3>{values?.slice(2)}</h3>
+            </div>}
+              placement={screenMd ? "top" : "left"}
             >
               {node}
             </Tooltip>
