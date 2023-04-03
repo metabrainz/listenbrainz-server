@@ -653,6 +653,7 @@ def get_service_details(user_name):
     :param user_name: the MusicBrainz ID of the user whose similar users are being requested.
     :resheader Content-Type: *application/json*
     :statuscode 200: Yay, you have data!
+    :statuscode 401: Invalid authorization. See error message for details.
     :statuscode 403: Forbidden, you do not have permissions to view this user's information.
     :statuscode 404: The requested user was not found.
     """
