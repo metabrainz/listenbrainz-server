@@ -10,35 +10,34 @@ All endpoints have this root URL for our current production site.
 
 
 Authentication
----------------
+--------------
 
-ListenBrainz make use of private API keys called User tokens to authenticate requests and ensure the proper authorizations for it. 
-A User token is a unique alphanumeric string linked to a user account.
-
-To set up and user User tokens for your requests follow this guide.
+ListenBrainz makes use of private API keys called user tokens to authenticate requests and ensure the proper
+access controls on user data. A user token is a unique alphanumeric string linked to a user account. To retrieve
+your user token, follow this guide.
 
 Get the User token
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 Every account has a User token associated with it, to get the token:
 
 1. Sign up or Log in your an account using this `link`_.
-2. Navigate to `profile`_ page to find your User Token (See image below for reference).
+2. Navigate to `profile`_ page to find your user Token (See image below for reference).
   
-  .. image:: docs\images\user-profile.png
+  .. image:: ../../images/user-profile.png
     :width: 400
     :alt: Screenshot showing the user profile.
 
 3. Copy the User Token to your clipboard.
 
   .. note:: 
-    You may also reset your User token by clicking the Reset token button on the `profile`_ page.
+    You may also reset your user token by clicking the Reset token button on the `profile`_ page.
 
 Add the User token to your requests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The User token must be included in the request header for its usage. 
-To format the header correctly use the following piece of code:
+The user token must be included in the request header for its usage.
+To format the header correctly, you can use the following piece of code:
 
   .. code-block:: python3
 
@@ -61,7 +60,8 @@ Then include the formatted header in the request to use it.
       )
 
 .. note:: 
-  A complete usage example for a request employing Authorization headers can be found on the :doc: `docs\users\api-usage` page.
+  A complete usage example for a request employing Authorization headers to make authenticated requests to ListenBrainz
+  can be found on the :doc:`API Usage <../api-usage>` page.
 
 
 Reference
@@ -109,5 +109,5 @@ receive higher rate limits than those without valid user tokens.
 .. [#] Provided for compatibility with other APIs, but we still recommend using
    ``X-RateLimit-Reset-In`` wherever possible
 
-.. _link: https://musicbrainz.org/oauth2/authorize?response_type=code&redirect_uri=https%3A%2F%2Flistenbrainz.org%2Flogin%2Fmusicbrainz%2Fpost%2F&scope=profile&state=JfBNrhgWrfyI8XaJxfBt&client_id=WpLC2ZObFYvuP8HquAEv7w
+.. _link: https://listenbrainz.org/login/
 .. _profile: https://listenbrainz.org/profile/
