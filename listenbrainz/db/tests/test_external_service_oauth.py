@@ -91,3 +91,12 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, remove_import_log=False)
         self.assertIsNone(db_oauth.get_token(self.user['id'], ExternalServiceType.SPOTIFY))
         self.assertIsNotNone(db_spotify.get_user_import_details(self.user['id']))
+
+    def test_get_services(self):
+        services = db_oauth.get_services(self.user["id"])
+        self.assertEqual(services, ["spotify"])
+
+        db_oauth.delete_token(self.user["id"], ExternalServiceType.SPOTIFY, True)
+        services = db_oauth.get_services(self.user["id"])
+        self.assertEqual(services, [])
+
