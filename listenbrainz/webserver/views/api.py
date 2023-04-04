@@ -8,6 +8,7 @@ from flask import Blueprint, request, jsonify, current_app
 
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
+import listenbrainz.db.external_service_oauth as db_external_service_oauth
 import listenbrainz.webserver.redis_connection as redis_connection
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer
@@ -17,7 +18,7 @@ from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
-    APIUnauthorized, ListenValidationError
+    APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
@@ -633,6 +634,35 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
                                                                           offset=offset)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
+@api_bp.route("/user/<user_name>/services", methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+def get_service_details(user_name):
+    """
+    Get list of services which are connected to a given user's account.
+
+    .. code-block:: json
+
+        {
+            "user_name": "hwnrwx",
+            "services": ["spotify"]
+        }
+
+    :param user_name: the MusicBrainz ID of the user whose similar users are being requested.
+    :resheader Content-Type: *application/json*
+    :statuscode 200: Yay, you have data!
+    :statuscode 401: Invalid authorization. See error message for details.
+    :statuscode 403: Forbidden, you do not have permissions to view this user's information.
+    :statuscode 404: The requested user was not found.
+    """
+    user = validate_auth_header(fetch_email=True)
+    if user_name != user['musicbrainz_id']:
+        raise APIForbidden("You don't have permissions to view this user's information.")
+
+    services = db_external_service_oauth.get_services(user["id"])
+    return jsonify({'user_name': user_name, 'services': services})
 
 
 def _get_listen_type(listen_type):
