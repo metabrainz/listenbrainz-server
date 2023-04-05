@@ -12,12 +12,15 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { Handle } = Slider;
   const [currentValue, setCurrentValue] = React.useState<number>();
   const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
+  const [tooltipMarks, setTooltipMarks] = React.useState<{
+    [key: number]: string;
+  }>({});
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 
   const formatTooltip = (value: number): string => {
     let result = "";
-    Object.entries(marks)
+    Object.entries(tooltipMarks)
       .reverse()
       .forEach(([key, val]) => {
         if (value >= +key && result === "") {
@@ -27,8 +30,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     return result;
   };
 
-  const tooltipHandle = (props: any) => {
-    const { value, dragging, index, ...restProps } = props;
+  const tooltipHandle = (handleprops: any) => {
+    const { value, dragging, index, ...restProps } = handleprops;
     const tooltipDate = formatTooltip(value);
     return (
       <Handle value={value} {...restProps}>
@@ -45,14 +48,12 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   };
 
   const changeHandler = React.useCallback((percent: number) => {
-    setCurrentValue(percent);
     const element: HTMLElement | null = document.getElementById(
       "release-cards-grid"
     )!;
-    const scrollHeight = ((percent as number) / 100) * element.scrollHeight;
-    const scrollTo = scrollHeight + element.offsetTop;
-    window.scrollTo({ top: scrollTo, behavior: "smooth" });
-    return scrollTo;
+    const scrollPosition = ((percent as number) / 100) * element.scrollHeight;
+    element.scrollTo({ top: scrollPosition, behavior: "smooth" });
+    setCurrentValue(percent);
   }, []);
 
   function createMarks(data: Array<FreshReleaseItem>) {
@@ -60,9 +61,12 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       releases,
       (item: FreshReleaseItem) => item.release_date
     );
-    const datesArr = Object.keys(releasesPerDate).map((item) =>
+    const dates = Object.keys(releasesPerDate).map((item) =>
       formatReleaseDate(item)
     );
+
+    const datesArr = dates.map((date) => date.slice(0, 6));
+
     const percentArr = Object.values(releasesPerDate)
       .map((item) => (item / data.length) * 100)
       .map((_, index, arr) =>
@@ -81,9 +85,10 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     const middle = percentArr[Math.floor(percentArr.length / 2)];
 
     // Scroll to the current date
-    setCurrentValue(middle);
-    window.scrollTo({ top: changeHandler(middle), behavior: "smooth" });
-    return zipObject(percentArr, datesArr);
+    changeHandler(middle);
+
+    setMarks(zipObject(percentArr, datesArr));
+    setTooltipMarks(zipObject(percentArr, dates));
   }
 
   const handleScroll = React.useCallback(
@@ -91,13 +96,13 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       // TODO change to relative position of #release-cards-grid instead of window
       const scrollPos =
         (window.scrollY / document.documentElement.scrollHeight) * 100;
-      setCurrentValue(scrollPos);
+      changeHandler(scrollPos);
     }, 300),
     []
   );
 
   React.useEffect(() => {
-    setMarks(createMarks(releases));
+    createMarks(releases);
   }, [releases]);
 
   React.useEffect(() => {
