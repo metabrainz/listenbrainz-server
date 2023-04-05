@@ -190,6 +190,9 @@
     display: grid;
     justify-items: center;
     grid-template-columns: repeat(4, 1fr);
+    overflow-y: hidden;
+    height: 910px;
+    width: 940px;
 
     .release-card-container {
       display: flex;
@@ -257,7 +260,6 @@
         }
       }
     }
-
     @media (max-width: 576px) {
       grid-template-columns: repeat(2, 1fr);
       & > .release-card-container {
@@ -329,7 +331,7 @@
     justify-content: center;
     top: 6rem;
     position: sticky;
-    height: 68vh;
+    height: 910px;
     padding-bottom: 6rem;
 
     .slider-container {
