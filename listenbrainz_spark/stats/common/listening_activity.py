@@ -101,7 +101,10 @@ def _get_time_range_bounds(stats_range: str) -> Tuple[datetime, datetime, relati
             spark_date_format = "EEEE dd MMMM y"
         elif stats_range == "this_month":
             # if today is 1st then 1st of 2 months ago otherwise the 1st of last month
-            from_offset = relativedelta(months=-2) if latest_listen_date.day == 1 else relativedelta(months=-1, day=1)
+            if latest_listen_date.day == 1:
+                from_offset = relativedelta(months=-2)
+            else:
+                from_offset = relativedelta(month=-1, day=1)
             # compute listening activity for each day but no weekday
             step = relativedelta(days=+1)
             date_format = "%d %B %Y"
