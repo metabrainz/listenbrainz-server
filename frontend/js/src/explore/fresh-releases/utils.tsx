@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 
 export function formatReleaseDate(releaseDate: string) {
   return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
+    month: "long",
+    day: "2-digit",
   })
     .formatToParts(new Date(Date.parse(releaseDate)))
     .reverse()
