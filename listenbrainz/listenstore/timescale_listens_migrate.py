@@ -5,10 +5,8 @@ import math
 import time
 from datetime import datetime, timedelta
 
-import psycopg2.extras
 from sqlalchemy import text
 
-from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 
@@ -91,7 +89,7 @@ def migrate_listens():
         already_max_created = row.already_max_created
 
     if already_done_ts:
-        chunk_start = already_done_ts - already_done_ts % CHUNK_SECONDS
+        chunk_start = int(already_done_ts - already_done_ts % CHUNK_SECONDS)
     else:
         chunk_start = LISTEN_MINIMUM_TS
 
