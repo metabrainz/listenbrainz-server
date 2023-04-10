@@ -140,7 +140,7 @@ class TimescaleListenStore:
 
         query = """
             WITH inserted_listens AS (
-                INSERT INTO listen_new (listened_at, user_id, recording_msid, data)
+                INSERT INTO listen (listened_at, user_id, recording_msid, data)
                      VALUES %s
                 ON CONFLICT (listened_at, user_id, recording_msid)
                  DO NOTHING
@@ -215,7 +215,7 @@ class TimescaleListenStore:
                              , l.data
                              -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
                              , COALESCE((data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
-                          FROM listen_new l
+                          FROM listen l
                      LEFT JOIN mbid_mapping mm
                             ON l.recording_msid = mm.recording_msid
                      LEFT JOIN mbid_manual_mapping user_mm
@@ -223,6 +223,9 @@ class TimescaleListenStore:
                            AND user_mm.user_id = l.user_id 
                      LEFT JOIN mbid_manual_mapping_top other_mm
                             ON l.recording_msid = other_mm.recording_msid
+                         WHERE l.user_id = :user_id
+                           AND listened_at > :from_ts
+                           AND listened_at < :to_ts
                    )
                    SELECT listened_at
                         , user_id
@@ -242,9 +245,6 @@ class TimescaleListenStore:
                        ON sl.recording_mbid = mbc.recording_mbid
         LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
                        ON TRUE
-                    WHERE user_id = :user_id
-                      AND listened_at > :from_ts
-                      AND listened_at < :to_ts
                  GROUP BY listened_at
                         , sl.recording_msid
                         , user_id
@@ -381,7 +381,7 @@ class TimescaleListenStore:
                          , recording_msid
                          , data
                          , row_number() OVER (PARTITION BY user_id ORDER BY listened_at DESC) AS rownum
-                      FROM listen_new l
+                      FROM listen l
                      WHERE {filters} 
               ), selected_listens AS (
                     SELECT l.*
@@ -494,8 +494,7 @@ class TimescaleListenStore:
 
                 if member.name.endswith(".listens"):
                     if not schema_checked:
-                        raise SchemaMismatchException(
-                            "SCHEMA_SEQUENCE file missing FROM listen_new dump.")
+                        raise SchemaMismatchException("SCHEMA_SEQUENCE file missing FROM listen dump.")
 
                     # tarf, really? That's the name you're going with? Yep.
                     with tar.extractfile(member) as tarf:
@@ -517,8 +516,7 @@ class TimescaleListenStore:
                 self.insert(listens)
 
         if not schema_checked:
-            raise SchemaMismatchException(
-                "SCHEMA_SEQUENCE file missing FROM listen_new dump.")
+            raise SchemaMismatchException("SCHEMA_SEQUENCE file missing FROM listen dump.")
 
         self.log.info('Import of listens from dump %s done!', archive_path)
         xz.stdout.close()
@@ -542,7 +540,7 @@ class TimescaleListenStore:
                  , min_listened_at = NULL
                  , max_listened_at = NULL
              WHERE user_id = :user_id;
-            DELETE FROM listen_new WHERE user_id = :user_id;
+            DELETE FROM listen WHERE user_id = :user_id;
         """
         try:
             with timescale.engine.begin() as connection:
