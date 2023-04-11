@@ -50,6 +50,7 @@ export type ListensProps = {
 export interface ListensState {
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
+  webSocketListens: Array<Listen>;
   listenCount?: number;
   loading: boolean;
   nextListenTs?: number;
@@ -74,6 +75,7 @@ export default class Listens extends React.Component<
 
   private APIService!: APIServiceClass;
   private listensTable = React.createRef<HTMLTableElement>();
+  private webSocketListensTable = React.createRef<HTMLTableElement>();
 
   private socket!: Socket;
 
@@ -87,6 +89,7 @@ export default class Listens extends React.Component<
       : undefined;
     this.state = {
       listens: props.listens || [],
+      webSocketListens: [],
       lastFetchedDirection: "older",
       loading: false,
       nextListenTs,
@@ -102,6 +105,7 @@ export default class Listens extends React.Component<
     };
 
     this.listensTable = React.createRef();
+    this.webSocketListensTable = React.createRef();
   }
 
   componentDidMount(): void {
@@ -225,13 +229,13 @@ export default class Listens extends React.Component<
 
     if (listen) {
       this.setState((prevState) => {
-        const { listens } = prevState;
+        const { webSocketListens } = prevState;
         // Crop listens array to 100 max
-        while (listens.length >= 100) {
-          listens.pop();
+        while (webSocketListens.length >= 100) {
+          webSocketListens.pop();
         }
-        listens.unshift(listen);
-        return { listens };
+        webSocketListens.push(listen);
+        return { webSocketListens };
       });
     }
   };
@@ -708,6 +712,7 @@ export default class Listens extends React.Component<
   render() {
     const {
       listens,
+      webSocketListens,
       listenCount,
       loading,
       nextListenTs,
@@ -738,25 +743,6 @@ export default class Listens extends React.Component<
     const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
       <div role="main">
-        <div className="listen-header">
-          {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
-          {isCurrentUsersPage && (
-            <button
-              type="button"
-              className="btn btn-primary add-listen-btn"
-              onClick={() => {
-                NiceModal.show(AddListenModal, {
-                  newAlert,
-                });
-              }}
-              data-Toggle="modal"
-              data-Target="#AddListenModal"
-            >
-              Add listen
-            </button>
-          )}
-        </div>
-
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {playingNowListen && this.getListenCard(playingNowListen)}
@@ -798,6 +784,39 @@ export default class Listens extends React.Component<
                 )}
               </div>
             )}
+            {webSocketListens.length > 0 && (
+              <>
+                <div className="listen-header">
+                  <h3>Listens since the page is opened</h3>
+                </div>
+                <div id="webSocketListens" ref={this.webSocketListensTable}>
+                  {webSocketListens.map((listen) => this.getListenCard(listen))}
+                </div>
+              </>
+            )}
+            <div className="listen-header">
+              {listens.length === 0 ? (
+                <div id="spacer" />
+              ) : (
+                <h3>Recent listens</h3>
+              )}
+              {isCurrentUsersPage && (
+                <button
+                  type="button"
+                  className="btn btn-primary add-listen-btn"
+                  style={{}}
+                  onClick={() => {
+                    NiceModal.show(AddListenModal, {
+                      newAlert,
+                    });
+                  }}
+                  data-Toggle="modal"
+                  data-Target="#AddListenModal"
+                >
+                  Add listen
+                </button>
+              )}
+            </div>
             {listens.length > 0 && (
               <div>
                 <div
