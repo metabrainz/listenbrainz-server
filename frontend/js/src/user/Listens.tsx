@@ -240,12 +240,16 @@ export default class Listens extends React.Component<
     const playingNow = newPlayingNow;
     const { APIService } = this.context;
     try {
-      const metadata = await APIService.lookupRecordingMetadata(
+      const metadata: MetadataLookup | null = await APIService.lookupRecordingMetadata(
         playingNow.track_metadata.track_name,
         playingNow.track_metadata.artist_name,
-        false
+        true
       );
       playingNow.track_metadata.mbid_mapping = metadata as MBIDMapping;
+      playingNow.track_metadata.mbid_mapping.caa_id =
+        metadata?.metadata?.release?.caa_id;
+      playingNow.track_metadata.mbid_mapping.caa_release_mbid =
+        metadata?.metadata?.release?.caa_release_mbid;
 
       await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {
