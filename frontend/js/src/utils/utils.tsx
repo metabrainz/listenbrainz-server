@@ -598,7 +598,6 @@ const getAlbumArtFromReleaseMBID = async (
 
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
-  spotifyUser?: SpotifyUser
   spotifyUser?: SpotifyUser,
   APIService?: APIServiceClass
 ): Promise<string | undefined> => {
@@ -621,7 +620,8 @@ const getAlbumArtFromListenMetadata = async (
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
   const userSubmittedReleaseMBID =
-    listen.track_metadata?.additional_info?.release_mbid;
+    listen.track_metadata?.additional_info?.release_mbid ||
+    listen.track_metadata?.release_mbid;
   if (userSubmittedReleaseMBID) {
     const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
       userSubmittedReleaseMBID
@@ -636,6 +636,33 @@ const getAlbumArtFromListenMetadata = async (
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
   if (caaId && caaReleaseMbid) {
     return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
+  }
+  // We have a mapped release MBID but no CAA IDs
+  const mappedReleaseMBID = listen.track_metadata?.mbid_mapping?.release_mbid;
+  if (mappedReleaseMBID) {
+    const mappedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
+      mappedReleaseMBID
+    );
+    if (mappedReleaseAlbumArt) {
+      return mappedReleaseAlbumArt;
+    }
+  }
+  // We have a mapped recording MBID but no release MBID
+  const mappedRecordingMBID =
+    listen.track_metadata?.mbid_mapping?.recording_mbid;
+  if (mappedRecordingMBID && APIService) {
+    const mappedRecording = (await APIService.lookupMBRecording(
+      mappedRecordingMBID,
+      "releases"
+    )) as MusicBrainzRecordingWithReleases;
+    // Try getting cover art from the first release in the list
+    // TODO: Improve this mechanism? In theory the MBID mapper shoudl handle this but it could be lacking
+    const mappedRecordingAlbumArt = await getAlbumArtFromReleaseMBID(
+      mappedRecording.releases?.[0]?.id
+    );
+    if (mappedRecordingAlbumArt) {
+      return mappedRecordingAlbumArt;
+    }
   }
   return undefined;
 };
