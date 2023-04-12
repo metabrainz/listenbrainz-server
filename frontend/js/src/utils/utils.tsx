@@ -599,6 +599,8 @@ const getAlbumArtFromReleaseMBID = async (
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
   spotifyUser?: SpotifyUser
+  spotifyUser?: SpotifyUser,
+  APIService?: APIServiceClass
 ): Promise<string | undefined> => {
   // if spotifyListen
   if (
