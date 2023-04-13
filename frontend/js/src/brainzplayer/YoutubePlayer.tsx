@@ -97,9 +97,9 @@ export default class YoutubePlayer
     return images;
   }
 
-  static getURLFromVideoID(trackID: string): string {
-    if (trackID) {
-      return `https://www.youtube.com/watch?v=${trackID}`;
+  static getURLFromVideoID(videoID: string): string {
+    if (videoID) {
+      return `https://www.youtube.com/watch?v=${videoID}`;
     }
     return "";
   }
@@ -180,7 +180,7 @@ export default class YoutubePlayer
       const videoId = _get(player, "playerInfo.videoData.video_id", "");
       // The player info is sometimes missing a title initially.
       // We fallback to getting it with getVideoData method once the information is loaded in the player
-      if (!title) {
+      if (!title || !videoId) {
         setTimeout(this.updateVideoInfo.bind(this), 2000);
       } else {
         const images: MediaImage[] = YoutubePlayer.getThumbnailsFromVideoid(
