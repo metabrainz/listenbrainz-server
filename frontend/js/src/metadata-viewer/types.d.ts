@@ -39,7 +39,7 @@ declare type MusicBrainzTrack = {
   position: number;
   title: string;
   id: string;
-  recording: MusicBrainzRecording;
+  recording: Omit<MusicBrainzRecording, "artist-credit">;
 };
 declare type MusicBrainzMedia = {
   title: string;
