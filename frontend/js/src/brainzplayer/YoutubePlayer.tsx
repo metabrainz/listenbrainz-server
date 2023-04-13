@@ -143,7 +143,7 @@ export default class YoutubePlayer
     }
     onTrackInfoChange(
       title,
-      `https://www.youtube.com/watch?v=${videoId}`,
+      videoId ? `https://www.youtube.com/watch?v=${videoId}` : "",
       undefined,
       undefined,
       images
@@ -177,13 +177,19 @@ export default class YoutubePlayer
       const videoId = _get(player, "playerInfo.videoData.video_id", "");
       // The player info is sometimes missing a title initially.
       // We fallback to getting it with getVideoData method once the information is loaded in the player
-      if (!title) {
+      if (!title || !videoId) {
         setTimeout(this.updateVideoInfo.bind(this), 2000);
       } else {
         const images: MediaImage[] = YoutubePlayer.getThumbnailsFromVideoid(
           videoId
         );
-        onTrackInfoChange(title, videoId, undefined, undefined, images);
+        onTrackInfoChange(
+          title,
+          `https://www.youtube.com/watch?v=${videoId}`,
+          undefined,
+          undefined,
+          images
+        );
       }
     }
     if (state === YouTube.PlayerState.PAUSED) {
