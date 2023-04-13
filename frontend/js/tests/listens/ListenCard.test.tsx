@@ -77,7 +77,9 @@ describe("ListenCard", () => {
       user_name: "test",
     };
     const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, listen: playingNowListen }} />
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...{ ...props, listen: playingNowListen }} />
+      </GlobalAppContext.Provider>
     );
 
     expect(

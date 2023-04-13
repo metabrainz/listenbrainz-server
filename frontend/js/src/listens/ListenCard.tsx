@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get, isEqual, isNil, isNumber } from "lodash";
+import { get, isEmpty, isEqual, isNil, isNumber } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -259,6 +259,7 @@ export default class ListenCard extends React.Component<
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
     const { currentUser } = this.context;
+    const isLoggedIn = !isEmpty(currentUser);
 
     const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
@@ -442,14 +443,15 @@ export default class ListenCard extends React.Component<
               </div>
             )}
             <div className="listen-controls">
-              {feedbackComponent ?? (
-                <ListenFeedbackComponent
-                  newAlert={newAlert}
-                  listen={listen}
-                  currentFeedback={currentFeedback as ListenFeedBack}
-                  updateFeedbackCallback={updateFeedbackCallback}
-                />
-              )}
+              {isLoggedIn &&
+                (feedbackComponent ?? (
+                  <ListenFeedbackComponent
+                    newAlert={newAlert}
+                    listen={listen}
+                    currentFeedback={currentFeedback as ListenFeedBack}
+                    updateFeedbackCallback={updateFeedbackCallback}
+                  />
+                ))}
               {hideActionsMenu ? null : (
                 <>
                   <FontAwesomeIcon
@@ -513,7 +515,7 @@ export default class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    {hasInfoAndMBID && (
+                    {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         text="Pin this track"
                         icon={faThumbtack}
@@ -527,7 +529,7 @@ export default class ListenCard extends React.Component<
                         dataTarget="#PinRecordingModal"
                       />
                     )}
-                    {hasInfoAndMBID && (
+                    {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         icon={faCommentDots}
                         title="Recommend to my followers"
@@ -535,7 +537,7 @@ export default class ListenCard extends React.Component<
                         action={this.recommendListenToFollowers}
                       />
                     )}
-                    {hasInfoAndMBID && (
+                    {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         text="Personally recommend"
                         icon={faPaperPlane}
@@ -549,7 +551,7 @@ export default class ListenCard extends React.Component<
                         dataTarget="#PersonalRecommendationModal"
                       />
                     )}
-                    {Boolean(currentUser) && Boolean(recordingMSID) && (
+                    {isLoggedIn && Boolean(recordingMSID) && (
                       <ListenControl
                         text="Link with MusicBrainz"
                         icon={faLink}
@@ -563,7 +565,7 @@ export default class ListenCard extends React.Component<
                         dataTarget="#MapToMusicBrainzRecordingModal"
                       />
                     )}
-                    {isListenReviewable && (
+                    {isLoggedIn && isListenReviewable && (
                       <ListenControl
                         text="Write a review"
                         icon={faPencilAlt}
