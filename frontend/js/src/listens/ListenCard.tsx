@@ -107,7 +107,6 @@ export default class ListenCard extends React.Component<
 
     this.state = {
       isCurrentlyPlaying: false,
-      saveDataMode: false,
     };
   }
 
@@ -121,12 +120,12 @@ export default class ListenCard extends React.Component<
 
   async componentDidUpdate(oldProps: ListenCardProps) {
     const { listen, customThumbnail } = this.props;
-    const { saveDataMode } = this.state;
+    const { userPreferences } = this.context;
     if (
       !customThumbnail &&
       Boolean(listen) &&
       !isEqual(listen, oldProps.listen) &&
-      saveDataMode !== true
+      userPreferences?.saveData !== true
     ) {
       await this.getCoverArt();
     }
