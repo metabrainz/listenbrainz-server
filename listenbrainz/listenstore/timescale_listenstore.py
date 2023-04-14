@@ -225,6 +225,7 @@ class TimescaleListenStore:
                         , created
                         , data
                         , sl.recording_mbid
+                        , mbc.recording_data->>'name' AS recording_name
                         , mbc.release_mbid
                         , mbc.artist_mbids::TEXT[]
                         , (mbc.release_data->>'caa_id')::bigint AS caa_id
@@ -245,6 +246,7 @@ class TimescaleListenStore:
                         , created
                         , data
                         , sl.recording_mbid
+                        , recording_data->>'name'
                         , release_mbid
                         , artist_mbids
                         , artist_data->>'name'
@@ -318,6 +320,7 @@ class TimescaleListenStore:
                         created=result.created,
                         data=result.data,
                         recording_mbid=result.recording_mbid,
+                        recording_name=result.recording_name,
                         release_mbid=result.release_mbid,
                         artist_mbids=result.artist_mbids,
                         ac_names=result.ac_names,
@@ -394,6 +397,7 @@ class TimescaleListenStore:
                          , created
                          , data
                          , l.recording_mbid
+                         , mbc.recording_data->>'name' AS recording_name
                          , mbc.release_mbid
                          , mbc.artist_mbids::TEXT[]
                          , (mbc.release_data->>'caa_id')::bigint AS caa_id
@@ -411,6 +415,7 @@ class TimescaleListenStore:
                          , created
                          , data
                          , l.recording_mbid
+                         , mbc.recording_data->>'name'
                          , mbc.release_mbid
                          , mbc.artist_mbids
                          , mbc.release_data->>'caa_id'
@@ -434,6 +439,7 @@ class TimescaleListenStore:
                     created=result.created,
                     data=result.data,
                     recording_mbid=result.recording_mbid,
+                    recording_name=result.recording_name,
                     release_mbid=result.release_mbid,
                     artist_mbids=result.artist_mbids,
                     ac_names=result.ac_names,
