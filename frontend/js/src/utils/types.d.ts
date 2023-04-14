@@ -52,6 +52,7 @@ declare type MBIDMappingArtist = {
 };
 
 declare type MBIDMapping = {
+  recording_name?: string;
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
