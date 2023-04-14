@@ -473,6 +473,7 @@ const getPageProps = (): {
     user_preferences = { ...user_preferences, saveData: false };
 
     if ("connection" in navigator) {
+      // @ts-ignore
       if (navigator.connection?.saveData === true) {
         user_preferences.saveData = true;
       }
