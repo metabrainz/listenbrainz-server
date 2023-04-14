@@ -91,7 +91,6 @@ export type ListenCardProps = {
 export type ListenCardState = {
   isCurrentlyPlaying: boolean;
   thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
-  saveDataMode?: boolean;
 };
 
 export default class ListenCard extends React.Component<

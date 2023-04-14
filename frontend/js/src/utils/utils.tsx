@@ -470,7 +470,7 @@ const getPageProps = (): {
 
     let { user_preferences } = globalReactProps;
 
-    user_preferences = { ...user_preferences, saveData: true };
+    user_preferences = { ...user_preferences, saveData: false };
 
     if ("connection" in navigator) {
       if (navigator.connection?.saveData === true) {
