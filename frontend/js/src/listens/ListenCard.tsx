@@ -114,9 +114,7 @@ export default class ListenCard extends React.Component<
   async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
     const { userPreferences } = this.context;
-    if (userPreferences?.saveDate) {
-      this.setState({ saveDataMode: true });
-    } else {
+    if (userPreferences?.saveData !== true) {
       await this.getCoverArt();
     }
   }

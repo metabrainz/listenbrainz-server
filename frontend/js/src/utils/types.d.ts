@@ -684,5 +684,5 @@ declare type SearchUser = {
 };
 
 declare type UserPreferences = {
-  saveDate?: boolean
-}
+  saveData?: boolean;
+};

@@ -466,12 +466,15 @@ const getPageProps = (): {
       critiquebrainz,
       sentry_traces_sample_rate,
       sentry_dsn,
-      user_preferences,
     } = globalReactProps;
+
+    let { user_preferences } = globalReactProps;
+
+    user_preferences = { ...user_preferences, saveData: true };
 
     if ("connection" in navigator) {
       if (navigator.connection?.saveData === true) {
-        user_preferences!.saveDate = true;
+        user_preferences.saveData = true;
       }
     }
 
