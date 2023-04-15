@@ -58,6 +58,8 @@ declare type MBIDMapping = {
   artists?: Array<MBIDMappingArtist>;
   caa_id?: number;
   caa_release_mbid?: string;
+  release_group_mbid?: string;
+  release_group_name?: string;
 };
 
 declare type BaseListenFormat = {
@@ -289,10 +291,33 @@ declare type UserRecordingsResponse = {
   };
 };
 
+declare type UserReleaseGroupsResponse = {
+  payload: {
+    release_groups: Array<{
+      artist_mbids?: Array<string>;
+      artist_name: string;
+      release_group_mbid?: string;
+      release_group_name: string;
+      listen_count: number;
+      caa_id?: number;
+      caa_release_mbid?: string;
+    }>;
+    count: number;
+    last_updated: number;
+    offset: number;
+    range: UserStatsAPIRange;
+    total_release_group_count: number;
+    user_id: string;
+    from_ts: number;
+    to_ts: number;
+  };
+};
+
 declare type UserEntityResponse =
   | UserArtistsResponse
   | UserReleasesResponse
-  | UserRecordingsResponse;
+  | UserRecordingsResponse
+  | UserReleaseGroupsResponse;
 
 declare type UserStatsAPIRange =
   | "all_time"
@@ -312,6 +337,8 @@ declare type UserEntityDatum = {
   artistMBID?: Array<string>;
   release?: string;
   releaseMBID?: string;
+  releaseGroup?: string;
+  releaseGroupMBID?: string;
   idx: number;
   count: number;
   caaID?: number;

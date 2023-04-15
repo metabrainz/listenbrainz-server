@@ -10,6 +10,7 @@ import UserTopEntity, {
 import * as userArtists from "../__mocks__/userArtists.json";
 import * as userReleases from "../__mocks__/userReleases.json";
 import * as userRecordings from "../__mocks__/userRecordings.json";
+import * as userReleaseGroups from "../__mocks__/userReleaseGroups.json";
 import { waitForComponentToPaint } from "../test-utils";
 
 const userProps: UserTopEntityProps = {
@@ -57,6 +58,22 @@ describe.each([
       await act(() => {
         wrapper.setState({
           data: userReleases as UserReleasesResponse,
+          loading: false,
+        });
+      });
+      await waitForComponentToPaint(wrapper);
+
+      expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
+    });
+
+    it("renders correctly for release group", async () => {
+      const wrapper = mount<UserTopEntity>(
+        <UserTopEntity {...{ ...props, entity: "release-group" }} />
+      );
+      await act(() => {
+        wrapper.setState({
+          data: userReleaseGroups as UserReleaseGroupsResponse,
           loading: false,
         });
       });

@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import requests
 import orjson
+from brainzutils.ratelimit import set_rate_limits
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
@@ -36,7 +37,8 @@ class StatsAPITestCase(IntegrationTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super(StatsAPITestCase, cls).setUpClass()
-        stats = ["artists", "releases", "recordings", "daily_activity", "listening_activity", "artistmap"]
+
+        stats = ["artists", "releases", "recordings", "release_groups", "daily_activity", "listening_activity", "artistmap"]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
             for range_ in ranges:
@@ -55,6 +57,8 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def setUp(self):
         self.maxDiff = None
+        set_rate_limits(5000, 50000, 10)
+
         # app context
         super(StatsAPITestCase, self).setUp()
         self.app.config["DEBUG"] = True
@@ -74,6 +78,13 @@ class StatsAPITestCase(IntegrationTestCase):
             self.user_release_payload[0]["user_id"] = self.user["id"]
         database = 'releases_all_time_20220718'
         db_stats.insert(database, 0, 5, self.user_release_payload)
+
+        # Insert release data
+        with open(self.path_to_data_file('user_top_release_groups_db_data_for_api_test.json'), 'r') as f:
+            self.user_release_group_payload = json.load(f)
+            self.user_release_group_payload[0]["user_id"] = self.user["id"]
+        database = 'release_groups_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.user_release_group_payload)
 
         # Insert recording data
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
@@ -115,6 +126,11 @@ class StatsAPITestCase(IntegrationTestCase):
                 "endpoint": "stats_api_v1.get_release",
                 "total_count_key": "total_release_count",
                 "payload": self.user_release_payload
+            },
+            "release_groups": {
+                "endpoint": "stats_api_v1.get_release_group",
+                "total_count_key": "total_release_group_count",
+                "payload": self.user_release_group_payload
             },
             "recordings": {
                 "endpoint": "stats_api_v1.get_recording",

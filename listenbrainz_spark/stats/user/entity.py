@@ -1,7 +1,7 @@
 import json
 import logging
 from datetime import datetime
-from typing import Iterator, Optional, Dict
+from typing import Iterator, Optional, Dict, List
 
 from more_itertools import chunked
 from pydantic import ValidationError
@@ -9,13 +9,16 @@ from pydantic import ValidationError
 from data.model.user_artist_stat import ArtistRecord
 from data.model.user_entity import UserEntityStatMessage, UserEntityRecords
 from data.model.user_recording_stat import RecordingRecord
+from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME
+from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME, \
+    RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
+from listenbrainz_spark.stats.user.release_group import get_release_groups
 from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
@@ -23,19 +26,22 @@ logger = logging.getLogger(__name__)
 entity_handler_map = {
     "artists": get_artists,
     "releases": get_releases,
-    "recordings": get_recordings
+    "recordings": get_recordings,
+    "release_groups": get_release_groups,
 }
 
 entity_model_map = {
     "artists": ArtistRecord,
     "releases": ReleaseRecord,
-    "recordings": RecordingRecord
+    "recordings": RecordingRecord,
+    "release_groups": ReleaseGroupRecord,
 }
 
 entity_cache_map = {
-    "artists": ARTIST_COUNTRY_CODE_DATAFRAME,
-    "releases": RELEASE_METADATA_CACHE_DATAFRAME,
-    "recordings": RELEASE_METADATA_CACHE_DATAFRAME
+    "artists": [ARTIST_COUNTRY_CODE_DATAFRAME],
+    "releases": [RELEASE_METADATA_CACHE_DATAFRAME],
+    "recordings": [RELEASE_METADATA_CACHE_DATAFRAME],
+    "release_groups": [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 }
 
 NUMBER_OF_TOP_ENTITIES = 1000  # number of top entities to retain for user stats
@@ -52,13 +58,14 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
     table = f"user_{entity}_{stats_range}"
     listens_df.createOrReplaceTempView(table)
 
-    df_name = "entity_data_cache"
-    cache_table_path = entity_cache_map.get(entity)
-    if cache_table_path:
-        read_files_from_HDFS(cache_table_path).createOrReplaceTempView(df_name)
+    cache_dfs = []
+    for idx, df_path in enumerate(entity_cache_map.get(entity)):
+        df_name = f"entity_data_cache_{idx}"
+        cache_dfs.append(df_name)
+        read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
 
     messages = calculate_entity_stats(
-        from_date, to_date, table, df_name, entity, stats_range, message_type, database
+        from_date, to_date, table, cache_dfs, entity, stats_range, message_type, database
     )
 
     logger.debug("Done!")
@@ -66,14 +73,14 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
     return messages
 
 
-def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, cache_table: str,
+def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, cache_tables: List[str],
                            entity: str, stats_range: str, message_type: str, database: str = None):
     handler = entity_handler_map[entity]
     if message_type == "year_in_music_top_stats":
         number_of_results = NUMBER_OF_YIM_ENTITIES
     else:
         number_of_results = NUMBER_OF_TOP_ENTITIES
-    data = handler(table, cache_table, number_of_results)
+    data = handler(table, cache_tables, number_of_results)
     return create_messages(data=data, entity=entity, stats_range=stats_range, from_date=from_date,
                            to_date=to_date, message_type=message_type, database=database)
 
