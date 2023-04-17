@@ -682,3 +682,7 @@ type UserFreshReleasesResponse = {
 declare type SearchUser = {
   user_name: string;
 };
+
+declare type UserPreferences = {
+  saveData?: boolean;
+};
