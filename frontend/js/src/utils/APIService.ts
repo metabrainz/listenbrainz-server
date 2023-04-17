@@ -628,6 +628,27 @@ export default class APIService {
     return response.status;
   };
 
+  undoDeleteListen = async (
+    userToken: string,
+    recordingMSID: string,
+    listenedAt: number
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/undo-delete-listen`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        listened_at: listenedAt,
+        recording_msid: recordingMSID,
+      }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   createPlaylist = async (
     userToken: string,
     playlistObject: JSPFObject
