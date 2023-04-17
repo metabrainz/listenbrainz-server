@@ -299,19 +299,8 @@ export default class YoutubePlayer
     if (!show) {
       return;
     }
-    let youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (!youtubeId && _isString(originURL) && originURL.length) {
-      try {
-        const parsedURL = new URL(originURL);
-        const { hostname, searchParams } = parsedURL;
-        if (/youtube\.com/.test(hostname)) {
-          youtubeId = searchParams.get("v");
-        }
-      } catch {
-        // URL is not valid, do nothing
-      }
-    }
+    const youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
+
     if (youtubeId) {
       this.playTrackById(youtubeId);
     } else {
