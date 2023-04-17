@@ -55,7 +55,15 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                       , '{"artist": [], "recording": [], "release_group": []}'
                       , '{"mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd", "name": "Dummy"}'
                       , 'f'
-                       )
+                       ),
+                       ('2cfad207-3f55-4aec-8120-86cf66e34d59'
+                      , '{678d88b2-87b0-403b-b63d-5da7465aecc3}'::UUID[]
+                      , '93ac1812-d38d-4125-88e8-8440e3e89072'
+                      , '{"name": "Immigrant Song", "rels": [], "length": 145426}'
+                      , '{"name": "Led Zeppelin", "artists": [{"area": "United Kingdom", "name": "Led Zeppelin", "rels": {"lyrics": "https://genius.com/artists/Led-zeppelin", "youtube": "https://www.youtube.com/@ledzeppelin", "wikidata": "https://www.wikidata.org/wiki/Q2331", "streaming": "https://tidal.com/artist/67522", "free streaming": "https://www.deezer.com/artist/848", "social network": "https://www.facebook.com/ledzeppelin", "official homepage": "http://www.ledzeppelin.com/", "purchase for download": "https://www.7digital.com/artist/led-zeppelin"}, "type": "Group", "end_year": 1980, "begin_year": 1968, "join_phrase": ""}], "artist_credit_id": 388}'
+                      , '{"artist": [], "recording": [], "release_group": []}'
+                      , '{"mbid": "93ac1812-d38d-4125-88e8-8440e3e89072", "name": "Led Zeppelin III", "year": 1987, "caa_id": 1287533205, "caa_release_mbid": "7aadcfa2-df82-480e-8d2d-7ec4d0b41172", "album_artist_name": "Led Zeppelin", "release_group_mbid": "53f80f76-f8af-3558-bfd5-e7221e055c75"}'
+                      , 'f' )
         """
 
         join_query = """INSERT INTO mbid_mapping
@@ -148,9 +156,10 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self._insert_mapping_metadata("c7a41965-9f1e-456c-8b1d-27c0f0dde280")
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, from_ts=1400000000, limit=1)
         self.assertEqual(len(listens), 1)
-        self.assertEqual(listens[0].data["mbid_mapping"]["artist_mbids"], ['8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11'])
-        self.assertEqual(listens[0].data["mbid_mapping"]["release_mbid"], '76df3287-6cda-33eb-8e9a-044b5e15ffdd')
-        self.assertEqual(listens[0].data["mbid_mapping"]["recording_mbid"], '2f3d422f-8890-41a1-9762-fbe16f107c31')
+        # mbid submitted by the user is preferred over the mapping created by LB
+        self.assertEqual(listens[0].data["mbid_mapping"]["artist_mbids"], ['678d88b2-87b0-403b-b63d-5da7465aecc3'])
+        self.assertEqual(listens[0].data["mbid_mapping"]["release_mbid"], '93ac1812-d38d-4125-88e8-8440e3e89072')
+        self.assertEqual(listens[0].data["mbid_mapping"]["recording_mbid"], '2cfad207-3f55-4aec-8120-86cf66e34d59')
 
     def test_get_listen_count_for_user(self):
         uid = random.randint(2000, 1 << 31)
