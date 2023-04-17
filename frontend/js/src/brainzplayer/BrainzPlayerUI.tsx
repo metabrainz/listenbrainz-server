@@ -149,6 +149,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       }
     }
   }
+
   const {
     children: dataSources,
     playerPaused,
@@ -219,7 +220,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       <div className="actions">
         {isPlayingATrack && currentDataSourceName && (
           <a
-            href={trackUrl ?? "#"}
+            href={trackUrl || "#"}
             aria-label={`Open in ${currentDataSourceName}`}
             title={`Open in ${currentDataSourceName}`}
             target="_blank"
