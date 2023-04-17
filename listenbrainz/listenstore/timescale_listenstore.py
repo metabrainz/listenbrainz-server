@@ -569,6 +569,32 @@ class TimescaleListenStore:
             self.log.error("Cannot delete listen for user: %s" % str(e))
             raise TimescaleListenStoreException
 
+    def undo_delete_listen(self,  listened_at: int, user_id: int, recording_msid: str):
+        """ Undo Delete for a particular listen for user with specified MusicBrainz ID.
+
+        Args:
+            listened_at: The timestamp of the listen
+            user_id: the listenbrainz row id of the user
+            recording_msid: the MessyBrainz ID of the recording
+        Raises: TimescaleListenStoreException if unable to delete the listen
+        """
+        query = """
+            DELETE FROM listen_delete_metadata WHERE
+                user_id = :user_id AND
+                listened_at = :listened_at AND
+                recording_msid = :recording_msid
+        """
+        try:
+            with timescale.engine.begin() as connection:
+                connection.execute(
+                    sqlalchemy.text(query),
+                    {"user_id": user_id,"listened_at": listened_at, "recording_msid": recording_msid}
+                )
+                
+        except psycopg2.OperationalError as e:
+            self.log.error("Cannot undo delete for user: %s" % str(e))
+            raise TimescaleListenStoreException
+
 
 class TimescaleListenStoreException(Exception):
     pass
