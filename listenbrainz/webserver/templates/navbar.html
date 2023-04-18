@@ -32,9 +32,10 @@
 
     <div class="navbar-bottom">
       {% if current_user.is_authenticated and not current_user.is_anonymous %}
+      <div class="username">{{ current_user.musicbrainz_id }}</div>
       <a href="{{ url_for('login.logout') }}">Logout</a>
       <a href="{{ url_for('profile.info') }}">
-        Preferences
+        Settings
       </a>
         {% else %}
         <a href="{{ url_for('login.index') }}">Sign in</a>

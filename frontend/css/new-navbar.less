@@ -42,7 +42,7 @@ body {
 			
 			a {
 				display: block;
-				font-weight: 500;
+				font-weight: normal;
 				&, &:visited, &:hover, &:visited:hover
 				{
 					/* Annoyingly we need this not-button because of Bootstrap 3*/
@@ -66,14 +66,21 @@ body {
 				flex-direction: column;
 				justify-content: space-around;
 				margin-bottom: 1.5em;
+				font-weight: 500;
 			}
 			.navbar-bottom {
 				margin-top:auto;
 				font-size: 14px;
+				.username{
+					font-weight: 700;
+					margin-bottom:0.3em;
+				}
 				line-height: 1.5em;
+				
 				> a {
 					width: fit-content;
 					margin-left: auto;
+					font-weight: normal;
 				}
 			}
 			.navbar-logo {
