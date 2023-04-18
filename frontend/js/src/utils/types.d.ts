@@ -52,6 +52,7 @@ declare type MBIDMappingArtist = {
 };
 
 declare type MBIDMapping = {
+  recording_name?: string;
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
@@ -681,4 +682,8 @@ type UserFreshReleasesResponse = {
 
 declare type SearchUser = {
   user_name: string;
+};
+
+declare type UserPreferences = {
+  saveData?: boolean;
 };
