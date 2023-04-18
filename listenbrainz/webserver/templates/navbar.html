@@ -22,10 +22,10 @@
     <div class="main-nav">
       {% if current_user.is_authenticated %}
       <a href="{{ url_for('index.feed') }}" {{ 'class=active' if active_page == 'feed'}}>Feed</a>
-      <a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}"  {{ 'class=active' if active_page=='profile' and my_profile }}>Profile</a>
+      <a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}"  {{ 'class=active' if active_page=='dashboard' and my_profile }}>Dashboard</a>
       {% else %}
       <a href="{{ url_for('index.recent_listens') }}" {{ 'class=active' if active_page == 'feed'}}>Feed</a>
-      <a href="{{ url_for('index.stats') }}"  {{ 'class=active' if active_page=='profile' }}>Profile</a>
+      <a href="{{ url_for('index.stats') }}"  {{ 'class=active' if active_page=='dashboard' }}>Dashboard</a>
       {% endif %}
       <a href="{{ url_for('explore.index') }}"  {{ 'class=active' if active_page=='explore' }}>Explore</a>
     </div>

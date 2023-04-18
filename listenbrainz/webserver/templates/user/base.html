@@ -5,7 +5,7 @@
 {% endblock %}
 
 <!-- these props are used in the navbar to highlight the navbar items -->
-{% set active_page = "profile" %}
+{% set active_page = "dashboard" %}
 {% if user %}
   {% set user = user %}
   {% set my_profile = current_user.id == user.id %}
@@ -22,7 +22,7 @@
         <div><a href="{{ url_for('login.index') }}">Sign in</a></div>
         {% endif %}
       </li>
-      <li class="{{ 'active' if active_section=='listens' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) if user else '#'}}">Listens</a></li>
+      <li class="{{ 'active' if active_section=='listens' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) if user else '#'}}">Profile</a></li>
       <li {{ 'class=active' if active_section=='stats' }}><a href="{{ url_for('user.stats', user_name=user.musicbrainz_id) if user else url_for('index.stats') }}">Stats</a></li>
       <li class="{{ 'active' if active_section=='taste' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.taste', user_name=user.musicbrainz_id) if user else '#' }}">Taste</a></li>
       <li class="{{ 'active' if active_section=='playlists' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) if user else '#' }}">Playlists</a></li>
