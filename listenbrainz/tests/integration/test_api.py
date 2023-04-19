@@ -7,9 +7,11 @@ from flask import url_for
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
+from data.model.external_service import ExternalServiceType
 from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
+import listenbrainz.db.external_service_oauth as db_oauth
 
 
 class APITestCase(ListenAPIIntegrationTestCase):
@@ -1028,3 +1030,37 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def test_unfollow_user_requires_login(self):
         r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]))
         self.assert401(r)
+
+    def test_get_user_services(self):
+        db_oauth.save_token(
+            user_id=self.user['id'],
+            service=ExternalServiceType.SPOTIFY,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=['user-read-recently-played']
+        )
+        response = self.client.get(
+            url_for("api_v1.get_service_details", user_name=self.user["musicbrainz_id"]),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        self.assertEqual(
+            {"services": ["spotify"], "user_name": self.user["musicbrainz_id"]},
+            response.json
+        )
+
+        response = self.client.get(
+            url_for("api_v1.get_service_details", user_name=self.user["musicbrainz_id"]),
+            content_type="application/json"
+        )
+        self.assert401(response)
+
+        response = self.client.get(
+            url_for("api_v1.get_service_details", user_name=self.followed_user["musicbrainz_id"]),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="application/json"
+        )
+        self.assert403(response)

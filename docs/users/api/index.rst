@@ -8,6 +8,62 @@ All endpoints have this root URL for our current production site.
 .. note::
     All ListenBrainz services are only available on **HTTPS**!
 
+
+Authentication
+--------------
+
+ListenBrainz makes use of private API keys called user tokens to authenticate requests and ensure the proper
+access controls on user data. A user token is a unique alphanumeric string linked to a user account. To retrieve
+your user token, follow this guide.
+
+Get the User token
+~~~~~~~~~~~~~~~~~~
+
+Every account has a User token associated with it, to get the token:
+
+1. Sign up or Log in your an account using this `link`_.
+2. Navigate to `profile`_ page to find your user Token (See image below for reference).
+  
+  .. image:: ../../images/user-profile.png
+    :width: 400
+    :alt: Screenshot showing the user profile.
+
+3. Copy the User Token to your clipboard.
+
+  .. note:: 
+    You may also reset your user token by clicking the Reset token button on the `profile`_ page.
+
+Add the User token to your requests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The user token must be included in the request header for its usage.
+To format the header correctly, you can use the following piece of code:
+
+  .. code-block:: python3
+
+    # The following token must be valid, but it doesn't have to be the token of the user you're
+    # trying to get the listen history of.
+    TOKEN = 'YOUR_TOKEN_HERE'
+    AUTH_HEADER = {
+      "Authorization": "Token {0}".format(TOKEN)
+    }
+
+Then include the formatted header in the request to use it.
+
+  .. code-block:: python3
+
+        response = requests.get(
+          ...
+          # Your request url and params go here.
+          ...
+          headers=AUTH_HEADER,
+      )
+
+.. note:: 
+  A complete usage example for a request employing Authorization headers to make authenticated requests to ListenBrainz
+  can be found on the :doc:`API Usage <../api-usage>` page.
+
+
 Reference
 ---------
 
@@ -52,3 +108,6 @@ receive higher rate limits than those without valid user tokens.
 
 .. [#] Provided for compatibility with other APIs, but we still recommend using
    ``X-RateLimit-Reset-In`` wherever possible
+
+.. _link: https://listenbrainz.org/login/
+.. _profile: https://listenbrainz.org/profile/

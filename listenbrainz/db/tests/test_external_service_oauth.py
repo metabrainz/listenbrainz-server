@@ -21,7 +21,8 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
             record_listens=True,
-            scopes=['user-read-recently-played']
+            scopes=['user-read-recently-played'],
+            external_user_id='external_user_idid',
         )
 
     def test_create_oauth(self):
@@ -33,10 +34,13 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
             record_listens=True,
-            scopes=['user-read-recently-played']
+            scopes=['user-read-recently-played'],
+            external_user_id='external_user_idid'
         )
         user = db_oauth.get_token(user2['id'], ExternalServiceType.SPOTIFY)
         self.assertEqual('token', user['access_token'])
+        self.assertEqual('external_user_idid', user['external_user_id'])
+
 
     def test_create_oauth_multiple(self):
         """ Test saving the token again for a given service and user_id
@@ -46,6 +50,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         time_before_update = datetime.now(timezone.utc)
         db_oauth.save_token(
             user_id=self.user['id'],
+            external_user_id='external_user_idid',
             service=ExternalServiceType.SPOTIFY,
             access_token='new_token',
             refresh_token='refresh_token',
@@ -91,3 +96,12 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, remove_import_log=False)
         self.assertIsNone(db_oauth.get_token(self.user['id'], ExternalServiceType.SPOTIFY))
         self.assertIsNotNone(db_spotify.get_user_import_details(self.user['id']))
+
+    def test_get_services(self):
+        services = db_oauth.get_services(self.user["id"])
+        self.assertEqual(services, ["spotify"])
+
+        db_oauth.delete_token(self.user["id"], ExternalServiceType.SPOTIFY, True)
+        services = db_oauth.get_services(self.user["id"])
+        self.assertEqual(services, [])
+

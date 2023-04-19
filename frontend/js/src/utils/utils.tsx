@@ -174,16 +174,33 @@ const getReleaseGroupMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.mbid_mapping.release_group_mbid");
 
 const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
-  _.get(listen, "track_metadata.track_name", "") || _.get(listen, "title", "");
+  _.get(listen, "track_metadata.mbid_mapping.recording_name", "") ||
+  _.get(listen, "track_metadata.track_name", "") ||
+  _.get(listen, "title", "");
 
 const getTrackDurationInMs = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "track_metadata.additional_info.duration_ms", "") ||
   _.get(listen, "track_metadata.additional_info.duration", "") * 1000 ||
   _.get(listen, "duration", "");
 
-const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
-  _.get(listen, "track_metadata.artist_name", "") ||
-  _.get(listen, "creator", "");
+const getArtistName = (
+  listen?: Listen | JSPFTrack | PinnedRecording
+): string => {
+  const artists: MBIDMappingArtist[] = _.get(
+    listen,
+    "track_metadata.mbid_mapping.artists",
+    []
+  );
+  if (artists?.length) {
+    return artists
+      .map((artist) => `${artist.artist_credit_name}${artist.join_phrase}`)
+      .join("");
+  }
+  return (
+    _.get(listen, "track_metadata.artist_name", "") ||
+    _.get(listen, "creator", "")
+  );
+};
 
 const getArtistLink = (listen: Listen) => {
   const artists = listen.track_metadata?.mbid_mapping?.artists;
@@ -196,6 +213,7 @@ const getArtistLink = (listen: Listen) => {
               href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
               target="_blank"
               rel="noopener noreferrer"
+              title={artist.artist_credit_name}
             >
               {artist.artist_credit_name}
             </a>
@@ -419,6 +437,7 @@ type GlobalAppProps = {
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
   critiquebrainz?: CritiqueBrainzUser;
+  user_preferences?: UserPreferences;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 
@@ -467,6 +486,17 @@ const getPageProps = (): {
       sentry_dsn,
     } = globalReactProps;
 
+    let { user_preferences } = globalReactProps;
+
+    user_preferences = { ...user_preferences, saveData: false };
+
+    if ("connection" in navigator) {
+      // @ts-ignore
+      if (navigator.connection?.saveData === true) {
+        user_preferences.saveData = true;
+      }
+    }
+
     const apiService = new APIServiceClass(
       api_url || `${window.location.origin}/1`
     );
@@ -476,6 +506,7 @@ const getPageProps = (): {
       spotifyAuth: spotify,
       youtubeAuth: youtube,
       critiquebrainzAuth: critiquebrainz,
+      userPreferences: user_preferences,
     };
     sentryProps = {
       sentry_dsn,

@@ -97,6 +97,13 @@ export default class YoutubePlayer
     return images;
   }
 
+  static getURLFromVideoID(videoID: string): string {
+    if (videoID) {
+      return `https://www.youtube.com/watch?v=${videoID}`;
+    }
+    return "";
+  }
+
   static getURLFromListen(listen: Listen | JSPFTrack): string | undefined {
     const youtubeId = this.getVideoIDFromListen(listen);
     if (youtubeId) {
@@ -132,22 +139,18 @@ export default class YoutubePlayer
     const videoData =
       this.youtubePlayer?.getVideoData && this.youtubePlayer.getVideoData();
     let videoId: string = "";
+    let videoUrl: string = "";
     if (videoData) {
       title = videoData.title;
       videoId = videoData.video_id as string;
       images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
+      videoUrl = YoutubePlayer.getURLFromVideoID(videoId);
     } else {
       // Fallback to track name from the listen we are playing
       const { currentListen } = this.state;
       title = getTrackName(currentListen);
     }
-    onTrackInfoChange(
-      title,
-      `https://www.youtube.com/watch?v=${videoId}`,
-      undefined,
-      undefined,
-      images
-    );
+    onTrackInfoChange(title, videoUrl, undefined, undefined, images);
     const duration = this.youtubePlayer?.getDuration();
     if (duration) {
       onDurationChange(duration * 1000);
@@ -177,13 +180,14 @@ export default class YoutubePlayer
       const videoId = _get(player, "playerInfo.videoData.video_id", "");
       // The player info is sometimes missing a title initially.
       // We fallback to getting it with getVideoData method once the information is loaded in the player
-      if (!title) {
+      if (!title || !videoId) {
         setTimeout(this.updateVideoInfo.bind(this), 2000);
       } else {
         const images: MediaImage[] = YoutubePlayer.getThumbnailsFromVideoid(
           videoId
         );
-        onTrackInfoChange(title, videoId, undefined, undefined, images);
+        const videoUrl = YoutubePlayer.getURLFromVideoID(videoId);
+        onTrackInfoChange(title, videoUrl, undefined, undefined, images);
       }
     }
     if (state === YouTube.PlayerState.PAUSED) {
@@ -295,19 +299,8 @@ export default class YoutubePlayer
     if (!show) {
       return;
     }
-    let youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (!youtubeId && _isString(originURL) && originURL.length) {
-      try {
-        const parsedURL = new URL(originURL);
-        const { hostname, searchParams } = parsedURL;
-        if (/youtube\.com/.test(hostname)) {
-          youtubeId = searchParams.get("v");
-        }
-      } catch {
-        // URL is not valid, do nothing
-      }
-    }
+    const youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
+
     if (youtubeId) {
       this.playTrackById(youtubeId);
     } else {

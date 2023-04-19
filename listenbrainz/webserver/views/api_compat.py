@@ -12,7 +12,8 @@ from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenVa
 import xmltodict
 
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen
+from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
+
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
@@ -287,7 +288,8 @@ def record_listens(data):
         raise InvalidAPIUsage(LastFMError(code=6, message=err.message), 400, output_format)
 
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
-    augmented_listens = insert_payload(validated_payload, user_metadata, listen_type=listen_type)
+    proper_listen_type = LISTEN_TYPE_PLAYING_NOW if listen_type == 'playing_now' else LISTEN_TYPE_SINGLE
+    augmented_listens = insert_payload(validated_payload, user_metadata, listen_type=proper_listen_type)
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()

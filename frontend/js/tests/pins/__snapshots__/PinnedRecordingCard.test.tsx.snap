@@ -213,18 +213,6 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
             <div
               className="listen-controls"
             >
-              <ListenFeedbackComponent
-                listen={
-                  Object {
-                    "listened_at": 1111111111,
-                    "track_metadata": Object {
-                      "artist_name": "Rick Astley",
-                      "track_name": "Never Gonna Give You Up",
-                    },
-                  }
-                }
-                newAlert={[Function]}
-              />
               <FontAwesomeIcon
                 aria-expanded="true"
                 aria-haspopup="true"

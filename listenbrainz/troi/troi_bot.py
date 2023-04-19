@@ -29,10 +29,15 @@ def run_post_recommendation_troi_bot():
         make_playlist_from_recommendations(user)
 
 
-def run_daily_jams_troi_bot():
-    """ Top level function called hourly to generate daily jams playlists for users """
+def run_daily_jams_troi_bot(create_all):
+    """ Top level function called hourly to generate daily jams playlists for users
+
+    Args:
+        create_all: whether to create daily jams for all users who follow troi-bot. if false,
+        create only for users according to timezone.
+    """
     # Now generate daily jams (and other in the future) for users who follow troi bot
-    users = get_users_for_daily_jams()
+    users = get_users_for_daily_jams(create_all)
     existing_urls = get_existing_daily_jams_urls([x["id"] for x in users])
     service = SpotifyService()
     for user in users:
@@ -44,8 +49,9 @@ def run_daily_jams_troi_bot():
             continue
 
 
-def get_users_for_daily_jams():
+def get_users_for_daily_jams(create_all):
     """ Retrieve users who follow troi bot and had midnight in their timezone less than 59 minutes ago. """
+    timezone_filter = "AND EXTRACT('hour' from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0"
     query = """
         SELECT "user".musicbrainz_id AS musicbrainz_id
              , "user".id as id
@@ -58,8 +64,9 @@ def get_users_for_daily_jams():
             ON us.user_id = user_0  
          WHERE user_1 = :followed
            AND relationship_type = 'follow'
-           AND EXTRACT('hour' from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0
     """
+    if not create_all:
+        query += " " + timezone_filter
     with db.engine.connect() as connection:
         result = connection.execute(text(query), {
             "followed": TROI_BOT_USER_ID,
