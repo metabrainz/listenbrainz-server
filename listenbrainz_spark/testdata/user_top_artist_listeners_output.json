@@ -61,17 +61,6 @@
         ]
       },
       {
-        "artist_mbid": "3252542b-98a7-48ba-9861-7a612b16c227",
-        "artist_name": "Kiasmos",
-        "total_listen_count": 1,
-        "listeners": [
-          {
-            "user_id": 1,
-            "listen_count": 1
-          }
-        ]
-      },
-      {
         "artist_mbid": "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f",
         "artist_name": "Vangelis",
         "total_listen_count": 3,
@@ -79,17 +68,6 @@
           {
             "user_id": 1,
             "listen_count": 3
-          }
-        ]
-      },
-      {
-        "artist_mbid": "603ba565-3967-4be1-931e-9cb945394e86",
-        "artist_name": "*NSYNC",
-        "total_listen_count": 1,
-        "listeners": [
-          {
-            "user_id": 2,
-            "listen_count": 1
           }
         ]
       },

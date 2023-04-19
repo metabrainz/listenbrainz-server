@@ -6,23 +6,6 @@
     "to_ts": 1628511763,
     "data": [
       {
-        "total_listen_count": 1,
-        "listeners": [
-          {
-            "user_id": 1,
-            "listen_count": 1
-          }
-        ],
-        "release_group_mbid": "030996fb-4388-34a5-8dfa-ddbdb71a2ac4",
-        "release_group_name": "Infinite Euphoria",
-        "artist_name": "Ferry Corsten",
-        "caa_id": 8448022908,
-        "caa_release_mbid": "0efa1563-cbc7-4249-b6ec-fab766c38c81",
-        "artist_mbids": [
-          "47347cb8-ac34-4916-84b6-d85d4e5e5384"
-        ]
-      },
-      {
         "total_listen_count": 6,
         "listeners": [
           {
@@ -54,23 +37,6 @@
         "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
         "artist_mbids": [
           "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
-        ]
-      },
-      {
-        "total_listen_count": 2,
-        "listeners": [
-          {
-            "user_id": 2,
-            "listen_count": 2
-          }
-        ],
-        "release_group_mbid": "2ae2e504-7116-4b4f-b632-9748bb18ccd2",
-        "release_group_name": "SOUR",
-        "artist_name": "Olivia Rodrigo",
-        "caa_id": 32201040812,
-        "caa_release_mbid": "6dd75bce-0194-4737-810c-d389689b4759",
-        "artist_mbids": [
-          "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
         ]
       },
       {
