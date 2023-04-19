@@ -4,7 +4,7 @@ import psycopg2
 from unidecode import unidecode
 
 from mapping.canonical_musicbrainz_data_base import CanonicalMusicBrainzDataBase
-from mapping.canonical_musicbrainz_data_release_support import CanonicalMusicBrainzDataRelease
+from mapping.canonical_musicbrainz_data_release_support import CanonicalMusicBrainzDataReleaseSupport
 from mapping.utils import log
 from mapping.custom_sorts import create_custom_sort_tables
 from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
@@ -85,7 +85,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         releases = CanonicalRelease(mb_conn)
         mapping = CanonicalMusicBrainzData(mb_conn, lb_conn)
         mapping.add_additional_bulk_table(can)
-        mapping_release = CanonicalMusicBrainzDataRelease(mb_conn, lb_conn)
+        mapping_release = CanonicalMusicBrainzDataReleaseSupport(mb_conn, lb_conn)
 
         # Carry out the bulk of the work
         create_custom_sort_tables(mb_conn)
