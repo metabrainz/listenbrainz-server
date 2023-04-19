@@ -1,16 +1,4 @@
-import re
-
-import psycopg2
-from psycopg2.errors import OperationalError
-from unidecode import unidecode
-
-from mapping.utils import log
-from mapping.custom_sorts import create_custom_sort_tables
 from mapping.bulk_table import BulkInsertTable
-from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
-from mapping.canonical_recording_release_redirect import CanonicalRecordingReleaseRedirect
-from mapping.canonical_release_redirect import CanonicalReleaseRedirect
-from mapping.canonical_release import CanonicalRelease
 
 import config
 
@@ -72,6 +60,10 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
                    ON acn.artist_credit = s.artist_credit
             LEFT JOIN musicbrainz.release_country rc
                    ON rc.release = rl.id
+               -- there is some bad data in MB for which the recording/release title is too large and exceeds the 
+               -- postgres indexing limits. therefore filter out such recordings before-hand, otherwise index creation
+               -- may fail
+                WHERE length(concat(ac.name, r.name, rl.name)) < 500 
              GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name, year
              ORDER BY ac.id, rpr.id
         """)]
