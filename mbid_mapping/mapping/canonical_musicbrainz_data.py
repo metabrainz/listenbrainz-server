@@ -4,7 +4,7 @@ import psycopg2
 from unidecode import unidecode
 
 from mapping.canonical_musicbrainz_data_base import CanonicalMusicBrainzDataBase
-from mapping.canonical_musicbrainz_data_release import CanonicalMusicBrainzDataRelease
+from mapping.canonical_musicbrainz_data_release_support import CanonicalMusicBrainzDataRelease
 from mapping.utils import log
 from mapping.custom_sorts import create_custom_sort_tables
 from mapping.canonical_recording_redirect import CanonicalRecordingRedirect
@@ -22,60 +22,6 @@ class CanonicalMusicBrainzData(CanonicalMusicBrainzDataBase):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.canonical_musicbrainz_data", mb_conn, lb_conn, batch_size)
-
-    def get_create_table_columns(self):
-        return [("id",                 "SERIAL"),
-                ("artist_credit_id",   "INT NOT NULL"),
-                ("artist_mbids",       "UUID[] NOT NULL"),
-                ("artist_credit_name", "TEXT NOT NULL"),
-                ("release_mbid",       "UUID NOT NULL"),
-                ("release_name",       "TEXT NOT NULL"),
-                ("recording_mbid",     "UUID NOT NULL"),
-                ("recording_name",     "TEXT NOT NULL"),
-                ("combined_lookup",    "TEXT NOT NULL"),
-                ("score",              "INTEGER NOT NULL"),
-                ("year",               "INTEGER")]
-
-    def get_insert_queries(self):
-        return [("MB", """
-               SELECT ac.id as artist_credit_id
-                    , r.name AS recording_name
-                    , r.gid AS recording_mbid
-                    , ac.name AS artist_credit_name
-                    , s.artist_mbids
-                    , rl.name AS release_name
-                    , rl.gid AS release_mbid
-                    , rpr.id AS score
-                    , date_year AS year
-                 FROM musicbrainz.recording r
-                 JOIN musicbrainz.artist_credit ac
-                   ON r.artist_credit = ac.id
-                 JOIN musicbrainz.artist_credit_name acn
-                   ON ac.id = acn.artist_credit
-                 JOIN musicbrainz.artist a
-                   ON acn.artist = a.id
-                 JOIN musicbrainz.track t
-                   ON t.recording = r.id
-                 JOIN musicbrainz.medium m
-                   ON m.id = t.medium
-                 JOIN musicbrainz.release rl
-                   ON rl.id = m.release
-                 JOIN mapping.canonical_musicbrainz_data_release_tmp rpr
-                   ON rl.id = rpr.release
-                 JOIN (SELECT artist_credit, array_agg(gid ORDER BY position) AS artist_mbids
-                         FROM musicbrainz.artist_credit_name acn2
-                         JOIN musicbrainz.artist a2
-                           ON acn2.artist = a2.id
-                     GROUP BY acn2.artist_credit) s
-                   ON acn.artist_credit = s.artist_credit
-            LEFT JOIN musicbrainz.release_country rc
-                   ON rc.release = rl.id
-               --- there is some bad data in MB for which the title is too large and exceeds the postgres indexing limits
-               --- therefore filter out such recordings before-hand, otherwise index creation may fail
-                WHERE length(concat(ac.name, r.name)) < 500      
-             GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name, year
-             ORDER BY ac.id, rpr.id
-        """)]
 
     def get_post_process_queries(self):
         return ["""

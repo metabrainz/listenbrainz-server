@@ -4,7 +4,7 @@ from unidecode import unidecode
 from mapping.canonical_musicbrainz_data_base import CanonicalMusicBrainzDataBase
 
 
-class CanonicalMusicBrainzDataRelease(CanonicalMusicBrainzDataBase):
+class CanonicalMusicBrainzDataReleaseSupport(CanonicalMusicBrainzDataBase):
     """
         This class creates the MBID mapping tables including the release name in lookups.
     """
