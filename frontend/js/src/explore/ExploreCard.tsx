@@ -47,14 +47,6 @@ function ExplorePage() {
     <div className="row">
       <div>
         <ExploreCard
-          name="AI Brainz (beta)"
-          desc="NEW ! Generate intelligent playlists with AI"
-          img_name="ai-brainz.jpg"
-          url="/explore/ai-brainz"
-        />
-      </div>
-      <div>
-        <ExploreCard
           name="Fresh Releases"
           desc="Discover"
           img_name="fresh-releases.jpg"
