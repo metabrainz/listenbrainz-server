@@ -159,10 +159,9 @@ body {
 		// Leave some space for BrainzPlayer
 		padding-bottom: @brainzplayer-height;
 
-		width: 100%;
-		div[role="main"] {
-			max-width: @max-content-width;
-		}
+		width: 100%; // fallback
+		width: calc(100% - @sidenav-width);
+		max-width: @max-content-width;
 	}
 	
 	/* Styles for mobile devices */
@@ -200,6 +199,9 @@ body {
 				display: flex;
 				align-items: center;
 			}
+		}
+		> :not(nav){
+			width: 100%; // fallback
 		}
 	}
 
