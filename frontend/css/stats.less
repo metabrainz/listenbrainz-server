@@ -6,19 +6,21 @@
 	width: 100%;
 	max-width: 100%;
 	// Default height just in case, otherwise nivo charts don't get rendered
-	height: 350px; // override this
+	height: 100px; // override this
+	min-height: 250px;
 	
 	&.user-listening-activity {
-		height: calc(100% * 0.3);
 		aspect-ratio: 3.5;
+		min-height: 350px;
+		height: calc(100% * 0.3);
 	}
 	&.user-listen-heatmap {
-		height: calc(100% * 0.3);
 		aspect-ratio: 3;
+		height: calc(100% * 0.3);
 	}
 	&.user-artist-map {
-    	height: calc(100% * 0.6);
 		aspect-ratio: 2;
+		height: calc(100% * 0.6);
 		position: relative;
 	}
 	
