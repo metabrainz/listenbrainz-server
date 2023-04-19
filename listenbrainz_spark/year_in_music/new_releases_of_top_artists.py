@@ -1,13 +1,11 @@
 from datetime import datetime, date, time
 
-import listenbrainz_spark
 from data.model.new_releases_stat import NewReleasesStat
-from listenbrainz_spark import config
-from listenbrainz_spark.path import RELEASE_GROUPS_YEAR_DATAFRAME
-from listenbrainz_spark.postgres.release_group import create_year_release_groups
+from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.postgres.release_group import create_release_group_metadata_cache
 
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump
+from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
 
 
 def get_new_releases_of_top_artists(year):
@@ -15,14 +13,10 @@ def get_new_releases_of_top_artists(year):
     to_date = datetime.combine(date(year, 12, 31), time.max)
     get_listens_from_dump(from_date, to_date).createOrReplaceTempView("listens")
 
-    create_year_release_groups(year)
-    listenbrainz_spark\
-        .sql_context\
-        .read\
-        .parquet(config.HDFS_CLUSTER_URI + RELEASE_GROUPS_YEAR_DATAFRAME)\
-        .createOrReplaceTempView("release_groups_of_year")
+    create_release_group_metadata_cache()
+    read_files_from_HDFS(RELEASE_GROUP_METADATA_CACHE_DATAFRAME).createOrReplaceTempView("release_groups")
 
-    new_releases = run_query(_get_new_releases_of_top_artists())
+    new_releases = run_query(_get_new_releases_of_top_artists(year))
 
     for entry in new_releases.toLocalIterator():
         data = entry.asDict(recursive=True)
@@ -34,7 +28,7 @@ def get_new_releases_of_top_artists(year):
         ).dict(exclude_none=True)
 
 
-def _get_new_releases_of_top_artists():
+def _get_new_releases_of_top_artists(year):
     # instead of exploding the artist mbids, it is possible to use arrays_overlap on the two artist credit mbids
     # however in that case spark will do a BroadcastNestedLoopJoin which is very slow (takes 3 hours). the query
     # below using equality on artist mbid takes 2 minutes.
@@ -65,7 +59,8 @@ def _get_new_releases_of_top_artists():
                  , caa_id
                  , caa_release_mbid
                  , explode(artist_credit_mbids) AS artist_mbid
-              FROM release_groups_of_year    
+              FROM release_groups_of_year
+             WHERE first_release_date_year = {year}
         )
             SELECT user_id
                  , collect_set(

@@ -264,6 +264,46 @@ export default class UserTopEntity extends React.Component<
                   );
                 }
               )}
+            {entity === "release-group" &&
+              Object.keys(data).length > 0 &&
+              (data as UserReleaseGroupsResponse).payload.release_groups.map(
+                (releaseGroup, index) => {
+                  const interchangeFormat = {
+                    id: index.toString(),
+                    entity: releaseGroup.release_group_name,
+                    entityType: "release-group" as Entity,
+                    entityMBID: releaseGroup.release_group_mbid,
+                    artist: releaseGroup.artist_name,
+                    artistMBID: releaseGroup.artist_mbids,
+                    idx: index + 1,
+                    count: releaseGroup.listen_count,
+                    caaID: releaseGroup.caa_id,
+                    caaReleaseMBID: releaseGroup.caa_release_mbid,
+                  };
+                  const listenDetails = getChartEntityDetails(
+                    interchangeFormat
+                  );
+                  return (
+                    <ListenCard
+                      key={releaseGroup.release_group_mbid}
+                      listenDetails={listenDetails}
+                      listen={userChartEntityToListen(interchangeFormat)}
+                      showTimestamp={false}
+                      showUsername={false}
+                      currentFeedback={0}
+                      newAlert={newAlert}
+                      additionalActions={
+                        <span className="badge badge-info">
+                          {releaseGroup.listen_count}
+                        </span>
+                      }
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      feedbackComponent={<></>}
+                      compact
+                    />
+                  );
+                }
+              )}
           </div>
           <a href={statsUrl} className="mt-15 btn btn-block btn-info">
             View more…

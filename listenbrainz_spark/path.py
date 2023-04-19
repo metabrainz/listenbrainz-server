@@ -99,7 +99,7 @@ MUSICBRAINZ_RELEASE_DUMP_JSON_FILE = "/musicbrainz/release/mbdump/release"
 RELEASE_COLOR_DUMP = "/release_color.json"
 
 RELEASE_METADATA_CACHE_DATAFRAME = "/release_metadata_cache"
-RELEASE_GROUPS_YEAR_DATAFRAME = "/release_groups_year"
+RELEASE_GROUP_METADATA_CACHE_DATAFRAME = "/release_group_metadata_cache"
 ARTIST_COUNTRY_CODE_DATAFRAME = "/artist_country_code"
 RECORDING_LENGTH_DATAFRAME = "/recording_length"
 ARTIST_CREDIT_MBID_DATAFRAME = "/artist_credit_mbid"

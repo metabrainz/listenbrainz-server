@@ -1,5 +1,6 @@
 from listenbrainz_spark.hdfs import upload_to_HDFS, delete_dir
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME
+from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME, \
+    RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.tests import SparkNewTestCase
 
 
@@ -9,6 +10,10 @@ class StatsTestCase(SparkNewTestCase):
     def setUpClass(cls) -> None:
         super(StatsTestCase, cls).setUpClass()
         cls.upload_test_listens()
+        upload_to_HDFS(
+            RELEASE_GROUP_METADATA_CACHE_DATAFRAME,
+            cls.path_to_data_file("release_group_data_cache.parquet")
+        )
         upload_to_HDFS(
             RELEASE_METADATA_CACHE_DATAFRAME,
             cls.path_to_data_file("release_data_cache.parquet")
@@ -22,5 +27,6 @@ class StatsTestCase(SparkNewTestCase):
     def tearDownClass(cls) -> None:
         super(StatsTestCase, cls).tearDownClass()
         cls.delete_uploaded_listens()
+        delete_dir(RELEASE_GROUP_METADATA_CACHE_DATAFRAME)
         delete_dir(RELEASE_METADATA_CACHE_DATAFRAME)
         delete_dir(ARTIST_COUNTRY_CODE_DATAFRAME)

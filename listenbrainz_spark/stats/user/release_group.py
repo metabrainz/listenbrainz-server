@@ -3,9 +3,9 @@ from typing import List
 from listenbrainz_spark.stats import run_query
 
 
-def get_releases(table: str, cache_tables: List[str], number_of_results: int):
+def get_release_groups(table: str, cache_tables: List[str], number_of_results: int):
     """
-    Get release information (release_name, release_mbid etc) for every user
+    Get release group information (release_group_name, release_group_mbid etc) for every user
     ordered by listen count (number of times a user has listened to tracks
     which belong to a particular release).
 
@@ -17,8 +17,8 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
         iterator (iter): an iterator over result
                 {
                     'user1' : [{
-                        'release_name': str
-                        'release_mbid': str,
+                        'release_group_name': str
+                        'release_group_mbid': str,
                         'artist_name': str,
                         'artist_mbids': list(str),
                         'listen_count': int
@@ -26,47 +26,52 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                     'user2' : [{...}],
                 }
     """
-    cache_table = cache_tables[0]
+    rel_cache_table = cache_tables[0]
+    rg_cache_table = cache_tables[1]
     result = run_query(f"""
         WITH gather_release_data AS (
             SELECT user_id
-                 , l.release_mbid
-                 , COALESCE(rel.release_name, l.release_name) AS release_name
-                 , COALESCE(rel.album_artist_name, l.artist_name) AS release_artist_name
-                 , COALESCE(rel.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
-                 , rel.caa_id
-                 , rel.caa_release_mbid
+                 , rg.release_group_mbid
+                 -- this is intentional as we don't have a release group name field in listen submission json
+                 -- and for the purposes of this stat, they'd usually be the same.
+                 , COALESCE(rg.title, l.release_name) AS release_group_name
+                 , COALESCE(rg.artist_credit_name, l.artist_name) AS release_group_artist_name
+                 , COALESCE(rg.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
+                 , rg.caa_id
+                 , rg.caa_release_mbid
               FROM {table} l
-         LEFT JOIN {cache_table} rel
+         LEFT JOIN {rel_cache_table} rel
                 ON rel.release_mbid = l.release_mbid
+         LEFT JOIN {rg_cache_table} rg
+                ON rg.release_group_mbid = rel.release_group_mbid
         ), intermediate_table as (
-           SELECT user_id
-                , first(release_name) AS any_release_name
-                , release_mbid
-                , first(release_artist_name) AS any_artist_name
-                , artist_credit_mbids
-                , caa_id
-                , caa_release_mbid
-                , count(*) as listen_count
+            SELECT user_id
+                 , first(release_group_name) AS any_release_group_name
+                 , release_group_mbid
+                 , first(release_group_artist_name) AS any_artist_name
+                 , artist_credit_mbids
+                 , caa_id
+                 , caa_release_mbid
+                 , count(*) as listen_count
               FROM gather_release_data
-             WHERE release_name != ''
-               AND release_name IS NOT NULL
+             WHERE release_group_name != ''
+               AND release_group_name IS NOT NULL
           GROUP BY user_id
-                 , lower(release_name)
-                 , release_mbid
-                 , lower(release_artist_name)
+                 , lower(release_group_name)
+                 , release_group_mbid
+                 , lower(release_group_artist_name)
                  , artist_credit_mbids
                  , caa_id
                  , caa_release_mbid
         ), entity_count as (
             SELECT user_id
-                 , count(*) as releases_count
+                 , count(*) as release_groups_count
               FROM intermediate_table
           GROUP BY user_id      
         ), ranked_stats as (
             SELECT user_id
-                 , any_release_name AS release_name
-                 , release_mbid
+                 , any_release_group_name AS release_group_name
+                 , release_group_mbid
                  , any_artist_name AS artist_name
                  , artist_credit_mbids
                  , caa_id
@@ -80,8 +85,8 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                         collect_list(
                             struct(
                                 listen_count
-                              , release_name
-                              , release_mbid
+                              , release_group_name
+                              , release_group_mbid
                               , artist_name
                               , coalesce(artist_credit_mbids, array()) AS artist_mbids
                               , caa_id
@@ -89,14 +94,14 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                             )
                         )
                        , false
-                    ) as releases
+                    ) as release_groups
               FROM ranked_stats
              WHERE rank <= {number_of_results}
           GROUP BY user_id
         )
             SELECT user_id
-                 , releases_count
-                 , releases
+                 , release_groups_count
+                 , release_groups
               FROM grouped_stats
               JOIN entity_count
              USING (user_id)
