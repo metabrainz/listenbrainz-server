@@ -74,6 +74,9 @@ class CanonicalMusicBrainzData(BulkInsertTable):
                    ON acn.artist_credit = s.artist_credit
             LEFT JOIN musicbrainz.release_country rc
                    ON rc.release = rl.id
+               --- there is some bad data in MB for which the title is too large and exceeds the postgres indexing limits
+               --- therefore filter out such recordings before-hand, otherwise index creation may fail
+                WHERE length(concat(ac.name, r.name)) < 500      
              GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name, year
              ORDER BY ac.id, rpr.id
         """)]
