@@ -13,6 +13,7 @@
 @tabs-height: 42px;
 @tabs-height-mobile: 42px;
 @nav-link-color: #1E1E1E;
+@gradient-orange: #ffa500;
 
 body {
 	display: flex;
@@ -34,7 +35,7 @@ body {
 			border-image: linear-gradient(
 			to bottom,
 			@blue,
-			#ffa500
+			@gradient-orange
 			) 1 100%;
 			padding: 1.2em;
 			background-color: @nav-background-color;
@@ -125,7 +126,7 @@ body {
 			border-image: linear-gradient(
 				to right,
 				@blue,
-				@orange
+				@gradient-orange
 				) 100% 1;
 			
 			.navbar-logo{
@@ -186,6 +187,17 @@ body {
 				&.collapse.in{
 					transform: none
 				}
+				.mobile-nav-fix{
+					position: absolute;
+					background-color: @nav-background-color;
+					border-right: 9px solid @gradient-orange;
+					//sidanav width + border thickness
+					width: calc(100% + 9px);
+					height: 120px;
+					bottom: -110px;
+					right: -9px; // parent's border thickness
+					z-index: 99;
+				}
 			}
 			#side-nav-overlay {
 				content:"";
@@ -194,11 +206,12 @@ body {
 				transition: opacity .3s linear;
 				position: fixed;
 				width: 100vw;
+				height: 110vh !important;
 				top:0;
 				bottom:0;
 				right: 0;
 				background:white;
-				z-index: 99;
+				z-index: 98;
 				&.collapse.in {
 					opacity: 0.8;
 					pointer-events: unset;
@@ -210,7 +223,9 @@ body {
 			}
 		}
 		> :not(nav){
-			width: 100%; // fallback
+			&, div[role="main"]{
+				width: 100%;
+			}
 		}
 	}
 
