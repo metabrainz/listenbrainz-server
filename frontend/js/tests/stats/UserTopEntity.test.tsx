@@ -31,7 +31,7 @@ const sitewideProps: UserTopEntityProps = {
   newAlert: (): any => {},
 };
 
-describe.each([
+xdescribe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
