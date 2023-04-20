@@ -16,6 +16,7 @@ from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
 from listenbrainz.webserver import flash
 from listenbrainz.webserver import timescale_connection
@@ -300,7 +301,7 @@ def delete_listens():
     )
 
 
-def _get_service_or_raise_404(name: str) -> ExternalService:
+def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
     """Returns the music service for the given name and raise 404 if
     service is not found
 
@@ -313,6 +314,8 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
             return SpotifyService()
         elif service == ExternalServiceType.CRITIQUEBRAINZ:
             return CritiqueBrainzService()
+        elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
+            return MusicBrainzService()
     except KeyError:
         raise NotFound("Service %s is invalid." % name)
 
@@ -365,7 +368,7 @@ def music_services_callback(service_name: str):
 @profile_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
 @api_login_required
 def refresh_service_token(service_name: str):
-    service = _get_service_or_raise_404(service_name)
+    service = _get_service_or_raise_404(service_name, include_mb=True)
     user = service.get_user(current_user.id)
     if not user:
         raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
