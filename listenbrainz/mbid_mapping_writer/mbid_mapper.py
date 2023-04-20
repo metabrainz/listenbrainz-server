@@ -111,7 +111,7 @@ class MBIDMapper:
         if release_name is not None and release_name_hit is not None:
             release_distance = distance(release_name, release_name_hit)
         else:
-            release_distance = None
+            release_distance = -1  # if we set release_distance to None then it causes issue when formatting log string
 
         return distance(artist_credit_name, artist_credit_name_hit), distance(recording_name, recording_name_hit), release_distance
 
@@ -307,7 +307,7 @@ class MBIDMapper:
         return {
             'artist_credit_name': hit['document']['artist_credit_name'],
             'artist_credit_id': hit['document']['artist_credit_id'],
-            'artist_mbids': hit['document']['artist_mbids'],
+            'artist_mbids': hit['document']['artist_mbids'][1:-1].split(","),
             'release_name': hit['document']['release_name'],
             'release_mbid': hit['document']['release_mbid'],
             'recording_name': hit['document']['recording_name'],

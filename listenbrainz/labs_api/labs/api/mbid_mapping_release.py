@@ -24,7 +24,7 @@ class MBIDMappingReleaseQuery(BaseMBIDMappingQuery):
 
         args = []
         for i, param in enumerate(params):
-            args.append((i, param['[artist_credit_name]'], param['[recording_name]'], param['release_name']))
+            args.append((i, param['[artist_credit_name]'], param['[recording_name]'], param['[release_name]']))
 
         results = []
         for index, artist_credit_name, recording_name, release_name in args:
