@@ -2,7 +2,7 @@
 @sidenav-width: 190px;
 @brainzplayer-height: 60px;
 @offscreen-sidenav-breakpoint: @grid-float-breakpoint-max;
-@very-wide-screen-breakpoint: 2000px;
+@very-wide-screen-breakpoint: 1950px;
 @navbar-height: 72px;
 @max-content-width: 1400px;
 @nav-background-color: #F3F3F3;
@@ -166,11 +166,14 @@ body {
 		padding-bottom: @brainzplayer-height;
 
 		width: 100%; // fallback
+		// width: -webkit-fill-available;
+		width: calc(100% - @sidenav-width);
 		div[role="main"]{
-			width: calc(100% - @sidenav-width);
 			max-width: @max-content-width;
 			margin-left: auto;
 			margin-right: auto;
+			// @media (min-width: @max-content-width) {
+			// }
 		}
 	}
 	
@@ -237,13 +240,14 @@ body {
 	margin-left:  ceil((@grid-gutter-width / -2));
 	margin-right: floor((@grid-gutter-width / -2));
 	margin-bottom: 1.5em;
-	> * {
+	&, > * {
 		background-color: @nav-tabs-background-color;
 	}
 	
 	.nav.nav-tabs {
 		display: flex;
 		background-color: @nav-tabs-background-color;
+		white-space: nowrap;
 		
 		> li{
 			background-color: @nav-tabs-background-color;
