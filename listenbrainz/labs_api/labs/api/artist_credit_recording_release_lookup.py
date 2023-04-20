@@ -12,7 +12,7 @@ class ArtistCreditRecordingReleaseLookupQuery(RecordingLookupBaseQuery):
         return param["[artist_credit_name]"] + param["[recording_name]"] + param["[release_name]"]
 
     def names(self):
-        return "acr-lookup", "MusicBrainz Artist Credit Recording Release lookup"
+        return "acrr-lookup", "MusicBrainz Artist Credit Recording Release lookup"
 
     def inputs(self):
         return ['[artist_credit_name]', '[recording_name]', '[release_name]']

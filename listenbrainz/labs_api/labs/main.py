@@ -5,6 +5,7 @@ from listenbrainz.labs_api.labs.api.artist_country_from_artist_mbid import Artis
 from listenbrainz.labs_api.labs.api.artist_credit_from_artist_mbid import ArtistCreditIdFromArtistMBIDQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup import \
     ArtistCreditRecordingReleaseLookupQuery
+from listenbrainz.labs_api.labs.api.mbid_mapping_release import MBIDMappingReleaseQuery
 from listenbrainz.labs_api.labs.api.recording_from_recording_mbid import RecordingFromRecordingMBIDQuery
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
 from listenbrainz.labs_api.labs.api.explain_mbid_mapping import ExplainMBIDMappingQuery
@@ -23,6 +24,7 @@ register_query(ArtistCountryFromArtistMBIDQuery())
 register_query(ArtistCreditIdFromArtistMBIDQuery())
 register_query(RecordingFromRecordingMBIDQuery())
 register_query(MBIDMappingQuery())
+register_query(MBIDMappingReleaseQuery())
 register_query(ExplainMBIDMappingQuery())
 register_query(RecordingSearchQuery())
 register_query(ArtistCreditRecordingLookupQuery())

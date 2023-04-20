@@ -6,7 +6,7 @@ from listenbrainz.labs_api.labs.api.recording_lookup_base import RecordingLookup
 class ArtistCreditRecordingLookupQuery(RecordingLookupBaseQuery):
 
     def names(self):
-        return ("acr-lookup", "MusicBrainz Artist Credit Recording lookup")
+        return "acr-lookup", "MusicBrainz Artist Credit Recording lookup"
 
     def inputs(self):
         return ['[artist_credit_name]', '[recording_name]']

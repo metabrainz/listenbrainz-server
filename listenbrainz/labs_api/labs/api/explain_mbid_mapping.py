@@ -11,7 +11,7 @@ class ExplainMBIDMappingQuery(Query):
         self.mapper = MBIDMapper(remove_stop_words=remove_stop_words, debug=True)
 
     def names(self):
-        return ("explain-mbid-mapping", "Explain MusicBrainz ID Mapping lookup")
+        return "explain-mbid-mapping", "Explain MusicBrainz ID Mapping lookup"
 
     def inputs(self):
         return ['artist_credit_name', 'recording_name', 'release_name']
