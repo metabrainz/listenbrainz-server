@@ -20,6 +20,10 @@ import CBReviewModal from "../../src/cb-review/CBReviewModal";
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
+const fetchSpy = jest
+  .spyOn(window, "fetch")
+  .mockRejectedValue(new Error("bob"));
+
 const listen: Listen = {
   listened_at: 0,
   playing_now: false,
