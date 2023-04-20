@@ -147,13 +147,13 @@ def get_mbid_mapping():
         }
     ]
 
-    if release_name:
-        q = ArtistCreditRecordingReleaseLookupQuery(debug=False)
-        exact_results = q.fetch(params)
-        if exact_results:
-            return process_results(exact_results[0], metadata, incs)
-
     try:
+        if release_name:
+            q = ArtistCreditRecordingReleaseLookupQuery(debug=False)
+            exact_results = q.fetch(params)
+            if exact_results:
+                return process_results(exact_results[0], metadata, incs)
+
         q = ArtistCreditRecordingLookupQuery(debug=False)
         exact_results = q.fetch(params)
         if exact_results:
@@ -165,7 +165,7 @@ def get_mbid_mapping():
             return process_results(fuzzy_result, metadata, incs)
 
     except Exception as e:
-        current_app.logger.error("Server failed to lookup recording: {}".format(e))
+        current_app.logger.error("Server failed to lookup recording: {}".format(e), exc_info=True)
         raise APIInternalServerError("Server failed to lookup recording")
 
     return jsonify({})
