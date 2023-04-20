@@ -2,8 +2,9 @@
 @sidenav-width: 190px;
 @brainzplayer-height: 60px;
 @offscreen-sidenav-breakpoint: @grid-float-breakpoint-max;
+@very-wide-screen-breakpoint: 2000px;
 @navbar-height: 72px;
-@max-content-width: 1600px;
+@max-content-width: 1400px;
 @nav-background-color: #F3F3F3;
 
 @nav-tabs-link-padding: 1em 1.5em;
@@ -164,8 +165,12 @@ body {
 		padding-bottom: @brainzplayer-height;
 
 		width: 100%; // fallback
-		width: calc(100% - @sidenav-width);
-		max-width: @max-content-width;
+		div[role="main"]{
+			width: calc(100% - @sidenav-width);
+			max-width: @max-content-width;
+			margin-left: auto;
+			margin-right: auto;
+		}
 	}
 	
 	/* Styles for mobile devices */
@@ -223,6 +228,7 @@ body {
 	
 	.nav.nav-tabs {
 		display: flex;
+		background-color: @nav-tabs-background-color;
 		
 		> li{
 			background-color: @nav-tabs-background-color;
@@ -310,7 +316,22 @@ body {
 			padding: @nav-tabs-link-padding-mobile;
 		}
 	}
+	/* Special styles for very wide screens */
+	@media (min-width: @very-wide-screen-breakpoint) {
+		.nav.nav-tabs {
+			/* Align the secondary nav with the centered content */
+			width: calc(100% - @sidenav-width);
+			max-width: @max-content-width;
+			margin-left: auto;
+			margin-right: auto;
+
+			>li.username {
+				background: #46433A;
+			}
+		}
+	}
 }
+
 .dragscroll {
 	/* We user the dragscroll library to handle dragging to scroll */
 	overflow-x: scroll;
