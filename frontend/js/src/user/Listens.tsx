@@ -753,10 +753,11 @@ export default class Listens extends React.Component<
                 aria-haspopup="true"
               >
                 <FontAwesomeIcon icon={faPlusCircle} title="Add listens" />
-                &nbsp;Add listens
+                &nbsp;Add listens&nbsp;
+                <span className="caret" />
               </button>
               <ul
-                className="dropdown-menu"
+                className="dropdown-menu dropdown-menu-right"
                 aria-labelledby="addListensDropdown"
               >
                 <li>
