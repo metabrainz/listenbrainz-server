@@ -131,3 +131,6 @@ def _update_msid_items(models: dict[str, list[ModelT]], metadatas: dict[str, dic
                     "recording_msid": msid
                 }
             }
+
+            if metadata.get("release"):
+                item.track_metadata["release_name"] = metadata["release"]
