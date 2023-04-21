@@ -769,7 +769,7 @@ def get_recording_pin_events(
 
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     recording_pin_events_db = get_pins_for_feed(
-        user_ids=(user['id'] for user in users_for_events),
+        user_ids=id_username_map.keys(),
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
@@ -779,27 +779,19 @@ def get_recording_pin_events(
     events = []
     for pin in recording_pin_events_db:
         try:
-            pinEvent = APIPinEvent(
+            pin_event = APIPinEvent(
                 user_name=id_username_map[pin.user_id],
                 blurb_content=pin.blurb_content,
-                track_metadata=TrackMetadata(
-                    artist_name=pin.track_metadata["artist_name"],
-                    track_name=pin.track_metadata["track_name"],
-                    release_name=None,
-                    additional_info=AdditionalInfo(
-                        recording_msid=pin.recording_msid,
-                        recording_mbid=pin.recording_mbid,
-                    )
-                )
+                track_metadata=pin.track_metadata
             )
 
             events.append(APITimelineEvent(
                 id=pin.row_id,
                 event_type=UserTimelineEventType.RECORDING_PIN,
-                user_name=pinEvent.user_name,
+                user_name=pin_event.user_name,
                 created=pin.created.timestamp(),
-                metadata=pinEvent,
-                hidden=False,
+                metadata=pin_event,
+                hidden=False
             ))
         except (pydantic.ValidationError, TypeError, KeyError):
             current_app.logger.error("Could not convert pinned recording to feed event", exc_info=True)
