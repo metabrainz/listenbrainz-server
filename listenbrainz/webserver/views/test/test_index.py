@@ -17,6 +17,17 @@ class IndexViewsTestCase(IntegrationTestCase):
     def test_index(self):
         resp = self.client.get(url_for('index.index'))
         self.assert200(resp)
+    
+    def test_index_logged_in_redirect(self):
+        """ If the user is logged in, redirect from the index to their profile page """
+        user = db_user.get_or_create(1, 'mr_monkey')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create(1, 'mr_monkey')
+        self.temporary_login(user['login_id'])
+
+        resp = self.client.get(url_for('index.index'))
+        self.assertRedirects(response, url_for('user.profile', user_name='mr_monkey'))
+
 
     def test_downloads(self):
         resp = self.client.get(url_for('index.downloads'))
