@@ -12,7 +12,11 @@ import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { io, Socket } from "socket.io-client";
 import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
-import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCompactDisc,
+  faPlusCircle,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import {
@@ -740,19 +744,48 @@ export default class Listens extends React.Component<
         <div className="listen-header">
           {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
           {isCurrentUsersPage && (
-            <button
-              type="button"
-              className="btn btn-primary add-listen-btn"
-              onClick={() => {
-                NiceModal.show(AddListenModal, {
-                  newAlert,
-                });
-              }}
-              data-Toggle="modal"
-              data-Target="#AddListenModal"
-            >
-              Add listen
-            </button>
+            <div className="dropdow add-listen-btn">
+              <button
+                className="btn btn-info dropdown-toggle"
+                type="button"
+                id="addListensDropdown"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+              >
+                <FontAwesomeIcon icon={faPlusCircle} title="Add listens" />
+                &nbsp;Add listens
+              </button>
+              <ul
+                className="dropdown-menu"
+                aria-labelledby="addListensDropdown"
+              >
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show(AddListenModal, {
+                        newAlert,
+                      });
+                    }}
+                    data-toggle="modal"
+                    data-target="#AddListenModal"
+                  >
+                    Manual addition
+                  </button>
+                </li>
+                <li>
+                  <a href="/profile/music-services/details/">
+                    Connect music services
+                  </a>
+                </li>
+                <li>
+                  <a href="/profile/import/">Import your listens</a>
+                </li>
+                <li>
+                  <a href="/add-data/">Submit from music players</a>
+                </li>
+              </ul>
+            </div>
           )}
         </div>
 
