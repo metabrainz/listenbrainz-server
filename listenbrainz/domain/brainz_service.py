@@ -25,7 +25,7 @@ class BaseBrainzService(ExternalService):
             user_id=user_id,
             service=self.service,
             access_token=token["access_token"],
-            refresh_token=token["refresh_token"],
+            refresh_token=token.get("refresh_token"),
             token_expires_ts=expires_at,
             record_listens=False,
             scopes=self.scopes
