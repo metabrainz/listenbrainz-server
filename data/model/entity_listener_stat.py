@@ -16,6 +16,7 @@ class UserIdListener(BaseModel):
 
 
 class BaseListenerRecord(BaseModel):
+    """ Common base class for entity listener stats """
     total_listen_count: NonNegativeInt
     listeners: List[UserIdListener]
 
@@ -65,6 +66,7 @@ class UserNameListener(BaseModel):
 
 
 class EntityListenerStatApi(BaseModel):
+    """ Base class for the entity listeners stats API response """
     stats_range: constr(min_length=1)
     from_ts: NonNegativeInt
     to_ts: NonNegativeInt
@@ -74,12 +76,20 @@ class EntityListenerStatApi(BaseModel):
 
 
 class ArtistListenerStatApi(EntityListenerStatApi):
+    """ Each individual record for top listeners of any given artist
+
+    Contains the artist name, ListenBrainz user IDs and listen count.
+    """
     artist_mbid: str
     artist_name: constr(min_length=1)
     _validate_uuids: classmethod = validator("artist_mbid", allow_reuse=True)(check_valid_uuid)
 
 
 class ReleaseListenerStatApi(EntityListenerStatApi):
+    """ Each individual record for top listeners of any given release group
+
+    Contains the release group name, artist name, relevant mbids, ListenBrainz user IDs and listen count.
+    """
     release_group_mbid: str
     release_group_name: constr(min_length=1)
     artist_name: str
