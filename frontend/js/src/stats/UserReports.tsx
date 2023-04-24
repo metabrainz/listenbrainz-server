@@ -167,7 +167,7 @@ export default class UserReports extends React.Component<
               <ErrorBoundary>
                 <UserTopEntity
                   range={range}
-                  entity="release"
+                  entity="release-group"
                   apiUrl={apiUrl}
                   user={user}
                   terminology="album"

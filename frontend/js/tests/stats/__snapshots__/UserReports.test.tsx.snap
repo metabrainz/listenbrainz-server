@@ -132,7 +132,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
         <ErrorBoundary>
           <UserTopEntity
             apiUrl="foobar"
-            entity="release"
+            entity="release-group"
             newAlert={[Function]}
             range="week"
             terminology="album"
@@ -348,7 +348,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
         <ErrorBoundary>
           <UserTopEntity
             apiUrl="foobar"
-            entity="release"
+            entity="release-group"
             newAlert={[Function]}
             range="week"
             terminology="album"

@@ -163,6 +163,78 @@ def get_release(user_name):
     return _get_entity_stats(user_name, "releases", "total_release_count")
 
 
+@stats_api_bp.route("/user/<user_name>/release-groups")
+@crossdomain
+@ratelimit()
+def get_release_group(user_name):
+    """
+    Get top release groups for user ``user_name``.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "release_groups": [
+                    {
+                        "artist_mbids": [
+                            "62162215-b023-4f0e-84bd-1e9412d5b32c",
+                            "faf4cefb-036c-4c88-b93a-5b03dd0a0e6b",
+                            "e07d9474-00ea-4460-ac27-88b46b3d976e"
+                        ],
+                        "artist_name": "All Time Low ft. Demi Lovato & blackbear",
+                        "caa_id": 29179588350,
+                        "caa_release_mbid": "ee65192d-31f3-437a-b170-9158d2172dbc",
+                        "listen_count": 456,
+                        "release_group_mbid": "326b4a29-dff5-4fab-87dc-efc1494001c6",
+                        "release_group_name": "Monsters"
+                    },
+                    {
+                        "artist_mbids": [
+                            "c8b03190-306c-4120-bb0b-6f2ebfc06ea9"
+                        ],
+                        "artist_name": "The Weeknd",
+                        "caa_id": 25720993837,
+                        "caa_release_mbid": "19e4f6cc-ca0c-4897-8dfc-a36914b7f998",
+                        "listen_count": 381,
+                        "release_group_mbid": "78570bea-2a26-467c-a3db-c52723ceb394",
+                        "release_group_name": "After Hours"
+                    }
+                ],
+                "count": 2,
+                "total_release_group_count": 175,
+                "range": "all_time",
+                "last_updated": 1588494361,
+                "user_id": "John Doe",
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - ``artist_mbids`` and ``release_group_mbid`` are optional fields and
+          may not be present in all the responses
+
+    :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of releases to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 releases will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    return _get_entity_stats(user_name, "release_groups", "total_release_group_count")
+
+
 @stats_api_bp.route("/user/<user_name>/recordings")
 @crossdomain
 @ratelimit()
@@ -241,9 +313,6 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
         raise APINoContent('')
 
     entity_list, total_entity_count = _process_user_entity(stats, offset, count)
-
-    entity = "artists" if entity == "test_artists" else entity
-
     return jsonify({"payload": {
         "user_id": user_name,
         entity: entity_list,
@@ -607,6 +676,76 @@ def get_sitewide_release():
     :resheader Content-Type: *application/json*
     """
     return _get_sitewide_stats("releases")
+
+
+@stats_api_bp.route("/sitewide/release-groups")
+@crossdomain
+@ratelimit()
+def get_sitewide_release_group():
+    """
+    Get sitewide top release groups.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "release_groups": [
+                    {
+                        "artist_mbids": [
+                            "62162215-b023-4f0e-84bd-1e9412d5b32c",
+                            "faf4cefb-036c-4c88-b93a-5b03dd0a0e6b",
+                            "e07d9474-00ea-4460-ac27-88b46b3d976e"
+                        ],
+                        "artist_name": "All Time Low ft. Demi Lovato & blackbear",
+                        "caa_id": 29179588350,
+                        "caa_release_mbid": "ee65192d-31f3-437a-b170-9158d2172dbc",
+                        "listen_count": 456,
+                        "release_group_mbid": "326b4a29-dff5-4fab-87dc-efc1494001c6",
+                        "release_group_name": "Monsters"
+                    },
+                    {
+                        "artist_mbids": [
+                            "c8b03190-306c-4120-bb0b-6f2ebfc06ea9"
+                        ],
+                        "artist_name": "The Weeknd",
+                        "caa_id": 25720993837,
+                        "caa_release_mbid": "19e4f6cc-ca0c-4897-8dfc-a36914b7f998",
+                        "listen_count": 381,
+                        "release_group_mbid": "78570bea-2a26-467c-a3db-c52723ceb394",
+                        "release_group_name": "After Hours"
+                    }
+                ],
+                "offset": 0,
+                "count": 2,
+                "range": "year",
+                "last_updated": 1588494361,
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - ``artist_mbids`` and ``release_mbid`` are optional fields and may not be present in all the responses
+
+    :param count: Optional, number of artists to return for each time range,
+        Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of artists to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    return _get_sitewide_stats("release_groups")
 
 
 @stats_api_bp.route("/sitewide/recordings")

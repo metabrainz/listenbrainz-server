@@ -91,7 +91,7 @@ def send_request_to_spark_cluster(query, **params):
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
-@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
+@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings', 'release_groups']),
               help="Entity for which statistics should be calculated")
 @click.option("--database", type=str, help="Name of the couchdb database to store data in")
 def request_user_stats(type_, range_, entity, database):
@@ -118,7 +118,7 @@ def request_user_stats(type_, range_, entity, database):
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
-@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
+@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings', 'release_groups']),
               help="Entity for which statistics should be calculated")
 def request_sitewide_stats(type_, range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
@@ -466,13 +466,13 @@ def request_year_in_music(ctx, year: int):
 def cron_request_all_stats(ctx):
     ctx.invoke(request_import_pg_tables)
     for stats_range in ALLOWED_STATISTICS_RANGE:
-        for entity in ["artists", "releases", "recordings"]:
+        for entity in ["artists", "releases", "recordings", "release_groups"]:
             ctx.invoke(request_user_stats, type_="entity", range_=stats_range, entity=entity)
 
         for stat in ["listening_activity", "daily_activity"]:
             ctx.invoke(request_user_stats, type_=stat, range_=stats_range)
 
-        for entity in ["artists", "releases", "recordings"]:
+        for entity in ["artists", "releases", "recordings", "release_groups"]:
             ctx.invoke(request_sitewide_stats, type_="entity", range_=stats_range, entity=entity)
 
         for stat in ["listening_activity"]:

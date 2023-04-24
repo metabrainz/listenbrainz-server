@@ -126,8 +126,6 @@ def create_app(debug=None):
     # OAuth
     from listenbrainz.webserver.login import login_manager, provider
     login_manager.init_app(app)
-    provider.init(app.config['MUSICBRAINZ_CLIENT_ID'],
-                  app.config['MUSICBRAINZ_CLIENT_SECRET'])
 
     # Error handling
     from listenbrainz.webserver.errors import init_error_handlers

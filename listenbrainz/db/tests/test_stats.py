@@ -42,7 +42,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(received, expected)
 
     def test_user_entity_stats(self):
-        entities = ["artists", "releases", "recordings"]
+        entities = ["artists", "releases", "recordings", "release_groups"]
         ranges = ["week", "month", "year"]
 
         with create_app().app_context():
