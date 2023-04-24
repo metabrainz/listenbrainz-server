@@ -5,7 +5,7 @@ from listenbrainz import db, utils
 import sqlalchemy
 
 
-def save_token(user_id: int, service: ExternalServiceType, access_token: str, refresh_token: str,
+def save_token(user_id: int, service: ExternalServiceType, access_token: str, refresh_token: Optional[str],
                token_expires_ts: int, record_listens: bool, scopes: List[str], external_user_id: Optional[str] = None):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
@@ -29,17 +29,20 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
     token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
-            INSERT INTO external_service_oauth
+            INSERT INTO external_service_oauth AS eso
             (user_id, external_user_id, service, access_token, refresh_token, token_expires, scopes)
             VALUES
             (:user_id, :external_user_id, :service, :access_token, :refresh_token, :token_expires, :scopes)
             ON CONFLICT (user_id, service)
             DO UPDATE SET
-                user_id = EXCLUDED.user_id,
                 external_user_id = EXCLUDED.external_user_id,
-                service = EXCLUDED.service,
                 access_token = EXCLUDED.access_token,
-                refresh_token = EXCLUDED.refresh_token,
+                -- MusicBrainz only returns a refresh token the first time around, ensure that we don't delete
+                -- the refresh token when the user logs in/logs out again.
+                refresh_token = CASE
+                                WHEN eso.service = 'musicbrainz' AND EXCLUDED.refresh_token IS NULL THEN eso.refresh_token
+                                ELSE EXCLUDED.refresh_token
+                                END,
                 token_expires = EXCLUDED.token_expires,
                 scopes = EXCLUDED.scopes,
                 last_updated = NOW()
