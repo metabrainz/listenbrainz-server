@@ -31,8 +31,6 @@ class FreshReleasesTestCase(SparkNewTestCase):
 
     @requests_mock.Mocker(real_http=True)
     def test_fresh_releases(self, mock_requests):
-        self.maxDiff = None
-
         with open(self.path_to_data_file("sitewide_fresh_releases.json")) as f:
             data = json.load(f)
         mock_requests.get(FRESH_RELEASES_ENDPOINT, status_code=200, json=data)
