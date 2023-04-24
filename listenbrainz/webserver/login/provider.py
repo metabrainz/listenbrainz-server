@@ -45,15 +45,16 @@ def get_user():
         db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
         user = db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)
         ts.set_empty_values_for_user(user["id"])
-
-        service.add_new_user(user["id"], token)
     else:  # an existing user is trying to log in
         # Other option is to change the return type of get_by_mb_row_id to a dict
-        # but its used so widely that we would modifying huge number of tests
+        # but its used so widely that we would modify huge number of tests
         user = dict(user)
         user["email"] = user_email
         # every time a user logs in, update the email in LB.
         db_user.update_user_details(user["id"], musicbrainz_id, user_email)
+
+    # update oauth token for the user
+    service.add_new_user(user["id"], token)
 
     return user
 

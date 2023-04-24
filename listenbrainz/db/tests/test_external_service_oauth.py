@@ -105,3 +105,34 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         services = db_oauth.get_services(self.user["id"])
         self.assertEqual(services, [])
 
+    def test_musicbrainz_oauth(self):
+        """ Test that the refresh token is not deleted on subsequent updates. """
+        user = db_user.get_or_create(3, 'musicbrainz')
+        db_oauth.save_token(
+            user_id=user['id'],
+            service=ExternalServiceType.MUSICBRAINZ,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=False,
+            scopes=['profile', 'rating']
+        )
+        oauth_user = db_oauth.get_token(user['id'], ExternalServiceType.MUSICBRAINZ)
+        self.assertEqual('token', oauth_user['access_token'])
+        self.assertEqual('refresh_token', oauth_user['refresh_token'])
+
+        # for subsequent logins, refresh token returned by MusicBrainz will be None.
+        db_oauth.save_token(
+            user_id=user['id'],
+            service=ExternalServiceType.MUSICBRAINZ,
+            access_token='new_token',
+            refresh_token=None,
+            token_expires_ts=int(time.time()),
+            record_listens=False,
+            scopes=['profile', 'rating']
+        )
+        oauth_user = db_oauth.get_token(user['id'], ExternalServiceType.MUSICBRAINZ)
+        self.assertEqual('new_token', oauth_user['access_token'])
+
+        # test that the refresh token isn't deleted on subsequent updates
+        self.assertEqual('refresh_token', oauth_user['refresh_token'])
