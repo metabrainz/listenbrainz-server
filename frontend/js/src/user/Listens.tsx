@@ -748,8 +748,8 @@ export default class Listens extends React.Component<
                   newAlert,
                 });
               }}
-              data-Toggle="modal"
-              data-Target="#AddListenModal"
+              data-toggle="modal"
+              data-target="#AddListenModal"
             >
               Add listen
             </button>

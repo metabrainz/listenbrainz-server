@@ -13,8 +13,7 @@ import { getArtistName, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import { COLOR_LB_LIGHT_GRAY, COLOR_LB_GREEN } from "../utils/constants";
-
-const RECORDING_MBID_RE = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
+import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
 
 export type MBIDMappingModalProps = {
   listenToMap?: Listen;
@@ -26,30 +25,14 @@ export type MBIDMappingModalProps = {
 };
 
 function getListenFromSelectedRecording(
-  selectedRecording?: MusicBrainzRecording
+  selectedRecordingMetadata?: TrackMetadata
 ): Listen | undefined {
-  if (!selectedRecording) {
+  if (!selectedRecordingMetadata) {
     return undefined;
   }
   return {
     listened_at: 0,
-    track_metadata: {
-      track_name: selectedRecording.title,
-      artist_name: selectedRecording["artist-credit"]
-        .map((ac) => ac.name + ac.joinphrase)
-        .join(""),
-      additional_info: {
-        duration_ms: selectedRecording.length,
-        artist_mbids: selectedRecording["artist-credit"].map(
-          (ac) => ac.artist.id
-        ),
-        release_artist_names: selectedRecording["artist-credit"].map(
-          (ac) => ac.artist.name
-        ),
-        recording_mbid: selectedRecording.id,
-        release_mbid: selectedRecording.releases?.[0]?.id,
-      },
-    },
+    track_metadata: selectedRecordingMetadata,
   };
 }
 
@@ -57,9 +40,9 @@ export default NiceModal.create(
   ({ listenToMap, newAlert }: MBIDMappingModalProps) => {
     const modal = useModal();
 
-    const [recordingMBIDInput, setRecordingMBIDInput] = React.useState("");
-    const [recordingMBIDValid, setRecordingMBIDValid] = React.useState(true);
-    const [selectedRecording, setSelectedRecording] = React.useState();
+    const [selectedRecording, setSelectedRecording] = React.useState<
+      TrackMetadata
+    >();
 
     const closeModal = React.useCallback(() => {
       modal.hide();
@@ -80,24 +63,16 @@ export default NiceModal.create(
       [newAlert]
     );
 
-    const reset = () => {
-      setRecordingMBIDInput("");
-      setRecordingMBIDValid(true);
-      setSelectedRecording(undefined);
-    };
-
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
     const { auth_token } = currentUser;
 
     const submitMBIDMapping = React.useCallback(async () => {
-      if (listenToMap && recordingMBIDValid && auth_token) {
+      if (listenToMap && selectedRecording?.recording_mbid && auth_token) {
         const recordingMSID = _get(
           listenToMap,
           "track_metadata.additional_info.recording_msid"
         );
-        const recordingMBIDToSubmit = RECORDING_MBID_RE.exec(
-          recordingMBIDInput
-        )![2].toLowerCase();
+        const recordingMBIDToSubmit = selectedRecording.recording_mbid;
         try {
           await APIService.submitMBIDMapping(
             auth_token,
@@ -122,45 +97,13 @@ export default NiceModal.create(
       newAlert,
       closeModal,
       APIService,
-      recordingMBIDInput,
-      recordingMBIDValid,
+      selectedRecording,
       handleError,
     ]);
-
-    const handleMBIDInputChange = React.useCallback(
-      async (event: React.ChangeEvent<HTMLInputElement>) => {
-        event.preventDefault();
-        const input = event.target.value;
-        const isValidUUID = RECORDING_MBID_RE.test(input);
-        const newRecordingMBID = isValidUUID
-          ? RECORDING_MBID_RE.exec(input)![2].toLowerCase()
-          : "";
-        let newSelectedRecording;
-        if (isValidUUID) {
-          try {
-            newSelectedRecording = await APIService.lookupMBRecording(
-              newRecordingMBID,
-              "artists+releases"
-            );
-          } catch (error) {
-            newAlert(
-              "warning",
-              "Could not find recording",
-              `We could not find a recording on MusicBrainz with the MBID ${newRecordingMBID} ('${error.message}')`
-            );
-          }
-        }
-        setRecordingMBIDInput(input);
-        setRecordingMBIDValid(isValidUUID);
-        setSelectedRecording(newSelectedRecording);
-      },
-      [APIService, newAlert]
-    );
 
     const listenFromSelectedRecording = getListenFromSelectedRecording(
       selectedRecording
     );
-    const isFormInvalid = recordingMBIDInput.length > 0 && !recordingMBIDValid;
 
     if (!listenToMap) {
       return null;
@@ -247,33 +190,18 @@ export default NiceModal.create(
                       title="Reset"
                       icon={faTimesCircle}
                       iconSize="lg"
-                      action={reset}
+                      action={() => setSelectedRecording(undefined)}
                     />
                   }
                 />
               ) : (
                 <div className="card listen-card">
-                  <div className={isFormInvalid ? "has-error" : ""}>
-                    <input
-                      type="text"
-                      value={recordingMBIDInput}
-                      className="form-control"
-                      id="recording-mbid"
-                      name="recording-mbid"
-                      onChange={handleMBIDInputChange}
-                      placeholder="MusicBrainz recording URL/MBID"
-                      required
-                      minLength={36}
-                    />
-                    {isFormInvalid && (
-                      <span
-                        className="help-block small"
-                        style={{ marginBottom: 0 }}
-                      >
-                        Not a valid MusicBrainz recording URL or MBID
-                      </span>
-                    )}
-                  </div>
+                  <SearchTrackOrMBID
+                    onSelectRecording={(trackMetadata) => {
+                      setSelectedRecording(trackMetadata);
+                    }}
+                    newAlert={newAlert}
+                  />
                 </div>
               )}
             </div>
@@ -291,7 +219,7 @@ export default NiceModal.create(
                 className="btn btn-success"
                 onClick={submitMBIDMapping}
                 data-dismiss="modal"
-                disabled={!selectedRecording || isFormInvalid}
+                disabled={!selectedRecording}
               >
                 Add mapping
               </button>
