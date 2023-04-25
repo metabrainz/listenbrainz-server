@@ -24,6 +24,7 @@
 @import "DateTimePicker.less";
 @import "TimePicker.less";
 @import "explore.less";
+@import "search-track.less";
 
 @icon-font-path: "/static/fonts/";
 
@@ -331,4 +332,9 @@ body {
 .badge-info {
   color: @white;
   background-color: @blue;
+}
+
+// Fix button height inside an input group
+.input-group > .input-group-btn > .btn {
+  line-height: 2em;
 }
