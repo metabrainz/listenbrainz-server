@@ -130,11 +130,6 @@ body {
 				) 100% 1;
 			
 			.navbar-logo{
-				// padding-bottom: 17px;
-				// line-height: 20px;
-				// padding: ((@navbar-height - @logo-height) / 2) @navbar-padding-horizontal;
-				// height: @logo-height;
-				// display: inline-block;
 				margin: 0;
 				margin-left: auto;
 				margin-right: auto;
@@ -166,14 +161,12 @@ body {
 		padding-bottom: @brainzplayer-height;
 
 		width: 100%; // fallback
-		// width: -webkit-fill-available;
 		width: calc(100% - @sidenav-width);
+		
 		div[role="main"]{
 			max-width: @max-content-width;
 			margin-left: auto;
 			margin-right: auto;
-			// @media (min-width: @max-content-width) {
-			// }
 		}
 	}
 	
@@ -194,7 +187,7 @@ body {
 					position: absolute;
 					background-color: @nav-background-color;
 					border-right: 9px solid @gradient-orange;
-					//sidanav width + border thickness
+					//sidenav width + border thickness
 					width: calc(100% + 9px);
 					height: 120px;
 					bottom: -110px;
@@ -338,16 +331,19 @@ body {
 	}
 	/* Special styles for very wide screens */
 	@media (min-width: @very-wide-screen-breakpoint) {
-		.nav.nav-tabs {
+		> * {
 			/* Align the secondary nav with the centered content */
 			width: calc(100% - @sidenav-width);
 			max-width: @max-content-width;
 			margin-left: auto;
 			margin-right: auto;
 
-			>li.username {
-				background: #46433A;
-			}
+		}
+		.nav.nav-tabs > li.username {
+			background: #46433A;
+		}
+		.breadcrumb {
+			padding-left: 0;
 		}
 	}
 }
