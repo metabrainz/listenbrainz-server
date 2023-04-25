@@ -554,9 +554,6 @@ declare type PinnedRecording = {
 
 /** For recommending a track from the front-end */
 declare type UserTrackRecommendationMetadata = {
-  artist_name: string;
-  track_name: string;
-  release_name?: string;
   recording_mbid?: string;
   recording_msid?: string;
 };
@@ -565,6 +562,7 @@ declare type UserTrackRecommendationMetadata = {
 declare type UserTrackPersonalRecommendationMetadata = UserTrackRecommendationMetadata & {
   blurb_content: string;
   users: Array<string>;
+  track_metadata?: TrackMetadata;
 };
 
 declare type PinEventMetadata = Listen & {

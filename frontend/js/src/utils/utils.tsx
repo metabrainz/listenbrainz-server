@@ -771,16 +771,8 @@ export function personalRecommendationEventToListen(
 ): BaseListenFormat {
   return {
     listened_at: -1,
-    track_metadata: {
-      track_name: eventMetadata.track_name,
-      artist_name: eventMetadata.artist_name,
-      release_name: eventMetadata.release_name ?? "",
-      additional_info: {
-        recording_mbid: eventMetadata.recording_mbid,
-        recording_msid: eventMetadata.recording_msid,
-      },
-    },
-  };
+    track_metadata: eventMetadata.track_metadata,
+  } as BaseListenFormat;
 }
 
 export function getReviewEventContent(

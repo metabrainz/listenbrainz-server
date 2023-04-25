@@ -192,11 +192,7 @@ export default class ListenCard extends React.Component<
     const { APIService, currentUser } = this.context;
 
     if (currentUser?.auth_token) {
-      const metadata: UserTrackRecommendationMetadata = {
-        artist_name: getArtistName(listen),
-        track_name: getTrackName(listen),
-        release_name: get(listen, "track_metadata.release_name"),
-      };
+      const metadata: UserTrackRecommendationMetadata = {};
 
       const recording_mbid = getRecordingMBID(listen);
       if (recording_mbid) {
@@ -218,7 +214,7 @@ export default class ListenCard extends React.Component<
           newAlert(
             "success",
             `You recommended a track to your followers!`,
-            `${metadata.artist_name} - ${metadata.track_name}`
+            `${getArtistName(listen)} - ${getTrackName(listen)}`
           );
         }
       } catch (error) {

@@ -163,6 +163,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(received[0]["track_metadata"], {
             "track_name": "Wicked Game",
             "artist_name": "Tom Ellis",
+            "release_name": "Lucifer",
             "additional_info": {
                 "recording_msid": msids[1]
             }

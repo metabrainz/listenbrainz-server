@@ -826,8 +826,6 @@ describe("recommendTrackToFollowers", () => {
 
   it("calls fetch with correct parameters", async () => {
     const metadata: UserTrackRecommendationMetadata = {
-      artist_name: "Hans Zimmer",
-      track_name: "Flight",
       recording_msid: "recording_msid",
     };
     await apiService.recommendTrackToFollowers(
@@ -850,8 +848,6 @@ describe("recommendTrackToFollowers", () => {
 
   it("calls checkStatus once", async () => {
     const metadata: UserTrackRecommendationMetadata = {
-      artist_name: "Hans Zimmer",
-      track_name: "Flight",
       recording_msid: "recording_msid",
     };
     await apiService.recommendTrackToFollowers(
@@ -864,8 +860,6 @@ describe("recommendTrackToFollowers", () => {
 
   it("returns the response code if successful", async () => {
     const metadata: UserTrackRecommendationMetadata = {
-      artist_name: "Hans Zimmer",
-      track_name: "Flight",
       recording_msid: "recording_msid",
     };
     await expect(
