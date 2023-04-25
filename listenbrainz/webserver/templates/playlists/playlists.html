@@ -8,12 +8,6 @@
    Playlists - ListenBrainz
 {%- endblock-%}
 
-{% block profile_content %}
-
-    <div id="react-container" role="main"></div>
-
-{% endblock %}
-
 {% block scripts %}
   {{ super() }}
   <script src="{{ get_static_path('playlists.js') }}" type="text/javascript"></script>

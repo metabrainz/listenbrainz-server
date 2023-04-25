@@ -29,10 +29,6 @@
       <li class="{{ 'active' if active_section=='recommendations' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) if user else '#'}}">Recommendations</a></li>
     </ul>
   </div>
-    
-
-    {% block profile_content %} {% endblock %}
-
 
   {{ super() }}
 {% endblock %}
