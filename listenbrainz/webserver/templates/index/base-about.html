@@ -6,9 +6,9 @@
     <!-- Page content -->
 	<div class="secondary-nav">
 		<ol class="breadcrumb">
-			<li {{ 'class=active' if active_settings_section == 'about'}}><a href="{{ url_for('profile.info') }}">About</a></li>
-			{% if not active_settings_section == 'about' %}
-			<li class="active">{{ active_settings_section|replace("-", " ")|capitalize }}</li>
+			<li {{ 'class=active' if active_about_section == 'about'}}><a href="{{ url_for('profile.info') }}">About</a></li>
+			{% if not active_about_section == 'about' %}
+			<li class="active">{{ active_about_section|replace("-", " ")|capitalize }}</li>
 			{% endif %}
 		</ol>
 	</div>
@@ -20,16 +20,16 @@
 				ListenBrainz
 			</p>
 			<ul>
-				<li {{ 'class=active' if active_settings_section == 'about'}}><a href="{{ url_for('index.about') }}">About</a></li>
-				<li {{ 'class=active' if active_settings_section == 'site-status'}}><a href="{{ url_for('index.current_status') }}">Site status</a></li>
-				<li {{ 'class=active' if active_settings_section == 'add-listens'}}><a href="{{ url_for('index.add_data_info') }}">Submitting data</a></li>
-				<li {{ 'class=active' if active_settings_section == 'using-data'}}><a href="{{ url_for('index.data') }}">Using our data</a></li>
+				<li {{ 'class=active' if active_about_section == 'about'}}><a href="{{ url_for('index.about') }}">About</a></li>
+				<li {{ 'class=active' if active_about_section == 'site-status'}}><a href="{{ url_for('index.current_status') }}">Site status</a></li>
+				<li {{ 'class=active' if active_about_section == 'add-listens'}}><a href="{{ url_for('index.add_data_info') }}">Submitting data</a></li>
+				<li {{ 'class=active' if active_about_section == 'using-data'}}><a href="{{ url_for('index.data') }}">Using our data</a></li>
 				<li><a href="https://listenbrainz.readthedocs.io" target="_blank" rel="noopener noreferrer">API docs
 					<svg style="display: inline-block; width: 0.8em; height: 0.8em; fill: grey;" viewbox="0 0 48 48">
 					<path d="M36 24c-1.2 0-2 0.8-2 2v12c0 1.2-0.8 2-2 2h-22c-1.2 0-2-0.8-2-2v-22c0-1.2 0.8-2 2-2h12c1.2 0 2-0.8 2-2s-0.8-2-2-2h-12c-3.4 0-6 2.6-6 6v22c0 3.4 2.6 6 6 6h22c3.4 0 6-2.6 6-6v-12c0-1.2-0.8-2-2-2z"></path>
 					<path d="M43.8 5.2c-0.2-0.4-0.6-0.8-1-1-0.2-0.2-0.6-0.2-0.8-0.2h-12c-1.2 0-2 0.8-2 2s0.8 2 2 2h7.2l-18.6 18.6c-0.8 0.8-0.8 2 0 2.8 0.4 0.4 0.8 0.6 1.4 0.6s1-0.2 1.4-0.6l18.6-18.6v7.2c0 1.2 0.8 2 2 2s2-0.8 2-2v-12c0-0.2 0-0.6-0.2-0.8z"></path>
 				</svg></a></li>
-				<li {{ 'class=active' if active_settings_section == 'terms-of-service'}}><a href="{{ url_for('index.terms_of_service') }}">Terms of service</a></li>
+				<li {{ 'class=active' if active_about_section == 'terms-of-service'}}><a href="{{ url_for('index.terms_of_service') }}">Terms of service</a></li>
 			</ul>
 			
 		</div>

@@ -70,7 +70,7 @@ def downloads():
 
 @index_bp.route("/data/")
 def data():
-    return render_template("index/data.html",active_settings_section="using-data")
+    return render_template("index/data.html",active_about_section="using-data")
 
 
 @index_bp.route("/add-data/")
@@ -90,12 +90,12 @@ def proxy():
 
 @index_bp.route("/about/")
 def about():
-    return render_template("index/about.html", active_settings_section="about")
+    return render_template("index/about.html", active_about_section="about")
 
 
 @index_bp.route("/terms-of-service/")
 def terms_of_service():
-    return render_template("index/terms-of-service.html", active_settings_section="terms-of-service")
+    return render_template("index/terms-of-service.html", active_about_section="terms-of-service")
 
 
 @index_bp.route("/blog-data/")
@@ -151,7 +151,7 @@ def current_status():
         listen_count=format(int(listen_count), ",d") if listen_count else "0",
         user_count=user_count,
         listen_counts_per_day=listen_counts_per_day,
-        active_settings_section="site-status"
+        active_about_section="site-status"
     )
 
 

@@ -34,13 +34,13 @@
       {% if current_user.is_authenticated and not current_user.is_anonymous %}
       <div class="username">{{ current_user.musicbrainz_id }}</div>
       <a href="{{ url_for('login.logout') }}">Logout</a>
-      <a href="{{ url_for('profile.info') }}">
+      <a {{ 'class=active' if active_settings_section is defined }} href="{{ url_for('profile.info') }}">
         Settings
       </a>
         {% else %}
         <a href="{{ url_for('login.index') }}">Sign in</a>
       {%- endif -%}
-      <a href="{{ url_for('index.about') }}">About</a>
+      <a {{ 'class=active' if active_about_section is defined }} href="{{ url_for('index.about') }}">About</a>
       <a href="https://community.metabrainz.org/c/listenbrainz" target="_blank" rel="noopener noreferrer">Community</a>
       <form class="search-bar" role="search" method="GET" action="/search">
           <input type="text" name="search_term" class="form-control input-sm" placeholder="Search users" required>
