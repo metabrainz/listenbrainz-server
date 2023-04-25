@@ -66,6 +66,7 @@ def select_timezone():
     return render_template(
         "profile/selecttimezone.html",
         props=orjson.dumps(props).decode("utf-8"),
+        active_settings_section="timezone"
     )
 
 
@@ -99,6 +100,7 @@ def reset_latest_import_timestamp():
     return render_template(
         "profile/resetlatestimportts.html",
         form=form,
+        active_settings_section="import"
     )
 
 
@@ -301,7 +303,8 @@ def delete_listens():
     return render_template(
         'profile/delete_listens.html',
         user=current_user,
-        form=form
+        form=form,
+        active_settings_section='delete-listens'
     )
 
 
