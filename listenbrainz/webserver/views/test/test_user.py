@@ -306,7 +306,9 @@ class UserViewsTestCase(IntegrationTestCase):
             "artist_name": "Danny Elfman",
             "release_name": "Danny Elfman & Tim Burton 25th Anniversary Music Box",
             "additional_info": {
-                "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
+                "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da"
+            },
+            "mbid_mapping": {
                 "recording_mbid": "1fe669c9-5a2b-4dcb-9e95-77480d1e732e",
                 "release_mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6",
                 "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"],

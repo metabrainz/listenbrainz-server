@@ -98,7 +98,7 @@ def _update_mbid_items(models: dict[str, list[ModelT]], metadatas: dict, remaini
                 "track_name": metadata["title"],
                 "artist_name": metadata["artist"],
                 "release_name": metadata["release"],
-                "additional_info": {
+                "mbid_mapping": {
                     "recording_mbid": metadata["recording_mbid"],
                     "release_mbid": metadata["release_mbid"],
                     "artist_mbids": metadata["artist_mbids"],
@@ -107,11 +107,11 @@ def _update_mbid_items(models: dict[str, list[ModelT]], metadatas: dict, remaini
             }
 
             if metadata["caa_id"]:
-                item.track_metadata["additional_info"]["caa_id"] = metadata["caa_id"]
-                item.track_metadata["additional_info"]["caa_release_mbid"] = metadata["caa_release_mbid"]
+                item.track_metadata["mbid_mapping"]["caa_id"] = metadata["caa_id"]
+                item.track_metadata["mbid_mapping"]["caa_release_mbid"] = metadata["caa_release_mbid"]
 
             if item.recording_msid:
-                item.track_metadata["additional_info"]["recording_msid"] = item.recording_msid
+                item.track_metadata["additional_info"] = {"recording_msid": item.recording_msid}
 
 
 def _update_msid_items(models: dict[str, list[ModelT]], metadatas: dict[str, dict]):
