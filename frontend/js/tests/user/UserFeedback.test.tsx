@@ -74,6 +74,12 @@ const fakeDateNow = jest
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 describe("UserFeedback", () => {
+  beforeAll(() => {
+    fetchMock.doMock();
+  });
+  beforeEach(() => {
+    fetchMock.mockReset();
+  });
   it("renders correctly", () => {
     const wrapper = mount<UserFeedback>(
       <UserFeedback {...props} />,
@@ -363,6 +369,8 @@ describe("UserFeedback", () => {
     });
 
     it("sets the state, loads feedback for user and updates browser history", async () => {
+      fetchMock.mockResponse(JSON.stringify(userFeedbackAPIResponse));
+
       const wrapper = mount<UserFeedback>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <UserFeedback {...props} />
@@ -377,10 +385,9 @@ describe("UserFeedback", () => {
       expect(instance.state.feedback).not.toEqual(
         userFeedbackAPIResponse.feedback
       );
-
-      fetchMock.mockResponseOnce(JSON.stringify(userFeedbackAPIResponse));
-      await instance.getFeedbackItemsFromAPI(1, true);
-      await waitForComponentToPaint(wrapper);
+      await act(async () => {
+        await instance.getFeedbackItemsFromAPI(1, true);
+      });
 
       expect(instance.state.feedback).toEqual(userFeedbackAPIResponse.feedback);
       expect(instance.state.maxPage).toEqual(2);

@@ -43,11 +43,15 @@ describe("LastFMImporter", () => {
   let instance: LastFmImporter;
 
   describe("getNumberOfPages", () => {
+    beforeAll(() => {
+      fetchMock.doMock();
+    });
     beforeEach(() => {
       const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
       instance = wrapper.instance();
       instance.setState({ lastfmUsername: "dummyUser" });
       // Mock function for fetch
+      fetchMock.mockReset();
       fetchMock.mockResponse(JSON.stringify(page));
     });
 

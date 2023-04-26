@@ -74,9 +74,13 @@ const listen2: Listen = {
 
 describe("BrainzPlayer", () => {
   beforeAll(() => {
+    fetchMock.doMock();
     window.location = {
       href: "http://nevergonnagiveyouup.com",
     } as Window["location"];
+  });
+  beforeEach(() => {
+    fetchMock.mockReset();
   });
 
   it("renders correctly", () => {
