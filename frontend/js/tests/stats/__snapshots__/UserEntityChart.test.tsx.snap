@@ -23566,7 +23566,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
           },
         ]
       }
-      newAlert={[MockFunction]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -23589,7 +23588,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
           currentDataSourceName="youtube"
           durationMs={0}
           listenBrainzAPIBaseURI="http://localhost/1"
-          newAlert={[MockFunction]}
           playNextTrack={[Function]}
           playPreviousTrack={[Function]}
           playerPaused={true}
@@ -24278,6 +24276,27 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
             </div>
           </div>
         </BrainzPlayerUI>
+        <ToastContainer
+          autoClose={8000}
+          closeButton={[Function]}
+          closeOnClick={true}
+          draggable={true}
+          draggableDirection="x"
+          draggablePercent={80}
+          hideProgressBar={true}
+          newestOnTop={true}
+          pauseOnFocusLoss={true}
+          pauseOnHover={true}
+          position="bottom-right"
+          role="alert"
+          rtl={false}
+          theme="light"
+          transition={[Function]}
+        >
+          <div
+            className="Toastify"
+          />
+        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -55804,7 +55823,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
           },
         ]
       }
-      newAlert={[MockFunction]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -55827,7 +55845,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
           currentDataSourceName="youtube"
           durationMs={0}
           listenBrainzAPIBaseURI="http://localhost/1"
-          newAlert={[MockFunction]}
           playNextTrack={[Function]}
           playPreviousTrack={[Function]}
           playerPaused={true}
@@ -56516,6 +56533,27 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
             </div>
           </div>
         </BrainzPlayerUI>
+        <ToastContainer
+          autoClose={8000}
+          closeButton={[Function]}
+          closeOnClick={true}
+          draggable={true}
+          draggableDirection="x"
+          draggablePercent={80}
+          hideProgressBar={true}
+          newestOnTop={true}
+          pauseOnFocusLoss={true}
+          pauseOnHover={true}
+          position="bottom-right"
+          role="alert"
+          rtl={false}
+          theme="light"
+          transition={[Function]}
+        >
+          <div
+            className="Toastify"
+          />
+        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
