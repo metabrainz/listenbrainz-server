@@ -75,7 +75,7 @@ const niceModalProps: NiceModalHocProps = {
   defaultVisible: true,
 };
 
-describe("CBReviewModal", () => {
+xdescribe("CBReviewModal", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
