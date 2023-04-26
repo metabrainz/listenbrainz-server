@@ -1,0 +1,34 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Playlists management - ListenBrainz{%- endblock -%}
+{%- block content -%}
+  <h2 class="page-title">Playlists managementg </h2>
+  {# Playlists management information #}
+  <h3>Synchronizing Playlists</h3>
+  <p>
+    There are many ways to sync your own playlists to ListenBrainz:
+  </p>
+  <h4>Music players</h4>
+  <ul>
+    <li><em><a href="https://www.foobar2000.org/">Foobar2000</a></em>, full-fledged audio player for Windows: <a href="https://github.com/regorxxx/Playlist-Manager-SMP"><code>Playlist-Manager-SMP</code></a></li>
+  </ul>
+
+  <h3>Synchronizing via third-party music services</h3>
+  <p>
+    <a href={{ url_for('profile.music_services_details') }}>Connect your ListenBrainz account</a> and import/export your playlists to some third-party services.
+  </p>
+  <ul>
+    <li><em><a href="https://open.spotify.com/">Spotify</a></em></li>
+  </ul>
+  <p>
+    
+  </p>
+
+  <h3>For advanced users</h3>
+  <p>
+    Developers are able to import/export and edit their playlists on Listenbrainz using the Listenbrainz API. Information on how to do this
+    can be found in the <a href="https://listenbrainz.readthedocs.io">API docs</a>.
+  </p>
+  <p>
+	Note playlist importing requires track MBID identification for every item; exporting requires some kind of content resolution of tracks by track MBID, title and/or artist, following <a href="https://xspf.org/spec#34-content-resolver">JSPF or XSPF specs</a>.
+  </p>
+{%- endblock -%}

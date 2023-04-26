@@ -80,6 +80,11 @@ def import_data_info():
     return render_template("index/import-data.html")
 
 
+@index_bp.route("/playlists-management/")
+def playlists_management_info():
+    return render_template("index/playlists-management.html")
+
+
 @index_bp.route("/lastfm-proxy/")
 def proxy():
     return render_template("index/lastfm-proxy.html")

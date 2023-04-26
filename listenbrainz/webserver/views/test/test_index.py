@@ -42,6 +42,10 @@ class IndexViewsTestCase(IntegrationTestCase):
         resp = self.client.get(url_for('index.import_data_info'))
         self.assert200(resp)
 
+    def test_playlists_management_info(self):
+        resp = self.client.get(url_for('index.playlists_management_info'))
+        self.assert200(resp)
+
     def test_404(self):
         resp = self.client.get('/canyoufindthis')
         self.assert404(resp)
