@@ -28,6 +28,38 @@ jest.mock("socket.io-client", () => {
   return { io: jest.fn(() => mockSocket) };
 });
 
+fetchMock.mockIf("https://coverartarchive.org/release").mockResponse(
+  JSON.stringify({
+    images: [
+      {
+        approved: true,
+        back: false,
+        comment: "",
+        edit: 87011975,
+        front: true,
+        id: 31670459502,
+        image:
+          "http://coverartarchive.org/release/49a56e8b-2d89-423a-978c-6b24957b12a8/31670459502.jpg",
+        thumbnails: {
+          "250":
+            "http://coverartarchive.org/release/49a56e8b-2d89-423a-978c-6b24957b12a8/31670459502-250.jpg",
+          "500":
+            "http://coverartarchive.org/release/49a56e8b-2d89-423a-978c-6b24957b12a8/31670459502-500.jpg",
+          "1200":
+            "http://coverartarchive.org/release/49a56e8b-2d89-423a-978c-6b24957b12a8/31670459502-1200.jpg",
+          large:
+            "http://coverartarchive.org/release/49a56e8b-2d89-423a-978c-6b24957b12a8/31670459502-500.jpg",
+          small:
+            "http://coverartarchive.org/release/49a56e8b-2d89-423a-978c-6b24957b12a8/31670459502-250.jpg",
+        },
+        types: ["Front"],
+      },
+    ],
+    release:
+      "https://musicbrainz.org/release/49a56e8b-2d89-423a-978c-6b24957b12a8",
+  })
+);
+
 const {
   haveListenCount,
   latestListenTs,
