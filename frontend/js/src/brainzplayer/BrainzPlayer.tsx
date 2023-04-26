@@ -27,6 +27,7 @@ import {
   overwriteMediaSession,
   updateMediaSession,
   updateWindowTitle,
+  ToastMsg,
 } from "../notifications/Notifications";
 import { getArtistName, getTrackName } from "../utils/utils";
 
@@ -89,10 +90,6 @@ export type BrainzPlayerState = {
   continuousPlaybackTime: number;
 };
 
-export type ToastMsgProps = {
-  title: string;
-  message: string | JSX.Element;
-};
 /**
  * Due to some issue with TypeScript when accessing static methods of an instance when you don't know
  * which class it is, we have to manually determine the class of the instance and call MyClass.staticMethod().
@@ -118,14 +115,6 @@ function isListenFromDatasource(
   return undefined;
 }
 
-export function ToastMsg({ title, message }: ToastMsgProps) {
-  return (
-    <div>
-      <b>{title}</b>
-      <p>{message}</p>
-    </div>
-  );
-}
 export default class BrainzPlayer extends React.Component<
   BrainzPlayerProps,
   BrainzPlayerState
