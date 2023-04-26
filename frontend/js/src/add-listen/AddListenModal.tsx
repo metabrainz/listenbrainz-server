@@ -74,38 +74,6 @@ export default NiceModal.create(({ newAlert }: AddListenModalProps) => {
     setListenOption(SubmitListenType.track);
   };
 
-  // const throttledSearchTrack = useMemo(
-  //   () =>
-  //     throttle(
-  //       async (searchString: string) => {
-  //         try {
-  //           const response = await fetch(
-  //             "https://labs.api.listenbrainz.org/recording-search/json",
-  //             {
-  //               method: "POST",
-  //               body: JSON.stringify([{ query: searchString }]),
-  //               headers: {
-  //                 "Content-type": "application/json; charset=UTF-8",
-  //               },
-  //             }
-  //           );
-
-  //           const parsedResponse = await response.json();
-  //           setTrackResults(parsedResponse);
-  //         } catch (error) {
-  //           handleError(error);
-  //         }
-  //       },
-  //       800,
-  //       { leading: false, trailing: true }
-  //     ),
-  //   [handleError]
-  // );
-
-  // useEffect(() => {
-  //   throttledSearchTrack(searchField);
-  // }, [searchField, throttledSearchTrack]);
-
   const submitListen = useCallback(async () => {
     if (auth_token) {
       if (selectedTrack) {

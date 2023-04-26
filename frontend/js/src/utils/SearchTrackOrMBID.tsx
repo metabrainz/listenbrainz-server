@@ -27,8 +27,6 @@ export default function SearchTrackOrMBID({
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRecording } = APIService;
   const [inputValue, setInputValue] = useState("");
-  const [selected, setSelected] = useState(false);
-  // const [selectedRecording, setSelectedRecording] = React.useState();
   const [searchResults, setSearchResults] = useState<Array<ACRMSearchResult>>(
     []
   );
@@ -133,17 +131,14 @@ export default function SearchTrackOrMBID({
       release_name: track.release_name,
     };
     onSelectRecording(metadata);
-    setSelected(true);
   };
 
   const reset = () => {
     setInputValue("");
     setSearchResults([]);
-    setSelected(false);
   };
 
   useEffect(() => {
-    setSelected(false);
     if (!inputValue) {
       return;
     }
