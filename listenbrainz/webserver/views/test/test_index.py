@@ -81,7 +81,7 @@ class IndexViewsTestCase(IntegrationTestCase):
     def test_menu_not_logged_in(self, mock_user_get):
         resp = self.client.get(url_for('index.index'))
         data = resp.data.decode('utf-8')
-        self.assertIn('id="#side-nav"', data)
+        self.assertIn('id="side-nav"', data)
         self.assertIn('Sign in', data)
         self.assertNotIn('iliekcomputers', data)
         self.assertNotIn('Logout', data)
@@ -100,7 +100,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         data = resp.data.decode('utf-8')
 
         # username & logout link in sidenav menu
-        self.assertIn('id="#side-nav"', data)
+        self.assertIn('id="side-nav"', data)
         self.assertIn('iliekcomputers', data)
         self.assertIn('Logout', data)
         self.assertNotIn('Sign in', data)
@@ -128,7 +128,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assert400(resp)
 
         # username & logout link in sidenav menu
-        self.assertIn('id="#side-nav"', data)
+        self.assertIn('id="side-nav"', data)
         self.assertIn('iliekcomputers', data)
         self.assertIn('Logout', data)
         self.assertNotIn('Sign in', data)
@@ -139,7 +139,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         data = resp.data.decode('utf-8')
         self.assert404(resp)
         # username & logout link in sidenav menu
-        self.assertIn('id="#side-nav"', data)
+        self.assertIn('id="side-nav"', data)
         self.assertIn('iliekcomputers', data)
         self.assertIn('Logout', data)
         self.assertNotIn('Sign in', data)
@@ -163,9 +163,8 @@ class IndexViewsTestCase(IntegrationTestCase):
         data = resp.data.decode('utf-8')
         # no sidenav menu
         self.assertNotIn('Dashboard', data)
-        self.assertNotIn('id="#side-nav"', data)
-        # sign in link in sidenav menu
-        self.assertIn('Sign in', data)
+        self.assertNotIn('id="side-nav"', data)
+        self.assertNotIn('Sign in', data)
 
     @mock.patch('listenbrainz.db.user.get_by_login_id')
     def test_menu_logged_in_error_dont_show_user_loaded(self, mock_user_get):
@@ -191,7 +190,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         data = resp.data.decode('utf-8')
         # no sidenav menu
         self.assertNotIn('Dashboard', data)
-        self.assertNotIn('id="#side-nav"', data)
+        self.assertNotIn('id="side-nav"', data)
         
         # Even after rendering the template, the database has only been queried once (before the exception)
         mock_user_get.assert_called_once()
