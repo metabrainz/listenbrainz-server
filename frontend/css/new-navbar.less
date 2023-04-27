@@ -5,395 +5,393 @@
 @very-wide-screen-breakpoint: 1950px;
 @navbar-height: 72px;
 @max-content-width: 1400px;
-@nav-background-color: #F3F3F3;
+@nav-background-color: #f3f3f3;
 
 @nav-tabs-link-padding: 1em 1.5em;
 @nav-tabs-link-padding-mobile: 0.8em 1em;
 @nav-tabs-background-color: @nav-background-color;
 @tabs-height: 42px;
 @tabs-height-mobile: 42px;
-@nav-link-color: #1E1E1E;
+@nav-link-color: #1e1e1e;
 @gradient-orange: #ffa500;
 
 body {
-	display: flex;
-	> nav[role="navigation"] {
-		#side-nav {
-			min-width: @sidenav-width;
-			// using important here to override Botostrap 3 collapse plugin setting height
-			height: 100vh !important;
-			display: flex;
-			position: sticky;
-			left: 0;
-			top: 0;
-			bottom:0;
-			font-family: "Roboto", sans-serif;
-			text-align: right;
-			flex-direction: column;
-			align-items: flex-end;
-			border-right: 9px solid;
-			border-image: linear-gradient(
-			to bottom,
-			@blue,
-			@gradient-orange
-			) 1 100%;
-			padding: 1.2em;
-			background-color: @nav-background-color;
-			z-index: 100;
-			
-			
-			a {
-				display: block;
-				font-weight: normal;
-				&, &:visited, &:hover, &:visited:hover
-				{
-					/* Annoyingly we need this not-button because of Bootstrap 3*/
-					&, &:not(.button){
-						color: @blue;
-					}
-				}
-				&.active{
-					text-decoration: underline;
-					text-decoration-thickness: 2px;
-					text-underline-offset: 6px;
-					font-style: italic;
-					font-weight: 700;
-				}
-			}
+  display: flex;
+  > nav[role="navigation"] {
+    #side-nav {
+      min-width: @sidenav-width;
+      // using important here to override Botostrap 3 collapse plugin setting height
+      height: 100vh !important;
+      display: flex;
+      position: sticky;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      font-family: "Roboto", sans-serif;
+      text-align: right;
+      flex-direction: column;
+      align-items: flex-end;
+      border-right: 9px solid;
+      border-image: linear-gradient(to bottom, @blue, @gradient-orange) 1 100%;
+      padding: 1.2em;
+      background-color: @nav-background-color;
+      z-index: 100;
 
-			.main-nav {
-				font-size: 18px;
-				flex-basis: 140px;
-				display: flex;
-				flex-direction: column;
-				justify-content: space-around;
-				margin-bottom: 1.5em;
-				font-weight: 500;
-			}
-			.navbar-bottom {
-				margin-top:auto;
-				font-size: 14px;
-				.username{
-					font-weight: 700;
-					margin-bottom:0.3em;
-				}
-				line-height: 1.5em;
-				
-				> a {
-					width: fit-content;
-					margin-left: auto;
-					font-weight: normal;
-				}
-			}
-			.navbar-logo {
-				z-index: 102; // just above the toggle hamburger button
-			}
-			.search-bar{
-				position: relative;
-				margin-top: 1em;
-				input{
-					background-color: @nav-tabs-border-color;
-					color: @nav-link-color;
-					border-radius: 33px;
-					border: none;
-					&:focus {
-						-webkit-box-shadow: inset 1px 2px 4px darkgrey;
-						box-shadow: inset 1px 2px 4px darkgrey;
-					}
-				}
-				button {
-					position: absolute;
-					right: 0.5em;
-					top: 0;
-					background: none;
-					border: none;
-					height: 100%;
-					font-size: 1.2em;
-				}
-			}
-		}
-		/* Sections of the sidebar navigation */
-		.navbar-logo {
-			height: auto;
-			width: 40px;
-			margin-bottom:1.5em;
-		}
-		// header shown on small screens, with button to open drawer menu
-		.navbar-header{
-			display: none;
-			height: @navbar-height;
-			border-bottom: 3px solid;
-			border-image: linear-gradient(
-				to right,
-				@blue,
-				@gradient-orange
-				) 100% 1;
-			
-			.navbar-logo{
-				margin: 0;
-				margin-left: auto;
-				margin-right: auto;
-				width: auto;
-				align-self: center;
-				>img{
-					height: 26px;
-    				margin-top: 3px;
-				}
-			}
-			.navbar-toggle {
-				z-index: 101; // just above so it can be clicked to close the side-nav
-				margin-left: @navbar-padding-horizontal;
-				border-color: @blue;
-				position: absolute;
-				.icon-bar {
-					background-color: @blue;
-				}
-				&:not(.collapsed) {
-					position: fixed;
-				}
-			}
-		}
-	}
-	/* main content */
-	> :not(nav){
-		margin-left: 1em;
-		// Leave some space for BrainzPlayer
-		padding-bottom: @brainzplayer-height;
+      a {
+        display: block;
+        font-weight: normal;
+        &,
+        &:visited,
+        &:hover,
+        &:visited:hover {
+          /* Annoyingly we need this not-button because of Bootstrap 3*/
+          &,
+          &:not(.button) {
+            color: @blue;
+          }
+        }
+        &.active {
+          text-decoration: underline;
+          text-decoration-thickness: 2px;
+          text-underline-offset: 6px;
+          font-style: italic;
+          font-weight: 700;
+        }
+      }
 
-		width: 100%; // fallback
-		width: calc(100% - @sidenav-width);
-		
-		div[role="main"]{
-			max-width: @max-content-width;
-			margin-left: auto;
-			margin-right: auto;
-		}
-	}
-	
-	/* Styles for mobile devices */
-	@media (max-width: @offscreen-sidenav-breakpoint) {
-		display: initial;
-		> nav[role="navigation"] {
-			#side-nav {
-				transition: transform .3s ease-in-out;
-				position: fixed;
-				// using important here to override Botostrap 3 collapse plugin setting height
-				height: auto !important;
-				transform: translateX(-100%);
-				&.collapse.in{
-					transform: none
-				}
-				.mobile-nav-fix{
-					position: absolute;
-					background-color: @nav-background-color;
-					border-right: 9px solid @gradient-orange;
-					//sidenav width + border thickness
-					width: calc(100% + 9px);
-					height: 120px;
-					bottom: -110px;
-					right: -9px; // parent's border thickness
-					z-index: 99;
-				}
-			}
-			#side-nav-overlay {
-				content:"";
-				opacity: 0;
-				pointer-events: none;
-				transition: opacity .3s linear;
-				position: fixed;
-				width: 100vw;
-				height: 110vh !important;
-				top:0;
-				bottom:0;
-				right: 0;
-				background:white;
-				z-index: 98;
-				&.collapse.in {
-					opacity: 0.8;
-					pointer-events: unset;
-				}
-			}
-			.navbar-header{
-				display: flex;
-				align-items: center;
-			}
-		}
-		> :not(nav){
-			&, div[role="main"]{
-				width: 100%;
-			}
-		}
-	}
+      .main-nav {
+        font-size: 18px;
+        flex-basis: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        margin-bottom: 1.5em;
+        font-weight: 500;
+      }
+      .navbar-bottom {
+        margin-top: auto;
+        font-size: 14px;
+        .username {
+          font-weight: 700;
+          margin-bottom: 0.3em;
+        }
+        line-height: 1.5em;
 
+        > a {
+          width: fit-content;
+          margin-left: auto;
+          font-weight: normal;
+        }
+      }
+      .navbar-logo {
+        z-index: 102; // just above the toggle hamburger button
+      }
+      .search-bar {
+        position: relative;
+        margin-top: 1em;
+        input {
+          background-color: @nav-tabs-border-color;
+          color: @nav-link-color;
+          border-radius: 33px;
+          border: none;
+          &:focus {
+            -webkit-box-shadow: inset 1px 2px 4px darkgrey;
+            box-shadow: inset 1px 2px 4px darkgrey;
+          }
+        }
+        button {
+          position: absolute;
+          right: 0.5em;
+          top: 0;
+          background: none;
+          border: none;
+          height: 100%;
+          font-size: 1.2em;
+        }
+      }
+    }
+    /* Sections of the sidebar navigation */
+    .navbar-logo {
+      height: auto;
+      width: 40px;
+      margin-bottom: 1.5em;
+    }
+    // header shown on small screens, with button to open drawer menu
+    .navbar-header {
+      display: none;
+      height: @navbar-height;
+      border-bottom: 3px solid;
+      border-image: linear-gradient(to right, @blue, @gradient-orange) 100% 1;
+
+      .navbar-logo {
+        margin: 0;
+        margin-left: auto;
+        margin-right: auto;
+        width: auto;
+        align-self: center;
+        > img {
+          height: 26px;
+          margin-top: 3px;
+        }
+      }
+      .navbar-toggle {
+        z-index: 101; // just above so it can be clicked to close the side-nav
+        margin-left: @navbar-padding-horizontal;
+        border-color: @blue;
+        position: absolute;
+        .icon-bar {
+          background-color: @blue;
+        }
+        &:not(.collapsed) {
+          position: fixed;
+        }
+      }
+    }
+  }
+  /* main content */
+  > :not(nav) {
+    margin-left: 1em;
+    // Leave some space for BrainzPlayer
+    padding-bottom: @brainzplayer-height;
+
+    width: 100%; // fallback
+    width: calc(100% - @sidenav-width);
+
+    div[role="main"] {
+      max-width: @max-content-width;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  /* Styles for mobile devices */
+  @media (max-width: @offscreen-sidenav-breakpoint) {
+    display: initial;
+    > nav[role="navigation"] {
+      #side-nav {
+        transition: transform 0.3s ease-in-out;
+        position: fixed;
+        // using important here to override Botostrap 3 collapse plugin setting height
+        height: auto !important;
+        transform: translateX(-100%);
+        &.collapse.in {
+          transform: none;
+        }
+        .mobile-nav-fix {
+          position: absolute;
+          background-color: @nav-background-color;
+          border-right: 9px solid @gradient-orange;
+          //sidenav width + border thickness
+          width: calc(100% + 9px);
+          height: 120px;
+          bottom: -110px;
+          right: -9px; // parent's border thickness
+          z-index: 99;
+        }
+      }
+      #side-nav-overlay {
+        content: "";
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s linear;
+        position: fixed;
+        width: 100vw;
+        height: 110vh !important;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        background: white;
+        z-index: 98;
+        &.collapse.in {
+          opacity: 0.8;
+          pointer-events: unset;
+        }
+      }
+      .navbar-header {
+        display: flex;
+        align-items: center;
+      }
+    }
+    > :not(nav) {
+      &,
+      div[role="main"] {
+        width: 100%;
+      }
+    }
+  }
 }
 
-.secondary-nav{
-	/* Secondary nav container should be full width and scrollable if there is excess */
-	width: calc(100% + @grid-gutter-width);
-	margin-left:  ceil((@grid-gutter-width / -2));
-	margin-right: floor((@grid-gutter-width / -2));
-	margin-bottom: 1.5em;
-	&, > * {
-		background-color: @nav-tabs-background-color;
-	}
-	
-	.nav.nav-tabs {
-		display: flex;
-		background-color: @nav-tabs-background-color;
-		white-space: nowrap;
-		
-		> li{
-			background-color: @nav-tabs-background-color;
-			border-bottom: 1px solid @nav-tabs-border-color;
-			float:unset;
-			> a {
-				color: @nav-link-color;
-				padding: @nav-tabs-link-padding;
-				border: 1px solid @nav-tabs-border-color;
-				border-top:none;
-				border-bottom: none;
-				margin-right: -1px;
-				margin-bottom: 0px;
-				&:hover {
-					color: initial;
-				}
-			}
-			&.active > a {
-				color: @nav-link-color;
-				font-weight: 700;
-				border-bottom: 1px solid white;
-				margin-bottom: -1px;
-			}
-			&.username{
-				font-weight: 700;
-				background: linear-gradient(288deg, #46433A 16.96%, @blue 98.91%);
-				color: @white;
-				> * {
-					padding: @nav-tabs-link-padding;
-				}
-				a, a:hover, a:visited, a:visited:hover{
-					color: @white;
-				}
-			}
-			&.disabled {
-				background-color: darken(@nav-tabs-background-color,15%);
-				> a {
-					color: darken(@nav-tabs-background-color,35%);
-				}
-			}
-		}
-	}
-	
-	.breadcrumb {
-		padding: @nav-tabs-link-padding;
-		list-style: none;
-		border-bottom: 1px solid @nav-tabs-border-color;
-		>li{
-			display: inline-block;
-			color: @text-color;
-			> a {
-				color: @nav-link-color;
-				font-weight: initial;
-			}
-			&.active {
-				color: @blue;
-				font-weight: 700;
-			}
-			&+li:before {
-				padding: 0 5px;
-				content: "\003E";
-			}
-		}
-	}
-	/* Styles for mobile devices */
-	@media (max-width: @offscreen-sidenav-breakpoint) {
-		/* When not all tabs fit horizontally,
+.secondary-nav {
+  /* Secondary nav container should be full width and scrollable if there is excess */
+  width: calc(100% + @grid-gutter-width);
+  margin-left: ceil((@grid-gutter-width / -2));
+  margin-right: floor((@grid-gutter-width / -2));
+  margin-bottom: 1.5em;
+  &,
+  > * {
+    background-color: @nav-tabs-background-color;
+  }
+
+  .nav.nav-tabs {
+    display: flex;
+    background-color: @nav-tabs-background-color;
+    white-space: nowrap;
+
+    > li {
+      background-color: @nav-tabs-background-color;
+      border-bottom: 1px solid @nav-tabs-border-color;
+      float: unset;
+      > a {
+        color: @nav-link-color;
+        padding: @nav-tabs-link-padding;
+        border: 1px solid @nav-tabs-border-color;
+        border-top: none;
+        border-bottom: none;
+        margin-right: -1px;
+        margin-bottom: 0px;
+        &:hover {
+          color: initial;
+        }
+      }
+      &.active > a {
+        color: @nav-link-color;
+        font-weight: 700;
+        border-bottom: 1px solid white;
+        margin-bottom: -1px;
+      }
+      &.username {
+        font-weight: 700;
+        background: linear-gradient(288deg, #46433a 16.96%, @blue 98.91%);
+        color: @white;
+        > * {
+          padding: @nav-tabs-link-padding;
+        }
+        a,
+        a:hover,
+        a:visited,
+        a:visited:hover {
+          color: @white;
+        }
+      }
+      &.disabled {
+        background-color: darken(@nav-tabs-background-color, 15%);
+        > a {
+          color: darken(@nav-tabs-background-color, 35%);
+        }
+      }
+    }
+  }
+
+  .breadcrumb {
+    padding: @nav-tabs-link-padding;
+    list-style: none;
+    border-bottom: 1px solid @nav-tabs-border-color;
+    > li {
+      display: inline-block;
+      color: @text-color;
+      > a {
+        color: @nav-link-color;
+        font-weight: initial;
+      }
+      &.active {
+        color: @blue;
+        font-weight: 700;
+      }
+      & + li:before {
+        padding: 0 5px;
+        content: "\003E";
+      }
+    }
+  }
+  /* Styles for mobile devices */
+  @media (max-width: @offscreen-sidenav-breakpoint) {
+    /* When not all tabs fit horizontally,
 		hide tabs behind gradient to indicate there's more */
-		&::after{
-			content: "";
-			width: 4em;
-			background: linear-gradient(270deg, #fff, transparent);
-			position: absolute;
-			pointer-events: none;
-			right: 0;
-			height: @tabs-height;
-			margin-top: -@tabs-height;
-		}
+    &::after {
+      content: "";
+      width: 4em;
+      background: linear-gradient(270deg, #fff, transparent);
+      position: absolute;
+      pointer-events: none;
+      right: 0;
+      height: @tabs-height;
+      margin-top: -@tabs-height;
+    }
 
-		.nav.nav-tabs > li {
-			> a, &.username > * {
-				padding: @nav-tabs-link-padding-mobile;
-			}
-		}
-		.breadcrumb {
-			padding: @nav-tabs-link-padding-mobile;
-		}
-	}
-	/* Special styles for very wide screens */
-	@media (min-width: @very-wide-screen-breakpoint) {
-		> * {
-			/* Align the secondary nav with the centered content */
-			width: calc(100% - @sidenav-width);
-			max-width: @max-content-width;
-			margin-left: auto;
-			margin-right: auto;
-
-		}
-		.nav.nav-tabs > li.username {
-			background: #46433A;
-		}
-		.breadcrumb {
-			padding-left: 0;
-		}
-	}
+    .nav.nav-tabs > li {
+      > a,
+      &.username > * {
+        padding: @nav-tabs-link-padding-mobile;
+      }
+    }
+    .breadcrumb {
+      padding: @nav-tabs-link-padding-mobile;
+    }
+  }
+  /* Special styles for very wide screens */
+  @media (min-width: @very-wide-screen-breakpoint) {
+    > * {
+      /* Align the secondary nav with the centered content */
+      width: calc(100% - @sidenav-width);
+      max-width: @max-content-width;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .nav.nav-tabs > li.username {
+      background: #46433a;
+    }
+    .breadcrumb {
+      padding-left: 0;
+    }
+  }
 }
 
 .dragscroll {
-	/* We user the dragscroll library to handle dragging to scroll */
-	overflow-x: scroll;
-	/* But we want to hide the scrollbar: */
-	-ms-overflow-style: none;  /* Internet Explorer and Edge */
-	scrollbar-width: none;  /* Firefox */
-	&::-webkit-scrollbar {
-		/* Chrome, Safari and Opera */
-		display: none;
-	}
+  /* We user the dragscroll library to handle dragging to scroll */
+  overflow-x: scroll;
+  /* But we want to hide the scrollbar: */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    /* Chrome, Safari and Opera */
+    display: none;
+  }
 }
-.tertiary-nav{
-	/* This tertiary nav (pills at the top of the page) should be max full width and scrollable */
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: space-between;
-	padding: 0 1em;
-	margin-left:  ceil((@grid-gutter-width / -2));
-	margin-right: floor((@grid-gutter-width / -2));
-	> * {
-		flex-shrink: 0;
-	}
+.tertiary-nav {
+  /* This tertiary nav (pills at the top of the page) should be max full width and scrollable */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 0 1em;
+  margin-left: ceil((@grid-gutter-width / -2));
+  margin-right: floor((@grid-gutter-width / -2));
+  > * {
+    flex-shrink: 0;
+  }
 }
 .tertiary-nav-vertical {
-	ul {
-		padding-left: 1em;
-		line-height: 2.2em;
-		li {
-			list-style: none;
-		}
-	}
+  ul {
+    padding-left: 1em;
+    line-height: 2.2em;
+    li {
+      list-style: none;
+    }
+  }
 }
 #settings {
-	display: flex;
-	flex-wrap: wrap;
-	.tertiary-nav-vertical {
-		flex: 0;
-		flex-basis: 250px;
-	}
+  display: flex;
+  flex-wrap: wrap;
+  .tertiary-nav-vertical {
+    flex: 0;
+    flex-basis: 250px;
+  }
 }
-.profile-on-mb{
-	float: right;
-	margin-top: 20px;
+.profile-on-mb {
+  float: right;
+  margin-top: 20px;
 }
 .modal-backdrop {
-    width: 100vw;
-    max-width: initial;
-	margin: 0;
+  width: 100vw;
+  max-width: initial;
+  margin: 0;
 }
