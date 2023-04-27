@@ -1,4 +1,4 @@
 #!/bin/bash
 
 sleep 1
-exec run-lb-command uwsgi --die-on-term /etc/uwsgi/uwsgi.ini
+exec run-consul-template -config /etc/consul-template-uwsgi.conf

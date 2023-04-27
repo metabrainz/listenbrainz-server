@@ -40,7 +40,7 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
             result = connection.execute(
                 text("""
                     SELECT count, min_listened_at, max_listened_at
-                      FROM listen_user_metadata
+                      FROM listen_user_metadata_new
                      WHERE user_id = :user_id
                 """), {"user_id": user["id"]})
             row = result.fetchone()
@@ -69,7 +69,7 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(metadata_2["max_listened_at"], datetime.utcfromtimestamp(1400000200))
         self.assertEqual(metadata_2["count"], 5)
 
-        # to test the case when the update script has not run since delete, so metadata in listen_user_metadata does
+        # to test the case when the update script has not run since delete, so metadata in listen_user_metadata_new does
         # account for this listen and deleting should not affect it either.
         self._create_test_data(user_1, "timescale_listenstore_test_listens_2.json")
         self.logstore.delete_listen(datetime.utcfromtimestamp(1400000500), user_1["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")

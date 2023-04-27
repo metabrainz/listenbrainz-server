@@ -53,7 +53,7 @@ class TimescaleListenStore:
     def set_empty_values_for_user(self, user_id: int):
         """When a user is created, set the timestamp keys and insert an entry in the listen count
          table so that we can avoid the expensive lookup for a brand new user."""
-        query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, NULL, NULL, NOW())"""
+        query = """INSERT INTO listen_user_metadata_new VALUES (:user_id, 0, NULL, NULL, NOW())"""
         with timescale.engine.begin() as connection:
             connection.execute(sqlalchemy.text(query), {"user_id": user_id})
 
@@ -62,7 +62,7 @@ class TimescaleListenStore:
 
          The number of listens comes from cache if available otherwise the get the
          listen count from the database. To get the listen count from the database,
-         query listen_user_metadata table for the count and the timestamp till which we
+         query listen_user_metadata_new table for the count and the timestamp till which we
          already have counted. Then scan the listens created later than that timestamp
          to get the remaining count. Add the two counts to get total listen count.
 
@@ -74,13 +74,13 @@ class TimescaleListenStore:
             return cached_count
 
         with timescale.engine.connect() as connection:
-            query = "SELECT count, created FROM listen_user_metadata WHERE user_id = :user_id"
+            query = "SELECT count, created FROM listen_user_metadata_new WHERE user_id = :user_id"
             result = connection.execute(sqlalchemy.text(query), {"user_id": user_id})
             row = result.fetchone()
             if row:
                 count, created = row.count, row.created
             else:
-                # we can reach here only in tests, because we create entries in listen_user_metadata
+                # we can reach here only in tests, because we create entries in listen_user_metadata_new
                 # table when user signs up and for existing users an entry should always exist.
                 count, created = 0, LISTEN_MINIMUM_DATE
 
@@ -92,7 +92,7 @@ class TimescaleListenStore:
         query = """
             SELECT COALESCE(min_listened_at, 'epoch'::timestamptz) AS min_ts
                  , COALESCE(max_listened_at, 'epoch'::timestamptz) AS max_ts
-              FROM listen_user_metadata
+              FROM listen_user_metadata_new
              WHERE user_id = :user_id
         """
         with timescale.engine.connect() as connection:
@@ -114,7 +114,7 @@ class TimescaleListenStore:
         if count:
             return count
 
-        query = "SELECT SUM(count) AS value FROM listen_user_metadata"
+        query = "SELECT SUM(count) AS value FROM listen_user_metadata_new"
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text(query))
@@ -146,7 +146,7 @@ class TimescaleListenStore:
                  DO NOTHING
                   RETURNING listened_at, user_id, recording_msid
             ), metadata AS (
-                INSERT INTO listen_user_metadata AS lum (user_id, count, min_listened_at, max_listened_at, created)
+                INSERT INTO listen_user_metadata_new AS lum (user_id, count, min_listened_at, max_listened_at, created)
                      SELECT user_id, count(*), min(listened_at), max(listened_at), NOW()
                        FROM inserted_listens
                    GROUP BY user_id  
@@ -535,7 +535,7 @@ class TimescaleListenStore:
         Raises: Exception if unable to delete the user in 5 retries
         """
         query = """
-            UPDATE listen_user_metadata 
+            UPDATE listen_user_metadata_new 
                SET count = 0
                  , min_listened_at = NULL
                  , max_listened_at = NULL
@@ -565,7 +565,7 @@ class TimescaleListenStore:
         Raises: TimescaleListenStoreException if unable to delete the listen
         """
         query = """
-            INSERT INTO listen_delete_metadata(user_id, listened_at, recording_msid) 
+            INSERT INTO listen_delete_metadata_new(user_id, listened_at, recording_msid) 
                  VALUES (:user_id, :listened_at, :recording_msid)
         """
         try:
