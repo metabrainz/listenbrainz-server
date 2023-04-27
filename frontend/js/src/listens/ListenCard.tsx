@@ -97,6 +97,7 @@ export default class ListenCard extends React.Component<
   ListenCardState
 > {
   static addCoverArtThumbnailSrc: string = "/static/img/add-cover-art.svg";
+  static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -134,11 +135,12 @@ export default class ListenCard extends React.Component<
   }
 
   async getCoverArt() {
-    const { spotifyAuth } = this.context;
+    const { spotifyAuth, APIService } = this.context;
     const { listen } = this.props;
     const albumArtSrc = await getAlbumArtFromListenMetadata(
       listen,
-      spotifyAuth
+      spotifyAuth,
+      APIService
     );
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
@@ -365,7 +367,7 @@ export default class ListenCard extends React.Component<
           </div>
         </a>
       );
-    } else {
+    } else if (!recordingMBID) {
       const openModal = () => {
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
@@ -388,6 +390,25 @@ export default class ListenCard extends React.Component<
             <FontAwesomeIcon icon={faLink} />
           </div>
         </div>
+      );
+    } else {
+      // Edge case: has no thumbnail, has a recording_mbid
+      // but no release_mbid for some reason
+      thumbnail = (
+        <a
+          href={`https://musicbrainz.org/recording/${recordingMBID}`}
+          title="Open in MusicBrainz"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="listen-thumbnail"
+        >
+          <div className="cover-art-fallback">
+            <img
+              src={ListenCard.coverartPlaceholder}
+              alt="Open in MusicBrainz"
+            />
+          </div>
+        </a>
       );
     }
 

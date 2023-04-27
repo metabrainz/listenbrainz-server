@@ -1045,21 +1045,29 @@ export default class APIService {
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"
-  ): Promise<any> => {
+  ): Promise<MusicBrainzRecording> => {
     const url = `${this.MBBaseURI}/recording/${recordingMBID}?fmt=json&inc=${inc}`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
   };
 
-  lookupMBRelease = async (releaseMBID: string): Promise<any> => {
+  lookupMBRelease = async (
+    releaseMBID: string
+  ): Promise<MusicBrainzReleaseWithReleaseGroup> => {
     const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
   };
 
-  lookupMBReleaseFromTrack = async (trackMBID: string): Promise<any> => {
+  lookupMBReleaseFromTrack = async (
+    trackMBID: string
+  ): Promise<{
+    "release-offset": number;
+    "release-count": number;
+    releases: MusicBrainzReleaseWithMedia[];
+  }> => {
     const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
