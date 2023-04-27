@@ -215,7 +215,7 @@ class TimescaleListenStore:
                              , l.data
                              -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
                              , COALESCE((data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
-                          FROM listen l
+                          FROM listen_new l
                      LEFT JOIN mbid_mapping mm
                             ON l.recording_msid = mm.recording_msid
                      LEFT JOIN mbid_manual_mapping user_mm
@@ -381,7 +381,7 @@ class TimescaleListenStore:
                          , recording_msid
                          , data
                          , row_number() OVER (PARTITION BY user_id ORDER BY listened_at DESC) AS rownum
-                      FROM listen l
+                      FROM listen_new l
                      WHERE {filters} 
               ), selected_listens AS (
                     SELECT l.*
