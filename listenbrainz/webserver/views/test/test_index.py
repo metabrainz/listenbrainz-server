@@ -26,7 +26,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.temporary_login(user['login_id'])
 
         resp = self.client.get(url_for('index.index'))
-        self.assertRedirects(response, url_for('user.profile', user_name='mr_monkey'))
+        self.assertRedirects(resp, url_for('user.profile', user_name='mr_monkey'))
 
 
     def test_downloads(self):
@@ -81,10 +81,10 @@ class IndexViewsTestCase(IntegrationTestCase):
     def test_menu_not_logged_in(self, mock_user_get):
         resp = self.client.get(url_for('index.index'))
         data = resp.data.decode('utf-8')
+        self.assertIn('id="#side-nav"', data)
         self.assertIn('Sign in', data)
-        self.assertIn('Import', data)
-        # item in user menu doesn't exist
-        self.assertNotIn('Home', data)
+        self.assertNotIn('iliekcomputers', data)
+        self.assertNotIn('Logout', data)
         mock_user_get.assert_not_called()
 
     @mock.patch('listenbrainz.db.user.get_by_login_id')
@@ -96,15 +96,15 @@ class IndexViewsTestCase(IntegrationTestCase):
 
         mock_user_get.return_value = user
         self.temporary_login(user['login_id'])
-        resp = self.client.get(url_for('index.index'))
+        resp = self.client.get(url_for('index.recent_listens'))
         data = resp.data.decode('utf-8')
 
-        # username (menu header)
+        # username & logout link in sidenav menu
+        self.assertIn('id="#side-nav"', data)
         self.assertIn('iliekcomputers', data)
-        self.assertIn('Import', data)
-        # item in user menu
+        self.assertIn('Logout', data)
+        self.assertNotIn('Sign in', data)
 
-        self.assertIn('Home', data)
         mock_user_get.assert_called_with(user['login_id'])
 
     @mock.patch('listenbrainz.db.user.get_by_login_id')
@@ -127,23 +127,23 @@ class IndexViewsTestCase(IntegrationTestCase):
         data = resp.data.decode('utf-8')
         self.assert400(resp)
 
-        # username (menu header)
+        # username & logout link in sidenav menu
+        self.assertIn('id="#side-nav"', data)
         self.assertIn('iliekcomputers', data)
-        self.assertIn('Import', data)
-        # item in user menu
+        self.assertIn('Logout', data)
+        self.assertNotIn('Sign in', data)
 
-        self.assertIn('Home', data)
         mock_user_get.assert_called_with(user['login_id'])
 
         resp = self.client.get('/page_that_returns_404')
         data = resp.data.decode('utf-8')
         self.assert404(resp)
-        # username (menu header)
+        # username & logout link in sidenav menu
+        self.assertIn('id="#side-nav"', data)
         self.assertIn('iliekcomputers', data)
-        self.assertIn('Import', data)
-        # item in user menu
+        self.assertIn('Logout', data)
+        self.assertNotIn('Sign in', data)
 
-        self.assertIn('Home', data)
         mock_user_get.assert_called_with(user['login_id'])
 
     @mock.patch('listenbrainz.db.user.get')
@@ -161,10 +161,11 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.temporary_login(user['login_id'])
         resp = self.client.get('/page_that_returns_500')
         data = resp.data.decode('utf-8')
-        # item not in user menu
-        self.assertNotIn('Home', data)
-        self.assertNotIn('Sign in', data)
-        self.assertIn('Import', data)
+        # no sidenav menu
+        self.assertNotIn('Dashboard', data)
+        self.assertNotIn('id="#side-nav"', data)
+        # sign in link in sidenav menu
+        self.assertIn('Sign in', data)
 
     @mock.patch('listenbrainz.db.user.get_by_login_id')
     def test_menu_logged_in_error_dont_show_user_loaded(self, mock_user_get):
@@ -188,10 +189,10 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.temporary_login(user['login_id'])
         resp = self.client.get('/page_that_returns_500')
         data = resp.data.decode('utf-8')
-        self.assertIn('Import', data)
-        # item not in user menu
-        self.assertNotIn('Home', data)
-        self.assertNotIn('Sign in', data)
+        # no sidenav menu
+        self.assertNotIn('Dashboard', data)
+        self.assertNotIn('id="#side-nav"', data)
+        
         # Even after rendering the template, the database has only been queried once (before the exception)
         mock_user_get.assert_called_once()
         self.assertIsInstance(self.get_context_variable('current_user'), listenbrainz.webserver.login.User)
