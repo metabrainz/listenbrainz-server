@@ -44,10 +44,22 @@ export default class PlaylistsList extends React.Component<
     };
   }
 
+  static getDerivedStateFromProps(
+    nextProps: React.PropsWithChildren<PlaylistsListProps>,
+    prevState: PlaylistsListState
+  ) {
+    if (nextProps.playlists !== prevState.playlists) {
+      return {
+        playlists: nextProps.playlists,
+      };
+    }
+    return prevState;
+  }
+
   async componentDidUpdate(
     prevProps: React.PropsWithChildren<PlaylistsListProps>
   ): Promise<void> {
-    const { user, activeSection, newAlert } = this.props;
+    const { user, activeSection, newAlert, playlists } = this.props;
     const { currentUser } = this.context;
     if (prevProps.activeSection !== activeSection) {
       await this.fetchPlaylists(0);
@@ -178,6 +190,7 @@ export default class PlaylistsList extends React.Component<
                 onSuccessfulCopy={this.onCopiedPlaylist}
                 newAlert={newAlert}
                 selectPlaylistForEdit={selectPlaylistForEdit}
+                key={playlist.identifier}
               />
             );
           })}
