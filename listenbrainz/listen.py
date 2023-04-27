@@ -131,7 +131,7 @@ class Listen(object):
             track_metadata["mbid_mapping"] = {"recording_mbid": str(recording_mbid)}
 
             if recording_name is not None:
-                data["track_metadata"]["mbid_mapping"]["recording_name"] = recording_name
+                track_metadata["mbid_mapping"]["recording_name"] = recording_name
 
             if release_mbid is not None:
                 track_metadata["mbid_mapping"]["release_mbid"] = str(release_mbid)
