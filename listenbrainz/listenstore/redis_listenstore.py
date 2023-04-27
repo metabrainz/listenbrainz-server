@@ -10,11 +10,11 @@ from listenbrainz.listen import Listen, NowPlayingListen
 
 class RedisListenStore:
 
-    RECENT_LISTENS_KEY = "rl-"
+    RECENT_LISTENS_KEY = "new-rl-"
     RECENT_LISTENS_MAX = 100
-    PLAYING_NOW_KEY = "pn."
+    PLAYING_NOW_KEY = "new-pn."
     LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
-    LISTEN_COUNT_PER_DAY_KEY = "lc-day-"
+    LISTEN_COUNT_PER_DAY_KEY = "new-lc-day-"
 
     def __init__(self, logger):
         self.log = logger

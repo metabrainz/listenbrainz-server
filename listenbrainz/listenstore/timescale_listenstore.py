@@ -20,9 +20,9 @@ from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH
 
 # Append the user name for both of these keys
-REDIS_USER_LISTEN_COUNT = "lc."
-REDIS_USER_TIMESTAMPS = "ts."
-REDIS_TOTAL_LISTEN_COUNT = "lc-total"
+REDIS_USER_LISTEN_COUNT = "new-lc."
+REDIS_USER_TIMESTAMPS = "new-ts."
+REDIS_TOTAL_LISTEN_COUNT = "new-lc-total"
 # cache listen counts for 5 minutes only, so that listen counts are always up-to-date in 5 minutes.
 REDIS_USER_LISTEN_COUNT_EXPIRY = 300
 

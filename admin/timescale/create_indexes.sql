@@ -8,7 +8,7 @@ CREATE UNIQUE INDEX listened_at_user_id_recording_msid_ndx_listen ON listen_new 
 
 CREATE INDEX recording_msid_ndx_listen on listen ((data->'track_metadata'->'additional_info'->>'recording_msid'));
 
-CREATE UNIQUE INDEX user_id_ndx_listen_user_metadata ON listen_user_metadata (user_id);
+CREATE UNIQUE INDEX user_id_ndx_listen_user_metadata_new ON listen_user_metadata_new (user_id);
 
 -- View indexes are created in listenbrainz/db/timescale.py
 
