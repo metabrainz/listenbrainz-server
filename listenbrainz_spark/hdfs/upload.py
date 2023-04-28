@@ -4,6 +4,7 @@ import time
 import tarfile
 import tempfile
 import logging
+from typing import List
 
 from listenbrainz_spark import schema, path, utils
 from listenbrainz_spark.hdfs.utils import create_dir
@@ -111,7 +112,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         rename(src_path, dest_path)
         utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
-    def upload_mlhd_dump(self, archives: list[str]):
+    def upload_mlhd_dump(self, archives: List[str]):
         """ Upload MLHD+ dump to HDFS """
         dest_path = path.MLHD_PLUS_DATA_DIRECTORY
         # Delete existing dumps if any
