@@ -385,6 +385,12 @@ def request_import_musicbrainz_release_dump():
     send_request_to_spark_cluster('import.musicbrainz_release_dump')
 
 
+@cli.command(name='request_import_mlhd_dump')
+def request_import_mlhd_dump():
+    """ Send the spark cluster a request to import musicbrainz release dump. """
+    send_request_to_spark_cluster("import.dump.mlhd")
+
+
 @cli.command(name='request_similar_users')
 @click.option("--max-num-users", type=int, default=25, help="The maxiumum number of similar users to return for any given user.")
 def request_similar_users(max_num_users):
