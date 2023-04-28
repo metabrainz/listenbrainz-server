@@ -516,6 +516,66 @@ def delete_listen():
 
     return jsonify({'status': 'ok'})
 
+@api_bp.route('/undo-delete-listen', methods=['POST', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def undo_delete_listen():
+    """
+    Undo a Delete for a particular listen from a user's listen history.
+    This checks for the correct authorization token and undo's the delete.
+
+
+    The format of the JSON to be POSTed to this endpoint is:
+
+    .. code-block:: json
+
+        {
+            "listened_at": 1,
+            "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f"
+        }
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Delete has been undone.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    data = request.json
+
+    if "listened_at" not in data:
+        log_raise_400("Listen timestamp missing.")
+    try:
+        listened_at = data["listened_at"]
+        listened_at = int(listened_at)
+    except ValueError:
+        log_raise_400("%s: Listen timestamp invalid." % listened_at)
+
+
+    if "recording_msid" not in data:
+        log_raise_400("Recording MSID missing.")
+
+    recording_msid = data["recording_msid"]
+    if not is_valid_uuid(recording_msid):
+        log_raise_400("%s: Recording MSID format invalid." % recording_msid)
+
+    try:
+        timescale_connection._ts.undo_delete_listen(listened_at=listened_at,
+                                               recording_msid=recording_msid, user_id=user["id"])
+    except TimescaleListenStoreException as e:
+        current_app.logger.error("Cannot undo the delete for user: %s" % str(e))
+        raise APIServiceUnavailable(
+            "We couldn't undo the delete. Please try again later.")
+    except Exception as e:
+        current_app.logger.error("Cannot undo the delete for user: %s" % str(e))
+        raise APIInternalServerError(
+            "We couldn't undo the delete. Please try again later.")
+
+    return jsonify({'status': 'ok'})
+
 
 def serialize_playlists(playlists, playlist_count, count, offset):
     """

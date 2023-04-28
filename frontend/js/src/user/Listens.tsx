@@ -549,8 +549,19 @@ export default class Listens extends React.Component<
           newAlert(
             "info",
             "Success",
-            "This listen has not been deleted yet, but is scheduled for deletion," +
-              " which usually happens shortly after the hour."
+            <div>
+              <p>
+                This listen has not been deleted yet, but is scheduled for
+                deletion, which usually happens shortly after the hour.
+              </p>
+              <button
+                type="button"
+                className="btn btn-primary add-listen"
+                onClick={() => this.undoDeleteListen(listen)}
+              >
+                Undo
+              </button>
+            </div>
           );
           // wait for the delete animation to finish
           setTimeout(() => {
@@ -561,6 +572,34 @@ export default class Listens extends React.Component<
         newAlert(
           "danger",
           "Error while deleting listen",
+          typeof error === "object" ? error.message : error.toString()
+        );
+      }
+    }
+  };
+
+  undoDeleteListen = async (listen: Listen) => {
+    const { newAlert } = this.props;
+    const { APIService, currentUser } = this.context;
+    const isCurrentUser =
+      Boolean(listen.user_name) && listen.user_name === currentUser?.name;
+    if (isCurrentUser && currentUser?.auth_token) {
+      const listenedAt = get(listen, "listened_at");
+      const recordingMsid = getRecordingMSID(listen);
+
+      try {
+        const status = await APIService.undoDeleteListen(
+          currentUser.auth_token,
+          recordingMsid,
+          listenedAt
+        );
+        if (status === 200) {
+          newAlert("info", "Success", "Undo Successful");
+        }
+      } catch (error) {
+        newAlert(
+          "danger",
+          "Error while undoing the delete",
           typeof error === "object" ? error.message : error.toString()
         );
       }
