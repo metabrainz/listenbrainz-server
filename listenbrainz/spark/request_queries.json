@@ -72,7 +72,7 @@
   "import.dump.mlhd": {
     "name": "import.dump.mlhd",
     "description": "Import MLHD+ dump into the spark cluster",
-    "params": [""]
+    "params": []
   },
   "import.pg_metadata_tables": {
     "name": "import.pg_metadata_tables",
