@@ -53,7 +53,7 @@ export default class PlaylistsList extends React.Component<
         playlists: nextProps.playlists,
       };
     }
-    return prevState;
+    return null;
   }
 
   async componentDidUpdate(
