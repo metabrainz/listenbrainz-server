@@ -69,6 +69,11 @@
     "description": "Import incremental dump with the specified ID into the spark cluster",
     "params": ["dump_id"]
   },
+  "import.dump.mlhd": {
+    "name": "import.dump.mlhd",
+    "description": "Import MLHD+ dump into the spark cluster",
+    "params": [""]
+  },
   "import.pg_metadata_tables": {
     "name": "import.pg_metadata_tables",
     "description": "Send the cluster a request to import metadata table from MB db postgres",

@@ -162,6 +162,27 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
         return dest
 
+    def download_mlhd_plus_dump(self, directory):
+        ftp_cwd = os.path.join(config.FTP_LISTENS_DIR, 'mlhd/')
+        self.connection.cwd(ftp_cwd)
+
+        downloaded_files = []
+
+        all_files = self.list_dir()
+        for filename in all_files:
+            if "complete" not in filename:
+                continue
+
+            t0 = time.monotonic()
+            logger.info(f"Downloading MLHD+ listen file {filename} from FTP...")
+            file_dest = os.path.join(directory, filename)
+            self.download_file_binary(filename, file_dest)
+            logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
+
+            downloaded_files.append(file_dest)
+
+        return downloaded_files
+
     def get_latest_dump_id(self, dump_type: DumpType):
         if dump_type == DumpType.INCREMENTAL:
             ftp_cwd = os.path.join(config.FTP_LISTENS_DIR, 'incremental/')
