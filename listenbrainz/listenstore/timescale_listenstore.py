@@ -140,7 +140,7 @@ class TimescaleListenStore:
 
         query = """
             WITH inserted_listens AS (
-                INSERT INTO listen (listened_at, user_id, recording_msid, data)
+                INSERT INTO listen_new (listened_at, user_id, recording_msid, data)
                      VALUES %s
                 ON CONFLICT (listened_at, user_id, recording_msid)
                  DO NOTHING
@@ -149,9 +149,9 @@ class TimescaleListenStore:
                 INSERT INTO listen_user_metadata_new AS lum (user_id, count, min_listened_at, max_listened_at, created)
                      SELECT user_id, count(*), min(listened_at), max(listened_at), NOW()
                        FROM inserted_listens
-                   GROUP BY user_id  
+                   GROUP BY user_id
                 ON CONFLICT (user_id)
-                  DO UPDATE 
+                  DO UPDATE
                         SET count = lum.count + excluded.count
                           , min_listened_at = least(lum.min_listened_at, excluded.min_listened_at)
                           , max_listened_at = greatest(lum.max_listened_at, excluded.max_listened_at)

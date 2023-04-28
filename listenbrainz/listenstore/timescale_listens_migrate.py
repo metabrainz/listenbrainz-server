@@ -37,6 +37,7 @@ def process_created(created: datetime):
 
     print(f" - fixed up using created in {round(e-s, 2)}s")
 
+
 def process_chunk(chunk_start):
     chunk_start_dt = datetime.fromtimestamp(chunk_start)
     chunk_start_dt = chunk_start_dt.replace(microsecond=0)
@@ -102,6 +103,7 @@ def migrate_listens():
         print_status_update(chunk_count, number_chunks, start_time)
         chunk_start += CHUNK_SECONDS
 
+    # max created for fixup in future - Thu 27 Apr 2023 08:50:19 PM UTC
     # since listens with older listened_at values can be inserted between runs, also do a scan with created field
     # to insert the remaining listens
     if already_max_created:
