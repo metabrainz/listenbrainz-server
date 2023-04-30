@@ -55,7 +55,7 @@ def transform_chunk(location) -> pandas.DataFrame:
         dfs.append(df)
         total_files += 1
 
-        if total_files % 100 == 0:
+        if total_files % 1000 == 0:
             logger.info(f"Done {total_files} files")
 
     final_df = pandas.concat(dfs)
