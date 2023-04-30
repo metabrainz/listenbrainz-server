@@ -52,7 +52,7 @@ def transform_chunk(location):
         local_path = os.path.join(location, f"{directory}.parquet")
         final_df.to_parquet(local_path)
 
-        hdfs_path = config.HDFS_CLUSTER_URI + path.MLHD_PLUS_DATA_DIRECTORY + "/" + f"{directory}.parquet"
+        hdfs_path = os.path.join(path.MLHD_PLUS_DATA_DIRECTORY, f"{directory}.parquet")
         upload_to_HDFS(hdfs_path, local_path)
 
         os.remove(local_path)
