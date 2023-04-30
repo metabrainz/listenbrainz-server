@@ -47,6 +47,7 @@ def transform_chunk(destination):
 
 def extract_chunk(archive, destination):
     """ Extract one chunk of MLHD+ dump. """
+    logger.info(f"Extracting MLHD+ listen file {archive} ...")
     total_files = 0
     t0 = time.monotonic()
 
@@ -61,7 +62,7 @@ def extract_chunk(archive, destination):
                 total_files += 1
 
     time_taken = time.monotonic() - t0
-    logger.info(f"Done! Total files processed {total_files}. Time taken: {time_taken:.2f}")
+    logger.info(f"Done! Total files extracted {total_files}. Time taken: {time_taken:.2f}")
 
 
 def download_chunk(filename, dest) -> str:
@@ -91,11 +92,13 @@ def import_mlhd_dump_to_hdfs():
     # MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
     MLHD_PLUS_FILES = ["mlhdplus-complete-0.tar"]
     for file in MLHD_PLUS_FILES:
-        with tempfile.TemporaryDirectory() as local_temp_dir:
-            file_dest = download_chunk(file, local_temp_dir)
-            extract_chunk(file_dest, local_temp_dir)
-            df = transform_chunk(file_dest)
-            upload_chunk(df)
+        local_temp_dir = tempfile.mkdtemp()
+        logger.info(local_temp_dir)
+        file_dest = download_chunk(file, local_temp_dir)
+        logger.info(file_dest)
+        extract_chunk(file_dest, local_temp_dir)
+        df = transform_chunk(file_dest)
+        upload_chunk(df)
 
     return [{
         'type': 'import_mlhd_dump',
