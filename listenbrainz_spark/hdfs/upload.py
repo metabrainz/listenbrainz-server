@@ -123,29 +123,23 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         rename(src_path, dest_path)
         utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
-    def upload_mlhd_dump(self, archives: List[str]):
+    def upload_mlhd_dump_chunk(self, archive: str):
         """ Upload MLHD+ dump to HDFS """
         dest_path = path.MLHD_PLUS_DATA_DIRECTORY
-        # Delete existing dumps if any
-        if path_exists(dest_path):
-            logger.info(f'Removing {dest_path} from HDFS...')
-            delete_dir(dest_path, recursive=True)
-            logger.info('Done!')
 
         # Check if parent directory exists, if not create a directory
         dest_path_parent = str(Path(dest_path).parent)
         if not path_exists(dest_path_parent):
             create_dir(dest_path_parent)
 
-        for archive in archives:
-            src_path = self.upload_archive_to_temp(archive, ".parquet")
-            archive_dest_path = os.path.join(dest_path, str(Path(archive).name))
+        src_path = self.upload_archive_to_temp(archive, ".txt.zst")
+        archive_dest_path = os.path.join(dest_path, str(Path(archive).name))
 
-            logger.info(f"Moving the processed files from {src_path} to {archive_dest_path}")
-            t0 = time.monotonic()
+        logger.info(f"Moving the processed files from {src_path} to {archive_dest_path}")
+        t0 = time.monotonic()
 
-            rename(src_path, archive_dest_path)
-            utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
+        rename(src_path, archive_dest_path)
+        utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
     def upload_archive_to_temp(self, archive: str, extension: str) -> str:
         """ Upload parquet files in archive to a temporary hdfs directory

@@ -11,3 +11,4 @@ sentry-sdk == 1.14.0
 unidecode == 1.2.0
 more-itertools==8.8.0
 pycountry==22.3.5
+pycurl==7.45.2

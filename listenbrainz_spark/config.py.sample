@@ -36,3 +36,6 @@ FTP_ARTIST_RELATION_DIR = '/pub/musicbrainz/listenbrainz/labs/artist-credit-arti
 FTP_LISTENS_DIR = '/pub/musicbrainz/listenbrainz/'
 
 MAPPING_NAME_PREFIX = 'msid-mbid-mapping-with-matchable'
+
+MLHD_PLUS_DUMP_URI = "https://data.metabrainz.org/pub/musicbrainz/listenbrainz/mlhd"
+
