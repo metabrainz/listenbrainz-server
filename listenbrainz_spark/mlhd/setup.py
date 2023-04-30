@@ -41,6 +41,8 @@ def transform_chunk(location) -> pandas.DataFrame:
     logger.info(f"Transforming MLHD+ extracted listen files ...")
     t0 = time.monotonic()
 
+    total_files = 0
+
     dfs = []
     pattern = os.path.join(location, "**", "*.txt.zst")
     for file in glob(pattern, recursive=True):
@@ -51,6 +53,12 @@ def transform_chunk(location) -> pandas.DataFrame:
         df = pandas.read_csv(file, sep="\t")
         df.insert(0, "user_id", user_id)
         dfs.append(df)
+        total_files += 1
+
+        if total_files % 100 == 0:
+            logger.info(f"Done {total_files} files")
+            total_files = 0
+
     final_df = pandas.concat(dfs)
 
     time_taken = time.monotonic() - t0
