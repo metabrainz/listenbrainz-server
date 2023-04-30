@@ -3,6 +3,15 @@ from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
     IntegerType, LongType
 
+
+mlhd_schema = StructType([
+    StructField('listened_at', TimestampType(), nullable=False),
+    StructField('artist_credit_mbids', ArrayType(StringType()), nullable=False),
+    StructField('release_mbid', StringType(), nullable=False),
+    StructField('recording_mbid', StringType(), nullable=False),
+    StructField('user_id', StringType(), nullable=False)
+])
+
 listens_new_schema = StructType([
     StructField('listened_at', TimestampType(), nullable=False),
     StructField('user_id', IntegerType(), nullable=False),
