@@ -14,6 +14,7 @@ import pycurl
 import listenbrainz_spark
 from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
+from listenbrainz_spark.hdfs import upload_to_HDFS
 from listenbrainz_spark.schema import mlhd_schema
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ def transform_chunk(location):
     is not amenable to HDFS storage and processing. Therefore, we transform the csv files to a smaller
     number of large parquet files. Further, also add the user_id as a column to the parquet file.
     """
-    logger.info(f"Transforming MLHD+ extracted listen files ...")
+    logger.info(f"Processing MLHD+ extracted listen files ...")
     t0 = time.monotonic()
 
     for directory in os.listdir(location):
@@ -45,16 +46,16 @@ def transform_chunk(location):
                 names=["listened_at", "artist_credit_mbids", "release_mbid", "recording_mbid"]
             )
             df.insert(0, "user_id", user_id)
-            df["listened_at"] = pandas.to_datetime(df["listened_at"], unit="s")
             dfs.append(df)
         final_df = pandas.concat(dfs)
 
-        listenbrainz_spark.session.createDataFrame(final_df, schema=mlhd_schema)\
-            .repartition(1)\
-            .write\
-            .mode("append")\
-            .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_DATA_DIRECTORY)
+        local_path = os.path.join(location, f"{directory}.parquet")
+        final_df.to_parquet(local_path)
 
+        hdfs_path = config.HDFS_CLUSTER_URI + path.MLHD_PLUS_DATA_DIRECTORY + "/" + f"{directory}.parquet"
+        upload_to_HDFS(hdfs_path, local_path)
+
+        os.remove(local_path)
         logger.info(f"Processed directory: {pattern}")
 
     time_taken = time.monotonic() - t0
