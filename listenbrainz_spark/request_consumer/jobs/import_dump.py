@@ -20,19 +20,6 @@ logger = logging.getLogger(__name__)
 # of the params in request_queries.json.
 
 
-def import_mlhd_dump_to_hdfs():
-    """ Import the MLHD+ dump. """
-    with tempfile.TemporaryDirectory() as temp_dir:
-        downloader = ListenbrainzDataDownloader()
-        archives = downloader.download_mlhd_plus_dump(temp_dir)
-        downloader.connection.close()
-        ListenbrainzDataUploader().upload_mlhd_dump(archives)
-    return [{
-        'type': 'import_mlhd_dump',
-        'time': str(datetime.utcnow()),
-    }]
-
-
 def import_full_dump_to_hdfs(dump_id: int = None) -> str:
     """ Import the full dump with the given dump_id if specified otherwise the
      latest full dump.
