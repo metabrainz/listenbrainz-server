@@ -4,7 +4,7 @@ import os
 LISTENBRAINZ_NEW_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz-new')
 
 # MLHD+ dump files
-MLHD_PLUS_DATA_DIRECTORY = os.path.join("/", "mlhd")
+MLHD_PLUS_RAW_DATA_DIRECTORY = os.path.join("/", "mlhd-raw")
 
 # path to save incremental dumps
 INCREMENTAL_DUMPS_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "incremental.parquet")

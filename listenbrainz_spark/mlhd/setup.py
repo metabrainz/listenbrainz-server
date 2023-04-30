@@ -11,11 +11,9 @@ from pathlib import Path
 import pandas
 import pycurl
 
-import listenbrainz_spark
 from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.hdfs import upload_to_HDFS
-from listenbrainz_spark.schema import mlhd_schema
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +50,7 @@ def transform_chunk(location):
         local_path = os.path.join(location, f"{directory}.parquet")
         final_df.to_parquet(local_path)
 
-        hdfs_path = os.path.join(path.MLHD_PLUS_DATA_DIRECTORY, f"{directory}.parquet")
+        hdfs_path = os.path.join(path.MLHD_PLUS_RAW_DATA_DIRECTORY, f"{directory}.parquet")
         upload_to_HDFS(hdfs_path, local_path)
 
         os.remove(local_path)
@@ -102,17 +100,16 @@ def download_chunk(filename, dest) -> str:
 
 def import_mlhd_dump_to_hdfs():
     """ Import the MLHD+ dump. """
-    # MLHD_PLUS_CHUNKS = [
-    #     "0", "1", "2", "3", "4", "5", "6", "7",
-    #     "8", "9", "a", "b", "c", "d", "e", "f"
-    # ]
-    # MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
-    MLHD_PLUS_FILES = ["mlhdplus-complete-0.tar"]
+    MLHD_PLUS_CHUNKS = [
+        "0", "1", "2", "3", "4", "5", "6", "7",
+        "8", "9", "a", "b", "c", "d", "e", "f"
+    ]
+    MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
     for filename in MLHD_PLUS_FILES:
-        # local_temp_dir = tempfile.mkdtemp()
-        # downloaded_chunk = download_chunk(filename, local_temp_dir)
-        # extract_chunk(filename, downloaded_chunk, local_temp_dir)
-        transform_chunk("/data/python-tmp/tmp9t5avji8")
+        with tempfile.TemporaryDirectory() as local_temp_dir:
+            downloaded_chunk = download_chunk(filename, local_temp_dir)
+            extract_chunk(filename, downloaded_chunk, local_temp_dir)
+            transform_chunk(local_temp_dir)
 
     return [{
         'type': 'import_mlhd_dump',
