@@ -18,10 +18,9 @@ def download_mlhd_plus_dump_file(filename, dest):
     curl = pycurl.Curl()
     download_path = f"{config.MLHD_PLUS_DUMP_URI}/{filename}"
     curl.setopt(pycurl.URL, download_path)
-    with open(dest, "wb") as f:
-        curl.setopt(pycurl.WRITEDATA, f)
-        curl.perform()
-        curl.close()
+    curl.setopt(pycurl.WRITEDATA, dest)
+    curl.perform()
+    curl.close()
 
     logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
 
