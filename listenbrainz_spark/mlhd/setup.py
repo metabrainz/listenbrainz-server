@@ -92,13 +92,14 @@ def import_mlhd_dump_to_hdfs():
     #     "8", "9", "a", "b", "c", "d", "e", "f"
     # ]
     # MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
-    MLHD_PLUS_FILES = ["mlhdplus-complete-0.tar"]
-    for filename in MLHD_PLUS_FILES:
-        with tempfile.TemporaryDirectory() as local_temp_dir:
-            downloaded_chunk = download_chunk(filename, local_temp_dir)
-            extract_chunk(filename, downloaded_chunk, local_temp_dir)
-            df = transform_chunk(local_temp_dir)
-            upload_chunk(df)
+    # MLHD_PLUS_FILES = ["mlhdplus-complete-0.tar"]
+    # for filename in MLHD_PLUS_FILES:
+    #     with tempfile.TemporaryDirectory() as local_temp_dir:
+    #         downloaded_chunk = download_chunk(filename, local_temp_dir)
+    #         extract_chunk(filename, downloaded_chunk, local_temp_dir)
+    local_temp_dir = "/data/python-tmp/tmp9t5avji8/"
+    df = transform_chunk(local_temp_dir)
+    upload_chunk(df)
 
     return [{
         'type': 'import_mlhd_dump',
