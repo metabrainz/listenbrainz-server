@@ -21,10 +21,14 @@ logger = logging.getLogger(__name__)
 
 def upload_chunk(df):
     """ Upload a chunk of processed MLHD+ dumps to HDFS """
+    logger.info("Uploading transformed MLHD+ chunk ...")
+    t0 = time.monotonic()
     listenbrainz_spark.session.createDataFrame(df, schema=mlhd_schema)\
         .write\
         .mode("append")\
         .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_DATA_DIRECTORY)
+    time_taken = time.monotonic() - t0
+    logger.info(f"Done! Files uploaded. Time taken: {time_taken:.2f}")
 
 
 def transform_chunk(location) -> pandas.DataFrame:
@@ -34,6 +38,9 @@ def transform_chunk(location) -> pandas.DataFrame:
     is not amenable to HDFS storage and processing. Therefore, we transform the csv files to a smaller
     number of large parquet files. Further, also add the user_id as a column to the parquet file.
     """
+    logger.info(f"Transforming MLHD+ extracted listen files ...")
+    t0 = time.monotonic()
+
     dfs = []
     pattern = os.path.join(location, "**", "*.txt.zst")
     for file in glob(pattern, recursive=True):
@@ -44,7 +51,11 @@ def transform_chunk(location) -> pandas.DataFrame:
         df = pandas.read_csv(file, sep="\t")
         df.insert(0, "user_id", user_id)
         dfs.append(df)
-    return pandas.concat(dfs)
+    final_df = pandas.concat(dfs)
+
+    time_taken = time.monotonic() - t0
+    logger.info(f"Done! Files transformed. Time taken: {time_taken:.2f}")
+    return final_df
 
 
 def extract_chunk(filename, archive, destination):
