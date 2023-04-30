@@ -19,19 +19,7 @@ from listenbrainz_spark.schema import mlhd_schema
 logger = logging.getLogger(__name__)
 
 
-def upload_chunk(df):
-    """ Upload a chunk of processed MLHD+ dumps to HDFS """
-    logger.info("Uploading transformed MLHD+ chunk ...")
-    t0 = time.monotonic()
-    listenbrainz_spark.session.createDataFrame(df, schema=mlhd_schema)\
-        .write\
-        .mode("append")\
-        .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_DATA_DIRECTORY)
-    time_taken = time.monotonic() - t0
-    logger.info(f"Done! Files uploaded. Time taken: {time_taken:.2f}")
-
-
-def transform_chunk(location) -> pandas.DataFrame:
+def transform_chunk(location):
     """ Transform the extracted MLHD+ chunk.
 
     The source dump is a bunch of small compressed csv files (one per user). However, this format
@@ -41,28 +29,30 @@ def transform_chunk(location) -> pandas.DataFrame:
     logger.info(f"Transforming MLHD+ extracted listen files ...")
     t0 = time.monotonic()
 
-    total_files = 0
+    for directory in os.listdir(location):
+        pattern = os.path.join(location, directory, "*.txt.zst")
+        dfs = []
 
-    dfs = []
-    pattern = os.path.join(location, "**", "*.txt.zst")
-    for file in glob(pattern, recursive=True):
-        # the user id is the name of the csv file, every user has its own file
-        user_id = Path(file).stem
-        # convert csv to parquet using pandas because spark workers cannot access
-        # csv files on leader's local file system
-        df = pandas.read_csv(file, sep="\t")
-        df.insert(0, "user_id", user_id)
-        dfs.append(df)
-        total_files += 1
+        for file in glob(pattern):
+            # the user id is the name of the csv file, every user has its own file
+            user_id = Path(file).stem
+            # convert csv to parquet using pandas because spark workers cannot access
+            # csv files on leader's local file system
+            df = pandas.read_csv(file, sep="\t")
+            df.insert(0, "user_id", user_id)
+            dfs.append(df)
 
-        if total_files % 1000 == 0:
-            logger.info(f"Done {total_files} files")
+        final_df = pandas.concat(dfs)
+        listenbrainz_spark.session.createDataFrame(final_df, schema=mlhd_schema)\
+            .repartition(1)\
+            .write\
+            .mode("append")\
+            .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_DATA_DIRECTORY)
 
-    final_df = pandas.concat(dfs)
+        logger.info(f"Processed directory: {pattern}")
 
     time_taken = time.monotonic() - t0
     logger.info(f"Done! Files transformed. Time taken: {time_taken:.2f}")
-    return final_df
 
 
 def extract_chunk(filename, archive, destination):
@@ -116,8 +106,7 @@ def import_mlhd_dump_to_hdfs():
     #         downloaded_chunk = download_chunk(filename, local_temp_dir)
     #         extract_chunk(filename, downloaded_chunk, local_temp_dir)
     local_temp_dir = "/data/python-tmp/tmp9t5avji8/"
-    df = transform_chunk(local_temp_dir)
-    upload_chunk(df)
+    transform_chunk(local_temp_dir)
 
     return [{
         'type': 'import_mlhd_dump',
