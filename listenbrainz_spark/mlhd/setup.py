@@ -11,8 +11,6 @@ from pathlib import Path
 import pandas
 import pycurl
 
-import pyspark.pandas as ps
-
 import listenbrainz_spark
 from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
@@ -51,9 +49,7 @@ def transform_chunk(location):
         final_df = pandas.concat(dfs)
         logger.info("Concatenated df in pandas")
 
-        ps\
-            .from_pandas(final_df)\
-            .to_spark()\
+        listenbrainz_spark.session.createDataFrame(final_df, schema=mlhd_schema)\
             .repartition(1)\
             .write\
             .mode("append")\
@@ -110,13 +106,12 @@ def import_mlhd_dump_to_hdfs():
     #     "8", "9", "a", "b", "c", "d", "e", "f"
     # ]
     # MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
-    # MLHD_PLUS_FILES = ["mlhdplus-complete-0.tar"]
-    # for filename in MLHD_PLUS_FILES:
-    #     with tempfile.TemporaryDirectory() as local_temp_dir:
-    #         downloaded_chunk = download_chunk(filename, local_temp_dir)
-    #         extract_chunk(filename, downloaded_chunk, local_temp_dir)
-    local_temp_dir = "/data/python-tmp/tmp9t5avji8/"
-    transform_chunk(local_temp_dir)
+    MLHD_PLUS_FILES = ["mlhdplus-complete-0.tar"]
+    for filename in MLHD_PLUS_FILES:
+        local_temp_dir = tempfile.mkdtemp()
+        downloaded_chunk = download_chunk(filename, local_temp_dir)
+        extract_chunk(filename, downloaded_chunk, local_temp_dir)
+        transform_chunk(local_temp_dir)
 
     return [{
         'type': 'import_mlhd_dump',
