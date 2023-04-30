@@ -42,28 +42,26 @@ def transform_chunk(destination):
         df = df.withColumn("user_id", user_id)
         combined_df.union(df)
 
+    return combined_df
+
 
 def extract_chunk(archive, destination):
     """ Extract one chunk of MLHD+ dump. """
     total_files = 0
-    total_time = 0.0
+    t0 = time.monotonic()
+
     with tarfile.open(archive, mode='r') as tar:
         for member in tar:
             if member.isfile() and member.name.endswith(".txt.zst"):
-                logger.info(f"Uploading {member.name}...")
-                t0 = time.monotonic()
-
                 try:
                     tar.extract(member, path=destination)
                 except tarfile.TarError as err:
                     shutil.rmtree(destination, ignore_errors=True)
                     raise DumpInvalidException(f"{type(err).__name__} while extracting {member.name}, aborting import")
-
-                time_taken = time.monotonic() - t0
                 total_files += 1
-                total_time += time_taken
-                logger.info(f"Done! Current file processed in {time_taken:.2f} sec")
-    logger.info(f"Done! Total files processed {total_files}. Average time taken: {total_time / total_files:.2f}")
+
+    time_taken = time.monotonic() - t0
+    logger.info(f"Done! Total files processed {total_files}. Time taken: {time_taken:.2f}")
 
 
 def download_chunk(filename, dest) -> str:
@@ -95,7 +93,8 @@ def import_mlhd_dump_to_hdfs():
     for file in MLHD_PLUS_FILES:
         with tempfile.TemporaryDirectory() as local_temp_dir:
             file_dest = download_chunk(file, local_temp_dir)
-            df = extract_chunk(file_dest, local_temp_dir)
+            extract_chunk(file_dest, local_temp_dir)
+            df = transform_chunk(file_dest)
             upload_chunk(df)
 
     return [{
