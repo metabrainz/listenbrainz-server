@@ -5,11 +5,11 @@ from pyspark.sql.types import StructField, StructType, ArrayType, StringType, Ti
 
 
 mlhd_schema = StructType([
+    StructField('user_id', StringType(), nullable=False),
     StructField('listened_at', TimestampType(), nullable=False),
     StructField('artist_credit_mbids', ArrayType(StringType()), nullable=False),
     StructField('release_mbid', StringType(), nullable=False),
-    StructField('recording_mbid', StringType(), nullable=False),
-    StructField('user_id', StringType(), nullable=False)
+    StructField('recording_mbid', StringType(), nullable=False)
 ])
 
 listens_new_schema = StructType([
