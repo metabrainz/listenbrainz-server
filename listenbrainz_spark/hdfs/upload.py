@@ -114,7 +114,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
     def upload_mlhd_dump_chunk(self, archive: str):
         """ Upload MLHD+ dump to HDFS """
-        dest_path = path.MLHD_PLUS_DATA_DIRECTORY
+        dest_path = path.MLHD_PLUS_RAW_DATA_DIRECTORY
 
         # Check if parent directory exists, if not create a directory
         dest_path_parent = str(Path(dest_path).parent)
