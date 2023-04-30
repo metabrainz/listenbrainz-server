@@ -8,6 +8,7 @@ from datetime import datetime
 from glob import glob
 from pathlib import Path
 
+import pandas
 import pycurl
 
 import listenbrainz_spark
@@ -20,34 +21,35 @@ logger = logging.getLogger(__name__)
 
 def upload_chunk(df):
     """ Upload a chunk of processed MLHD+ dumps to HDFS """
-    df\
+    listenbrainz_spark.session.createDataFrame(df, schema=mlhd_schema)\
         .write\
         .mode("append")\
         .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_DATA_DIRECTORY)
 
 
-def transform_chunk(destination):
+def transform_chunk(location) -> pandas.DataFrame:
     """ Transform the extracted MLHD+ chunk.
 
     The source dump is a bunch of small compressed csv files (one per user). However, this format
     is not amenable to HDFS storage and processing. Therefore, we transform the csv files to a smaller
     number of large parquet files. Further, also add the user_id as a column to the parquet file.
     """
-    combined_df = listenbrainz_spark.session.createDataFrame([], schema=mlhd_schema)
-
-    pattern = os.path.join(destination, "**", "*.txt.zst")
+    dfs = []
+    pattern = os.path.join(location, "**", "*.txt.zst")
     for file in glob(pattern, recursive=True):
-        user_id = Path(file).stem  # the user id is the name of the csv file, every user has its own file
-        df = listenbrainz_spark.sql_context.read.csv(f"file://{file}", sep="\t")
-        df = df.withColumn("user_id", user_id)
-        combined_df.union(df)
+        # the user id is the name of the csv file, every user has its own file
+        user_id = Path(file).stem
+        # convert csv to parquet using pandas because spark workers cannot access
+        # csv files on leader's local file system
+        df = pandas.read_csv(file, sep="\t")
+        df.insert(0, "user_id", user_id)
+        dfs.append(df)
+    return pandas.concat(dfs)
 
-    return combined_df
 
-
-def extract_chunk(archive, destination):
+def extract_chunk(filename, archive, destination):
     """ Extract one chunk of MLHD+ dump. """
-    logger.info(f"Extracting MLHD+ listen file {archive} ...")
+    logger.info(f"Extracting MLHD+ listen file {filename} ...")
     total_files = 0
     t0 = time.monotonic()
 
@@ -91,10 +93,10 @@ def import_mlhd_dump_to_hdfs():
     # ]
     # MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
     MLHD_PLUS_FILES = ["mlhdplus-complete-0.tar"]
-    for file in MLHD_PLUS_FILES:
+    for filename in MLHD_PLUS_FILES:
         with tempfile.TemporaryDirectory() as local_temp_dir:
-            downloaded_chunk = download_chunk(file, local_temp_dir)
-            extract_chunk(downloaded_chunk, local_temp_dir)
+            downloaded_chunk = download_chunk(filename, local_temp_dir)
+            extract_chunk(filename, downloaded_chunk, local_temp_dir)
             df = transform_chunk(local_temp_dir)
             upload_chunk(df)
 
