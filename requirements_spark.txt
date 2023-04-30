@@ -13,3 +13,4 @@ more-itertools==8.8.0
 pycountry==22.3.5
 pycurl==7.45.2
 pandas==2.0.1
+zstandard==0.21.0
