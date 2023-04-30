@@ -45,9 +45,9 @@ def transform_chunk(location):
                 names=["listened_at", "artist_credit_mbids", "release_mbid", "recording_mbid"]
             )
             df.insert(0, "user_id", user_id)
+            df["listened_at"] = pandas.to_datetime(df["listened_at"], unit="s")
             dfs.append(df)
         final_df = pandas.concat(dfs)
-        logger.info("Concatenated df in pandas")
 
         listenbrainz_spark.session.createDataFrame(final_df, schema=mlhd_schema)\
             .repartition(1)\
@@ -108,10 +108,10 @@ def import_mlhd_dump_to_hdfs():
     # MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
     MLHD_PLUS_FILES = ["mlhdplus-complete-0.tar"]
     for filename in MLHD_PLUS_FILES:
-        local_temp_dir = tempfile.mkdtemp()
-        downloaded_chunk = download_chunk(filename, local_temp_dir)
-        extract_chunk(filename, downloaded_chunk, local_temp_dir)
-        transform_chunk(local_temp_dir)
+        # local_temp_dir = tempfile.mkdtemp()
+        # downloaded_chunk = download_chunk(filename, local_temp_dir)
+        # extract_chunk(filename, downloaded_chunk, local_temp_dir)
+        transform_chunk("/data/python-tmp/tmp9t5avji8")
 
     return [{
         'type': 'import_mlhd_dump',
