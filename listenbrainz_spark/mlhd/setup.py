@@ -38,7 +38,12 @@ def transform_chunk(location):
             user_id = Path(file).stem
             # convert csv to parquet using pandas because spark workers cannot access
             # csv files on leader's local file system
-            df = pandas.read_csv(file, sep="\t", names=["listened_at", "artist_credit_mbids", "release_mbid", "recording_mbid"])
+            df = pandas.read_csv(
+                file,
+                # mlhd+ files are tab separated and do not have a header row
+                sep="\t",
+                names=["listened_at", "artist_credit_mbids", "release_mbid", "recording_mbid"]
+            )
             df.insert(0, "user_id", user_id)
             dfs.append(df)
         final_df = pandas.concat(dfs)
