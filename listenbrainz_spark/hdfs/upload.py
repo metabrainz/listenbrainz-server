@@ -126,9 +126,8 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
         logger.info(f"Moving the processed files from {src_path} to {archive_dest_path}")
         t0 = time.monotonic()
-
         rename(src_path, archive_dest_path)
-        utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
+        logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
     def upload_archive_to_temp(self, archive: str, extension: str) -> str:
         """ Upload parquet files in archive to a temporary hdfs directory
