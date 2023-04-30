@@ -11,6 +11,8 @@ from pathlib import Path
 import pandas
 import pycurl
 
+import pyspark.pandas as ps
+
 import listenbrainz_spark
 from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
@@ -49,7 +51,9 @@ def transform_chunk(location):
         final_df = pandas.concat(dfs)
         logger.info("Concatenated df in pandas")
 
-        listenbrainz_spark.session.createDataFrame(final_df, schema=mlhd_schema)\
+        ps\
+            .from_pandas(final_df)\
+            .to_spark()\
             .repartition(1)\
             .write\
             .mode("append")\
