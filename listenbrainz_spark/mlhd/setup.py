@@ -31,8 +31,8 @@ def transform_chunk(location):
 
     for directory in os.listdir(location):
         pattern = os.path.join(location, directory, "*.txt.zst")
-        dfs = []
 
+        dfs = []
         for file in glob(pattern):
             # the user id is the name of the csv file, every user has its own file
             user_id = Path(file).stem
@@ -41,10 +41,10 @@ def transform_chunk(location):
             df = pandas.read_csv(file, sep="\t")
             df.insert(0, "user_id", user_id)
             dfs.append(df)
-
         final_df = pandas.concat(dfs)
+        logger.info("Concatenated df in pandas")
+
         listenbrainz_spark.session.createDataFrame(final_df, schema=mlhd_schema)\
-            .repartition(1)\
             .write\
             .mode("append")\
             .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_DATA_DIRECTORY)
