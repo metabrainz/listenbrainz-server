@@ -1,18 +1,72 @@
 import logging
 import os
+import shutil
+import tarfile
 import tempfile
 import time
 from datetime import datetime
+from glob import glob
+from pathlib import Path
 
 import pycurl
 
-from listenbrainz_spark import config
-from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
+import listenbrainz_spark
+from listenbrainz_spark import config, path
+from listenbrainz_spark.exceptions import DumpInvalidException
+from listenbrainz_spark.schema import mlhd_schema
 
 logger = logging.getLogger(__name__)
 
 
-def download_mlhd_plus_dump_file(filename, dest) -> str:
+def upload_chunk(df):
+    """ Upload a chunk of processed MLHD+ dumps to HDFS """
+    df\
+        .write\
+        .mode("append")\
+        .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_DATA_DIRECTORY)
+
+
+def transform_chunk(destination):
+    """ Transform the extracted MLHD+ chunk.
+
+    The source dump is a bunch of small compressed csv files (one per user). However, this format
+    is not amenable to HDFS storage and processing. Therefore, we transform the csv files to a smaller
+    number of large parquet files. Further, also add the user_id as a column to the parquet file.
+    """
+    combined_df = listenbrainz_spark.session.createDataFrame([], schema=mlhd_schema)
+
+    pattern = os.path.join(destination, "**", "*.txt.zst")
+    for file in glob(pattern, recursive=True):
+        user_id = Path(file).stem  # the user id is the name of the csv file, every user has its own file
+        df = listenbrainz_spark.sql_context.read.csv(f"file://{file}", sep="\t")
+        df = df.withColumn("user_id", user_id)
+        combined_df.union(df)
+
+
+def extract_chunk(archive, destination):
+    """ Extract one chunk of MLHD+ dump. """
+    total_files = 0
+    total_time = 0.0
+    with tarfile.open(archive, mode='r') as tar:
+        for member in tar:
+            if member.isfile() and member.name.endswith(".txt.zst"):
+                logger.info(f"Uploading {member.name}...")
+                t0 = time.monotonic()
+
+                try:
+                    tar.extract(member, path=destination)
+                except tarfile.TarError as err:
+                    shutil.rmtree(destination, ignore_errors=True)
+                    raise DumpInvalidException(f"{type(err).__name__} while extracting {member.name}, aborting import")
+
+                time_taken = time.monotonic() - t0
+                total_files += 1
+                total_time += time_taken
+                logger.info(f"Done! Current file processed in {time_taken:.2f} sec")
+    logger.info(f"Done! Total files processed {total_files}. Average time taken: {total_time / total_files:.2f}")
+
+
+def download_chunk(filename, dest) -> str:
     """ Download one chunk of MLHD+ dump and return the path of its download location """
     t0 = time.monotonic()
     logger.info(f"Downloading MLHD+ listen file {filename} ...")
@@ -38,12 +92,11 @@ def import_mlhd_dump_to_hdfs():
     # ]
     # MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
     MLHD_PLUS_FILES = ["mlhdplus-complete-0.tar"]
-    uploader = ListenbrainzDataUploader()
     for file in MLHD_PLUS_FILES:
         with tempfile.TemporaryDirectory() as local_temp_dir:
-            file_dest = download_mlhd_plus_dump_file(file, local_temp_dir)
-            uploader.upload_mlhd_dump_chunk(file_dest)
-            os.remove(file_dest)
+            file_dest = download_chunk(file, local_temp_dir)
+            df = extract_chunk(file_dest, local_temp_dir)
+            upload_chunk(df)
 
     return [{
         'type': 'import_mlhd_dump',
