@@ -11,16 +11,19 @@ def get_users_to_update() -> list[dict]:
     """ Retrieve users who have a connected spotify account but we don't have the spotify user id for them. """
     current_app.logger.info("Fetching users to retrieve spotify user ids for")
     query = """
-        SELECT user_id
+        SELECT eso.user_id
              , musicbrainz_id
              , access_token
              , refresh_token
              , token_expires
-          FROM external_service_oauth
+          FROM external_service_oauth eso
           JOIN "user"
-            ON "user".id = external_service_oauth.user_id
-         WHERE service = 'spotify'
+            ON "user".id = eso.user_id
+     LEFT JOIN listens_importer li
+            ON "user".id = li.user_id
+         WHERE eso.service = 'spotify'
            AND external_user_id IS NULL
+           AND error_message IS NULL
     """
     with db.engine.connect() as connection:
         result = connection.execute(text(query))
