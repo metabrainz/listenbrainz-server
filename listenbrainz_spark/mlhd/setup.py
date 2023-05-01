@@ -134,12 +134,13 @@ def download_chunk(filename, dest) -> str:
 def import_mlhd_dump_to_hdfs():
     """ Import the MLHD+ dump. """
     MLHD_PLUS_CHUNKS = [
-        "0", "1", "2", "3", "4", "5", "6", "7",
-        "8", "9", "a", "b", "c", "d", "e", "f"
+        # "0", "1", "2", "3", "4", "5", "6", "7",
+        # "8", "9", "a", "b", "c", "d",
+        "e", "f"
     ]
     MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
 
-    delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
+    # delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
 
     for filename in MLHD_PLUS_FILES:
         with tempfile.TemporaryDirectory() as local_temp_dir:
