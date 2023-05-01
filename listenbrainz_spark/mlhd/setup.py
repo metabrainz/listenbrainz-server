@@ -29,12 +29,15 @@ def transform_chunk(location):
     t0 = time.monotonic()
 
     for directory in os.listdir(location):
+        if not os.path.isdir(os.path.join(location, directory)):
+            continue
+
         pattern = os.path.join(location, directory, "*.txt.zst")
 
         dfs = []
         for file in glob(pattern):
             # the user id is the name of the csv file, every user has its own file
-            user_id = Path(file).stem
+            user_id = Path(file).name.split(".")[0]
             # convert csv to parquet using pandas because spark workers cannot access
             # csv files on leader's local file system
             df = pandas.read_csv(
@@ -45,6 +48,10 @@ def transform_chunk(location):
             )
             df.insert(0, "user_id", user_id)
             dfs.append(df)
+
+        if not dfs:
+            logger.info(f"Processed directory: {pattern} but no dump files found")
+
         final_df = pandas.concat(dfs)
 
         local_path = os.path.join(location, f"{directory}.parquet")
