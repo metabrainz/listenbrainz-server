@@ -27,7 +27,7 @@ def post_process_mlhd_plus():
     field is converted to an array of mbids instead of a comma separated string.
     """
     table = "raw_mlhd_data"
-    query = """
+    query = f"""
         SELECT user_id
              , to_timestamp(listened_at) AS listened_at
              , split(artist_credit_mbids, ',') AS artist_credit_mbids
@@ -135,8 +135,7 @@ def import_mlhd_dump_to_hdfs():
     """ Import the MLHD+ dump. """
     MLHD_PLUS_CHUNKS = [
         # "0", "1", "2", "3", "4", "5", "6", "7",
-        # "8", "9", "a", "b", "c", "d", "e",
-        "f"
+        # "8", "9", "a", "b", "c", "d", "e", "f"
     ]
     MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
 
