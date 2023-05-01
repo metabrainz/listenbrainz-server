@@ -135,8 +135,8 @@ def import_mlhd_dump_to_hdfs():
     """ Import the MLHD+ dump. """
     MLHD_PLUS_CHUNKS = [
         # "0", "1", "2", "3", "4", "5", "6", "7",
-        # "8", "9", "a", "b", "c", "d",
-        "e", "f"
+        # "8", "9", "a", "b", "c", "d", "e",
+        "f"
     ]
     MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
 
