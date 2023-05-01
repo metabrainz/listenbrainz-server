@@ -13,9 +13,35 @@ import pycurl
 
 from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
-from listenbrainz_spark.hdfs import upload_to_HDFS
+from listenbrainz_spark.hdfs import upload_to_HDFS, delete_dir
+from listenbrainz_spark.stats import run_query
+from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
+
+
+def post_process_mlhd_plus():
+    """ Post process the MLHD+ dump loaded into spark.
+
+    The listened_at field has to be converted into a Timestamp Field and the artist_credit_mbids
+    field is converted to an array of mbids instead of a comma separated string.
+    """
+    table = "raw_mlhd_data"
+    query = """
+        SELECT user_id
+             , to_timestamp(listened_at) AS listened_at
+             , split(artist_credit_mbids, ',') AS artist_credit_mbids
+             , release_mbid
+             , recording_mbid
+          FROM {table}
+    """
+
+    read_files_from_HDFS(path.MLHD_PLUS_RAW_DATA_DIRECTORY).createOrReplaceTempView(table)
+    run_query(query)\
+        .repartition(2000, "user_id")\
+        .write\
+        .mode("overwrite")\
+        .parquet(path.MLHD_PLUS_DATA_DIRECTORY)
 
 
 def transform_chunk(location):
@@ -55,7 +81,7 @@ def transform_chunk(location):
         final_df = pandas.concat(dfs)
 
         local_path = os.path.join(location, f"{directory}.parquet")
-        final_df.to_parquet(local_path)
+        final_df.to_parquet(local_path, index=False)
 
         hdfs_path = os.path.join(path.MLHD_PLUS_RAW_DATA_DIRECTORY, f"{directory}.parquet")
         upload_to_HDFS(hdfs_path, local_path)
@@ -112,11 +138,15 @@ def import_mlhd_dump_to_hdfs():
         "8", "9", "a", "b", "c", "d", "e", "f"
     ]
     MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
+
     for filename in MLHD_PLUS_FILES:
         with tempfile.TemporaryDirectory() as local_temp_dir:
             downloaded_chunk = download_chunk(filename, local_temp_dir)
             extract_chunk(filename, downloaded_chunk, local_temp_dir)
             transform_chunk(local_temp_dir)
+
+    post_process_mlhd_plus()
+    delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
 
     return [{
         'type': 'import_mlhd_dump',
