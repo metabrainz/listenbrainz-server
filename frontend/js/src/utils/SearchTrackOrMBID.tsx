@@ -82,10 +82,10 @@ export default function SearchTrackOrMBID({
           )![2].toLowerCase();
 
           try {
-            const lookupResult: MusicBrainzRecording = await lookupMBRecording(
+            const lookupResult: MusicBrainzRecordingWithReleases = (await lookupMBRecording(
               newRecordingMBID,
               "artists+releases"
-            );
+            )) as MusicBrainzRecordingWithReleases;
             const newMetadata: TrackMetadata = {
               track_name: lookupResult.title,
               artist_name: lookupResult["artist-credit"]
@@ -100,7 +100,7 @@ export default function SearchTrackOrMBID({
                   (ac) => ac.artist.name
                 ),
                 recording_mbid: lookupResult.id,
-                release_mbid: lookupResult.releases?.[0]?.id,
+                release_mbid: lookupResult.releases[0]?.id,
               },
             };
             onSelectRecording(newMetadata);
