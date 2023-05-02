@@ -111,7 +111,7 @@ export default class Listens extends React.Component<
     this.listensTable = React.createRef();
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService } = this.context;
@@ -126,21 +126,22 @@ export default class Listens extends React.Component<
     const { user } = this.props;
     // Get the user listen count
     if (user?.name) {
-      try {
-        const listenCount = await this.APIService.getUserListenCount(user.name);
-        this.setState({ listenCount });
-      } catch (error) {
-        newAlert(
-          "danger",
-          "Sorry, we couldn't load your listens count…",
-          error?.toString()
-        );
-      }
-      await this.getFollowing();
+      this.APIService.getUserListenCount(user.name)
+        .then((listenCount) => {
+          this.setState({ listenCount });
+        })
+        .catch((error) => {
+          newAlert(
+            "danger",
+            "Sorry, we couldn't load your listens count…",
+            error?.toString()
+          );
+        });
     }
     if (playingNowListen) {
       this.receiveNewPlayingNow(playingNowListen);
     }
+    this.getFollowing();
     this.loadFeedback();
   }
 
