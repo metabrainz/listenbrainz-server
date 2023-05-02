@@ -1,7 +1,7 @@
 .lb-follow-button {
   // This isn't named 'follow-button' because some ad blocker rules
   // remove elements with this class name.
-  margin-left: 10px;
+  &:not(:first-child){margin-left: 10px;}
   font-family: "Sintony", sans-serif;
   color: @white;
   background: @blue;
