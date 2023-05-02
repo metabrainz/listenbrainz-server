@@ -7,7 +7,7 @@
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
-    <a class="navbar-logo" href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) if current_user.is_authenticated else url_for('index.index') }}">
+    <a class="navbar-logo" href="{{ url_for('index.index') }}">
       <img src="{{ url_for('static', filename='img/navbar_logo.svg') }}" alt="ListenBrainz" height="31"/>
     </a>
   </div>
