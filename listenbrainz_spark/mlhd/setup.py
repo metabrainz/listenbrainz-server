@@ -38,7 +38,7 @@ def post_process_mlhd_plus():
 
     read_files_from_HDFS(path.MLHD_PLUS_RAW_DATA_DIRECTORY).createOrReplaceTempView(table)
     run_query(query)\
-        .repartition(2000, "user_id")\
+        .repartition(10000, "user_id")\
         .write\
         .mode("overwrite")\
         .parquet(path.MLHD_PLUS_DATA_DIRECTORY)
@@ -134,21 +134,21 @@ def download_chunk(filename, dest) -> str:
 def import_mlhd_dump_to_hdfs():
     """ Import the MLHD+ dump. """
     MLHD_PLUS_CHUNKS = [
-        # "0", "1", "2", "3", "4", "5", "6", "7",
-        # "8", "9", "a", "b", "c", "d", "e", "f"
+        "0", "1", "2", "3", "4", "5", "6", "7",
+        "8", "9", "a", "b", "c", "d", "e", "f"
     ]
     MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
 
     # delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
 
-    for filename in MLHD_PLUS_FILES:
-        with tempfile.TemporaryDirectory() as local_temp_dir:
-            downloaded_chunk = download_chunk(filename, local_temp_dir)
-            extract_chunk(filename, downloaded_chunk, local_temp_dir)
-            transform_chunk(local_temp_dir)
+    # for filename in MLHD_PLUS_FILES:
+    #     with tempfile.TemporaryDirectory() as local_temp_dir:
+    #         downloaded_chunk = download_chunk(filename, local_temp_dir)
+    #         extract_chunk(filename, downloaded_chunk, local_temp_dir)
+    #         transform_chunk(local_temp_dir)
 
     post_process_mlhd_plus()
-    delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
+    # delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
 
     return [{
         'type': 'import_mlhd_dump',
