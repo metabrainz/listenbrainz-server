@@ -22,6 +22,34 @@ declare type MusicBrainzArtistCredit = {
   };
 };
 
+declare type MusicBrainzReleaseGroup = {
+  title: string;
+  id: string;
+  disambiguation: string;
+  "first-release-date": string;
+  "primary-type": string;
+  "primary-type-id": string;
+  "secondary-types": string[];
+  "secondary-type-ids": string[];
+};
+
+declare type MusicBrainzTrack = {
+  number: string;
+  length: number;
+  position: number;
+  title: string;
+  id: string;
+  recording: Omit<MusicBrainzRecording, "artist-credit">;
+};
+declare type MusicBrainzMedia = {
+  title: string;
+  position: number;
+  tracks: Array<MusicBrainzTrack>;
+  format: string;
+  "format-id": string;
+  "track-offset": number;
+  "track-count": number;
+};
 declare type MusicBrainzRelease = {
   title: string;
   id: string;
@@ -35,6 +63,13 @@ declare type MusicBrainzRelease = {
   quality: string;
   country: string;
 };
+declare type MusicBrainzReleaseWithMedia = MusicBrainzRelease & {
+  media: Array<MusicBrainzMedia>;
+};
+// With ?inc=release-groups
+declare type MusicBrainzReleaseWithReleaseGroup = MusicBrainzRelease & {
+  "release-group": MusicBrainzReleaseGroup;
+};
 
 declare type MusicBrainzRecording = {
   title: string;
@@ -44,7 +79,10 @@ declare type MusicBrainzRecording = {
   video: boolean;
   disambiguation: string;
   "artist-credit": Array<MusicBrainzArtistCredit>;
-  releases?: Array<MusicBrainzRelease>;
+};
+// With ?inc=releases
+declare type MusicBrainzRecordingWithReleases = MusicBrainzRecording & {
+  releases: Array<MusicBrainzRelease>;
 };
 
 declare type MusicBrainzRecordingRel = {

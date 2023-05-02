@@ -97,6 +97,7 @@ export default class ListenCard extends React.Component<
   ListenCardState
 > {
   static addCoverArtThumbnailSrc: string = "/static/img/add-cover-art.svg";
+  static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -134,11 +135,12 @@ export default class ListenCard extends React.Component<
   }
 
   async getCoverArt() {
-    const { spotifyAuth } = this.context;
+    const { spotifyAuth, APIService } = this.context;
     const { listen } = this.props;
     const albumArtSrc = await getAlbumArtFromListenMetadata(
       listen,
-      spotifyAuth
+      spotifyAuth,
+      APIService
     );
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
@@ -192,11 +194,7 @@ export default class ListenCard extends React.Component<
     const { APIService, currentUser } = this.context;
 
     if (currentUser?.auth_token) {
-      const metadata: UserTrackRecommendationMetadata = {
-        artist_name: getArtistName(listen),
-        track_name: getTrackName(listen),
-        release_name: get(listen, "track_metadata.release_name"),
-      };
+      const metadata: UserTrackRecommendationMetadata = {};
 
       const recording_mbid = getRecordingMBID(listen);
       if (recording_mbid) {
@@ -218,7 +216,7 @@ export default class ListenCard extends React.Component<
           newAlert(
             "success",
             `You recommended a track to your followers!`,
-            `${metadata.artist_name} - ${metadata.track_name}`
+            `${getArtistName(listen)} - ${getTrackName(listen)}`
           );
         }
       } catch (error) {
@@ -369,7 +367,7 @@ export default class ListenCard extends React.Component<
           </div>
         </a>
       );
-    } else {
+    } else if (!recordingMBID) {
       const openModal = () => {
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
@@ -392,6 +390,25 @@ export default class ListenCard extends React.Component<
             <FontAwesomeIcon icon={faLink} />
           </div>
         </div>
+      );
+    } else {
+      // Edge case: has no thumbnail, has a recording_mbid
+      // but no release_mbid for some reason
+      thumbnail = (
+        <a
+          href={`https://musicbrainz.org/recording/${recordingMBID}`}
+          title="Open in MusicBrainz"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="listen-thumbnail"
+        >
+          <div className="cover-art-fallback">
+            <img
+              src={ListenCard.coverartPlaceholder}
+              alt="Open in MusicBrainz"
+            />
+          </div>
+        </a>
       );
     }
 

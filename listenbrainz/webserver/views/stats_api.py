@@ -25,7 +25,7 @@ from listenbrainz.webserver.errors import (APIBadRequest,
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
-                                                    get_non_negative_param)
+                                                    get_non_negative_param, is_valid_uuid)
 
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
@@ -551,6 +551,173 @@ def get_artist_map(user_name: str):
             "artist_map": [x.dict() for x in result.data.__root__]
         }
     })
+
+
+@stats_api_bp.route("/artist/<artist_mbid>/listeners")
+@crossdomain
+@ratelimit()
+def get_artist_listeners(artist_mbid):
+    """ Get top listeners for artist ``artist_mbid``. This includes the total listen count for the entity
+    and top N listeners with their individual listen count for that artist in a given time range. A sample
+    response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_mbid": "00034ede-a1f1-4219-be39-02f36853373e",
+            "artist_name": "O Rappa",
+            "from_ts": 1009843200,
+            "last_updated": 1681839677,
+            "listeners": [
+              {
+                "listen_count": 2469,
+                "user_name": "RosyPsanda"
+              },
+              {
+                "listen_count": 1858,
+                "user_name": "alexyagui"
+              },
+              {
+                "listen_count": 578,
+                "user_name": "rafael_gn"
+              },
+              {
+                "listen_count": 8,
+                "user_name": "italooliveira"
+              },
+              {
+                "listen_count": 7,
+                "user_name": "paulodesouza"
+              },
+              {
+                "listen_count": 1,
+                "user_name": "oldpunisher"
+              }
+            ],
+            "stats_range": "all_time",
+            "to_ts": 1681777035,
+            "total_listen_count": 16393
+          }
+        }
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated or the entity does not exist,
+        empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: Entity not found
+    :resheader Content-Type: *application/json*
+    """
+    return _get_entity_listeners("artists", artist_mbid)
+
+
+@stats_api_bp.route("/release-group/<release_group_mbid>/listeners")
+@crossdomain
+@ratelimit()
+def get_release_group_listeners(release_group_mbid):
+    """ Get top listeners for release group ``release_group_mbid``. This includes the total listen count
+    for the entity and top N listeners with their individual listen count for that release group in a
+    given time range. A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_mbids": [
+              "c234fa42-e6a6-443e-937e-2f4b073538a3"
+            ],
+            "artist_name": "Chris Brown",
+            "caa_id": 23564822587,
+            "caa_release_mbid": "25f18616-5a9c-470e-964d-4eb8a511435b",
+            "from_ts": 1009843200,
+            "last_updated": 1681843150,
+            "listeners": [
+              {
+                "listen_count": 2365,
+                "user_name": "purpleyor"
+              },
+              {
+                "listen_count": 570,
+                "user_name": "dndty"
+              },
+              {
+                "listen_count": 216,
+                "user_name": "iammsyre"
+              },
+              {
+                "listen_count": 141,
+                "user_name": "dpmittal"
+              },
+              {
+                "listen_count": 33,
+                "user_name": "tazlad"
+              },
+              {
+                "listen_count": 30,
+                "user_name": "ratkutti"
+              },
+              {
+                "listen_count": 22,
+                "user_name": "Raymorjamiek"
+              },
+              {
+                "listen_count": 21,
+                "user_name": "MJJMC"
+              },
+              {
+                "listen_count": 12,
+                "user_name": "fookever"
+              },
+              {
+                "listen_count": 8,
+                "user_name": "Jamjamk12071983"
+              },
+              {
+                "listen_count": 1,
+                "user_name": "hassanymoses"
+              },
+              {
+                "listen_count": 1,
+                "user_name": "iJays"
+              }
+            ],
+            "release_group_mbid": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+            "release_group_name": "Indigo",
+            "stats_range": "all_time",
+            "to_ts": 1681777035,
+            "total_listen_count": 10291
+          }
+        }
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated or the entity does not exist,
+        empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: Entity not found
+    :resheader Content-Type: *application/json*
+    """
+    return _get_entity_listeners("release_groups", release_group_mbid)
+
+
+def _get_entity_listeners(entity, mbid):
+    if not is_valid_uuid(mbid):
+        raise APIBadRequest(f"{mbid} mbid format invalid.")
+
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get_entity_listener(entity, mbid, stats_range)
+    if stats is None:
+        raise APINoContent("")
+
+    return jsonify({"payload": stats})
 
 
 @stats_api_bp.route("/sitewide/artists")

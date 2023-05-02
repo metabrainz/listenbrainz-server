@@ -26,7 +26,7 @@ export type MBIDMappingModalProps = {
 };
 
 function getListenFromSelectedRecording(
-  selectedRecording?: MusicBrainzRecording
+  selectedRecording?: MusicBrainzRecordingWithReleases
 ): Listen | undefined {
   if (!selectedRecording) {
     return undefined;
@@ -47,7 +47,7 @@ function getListenFromSelectedRecording(
           (ac) => ac.artist.name
         ),
         recording_mbid: selectedRecording.id,
-        release_mbid: selectedRecording.releases?.[0]?.id,
+        release_mbid: selectedRecording.releases[0]?.id,
       },
     },
   };
@@ -59,7 +59,9 @@ export default NiceModal.create(
 
     const [recordingMBIDInput, setRecordingMBIDInput] = React.useState("");
     const [recordingMBIDValid, setRecordingMBIDValid] = React.useState(true);
-    const [selectedRecording, setSelectedRecording] = React.useState();
+    const [selectedRecording, setSelectedRecording] = React.useState<
+      MusicBrainzRecordingWithReleases
+    >();
 
     const closeModal = React.useCallback(() => {
       modal.hide();
@@ -138,10 +140,10 @@ export default NiceModal.create(
         let newSelectedRecording;
         if (isValidUUID) {
           try {
-            newSelectedRecording = await APIService.lookupMBRecording(
+            newSelectedRecording = (await APIService.lookupMBRecording(
               newRecordingMBID,
               "artists+releases"
-            );
+            )) as MusicBrainzRecordingWithReleases;
           } catch (error) {
             newAlert(
               "warning",

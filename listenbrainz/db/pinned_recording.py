@@ -3,8 +3,7 @@ from datetime import datetime
 
 from listenbrainz import db
 from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
-from typing import List
-
+from typing import List, Iterable
 
 PINNED_REC_GET_COLUMNS = [
     "user_id",
@@ -186,7 +185,7 @@ def get_pins_for_user_following(user_id: int, count: int, offset: int) -> List[P
         return [PinnedRecording(**row) for row in result.mappings()]
 
 
-def get_pins_for_feed(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[PinnedRecording]:
+def get_pins_for_feed(user_ids: Iterable[int], min_ts: int, max_ts: int, count: int) -> List[PinnedRecording]:
     """ Gets a list of PinnedRecordings for specified users in descending order of their created date.
 
     Args:

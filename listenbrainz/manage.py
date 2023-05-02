@@ -15,6 +15,7 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
     delete_listens as ts_delete_listens, \
     delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data, \
     refresh_top_manual_mappings as ts_refresh_top_manual_mappings
+from listenbrainz.domain import spotify_fill_user_id
 from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
 from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
@@ -283,6 +284,16 @@ def listen_add_userid():
     app = create_app()
     with app.app_context():
         timescale_fill_userid.fill_userid()
+
+
+@cli.command()
+def spotify_add_userid():
+    """
+        Fill in the spotify user id using the connected user's oauth token.
+    """
+    app = create_app()
+    with app.app_context():
+        spotify_fill_user_id.main()
 
 
 @cli.command()

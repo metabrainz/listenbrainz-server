@@ -1,6 +1,7 @@
 from flask import current_app
 from flask_login import current_user
 
+from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
 
@@ -36,6 +37,21 @@ def get_current_critiquebrainz_user():
     if not current_user.is_authenticated:
         return {}
     user = CritiqueBrainzService().get_user(current_user.id)
+    if user is None:
+        return {}
+    return {
+        "access_token": user["access_token"],
+    }
+
+
+def get_current_musicbrainz_user():
+    """Returns the musicbrainz access token for the current
+    authenticated user. If the user is unauthenticated or has not
+    linked their musicbrainz account for submitting tags/ratings,
+    returns empty dict."""
+    if not current_user.is_authenticated:
+        return {}
+    user = MusicBrainzService().get_user(current_user.id)
     if user is None:
         return {}
     return {

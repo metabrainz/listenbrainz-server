@@ -43,14 +43,11 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         self.assertListEqual([], events)
 
     def test_it_adds_rows_to_the_database(self):
+        recording_msid = str(uuid.uuid4())
         event = db_user_timeline_event.create_user_timeline_event(
             user_id=self.user['id'],
             event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
-            metadata=RecordingRecommendationMetadata(
-                track_name="Sunflower",
-                artist_name="Swae Lee & Post Malone",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_msid=recording_msid)
         )
         events = db_user_timeline_event.get_user_track_recommendation_events(
             user_id=self.user['id'],
@@ -59,7 +56,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(1, len(events))
         self.assertEqual(event.id, events[0].id)
         self.assertEqual(event.created, events[0].created)
-        self.assertEqual('Sunflower', events[0].metadata.track_name)
+        self.assertEqual(recording_msid, events[0].metadata.recording_msid)
 
     @mock.patch('listenbrainz.db.engine.connect', side_effect=Exception)
     def test_it_raises_database_exceptions_if_something_goes_wrong(self, mock_db_connect):
@@ -67,21 +64,13 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             db_user_timeline_event.create_user_timeline_event(
                 user_id=self.user['id'],
                 event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
-                metadata=RecordingRecommendationMetadata(
-                    track_name="Sunflower",
-                    artist_name="Swae Lee & Post Malone",
-                    recording_msid=str(uuid.uuid4()),
-                )
+                metadata=RecordingRecommendationMetadata(recording_msid=str(uuid.uuid4()))
             )
 
     def test_create_user_track_recommendation_sets_event_type_correctly(self):
         event = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="Sunflower",
-                artist_name="Swae Lee & Post Malone",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_msid=str(uuid.uuid4()))
         )
         self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, event.event_type)
 
@@ -213,21 +202,16 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(1, len(events))
 
     def test_get_events_for_feed_honors_count_parameter(self):
+        recording_msid_1 = str(uuid.uuid4())
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="Sunflower",
-                artist_name="Swae Lee & Post Malone",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_msid=recording_msid_1)
         )
+
+        recording_msid_2 = str(uuid.uuid4())
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="Da Funk",
-                artist_name="Daft Punk",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_msid=recording_msid_2)
         )
 
         events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
@@ -239,17 +223,13 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
 
         # 2 events exist, should return only one, the one that is newer
         self.assertEqual(1, len(events))
-        self.assertEqual('Da Funk', events[0].metadata.track_name)
+        self.assertEqual(recording_msid_2, events[0].metadata.recording_msid)
 
     def test_delete_feed_events(self):
         # creating recording recommendation and checking
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.user['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="All Caps",
-                artist_name="MF DOOM",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_msid=str(uuid.uuid4()))
         )
         self.assertEqual(UserTimelineEventType.RECORDING_RECOMMENDATION, event_rec.event_type)
         self.assertEqual(self.user['id'], event_rec.user_id)
