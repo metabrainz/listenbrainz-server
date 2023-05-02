@@ -282,7 +282,6 @@ export default class MissingMBDataPage extends React.Component<
         </div>
         <BrainzPlayer
           listens={missingMBDataAsListen}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}

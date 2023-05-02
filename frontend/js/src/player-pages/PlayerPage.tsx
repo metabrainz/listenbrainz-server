@@ -309,7 +309,6 @@ export default class PlayerPage extends React.Component<
           </div>
           <BrainzPlayer
             listens={tracks?.map(JSPFTrackToListen)}
-            newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}

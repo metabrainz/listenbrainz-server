@@ -332,7 +332,6 @@ export default class Recommendations extends React.Component<
           </div>
           <BrainzPlayer
             listens={recommendations}
-            newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}

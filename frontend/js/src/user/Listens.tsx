@@ -1042,7 +1042,6 @@ export default class Listens extends React.Component<
         </div>
         <BrainzPlayer
           listens={allListenables}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}

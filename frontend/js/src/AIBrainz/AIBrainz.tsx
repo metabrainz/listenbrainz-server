@@ -340,7 +340,6 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
         </svg>
       </p>
       <BrainzPlayer
-        newAlert={newAlert}
         listens={[totallyInnocentListen]}
         listenBrainzAPIBaseURI={APIService.APIBaseURI}
         refreshSpotifyToken={APIService.refreshSpotifyToken}

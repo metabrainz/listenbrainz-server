@@ -83,7 +83,6 @@ export default class UserTaste extends React.Component<UserTasteProps> {
         </div>
         <BrainzPlayer
           listens={listenables}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
