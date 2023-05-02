@@ -51,9 +51,9 @@ def post_process_mlhd_plus():
             .createOrReplaceTempView(table)
 
         run_query(query)\
-            .partitionBy("user_id")\
             .write\
             .mode("append")\
+            .partitionBy("user_id")\
             .parquet(path.MLHD_PLUS_DATA_DIRECTORY)
 
         logger.info(f"Processed chunk: {chunk}")
