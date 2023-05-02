@@ -11,6 +11,7 @@ from pathlib import Path
 import pandas
 import pycurl
 
+import listenbrainz_spark
 from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.hdfs import upload_to_HDFS, delete_dir
@@ -18,6 +19,11 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
+
+MLHD_PLUS_CHUNKS = [
+    "0", "1", "2", "3", "4", "5", "6", "7",
+    "8", "9", "a", "b", "c", "d", "e", "f"
+]
 
 
 def post_process_mlhd_plus():
@@ -35,13 +41,21 @@ def post_process_mlhd_plus():
              , recording_mbid
           FROM {table}
     """
+    for chunk in MLHD_PLUS_CHUNKS:
+        listenbrainz_spark\
+            .sql_context\
+            .read\
+            .format("parquet")\
+            .option("pathGlobFilter", f"{chunk}*.parquet")\
+            .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_RAW_DATA_DIRECTORY)
 
-    read_files_from_HDFS(path.MLHD_PLUS_RAW_DATA_DIRECTORY).createOrReplaceTempView(table)
-    run_query(query)\
-        .repartition(10000, "user_id")\
-        .write\
-        .mode("overwrite")\
-        .parquet(path.MLHD_PLUS_DATA_DIRECTORY)
+        run_query(query)\
+            .repartition("user_id")\
+            .write\
+            .mode("append")\
+            .parquet(path.MLHD_PLUS_DATA_DIRECTORY)
+
+        logger.info(f"Processed chunk: {chunk}")
 
 
 def transform_chunk(location):
@@ -133,10 +147,6 @@ def download_chunk(filename, dest) -> str:
 
 def import_mlhd_dump_to_hdfs():
     """ Import the MLHD+ dump. """
-    MLHD_PLUS_CHUNKS = [
-        "0", "1", "2", "3", "4", "5", "6", "7",
-        "8", "9", "a", "b", "c", "d", "e", "f"
-    ]
     MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
 
     # delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
