@@ -7,7 +7,7 @@
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
-    <a class="navbar-logo" href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) if current_user.is_authenticated else url_for('index.index') }}">
+    <a class="navbar-logo" href="{{ url_for('index.index', redirect="false") }}">
       <img src="{{ url_for('static', filename='img/navbar_logo.svg') }}" alt="ListenBrainz" height="31"/>
     </a>
   </div>
@@ -16,7 +16,7 @@
   
   {% if not hide_navbar_user_menu %}
   <div id="side-nav" class="collapse">
-    <a class="navbar-logo" href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) if current_user.is_authenticated else url_for('index.index') }}">
+    <a class="navbar-logo" href="{{ url_for('index.index', redirect="false") }}">
       <img src="{{ url_for('static', filename='img/listenbrainz_logo_icon.svg') }}" alt="ListenBrainz" />
     </a>
     <div class="main-nav">
