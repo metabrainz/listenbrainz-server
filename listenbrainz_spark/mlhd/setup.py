@@ -47,7 +47,8 @@ def post_process_mlhd_plus():
             .read\
             .format("parquet")\
             .option("pathGlobFilter", f"{chunk}*.parquet")\
-            .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_RAW_DATA_DIRECTORY)
+            .parquet(config.HDFS_CLUSTER_URI + path.MLHD_PLUS_RAW_DATA_DIRECTORY)\
+            .createOrReplaceTempView(table)
 
         run_query(query)\
             .repartition("user_id")\
