@@ -19,7 +19,6 @@ describe("ErrorBoundary", () => {
 
     expect(wrapper.state()).toMatchObject({ hasError: true });
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 
   it("reloads page when button is clicked", () => {
@@ -40,7 +39,6 @@ describe("ErrorBoundary", () => {
     wrapper.find("button").simulate("click");
 
     expect(window.location.reload).toHaveBeenCalledTimes(1);
-    wrapper.unmount();
   });
 
   it("renders the child component if error is not thrown", () => {
@@ -52,6 +50,5 @@ describe("ErrorBoundary", () => {
 
     expect(wrapper.state()).toMatchObject({ hasError: false });
     expect(wrapper).toMatchSnapshot();
-    wrapper.unmount();
   });
 });

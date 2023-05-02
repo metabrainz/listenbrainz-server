@@ -15,6 +15,7 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
     delete_listens as ts_delete_listens, \
     delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data, \
     refresh_top_manual_mappings as ts_refresh_top_manual_mappings
+from listenbrainz.domain import spotify_fill_user_id
 from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
 from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
@@ -225,13 +226,13 @@ def delete_pending_listens():
         ts_delete_listens()
 
 
-@cli.command(name="delete_listens_and_update_metadata")
-def delete_listens_and_update_metadata():
+@cli.command(name="delete_listens")
+def complete_delete_listens():
     """ Complete all pending listen deletes and also run update script for
     updating listen metadata since last cron run """
     application = webserver.create_app()
     with application.app_context():
-        ts_delete_listens_and_update_user_listen_data()
+        ts_delete_listens()
 
 
 @cli.command(name="add_missing_to_listen_users_metadata")
@@ -286,6 +287,16 @@ def listen_add_userid():
 
 
 @cli.command()
+def spotify_add_userid():
+    """
+        Fill in the spotify user id using the connected user's oauth token.
+    """
+    app = create_app()
+    with app.app_context():
+        spotify_fill_user_id.main()
+
+
+@cli.command()
 def msb_transfer_db():
     """ Transfer MsB tables from MsB DB to TS DB"""
     with create_app().app_context():
@@ -293,12 +304,13 @@ def msb_transfer_db():
 
 
 @cli.command()
-def run_daily_jams():
+@click.option("--create-all", is_flag=True, help="Create the daily jams for all users. if false (default), only for users according to timezone.")
+def run_daily_jams(create_all):
     """ Generate daily playlists for users soon after the new day begins in their timezone. This is an internal LB
     method and not a core function of troi.
     """
     with create_app().app_context():
-        run_daily_jams_troi_bot()
+        run_daily_jams_troi_bot(create_all)
 
 
 @cli.command()

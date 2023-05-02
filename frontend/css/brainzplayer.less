@@ -19,8 +19,11 @@
 #brainz-player {
   position: fixed;
   bottom: 0;
-  left: 0;
-  width: 100%;
+  right: 0;
+  width: calc(100% - @sidenav-width);
+  @media (max-width: @offscreen-sidenav-breakpoint) {
+    width: 100%;
+  }
   height: @brainzplayer-height;
   background: @white-background;
   display: flex;

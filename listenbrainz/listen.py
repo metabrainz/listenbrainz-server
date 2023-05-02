@@ -3,7 +3,7 @@ import calendar
 from copy import deepcopy
 from datetime import datetime
 
-import ujson
+import orjson
 
 
 def flatten_dict(d, seperator='', parent_key=''):
@@ -126,7 +126,7 @@ class Listen(object):
 
     @classmethod
     def from_timescale(cls, listened_at, track_name, user_id, created, data,
-                       recording_mbid=None, release_mbid=None, artist_mbids=None,
+                       recording_mbid=None, recording_name=None, release_mbid=None, artist_mbids=None,
                        ac_names=None, ac_join_phrases=None, user_name=None,
                        caa_id=None, caa_release_mbid=None):
         """Factory to make Listen() objects from a timescale dict"""
@@ -135,6 +135,9 @@ class Listen(object):
         data["track_metadata"]["track_name"] = track_name
         if recording_mbid is not None:
             data["track_metadata"]["mbid_mapping"] = {"recording_mbid": str(recording_mbid)}
+
+            if recording_name is not None:
+                data["track_metadata"]["mbid_mapping"]["recording_name"] = recording_name
 
             if release_mbid is not None:
                 data["track_metadata"]["mbid_mapping"]["release_mbid"] = str(release_mbid)
@@ -199,10 +202,10 @@ class Listen(object):
         track_metadata['additional_info']['recording_msid'] = self.recording_msid
         track_name = track_metadata['track_name']
         del track_metadata['track_name']
-        return (self.ts_since_epoch, track_name, self.user_name, self.user_id, ujson.dumps({
+        return (self.ts_since_epoch, track_name, self.user_name, self.user_id, orjson.dumps({
             'user_id': self.user_id,
             'track_metadata': track_metadata
-        }))
+        }).decode("utf-8"))
 
     def validate(self):
         return (self.user_id is not None and self.timestamp is not None

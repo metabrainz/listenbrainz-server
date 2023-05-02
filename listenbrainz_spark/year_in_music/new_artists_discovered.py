@@ -1,11 +1,15 @@
+from datetime import datetime, date, time
+
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_dump
 
 
 def get_new_artists_discovered_count(year):
     """ Count the number of artists a user has listened to for the first time in the given year. """
-    get_listens_from_dump()\
-        .createOrReplaceTempView("artists_discovery_listens")
+    from_date = datetime(year, 1, 1)
+    to_date = datetime.combine(date(year, 12, 31), time.max)
+    get_listens_from_dump(from_date, to_date).createOrReplaceTempView("artists_discovery_listens")
+
     data = run_query(_get_new_discovered_artists_count(year)).collect()
     yield {
         "type": "year_in_music_new_artists_discovered_count",

@@ -13,6 +13,7 @@ class SitewideEntityTestCase(StatsTestCase):
     def setUpClass(cls):
         super(SitewideEntityTestCase, cls).setUpClass()
         entity.entity_handler_map['test'] = MagicMock(return_value="sample_test_data")
+        entity.entity_cache_map['test'] = []
 
     @patch('listenbrainz_spark.stats.sitewide.entity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.sitewide.entity.create_messages')

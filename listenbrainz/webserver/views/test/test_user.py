@@ -3,7 +3,7 @@ import logging
 import time
 from unittest import mock
 
-import ujson
+import orjson
 from flask import url_for
 from sqlalchemy import text
 
@@ -51,11 +51,11 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for("redirect.redirect_listens"))
         self.assertRedirects(response, "/user/iliekcomputers/")
 
-        response = self.client.get(url_for("redirect.redirect_charts"))
-        self.assertRedirects(response, "/user/iliekcomputers/charts/")
+        response = self.client.get(url_for("redirect.redirect_stats"))
+        self.assertRedirects(response, "/user/iliekcomputers/stats/")
 
-        response = self.client.get(url_for("redirect.redirect_charts") + "?foo=bar")
-        self.assertRedirects(response, "/user/iliekcomputers/charts/?foo=bar")
+        response = self.client.get(url_for("redirect.redirect_stats") + "?foo=bar")
+        self.assertRedirects(response, "/user/iliekcomputers/stats/?foo=bar")
 
     def test_user_redirects(self):
         response = self.client.get('/user/iliekcomputers/')
@@ -68,10 +68,10 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get('/user/iliekcomputers/charts')
         self.assertRedirects(response, '/user/iliekcomputers/charts/', permanent=True)
 
-        response = self.client.get('/user/iliekcomputers/reports/')
+        response = self.client.get('/user/iliekcomputers/stats/')
         self.assert200(response)
-        response = self.client.get('/user/iliekcomputers/reports')
-        self.assertRedirects(response, '/user/iliekcomputers/reports/', permanent=True)
+        response = self.client.get('/user/iliekcomputers/stats')
+        self.assertRedirects(response, '/user/iliekcomputers/stats/', permanent=True)
 
         # these are permanent redirects to user/<username>/charts
 
@@ -107,14 +107,14 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access(self):
@@ -128,7 +128,7 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
 
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
@@ -136,7 +136,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
@@ -147,14 +147,14 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable('props'))
+        props = orjson.loads(self.get_context_variable('props'))
         self.assertIsNone(props['logged_in_user_follows_user'])
 
         self.temporary_login(self.user.login_id)
         mock_is_following_user.return_value = False
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable('props'))
+        props = orjson.loads(self.get_context_variable('props'))
         self.assertFalse(props['logged_in_user_follows_user'])
 
     def _create_test_data(self, user_name):
@@ -306,7 +306,9 @@ class UserViewsTestCase(IntegrationTestCase):
             "artist_name": "Danny Elfman",
             "release_name": "Danny Elfman & Tim Burton 25th Anniversary Music Box",
             "additional_info": {
-                "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
+                "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da"
+            },
+            "mbid_mapping": {
                 "recording_mbid": "1fe669c9-5a2b-4dcb-9e95-77480d1e732e",
                 "release_mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6",
                 "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"],

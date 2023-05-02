@@ -6,7 +6,7 @@ from typing import Dict, Tuple, Optional
 import psycopg2
 import psycopg2.sql
 import sqlalchemy
-import ujson
+import orjson
 from brainzutils import cache
 from psycopg2.errors import UntranslatableCharacter
 from psycopg2.extras import execute_values
@@ -82,64 +82,16 @@ class TimescaleListenStore:
                 # table when user signs up and for existing users an entry should always exist.
                 count, created = 0, LISTEN_MINIMUM_DATE
 
-            query_remaining = """
-                SELECT count(*) AS remaining_count
-                  FROM listen
-                 WHERE user_id = :user_id
-                   AND created > :created
-            """
-            result = connection.execute(
-                sqlalchemy.text(query_remaining),
-                {"user_id": user_id, "created": created}
-            )
-            remaining_count = result.fetchone().remaining_count
-
-            total_count = count + remaining_count
-            cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), total_count, REDIS_USER_LISTEN_COUNT_EXPIRY)
-            return total_count
+            cache.set(REDIS_USER_LISTEN_COUNT + str(user_id), count, REDIS_USER_LISTEN_COUNT_EXPIRY)
+            return count
 
     def get_timestamps_for_user(self, user_id: int) -> Tuple[Optional[int], Optional[int]]:
         """ Return the min_ts and max_ts for the given list of users """
         query = """
-            WITH last_update AS (
-             -- we do coalesce here and not at the end because max_listened_at and min_listened_at is set to NULL
-             -- 1) for new users
-             -- 2) users who have delete listen history and re-imported (and cron job hasn't run yet)
-             -- 3) development (cron job never runs)
-             -- the where clause in listens_after_update immediately evaluates to false if listened_at is
-             -- compared to NULL and thus preventing the query from finding new listens submitted since the
-             -- cron job ran last.
-                SELECT COALESCE(min_listened_at, 0) AS existing_min_ts
-                     , COALESCE(max_listened_at, 0) AS existing_max_ts
-                  FROM listen_user_metadata
-                 WHERE user_id = :user_id
-            ),
-             -- we only do this for max_ts because it means listens newer than the last time 
-             -- metadata update cron job ran. these appear on the first page (or near to it) of
-             -- listens. there is a similar case for min_ts but those listens would appear at/near
-             -- the last page and it is likely no one would notice, so need to do extra work
-             listens_after_update AS (
-                SELECT max(listened_at) AS new_max_ts
-                  FROM listen l
-                -- we want max(listened_at) so why bother adding a >= listened_at clause?
-                -- because we want to limit the scan to a few chunks making the query run much faster
-                -- (except for the cases listens in last_update CTE where existing_max_ts will 0)
-                  
-                -- do not directly join to CTE, otherwise TS generates a suboptimal query plan
-                -- scanning all chunks. whereas doing it this way, we get runtime chunk exclusion
-                 WHERE l.listened_at >= (SELECT existing_max_ts FROM last_update)
-                   AND l.user_id = :user_id
-                -- note that we do not consider the created field here. our purpose is to know the timestamp
-                -- of the latest listen for a given user for listens that have been inserted since the cron
-                -- job ran last time and hence are unaccounted for in listen_user_metadata table. we could
-                -- add a check for created column as well here but that would probably be more inefficient.
-                -- listened_at and user_id have an index so we can get away with just reading the index and not
-                -- fetching actual table rows.
-             )
-             SELECT greatest(existing_max_ts, new_max_ts) AS max_ts
-                  , existing_min_ts AS min_ts
-               FROM listens_after_update
-               JOIN last_update ON TRUE
+            SELECT COALESCE(min_listened_at, 0) AS min_ts
+                 , COALESCE(max_listened_at, 0) AS max_ts
+              FROM listen_user_metadata
+             WHERE user_id = :user_id
         """
         with timescale.engine.connect() as connection:
             result = connection.execute(text(query), {"user_id": user_id})
@@ -181,11 +133,26 @@ class TimescaleListenStore:
         for listen in listens:
             submit.append(listen.to_timescale())
 
-        query = """INSERT INTO listen (listened_at, track_name, user_name, user_id, data)
-                        VALUES %s
-                   ON CONFLICT (listened_at, track_name, user_id)
-                    DO NOTHING
-                     RETURNING listened_at, track_name, user_name, user_id"""
+        query = """
+            WITH listens AS (
+                INSERT INTO listen (listened_at, track_name, user_name, user_id, data)
+                     VALUES %s
+                ON CONFLICT (listened_at, track_name, user_id)
+                 DO NOTHING
+                  RETURNING listened_at, track_name, user_name, user_id
+            ), metadata AS (
+                INSERT INTO listen_user_metadata AS lum (user_id, count, min_listened_at, max_listened_at, created)
+                     SELECT user_id, count(*), min(listened_at), max(listened_at), NOW()
+                       FROM listens
+                   GROUP BY user_id  
+                ON CONFLICT (user_id)
+                  DO UPDATE 
+                        SET count = lum.count + excluded.count
+                          , min_listened_at = least(lum.min_listened_at, excluded.min_listened_at)
+                          , max_listened_at = greatest(lum.max_listened_at, excluded.max_listened_at)
+                          , created = excluded.created
+            ) SELECT * FROM listens
+        """
 
         inserted_rows = []
         conn = timescale.engine.raw_connection()
@@ -241,8 +208,8 @@ class TimescaleListenStore:
                              , l.user_id
                              , l.created
                              , l.data
-                             -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
-                             , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
+                             -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
+                             , COALESCE((data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
                           FROM listen l
                      LEFT JOIN mbid_mapping mm
                             ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
@@ -258,6 +225,7 @@ class TimescaleListenStore:
                         , created
                         , data
                         , sl.recording_mbid
+                        , mbc.recording_data->>'name' AS recording_name
                         , mbc.release_mbid
                         , mbc.artist_mbids::TEXT[]
                         , (mbc.release_data->>'caa_id')::bigint AS caa_id
@@ -278,6 +246,7 @@ class TimescaleListenStore:
                         , created
                         , data
                         , sl.recording_mbid
+                        , recording_data->>'name'
                         , release_mbid
                         , artist_mbids
                         , artist_data->>'name'
@@ -351,6 +320,7 @@ class TimescaleListenStore:
                         created=result.created,
                         data=result.data,
                         recording_mbid=result.recording_mbid,
+                        recording_name=result.recording_name,
                         release_mbid=result.release_mbid,
                         artist_mbids=result.artist_mbids,
                         ac_names=result.ac_names,
@@ -410,8 +380,8 @@ class TimescaleListenStore:
                      WHERE {filters} 
               ), selected_listens AS (
                     SELECT l.*
-                           -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
-                         , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
+                        -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
+                         , COALESCE((data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
                       FROM intermediate l
                  LEFT JOIN mbid_mapping mm
                         ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
@@ -427,6 +397,7 @@ class TimescaleListenStore:
                          , created
                          , data
                          , l.recording_mbid
+                         , mbc.recording_data->>'name' AS recording_name
                          , mbc.release_mbid
                          , mbc.artist_mbids::TEXT[]
                          , (mbc.release_data->>'caa_id')::bigint AS caa_id
@@ -444,6 +415,7 @@ class TimescaleListenStore:
                          , created
                          , data
                          , l.recording_mbid
+                         , mbc.recording_data->>'name'
                          , mbc.release_mbid
                          , mbc.artist_mbids
                          , mbc.release_data->>'caa_id'
@@ -467,6 +439,7 @@ class TimescaleListenStore:
                     created=result.created,
                     data=result.data,
                     recording_mbid=result.recording_mbid,
+                    recording_name=result.recording_name,
                     release_mbid=result.release_mbid,
                     artist_mbids=result.artist_mbids,
                     ac_names=result.ac_names,
@@ -526,7 +499,7 @@ class TimescaleListenStore:
                             if not line:
                                 break
 
-                            listen = Listen.from_json(ujson.loads(line))
+                            listen = Listen.from_json(orjson.loads(line))
                             listens.append(listen)
 
                             if len(listens) > DUMP_CHUNK_SIZE:

@@ -1,27 +1,33 @@
 .pill {
   display: inline-block;
-  background-color: @blue;
-  border-radius: 100px;
+  background: transparent;
+  color: @light-grey;
+  border: 2px solid @light-grey;
+  border-radius: 124px;
   margin: 2px 2px 5px 2px;
-  > div {
-    display: flex;
-    margin: 5px;
-    // We want pills to be always 32px height or more
-    // Texts are 10px, hence minimum height of 22px here
-    min-height: 22px;
-    span {
+  outline: none;
+  padding: 3px 12px;
+  &.active {
+    background: @orange;
+    color: @white;
+    border: 2px solid transparent;
+  }
+  &.secondary {
+    &.active {
+      background: @blue;
       color: @white;
-      margin-top: auto;
-      margin-bottom: auto;
-      margin-left: 6px;
-      margin-right: 6px;
-      font-style: normal;
     }
-    button {
-      background-color: @blue;
+  }
+  &:visited,
+  &:hover,
+  &:visited:hover {
+    color: @light-grey;
+    &.active {
       color: @white;
-      border: none;
-      border-radius: 100px;
     }
+  }
+  button {
+    background: transparent;
+    border: none;
   }
 }

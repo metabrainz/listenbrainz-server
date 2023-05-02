@@ -23,22 +23,19 @@
 @import "add-listen-modal.less";
 @import "DateTimePicker.less";
 @import "TimePicker.less";
+@import "explore.less";
+@import "stats.less";
+
+@import "new-navbar.less";
 
 @icon-font-path: "/static/fonts/";
 
 @pager-border-radius: @border-radius-base;
-// Height of the BrainzPlayer component (fixed at the bottom of the page)
-@brainzplayer-height: 60px;
 
 @import (inline, css) "highlight.js/styles/github.css";
 pre code.hljs {
   max-height: 50vh;
   overflow-y: scroll;
-}
-
-body {
-  // Leave some space for BrainzPlayer
-  padding-bottom: @brainzplayer-height;
 }
 
 .table {
@@ -103,6 +100,8 @@ body {
   color: #000000;
   padding-bottom: 10px;
   margin-top: 2rem;
+  margin-left: ceil((@grid-gutter-width / -2));
+  margin-right: floor((@grid-gutter-width / -2));
   border-top-width: 2px;
   border-top-style: solid;
   border-top-color: #ddd;
@@ -325,4 +324,9 @@ body {
       background-color: #eb743b;
     }
   }
+}
+
+.badge-info {
+  color: @white;
+  background-color: @blue;
 }

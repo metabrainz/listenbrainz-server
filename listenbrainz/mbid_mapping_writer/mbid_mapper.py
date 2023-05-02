@@ -90,6 +90,7 @@ class MBIDMapper:
         if is_artist_credit:
             strings.insert(0, ",")
             strings.append(" with ")
+            strings.append(" & ")
 
         for s in strings:
             index = query.find(s)

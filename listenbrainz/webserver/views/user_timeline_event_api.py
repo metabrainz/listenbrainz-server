@@ -15,22 +15,20 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-import logging
 
 import time
-from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Tuple, Dict, Iterable
 
 import pydantic
-import ujson
+import orjson
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request, current_app
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
-from data.model.listen import APIListen, TrackMetadata, AdditionalInfo
+from data.model.listen import APIListen
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
     CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent
@@ -43,7 +41,7 @@ from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
-from listenbrainz.webserver.views.api_tools import validate_auth_header, _filter_description_html, \
+from listenbrainz.webserver.views.api_tools import validate_auth_header, \
     _validate_get_endpoint_params
 
 MAX_LISTEN_EVENTS_PER_USER = 2  # the maximum number of listens we want to return in the feed per user
@@ -59,23 +57,22 @@ user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 def create_user_recording_recommendation_event(user_name):
     """ Make the user recommend a recording to their followers.
 
-    The request should post the following data about the recording being recommended:
+    The request should post the following data about the recording being recommended (either one of recording_msid or
+    recording_mbid is sufficient):
 
     .. code-block:: json
 
         {
             "metadata": {
-                "artist_name": "<The name of the artist, required>",
-                "track_name": "<The name of the track, required>",
-                "recording_msid": "<The MessyBrainz ID of the recording, required>",
-                "release_name": "<The name of the release, optional>",
-                "recording_mbid": "<The MusicBrainz ID of the recording, optional>"
+                "recording_msid": "<The MessyBrainz ID of the recording, optional>",
+                "recording_mbid": "<The MusicBrainz ID of the recording>"
             }
         }
 
-
     :param user_name: The MusicBrainz ID of the user who is recommending the recording.
     :type user_name: ``str``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, recording has been recommended!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend recordings on the behalf of this user
@@ -87,7 +84,7 @@ def create_user_recording_recommendation_event(user_name):
         raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -130,7 +127,6 @@ def create_user_notification_event(user_name):
     :statuscode 403: Forbidden, you are not an approved user.
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
-
     """
     creator = validate_auth_header()
     if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
@@ -141,7 +137,7 @@ def create_user_notification_event(user_name):
         raise APINotFound(f"Cannot find user: {user_name}")
 
     try:
-        data = ujson.loads(request.get_data())['metadata']
+        data = orjson.loads(request.get_data())['metadata']
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -195,7 +191,7 @@ def create_user_cb_review_event(user_name):
         raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -239,6 +235,8 @@ def user_feed(user_name: str):
     :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned
     :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :type count: ``int``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, you have feed events!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permission to view this user's feed.
@@ -364,6 +362,8 @@ def delete_feed_events(user_name):
 
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Successful deletion
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
@@ -376,7 +376,7 @@ def delete_feed_events(user_name):
         raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
 
     try:
-        event = ujson.loads(request.get_data())
+        event = orjson.loads(request.get_data())
 
         if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
                 UserTimelineEventType.NOTIFICATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
@@ -420,6 +420,8 @@ def hide_user_timeline_event(user_name):
 
     :param user_name: The MusicBrainz ID of the user from whose timeline events are being deleted
     :type user_name: ``str``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Event hidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
@@ -433,7 +435,7 @@ def hide_user_timeline_event(user_name):
         raise APIUnauthorized("You don't have permissions to hide events from this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -473,20 +475,22 @@ def unhide_user_timeline_event(user_name):
         }
 
     :type user_name: ``str``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Event unhidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
     :statuscode 404: User not found
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
-
     '''
+    
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
         raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -502,39 +506,38 @@ def unhide_user_timeline_event(user_name):
 @ratelimit()
 def create_personal_recommendation_event(user_name):
     '''
-    Make the user recommend a recording to their followers.
-    The request should post the following data about the recording being
-    recommended, and also the list of followers getting recommended:
+    Make the user recommend a recording to their followers. The request should post
+    the following data about the recording being recommended (either one of recording_msid
+    or recording_mbid is sufficient), and also the list of followers getting recommended:
 
     .. code-block:: json
-    {
-        "metadata": {
-            "artist_name": "<The name of the artist, required>",
-            "track_name": "<The name of the track, required>",
-            "recording_msid": "<The MessyBrainz ID of the recording, required>",
-            "release_name": "<The name of the release, optional>",
-            "recording_mbid": "<The MusicBrainz ID of the recording, optional>",
-            "users": [<usernames of the persons you want to recommend to, required>]
-            "blurb_content": "<String containing personalized recommendation>"
-        }
-    }
 
+        {
+            "metadata": {
+                "recording_msid": "<The MessyBrainz ID of the recording, optional>",
+                "recording_mbid": "<The MusicBrainz ID of the recording>",
+                "users": [<usernames of the persons you want to recommend to, required>]
+                "blurb_content": "<String containing personalized recommendation>"
+            }
+        }
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, recording has been recommended!
-    :statuscode 400: Bad request, check ``response['error']`` for more
-    details.
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend
     personal recordings on the behalf of this user
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
-
     '''
+    
     user = validate_auth_header()
 
     if user_name != user['musicbrainz_id']:
         raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
 
     try:
-        data = ujson.loads(request.get_data())
+        data = orjson.loads(request.get_data())
     except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
@@ -545,7 +548,7 @@ def create_personal_recommendation_event(user_name):
         follower_results = db_user_relationship.multiple_users_by_username_following_user(user['id'], metadata.users)
         non_followers = []
         for follower in metadata.users:
-            if not follower_results[follower]:
+            if not follower_results or not follower_results[follower]:
                 non_followers.append(follower)
         if non_followers:
             raise APIBadRequest(f"You cannot recommend tracks to non-followers! These people don't follow you {str(non_followers)}")
@@ -555,7 +558,10 @@ def create_personal_recommendation_event(user_name):
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
-    return jsonify({"status": "ok"})
+    event_data = event.dict()
+    event_data['created'] = event_data['created'].timestamp()
+    event_data['event_type'] = event_data['event_type'].value
+    return jsonify(event_data)
 
 
 def get_listen_events(
@@ -667,21 +673,14 @@ def get_recording_recommendation_events(
         max_ts=max_ts,
         count=count,
     )
+    events_metadata_db = fetch_track_metadata_for_items([e.metadata for e in recording_recommendation_events_db])
 
     events = []
     for event in recording_recommendation_events_db:
         try:
             listen = APIListen(
                 user_name=id_username_map[event.user_id],
-                track_metadata=TrackMetadata(
-                    artist_name=event.metadata.artist_name,
-                    track_name=event.metadata.track_name,
-                    release_name=event.metadata.release_name,
-                    additional_info=AdditionalInfo(
-                        recording_msid=event.metadata.recording_msid,
-                        recording_mbid=event.metadata.recording_mbid,
-                    )
-                ),
+                track_metadata=event.metadata.track_metadata,
             )
 
             events.append(APITimelineEvent(
@@ -758,7 +757,7 @@ def get_recording_pin_events(
 
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     recording_pin_events_db = get_pins_for_feed(
-        user_ids=(user['id'] for user in users_for_events),
+        user_ids=id_username_map.keys(),
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
@@ -768,27 +767,19 @@ def get_recording_pin_events(
     events = []
     for pin in recording_pin_events_db:
         try:
-            pinEvent = APIPinEvent(
+            pin_event = APIPinEvent(
                 user_name=id_username_map[pin.user_id],
                 blurb_content=pin.blurb_content,
-                track_metadata=TrackMetadata(
-                    artist_name=pin.track_metadata["artist_name"],
-                    track_name=pin.track_metadata["track_name"],
-                    release_name=None,
-                    additional_info=AdditionalInfo(
-                        recording_msid=pin.recording_msid,
-                        recording_mbid=pin.recording_mbid,
-                    )
-                )
+                track_metadata=pin.track_metadata
             )
 
             events.append(APITimelineEvent(
                 id=pin.row_id,
                 event_type=UserTimelineEventType.RECORDING_PIN,
-                user_name=pinEvent.user_name,
+                user_name=pin_event.user_name,
                 created=pin.created.timestamp(),
-                metadata=pinEvent,
-                hidden=False,
+                metadata=pin_event,
+                hidden=False
             ))
         except (pydantic.ValidationError, TypeError, KeyError):
             current_app.logger.error("Could not convert pinned recording to feed event", exc_info=True)
@@ -811,16 +802,13 @@ def get_personal_recording_recommendation_events(
         max_ts=max_ts,
         count=count,
     )
+    events_metadata_db = fetch_track_metadata_for_items([e.metadata for e in personal_recording_recommendation_events_db])
 
     events = []
     for event in personal_recording_recommendation_events_db:
         try:
             personal_recommendation = APIPersonalRecommendationEvent(
-                artist_name=event.metadata.artist_name,
-                track_name=event.metadata.track_name,
-                release_name=event.metadata.release_name,
-                recording_mbid=event.metadata.recording_mbid,
-                recording_msid=event.metadata.recording_msid,
+                track_metadata=event.metadata.track_metadata,
                 users=event.metadata.users,
                 blurb_content=event.metadata.blurb_content
             )

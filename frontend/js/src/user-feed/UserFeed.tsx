@@ -27,13 +27,13 @@ import { get as _get, reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import * as _ from "lodash";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
@@ -51,7 +51,6 @@ import {
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
-import SimpleModal from "../utils/SimpleModal";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -904,18 +903,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { events } = reactProps;
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -924,18 +916,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    modal: modalRef,
-  };
+  const { events } = reactProps;
 
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
     UserFeedPage
@@ -943,12 +924,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
-        <UserFeedPageWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          events={events}
-        />
+      <GlobalAppContext.Provider value={globalAppContext}>
+        <NiceModal.Provider>
+          <UserFeedPageWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            events={events}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

@@ -70,7 +70,6 @@ describe("ListenFeedbackComponent", () => {
         -1,
         "bar"
       );
-      wrapper.unmount();
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
@@ -95,7 +94,6 @@ describe("ListenFeedbackComponent", () => {
         instance.submitFeedback(-1);
       });
       expect(spy).toHaveBeenCalledTimes(0);
-      wrapper.unmount();
     });
 
     it("doesn't update feedback state or call updateFeedbackCallback if status code is not 200", async () => {
@@ -119,7 +117,6 @@ describe("ListenFeedbackComponent", () => {
       expect(spy).toHaveBeenCalledWith("baz", -1, "bar", "yyyy");
 
       expect(props.updateFeedbackCallback).toHaveBeenCalledTimes(0);
-      wrapper.unmount();
     });
 
     it("calls handleError if error is returned", async () => {
@@ -146,7 +143,6 @@ describe("ListenFeedbackComponent", () => {
         "Error while submitting feedback",
         "my error message"
       );
-      wrapper.unmount();
     });
   });
 });

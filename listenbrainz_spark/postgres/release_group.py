@@ -1,8 +1,8 @@
-from listenbrainz_spark.path import RELEASE_GROUPS_YEAR_DATAFRAME
+from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.postgres.utils import save_pg_table_to_hdfs
 
 
-def create_year_release_groups(year):
+def create_release_group_metadata_cache():
     """ Import release groups which were released in the given year from postgres to HDFS """
     query = f"""
         WITH rg_cover_art AS (
@@ -42,6 +42,7 @@ def create_year_release_groups(year):
                  , rgca.caa_id AS caa_id
                  , rgca.caa_release_mbid AS caa_release_mbid
                  , array_agg(a.gid ORDER BY acn.position) AS artist_credit_mbids
+                 , rgm.first_release_date_year
               FROM musicbrainz.release_group rg
               JOIN musicbrainz.release_group_meta rgm
                 ON rgm.id = rg.id
@@ -53,13 +54,13 @@ def create_year_release_groups(year):
                 ON acn.artist = a.id
          LEFT JOIN rg_cover_art rgca
                 ON rgca.release_group = rg.id
-             WHERE rgm.first_release_date_year = {year}
           GROUP BY rg.gid
                  , rg.name
+                 , rgm.first_release_date_year
                  , make_date(rgm.first_release_date_year, rgm.first_release_date_month, rgm.first_release_date_day)
                  , ac.name
                  , rgca.caa_id
                  , rgca.caa_release_mbid
     """
 
-    save_pg_table_to_hdfs(query, RELEASE_GROUPS_YEAR_DATAFRAME)
+    save_pg_table_to_hdfs(query, RELEASE_GROUP_METADATA_CACHE_DATAFRAME)

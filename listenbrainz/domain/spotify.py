@@ -3,6 +3,7 @@ import base64
 from typing import Sequence, Optional
 
 import requests
+import spotipy
 
 from flask import current_app
 from spotipy import SpotifyOAuth
@@ -93,9 +94,13 @@ class SpotifyService(ImporterService):
         scopes = token['scope'].split()
         active = set(scopes).issuperset(SPOTIFY_IMPORT_PERMISSIONS)
 
+        sp = spotipy.Spotify(auth=access_token)
+        details = sp.current_user()
+        external_user_id = details["id"]
+
         external_service_oauth.save_token(user_id=user_id, service=self.service, access_token=access_token,
                                           refresh_token=refresh_token, token_expires_ts=expires_at,
-                                          record_listens=active, scopes=scopes)
+                                          record_listens=active, scopes=scopes, external_user_id=external_user_id)
         return True
 
     def get_authorize_url(self, permissions: Sequence[str]):

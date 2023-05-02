@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, isEqual, isNil, isNumber } from "lodash";
+import { get, isEmpty, isEqual, isNil, isNumber } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -7,7 +7,10 @@ import {
   faCommentDots,
   faExternalLinkAlt,
   faCode,
-  faCopy,
+  faPaperPlane,
+  faThumbtack,
+  faPencilAlt,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSoundcloud,
@@ -17,6 +20,7 @@ import {
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   getArtistLink,
   getTrackLink,
@@ -29,6 +33,8 @@ import {
   getTrackName,
   getTrackDurationInMs,
   getRecordingMSID,
+  getArtistMBIDs,
+  getReleaseGroupMBID,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
@@ -38,8 +44,12 @@ import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import { millisecondsToStr } from "../playlists/utils";
-
-export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+import PinRecordingModal from "../pins/PinRecordingModal";
+import CBReviewModal from "../cb-review/CBReviewModal";
+import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
+import ListenPayloadModal from "./ListenPayloadModal";
+import CoverArtWithFallback from "./CoverArtWithFallback";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -86,7 +96,8 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  static defaultThumbnailSrc: string = "/static/img/cover-art-placeholder.jpg";
+  static addCoverArtThumbnailSrc: string = "/static/img/add-cover-art.svg";
+  static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -100,15 +111,20 @@ export default class ListenCard extends React.Component<
 
   async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-    await this.getCoverArt();
+    const { userPreferences } = this.context;
+    if (userPreferences?.saveData !== true) {
+      await this.getCoverArt();
+    }
   }
 
   async componentDidUpdate(oldProps: ListenCardProps) {
     const { listen, customThumbnail } = this.props;
+    const { userPreferences } = this.context;
     if (
       !customThumbnail &&
       Boolean(listen) &&
-      !isEqual(listen, oldProps.listen)
+      !isEqual(listen, oldProps.listen) &&
+      userPreferences?.saveData !== true
     ) {
       await this.getCoverArt();
     }
@@ -119,11 +135,12 @@ export default class ListenCard extends React.Component<
   }
 
   async getCoverArt() {
-    const { spotifyAuth } = this.context;
+    const { spotifyAuth, APIService } = this.context;
     const { listen } = this.props;
     const albumArtSrc = await getAlbumArtFromListenMetadata(
       listen,
-      spotifyAuth
+      spotifyAuth,
+      APIService
     );
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
@@ -177,11 +194,7 @@ export default class ListenCard extends React.Component<
     const { APIService, currentUser } = this.context;
 
     if (currentUser?.auth_token) {
-      const metadata: UserTrackRecommendationMetadata = {
-        artist_name: getArtistName(listen),
-        track_name: getTrackName(listen),
-        release_name: _get(listen, "track_metadata.release_name"),
-      };
+      const metadata: UserTrackRecommendationMetadata = {};
 
       const recording_mbid = getRecordingMBID(listen);
       if (recording_mbid) {
@@ -203,7 +216,7 @@ export default class ListenCard extends React.Component<
           newAlert(
             "success",
             `You recommended a track to your followers!`,
-            `${metadata.artist_name} - ${metadata.track_name}`
+            `${getArtistName(listen)} - ${getTrackName(listen)}`
           );
         }
       } catch (error) {
@@ -244,15 +257,19 @@ export default class ListenCard extends React.Component<
       currentFeedback,
       newAlert,
       updateFeedbackCallback,
+      additionalActions,
       ...otherProps
     } = this.props;
     const { isCurrentlyPlaying, thumbnailSrc } = this.state;
-    const { additionalActions } = this.props;
-    const { modal } = this.context;
+    const { currentUser } = this.context;
+    const isLoggedIn = !isEmpty(currentUser);
 
     const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
+    const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
     const releaseMBID = getReleaseMBID(listen);
+    const releaseGroupMBID = getReleaseGroupMBID(listen);
+    const artistMBIDs = getArtistMBIDs(listen);
     const spotifyURL = SpotifyPlayer.getURLFromListen(listen);
     const youtubeURL = YoutubePlayer.getURLFromListen(listen);
     const soundcloudURL = SoundcloudPlayer.getURLFromListen(listen);
@@ -263,13 +280,18 @@ export default class ListenCard extends React.Component<
 
     const hasRecordingMSID = Boolean(recordingMSID);
     const hasRecordingMBID = Boolean(recordingMBID);
-    const enableRecommendButton =
+    const hasInfoAndMBID =
       artistName && trackName && (hasRecordingMSID || hasRecordingMBID);
+    const isListenReviewable =
+      Boolean(recordingMBID) ||
+      artistMBIDs?.length ||
+      Boolean(trackMBID) ||
+      Boolean(releaseGroupMBID);
 
     // Hide the actions menu if in compact mode or no buttons to be shown
     const hasActionOptions =
       additionalMenuItems?.length ||
-      enableRecommendButton ||
+      hasInfoAndMBID ||
       recordingMBID ||
       spotifyURL ||
       youtubeURL ||
@@ -305,6 +327,90 @@ export default class ListenCard extends React.Component<
         </span>
       );
     }
+    let thumbnail;
+    if (customThumbnail) {
+      thumbnail = customThumbnail;
+    } else if (thumbnailSrc) {
+      thumbnail = (
+        <div className="listen-thumbnail">
+          <a
+            href={
+              releaseMBID
+                ? `https://musicbrainz.org/release/${releaseMBID}`
+                : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
+            }
+            title={listen.track_metadata?.release_name ?? "Cover art"}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <CoverArtWithFallback
+              imgSrc={thumbnailSrc}
+              altText={listen.track_metadata?.release_name}
+            />
+          </a>
+        </div>
+      );
+    } else if (releaseMBID) {
+      thumbnail = (
+        <a
+          href={`https://musicbrainz.org/release/${releaseMBID}/cover-art`}
+          title="Add cover art in MusicBrainz"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="listen-thumbnail"
+        >
+          <div className="add-cover-art">
+            <img
+              src={ListenCard.addCoverArtThumbnailSrc}
+              alt="Add cover art in MusicBrainz"
+            />
+          </div>
+        </a>
+      );
+    } else if (!recordingMBID) {
+      const openModal = () => {
+        NiceModal.show(MBIDMappingModal, {
+          listenToMap: listen,
+          newAlert,
+        });
+      };
+      thumbnail = (
+        <div
+          className="listen-thumbnail"
+          title="Link with MusicBrainz"
+          onClick={openModal}
+          onKeyDown={openModal}
+          role="button"
+          tabIndex={0}
+          // onKeyPress={action}
+          data-toggle="modal"
+          data-target="#MapToMusicBrainzRecordingModal"
+        >
+          <div className="not-mapped">
+            <FontAwesomeIcon icon={faLink} />
+          </div>
+        </div>
+      );
+    } else {
+      // Edge case: has no thumbnail, has a recording_mbid
+      // but no release_mbid for some reason
+      thumbnail = (
+        <a
+          href={`https://musicbrainz.org/recording/${recordingMBID}`}
+          title="Open in MusicBrainz"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="listen-thumbnail"
+        >
+          <div className="cover-art-fallback">
+            <img
+              src={ListenCard.coverartPlaceholder}
+              alt="Open in MusicBrainz"
+            />
+          </div>
+        </a>
+      );
+    }
 
     return (
       <Card
@@ -318,57 +424,16 @@ export default class ListenCard extends React.Component<
       >
         <div className="main-content">
           {beforeThumbnailContent}
-          {customThumbnail || (
-            <div className="listen-thumbnail">
-              {thumbnailSrc ? (
-                <a
-                  href={
-                    releaseMBID
-                      ? `https://musicbrainz.org/release/${releaseMBID}`
-                      : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
-                  }
-                  title={listen.track_metadata?.release_name ?? "Cover art"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    src={thumbnailSrc}
-                    alt={listen.track_metadata?.release_name ?? "Cover art"}
-                  />
-                </a>
-              ) : (
-                <a
-                  href={
-                    releaseMBID
-                      ? `https://musicbrainz.org/release/${releaseMBID}/cover-art`
-                      : "https://musicbrainz.org/doc/How_to_Add_Cover_Art"
-                  }
-                  title={
-                    releaseMBID
-                      ? "Add cover art in MusicBrainz"
-                      : "How can I add missing cover art?"
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    src={ListenCard.defaultThumbnailSrc}
-                    alt={
-                      releaseMBID
-                        ? "Add cover art in MusicBrainz"
-                        : "How can I add missing cover art?"
-                    }
-                  />
-                </a>
-              )}
-            </div>
-          )}
+          {thumbnail}
           {listenDetails ? (
             <div className="listen-details">{listenDetails}</div>
           ) : (
             <div className="listen-details">
               <div className="title-duration">
-                <div title={trackName} className="ellipsis-2-lines">
+                <div
+                  title={trackName}
+                  className={compact ? "ellipsis" : "ellipsis-2-lines"}
+                >
                   {getTrackLink(listen)}
                 </div>
                 {trackDurationMs && (
@@ -400,14 +465,15 @@ export default class ListenCard extends React.Component<
               </div>
             )}
             <div className="listen-controls">
-              {feedbackComponent ?? (
-                <ListenFeedbackComponent
-                  newAlert={newAlert}
-                  listen={listen}
-                  currentFeedback={currentFeedback as ListenFeedBack}
-                  updateFeedbackCallback={updateFeedbackCallback}
-                />
-              )}
+              {isLoggedIn &&
+                (feedbackComponent ?? (
+                  <ListenFeedbackComponent
+                    newAlert={newAlert}
+                    listen={listen}
+                    currentFeedback={currentFeedback as ListenFeedBack}
+                    updateFeedbackCallback={updateFeedbackCallback}
+                  />
+                ))}
               {hideActionsMenu ? null : (
                 <>
                   <FontAwesomeIcon
@@ -471,7 +537,21 @@ export default class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    {enableRecommendButton && (
+                    {isLoggedIn && hasInfoAndMBID && (
+                      <ListenControl
+                        text="Pin this track"
+                        icon={faThumbtack}
+                        action={() => {
+                          NiceModal.show(PinRecordingModal, {
+                            recordingToPin: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#PinRecordingModal"
+                      />
+                    )}
+                    {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         icon={faCommentDots}
                         title="Recommend to my followers"
@@ -479,40 +559,59 @@ export default class ListenCard extends React.Component<
                         action={this.recommendListenToFollowers}
                       />
                     )}
+                    {isLoggedIn && hasInfoAndMBID && (
+                      <ListenControl
+                        text="Personally recommend"
+                        icon={faPaperPlane}
+                        action={() => {
+                          NiceModal.show(PersonalRecommendationModal, {
+                            listenToPersonallyRecommend: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#PersonalRecommendationModal"
+                      />
+                    )}
+                    {isLoggedIn && Boolean(recordingMSID) && (
+                      <ListenControl
+                        text="Link with MusicBrainz"
+                        icon={faLink}
+                        action={() => {
+                          NiceModal.show(MBIDMappingModal, {
+                            listenToMap: listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#MapToMusicBrainzRecordingModal"
+                      />
+                    )}
+                    {isLoggedIn && isListenReviewable && (
+                      <ListenControl
+                        text="Write a review"
+                        icon={faPencilAlt}
+                        action={() => {
+                          NiceModal.show(CBReviewModal, {
+                            listen,
+                            newAlert,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#CBReviewModal"
+                      />
+                    )}
                     {additionalMenuItems}
                     <ListenControl
                       text="Inspect listen"
                       icon={faCode}
                       action={() => {
-                        const stringifiedJSON = JSON.stringify(listen, null, 2);
-                        modal?.current?.updateModal(
-                          stringifiedJSON,
-                          "Inspect listen",
-                          <>
-                            <button
-                              type="button"
-                              className="btn btn-info"
-                              onClick={async () => {
-                                await navigator.clipboard.writeText(
-                                  stringifiedJSON
-                                );
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faCopy} /> Copy
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-default"
-                              data-dismiss="modal"
-                            >
-                              Close
-                            </button>
-                          </>,
-                          true
-                        );
+                        NiceModal.show(ListenPayloadModal, {
+                          listen,
+                        });
                       }}
                       dataToggle="modal"
-                      dataTarget="#SimpleModal"
+                      dataTarget="#ListenPayloadModal"
                     />
                   </ul>
                 </>

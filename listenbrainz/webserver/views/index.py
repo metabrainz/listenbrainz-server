@@ -11,7 +11,7 @@ from typing import List
 from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
-import ujson
+import orjson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
@@ -33,6 +33,9 @@ SEARCH_USER_LIMIT = 100  # max number of users to return in search username resu
 
 @index_bp.route("/")
 def index():
+    if current_user.is_authenticated and request.args.get("redirect", "true") == "true":
+        return redirect( url_for("user.profile", user_name=current_user.musicbrainz_id))
+
     if _ts:
         try:
             listen_count = _ts.get_total_listen_count()
@@ -67,12 +70,12 @@ def downloads():
 
 @index_bp.route("/data/")
 def data():
-    return render_template("index/data.html")
+    return render_template("index/data.html",active_about_section="using-data")
 
 
 @index_bp.route("/add-data/")
 def add_data_info():
-    return render_template("index/add-data.html")
+    return render_template("index/add-data.html", active_settings_section = "add-listens" )
 
 
 @index_bp.route("/import-data/")
@@ -87,12 +90,12 @@ def proxy():
 
 @index_bp.route("/about/")
 def about():
-    return render_template("index/about.html")
+    return render_template("index/about.html", active_about_section="about")
 
 
 @index_bp.route("/terms-of-service/")
 def terms_of_service():
-    return render_template("index/terms-of-service.html")
+    return render_template("index/terms-of-service.html", active_about_section="terms-of-service")
 
 
 @index_bp.route("/blog-data/")
@@ -148,6 +151,7 @@ def current_status():
         listen_count=format(int(listen_count), ",d") if listen_count else "0",
         user_count=user_count,
         listen_counts_per_day=listen_counts_per_day,
+        active_about_section="site-status"
     )
 
 
@@ -162,12 +166,20 @@ def recent_listens():
                 "listened_at": listen.ts_since_epoch,
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
+            
+    listen_count = _ts.get_total_listen_count()
+    try:
+        user_count = format(int(_get_user_count()), ',d')
+    except DatabaseException as e:
+        user_count = 'Unknown'
 
     props = {
         "listens": recent,
+        "globalListenCount":listen_count,
+        "globalUserCount": user_count
     }
 
-    return render_template("index/recent.html", props=ujson.dumps(props))
+    return render_template("index/recent.html", props=orjson.dumps(props).decode("utf-8"))
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required
@@ -311,6 +323,6 @@ def charts():
 
 
 @index_bp.route("/statistics/")
-def reports():
-    """ Show sitewide reports """
-    return render_template("index/reports.html")
+def stats():
+    """ Show sitewide stats """
+    return render_template("index/stats.html")

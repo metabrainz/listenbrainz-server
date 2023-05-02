@@ -1,0 +1,9 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Sitewide Stats - ListenBrainz{% endblock %}
+
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ get_static_path('userReports.js') }}" type="text/javascript"></script>
+{% endblock %}

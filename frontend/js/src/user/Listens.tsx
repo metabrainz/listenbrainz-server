@@ -14,13 +14,11 @@ import { get, isEqual } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import {
   faCompactDisc,
-  faLink,
-  faPencilAlt,
-  faThumbtack,
+  faPlusCircle,
   faTrashAlt,
-  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import NiceModal from "@ebay/nice-modal-react";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -31,27 +29,20 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 import Loader from "../components/Loader";
-import PinRecordingModal from "../pins/PinRecordingModal";
-import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
-import AddListenModal from "../add-listen/add-listen-modal";
+import AddListenModal from "../add-listen/AddListenModal";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
   getPageProps,
   getListenablePin,
   getRecordingMBID,
-  getArtistMBIDs,
-  getReleaseGroupMBID,
   getTrackName,
-  getArtistName,
   getRecordingMSID,
 } from "../utils/utils";
-import CBReviewModal from "../cb-review/CBReviewModal";
 import ListenControl from "../listens/ListenControl";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCountCard from "../listens/ListenCountCard";
-import SimpleModal from "../utils/SimpleModal";
-import MbidMappingModal from "../mbid-mapping/MbidMappingModal";
+import FollowButton from "../follow/FollowButton";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -70,10 +61,6 @@ export interface ListensState {
   previousListenTs?: number;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
-  recordingToPin?: Listen;
-  recordingToReview?: Listen;
-  recordingToMapToMusicbrainz?: Listen;
-  recordingToPersonallyRecommend?: Listen;
   dateTimePickerValue: Date;
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
@@ -81,6 +68,7 @@ export interface ListensState {
   deletedListen: Listen | null;
   userPinnedRecording?: PinnedRecording;
   playingNowListen?: Listen;
+  followingList: Array<string>;
 }
 
 export default class Listens extends React.Component<
@@ -109,10 +97,6 @@ export default class Listens extends React.Component<
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
-      recordingToPin: props.listens?.[0],
-      recordingToReview: props.listens?.[0],
-      recordingToMapToMusicbrainz: props.listens?.[0],
-      recordingToPersonallyRecommend: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
       dateTimePickerValue: nextListenTs
@@ -121,12 +105,13 @@ export default class Listens extends React.Component<
       deletedListen: null,
       userPinnedRecording: props.userPinnedRecording,
       playingNowListen,
+      followingList: [],
     };
 
     this.listensTable = React.createRef();
   }
 
-  componentDidMount(): void {
+  componentDidMount() {
     const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService } = this.context;
@@ -156,6 +141,7 @@ export default class Listens extends React.Component<
     if (playingNowListen) {
       this.receiveNewPlayingNow(playingNowListen);
     }
+    this.getFollowing();
     this.loadFeedback();
   }
 
@@ -203,10 +189,6 @@ export default class Listens extends React.Component<
       this.afterListensFetch
     );
   };
-
-  handlePinnedRecording(pinnedRecording: PinnedRecording) {
-    this.setState({ userPinnedRecording: pinnedRecording });
-  }
 
   connectWebsockets = (): void => {
     this.createWebsocketsConnection();
@@ -271,7 +253,7 @@ export default class Listens extends React.Component<
         playingNow.track_metadata.artist_name,
         false
       );
-      playingNow.track_metadata.mbid_mapping = metadata as MbidMapping;
+      playingNow.track_metadata.mbid_mapping = metadata as MBIDMapping;
 
       await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {
@@ -280,7 +262,7 @@ export default class Listens extends React.Component<
         newAlert(
           "danger",
           "We could not load data for the now playing listen",
-          typeof error === "object" ? error.message : error
+          typeof error === "object" ? error.message : error.toString()
         );
       }
     }
@@ -464,7 +446,6 @@ export default class Listens extends React.Component<
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const recordingMBID = getRecordingMBID(listen);
-
     if (!currentUser?.name || !recordingMBID) {
       return;
     }
@@ -556,24 +537,6 @@ export default class Listens extends React.Component<
       : 0;
   };
 
-  updateRecordingToPin = (recordingToPin: Listen) => {
-    this.setState({ recordingToPin });
-  };
-
-  updateRecordingToReview = (recordingToReview: Listen) => {
-    this.setState({ recordingToReview });
-  };
-
-  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
-    this.setState({ recordingToMapToMusicbrainz });
-  };
-
-  updateRecordingToPersonallyRecommend = (
-    recordingToPersonallyRecommend: Listen
-  ) => {
-    this.setState({ recordingToPersonallyRecommend });
-  };
-
   deleteListen = async (listen: Listen) => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
@@ -610,6 +573,52 @@ export default class Listens extends React.Component<
         );
       }
     }
+  };
+
+  getFollowing = async () => {
+    const { APIService, currentUser } = this.context;
+    const { getFollowingForUser } = APIService;
+    if (!currentUser?.name) {
+      return;
+    }
+    try {
+      const response = await getFollowingForUser(currentUser.name);
+      const { following } = response;
+
+      this.setState({ followingList: following });
+    } catch (err) {
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
+    }
+  };
+
+  updateFollowingList = (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => {
+    const { followingList } = this.state;
+    const newFollowingList = [...followingList];
+    const index = newFollowingList.findIndex(
+      (following) => following === user.name
+    );
+    if (action === "follow" && index === -1) {
+      newFollowingList.push(user.name);
+    }
+    if (action === "unfollow" && index !== -1) {
+      newFollowingList.splice(index, 1);
+    }
+    this.setState({ followingList: newFollowingList });
+  };
+
+  loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
+    const { currentUser } = this.context;
+    const { followingList } = this.state;
+
+    if (_.isNil(currentUser) || _.isEmpty(currentUser)) {
+      return false;
+    }
+
+    return followingList.includes(user.name);
   };
 
   removeListenFromListenList = (listen: Listen) => {
@@ -701,70 +710,14 @@ export default class Listens extends React.Component<
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
     const listenedAt = get(listen, "listened_at");
     const recordingMSID = getRecordingMSID(listen);
-    const recordingMBID = getRecordingMBID(listen);
-    const artistMBIDs = getArtistMBIDs(listen);
-    const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
-    const releaseGroupMBID = getReleaseGroupMBID(listen);
     const canDelete =
       isCurrentUser &&
       (Boolean(listenedAt) || listenedAt === 0) &&
       Boolean(recordingMSID);
 
-    const isListenReviewable =
-      Boolean(recordingMBID) ||
-      artistMBIDs?.length ||
-      Boolean(trackMBID) ||
-      Boolean(releaseGroupMBID);
-    const canPin = Boolean(recordingMBID) || Boolean(recordingMSID);
-    const canPersonallyRecommend = Boolean(recordingMSID);
-    const canManuallyMap = Boolean(recordingMSID);
-
     /* eslint-disable react/jsx-no-bind */
     const additionalMenuItems = [];
-    if (canPersonallyRecommend) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Personally recommend"
-          icon={faPaperPlane}
-          action={this.updateRecordingToPersonallyRecommend.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#PersonalRecommendationModal"
-        />
-      );
-    }
-    if (canPin) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Pin this track"
-          icon={faThumbtack}
-          action={this.updateRecordingToPin.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#PinRecordingModal"
-        />
-      );
-    }
-    if (isListenReviewable) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Write a review"
-          icon={faPencilAlt}
-          action={this.updateRecordingToReview.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#CBReviewModal"
-        />
-      );
-    }
-    if (canManuallyMap) {
-      additionalMenuItems.push(
-        <ListenControl
-          text="Link with MusicBrainz"
-          icon={faLink}
-          action={this.updateRecordingToMapToMusicbrainz.bind(this, listen)}
-          dataToggle="modal"
-          dataTarget="#MapToMusicBrainzRecordingModal"
-        />
-      );
-    }
+
     if (canDelete) {
       additionalMenuItems.push(
         <ListenControl
@@ -813,10 +766,6 @@ export default class Listens extends React.Component<
       nextListenTs,
       previousListenTs,
       dateTimePickerValue,
-      recordingToPin,
-      recordingToMapToMusicbrainz,
-      recordingToReview,
-      recordingToPersonallyRecommend,
       userPinnedRecording,
       playingNowListen,
     } = this.state;
@@ -839,18 +788,84 @@ export default class Listens extends React.Component<
     const isOldestButtonDisabled =
       listens?.length > 0 &&
       listens[listens.length - 1]?.listened_at <= oldestListenTs;
+    const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
       <div role="main">
-        <div className="listen-header">
-          {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
-          <button
-            type="button"
-            className="btn btn-primary add-listen-btn"
-            data-Toggle="modal"
-            data-Target="#AddListenModal"
-          >
-            Add listen
-          </button>
+        <div className="row">
+          <div className="col-md-8 listen-header">
+            {listens.length === 0 ? (
+              <div id="spacer" />
+            ) : (
+              <h3>Recent listens</h3>
+            )}
+            {isCurrentUsersPage && (
+              <div className="dropdow add-listen-btn">
+                <button
+                  className="btn btn-info dropdown-toggle"
+                  type="button"
+                  id="addListensDropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                >
+                  <FontAwesomeIcon icon={faPlusCircle} title="Add listens" />
+                  &nbsp;Add listens&nbsp;
+                  <span className="caret" />
+                </button>
+                <ul
+                  className="dropdown-menu dropdown-menu-right"
+                  aria-labelledby="addListensDropdown"
+                >
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show(AddListenModal, {
+                          newAlert,
+                        });
+                      }}
+                      data-toggle="modal"
+                      data-target="#AddListenModal"
+                    >
+                      Manual addition
+                    </button>
+                  </li>
+                  <li>
+                    <a href="/profile/music-services/details/">
+                      Connect music services
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/profile/import/">Import your listens</a>
+                  </li>
+                  <li>
+                    <a href="/add-data/">Submit from music players</a>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+          <div className="col-md-4" style={{ marginTop: "1em" }}>
+            {!isCurrentUsersPage && (
+              <FollowButton
+                type="icon-only"
+                user={user}
+                loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
+                updateFollowingList={this.updateFollowingList}
+              />
+            )}
+            <a
+              href={`https://musicbrainz.org/user/${user.name}`}
+              className="btn lb-follow-button" // for same style as follow button next to it
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img
+                src="/static/img/musicbrainz-16.svg"
+                alt="MusicBrainz Logo"
+              />{" "}
+              MusicBrainz
+            </a>
+          </div>
         </div>
 
         <div className="row">
@@ -859,7 +874,7 @@ export default class Listens extends React.Component<
             {userPinnedRecording && (
               <PinnedRecordingCard
                 pinnedRecording={userPinnedRecording}
-                isCurrentUser={currentUser?.name === user?.name}
+                isCurrentUser={isCurrentUsersPage}
                 currentFeedback={userPinnedRecordingFeedback}
                 updateFeedbackCallback={this.updateFeedback}
                 removePinFromPinsList={() => {}}
@@ -873,7 +888,7 @@ export default class Listens extends React.Component<
             {!listens.length && (
               <div className="empty-listens">
                 <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
-                {currentUser?.name === user?.name ? (
+                {isCurrentUsersPage ? (
                   <div className="lead empty-text">Get listening</div>
                 ) : (
                   <div className="lead empty-text">
@@ -881,7 +896,7 @@ export default class Listens extends React.Component<
                   </div>
                 )}
 
-                {currentUser?.name === user?.name && (
+                {isCurrentUsersPage && (
                   <div className="empty-action">
                     Import <a href="/profile/import/">your listening history</a>{" "}
                     from last.fm/libre.fm and track your listens by{" "}
@@ -1021,37 +1036,10 @@ export default class Listens extends React.Component<
                     </a>
                   </li>
                 </ul>
-                {currentUser && (
-                  <>
-                    <PinRecordingModal
-                      recordingToPin={recordingToPin}
-                      newAlert={newAlert}
-                      onSuccessfulPin={(pinnedListen) =>
-                        this.handlePinnedRecording(pinnedListen)
-                      }
-                    />
-                    <MbidMappingModal
-                      listenToMap={recordingToMapToMusicbrainz}
-                      newAlert={newAlert}
-                    />
-                    <CBReviewModal
-                      listen={recordingToReview}
-                      isCurrentUser={currentUser?.name === user?.name}
-                      newAlert={newAlert}
-                    />
-                    <PersonalRecommendationModal
-                      recordingToPersonallyRecommend={
-                        recordingToPersonallyRecommend
-                      }
-                      newAlert={newAlert}
-                    />
-                  </>
-                )}
               </div>
             )}
           </div>
         </div>
-        {currentUser && <AddListenModal newAlert={newAlert} />}
         <BrainzPlayer
           listens={allListenables}
           newAlert={newAlert}
@@ -1068,29 +1056,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    critiquebrainz,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const {
-    latest_listen_ts,
-    listens,
-    oldest_listen_ts,
-    userPinnedRecording,
-    user,
-  } = reactProps;
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -1099,31 +1069,30 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
+  const {
+    latest_listen_ts,
+    listens,
+    oldest_listen_ts,
+    userPinnedRecording,
+    user,
+  } = reactProps;
 
   const ListensWithAlertNotifications = withAlertNotifications(Listens);
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    critiquebrainzAuth: critiquebrainz,
-    modal: modalRef,
-  };
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
-        <ListensWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          latestListenTs={latest_listen_ts}
-          listens={listens}
-          userPinnedRecording={userPinnedRecording}
-          oldestListenTs={oldest_listen_ts}
-          user={user}
-        />
+      <GlobalAppContext.Provider value={globalAppContext}>
+        <NiceModal.Provider>
+          <ListensWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            latestListenTs={latest_listen_ts}
+            listens={listens}
+            userPinnedRecording={userPinnedRecording}
+            oldestListenTs={oldest_listen_ts}
+            user={user}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

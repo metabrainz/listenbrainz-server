@@ -60,19 +60,6 @@ const mountOptions: { context: GlobalAppContextT } = {
 };
 
 describe("UserPins", () => {
-  let wrapper: ReactWrapper<UserPinsProps, UserPinsState, UserPins> | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders correctly on the profile page", () => {
     // Datepicker component uses current time at load as max date,
     // and PinnedRecordingModal component uses current time at load to display recording unpin date,
@@ -84,13 +71,13 @@ describe("UserPins", () => {
 
     // eslint-disable-next-line no-import-assign
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
+    const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
   });
 
   it("renders the correct number of pinned recordings", () => {
-    wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
+    const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
 
     const wrapperElement = wrapper.find("#pinned-recordings");
     const pinnedRecordings = wrapperElement.find(PinnedRecordingCard);
@@ -100,13 +87,13 @@ describe("UserPins", () => {
   describe("handleLoadMore", () => {
     describe("handleClickOlder", () => {
       it("does nothing if page >= maxPage", async () => {
-        wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
+        const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
         const instance = wrapper.instance();
 
         const spy = jest.fn().mockImplementation(() => {});
         instance.getPinsFromAPI = spy;
         await act(() => {
-          wrapper!.setState({ maxPage: 1 });
+          wrapper.setState({ maxPage: 1 });
         });
 
         await act(async () => {
@@ -118,7 +105,7 @@ describe("UserPins", () => {
       });
 
       it("calls the API to get next page", async () => {
-        wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
+        const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
         const instance = wrapper.instance();
 
         const apiSpy = jest
@@ -149,10 +136,10 @@ describe("UserPins", () => {
 
   describe("removePinFromPinsList", () => {
     it("updates the listens state after removing particular pin", async () => {
-      wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
+      const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
       const instance = wrapper.instance();
       await act(() => {
-        wrapper!.setState({ pins: props.pins });
+        wrapper.setState({ pins: props.pins });
       });
 
       expect(wrapper.state("pins")).toHaveLength(25);

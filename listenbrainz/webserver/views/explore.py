@@ -1,10 +1,20 @@
 from flask import Blueprint, render_template, current_app
-import ujson
+import orjson
 from werkzeug.exceptions import NotFound
 
 from listenbrainz.db.similar_users import get_top_similar_users
 
 explore_bp = Blueprint('explore', __name__)
+
+
+@explore_bp.route("/")
+def index():
+    """ Main explore page for users to browse the various explore features """
+
+    return render_template(
+        "explore/index.html",
+        props=orjson.dumps({}).decode("utf-8")
+    )
 
 
 @explore_bp.route("/huesound/")
@@ -13,7 +23,7 @@ def huesound():
 
     return render_template(
         "explore/huesound.html",
-        props=ujson.dumps({})
+        props=orjson.dumps({}).decode("utf-8")
     )
 
 
@@ -37,7 +47,7 @@ def fresh_releases():
 
     return render_template(
         "explore/fresh-releases.html",
-        props=ujson.dumps({})
+        props=orjson.dumps({}).decode("utf-8")
     )
 
 @explore_bp.route("/cover-art-collage/")
@@ -53,3 +63,9 @@ def cover_art_collage(year: int = 2022):
     return render_template(
         "explore/cover-art-collage.html"
     )
+
+@explore_bp.route("/ai-brainz/")
+def ai_brainz():
+    """ Explore your love of Rick """
+
+    return render_template("explore/ai-brainz.html")

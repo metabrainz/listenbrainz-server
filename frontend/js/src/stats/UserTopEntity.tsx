@@ -6,8 +6,12 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "../utils/APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
-import { getEntityLink, isInvalidStatRange } from "./utils";
-import { COLOR_LB_ASPHALT } from "../utils/constants";
+import {
+  getChartEntityDetails,
+  isInvalidStatRange,
+  userChartEntityToListen,
+} from "./utils";
+import ListenCard from "../listens/ListenCard";
 
 export type UserTopEntityProps = {
   range: UserStatsAPIRange;
@@ -15,6 +19,11 @@ export type UserTopEntityProps = {
   user?: ListenBrainzUser;
   apiUrl: string;
   terminology: string;
+  newAlert: (
+    alertType: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
 };
 
 export type UserTopEntityState = {
@@ -46,9 +55,9 @@ export default class UserTopEntity extends React.Component<
   }
 
   componentDidUpdate(prevProps: UserTopEntityProps) {
-    const { range: prevRange } = prevProps;
-    const { range: currRange } = this.props;
-    if (prevRange !== currRange) {
+    const { range: prevRange, user: prevUser } = prevProps;
+    const { range: currRange, user: currUser } = this.props;
+    if (prevRange !== currRange || prevUser !== currUser) {
       if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,
@@ -95,7 +104,7 @@ export default class UserTopEntity extends React.Component<
   };
 
   render() {
-    const { entity, range, user, terminology } = this.props;
+    const { entity, range, user, terminology, newAlert } = this.props;
     const { data, loading, hasError, errorMessage } = this.state;
 
     let statsUrl;
@@ -107,197 +116,198 @@ export default class UserTopEntity extends React.Component<
     statsUrl += `/charts?range=${range}&entity=${entity}`;
 
     const entityTextOnCard = `${terminology}s`;
-
+    if (hasError) {
+      return (
+        <Card className="mt-15">
+          <h3 className="capitalize-bold text-center">
+            Top {entityTextOnCard}
+          </h3>
+          <div className="text-center">
+            <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+            {errorMessage}
+          </div>
+        </Card>
+      );
+    }
     return (
-      <Card
-        style={{
-          minHeight: 550,
-          marginTop: 20,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <h3 className="capitalize-bold" style={{ display: "inline" }}>
-          Top {entityTextOnCard}
-        </h3>
-        <h4
-          style={{
-            display: "inline",
-            position: "absolute",
-            marginTop: 20,
-            right: 20,
-          }}
-        >
-          <a href="#top-entity">
-            <FontAwesomeIcon
-              icon={faLink as IconProp}
-              size="sm"
-              color={COLOR_LB_ASPHALT}
-              style={{ marginRight: 20 }}
-            />
-          </a>
-        </h4>
+      <Card className="mt-15">
+        <h3 className="capitalize-bold text-center">Top {entityTextOnCard}</h3>
         <Loader isLoading={loading}>
-          <table
-            style={{
-              whiteSpace: "nowrap",
-              tableLayout: "fixed",
-              width: "90%",
-            }}
-          >
-            <tbody>
-              {hasError && (
-                <tr style={{ height: 440 }}>
-                  <td
-                    style={{
-                      fontSize: 24,
-                      textAlign: "center",
-                      whiteSpace: "initial",
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-                    {errorMessage}
-                  </td>
-                </tr>
+          <div style={{ padding: "1em" }}>
+            {entity === "artist" &&
+              Object.keys(data).length > 0 &&
+              (data as UserArtistsResponse).payload.artists.map(
+                (artist, index) => {
+                  const interchangeFormat = {
+                    id: index.toString(),
+                    entity: artist.artist_name,
+                    entityType: "artist" as Entity,
+                    entityMBID: artist.artist_mbid ?? "",
+                    idx: index + 1,
+                    count: artist.listen_count,
+                  };
+                  const listenDetails = getChartEntityDetails(
+                    interchangeFormat
+                  );
+                  return (
+                    <ListenCard
+                      key={artist.artist_mbid}
+                      listenDetails={listenDetails}
+                      listen={userChartEntityToListen(interchangeFormat)}
+                      showTimestamp={false}
+                      showUsername={false}
+                      currentFeedback={0}
+                      newAlert={newAlert}
+                      additionalActions={
+                        <span className="badge badge-info">
+                          {artist.listen_count}
+                        </span>
+                      }
+                      // no thumbnail for artist entities
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      customThumbnail={<></>}
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      feedbackComponent={<></>}
+                      compact
+                    />
+                  );
+                }
               )}
-              {!hasError &&
-                entity === "artist" &&
-                Object.keys(data).length > 0 &&
-                (data as UserArtistsResponse).payload.artists.map(
-                  (artist, index) => {
-                    return (
-                      // eslint-disable-next-line react/no-array-index-key
-                      <tr key={index} style={{ height: 44 }}>
-                        <td style={{ width: "10%", textAlign: "end" }}>
-                          {index + 1}.&nbsp;
-                        </td>
-                        <td
-                          style={{
-                            textOverflow: "ellipsis",
-                            overflow: "hidden",
-                            paddingRight: 10,
-                          }}
-                        >
-                          {getEntityLink(
-                            "artist",
-                            artist.artist_name,
-                            artist.artist_mbid ?? undefined
-                          )}
-                        </td>
-                        <td style={{ width: "10%" }}>{artist.listen_count}</td>
-                      </tr>
-                    );
-                  }
-                )}
-              {!hasError &&
-                entity === "release" &&
-                Object.keys(data).length > 0 &&
-                (data as UserReleasesResponse).payload.releases.map(
-                  (release, index) => {
-                    return (
-                      // eslint-disable-next-line react/no-array-index-key
-                      <React.Fragment key={index}>
-                        <tr style={{ height: 22 }}>
-                          <td style={{ width: "10%", textAlign: "end" }}>
-                            {index + 1}.&nbsp;
-                          </td>
-                          <td
-                            style={{
-                              textOverflow: "ellipsis",
-                              overflow: "hidden",
-                              paddingRight: 10,
-                            }}
-                          >
-                            {getEntityLink(
-                              "release",
-                              release.release_name,
-                              release.release_mbid
-                            )}
-                          </td>
-                          <td style={{ width: "10%" }}>
-                            {release.listen_count}
-                          </td>
-                        </tr>
-                        <tr style={{ height: 22 }}>
-                          <td />
-                          <td
-                            style={{
-                              fontSize: 12,
-                              textOverflow: "ellipsis",
-                              overflow: "hidden",
-                              paddingRight: 10,
-                            }}
-                          >
-                            {getEntityLink(
-                              "artist",
-                              release.artist_name,
-                              release.artist_mbids && release.artist_mbids[0]
-                            )}
-                          </td>
-                        </tr>
-                      </React.Fragment>
-                    );
-                  }
-                )}
-              {!hasError &&
-                entity === "recording" &&
-                Object.keys(data).length > 0 &&
-                (data as UserRecordingsResponse).payload.recordings.map(
-                  (recording, index) => {
-                    return (
-                      // eslint-disable-next-line react/no-array-index-key
-                      <React.Fragment key={index}>
-                        <tr style={{ height: 22 }}>
-                          <td style={{ width: "10%", textAlign: "end" }}>
-                            {index + 1}.&nbsp;
-                          </td>
-                          <td
-                            style={{
-                              textOverflow: "ellipsis",
-                              overflow: "hidden",
-                              paddingRight: 10,
-                            }}
-                          >
-                            {getEntityLink(
-                              "recording",
-                              recording.track_name,
-                              recording.recording_mbid
-                            )}
-                          </td>
-                          <td style={{ width: "10%" }}>
-                            {recording.listen_count}
-                          </td>
-                        </tr>
-                        <tr style={{ height: 22 }}>
-                          <td />
-                          <td
-                            style={{
-                              fontSize: 12,
-                              textOverflow: "ellipsis",
-                              overflow: "hidden",
-                              paddingRight: 10,
-                            }}
-                          >
-                            {getEntityLink(
-                              "artist",
-                              recording.artist_name,
-                              recording.artist_mbids &&
-                                recording.artist_mbids[0]
-                            )}
-                          </td>
-                        </tr>
-                      </React.Fragment>
-                    );
-                  }
-                )}
-            </tbody>
-          </table>
-          {!hasError && (
-            <a href={statsUrl} className="mt-15">
-              View More
-            </a>
-          )}
+            {entity === "release" &&
+              Object.keys(data).length > 0 &&
+              (data as UserReleasesResponse).payload.releases.map(
+                (release, index) => {
+                  const interchangeFormat = {
+                    id: index.toString(),
+                    entity: release.release_name,
+                    entityType: "release" as Entity,
+                    entityMBID: release.release_mbid,
+                    artist: release.artist_name,
+                    artistMBID: release.artist_mbids,
+                    idx: index + 1,
+                    count: release.listen_count,
+                    caaID: release.caa_id,
+                    caaReleaseMBID: release.caa_release_mbid,
+                  };
+                  const listenDetails = getChartEntityDetails(
+                    interchangeFormat
+                  );
+                  return (
+                    <ListenCard
+                      key={release.release_mbid}
+                      listenDetails={listenDetails}
+                      listen={userChartEntityToListen(interchangeFormat)}
+                      showTimestamp={false}
+                      showUsername={false}
+                      currentFeedback={0}
+                      newAlert={newAlert}
+                      additionalActions={
+                        <span className="badge badge-info">
+                          {release.listen_count}
+                        </span>
+                      }
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      feedbackComponent={<></>}
+                      compact
+                    />
+                  );
+                }
+              )}
+            {entity === "recording" &&
+              Object.keys(data).length > 0 &&
+              (data as UserRecordingsResponse).payload.recordings.map(
+                (recording) => {
+                  const {
+                    artist_name,
+                    track_name,
+                    recording_mbid,
+
+                    release_mbid,
+                    release_name,
+                    caa_id,
+                    caa_release_mbid,
+                    artist_mbids,
+                    listen_count,
+                  } = recording;
+                  const listenFromRecording: Listen = {
+                    listened_at: 0,
+                    track_metadata: {
+                      artist_name,
+                      track_name,
+                      release_name,
+                      release_mbid,
+                      recording_mbid,
+                      mbid_mapping: {
+                        caa_id,
+                        caa_release_mbid,
+                        recording_mbid: recording_mbid ?? "",
+                        release_mbid: release_mbid ?? "",
+                        artist_mbids: artist_mbids ?? [],
+                      },
+                    },
+                  };
+                  return (
+                    <ListenCard
+                      key={recording_mbid}
+                      listen={listenFromRecording}
+                      showTimestamp={false}
+                      showUsername={false}
+                      newAlert={newAlert}
+                      additionalActions={
+                        <span className="badge badge-info">{listen_count}</span>
+                      }
+                      // Disabling the feedback component here because of display issues with the badge
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      feedbackComponent={<></>}
+                      compact
+                    />
+                  );
+                }
+              )}
+            {entity === "release-group" &&
+              Object.keys(data).length > 0 &&
+              (data as UserReleaseGroupsResponse).payload.release_groups.map(
+                (releaseGroup, index) => {
+                  const interchangeFormat = {
+                    id: index.toString(),
+                    entity: releaseGroup.release_group_name,
+                    entityType: "release-group" as Entity,
+                    entityMBID: releaseGroup.release_group_mbid,
+                    artist: releaseGroup.artist_name,
+                    artistMBID: releaseGroup.artist_mbids,
+                    idx: index + 1,
+                    count: releaseGroup.listen_count,
+                    caaID: releaseGroup.caa_id,
+                    caaReleaseMBID: releaseGroup.caa_release_mbid,
+                  };
+                  const listenDetails = getChartEntityDetails(
+                    interchangeFormat
+                  );
+                  return (
+                    <ListenCard
+                      key={releaseGroup.release_group_mbid}
+                      listenDetails={listenDetails}
+                      listen={userChartEntityToListen(interchangeFormat)}
+                      showTimestamp={false}
+                      showUsername={false}
+                      currentFeedback={0}
+                      newAlert={newAlert}
+                      additionalActions={
+                        <span className="badge badge-info">
+                          {releaseGroup.listen_count}
+                        </span>
+                      }
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      feedbackComponent={<></>}
+                      compact
+                    />
+                  );
+                }
+              )}
+          </div>
+          <a href={statsUrl} className="mt-15 btn btn-block btn-info">
+            View more…
+          </a>
         </Loader>
       </Card>
     );

@@ -7,8 +7,8 @@ import { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 import * as colorPlayProps from "../__mocks__/colorPlayProps.json";
-import ColorPlay from "../../src/huesound/ColorPlay";
-import ColorWheel from "../../src/huesound/ColorWheel";
+import ColorPlay from "../../src/explore/huesound/ColorPlay";
+import ColorWheel from "../../src/explore/huesound/ColorWheel";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -46,7 +46,6 @@ describe("ColorPlay", () => {
     const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
     // const instance = wrapper.instance();
     expect(wrapper.find(ColorWheel)).toHaveLength(1);
-    wrapper.unmount();
   });
 
   it("contains a BrainzPlayer instance when a release is selected", async () => {
@@ -59,7 +58,6 @@ describe("ColorPlay", () => {
       wrapper.setState({ selectedRelease: release });
     });
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
-    wrapper.unmount();
   });
   // xdescribe("selectRelease", () => {
   // it("selects the particular release and starts playing it in brainzplayer", async () => {

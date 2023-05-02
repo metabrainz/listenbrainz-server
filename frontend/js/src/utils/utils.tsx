@@ -1,12 +1,14 @@
 import * as React from "react";
 import * as _ from "lodash";
 import * as timeago from "time-ago";
-import { isFinite, isUndefined } from "lodash";
+import { isFinite, isUndefined, castArray } from "lodash";
 import { Rating } from "react-simple-star-rating";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
 import NamePill from "../personal-recommendations/NamePill";
+import { GlobalAppContextT } from "./GlobalAppContext";
+import APIServiceClass from "./APIService";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
@@ -132,9 +134,29 @@ const searchForYoutubeTrack = async (
 const getAdditionalContent = (metadata: EventMetadata): string =>
   _.get(metadata, "blurb_content") ?? _.get(metadata, "text") ?? "";
 
-const getArtistMBIDs = (listen: Listen): string[] | undefined =>
-  _.get(listen, "track_metadata.additional_info.artist_mbids") ??
-  _.get(listen, "track_metadata.mbid_mapping.artist_mbids");
+const getArtistMBIDs = (listen: Listen): string[] | undefined => {
+  const additionalInfoArtistMBIDs = _.get(
+    listen,
+    "track_metadata.additional_info.artist_mbids"
+  );
+  const mbidMappingArtistMBIDs = _.get(
+    listen,
+    "track_metadata.mbid_mapping.artist_mbids"
+  );
+  if (additionalInfoArtistMBIDs || mbidMappingArtistMBIDs) {
+    return additionalInfoArtistMBIDs ?? mbidMappingArtistMBIDs;
+  }
+
+  // Backup: cast artist_mbid as an array if it exists
+  const additionalInfoArtistMBID = _.get(
+    listen,
+    "track_metadata.additional_info.artist_mbid"
+  );
+  if (additionalInfoArtistMBID) {
+    return [additionalInfoArtistMBID];
+  }
+  return undefined;
+};
 
 const getRecordingMSID = (listen: Listen): string =>
   _.get(listen, "track_metadata.additional_info.recording_msid");
@@ -152,16 +174,33 @@ const getReleaseGroupMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.mbid_mapping.release_group_mbid");
 
 const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
-  _.get(listen, "track_metadata.track_name", "") || _.get(listen, "title", "");
+  _.get(listen, "track_metadata.mbid_mapping.recording_name", "") ||
+  _.get(listen, "track_metadata.track_name", "") ||
+  _.get(listen, "title", "");
 
 const getTrackDurationInMs = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "track_metadata.additional_info.duration_ms", "") ||
   _.get(listen, "track_metadata.additional_info.duration", "") * 1000 ||
   _.get(listen, "duration", "");
 
-const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
-  _.get(listen, "track_metadata.artist_name", "") ||
-  _.get(listen, "creator", "");
+const getArtistName = (
+  listen?: Listen | JSPFTrack | PinnedRecording
+): string => {
+  const artists: MBIDMappingArtist[] = _.get(
+    listen,
+    "track_metadata.mbid_mapping.artists",
+    []
+  );
+  if (artists?.length) {
+    return artists
+      .map((artist) => `${artist.artist_credit_name}${artist.join_phrase}`)
+      .join("");
+  }
+  return (
+    _.get(listen, "track_metadata.artist_name", "") ||
+    _.get(listen, "creator", "")
+  );
+};
 
 const getArtistLink = (listen: Listen) => {
   const artists = listen.track_metadata?.mbid_mapping?.artists;
@@ -174,6 +213,7 @@ const getArtistLink = (listen: Listen) => {
               href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
               target="_blank"
               rel="noopener noreferrer"
+              title={artist.artist_credit_name}
             >
               {artist.artist_credit_name}
             </a>
@@ -387,27 +427,34 @@ const createAlert = (
   };
 };
 
-interface GlobalProps {
-  api_url: string;
+type SentryProps = {
   sentry_dsn: string;
+  sentry_traces_sample_rate?: number;
+};
+type GlobalAppProps = {
+  api_url: string;
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
   critiquebrainz?: CritiqueBrainzUser;
-  sentry_traces_sample_rate?: number;
-}
+  user_preferences?: UserPreferences;
+};
+type GlobalProps = GlobalAppProps & SentryProps;
 
 const getPageProps = (): {
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
-  globalReactProps: GlobalProps;
+  sentryProps: SentryProps;
   optionalAlerts: Alert[];
+  globalAppContext: GlobalAppContextT;
 } => {
   let domContainer = document.getElementById("react-container");
   const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
   let reactProps = {};
   let globalReactProps = {} as GlobalProps;
+  let sentryProps = {} as SentryProps;
+  let globalAppContext = {} as GlobalAppContextT;
   const optionalAlerts = [];
   if (!domContainer) {
     // Ensure there is a container for React rendering
@@ -428,6 +475,43 @@ const getPageProps = (): {
     if (propsElement?.innerHTML) {
       reactProps = JSON.parse(propsElement!.innerHTML);
     }
+
+    const {
+      current_user,
+      api_url,
+      spotify,
+      youtube,
+      critiquebrainz,
+      sentry_traces_sample_rate,
+      sentry_dsn,
+    } = globalReactProps;
+
+    let { user_preferences } = globalReactProps;
+
+    user_preferences = { ...user_preferences, saveData: false };
+
+    if ("connection" in navigator) {
+      // @ts-ignore
+      if (navigator.connection?.saveData === true) {
+        user_preferences.saveData = true;
+      }
+    }
+
+    const apiService = new APIServiceClass(
+      api_url || `${window.location.origin}/1`
+    );
+    globalAppContext = {
+      APIService: apiService,
+      currentUser: current_user,
+      spotifyAuth: spotify,
+      youtubeAuth: youtube,
+      critiquebrainzAuth: critiquebrainz,
+      userPreferences: user_preferences,
+    };
+    sentryProps = {
+      sentry_dsn,
+      sentry_traces_sample_rate,
+    };
   } catch (err) {
     // Show error to the user and ask to reload page
     const errorMessage = `Please refresh the page.
@@ -440,7 +524,13 @@ const getPageProps = (): {
     );
     optionalAlerts.push(newAlert);
   }
-  return { domContainer, reactProps, globalReactProps, optionalAlerts };
+  return {
+    domContainer,
+    reactProps,
+    sentryProps,
+    globalAppContext,
+    optionalAlerts,
+  };
 };
 
 const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
@@ -539,7 +629,8 @@ const getAlbumArtFromReleaseMBID = async (
 
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
-  spotifyUser?: SpotifyUser
+  spotifyUser?: SpotifyUser,
+  APIService?: APIServiceClass
 ): Promise<string | undefined> => {
   // if spotifyListen
   if (
@@ -681,16 +772,8 @@ export function personalRecommendationEventToListen(
 ): BaseListenFormat {
   return {
     listened_at: -1,
-    track_metadata: {
-      track_name: eventMetadata.track_name,
-      artist_name: eventMetadata.artist_name,
-      release_name: eventMetadata.release_name ?? "",
-      additional_info: {
-        recording_mbid: eventMetadata.recording_mbid,
-        recording_msid: eventMetadata.recording_msid,
-      },
-    },
-  };
+    track_metadata: eventMetadata.track_metadata,
+  } as BaseListenFormat;
 }
 
 export function getReviewEventContent(

@@ -11,21 +11,10 @@ exports[`UserDailyActivity renders corectly when range is invalid 1`] = `
   }
 >
   <ForwardRef
-    style={
-      Object {
-        "marginTop": 20,
-        "minHeight": 480,
-      }
-    }
+    className="user-stats-card"
   >
     <div
-      className="card "
-      style={
-        Object {
-          "marginTop": 20,
-          "minHeight": 480,
-        }
-      }
+      className="card user-stats-card"
     >
       <div
         className="row"
@@ -202,12 +191,7 @@ exports[`UserDailyActivity renders corectly when range is invalid 1`] = `
 
 exports[`UserDailyActivity renders correctly 1`] = `
 <ForwardRef
-  style={
-    Object {
-      "marginTop": 20,
-      "minHeight": 480,
-    }
-  }
+  className="user-stats-card"
 >
   <div
     className="row"
@@ -1102,7 +1086,6 @@ exports[`UserDailyActivity renders correctly 1`] = `
               },
             ]
           }
-          width={1200}
         />
       </div>
     </div>

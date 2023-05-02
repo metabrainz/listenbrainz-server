@@ -198,11 +198,11 @@ class MappingTestCase(TimescaleTestCase):
                 continue
 
             self.assertEqual(metadata["release_name"], recording["release"])
-            self.assertEqual(metadata["additional_info"]["recording_mbid"], recording["recording_mbid"])
             self.assertEqual(metadata["additional_info"]["recording_msid"], recording["recording_msid"])
-            self.assertEqual(metadata["additional_info"]["release_mbid"], recording["release_mbid"])
-            self.assertEqual(metadata["additional_info"]["artist_mbids"], recording["artist_mbids"])
-            self.assertEqual(metadata["additional_info"]["artists"], recording["artists"])
+            self.assertEqual(metadata["mbid_mapping"]["recording_mbid"], recording["recording_mbid"])
+            self.assertEqual(metadata["mbid_mapping"]["release_mbid"], recording["release_mbid"])
+            self.assertEqual(metadata["mbid_mapping"]["artist_mbids"], recording["artist_mbids"])
+            self.assertEqual(metadata["mbid_mapping"]["artists"], recording["artists"])
 
     def test_fetch_track_metadata_for_items_with_same_mbid(self):
         recording = self.insert_recordings()[0]
@@ -216,9 +216,9 @@ class MappingTestCase(TimescaleTestCase):
             self.assertEqual(metadata["track_name"], recording["title"])
             self.assertEqual(metadata["artist_name"], recording["artist"])
             self.assertEqual(metadata["release_name"], recording["release"])
-            self.assertEqual(metadata["additional_info"]["recording_mbid"], recording["recording_mbid"])
             self.assertEqual(metadata["additional_info"]["recording_msid"], recording["recording_msid"])
-            self.assertEqual(metadata["additional_info"]["release_mbid"], recording["release_mbid"])
-            self.assertEqual(metadata["additional_info"]["artist_mbids"], recording["artist_mbids"])
-            self.assertEqual(metadata["additional_info"]["artists"], recording["artists"])
+            self.assertEqual(metadata["mbid_mapping"]["recording_mbid"], recording["recording_mbid"])
+            self.assertEqual(metadata["mbid_mapping"]["release_mbid"], recording["release_mbid"])
+            self.assertEqual(metadata["mbid_mapping"]["artist_mbids"], recording["artist_mbids"])
+            self.assertEqual(metadata["mbid_mapping"]["artists"], recording["artists"])
 

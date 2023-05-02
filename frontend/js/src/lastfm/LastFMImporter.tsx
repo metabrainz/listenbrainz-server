@@ -414,6 +414,7 @@ export default class LastFmImporter extends React.Component<
       this.totalPages = await this.getNumberOfPages();
       this.userIsPrivate = await this.getUserPrivacy();
       this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
+      this.numCompleted = 0;
 
       await this.importLoop(); // import pages
     } catch (err) {
@@ -622,16 +623,13 @@ export default class LastFmImporter extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalReactProps } = getPageProps();
-  const { api_url, sentry_dsn, sentry_traces_sample_rate } = globalReactProps;
   const {
-    user,
-    profile_url,
-    lastfm_api_url,
-    lastfm_api_key,
-    librefm_api_url,
-    librefm_api_key,
-  } = reactProps;
+    domContainer,
+    reactProps,
+    globalAppContext,
+    sentryProps,
+  } = getPageProps();
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -641,12 +639,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const {
+    user,
+    profile_url,
+    lastfm_api_url,
+    lastfm_api_key,
+    librefm_api_url,
+    librefm_api_key,
+  } = reactProps;
+
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <LastFmImporter
       user={user}
       profileUrl={profile_url}
-      apiUrl={api_url}
+      apiUrl={globalAppContext.APIService.APIBaseURI}
       lastfmApiKey={lastfm_api_key}
       lastfmApiUrl={lastfm_api_url}
       librefmApiKey={librefm_api_key}

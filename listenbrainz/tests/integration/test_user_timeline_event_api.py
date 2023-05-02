@@ -63,11 +63,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.app.config["TESTING"] = False
 
     def test_recommendation_writes_an_event_to_the_database(self):
-        metadata = {
-            'artist_name': 'Kanye West',
-            'track_name': 'Fade',
-            'recording_msid': str(uuid.uuid4()),
-        }
+        metadata = {'recording_msid': str(uuid.uuid4())}
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
@@ -80,16 +76,11 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             count=1,
         )
         self.assertEqual(1, len(events))
-        self.assertEqual('Kanye West', events[0].metadata.artist_name)
-        self.assertEqual('Fade', events[0].metadata.track_name)
+        self.assertEqual(metadata["recording_msid"], events[0].metadata.recording_msid)
 
     def test_recommendation_mbid_only(self):
         """ Test recommendation with mbid only works """
-        metadata = {
-            'artist_name': 'Kanye West',
-            'track_name': 'Fade',
-            'recording_mbid': str(uuid.uuid4()),
-        }
+        metadata = {'recording_mbid': str(uuid.uuid4())}
         r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
@@ -102,8 +93,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             count=1,
         )
         self.assertEqual(1, len(events))
-        self.assertEqual('Kanye West', events[0].metadata.artist_name)
-        self.assertEqual('Fade', events[0].metadata.track_name)
         self.assertEqual(metadata['recording_mbid'], events[0].metadata.recording_mbid)
 
     def test_recommendation_checks_auth_token_for_authorization(self):
@@ -840,9 +829,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
         db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -865,14 +851,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         self.assertEqual(1, len(events))
 
-        received = events[0].metadata.dict()
-        self.assertEqual(metadata["track_name"], received["track_name"])
-        self.assertEqual(metadata["artist_name"], received["artist_name"])
-        self.assertEqual(metadata["release_name"], received["release_name"])
-        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
-        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
-        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
-        self.assertCountEqual(metadata["users"], received["users"])
+        received = events[0].metadata.dict(exclude_none=True)
+        self.assertEqual(metadata, received)
 
     def test_personal_recommendation_checks_auth_token(self):
         user_one = db_user.get_or_create(2, "riksucks")
@@ -919,9 +899,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
         db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -944,9 +921,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
         db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -970,9 +944,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
 
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -988,6 +959,29 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         data = json.loads(r.data)
         self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['hrik2001']", data['error'])
 
+
+    def test_personal_recommendation_not_for_non_followers_peter_k(self):
+        user_one = db_user.get_or_create(2, "riksucks")
+        user_two = db_user.get_or_create(3, "hrik2001")
+
+        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+
+        metadata = {
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": ["peter k"],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+        data = json.loads(r.data)
+        self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['peter k']", data['error'])
+
     def test_personal_recommendation_stays_after_unfollowing(self):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
@@ -996,9 +990,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
 
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -1023,14 +1014,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         self.assertEqual(1, len(events))
 
-        received = events[0].metadata.dict()
-        self.assertEqual(metadata["track_name"], received["track_name"])
-        self.assertEqual(metadata["artist_name"], received["artist_name"])
-        self.assertEqual(metadata["release_name"], received["release_name"])
-        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
-        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
-        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
-        self.assertCountEqual(metadata["users"], received["users"])
+        received = events[0].metadata.dict(exclude_none=True)
+        self.assertDictEqual(metadata, received)
 
     def test_personal_recommendation_mbid_only(self):
         """ Test that we can recommend a recording with only mbid """
@@ -1041,10 +1026,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
         db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
-            "recording_mbid": str(uuid.uuid4()),
+            "recording_mbid": "34c208ee-2de7-4d38-b47e-907074866dd3",
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
@@ -1065,11 +1047,5 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         self.assertEqual(1, len(events))
 
-        received = events[0].metadata.dict()
-        self.assertEqual(metadata["track_name"], received["track_name"])
-        self.assertEqual(metadata["artist_name"], received["artist_name"])
-        self.assertEqual(metadata["release_name"], received["release_name"])
-        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
-        self.assertEqual(None, received["recording_msid"])
-        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
-        self.assertCountEqual(metadata["users"], received["users"])
+        received = events[0].metadata.dict(exclude_none=True)
+        self.assertDictEqual(received, metadata)

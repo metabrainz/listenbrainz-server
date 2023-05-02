@@ -29,10 +29,15 @@ def run_post_recommendation_troi_bot():
         make_playlist_from_recommendations(user)
 
 
-def run_daily_jams_troi_bot():
-    """ Top level function called hourly to generate daily jams playlists for users """
+def run_daily_jams_troi_bot(create_all):
+    """ Top level function called hourly to generate daily jams playlists for users
+
+    Args:
+        create_all: whether to create daily jams for all users who follow troi-bot. if false,
+        create only for users according to timezone.
+    """
     # Now generate daily jams (and other in the future) for users who follow troi bot
-    users = get_users_for_daily_jams()
+    users = get_users_for_daily_jams(create_all)
     existing_urls = get_existing_daily_jams_urls([x["id"] for x in users])
     service = SpotifyService()
     for user in users:
@@ -44,8 +49,9 @@ def run_daily_jams_troi_bot():
             continue
 
 
-def get_users_for_daily_jams():
+def get_users_for_daily_jams(create_all):
     """ Retrieve users who follow troi bot and had midnight in their timezone less than 59 minutes ago. """
+    timezone_filter = "AND EXTRACT('hour' from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0"
     query = """
         SELECT "user".musicbrainz_id AS musicbrainz_id
              , "user".id as id
@@ -58,8 +64,9 @@ def get_users_for_daily_jams():
             ON us.user_id = user_0  
          WHERE user_1 = :followed
            AND relationship_type = 'follow'
-           AND EXTRACT('hour' from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0
     """
+    if not create_all:
+        query += " " + timezone_filter
     with db.engine.connect() as connection:
         result = connection.execute(text(query), {
             "followed": TROI_BOT_USER_ID,
@@ -93,7 +100,8 @@ def make_playlist_from_recommendations(user):
         "user_name": user,
         "upload": True,
         "token": token,
-        "created_for": user
+        "created_for": user,
+        "echo": False
     }
     for recs_type in ["top", "similar"]:
         # need to copy dict so that test mocks keep working
@@ -111,12 +119,10 @@ def _get_spotify_details(user_id, service):
         if not token:
             return None
 
-        sp = spotipy.Spotify(auth=token["access_token"])
-        spotify_user_id = sp.current_user()["id"]
         return {
             "is_public": True,
             "is_collaborative": False,
-            "user_id": spotify_user_id,
+            "user_id": token["external_user_id"],
             "token": token["access_token"]
         }
     except Exception:
@@ -145,7 +151,7 @@ def run_daily_jams(user, existing_url, service):
 
     playlist = generate_playlist(DailyJamsPatch(), args)
 
-    if len(playlist.playlists) > 0:
+    if playlist is not None and len(playlist.playlists) > 0:
         url = current_app.config["SERVER_ROOT_URL"] + "/playlist/" + playlist.playlists[0].mbid
         message = f"""Your daily-jams playlist has been updated. <a href="{url}">Give it a listen!</a>."""
 

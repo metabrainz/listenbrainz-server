@@ -6,47 +6,35 @@ import * as Sentry from "@sentry/react";
 import { get } from "lodash";
 
 import { Integrations } from "@sentry/tracing";
-import {
-  faPencilAlt,
-  faThumbtack,
-  faPaperPlane,
-} from "@fortawesome/free-solid-svg-icons";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import NiceModal from "@ebay/nice-modal-react";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../listens/ListenCard";
 
-import PinRecordingModal from "../pins/PinRecordingModal";
 import {
   getPageProps,
   getRecordingMBID,
-  getArtistMBIDs,
-  getReleaseGroupMBID,
   getTrackName,
   getRecordingMSID,
 } from "../utils/utils";
-import CBReviewModal from "../cb-review/CBReviewModal";
-import ListenControl from "../listens/ListenControl";
-import SimpleModal from "../utils/SimpleModal";
-import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+
+import Card from "../components/Card";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
+  globalListenCount: number;
+  globalUserCount: string;
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
   listens: Array<Listen>;
   listenCount?: number;
-  recordingToPin?: Listen;
-  recordingToReview?: Listen;
-  recordingToMapToMusicbrainz?: Listen;
-  recordingToPersonallyRecommend: Listen;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
 }
@@ -62,10 +50,6 @@ export default class RecentListens extends React.Component<
     super(props);
     this.state = {
       listens: props.listens || [],
-      recordingToPin: props.listens?.[0],
-      recordingToReview: props.listens?.[0],
-      recordingToMapToMusicbrainz: props.listens?.[0],
-      recordingToPersonallyRecommend: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
     };
@@ -74,24 +58,6 @@ export default class RecentListens extends React.Component<
   componentDidMount(): void {
     this.loadFeedback();
   }
-
-  updateRecordingToPin = (recordingToPin: Listen) => {
-    this.setState({ recordingToPin });
-  };
-
-  updateRecordingToPersonallyRecommend = (
-    recordingToPersonallyRecommend: Listen
-  ) => {
-    this.setState({ recordingToPersonallyRecommend });
-  };
-
-  updateRecordingToReview = (recordingToReview: Listen) => {
-    this.setState({ recordingToReview });
-  };
-
-  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
-    this.setState({ recordingToMapToMusicbrainz });
-  };
 
   getFeedback = async () => {
     const { newAlert } = this.props;
@@ -194,95 +160,37 @@ export default class RecentListens extends React.Component<
   };
 
   render() {
-    const {
-      listens,
-      recordingToPin,
-      recordingToReview,
-      recordingToMapToMusicbrainz,
-      recordingToPersonallyRecommend,
-    } = this.state;
-    const { newAlert } = this.props;
+    const { listens } = this.state;
+    const { newAlert, globalListenCount, globalUserCount } = this.props;
     const { APIService, currentUser } = this.context;
 
     return (
       <div role="main">
-        <h3>Recent listens</h3>
+        <h3>Global listens</h3>
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-4 col-md-push-8">
+            <Card id="listen-count-card">
+              <div>
+                {globalListenCount?.toLocaleString() ?? "-"}
+                <br />
+                <small className="text-muted">songs played</small>
+              </div>
+            </Card>
+            <Card id="listen-count-card">
+              <div>
+                {globalUserCount ?? "-"}
+                <br />
+                <small className="text-muted">users</small>
+              </div>
+            </Card>
+          </div>
+          <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
               <h5 className="text-center">No listens to show</h5>
             )}
             {listens.length > 0 && (
               <div id="listens">
                 {listens.map((listen) => {
-                  const recordingMBID = getRecordingMBID(listen);
-                  const artistMBIDs = getArtistMBIDs(listen);
-                  const trackMBID = get(
-                    listen,
-                    "track_metadata.additional_info.track_mbid"
-                  );
-                  const releaseGroupMBID = getReleaseGroupMBID(listen);
-
-                  const isListenReviewable =
-                    Boolean(recordingMBID) ||
-                    artistMBIDs?.length ||
-                    Boolean(trackMBID) ||
-                    Boolean(releaseGroupMBID);
-
-                  const isListenPersonallyRecommendable = Boolean(
-                    getRecordingMBID(listen)
-                  );
-                  // On the Recent page listens should have either an MSID or MBID or both,
-                  // so we can assume we can pin them
-                  /* eslint-disable react/jsx-no-bind */
-                  const additionalMenuItems = [
-                    <ListenControl
-                      text="Pin this track"
-                      icon={faThumbtack}
-                      action={this.updateRecordingToPin.bind(this, listen)}
-                      dataToggle="modal"
-                      dataTarget="#PinRecordingModal"
-                    />,
-                  ];
-                  if (isListenReviewable) {
-                    additionalMenuItems.push(
-                      <ListenControl
-                        text="Write a review"
-                        icon={faPencilAlt}
-                        action={this.updateRecordingToReview.bind(this, listen)}
-                        dataToggle="modal"
-                        dataTarget="#CBReviewModal"
-                      />
-                    );
-                  }
-                  additionalMenuItems.push(
-                    <ListenControl
-                      text="Map to a Recording"
-                      icon={faPencilAlt}
-                      action={this.updateRecordingToMapToMusicbrainz.bind(
-                        this,
-                        listen
-                      )}
-                      dataToggle="modal"
-                      dataTarget="#UpdateMusicbrainzMappingModal"
-                    />
-                  );
-
-                  if (isListenPersonallyRecommendable) {
-                    additionalMenuItems.push(
-                      <ListenControl
-                        text="Personally recommend"
-                        icon={faPaperPlane}
-                        action={this.updateRecordingToPersonallyRecommend.bind(
-                          this,
-                          listen
-                        )}
-                        dataToggle="modal"
-                        dataTarget="#PersonalRecommendationModal"
-                      />
-                    );
-                  }
-                  /* eslint-enable react/jsx-no-bind */
                   return (
                     <ListenCard
                       key={`${listen.listened_at}-${getTrackName(listen)}-${
@@ -294,38 +202,12 @@ export default class RecentListens extends React.Component<
                       listen={listen}
                       newAlert={newAlert}
                       currentFeedback={this.getFeedbackForListen(listen)}
-                      additionalMenuItems={additionalMenuItems}
                     />
                   );
                 })}
               </div>
             )}
           </div>
-          <div className="col-md-4" />
-          {currentUser && (
-            <>
-              <PinRecordingModal
-                recordingToPin={recordingToPin}
-                newAlert={newAlert}
-                onSuccessfulPin={(pinnedListen) =>
-                  newAlert(
-                    "success",
-                    "",
-                    `Successfully pinned ${getTrackName(pinnedListen)}`
-                  )
-                }
-              />
-              <CBReviewModal
-                listen={recordingToReview}
-                isCurrentUser
-                newAlert={newAlert}
-              />
-              <PersonalRecommendationModal
-                recordingToPersonallyRecommend={recordingToPersonallyRecommend}
-                newAlert={newAlert}
-              />
-            </>
-          )}
         </div>
         <BrainzPlayer
           listens={listens}
@@ -343,25 +225,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    critiquebrainz,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-
-  const { listens } = reactProps;
-
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
   if (sentry_dsn) {
     Sentry.init({
       dsn: sentry_dsn,
@@ -370,29 +238,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const { listens, globalListenCount, globalUserCount } = reactProps;
+
   const RecentListensWithAlertNotifications = withAlertNotifications(
     RecentListens
   );
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-    critiquebrainzAuth: critiquebrainz,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
-        <RecentListensWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          listens={listens}
-        />
+      <GlobalAppContext.Provider value={globalAppContext}>
+        <NiceModal.Provider>
+          <RecentListensWithAlertNotifications
+            initialAlerts={optionalAlerts}
+            listens={listens}
+            globalListenCount={globalListenCount}
+            globalUserCount={globalUserCount}
+          />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

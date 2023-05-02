@@ -3,7 +3,7 @@ import datetime
 from typing import List, Optional
 
 import sqlalchemy
-import ujson
+import orjson
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import timescale as ts
@@ -427,7 +427,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
     """)
     fields = playlist.dict(include={'creator_id', 'name', 'description', 'public',
                                     'copied_from_id', 'created_for_id'})
-    fields["additional_metadata"] = ujson.dumps(playlist.additional_metadata or {})
+    fields["additional_metadata"] = orjson.dumps(playlist.additional_metadata or {}).decode("utf-8")
 
     with ts.engine.connect() as connection:
         with connection.begin():

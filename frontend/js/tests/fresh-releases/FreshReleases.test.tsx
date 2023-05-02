@@ -10,8 +10,8 @@ import APIService from "../../src/utils/APIService";
 
 import FreshReleases, {
   FreshReleasesProps,
-} from "../../src/fresh-releases/FreshReleases";
-import ReleaseFilters from "../../src/fresh-releases/ReleaseFilters";
+} from "../../src/explore/fresh-releases/FreshReleases";
+import ReleaseFilters from "../../src/explore/fresh-releases/ReleaseFilters";
 
 import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
 import * as userData from "../__mocks__/freshReleasesUserData.json";
@@ -50,27 +50,12 @@ const mountOptions: { context: GlobalAppContextT } = {
 };
 
 describe("FreshReleases", () => {
-  let wrapper:
-    | ReactWrapper<FreshReleasesProps, {}, React.Component>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders filters, card grid, and timeline components on the page", async () => {
     const mockFetchSitewideFreshReleases = jest.fn().mockResolvedValue({
       json: () => sitewideData,
     });
     mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases;
-    wrapper = mount(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
         <FreshReleases {...props} />
       </GlobalAppContext.Provider>
@@ -87,7 +72,7 @@ describe("FreshReleases", () => {
       json: () => userData,
     });
     mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
-    wrapper = mount(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
         <FreshReleases {...props} />
       </GlobalAppContext.Provider>
@@ -103,7 +88,7 @@ describe("FreshReleases", () => {
   it("renders filters correctly", async () => {
     const setFilteredList = jest.fn();
 
-    wrapper = mount(
+    const wrapper = mount(
       <ReleaseFilters
         allFilters={sitewideFilters}
         releases={sitewideData}

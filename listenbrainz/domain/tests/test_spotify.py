@@ -1,6 +1,7 @@
 import time
 from datetime import datetime, timezone
 from unittest import mock
+import spotipy
 
 import requests_mock
 
@@ -17,15 +18,21 @@ class SpotifyServiceTestCase(IntegrationTestCase):
         super(SpotifyServiceTestCase, self).setUp()
         self.user_id = db_user.create(312, 'spotify_user')
         self.service = SpotifyService()
-        self.service.add_new_user(self.user_id, {
-            'access_token': 'old-token',
-            'refresh_token': 'old-refresh-token',
-            'expires_in': 3600,
-            'scope': 'user-read-currently-playing user-read-recently-played'
-        })
+        
+        with mock.patch.object(spotipy.Spotify, 'current_user', return_value = {"id": "test_user_id"}):
+            self.service.add_new_user(self.user_id, {
+                'access_token': 'old-token',
+                'refresh_token': 'old-refresh-token',
+                'expires_in': 3600,
+                'scope': 'user-read-currently-playing user-read-recently-played'
+            })
+
         self.spotify_user = self.service.get_user(self.user_id)
 
-    def test_get_active_users(self):
+    @mock.patch.object(spotipy.Spotify, 'current_user')
+    def test_get_active_users(self, mock_current_user):
+        mock_current_user.return_value = {"id": "test_user_id"}
+
         user_id_1 = db_user.create(333, 'user-1')
         user_id_2 = db_user.create(666, 'user-2')
         user_id_3 = db_user.create(999, 'user-3')
@@ -127,8 +134,11 @@ class SpotifyServiceTestCase(IntegrationTestCase):
         self.assertEqual(user['refresh_token'], 'old-refresh-token')
         self.assertIsNotNone(user['last_updated'])
 
+    
+    @mock.patch.object(spotipy.Spotify, 'current_user')
     @mock.patch('time.time')
-    def test_add_new_user(self, mock_time):
+    def test_add_new_user(self, mock_time, mock_current_user):
+        mock_current_user.return_value = {"id": "test_user_id"}
         mock_time.return_value = 0
         self.service.remove_user(self.user_id)
         self.service.add_new_user(self.user_id, {
@@ -141,3 +151,4 @@ class SpotifyServiceTestCase(IntegrationTestCase):
         self.assertEqual(self.user_id, user['user_id'])
         self.assertEqual('access-token', user['access_token'])
         self.assertEqual('refresh-token', user['refresh_token'])
+        self.assertEqual("test_user_id", user["external_user_id"])

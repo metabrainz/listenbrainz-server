@@ -1,14 +1,13 @@
 {% extends 'user/base.html' %}
-
-{% block profile_content %}
-
-    <div id="react-container" ></div>
-
-{% endblock %}
+{%- block title -%}
+  {% if current_user.musicbrainz_id == user.musicbrainz_id %}
+  Your
+  {% else %}
+  {{ user.musicbrainz_id }}'s&nbsp;
+  {%- endif -%}
+  Tastes - ListenBrainz
+{%- endblock-%}
 
 {% block scripts %}
-  {{ super() }}
-  <script
-    src="{{ get_static_path('userTaste.js') }}"
-    type="text/javascript"
-  ></script>{% endblock %}
+{{ super() }}
+<script src="{{ get_static_path('userTaste.js') }}" type="text/javascript"></script>{% endblock %}

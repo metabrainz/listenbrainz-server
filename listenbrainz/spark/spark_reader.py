@@ -2,7 +2,7 @@
 import json
 import time
 
-import ujson
+import orjson
 from kombu import Connection, Message, Consumer, Exchange, Queue
 from kombu.mixins import ConsumerMixin
 
@@ -32,6 +32,7 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_fresh_releases,
                                          handle_similar_recordings,
                                          handle_similar_artists,
+                                         handle_entity_listener,
                                          handle_yim_listening_time,
                                          handle_new_artists_discovered_count,
                                          handle_yim_tracks_of_the_year_start,
@@ -45,6 +46,7 @@ response_handler_map = {
     'couchdb_data_start': handle_couchdb_data_start,
     'couchdb_data_end': handle_couchdb_data_end,
     'user_entity': handle_user_entity,
+    'entity_listener': handle_entity_listener,
     'user_listening_activity': handle_user_listening_activity,
     'user_daily_activity': handle_user_daily_activity,
     'sitewide_entity': handle_sitewide_entity,
@@ -93,7 +95,7 @@ class SparkReader(ConsumerMixin):
     def process_response(self, response):
         try:
             response_type = response['type']
-        except KeyError:
+        except (TypeError, KeyError):
             self.app.logger.error("Bad response sent to spark_reader: %s", json.dumps(response, indent=4),
                                   exc_info=True)
             return
@@ -116,7 +118,7 @@ class SparkReader(ConsumerMixin):
             insert into the database accordingly.
         """
         self.app.logger.debug("Received a message, processing...")
-        response = ujson.loads(message.body)
+        response = orjson.loads(message.body)
         self.process_response(response)
         message.ack()
         self.app.logger.debug("Done!")

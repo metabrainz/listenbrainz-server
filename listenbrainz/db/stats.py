@@ -24,7 +24,7 @@
 from datetime import datetime
 from typing import Optional
 
-import ujson
+import orjson
 from flask import current_app
 from pydantic import ValidationError
 from requests import HTTPError
@@ -33,6 +33,7 @@ from sentry_sdk import start_span
 from data.model.common_stat import StatApi
 from data.model.user_artist_map import UserArtistMapRecord
 from listenbrainz.db import couchdb
+from listenbrainz.db.user import get_users_by_id
 
 # sitewide statistics are stored in the user statistics table
 # as statistics for a special user with the following user_id.
@@ -40,7 +41,7 @@ from listenbrainz.db import couchdb
 SITEWIDE_STATS_USER_ID = 15753
 
 
-def insert(database: str, from_ts: int, to_ts: int, values: list[dict]):
+def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="user_id"):
     """ Insert stats in couchdb.
 
         Args:
@@ -48,11 +49,12 @@ def insert(database: str, from_ts: int, to_ts: int, values: list[dict]):
             from_ts: the start of the time period for which the stat is
             to_ts: the end of the time period for which the stat is
             values: list with each item as stat for 1 user
+            key: the key of the value to user as _id of the document
     """
     with start_span(op="processing", description="add _id, from_ts, to_ts and last_updated to docs"):
         for doc in values:
-            doc["_id"] = str(doc["user_id"])
-            doc["key"] = doc["user_id"]
+            doc["_id"] = str(doc[key])
+            doc["key"] = doc[key]
             doc["from_ts"] = from_ts
             doc["to_ts"] = to_ts
             doc["last_updated"] = int(datetime.now().timestamp())
@@ -86,10 +88,48 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
     except (ValidationError, KeyError) as e:
         current_app.logger.error(
-            f"{e}. Occurred while processing {stats_range} top artists for user_id: {user_id}"
-            f" and data: {ujson.dumps(data, indent=4)}", exc_info=True)
+            f"{e}. Occurred while processing {stats_range} {stats_type} for user_id: {user_id}"
+            f" and data: {orjson.dumps(data, option=orjson.OPT_INDENT_2).decode('utf-8')}", exc_info=True)
     return None
 
+
+def get_entity_listener(entity, entity_id, stats_range) -> Optional[dict]:
+    """ Retrieve stats for the given entity, stats range and stats type.
+
+        Args:
+            entity: the type of stat entity
+            entity_id: the mbid of the particular entity item
+            stats_range: time period to retrieve stats for
+    """
+    prefix = f"{entity}_listeners_{stats_range}"
+    try:
+        doc = couchdb.fetch_data(prefix, entity_id)
+        if doc is None:
+            return None
+
+        doc.pop("_id", None)
+        doc.pop("key", None)
+        doc.pop("_rev", None)
+        doc.pop("_revisions", None)
+
+        user_id_listeners = doc.pop("listeners", [])
+        users_map = get_users_by_id([x["user_id"] for x in user_id_listeners])
+        user_name_listeners = []
+        for x in user_id_listeners:
+            user_name = users_map.get(x["user_id"])
+            if user_name:
+                user_name_listeners.append({"user_name": user_name, "listen_count": x["listen_count"]})
+
+        doc["stats_range"] = stats_range
+        doc["listeners"] = user_name_listeners
+        return doc
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+    except (ValidationError, KeyError) as e:
+        current_app.logger.error(
+            f"{e}. Occurred while processing {stats_range} {entity} for mbid: {entity_id}"
+            f" and data: {orjson.dumps(doc, option=orjson.OPT_INDENT_2).decode('utf-8')}", exc_info=True)
+    return None
 
 def insert_artist_map(user_id: int, stats_range: str, from_ts: int, to_ts: int, data: list[UserArtistMapRecord]):
     """ Insert artist map stats in database.

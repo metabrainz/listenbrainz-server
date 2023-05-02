@@ -7,8 +7,7 @@ import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -107,7 +106,7 @@ export default class SelectTimezone extends React.Component<
         <div>
           <form onSubmit={this.submitTimezone}>
             <label>
-              Select you local timezone:
+              Select your local timezone:
               <select
                 defaultValue={userTimezone}
                 onChange={(e) => this.zoneSelection(e.target.value)}
@@ -142,18 +141,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     domContainer,
     reactProps,
-    globalReactProps,
+    globalAppContext,
+    sentryProps,
     optionalAlerts,
   } = getPageProps();
-  const {
-    api_url,
-    sentry_dsn,
-    current_user,
-    spotify,
-    youtube,
-    sentry_traces_sample_rate,
-  } = globalReactProps;
-  const { pg_timezones, user_timezone } = reactProps;
+  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
     Sentry.init({
@@ -162,26 +154,16 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
+  const { pg_timezones, user_timezone } = reactProps;
 
   const SelectTimezoneWithAlertNotifications = withAlertNotifications(
     SelectTimezone
   );
 
-  const apiService = new APIServiceClass(
-    api_url || `${window.location.origin}/1`
-  );
-
-  const globalProps: GlobalAppContextT = {
-    APIService: apiService,
-    currentUser: current_user,
-    spotifyAuth: spotify,
-    youtubeAuth: youtube,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <SelectTimezoneWithAlertNotifications
           initialAlerts={optionalAlerts}
           pg_timezones={pg_timezones}

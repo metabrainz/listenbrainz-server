@@ -1,6 +1,6 @@
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
-import ujson
+import orjson
 
 from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
 from flask_login import current_user
@@ -50,10 +50,8 @@ def redirect_user_page(target):
 
 redirect_bp.add_url_rule("/listens/", "redirect_listens",
                          redirect_user_page("user.profile"))
-redirect_bp.add_url_rule("/charts/", "redirect_charts",
-                         redirect_user_page("user.charts"))
-redirect_bp.add_url_rule("/reports/", "redirect_reports",
-                         redirect_user_page("user.reports"))
+redirect_bp.add_url_rule("/stats/", "redirect_stats",
+                         redirect_user_page("user.stats"))
 redirect_bp.add_url_rule("/playlists/", "redirect_playlists",
                          redirect_user_page("user.playlists"))
 redirect_bp.add_url_rule("/recommendations/",
@@ -136,7 +134,7 @@ def profile(user_name):
     }
 
     return render_template("user/profile.html",
-                           props=ujson.dumps(props),
+                           props=orjson.dumps(props).decode("utf-8"),
                            user=user,
                            active_section='listens')
 
@@ -176,15 +174,20 @@ def charts(user_name):
 
     return render_template(
         "user/charts.html",
-        active_section="charts",
-        props=ujson.dumps(props),
+        active_section="stats",
+        props=orjson.dumps(props).decode("utf-8"),
         user=user
     )
 
-
 @user_bp.route("/<user_name>/reports/")
-def reports(user_name: str):
-    """ Show user reports """
+def reports(user_name):
+    """ Redirect to stats page """
+    return redirect(url_for('user.stats', user_name=user_name), code=301)
+
+
+@user_bp.route("/<user_name>/stats/")
+def stats(user_name: str):
+    """ Show user stats """
     user = _get_user(user_name)
 
     user_data = {
@@ -198,16 +201,16 @@ def reports(user_name: str):
     }
 
     return render_template(
-        "user/reports.html",
-        active_section="reports",
-        props=ujson.dumps(props),
+        "user/stats.html",
+        active_section="stats",
+        props=orjson.dumps(props).decode("utf-8"),
         user=user
     )
 
 
 @user_bp.route("/<user_name>/collaborations/")
 def collaborations(user_name: str):
-    return redirect(url_for("user.playlists", user_name=current_user.musicbrainz_id))
+    return redirect(url_for("user.playlists", user_name=user_name))
 
 
 @user_bp.route("/<user_name>/playlists/")
@@ -243,7 +246,7 @@ def playlists(user_name: str):
     return render_template(
         "playlists/playlists.html",
         active_section="playlists",
-        props=ujson.dumps(props),
+        props=orjson.dumps(props).decode("utf-8"),
         user=user
     )
 
@@ -288,7 +291,7 @@ def recommendation_playlists(user_name: str):
     return render_template(
         "playlists/recommendations.html",
         active_section="recommendations",
-        props=ujson.dumps(props),
+        props=orjson.dumps(props).decode("utf-8"),
         user=user
     )
 
@@ -405,7 +408,7 @@ def taste(user_name: str):
     return render_template(
         "user/taste.html",
         active_section="taste",
-        props=ujson.dumps(props),
+        props=orjson.dumps(props).decode("utf-8"),
         user=user
     )
 
@@ -422,13 +425,13 @@ def year_in_music(user_name, year: int = 2022):
         "user/year-in-music.html",
         user_name=user_name,
         year=year,
-        props=ujson.dumps({
+        props=orjson.dumps({
             "data": db_year_in_music.get(user.id, year),
             "user": {
                 "id": user.id,
                 "name": user.musicbrainz_id,
             }
-        }),
+        }).decode("utf-8"),
         year_in_music_js_file=f"yearInMusic{year}.js"
     )
 
@@ -447,4 +450,4 @@ def missing_mb_data(user_name: str):
         }
     }
 
-    return render_template("user/missing_data.html", user=user, props=ujson.dumps(props))
+    return render_template("user/missing_data.html", user=user, props=orjson.dumps(props).decode("utf-8"), active_settings_section="missing-musicbrainz-data")

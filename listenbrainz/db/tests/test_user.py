@@ -3,14 +3,9 @@ import json
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
-import listenbrainz.db.stats as db_stats
 import sqlalchemy
-import time
-import ujson
 
-from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
-from data.model.user_entity import EntityRecord
 from listenbrainz import db
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase

@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import sqlalchemy
-import ujson
+import orjson
 
 from datetime import datetime
 
@@ -32,7 +32,7 @@ from listenbrainz.db.model.user_timeline_event import (
 )
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from typing import List, Tuple
+from typing import List, Tuple, Iterable
 
 from listenbrainz.db.model.review import CBReviewTimelineMetadata
 
@@ -53,7 +53,7 @@ def create_user_timeline_event(
                 """), {
                     'user_id': user_id,
                     'event_type': event_type.value,
-                    'metadata': ujson.dumps(metadata.dict()),
+                    'metadata': orjson.dumps(metadata.dict()).decode("utf-8"),
                 }
             )
 
@@ -125,16 +125,13 @@ def create_personal_recommendation_event(user_id: int, metadata:
                         :user_id,
                         'personal_recording_recommendation',
                         jsonb_build_object(
-                            'track_name', :track_name,
-                            'artist_name', :artist_name,
-                            'release_name', :release_name,
                             'recording_mbid', :recording_mbid,
                             'recording_msid', :recording_msid,
                             'users', (
                                 SELECT jsonb_agg("user".id) as users
                                   FROM unnest(:users) as arr
-                                  INNER JOIN "user"
-                                  ON "user".musicbrainz_id = arr
+                            INNER JOIN "user"
+                                    ON "user".musicbrainz_id = arr
                             ),
                             'blurb_content', :blurb_content
                         )
@@ -142,9 +139,6 @@ def create_personal_recommendation_event(user_id: int, metadata:
                 RETURNING id, user_id, event_type, metadata, created
                 """), {
                     'user_id': user_id,
-                    'track_name': metadata.track_name,
-                    'artist_name': metadata.artist_name,
-                    'release_name': metadata.release_name,
                     'recording_mbid': metadata.recording_mbid,
                     'recording_msid': metadata.recording_msid,
                     'users': metadata.users,
@@ -176,7 +170,7 @@ def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, co
             'count': count,
         })
 
-        return [UserTimelineEvent(**row) for row in result.mappings()]
+        return [UserTimelineEvent(**row,) for row in result.mappings()]
 
 
 def get_user_track_recommendation_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
@@ -191,7 +185,7 @@ def get_user_track_recommendation_events(user_id: int, count: int = 50) -> List[
     )
 
 
-def get_recording_recommendation_events_for_feed(user_ids: Tuple[int], min_ts: float, max_ts: float, count: int) \
+def get_recording_recommendation_events_for_feed(user_ids: Iterable[int], min_ts: float, max_ts: float, count: int) \
         -> List[UserTimelineEvent]:
     """ Gets a list of recording_recommendation events for specified users.
 
@@ -215,7 +209,13 @@ def get_recording_recommendation_events_for_feed(user_ids: Tuple[int], min_ts: f
             "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
         })
 
-        return [UserTimelineEvent(**row) for row in result.mappings()]
+        return [UserTimelineEvent(
+            id=row.id,
+            user_id=row.user_id,
+            event_type=row.event_type,
+            metadata=RecordingRecommendationMetadata(**row.metadata),
+            created=row.created
+        ) for row in result]
 
 
 def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
@@ -231,16 +231,14 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
                  ,
                  (
                     SELECT jsonb_build_object(
-                        'track_name', user_timeline_event.metadata -> 'track_name',
-                        'artist_name', user_timeline_event.metadata -> 'artist_name',
-                        'release_name', user_timeline_event.metadata -> 'release_name',
                         'recording_mbid', user_timeline_event.metadata -> 'recording_mbid',
                         'recording_msid', user_timeline_event.metadata -> 'recording_msid',
                         'users', jsonb_agg("user".musicbrainz_id),
                         'blurb_content', user_timeline_event.metadata -> 'blurb_content'
                     ) AS metadata
-                    FROM jsonb_array_elements_text(user_timeline_event.metadata -> 'users') AS arr
-                   INNER JOIN "user" ON arr.value::int = "user".id
+                      FROM jsonb_array_elements_text(user_timeline_event.metadata -> 'users') AS arr
+                INNER JOIN "user" 
+                        ON arr.value::int = "user".id
                  )
                  , user_timeline_event.created
                  , "user".musicbrainz_id as user_name
@@ -262,7 +260,14 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
             "event_type": UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
         })
 
-        return [UserTimelineEvent(**row) for row in result.mappings()]
+        return [UserTimelineEvent(
+            id=row.id,
+            user_id=row.user_id,
+            user_name=row.user_name,
+            event_type=row.event_type,
+            metadata=PersonalRecordingRecommendationMetadata(**row.metadata),
+            created=row.created
+        ) for row in result]
 
 
 def get_cb_review_events(user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:

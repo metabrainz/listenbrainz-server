@@ -34,7 +34,7 @@ from ftplib import FTP
 from typing import Tuple, Optional
 
 import sqlalchemy
-import ujson
+import orjson
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
 from psycopg2.sql import Identifier, SQL, Composable
@@ -326,6 +326,7 @@ def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=DUMP_D
 
 
 def dump_statistics(location: str):
+    # TODO: when adding support to dump entity listener statistics, replace user_id with user_name
     stats = [
         f"{stat_type}_{stat_range}"
         # not including aritst_map because those databases are always incomplete we only generate it on demand
@@ -335,7 +336,7 @@ def dump_statistics(location: str):
     full_path = os.path.join(location, "statistics")
     for stat in stats:
         os.makedirs(full_path, exist_ok=True)
-        with open(os.path.join(full_path, f"{stat}.jsonl"), "w+", encoding="utf-8") as fp:
+        with open(os.path.join(full_path, f"{stat}.jsonl"), "wb+") as fp:
             couchdb.dump_database(stat, fp)
 
 
@@ -559,7 +560,8 @@ def dump_user_feedback(connection, location):
                 os.makedirs(full_path)
                 with open(os.path.join(full_path, "data.json"), "wb") as f:
                     for item in todays_items:
-                        f.write(bytes(ujson.dumps(item) + "\n", "utf-8"))
+                        f.write(orjson.dumps(item))
+                        f.write(bytes("\n", "utf-8"))
                 todays_items = []
 
             if not row:
@@ -594,7 +596,7 @@ def dump_user_feedback(connection, location):
                 os.makedirs(full_path)
                 with open(os.path.join(full_path, "data.json"), "wb") as f:
                     for item in todays_items:
-                        f.write(bytes(ujson.dumps(item) + "\n", "utf-8"))
+                        f.write(orjson.dumps(item, option=orjson.OPT_APPEND_NEWLINE))
                 todays_items = []
 
             if not row:
