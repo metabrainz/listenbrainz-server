@@ -31,7 +31,6 @@ describe("UserDailyActivity", () => {
     await act(async () => {
       wrapper.setState({
         data: (userDailyActivityProcessedData as unknown) as UserDailyActivityData,
-        graphContainerWidth: 1200,
         loading: false,
       });
     });
@@ -48,33 +47,6 @@ describe("UserDailyActivity", () => {
     await waitForComponentToPaint(wrapper);
 
     expect(wrapper).toMatchSnapshot();
-  });
-  describe("componentDidMount", () => {
-    it('adds event listener for "resize" event', () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(window, "addEventListener");
-      spy.mockImplementationOnce(() => {});
-      instance.handleResize = jest.fn();
-      instance.componentDidMount();
-
-      expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
-    });
-
-    it('calls "handleResize" once', () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      instance.handleResize = jest.fn();
-      instance.componentDidMount();
-
-      expect(instance.handleResize).toHaveBeenCalledTimes(1);
-    });
   });
 
   describe("componentDidUpdate", () => {
@@ -105,22 +77,6 @@ describe("UserDailyActivity", () => {
       });
 
       expect(instance.loadData).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("componentWillUnmount", () => {
-    it('removes event listener for "resize" event', () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(window, "removeEventListener");
-      spy.mockImplementationOnce(() => {});
-      instance.handleResize = jest.fn();
-      instance.componentWillUnmount();
-
-      expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
     });
   });
 

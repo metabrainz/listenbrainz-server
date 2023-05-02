@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import he from "he";
 
 function Blog({ apiUrl }: { apiUrl: string }) {
   const [blogDetails, setBlogDetails] = useState<object[]>();
@@ -12,7 +13,7 @@ function Blog({ apiUrl }: { apiUrl: string }) {
         for (let postIndex = 0; postIndex <= 6; postIndex += 1) {
           const object: any = {};
           object.id = response.posts[postIndex].ID;
-          object.title = response.posts[postIndex].title;
+          object.title = he.decode(response.posts[postIndex].title);
           object.link = response.posts[postIndex].URL;
           objectArray.push(object);
         }

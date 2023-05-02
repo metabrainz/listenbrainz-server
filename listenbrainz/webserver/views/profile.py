@@ -66,6 +66,7 @@ def select_timezone():
     return render_template(
         "profile/selecttimezone.html",
         props=orjson.dumps(props).decode("utf-8"),
+        active_settings_section="timezone"
     )
 
 
@@ -75,7 +76,8 @@ def set_troi_prefs():
     current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
     return render_template(
         "profile/troi_prefs.html",
-        props=orjson.dumps({"troi_prefs": current_troi_prefs}).decode("utf-8")
+        props=orjson.dumps({"troi_prefs": current_troi_prefs}).decode("utf-8"),
+        active_settings_section = "playlist-preferences"
     )
 
 
@@ -98,6 +100,7 @@ def reset_latest_import_timestamp():
     return render_template(
         "profile/resetlatestimportts.html",
         form=form,
+        active_settings_section="import"
     )
 
 
@@ -110,6 +113,7 @@ def info():
         "profile/info.html",
         user=current_user,
         user_setting=user_setting,
+        active_settings_section="info"
     )
 
 
@@ -148,6 +152,7 @@ def import_data():
         user=current_user,
         user_has_email=user_has_email,
         props=orjson.dumps(props).decode("utf-8"),
+        active_settings_section="import"
     )
 
 
@@ -209,7 +214,7 @@ def export_data():
         response.mimetype = "text/json"
         return response
     else:
-        return render_template("user/export.html", user=current_user)
+        return render_template("user/export.html", user=current_user, active_settings_section="export-data")
 
 
 @profile_bp.route("/export-feedback/", methods=["POST"])
@@ -262,7 +267,8 @@ def delete():
     return render_template(
         'profile/delete.html',
         user=current_user,
-        form=form
+        form=form,
+        active_settings_section = 'delete-account'
     )
 
 
@@ -297,7 +303,8 @@ def delete_listens():
     return render_template(
         'profile/delete_listens.html',
         user=current_user,
-        form=form
+        form=form,
+        active_settings_section='delete-listens'
     )
 
 
@@ -346,7 +353,8 @@ def music_services_details():
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
         critiquebrainz_user=critiquebrainz_user,
-        current_critiquebrainz_permissions=current_critiquebrainz_permissions
+        current_critiquebrainz_permissions=current_critiquebrainz_permissions,
+        active_settings_section="connect-services"
     )
 
 

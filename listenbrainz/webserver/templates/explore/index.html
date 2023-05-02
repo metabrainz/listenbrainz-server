@@ -1,10 +1,19 @@
 {%- extends 'base-react.html' -%}
 
-{% block profile_content %}
+<!-- these props are used in the navbar to highlight the navbar items -->
+{% set active_page = "explore" %}
 
-    <div id="react-container" ></div>
+{% block content %}
+  <div class="secondary-nav">
+    <ol class="breadcrumb">
+      <li class="active">Explore</li>
+    </ol>
+  </div>
+    
+  {{ super() }}
 
 {% endblock %}
+
 
 {% block scripts %}
   {{ super() }}

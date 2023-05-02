@@ -3,6 +3,8 @@
 {% block title %}User "{{ user_id }}" - ListenBrainz{% endblock %}
 
 {% block content %}
+<div role="main">
+
   <div id="user-profile">
     <h2 class="page-title">{{ user_id }}</h2>
 
@@ -21,4 +23,5 @@
     {% endif %}
 
   </div>
+</div>
 {% endblock %}
