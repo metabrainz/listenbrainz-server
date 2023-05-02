@@ -58,6 +58,7 @@ module.exports = function (env, argv) {
         path.resolve(jsDir, "src/recent/RecentListens.tsx"),
         path.resolve(cssDir, "main.less"),
       ],
+      AIBrainz: [path.resolve(jsDir, "src/AIBrainz/AIBrainz.tsx")],
       listens: [path.resolve(jsDir, "src/user/Listens.tsx")],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),

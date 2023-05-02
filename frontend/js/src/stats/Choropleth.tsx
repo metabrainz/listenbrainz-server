@@ -1,6 +1,6 @@
 import { Theme } from "@nivo/core";
 import {
-  Choropleth,
+  ResponsiveChoropleth,
   ChoroplethBoundFeature,
   ChoroplethEventHandler,
 } from "@nivo/geo";
@@ -22,7 +22,6 @@ const { useState, useCallback, useMemo, useEffect, useRef } = React;
 
 export type ChoroplethProps = {
   data: UserArtistMapData;
-  width?: number;
   selectedMetric: "artist" | "listen";
   colorScaleRange?: string[];
 };
@@ -89,12 +88,18 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     ChoroplethBoundFeature
   >();
   const refContainer = useRef<HTMLDivElement>(null);
+  const { current: currentRefContainer } = refContainer;
+
+  const [containerWidth, setContainerWidth] = useState<number>();
+  useEffect(() => {
+    if (currentRefContainer) {
+      setContainerWidth(currentRefContainer.clientWidth);
+    }
+  }, [currentRefContainer]);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
-  const { data, width, colorScaleRange } = props;
-  const containerWidth = width || 1200; // Set default width to 1200
-  const containerHeight = containerWidth / 2;
+  const { data, colorScaleRange, selectedMetric } = props;
 
   // Calculate logarithmic domain
   const domain = (() => {
@@ -117,8 +122,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   // Create a custom legend component because the default doesn't work with scaleThreshold
   const customLegend = () => (
     <BoxLegendSvg
-      containerHeight={containerHeight}
-      containerWidth={containerWidth}
+      containerHeight={containerWidth ? containerWidth / 2 : 500}
+      containerWidth={containerWidth ?? 1000}
       data={colorScale.range().map((color: string, index: number) => {
         // eslint-disable-next-line prefer-const
         let [start, end] = colorScale.invertExtent(color);
@@ -145,7 +150,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       return null;
     }
 
-    const { selectedMetric } = props;
     let suffix = `${selectedMetric[0].toUpperCase()}${selectedMetric.slice(1)}`;
     if (Number(selectedCountry.formattedValue) !== 1) {
       suffix = `${suffix}s`;
@@ -200,7 +204,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         ))}
       </div>
     );
-  }, [selectedCountry]);
+  }, [selectedCountry, selectedMetric]);
 
   // Hide our custom tooltip when user clicks somewhere that isn't a country
   const handleClickOutside = useCallback(
@@ -239,11 +243,9 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   );
 
   return (
-    <div ref={refContainer} style={{ position: "relative" }}>
-      <Choropleth
+    <div ref={refContainer} className="stats-full-width-graph user-artist-map">
+      <ResponsiveChoropleth
         data={data}
-        width={containerWidth}
-        height={containerHeight}
         features={worldCountries.features}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
         colors={colorScale}
@@ -257,7 +259,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         onClick={showTooltipFromEvent}
         unknownColor="#efefef"
         label="properties.name"
-        projectionScale={containerWidth / 5.5}
+        projectionScale={containerWidth ? containerWidth / 5.5 : 175}
         projectionType="naturalEarth1"
         projectionTranslation={[0.5, 0.53]}
         borderWidth={0.5}

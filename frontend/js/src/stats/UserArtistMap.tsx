@@ -20,7 +20,6 @@ export type UserArtistMapProps = {
 export type UserArtistMapState = {
   data: UserArtistMapData;
   errorMessage?: string;
-  graphContainerWidth?: number;
   hasError?: boolean;
   loading: boolean;
   selectedMetric: "artist" | "listen";
@@ -31,8 +30,6 @@ export default class UserArtistMap extends React.Component<
   UserArtistMapState
 > {
   APIService: APIService;
-
-  graphContainer: React.RefObject<HTMLDivElement>;
 
   rawData: UserArtistMapResponse;
 
@@ -50,21 +47,13 @@ export default class UserArtistMap extends React.Component<
       selectedMetric: "artist",
     };
 
-    this.graphContainer = React.createRef();
-
     this.rawData = {} as UserArtistMapResponse;
   }
 
-  componentDidMount() {
-    window.addEventListener("resize", this.handleResize);
-
-    this.handleResize();
-  }
-
   componentDidUpdate(prevProps: UserArtistMapProps) {
-    const { range: prevRange } = prevProps;
-    const { range: currRange } = this.props;
-    if (prevRange !== currRange) {
+    const { range: prevRange, user: prevUser } = prevProps;
+    const { range: currRange, user: currUser } = this.props;
+    if (prevRange !== currRange || prevUser !== currUser) {
       if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,
@@ -75,10 +64,6 @@ export default class UserArtistMap extends React.Component<
         this.loadData();
       }
     }
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("resize", this.handleResize);
   }
 
   changeSelectedMetric = (
@@ -145,30 +130,17 @@ export default class UserArtistMap extends React.Component<
     });
   };
 
-  handleResize = () => {
-    this.setState({
-      graphContainerWidth: this.graphContainer.current?.offsetWidth,
-    });
-  };
-
   render() {
     const {
       selectedMetric,
       data,
       errorMessage,
-      graphContainerWidth,
       hasError,
       loading,
     } = this.state;
 
     return (
-      <Card
-        style={{
-          marginTop: 20,
-          minHeight: (graphContainerWidth || 1200) * 0.5,
-        }}
-        ref={this.graphContainer}
-      >
+      <Card className="user-stats-card">
         <div className="row">
           <div className="col-md-9 col-xs-6">
             <h3 style={{ marginLeft: 20 }}>
@@ -234,7 +206,7 @@ export default class UserArtistMap extends React.Component<
           </div>
         </div>
         <Loader isLoading={loading}>
-          {hasError && (
+          {hasError ? (
             <div
               className="flex-center"
               style={{
@@ -246,17 +218,8 @@ export default class UserArtistMap extends React.Component<
                 {errorMessage}
               </span>
             </div>
-          )}
-          {!hasError && (
-            <div className="row">
-              <div className="col-xs-12">
-                <Choropleth
-                  data={data}
-                  width={graphContainerWidth}
-                  selectedMetric={selectedMetric}
-                />
-              </div>
-            </div>
+          ) : (
+            <Choropleth data={data} selectedMetric={selectedMetric} />
           )}
         </Loader>
       </Card>

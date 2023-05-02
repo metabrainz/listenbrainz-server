@@ -7,7 +7,7 @@
   <meta charset="utf-8" />
   <title>{% block title %}ListenBrainz{% endblock %}</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densityDpi=device-dpi, minimal-ui' />
 
   <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
   <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
@@ -21,7 +21,7 @@
 <body>
 {%- include 'navbar.html' -%}
 
-<div class="container">
+<div class="container-fluid">
 
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% for category, message in messages %}
@@ -40,7 +40,7 @@
 
   {%- block footer -%}
   <section class="footer">
-    <div class="container">
+    <div class="container-fluid">
       <div class="row">
         <div class="col-sm-12 col-md-6">
           <h3>

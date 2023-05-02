@@ -112,9 +112,9 @@ export default class UserListeningActivity extends React.Component<
   }
 
   componentDidUpdate(prevProps: UserListeningActivityProps) {
-    const { range: prevRange } = prevProps;
-    const { range: currRange } = this.props;
-    if (prevRange !== currRange) {
+    const { range: prevRange, user: prevUser } = prevProps;
+    const { range: currRange, user: currUser } = this.props;
+    if (prevRange !== currRange || prevUser !== currUser) {
       if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,
@@ -433,17 +433,13 @@ export default class UserListeningActivity extends React.Component<
           )}
           {!hasError && (
             <>
-              <div className="row">
-                <div className="col-xs-12" style={{ height: 350 }}>
-                  <BarDualTone
-                    data={data}
-                    range={range}
-                    showLegend={range !== "all_time"}
-                    lastRangePeriod={lastRangePeriod}
-                    thisRangePeriod={thisRangePeriod}
-                  />
-                </div>
-              </div>
+              <BarDualTone
+                data={data}
+                range={range}
+                showLegend={range !== "all_time"}
+                lastRangePeriod={lastRangePeriod}
+                thisRangePeriod={thisRangePeriod}
+              />
               <div className="row mt-5 mb-15">
                 <MediaQuery minWidth={768}>
                   <div className="col-md-6 text-center">

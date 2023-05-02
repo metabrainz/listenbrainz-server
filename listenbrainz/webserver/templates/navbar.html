@@ -1,101 +1,55 @@
-<nav class="navbar navbar-default navbar-static-top" role="navigation">
-  <div class="container">
+<nav role="navigation">
+  
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#side-nav,#side-nav-overlay">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-logo" href="{{ url_for('index.index', redirect="false") }}">
+      <img src="{{ url_for('static', filename='img/navbar_logo.svg') }}" alt="ListenBrainz" height="31"/>
+    </a>
+  </div>
+  
+  {#- Collect the nav links, forms, and other content for toggling -#}
+  
+  {% if not hide_navbar_user_menu %}
+  <div id="side-nav" class="collapse">
+    <a class="navbar-logo" href="{{ url_for('index.index', redirect="false") }}">
+      <img src="{{ url_for('static', filename='img/listenbrainz_logo_icon.svg') }}" alt="ListenBrainz" />
+    </a>
+    <div class="main-nav">
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('index.feed') }}" {{ 'class=active' if active_page == 'feed'}}>Feed</a>
+      <a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}"  {{ 'class=active' if active_page=='dashboard' and my_profile }}>Dashboard</a>
+      {% else %}
+      <a href="{{ url_for('index.recent_listens') }}" {{ 'class=active' if active_page == 'feed'}}>Feed</a>
+      <a href="{{ url_for('index.stats') }}"  {{ 'class=active' if active_page=='dashboard' }}>Dashboard</a>
+      {% endif %}
+      <a href="{{ url_for('explore.index') }}"  {{ 'class=active' if active_page=='explore' }}>Explore</a>
+    </div>
 
-    {#- Brand and toggle get grouped for better mobile display -#}
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#lb-navbar-collapse">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand logo" href="{{ url_for('index.index') }}">
-          <img src="{{ url_for('static', filename='img/navbar_logo.svg') }}" alt="ListenBrainz" width="180" />
+    <div class="navbar-bottom">
+      {% if current_user.is_authenticated and not current_user.is_anonymous %}
+      <div class="username">{{ current_user.musicbrainz_id }}</div>
+      <a href="{{ url_for('login.logout') }}">Logout</a>
+      <a {{ 'class=active' if active_settings_section is defined }} href="{{ url_for('profile.info') }}">
+        Settings
       </a>
-    </div>
-
-    {#- Collect the nav links, forms, and other content for toggling -#}
-    <div class="collapse navbar-collapse" id="lb-navbar-collapse">
-      <ul class="nav navbar-nav">
-        {% if not hide_navbar_user_menu %}
-          {% if current_user.is_authenticated %}
-            <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Home</a></li>
-            <li><a href="{{ url_for('index.feed') }}">Feed</a></li>
-          {% endif %}
-        {%- endif -%}
-        <li><a href="{{ url_for('index.recent_listens') }}">Recent</a></li>
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-             Data<span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('index.add_data_info') }}">Adding data</a></li>
-            <li><a href="{{ url_for('index.import_data_info') }}">Importing data</a></li>
-            <li><a href="{{ url_for('index.data') }}">Using our data</a></li>
-          </ul>
-        </li>
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-             Explore<span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('explore.fresh_releases') }}">Fresh Releases</a></li>
-            <li><a href="{{ url_for('explore.huesound') }}">Hue Sound</a></li>
-            <li><a href="{{ url_for('explore.similar_users') }}">Top similar users</a></li>
-            {% if current_user.is_authenticated %}
-              <li><a href="{{ url_for('user.year_in_music', user_name=current_user.musicbrainz_id) }}">Your Year In Music</a></li>
-            {% endif %}
-            <li><a href="{{ url_for('explore.cover_art_collage') }}">Cover Art Collage</a></li>
-          </ul>
-        </li>
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-             About<span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('index.about') }}">About ListenBrainz</a></li>
-            <li><a href="{{ url_for('index.messybrainz') }}">MessyBrainz</a></li>
-            <li><a href="https://listenbrainz.readthedocs.io">API Docs</a></li>
-            <li><a href="{{ url_for('index.current_status') }}">Current site status</a></li>
-            <li><a href="{{ url_for('index.terms_of_service') }}">Terms of service</a></li>
-            <li><a href="https://metabrainz.org">About MetaBrainz</a></li>
-          </ul>
-        </li>
-    </ul>
-
-    {% if not hide_navbar_user_menu %}
-      <ul class="nav navbar-nav navbar-right">
-        {% if not current_user.is_authenticated or current_user.is_anonymous %}
-          <li>
-            <a href="{{ url_for('login.index') }}">Sign in</a>
-          </li>
         {% else %}
-          <li class="dropdown">
-            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-              {{ current_user.musicbrainz_id }} <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Profile</a></li>
-              <li><a href="{{ url_for('profile.info') }}">Settings</a></li>
-              <li><a href="{{ url_for('user.playlists', user_name=current_user.musicbrainz_id) }}">Playlists</a></li>
-              <li><a href="{{ url_for('recommendations_cf_recording.info', user_name=current_user.musicbrainz_id) }}">Tracks you might like</a></li>
-              <li><a href="{{ url_for('profile.music_services_details') }}">Connect Services</a></li>
-              <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
-              <li><a href="{{ url_for('profile.export_data') }}">Export</a></li>
-              <li><a href="{{ url_for('user.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Add Missing MusicBrainz Data</a></li>
-              <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
-            </ul>
-          </li>
-        {%- endif -%}
-      </ul>
-      <form class="navbar-form navbar-right" role="search" method="GET" action="/search">
-        <div class="form-group">
-          <input type="text" name="search_term" class="form-control input-sm" placeholder="Search Listener" required>
-        </div>
-        <button type="submit" class="btn btn-primary input-sm"><span class="glyphicon glyphicon-search"></span></button>
+        <a href="{{ url_for('login.index') }}">Sign in</a>
+      {%- endif -%}
+      <a {{ 'class=active' if active_about_section is defined }} href="{{ url_for('index.about') }}">About</a>
+      <a href="https://community.metabrainz.org/c/listenbrainz" target="_blank" rel="noopener noreferrer">Community</a>
+      <form class="search-bar" role="search" method="GET" action="/search">
+          <input type="text" name="search_term" class="form-control input-sm" placeholder="Search users" required>
+        <button type="submit"><span class="glyphicon glyphicon-search"></span></button>
       </form>
-    {% endif %}
     </div>
-
+    <div class="mobile-nav-fix"></div>
+  </div>
+  <div id="side-nav-overlay" class="collapse" data-toggle="collapse" data-target="#side-nav,#side-nav-overlay"></div>
+  {% endif %}
   </div>
 </nav>

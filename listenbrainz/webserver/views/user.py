@@ -450,4 +450,4 @@ def missing_mb_data(user_name: str):
         }
     }
 
-    return render_template("user/missing_data.html", user=user, props=orjson.dumps(props).decode("utf-8"))
+    return render_template("user/missing_data.html", user=user, props=orjson.dumps(props).decode("utf-8"), active_settings_section="missing-musicbrainz-data")
