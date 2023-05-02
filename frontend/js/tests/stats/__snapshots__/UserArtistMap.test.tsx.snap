@@ -6,21 +6,10 @@ exports[`Sitewide Stats UserArtistMap renders corectly when range is invalid 1`]
   range="invalid_range"
 >
   <ForwardRef
-    style={
-      Object {
-        "marginTop": 20,
-        "minHeight": 600,
-      }
-    }
+    className="user-stats-card"
   >
     <div
-      className="card "
-      style={
-        Object {
-          "marginTop": 20,
-          "minHeight": 600,
-        }
-      }
+      className="card user-stats-card"
     >
       <div
         className="row"
@@ -254,12 +243,7 @@ exports[`Sitewide Stats UserArtistMap renders corectly when range is invalid 1`]
 
 exports[`Sitewide Stats UserArtistMap renders correctly 1`] = `
 <ForwardRef
-  style={
-    Object {
-      "marginTop": 20,
-      "minHeight": 600,
-    }
-  }
+  className="user-stats-card"
 >
   <div
     className="row"
@@ -393,130 +377,121 @@ exports[`Sitewide Stats UserArtistMap renders correctly 1`] = `
   <Loader
     isLoading={false}
   >
-    <div
-      className="row"
-    >
-      <div
-        className="col-xs-12"
-      >
-        <CustomChoropleth
-          data={
-            Array [
-              Object {
-                "id": "GBR",
-                "value": 50,
-              },
-              Object {
-                "id": "USA",
-                "value": 135,
-              },
-              Object {
-                "id": "AUS",
-                "value": 6,
-              },
-              Object {
-                "id": "BEL",
-                "value": 2,
-              },
-              Object {
-                "id": "DEU",
-                "value": 10,
-              },
-              Object {
-                "id": "CAN",
-                "value": 10,
-              },
-              Object {
-                "id": "ARG",
-                "value": 1,
-              },
-              Object {
-                "id": "ESP",
-                "value": 1,
-              },
-              Object {
-                "id": "PRT",
-                "value": 1,
-              },
-              Object {
-                "id": "ISL",
-                "value": 3,
-              },
-              Object {
-                "id": "NLD",
-                "value": 6,
-              },
-              Object {
-                "id": "NOR",
-                "value": 2,
-              },
-              Object {
-                "id": "SWE",
-                "value": 10,
-              },
-              Object {
-                "id": "IND",
-                "value": 30,
-              },
-              Object {
-                "id": "IRL",
-                "value": 5,
-              },
-              Object {
-                "id": "FRA",
-                "value": 5,
-              },
-              Object {
-                "id": "URY",
-                "value": 1,
-              },
-              Object {
-                "id": "DNK",
-                "value": 2,
-              },
-              Object {
-                "id": "PAK",
-                "value": 1,
-              },
-              Object {
-                "id": "TUR",
-                "value": 1,
-              },
-              Object {
-                "id": "JAM",
-                "value": 1,
-              },
-              Object {
-                "id": "SGP",
-                "value": 1,
-              },
-              Object {
-                "id": "IDN",
-                "value": 2,
-              },
-              Object {
-                "id": "PHL",
-                "value": 1,
-              },
-              Object {
-                "id": "PRI",
-                "value": 1,
-              },
-              Object {
-                "id": "NZL",
-                "value": 1,
-              },
-              Object {
-                "id": "MYS",
-                "value": 1,
-              },
-            ]
-          }
-          selectedMetric="artist"
-          width={1200}
-        />
-      </div>
-    </div>
+    <CustomChoropleth
+      data={
+        Array [
+          Object {
+            "id": "GBR",
+            "value": 50,
+          },
+          Object {
+            "id": "USA",
+            "value": 135,
+          },
+          Object {
+            "id": "AUS",
+            "value": 6,
+          },
+          Object {
+            "id": "BEL",
+            "value": 2,
+          },
+          Object {
+            "id": "DEU",
+            "value": 10,
+          },
+          Object {
+            "id": "CAN",
+            "value": 10,
+          },
+          Object {
+            "id": "ARG",
+            "value": 1,
+          },
+          Object {
+            "id": "ESP",
+            "value": 1,
+          },
+          Object {
+            "id": "PRT",
+            "value": 1,
+          },
+          Object {
+            "id": "ISL",
+            "value": 3,
+          },
+          Object {
+            "id": "NLD",
+            "value": 6,
+          },
+          Object {
+            "id": "NOR",
+            "value": 2,
+          },
+          Object {
+            "id": "SWE",
+            "value": 10,
+          },
+          Object {
+            "id": "IND",
+            "value": 30,
+          },
+          Object {
+            "id": "IRL",
+            "value": 5,
+          },
+          Object {
+            "id": "FRA",
+            "value": 5,
+          },
+          Object {
+            "id": "URY",
+            "value": 1,
+          },
+          Object {
+            "id": "DNK",
+            "value": 2,
+          },
+          Object {
+            "id": "PAK",
+            "value": 1,
+          },
+          Object {
+            "id": "TUR",
+            "value": 1,
+          },
+          Object {
+            "id": "JAM",
+            "value": 1,
+          },
+          Object {
+            "id": "SGP",
+            "value": 1,
+          },
+          Object {
+            "id": "IDN",
+            "value": 2,
+          },
+          Object {
+            "id": "PHL",
+            "value": 1,
+          },
+          Object {
+            "id": "PRI",
+            "value": 1,
+          },
+          Object {
+            "id": "NZL",
+            "value": 1,
+          },
+          Object {
+            "id": "MYS",
+            "value": 1,
+          },
+        ]
+      }
+      selectedMetric="artist"
+    />
   </Loader>
 </ForwardRef>
 `;
@@ -532,21 +507,10 @@ exports[`User Stats UserArtistMap renders corectly when range is invalid 1`] = `
   }
 >
   <ForwardRef
-    style={
-      Object {
-        "marginTop": 20,
-        "minHeight": 600,
-      }
-    }
+    className="user-stats-card"
   >
     <div
-      className="card "
-      style={
-        Object {
-          "marginTop": 20,
-          "minHeight": 600,
-        }
-      }
+      className="card user-stats-card"
     >
       <div
         className="row"
@@ -780,12 +744,7 @@ exports[`User Stats UserArtistMap renders corectly when range is invalid 1`] = `
 
 exports[`User Stats UserArtistMap renders correctly 1`] = `
 <ForwardRef
-  style={
-    Object {
-      "marginTop": 20,
-      "minHeight": 600,
-    }
-  }
+  className="user-stats-card"
 >
   <div
     className="row"
@@ -919,130 +878,121 @@ exports[`User Stats UserArtistMap renders correctly 1`] = `
   <Loader
     isLoading={false}
   >
-    <div
-      className="row"
-    >
-      <div
-        className="col-xs-12"
-      >
-        <CustomChoropleth
-          data={
-            Array [
-              Object {
-                "id": "GBR",
-                "value": 50,
-              },
-              Object {
-                "id": "USA",
-                "value": 135,
-              },
-              Object {
-                "id": "AUS",
-                "value": 6,
-              },
-              Object {
-                "id": "BEL",
-                "value": 2,
-              },
-              Object {
-                "id": "DEU",
-                "value": 10,
-              },
-              Object {
-                "id": "CAN",
-                "value": 10,
-              },
-              Object {
-                "id": "ARG",
-                "value": 1,
-              },
-              Object {
-                "id": "ESP",
-                "value": 1,
-              },
-              Object {
-                "id": "PRT",
-                "value": 1,
-              },
-              Object {
-                "id": "ISL",
-                "value": 3,
-              },
-              Object {
-                "id": "NLD",
-                "value": 6,
-              },
-              Object {
-                "id": "NOR",
-                "value": 2,
-              },
-              Object {
-                "id": "SWE",
-                "value": 10,
-              },
-              Object {
-                "id": "IND",
-                "value": 30,
-              },
-              Object {
-                "id": "IRL",
-                "value": 5,
-              },
-              Object {
-                "id": "FRA",
-                "value": 5,
-              },
-              Object {
-                "id": "URY",
-                "value": 1,
-              },
-              Object {
-                "id": "DNK",
-                "value": 2,
-              },
-              Object {
-                "id": "PAK",
-                "value": 1,
-              },
-              Object {
-                "id": "TUR",
-                "value": 1,
-              },
-              Object {
-                "id": "JAM",
-                "value": 1,
-              },
-              Object {
-                "id": "SGP",
-                "value": 1,
-              },
-              Object {
-                "id": "IDN",
-                "value": 2,
-              },
-              Object {
-                "id": "PHL",
-                "value": 1,
-              },
-              Object {
-                "id": "PRI",
-                "value": 1,
-              },
-              Object {
-                "id": "NZL",
-                "value": 1,
-              },
-              Object {
-                "id": "MYS",
-                "value": 1,
-              },
-            ]
-          }
-          selectedMetric="artist"
-          width={1200}
-        />
-      </div>
-    </div>
+    <CustomChoropleth
+      data={
+        Array [
+          Object {
+            "id": "GBR",
+            "value": 50,
+          },
+          Object {
+            "id": "USA",
+            "value": 135,
+          },
+          Object {
+            "id": "AUS",
+            "value": 6,
+          },
+          Object {
+            "id": "BEL",
+            "value": 2,
+          },
+          Object {
+            "id": "DEU",
+            "value": 10,
+          },
+          Object {
+            "id": "CAN",
+            "value": 10,
+          },
+          Object {
+            "id": "ARG",
+            "value": 1,
+          },
+          Object {
+            "id": "ESP",
+            "value": 1,
+          },
+          Object {
+            "id": "PRT",
+            "value": 1,
+          },
+          Object {
+            "id": "ISL",
+            "value": 3,
+          },
+          Object {
+            "id": "NLD",
+            "value": 6,
+          },
+          Object {
+            "id": "NOR",
+            "value": 2,
+          },
+          Object {
+            "id": "SWE",
+            "value": 10,
+          },
+          Object {
+            "id": "IND",
+            "value": 30,
+          },
+          Object {
+            "id": "IRL",
+            "value": 5,
+          },
+          Object {
+            "id": "FRA",
+            "value": 5,
+          },
+          Object {
+            "id": "URY",
+            "value": 1,
+          },
+          Object {
+            "id": "DNK",
+            "value": 2,
+          },
+          Object {
+            "id": "PAK",
+            "value": 1,
+          },
+          Object {
+            "id": "TUR",
+            "value": 1,
+          },
+          Object {
+            "id": "JAM",
+            "value": 1,
+          },
+          Object {
+            "id": "SGP",
+            "value": 1,
+          },
+          Object {
+            "id": "IDN",
+            "value": 2,
+          },
+          Object {
+            "id": "PHL",
+            "value": 1,
+          },
+          Object {
+            "id": "PRI",
+            "value": 1,
+          },
+          Object {
+            "id": "NZL",
+            "value": 1,
+          },
+          Object {
+            "id": "MYS",
+            "value": 1,
+          },
+        ]
+      }
+      selectedMetric="artist"
+    />
   </Loader>
 </ForwardRef>
 `;
