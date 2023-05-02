@@ -119,12 +119,10 @@ def _get_spotify_details(user_id, service):
         if not token:
             return None
 
-        sp = spotipy.Spotify(auth=token["access_token"])
-        spotify_user_id = sp.current_user()["id"]
         return {
             "is_public": True,
             "is_collaborative": False,
-            "user_id": spotify_user_id,
+            "user_id": token["external_user_id"],
             "token": token["access_token"]
         }
     except Exception:
