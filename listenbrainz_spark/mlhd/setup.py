@@ -51,7 +51,7 @@ def post_process_mlhd_plus():
             .createOrReplaceTempView(table)
 
         run_query(query)\
-            .repartition("user_id")\
+            .partitionBy("user_id")\
             .write\
             .mode("append")\
             .parquet(path.MLHD_PLUS_DATA_DIRECTORY)
