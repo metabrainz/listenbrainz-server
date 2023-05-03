@@ -24,6 +24,7 @@
 @import "DateTimePicker.less";
 @import "TimePicker.less";
 @import "explore.less";
+@import "search-track.less";
 @import "stats.less";
 @import "new-navbar.less";
 
@@ -330,4 +331,9 @@ pre code.hljs {
 .badge-info {
   color: @white;
   background-color: @blue;
+}
+
+// Fix button height inside an input group
+.input-group > .input-group-btn > .btn {
+  line-height: 2em;
 }

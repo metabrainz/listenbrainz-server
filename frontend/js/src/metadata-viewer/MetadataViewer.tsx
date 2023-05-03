@@ -196,7 +196,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     (recordingData?.artist_credit_name ?? fallbackArtistName) ||
     "No artist to show";
   const duration =
-    metadata?.recording?.duration ??
+    metadata?.recording?.length ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
 
   const artist = metadata?.artist?.artists?.[0];
