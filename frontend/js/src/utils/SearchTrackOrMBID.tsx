@@ -25,7 +25,7 @@ export default function SearchTrackOrMBID({
   newAlert,
 }: SearchTrackOrMBIDProps) {
   const { APIService } = useContext(GlobalAppContext);
-  const { lookupMBRecording } = APIService;
+  const { getRecordingMetadata } = APIService;
   const [inputValue, setInputValue] = useState("");
   const [searchResults, setSearchResults] = useState<Array<ACRMSearchResult>>(
     []
@@ -82,28 +82,38 @@ export default function SearchTrackOrMBID({
           )![2].toLowerCase();
 
           try {
-            const lookupResult: MusicBrainzRecordingWithReleases = (await lookupMBRecording(
+            const recordingMetadataResponse = await getRecordingMetadata([
               newRecordingMBID,
-              "artists+releases"
-            )) as MusicBrainzRecordingWithReleases;
-            const newMetadata: TrackMetadata = {
-              track_name: lookupResult.title,
-              artist_name: lookupResult["artist-credit"]
-                .map((ac) => ac.name + ac.joinphrase)
-                .join(""),
-              additional_info: {
-                duration_ms: lookupResult.length,
-                artist_mbids: lookupResult["artist-credit"].map(
-                  (ac) => ac.artist.id
-                ),
-                release_artist_names: lookupResult["artist-credit"].map(
-                  (ac) => ac.artist.name
-                ),
-                recording_mbid: lookupResult.id,
-                release_mbid: lookupResult.releases[0]?.id,
-              },
-            };
-            onSelectRecording(newMetadata);
+            ]);
+            const recordingMetadata =
+              recordingMetadataResponse?.[newRecordingMBID];
+            if (recordingMetadata) {
+              const newMetadata: TrackMetadata = {
+                additional_info: {
+                  release_mbid: recordingMetadata.release?.mbid,
+                  recording_mbid: newRecordingMBID,
+                  duration_ms: recordingMetadata.recording?.length,
+                  release_artist_name:
+                    recordingMetadata.release?.album_artist_name,
+
+                  release_group_mbid:
+                    recordingMetadata.release?.release_group_mbid,
+                },
+                mbid_mapping: {
+                  caa_id: recordingMetadata?.release?.caa_id,
+                  caa_release_mbid:
+                    recordingMetadata?.release?.caa_release_mbid,
+                  recording_mbid: newRecordingMBID,
+                  release_mbid: recordingMetadata.release?.mbid as string,
+                  // we don't get artist mbids from the metadata endpoint
+                  artist_mbids: [],
+                },
+                artist_name: recordingMetadata.artist?.name as string,
+                track_name: recordingMetadata.recording?.name as string,
+                release_name: recordingMetadata.release?.name,
+              };
+              onSelectRecording(newMetadata);
+            }
           } catch (error) {
             handleError(
               `We could not find a recording on MusicBrainz with the MBID ${newRecordingMBID} ('${error.message}')`,
@@ -116,7 +126,7 @@ export default function SearchTrackOrMBID({
         800,
         { leading: false, trailing: true }
       ),
-    [lookupMBRecording, handleError, onSelectRecording]
+    [getRecordingMetadata, handleError, onSelectRecording]
   );
 
   const selectSearchResult = (track: ACRMSearchResult) => {
