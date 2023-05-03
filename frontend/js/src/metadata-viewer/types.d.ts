@@ -115,14 +115,18 @@ declare type ListenMetadata = {
     artists?: Array<MusicBrainzArtist>;
   };
   recording?: {
+    name?: string;
     rels?: Array<MusicBrainzRecordingRel>;
-    duration?: number;
+    length?: number;
   };
   release?: {
-    caa_id: ?number;
-    caa_release_mbid: ?string;
+    name?: string;
+    caa_id?: number;
+    caa_release_mbid?: string;
     mbid?: string;
     year?: number;
+    album_artist_name?: string;
+    release_group_mbid?: string;
   };
   tag?: {
     artist?: Array<ArtistTag>;

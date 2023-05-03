@@ -1182,6 +1182,26 @@ export default class APIService {
     return response.json();
   };
 
+  getRecordingMetadata = async (
+    recordingMBIDs: string[],
+    metadata: boolean = true
+  ): Promise<{ [mbid: string]: ListenMetadata } | null> => {
+    if (!recordingMBIDs?.length) {
+      return null;
+    }
+    const url = new URL(`${this.APIBaseURI}/metadata/recording/`);
+
+    url.searchParams.append("recording_mbids", recordingMBIDs.join(" "));
+
+    if (metadata) {
+      url.searchParams.append("inc", "artist tag release");
+    }
+
+    const response = await fetch(url.toString());
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   resetUserTimezone = async (
     userToken: string,
     zonename: string
