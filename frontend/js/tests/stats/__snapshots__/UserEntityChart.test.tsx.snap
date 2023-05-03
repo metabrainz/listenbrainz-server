@@ -5664,7 +5664,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                 className="previous disabled"
               >
                 <a
-                  href=""
+                  href="?page=0&range=&entity="
                   onClick={[Function]}
                   role="button"
                 >
@@ -16070,7 +16070,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                 className="previous disabled"
               >
                 <a
-                  href=""
+                  href="?page=0&range=&entity="
                   onClick={[Function]}
                   role="button"
                 >
@@ -23070,7 +23070,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                 className="previous disabled"
               >
                 <a
-                  href=""
+                  href="?page=0&range=&entity="
                   onClick={[Function]}
                   role="button"
                 >
@@ -30037,7 +30037,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                 className="previous disabled"
               >
                 <a
-                  href=""
+                  href="?page=0&range=&entity="
                   onClick={[Function]}
                   role="button"
                 >
@@ -37909,7 +37909,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                 className="previous disabled"
               >
                 <a
-                  href=""
+                  href="?page=0&range=&entity="
                   onClick={[Function]}
                   role="button"
                 >
@@ -48321,7 +48321,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                 className="previous disabled"
               >
                 <a
-                  href=""
+                  href="?page=0&range=&entity="
                   onClick={[Function]}
                   role="button"
                 >
@@ -55327,7 +55327,7 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                 className="previous disabled"
               >
                 <a
-                  href=""
+                  href="?page=0&range=&entity="
                   onClick={[Function]}
                   role="button"
                 >
@@ -62300,7 +62300,7 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                 className="previous disabled"
               >
                 <a
-                  href=""
+                  href="?page=0&range=&entity="
                   onClick={[Function]}
                   role="button"
                 >

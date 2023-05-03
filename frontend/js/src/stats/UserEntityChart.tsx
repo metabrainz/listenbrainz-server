@@ -636,7 +636,7 @@ export default class UserEntityChart extends React.Component<
                         }`}
                       >
                         <a
-                          href=""
+                          href={this.buildURLParams(prevPage, range, entity)}
                           role="button"
                           onClick={(e) => {
                             this.handleClickEvent(e, () => {
