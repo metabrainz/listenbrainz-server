@@ -35,7 +35,13 @@ function getListenFromTrack(
 
   return {
     listened_at: convertDateToUnixTimestamp(selectedDate),
-    track_metadata: selectedTrackMetadata,
+    track_metadata: {
+      ...selectedTrackMetadata,
+      additional_info: {
+        ...selectedTrackMetadata.additional_info,
+        submission_client: "listenbrainz web",
+      },
+    },
   };
 }
 
