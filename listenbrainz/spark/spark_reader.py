@@ -38,7 +38,8 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_yim_tracks_of_the_year_start,
                                          handle_yim_tracks_of_the_year_data,
                                          handle_yim_tracks_of_the_year_end,
-                                         handle_yim_artist_map)
+                                         handle_yim_artist_map, handle_similar_recordings_start,
+                                         handle_similar_recordings_end)
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
@@ -64,6 +65,8 @@ response_handler_map = {
     'cf_recommendations_recording_mail': cf_recording_recommendations_complete,
     'similar_users': handle_similar_users,
     'similar_recordings': handle_similar_recordings,
+    'similar_recordings_start': handle_similar_recordings_start,
+    'similar_recordings_end': handle_similar_recordings_end,
     'similar_artists': handle_similar_artists,
     'year_in_music_top_stats': handle_yim_top_stats,
     'year_in_music_listens_per_day': handle_yim_listens_per_day,
