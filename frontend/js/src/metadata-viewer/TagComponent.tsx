@@ -80,49 +80,81 @@ export default function TagComponent(props: {
   const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
   const { submitTagToMusicBrainz } = APIService;
 
-  const [upvote, downvote, withdraw] = Object.values(TagActionType).map(
-    (actionVerb: TagActionType) => {
-      return React.useCallback(async () => {
-        let MBID = entityMBID;
-        if (entityType === "artist") {
-          MBID = (tag as ArtistTag).artist_mbid;
-        }
-        if (entityType === "release-group") {
-          MBID = (tag as ReleaseGroupTag).release_group_mbid;
-        }
-        if (!MBID || !musicbrainzAuthToken) {
-          return;
-        }
-        const success = await submitTagToMusicBrainz(
-          entityType,
-          MBID,
-          tag.tag,
-          actionVerb,
-          musicbrainzAuthToken
-        );
-        if (success) {
-          switch (actionVerb) {
-            case TagActionType.UPVOTE:
-              setUserScore(1);
-              break;
-            case TagActionType.DOWNVOTE:
-              setUserScore(-1);
-              break;
-            case TagActionType.WITHDRAW:
-            default:
-              setUserScore(0);
-              break;
-          }
-        }
-      }, [
-        tag.tag,
-        entityType,
-        entityMBID,
-        musicbrainzAuthToken,
-        submitTagToMusicBrainz,
-      ]);
+  let tagEntityMBID = entityMBID;
+  if (entityType === "artist") {
+    tagEntityMBID = (tag as ArtistTag).artist_mbid;
+  }
+  if (entityType === "release-group") {
+    tagEntityMBID = (tag as ReleaseGroupTag).release_group_mbid;
+  }
+  /** We can't generate the callback frunction from an array.map to refactor this,
+   * the callback functions have to be defined separately, duplicating some code.
+   */
+  const upvote = React.useCallback(async () => {
+    if (!tagEntityMBID || !musicbrainzAuthToken) {
+      return;
     }
-  );
+    const success = await submitTagToMusicBrainz(
+      entityType,
+      tagEntityMBID,
+      tag.tag,
+      TagActionType.UPVOTE,
+      musicbrainzAuthToken
+    );
+    if (success) {
+      setUserScore(1);
+    }
+  }, [
+    tag.tag,
+    entityType,
+    tagEntityMBID,
+    musicbrainzAuthToken,
+    submitTagToMusicBrainz,
+  ]);
+
+  const downvote = React.useCallback(async () => {
+    if (!tagEntityMBID || !musicbrainzAuthToken) {
+      return;
+    }
+    const success = await submitTagToMusicBrainz(
+      entityType,
+      tagEntityMBID,
+      tag.tag,
+      TagActionType.DOWNVOTE,
+      musicbrainzAuthToken
+    );
+    if (success) {
+      setUserScore(-1);
+    }
+  }, [
+    tag.tag,
+    entityType,
+    tagEntityMBID,
+    musicbrainzAuthToken,
+    submitTagToMusicBrainz,
+  ]);
+
+  const withdraw = React.useCallback(async () => {
+    if (!tagEntityMBID || !musicbrainzAuthToken) {
+      return;
+    }
+    const success = await submitTagToMusicBrainz(
+      entityType,
+      tagEntityMBID,
+      tag.tag,
+      TagActionType.WITHDRAW,
+      musicbrainzAuthToken
+    );
+    if (success) {
+      setUserScore(0);
+    }
+  }, [
+    tag.tag,
+    entityType,
+    tagEntityMBID,
+    musicbrainzAuthToken,
+    submitTagToMusicBrainz,
+  ]);
 
   return (
     <span key={tag.tag + tag.count} className="tag">
