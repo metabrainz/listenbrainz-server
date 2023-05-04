@@ -109,6 +109,27 @@ def start_prod_table(name, algorithm):
         conn.close()
 
 
+def insert_prod_table(name, data, algorithm):
+    """ Insert similar recordings for the production dataset. """
+    table = Identifier("similarity", f"{name}_prod_tmp")
+    query = SQL("""
+        INSERT INTO {table} AS sr (mbid0, mbid1, score)
+             VALUES %s
+        ON CONFLICT (mbid0, mbid1)
+          DO UPDATE
+                SET score = EXCLUDED.score
+    """).format(table=table)
+    values = [(x["mbid0"], x["mbid1"], x["score"]) for x in data]
+
+    conn = timescale.engine.raw_connection()
+    try:
+        with conn.cursor() as curs:
+            execute_values(curs, query, values)
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def end_prod_table(name, algorithm):
     """ Switch the temporary production table in production.
 
