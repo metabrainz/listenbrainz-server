@@ -136,7 +136,7 @@ def main(days, session, contribution, threshold, limit, skip, is_production_data
             "type": "similar_recordings",
             "algorithm": algorithm,
             "data": items,
-            "production": is_production_dataset
+            "is_production_dataset": is_production_dataset
         }
 
     if is_production_dataset:
