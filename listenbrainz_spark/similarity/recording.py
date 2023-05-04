@@ -27,6 +27,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
               LEFT JOIN {metadata_table} r
                   USING (recording_mbid)
                   WHERE l.recording_mbid IS NOT NULL
+                    AND l.recording_mbid != ''
             ), ordered AS (
                 SELECT user_id
                      , listened_at
