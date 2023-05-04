@@ -434,7 +434,9 @@ def request_similar_recordings(days, session, contribution, threshold, limit, sk
                                         " (the limit is instructive. upto 2x artists may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_artists(days, session, contribution, threshold, limit, skip):
+@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
+                                                 " affects how the resulting dataset is stored in LB.", required=True)
+def request_similar_artists(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar artists index. """
     send_request_to_spark_cluster(
         "similarity.artist",
@@ -443,7 +445,8 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip)
         contribution=contribution,
         threshold=threshold,
         limit=limit,
-        skip=skip
+        skip=skip,
+        is_production_dataset=production
     )
 
 
@@ -532,3 +535,12 @@ def cron_request_recommendations(ctx):
     ctx.invoke(request_candidate_sets)
     ctx.invoke(request_recording_discovery)
     ctx.invoke(request_recommendations)
+
+
+@cli.command(name='cron_request_similarity_datasets')
+@click.pass_context
+def cron_request_similarity_datasets(ctx):
+    ctx.request_similar_recordings(days=7500, session=300, contribution=5, threshold=10,
+                                   limit=100, skip=30, production=True)
+    ctx.request_similar_artists(days=7500, session=300, contribution=5, threshold=10,
+                                limit=100, skip=30, production=True)
