@@ -10,27 +10,36 @@ function AddTagComponent(props: {
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const { APIService } = React.useContext(GlobalAppContext);
+  const { APIService, musicbrainzAuth } = React.useContext(GlobalAppContext);
+  const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
+  const { submitTagToMusicBrainz } = APIService;
   const { entityMBID, entityType, callback } = props;
 
   const submitNewTag = React.useCallback(
     async (event: React.FormEvent) => {
       event.preventDefault();
       const newTag = inputRef?.current?.value;
-      if (!newTag || !entityMBID) {
+      if (!newTag || !entityMBID || !musicbrainzAuthToken) {
         return;
       }
-      const success = await APIService.submitTagToMusicBrainz(
+      const success = await submitTagToMusicBrainz(
         entityType,
         entityMBID,
         newTag,
-        TagActionType.UPVOTE
+        TagActionType.UPVOTE,
+        musicbrainzAuthToken
       );
       if (success && isFunction(callback)) {
         callback(newTag);
       }
     },
-    [entityType, entityMBID]
+    [
+      entityType,
+      entityMBID,
+      musicbrainzAuthToken,
+      submitTagToMusicBrainz,
+      callback,
+    ]
   );
   return (
     <div className={`add-tag ${expanded ? "expanded" : ""}`}>

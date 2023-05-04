@@ -1317,7 +1317,8 @@ export default class APIService {
     entityType: string,
     entityMBID: string,
     tagName: string,
-    action: TagActionType
+    action: TagActionType,
+    musicBrainzAuthToken: string
   ): Promise<boolean> => {
     const formattedEntityName = kebabCase(entityType);
     // encode reserved characters
@@ -1364,7 +1365,8 @@ export default class APIService {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "Content-Type": "application/xml",
+          "Content-Type": "application/xml; charset=utf-8",
+          Authorization: `Token ${musicBrainzAuthToken}`,
         },
         body,
       });

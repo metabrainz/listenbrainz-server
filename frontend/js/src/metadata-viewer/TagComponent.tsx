@@ -76,7 +76,9 @@ export default function TagComponent(props: {
 }) {
   const { tag, entityType, entityMBID } = props;
   const [userScore, setUserScore] = React.useState<UserTagScore>(0);
-  const { APIService } = React.useContext(GlobalAppContext);
+  const { APIService, musicbrainzAuth } = React.useContext(GlobalAppContext);
+  const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
+  const { submitTagToMusicBrainz } = APIService;
 
   const [upvote, downvote, withdraw] = Object.values(TagActionType).map(
     (actionVerb: TagActionType) => {
@@ -88,14 +90,15 @@ export default function TagComponent(props: {
         if (entityType === "release-group") {
           MBID = (tag as ReleaseGroupTag).release_group_mbid;
         }
-        if (!MBID) {
+        if (!MBID || !musicbrainzAuthToken) {
           return;
         }
-        const success = await APIService.submitTagToMusicBrainz(
+        const success = await submitTagToMusicBrainz(
           entityType,
           MBID,
           tag.tag,
-          actionVerb
+          actionVerb,
+          musicbrainzAuthToken
         );
         if (success) {
           switch (actionVerb) {
@@ -111,7 +114,13 @@ export default function TagComponent(props: {
               break;
           }
         }
-      }, [tag, entityType, entityMBID]);
+      }, [
+        tag.tag,
+        entityType,
+        entityMBID,
+        musicbrainzAuthToken,
+        submitTagToMusicBrainz,
+      ]);
     }
   );
 
