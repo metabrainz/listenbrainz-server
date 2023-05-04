@@ -59,7 +59,7 @@ export default class PlaylistsList extends React.Component<
   async componentDidUpdate(
     prevProps: React.PropsWithChildren<PlaylistsListProps>
   ): Promise<void> {
-    const { user, activeSection, newAlert, playlists } = this.props;
+    const { user, activeSection, newAlert } = this.props;
     const { currentUser } = this.context;
     if (prevProps.activeSection !== activeSection) {
       await this.fetchPlaylists(0);
