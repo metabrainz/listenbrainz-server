@@ -437,8 +437,10 @@ def handle_similar_recordings_end(message):
 
 
 def handle_similar_recordings(message):
-    table = "recording_prod_tmp" if message.get("is_production_dataset") else "recording"
-    similarity.insert(table, message["data"], message["algorithm"])
+    if message.get("is_production_dataset"):
+        similarity.insert_prod_table("recording", message["data"], message["algorithm"])
+    else:
+        similarity.insert("recording", message["data"], message["algorithm"])
 
 
 def handle_similar_artists(message):
