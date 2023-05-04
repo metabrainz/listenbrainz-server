@@ -202,6 +202,12 @@ CREATE TABLE similarity.recording (
     metadata JSONB NOT NULL
 );
 
+CREATE TABLE similarity.recording_prod (
+    mbid0 UUID NOT NULL,
+    mbid1 UUID NOT NULL,
+    score INT NOT NULL
+);
+
 CREATE TABLE similarity.artist_credit_mbids (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,

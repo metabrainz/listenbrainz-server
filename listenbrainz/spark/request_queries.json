@@ -147,7 +147,8 @@
       "contribution",
       "threshold",
       "limit",
-      "skip"
+      "skip",
+      "is_production_dataset"
     ]
   },
   "similarity.artist": {
