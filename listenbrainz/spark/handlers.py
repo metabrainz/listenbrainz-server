@@ -428,8 +428,17 @@ def handle_yim_tracks_of_the_year_end(message):
     yim_patch_runner(message["year"])
 
 
+def handle_similar_recordings_start(message):
+    similarity.start_prod_table("recording", message["algorithm"])
+
+
+def handle_similar_recordings_end(message):
+    similarity.end_prod_table("recording", message["algorithm"])
+
+
 def handle_similar_recordings(message):
-    similarity.insert("recording", message["data"], message["algorithm"])
+    table = "recording_prod_tmp" if message.get("is_production_dataset") else "recording"
+    similarity.insert(table, message["data"], message["algorithm"])
 
 
 def handle_similar_artists(message):
