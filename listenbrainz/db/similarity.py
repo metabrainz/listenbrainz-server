@@ -99,11 +99,6 @@ def start_prod_table(name, algorithm):
             """).format(table=table)
             curs.execute(query)
 
-            query = SQL("""
-                COMMENT ON TABLE {table} IS {comment}
-            """).format(table=table, comment=Literal(f"This dataset is created using the algorithm {algorithm}"))
-            curs.execute(query)
-
         conn.commit()
     finally:
         conn.close()
@@ -159,6 +154,12 @@ def end_prod_table(name, algorithm):
              """).format(incoming_table=incoming_table, prod_table=Identifier(f"{name}_prod"))
             curs.execute(query)
             query = SQL("""DROP TABLE {old_table}""").format(old_table=Identifier("similarity", f"{name}_prod_old"))
+            curs.execute(query)
+
+            query = SQL("COMMENT ON TABLE {table} IS {comment}").format(
+                table=Identifier("similarity", f"{name}_prod"),
+                comment=Literal(f"This dataset is created using the algorithm {algorithm}")
+            )
             curs.execute(query)
 
         conn.commit()
