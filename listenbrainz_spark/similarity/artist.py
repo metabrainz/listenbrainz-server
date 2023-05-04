@@ -34,6 +34,7 @@ def build_sessioned_index(listen_table, metadata_table, artist_credit_table, ses
                   JOIN {artist_credit_table} ac
                  USING (artist_credit_id)
                  WHERE l.recording_mbid IS NOT NULL
+                   AND l.recording_mbid != ''
                 WINDOW w AS (PARTITION BY l.user_id, listened_at, l.recording_mbid ORDER BY ac.position)
             ), ordered AS (
                 SELECT user_id
