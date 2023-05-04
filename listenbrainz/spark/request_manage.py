@@ -540,7 +540,7 @@ def cron_request_recommendations(ctx):
 @cli.command(name='cron_request_similarity_datasets')
 @click.pass_context
 def cron_request_similarity_datasets(ctx):
-    ctx.request_similar_recordings(days=7500, session=300, contribution=5, threshold=10,
-                                   limit=100, skip=30, production=True)
-    ctx.request_similar_artists(days=7500, session=300, contribution=5, threshold=10,
-                                limit=100, skip=30, production=True)
+    ctx.invoke(request_similar_recordings, days=7500, session=300, contribution=5,
+               threshold=10, limit=100, skip=30, production=True)
+    ctx.invoke(request_similar_artists, days=7500, session=300, contribution=5,
+               threshold=10, limit=100, skip=30, production=True)
