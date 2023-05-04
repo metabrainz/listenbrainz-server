@@ -102,7 +102,7 @@ declare type YoutubeUser = {
   api_key?: string;
 };
 
-declare type CritiqueBrainzUser = {
+declare type MetaBrainzProjectUser = {
   access_token?: string;
 };
 
