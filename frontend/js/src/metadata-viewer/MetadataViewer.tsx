@@ -74,6 +74,8 @@ function getNowPlayingRecordingMBID(
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { recordingData, playingNow } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { getFeedbackForUserForMBIDs, submitFeedback } = APIService;
+  const { auth_token, name: username } = currentUser;
 
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const [expandedAccordion, setExpandedAccordion] = React.useState(1);
@@ -89,15 +91,16 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       const averageColor = getAverageRGBOfImage(albumArtRef?.current);
       setAlbumArtColor(averageColor);
     };
-    if (albumArtRef?.current) {
-      albumArtRef.current.addEventListener("load", setAverageColor);
+    const currentAlbumArtRef = albumArtRef.current;
+    if (currentAlbumArtRef) {
+      currentAlbumArtRef.addEventListener("load", setAverageColor);
     }
     return () => {
-      if (albumArtRef?.current) {
-        albumArtRef.current.removeEventListener("load", setAverageColor);
+      if (currentAlbumArtRef) {
+        currentAlbumArtRef.removeEventListener("load", setAverageColor);
       }
     };
-  }, [albumArtRef?.current, setAlbumArtColor]);
+  }, [setAlbumArtColor]);
 
   React.useEffect(() => {
     const getFeedbackPromise = async () => {
@@ -109,8 +112,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         return;
       }
       try {
-        const feedbackObject = await APIService.getFeedbackForUserForMBIDs(
-          currentUser.name,
+        const feedbackObject = await getFeedbackForUserForMBIDs(
+          username,
           recordingMBID
         );
         if (feedbackObject?.feedback?.length) {
@@ -127,11 +130,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       }
     };
     getFeedbackPromise();
-  }, [recordingData, playingNow]);
+  }, [recordingData, playingNow, getFeedbackForUserForMBIDs, username]);
 
-  const submitFeedback = React.useCallback(
+  const submitFeedbackCallback = React.useCallback(
     async (score: ListenFeedBack) => {
-      if (currentUser?.auth_token) {
+      if (auth_token) {
         const recordingMBID = getNowPlayingRecordingMBID(
           recordingData,
           playingNow
@@ -141,12 +144,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         }
         try {
           setCurrentListenFeedback(score);
-          await APIService.submitFeedback(
-            currentUser.auth_token,
-            score,
-            undefined,
-            recordingMBID
-          );
+          await submitFeedback(auth_token, score, undefined, recordingMBID);
         } catch (error) {
           // Revert the feedback UI in case of failure
           setCurrentListenFeedback(0);
@@ -155,7 +153,13 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         }
       }
     },
-    [recordingData, playingNow, setCurrentListenFeedback]
+    [
+      recordingData,
+      playingNow,
+      setCurrentListenFeedback,
+      submitFeedback,
+      auth_token,
+    ]
   );
 
   const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
@@ -520,7 +524,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <button
               className="btn-transparent"
               onClick={() =>
-                submitFeedback(currentListenFeedback === 1 ? 0 : 1)
+                submitFeedbackCallback(currentListenFeedback === 1 ? 0 : 1)
               }
               type="button"
             >
@@ -534,7 +538,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <button
               className="btn-transparent"
               onClick={() =>
-                submitFeedback(currentListenFeedback === -1 ? 0 : -1)
+                submitFeedbackCallback(currentListenFeedback === -1 ? 0 : -1)
               }
               type="button"
             >
