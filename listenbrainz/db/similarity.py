@@ -100,8 +100,8 @@ def start_prod_table(name, algorithm):
             curs.execute(query)
 
             query = SQL("""
-                COMMENT ON TABLE {table} IS 'This dataset is created using the algorithm {algorithm}'
-            """).format(table=table, algorithm=Literal(algorithm))
+                COMMENT ON TABLE {table} IS {comment}
+            """).format(table=table, comment=Literal(f"This dataset is created using the algorithm {algorithm}"))
             curs.execute(query)
 
         conn.commit()
