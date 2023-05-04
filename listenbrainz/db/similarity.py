@@ -95,7 +95,7 @@ def start_prod_table(name, algorithm):
             curs.execute(query)
 
             query = SQL("""
-                CREATE TABLE {table} (mbid0 UUID NOT NULL, mbid1 NOT NULL, score INT NOT NULL)
+                CREATE TABLE {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, score INT NOT NULL)
             """).format(table=table)
             curs.execute(query)
 
