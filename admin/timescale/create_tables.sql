@@ -214,4 +214,11 @@ CREATE TABLE similarity.artist_credit_mbids (
     metadata JSONB NOT NULL
 );
 
+
+CREATE TABLE similarity.artist_credit_mbids_prod (
+    mbid0 UUID NOT NULL,
+    mbid1 UUID NOT NULL,
+    score INT NOT NULL
+);
+
 COMMIT;

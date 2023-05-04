@@ -62,13 +62,15 @@ CREATE UNIQUE INDEX similar_recordings_uniq_idx ON similarity.recording (mbid0, 
 CREATE UNIQUE INDEX similar_recordings_reverse_uniq_idx ON similarity.recording (mbid1, mbid0);
 CREATE INDEX similar_recordings_algorithm_idx ON similarity.recording USING gin (metadata);
 
--- NOTE: If the indexes for the recording_prod table changes, update the code in listenbrainz/db/similarity.py !
-CREATE UNIQUE INDEX similar_recordings_prod_uniq_idx ON similarity.recording_prod (mbid0, mbid1);
-CREATE UNIQUE INDEX similar_recordings_prod_reverse_uniq_idx ON similarity.recording_prod (mbid1, mbid0);
-
 CREATE UNIQUE INDEX similar_artists_uniq_idx ON similarity.artist_credit_mbids (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_artist_credit_mbids_reverse_uniq_idx ON similarity.artist_credit_mbids (mbid1, mbid0);
 CREATE INDEX similar_artist_credit_mbids_algorithm_idx ON similarity.artist_credit_mbids USING gin (metadata);
+
+-- NOTE: If the indexes for the recording_prod/artist_credit_mbids_prod table changes, update the code in listenbrainz/db/similarity.py !
+CREATE UNIQUE INDEX similar_recordings_prod_uniq_idx ON similarity.recording_prod (mbid0, mbid1);
+CREATE UNIQUE INDEX similar_recordings_prod_reverse_uniq_idx ON similarity.recording_prod (mbid1, mbid0);
+CREATE UNIQUE INDEX similar_artist_credit_mbids_prod_uniq_idx ON similarity.recording_prod (mbid0, mbid1);
+CREATE UNIQUE INDEX similar_artist_credit_mbids_prod_reverse_uniq_idx ON similarity.recording_prod (mbid1, mbid0);
 
 CREATE INDEX mbid_manual_mapping_top_idx ON mbid_manual_mapping_top (recording_msid) INCLUDE (recording_mbid);
 
