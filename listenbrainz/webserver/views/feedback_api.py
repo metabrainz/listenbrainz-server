@@ -208,13 +208,14 @@ def get_feedback_for_recordings_for_user(user_name):
 
     .. note::
 
-        If you get a 502 error while querying this endpoint, consider reducing the number of total recordings you are
+        If you get a 502 error while querying this endpoint using a GET request, consider reducing the number of total recordings you are
         querying in 1 request. As a rule of thumb, requesting maximum ~75 recordings in 1 request will avert the error.
 
         The reason this error occurs is because the recording uuids are query params which are part of the request url.
         The length of the url is subject to a general limit imposed at the middleware level so requests with long urls
         never reach the ListenBrainz backend. Due to the same reason, the backend cannot provide a meaningful error.
-
+    
+    @GET request
     :param recordings: comma separated list of recording_msids for which feedback records are to be fetched.
         this param is deprecated and will be removed in the future. use recording_msids instead.
     :type recordings: ``str``
@@ -222,6 +223,16 @@ def get_feedback_for_recordings_for_user(user_name):
     :type recording_msids: ``str``
     :param recording_mbids: comma separated list of recording_mbids for which feedback records are to be fetched.
     :type recording_mbids: ``str``
+
+    @POST request
+    The format of the post data should look as follows:
+    .. code-block:: json
+
+        {
+            "recording_msids": "<msid1>,<msid2>,<msid3>",
+            "recording_mbids": "<mbid1>,<mbid2>,<mbid3>"
+        }
+
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
@@ -235,8 +246,8 @@ def get_feedback_for_recordings_for_user(user_name):
             msids_unparsed = request.args.get("recordings")
         mbids_unparsed = request.args.get("recording_mbids")
     elif request.method == "POST":
-        msids_unparsed = request.json.get(recording_msids)
-        mbids_unparsed = request.json.get(recording_mbids)
+        msids_unparsed = request.json.get("recording_msids")
+        mbids_unparsed = request.json.get("recording_mbids")
         
     if msids_unparsed:
         recording_msids = parse_param_list(msids_unparsed)
