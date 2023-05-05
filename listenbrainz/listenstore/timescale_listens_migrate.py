@@ -12,6 +12,7 @@ from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 
 CHUNK_SECONDS = 432000
 global_missing_users = set()
+MAX_CREATED_WHEN_ENABLED_ON_TEST = datetime(2023, 4, 27)
 
 
 def process_created(created: datetime):
@@ -103,12 +104,19 @@ def migrate_listens():
         print_status_update(chunk_count, number_chunks, start_time)
         chunk_start += CHUNK_SECONDS
 
-    # max created for fixup in future - Thu 27 Apr 2023 08:50:19 PM UTC
+    print("Finished chunkwise scan.")
+
     # since listens with older listened_at values can be inserted between runs, also do a scan with created field
     # to insert the remaining listens
     if already_max_created:
-        print("Finished chunkwise scan.")
-        process_created(already_max_created)
+        # at MAX_CREATED_WHEN_ENABLED_ON_TEST, we enabled this migration for testing on test.lb
+        # so new listens may have appeared since then. to ensure we don't miss any listens,
+        # fixup from that date.
+        already_max_created = min(already_max_created, MAX_CREATED_WHEN_ENABLED_ON_TEST)
+    else:
+        already_max_created = MAX_CREATED_WHEN_ENABLED_ON_TEST
+
+    process_created(already_max_created)
 
     print("Finished.")
 
