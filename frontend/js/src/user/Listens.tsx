@@ -246,12 +246,19 @@ export default class Listens extends React.Component<
         true
       );
       if (response) {
-        const { metadata } = response;
-        playingNow.track_metadata.mbid_mapping = response as MBIDMapping;
-        playingNow.track_metadata.mbid_mapping.caa_id =
-          metadata?.release?.caa_id;
-        playingNow.track_metadata.mbid_mapping.caa_release_mbid =
-          metadata?.release?.caa_release_mbid;
+        const {
+          metadata,
+          recording_mbid,
+          release_mbid,
+          artist_mbids,
+        } = response;
+        playingNow.track_metadata.mbid_mapping = {
+          recording_mbid,
+          release_mbid,
+          artist_mbids,
+          caa_id: metadata?.release?.caa_id,
+          caa_release_mbid: metadata?.release?.caa_release_mbid,
+        } as MBIDMapping;
       }
 
       await this.loadFeedbackForNowPlaying(playingNow);
