@@ -3,7 +3,7 @@ Utility tool for migrating listens to new schema table. It can be run multiple t
 """
 import math
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import text
 
@@ -12,7 +12,7 @@ from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 
 CHUNK_SECONDS = 432000
 global_missing_users = set()
-MAX_CREATED_WHEN_ENABLED_ON_TEST = datetime(2023, 4, 27)
+MAX_CREATED_WHEN_ENABLED_ON_TEST = datetime(2023, 4, 27, tzinfo=timezone.utc)
 
 
 def process_created(created: datetime):
