@@ -1,5 +1,4 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
-import async from "react-select/async";
 import { TagActionType } from "../metadata-viewer/TagComponent";
 import APIError from "./APIError";
 
@@ -148,6 +147,10 @@ export default class APIService {
 
   refreshCritiquebrainzToken = async (): Promise<string> => {
     return this.refreshAccessToken("critiquebrainz");
+  };
+
+  refreshMusicbrainzToken = async (): Promise<string> => {
+    return this.refreshAccessToken("musicbrainz");
   };
 
   refreshAccessToken = async (service: string): Promise<string> => {
@@ -1318,7 +1321,8 @@ export default class APIService {
     entityMBID: string,
     tagName: string,
     action: TagActionType,
-    musicBrainzAuthToken: string
+    musicBrainzAuthToken: string,
+    retries: number = 2
   ): Promise<boolean> => {
     const formattedEntityName = kebabCase(entityType);
     // encode reserved characters
@@ -1366,12 +1370,29 @@ export default class APIService {
         method: "POST",
         headers: {
           "Content-Type": "application/xml; charset=utf-8",
-          Authorization: `Token ${musicBrainzAuthToken}`,
+          Authorization: `Bearer ${musicBrainzAuthToken}`,
         },
         body,
       });
       if (response.ok) {
         return true;
+      }
+      if (retries > 0) {
+        let token = musicBrainzAuthToken;
+        if (response.status === 401) {
+          // Token is probably expired, refresh it before trying again
+          // Currently the error messgae and status is the same for wrong credentials
+          // and expired token, so we can't know exactly what the issue is. See MBS-13068
+          token = await this.refreshMusicbrainzToken();
+        }
+        return this.submitTagToMusicBrainz(
+          entityType,
+          entityMBID,
+          tagName,
+          action,
+          token,
+          retries - 1
+        );
       }
       return false;
     } catch (err) {
