@@ -595,8 +595,8 @@ export default class APIService {
         "Content-Type": "application/json;charset=UTF-8",
       },
       body: JSON.stringify({
-        recording_mbids,
         recording_msids,
+        recording_mbids,
       }),
     });
     await this.checkStatus(response);
@@ -709,8 +709,9 @@ export default class APIService {
       };
     }
 
-    const url = `${this.APIBaseURI}/user/${userName}/playlists${createdFor ? "/createdfor" : ""
-      }${collaborator ? "/collaborator" : ""}?offset=${offset}&count=${count}`;
+    const url = `${this.APIBaseURI}/user/${userName}/playlists${
+      createdFor ? "/createdfor" : ""
+    }${collaborator ? "/collaborator" : ""}?offset=${offset}&count=${count}`;
 
     const response = await fetch(url, {
       method: "GET",
