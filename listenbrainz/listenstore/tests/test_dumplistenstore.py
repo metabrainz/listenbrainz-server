@@ -48,7 +48,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         for listen in listens:
             submit.append((*listen.to_timescale(), listen.inserted_timestamp))
 
-        query = """INSERT INTO listen_new (listened_at, user_id, recording_msid, data, created)
+        query = """INSERT INTO listen (listened_at, user_id, recording_msid, data, created)
                         VALUES %s
                    ON CONFLICT (listened_at, user_id, recording_msid)
                     DO NOTHING

@@ -277,7 +277,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def _get_pending_deletes(self):
         with timescale.engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM listen_delete_metadata_new"))
+            result = connection.execute(text("SELECT * FROM listen_delete_metadata"))
             return [{
                 "user_id": row.user_id,
                 "recording_msid": row.recording_msid,
@@ -289,7 +289,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
             result = connection.execute(
                 text("""
                     SELECT count, min_listened_at, max_listened_at
-                      FROM listen_user_metadata_new
+                      FROM listen_user_metadata
                      WHERE user_id = :user_id
                 """), {"user_id": user_id})
             return result.fetchone()._asdict()
