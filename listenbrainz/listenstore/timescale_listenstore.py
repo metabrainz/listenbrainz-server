@@ -27,7 +27,6 @@ REDIS_TOTAL_LISTEN_COUNT = "lc-total"
 REDIS_USER_LISTEN_COUNT_EXPIRY = 300
 
 DUMP_CHUNK_SIZE = 100000
-DATA_START_YEAR = 2005
 DATA_START_YEAR_IN_SECONDS = 1104537600
 
 # How many listens to fetch on the first attempt. If we don't fetch enough, increase it by WINDOW_SIZE_MULTIPLIER
