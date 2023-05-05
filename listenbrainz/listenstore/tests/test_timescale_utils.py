@@ -77,9 +77,9 @@ class TestTimescaleUtils(DatabaseTestCase, TimescaleTestCase):
         # test min_listened_at is updated if that listen is deleted for a user
         self.logstore.delete_listen(datetime.utcfromtimestamp(1400000000), user_1["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
         # test max_listened_at is updated if that listen is deleted for a user
-        self.logstore.delete_listen(datetime.utcfromtimestamp(1400000200), user_1["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
+        self.logstore.delete_listen(datetime.utcfromtimestamp(1400000200), user_1["id"], "db072fa7-0c7f-4f55-b90f-a88da531b219")
         # test normal listen delete updates correctly
-        self.logstore.delete_listen(datetime.utcfromtimestamp(1400000100), user_2["id"], "4269ddbc-9241-46da-935d-4fa9e0f7f371")
+        self.logstore.delete_listen(datetime.utcfromtimestamp(1400000100), user_2["id"], "08ade1eb-800e-4ad8-8184-32941664ac02")
 
         delete_listens()
 

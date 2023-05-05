@@ -156,10 +156,10 @@ class MappingJobQueue(threading.Thread):
            Listens are added to the queue with a low priority."""
 
         # Find listens that have no entry in the mapping yet.
-        legacy_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid
+        legacy_query = """SELECT data->'additional_info'->>'recording_msid'::TEXT AS recording_msid
                             FROM listen
                        LEFT JOIN mbid_mapping m
-                              ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::text
+                              ON data->'additional_info'->>'recording_msid' = m.recording_msid::text
                            WHERE m.recording_mbid IS NULL
                              AND listened_at <= :max_ts
                              AND listened_at > :min_ts"""
