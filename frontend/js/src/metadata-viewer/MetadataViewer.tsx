@@ -406,11 +406,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 <TagsComponent
                   tags={metadata?.tag?.release_group}
                   entityType="release-group"
-                  entityMBID={
-                    metadata?.release?.release_group_mbid ??
-                    metadata?.tag?.release_group?.[0]?.release_group_mbid ??
-                    ""
-                  }
+                  entityMBID={metadata?.release?.release_group_mbid ?? ""}
                 />
                 <OpenInMusicBrainzButton
                   entityType="release"

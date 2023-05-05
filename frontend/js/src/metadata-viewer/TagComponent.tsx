@@ -84,9 +84,6 @@ export default function TagComponent(props: {
   if (entityType === "artist") {
     tagEntityMBID = (tag as ArtistTag).artist_mbid;
   }
-  if (entityType === "release-group") {
-    tagEntityMBID = (tag as ReleaseGroupTag).release_group_mbid;
-  }
   /** We can't generate the callback frunction from an array.map to refactor this,
    * the callback functions have to be defined separately, duplicating some code.
    */

@@ -100,13 +100,10 @@ declare type EntityTag = {
 };
 
 declare type RecordingTag = EntityTag;
+declare type ReleaseGroupTag = EntityTag;
 
 declare type ArtistTag = EntityTag & {
   artist_mbid: string;
-};
-
-declare type ReleaseGroupTag = EntityTag & {
-  release_group_mbid: string;
 };
 
 declare type ListenMetadata = {
