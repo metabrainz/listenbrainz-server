@@ -18,7 +18,7 @@ MAX_CREATED_WHEN_ENABLED_ON_TEST = datetime(2023, 4, 27, tzinfo=timezone.utc)
 def process_created(created: datetime):
     print("Fixing-up using created - this may take a while.")
     query = """
-        INSERT INTO listen_new (listened_at, created, user_id, recording_msid, data)
+        INSERT INTO listen (listened_at, created, user_id, recording_msid, data)
              SELECT to_timestamp(listened_at)
                   , created
                   , user_id
@@ -47,7 +47,7 @@ def process_chunk(chunk_start):
     print(f"Processing chunk: {chunk_start_dt.isoformat()} - {chunk_end_dt.isoformat()}")
 
     query = """
-        INSERT INTO listen_new (listened_at, created, user_id, recording_msid, data)
+        INSERT INTO listen (listened_at, created, user_id, recording_msid, data)
              SELECT to_timestamp(listened_at)
                   , created
                   , user_id
@@ -78,7 +78,7 @@ def migrate_listens():
     query2 = """
         SELECT COALESCE(EXTRACT('epoch' from max(listened_at)), 0) AS already_done_ts
              , max(created) AS already_max_created
-          FROM listen_new
+          FROM listen
     """
     with timescale.engine.connect() as connection:
         result = connection.execute(text(query1), {"least_accepted_ts": LISTEN_MINIMUM_TS})

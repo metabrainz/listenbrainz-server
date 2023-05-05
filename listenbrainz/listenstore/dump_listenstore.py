@@ -45,7 +45,7 @@ class DumpListenStore:
         """
 
         query = """SELECT extract(epoch from listened_at) as listened_at, user_id, created, recording_msid::TEXT, data
-                      FROM listen_new
+                      FROM listen
                      WHERE listened_at >= :start_time
                        AND listened_at <= :end_time
                   ORDER BY listened_at ASC"""
@@ -63,7 +63,7 @@ class DumpListenStore:
         """
 
         query = """SELECT extract(epoch from listened_at) as listened_at, user_id, created, recording_msid::TEXT, data
-                      FROM listen_new
+                      FROM listen
                      WHERE created > :start_ts
                        AND created <= :end_ts
                   ORDER BY created ASC"""
@@ -344,7 +344,7 @@ class DumpListenStore:
                           , data->'additional_info'->>'recording_mbid' AS l_recording_mbid
                           -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
                           , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS m_recording_mbid
-                       FROM listen_new l
+                       FROM listen l
                   LEFT JOIN mbid_mapping mm
                          ON l.recording_msid = mm.recording_msid
                   LEFT JOIN mbid_manual_mapping user_mm
