@@ -12,6 +12,7 @@ import FreshReleases, {
   FreshReleasesProps,
 } from "../../src/explore/fresh-releases/FreshReleases";
 import ReleaseFilters from "../../src/explore/fresh-releases/ReleaseFilters";
+import ReleaseTimeline from "../../src/explore/fresh-releases/ReleaseTimeline";
 
 import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
 import * as userData from "../__mocks__/freshReleasesUserData.json";
@@ -50,7 +51,22 @@ const mountOptions: { context: GlobalAppContextT } = {
 };
 
 describe("FreshReleases", () => {
-  it("renders filters, card grid, and timeline components on the page", async () => {
+  it("renders the page correctly", async () => {
+    const mockFetchUserFreshReleases = jest.fn().mockResolvedValue({
+      json: () => userData,
+    });
+    mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
+    const wrapper = mount(
+      <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
+        <FreshReleases {...props} />
+      </GlobalAppContext.Provider>
+    );
+    await waitForComponentToPaint(wrapper);
+    expect(mockFetchUserFreshReleases).toHaveBeenCalledWith("chinmaykunkikar");
+    expect(wrapper.html()).toMatchSnapshot();
+  });
+
+  it("renders sitewide fresh releases page, including timeline component", async () => {
     const mockFetchSitewideFreshReleases = jest.fn().mockResolvedValue({
       json: () => sitewideData,
     });
@@ -61,27 +77,14 @@ describe("FreshReleases", () => {
       </GlobalAppContext.Provider>
     );
     await waitForComponentToPaint(wrapper);
-    expect(mockFetchSitewideFreshReleases).toHaveBeenCalledWith(3);
-    await waitForComponentToPaint(wrapper);
-    expect(wrapper.find(ReleaseFilters)).toHaveLength(1);
-    expect(wrapper.html()).toMatchSnapshot();
-  });
-
-  it("renders user fresh releases page correctly", async () => {
-    const mockFetchUserFreshReleases = jest.fn().mockResolvedValue({
-      json: () => userData,
+    await act(() => {
+      // click on sitewide-releases button
+      wrapper.find("#sitewide-releases").at(0).simulate("click");
     });
-    mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
-    const wrapper = mount(
-      <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
-        <FreshReleases {...props} />
-      </GlobalAppContext.Provider>
-    );
-    // click on user-releases button
-    wrapper.find("#user-releases").at(0).simulate("click");
     await waitForComponentToPaint(wrapper);
-
-    expect(mockFetchUserFreshReleases).toBeCalled();
+    expect(mockFetchSitewideFreshReleases).toHaveBeenCalledWith(3);
+    expect(wrapper.find("#release-filters")).toHaveLength(1);
+    expect(wrapper.find(".releases-timeline")).toHaveLength(1);
     expect(wrapper.html()).toMatchSnapshot();
   });
 
