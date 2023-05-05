@@ -88,12 +88,22 @@ export default function TagsComponent(props: {
   entityMBID: string;
 }) {
   const { tags, entityType, entityMBID } = props;
+  const [newTags, setNewTags] = React.useState<EntityTag[]>([]);
+  const onAddNewTag = React.useCallback(
+    (newTagName: string) => {
+      const newTag: EntityTag = { count: 1, tag: newTagName };
+      setNewTags((prevTags) => prevTags.concat(newTag));
+    },
+    [setNewTags]
+  );
+  const allTags: Array<
+    EntityTag | ArtistTag | ReleaseGroupTag
+  > = newTags.concat(tags ? tags.filter((tag) => tag.genre_mbid) : []);
   return (
     <div className="tags-wrapper content-box">
       <div className="tags">
-        {tags?.length ? (
-          tags
-            .filter((tag) => tag.genre_mbid)
+        {allTags?.length ? (
+          allTags
             .sort((t1, t2) => t2.count - t1.count)
             .map((tag) => (
               <TagComponent
@@ -106,7 +116,11 @@ export default function TagsComponent(props: {
           <span>Be the first to add a tag</span>
         )}
       </div>
-      <AddTagComponent entityType={entityType} entityMBID={entityMBID} />
+      <AddTagComponent
+        entityType={entityType}
+        entityMBID={entityMBID}
+        callback={onAddNewTag}
+      />
     </div>
   );
 }
