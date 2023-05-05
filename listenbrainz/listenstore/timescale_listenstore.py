@@ -213,7 +213,7 @@ class TimescaleListenStore:
                              , l.recording_msid
                              , l.data
                              -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
-                             , COALESCE((data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
+                             , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
                           FROM listen l
                      LEFT JOIN mbid_mapping mm
                             ON l.recording_msid = mm.recording_msid
@@ -385,7 +385,7 @@ class TimescaleListenStore:
               ), selected_listens AS (
                     SELECT l.*
                         -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
-                         , COALESCE((data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
+                         , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
                       FROM intermediate l
                  LEFT JOIN mbid_mapping mm
                         ON l.recording_msid = mm.recording_msid

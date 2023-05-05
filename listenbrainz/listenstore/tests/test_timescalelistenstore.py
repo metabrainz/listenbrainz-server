@@ -15,6 +15,7 @@ from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COU
     TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
 from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data,\
     recalculate_all_user_data, add_missing_to_listen_users_metadata, update_user_listen_data
+from listenbrainz.webserver import create_app
 
 
 class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
@@ -22,6 +23,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
+        self.app = create_app()
         self.log = logging.getLogger(__name__)
         self.logstore = TimescaleListenStore(self.log)
 
@@ -165,12 +167,12 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000000)
 
     def test_fetch_listens_with_mapping(self):
+        """ Test that the recording mbid submitted by the user is preferred over the mapping created by LB """
         self._create_test_data(self.testuser_name, self.testuser_id)
         self._insert_mapping_metadata("c7a41965-9f1e-456c-8b1d-27c0f0dde280")
         from_ts = datetime.utcfromtimestamp(1400000000)
         listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, from_ts=from_ts, limit=1)
         self.assertEqual(len(listens), 1)
-        # mbid submitted by the user is preferred over the mapping created by LB
         self.assertEqual(listens[0].data["mbid_mapping"]["artist_mbids"], ['678d88b2-87b0-403b-b63d-5da7465aecc3'])
         self.assertEqual(listens[0].data["mbid_mapping"]["release_mbid"], '93ac1812-d38d-4125-88e8-8440e3e89072')
         self.assertEqual(listens[0].data["mbid_mapping"]["recording_mbid"], '2cfad207-3f55-4aec-8120-86cf66e34d59')
