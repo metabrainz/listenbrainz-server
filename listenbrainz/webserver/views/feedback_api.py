@@ -196,7 +196,7 @@ def _get_feedback_for_recording(recording_type, recording):
     })
 
 
-@feedback_api_bp.route("/user/<user_name>/get-feedback-for-recordings", methods=["GET"])
+@feedback_api_bp.route("/user/<user_name>/get-feedback-for-recordings", methods=["GET", "POST"])
 @crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user(user_name):
@@ -225,13 +225,21 @@ def get_feedback_for_recordings_for_user(user_name):
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
-
-    msids_unparsed = request.args.get("recording_msids")
-    if msids_unparsed is None:
-        msids_unparsed = request.args.get("recordings")
-    mbids_unparsed = request.args.get("recording_mbids")
+    msids_unparsed = None
+    mbids_unparsed = None
 
     recording_msids, recording_mbids = [], []
+    if request.method == "GET":
+        msids_unparsed = request.args.get("recording_msids")
+        if msids_unparsed is None:
+            msids_unparsed = request.args.get("recordings")
+        mbids_unparsed = request.args.get("recording_mbids")
+    elif request.method == "POST":
+        msids_unparsed = request.json.get(recording_msids)
+        if msids_unparsed is None:
+            msids_unparsed = request.json.get("recordings")
+        mbids_unparsed = request.json.get("recording_mbids")
+        
     if msids_unparsed:
         recording_msids = parse_param_list(msids_unparsed)
     if mbids_unparsed:

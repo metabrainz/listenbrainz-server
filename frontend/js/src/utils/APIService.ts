@@ -588,8 +588,17 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_msids=${recording_msids}&recording_mbids=${recording_mbids}`;
-    const response = await fetch(url);
+    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        recording_mbids,
+        recording_msids,
+      }),
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -601,8 +610,16 @@ export default class APIService {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_mbids=${recording_mbids}`;
-    const response = await fetch(url);
+    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        recording_mbids,
+      }),
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -692,9 +709,8 @@ export default class APIService {
       };
     }
 
-    const url = `${this.APIBaseURI}/user/${userName}/playlists${
-      createdFor ? "/createdfor" : ""
-    }${collaborator ? "/collaborator" : ""}?offset=${offset}&count=${count}`;
+    const url = `${this.APIBaseURI}/user/${userName}/playlists${createdFor ? "/createdfor" : ""
+      }${collaborator ? "/collaborator" : ""}?offset=${offset}&count=${count}`;
 
     const response = await fetch(url, {
       method: "GET",
