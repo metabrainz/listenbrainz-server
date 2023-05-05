@@ -64,7 +64,6 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
     return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
   }
-  React.useEffect(() => {}, [releaseMBID, setCoverartSrc]);
 
   React.useEffect(() => {
     async function getCoverArt() {
@@ -94,7 +93,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       <div className="name-type-container">
         <div className="release-name" title={releaseName}>
           <a
-            href={`https://musicbrainz.org/release/${releaseMBID}`}
+            href={`/player/release/${releaseMBID}`}
             target="_blank"
             rel="noopener noreferrer"
           >
