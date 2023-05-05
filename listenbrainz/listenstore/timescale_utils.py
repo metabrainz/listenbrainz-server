@@ -24,33 +24,33 @@ def delete_listens():
     #
     # 1) Delete Mismatch
     #
-    # The listen_delete_metadata table holds the rows to be deleted from listen. We fetch the rows from it and delete
-    # corresponding listens from listen table. After that, we update counts and timestamps in listen_user_metadata table
-    # as necessary. Between the time rows are deleted from listen table and the time we get to clear up the
-    # listen_delete_metadata table, new rows may have been inserted in the latter. So, we would have deleted rows from
-    # listen_delete_metadata table without deleting the actual listens.
+    # The listen_delete_metadata_new table holds the rows to be deleted FROM listen_new. We fetch the rows from it and delete
+    # corresponding listens FROM listen_new table. After that, we update counts and timestamps in listen_user_metadata_new table
+    # as necessary. Between the time rows are deleted FROM listen_new table and the time we get to clear up the
+    # listen_delete_metadata_new table, new rows may have been inserted in the latter. So, we would have deleted rows from
+    # listen_delete_metadata_new table without deleting the actual listens.
     #
     # This issue exists because our transaction isolation level is READ COMMITTED. This issue can be prevented by using
     # the REPEATABLE READ isolation level but that comes with its own issues. To alleviate this issue, the id
-    # column has been added to the listen_delete_metadata table. Before the start of the transaction, we record the
-    # maximum id in the table. This id is used to select the rows from listen_delete_metadata table and the same rows
+    # column has been added to the listen_delete_metadata_new table. Before the start of the transaction, we record the
+    # maximum id in the table. This id is used to select the rows from listen_delete_metadata_new table and the same rows
     # are then later deleted.
     #
     # 2) "Fake/Double" Delete
     #
     # The DELETE listen endpoint does not verify whether a listen already exists in the listen table. It also does not
-    # check whether that row for that delete already exists in listen_delete_metadata table. This can actually be a
+    # check whether that row for that delete already exists in listen_delete_metadata_new table. This can actually be a
     # quite common situation, for example: the user clicking delete for the same listen twice. If we count the number of
-    # deleted listens to subtract using listen_delete_metadata table, the count may become inaccurate.
+    # deleted listens to subtract using listen_delete_metadata_new table, the count may become inaccurate.
     #
-    # Therefore, we use the RETURNING clause with the DELETE FROM listen statement to return the user_id and created
+    # Therefore, we use the RETURNING clause with the DELETE FROM listen_new statement to return the user_id and created
     # of the actual deletes and then calculate the deleted listen count from it and subtract it from existing count to
     # get the updated count.
     #
     # However, PG's CTEs have a limitation that they unrelated WITH'ed queries may be executed in any order and if there
     # are multiple updates to a row in a CTE, only 1 query's update will be visible afterwards. So the queries to update
     # timestamps cannot be put in the WITH of update counts query. Further, this means that we cannot utilise the
-    # RETURNING clause to return listened_at for these queries and need to read the listen_delete_metadata table.
+    # RETURNING clause to return listened_at for these queries and need to read the listen_delete_metadata_new table.
     # (**There is an alternative if needed: create a temporary table out of the RETURNING clause data.**)
     # But but wait... For updating min/max listened_at timestamp, we scan the listen table so even if there are double
     # entries or fake entries for delete, it doesn't matter. The new min/max timestamps are going to come from the
@@ -58,17 +58,17 @@ def delete_listens():
     #
     # 3) Interaction with regular metadata update cron job
     #
-    # A periodic cron job run updates the metadata in the listen_user_metadata table. Specifically, the count,
+    # A periodic cron job run updates the metadata in the listen_user_metadata_new table. Specifically, the count,
     # min_listened_at and max_listened_at values for a user have been calculated only on the basis of listens created
-    # prior to the created value of that user's listen_user_metadata row. But many users will have listens created
+    # prior to the created value of that user's listen_user_metadata_new row. But many users will have listens created
     # since the last cron job run, some of these may end up in deletes as well.
     #
-    # Listens which have a created value later than the created value in the listen_user_metadata table haven't yet
-    # been counted in the listen_user_metadata table. So when deleted the count of these listens should not be
-    # subtracted from listen_user_metadata. The FILTER clause with count(*) is responsible for that.
+    # Listens which have a created value later than the created value in the listen_user_metadata_new table haven't yet
+    # been counted in the listen_user_metadata_new table. So when deleted the count of these listens should not be
+    # subtracted from listen_user_metadata_new. The FILTER clause with count(*) is responsible for that.
     #
     # Similarly, a listen with listened_at greater than max_listened_at can be created later than the created value
-    # in the listen_user_metadata table. If this listen is deleted and the listen with max_listened_at is also deleted,
+    # in the listen_user_metadata_new table. If this listen is deleted and the listen with max_listened_at is also deleted,
     # max(listened_at) of deleted listens != max_listened_at of listened_user_metadata. So, we will have missed to
     # update listen timestamps in this case. To avoid this, we need to check max_listened_at is in the list of
     # listened_at of delete listens. The same situation can happen with min_listened_at.
@@ -76,7 +76,7 @@ def delete_listens():
     # 4) Redundant work in updating min/max listened_at
     #
     # To update min/max listened_at fields, it doesn't really matter whether the listens were created prior or after
-    # the created value in the listen_user_metadata table. It is a matter of choosing the best performance
+    # the created value in the listen_user_metadata_new table. It is a matter of choosing the best performance
     # characteristics. When updating the these fields we use the existing min/max listened_at values to reduce the
     # search space.
     #
@@ -95,27 +95,27 @@ def delete_listens():
 
     # select the maximum id in the table till now, we are only to process
     # deletes with row id earlier than this.
-    select_max_id = "SELECT max(id) AS max_id FROM listen_delete_metadata"
+    select_max_id = "SELECT max(id) AS max_id FROM listen_delete_metadata_new"
 
     # count deleted listens, checked created and update listen counts
     delete_listens_and_update_listen_counts = """
         WITH deleted_listens AS (
-            DELETE FROM listen l
-             USING listen_delete_metadata ldm
+            DELETE FROM listen_new l
+             USING listen_delete_metadata_new ldm
              WHERE ldm.id <= :max_id
                AND l.user_id = ldm.user_id
                AND l.listened_at = ldm.listened_at
-               AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = ldm.recording_msid::text
+               AND l.recording_msid = ldm.recording_msid
          RETURNING l.user_id, l.created
         ), update_counts AS (
             SELECT user_id
                  , count(*) AS deleted_count
               FROM deleted_listens dl
-              JOIN listen_user_metadata lm
+              JOIN listen_user_metadata_new lm
              USING (user_id)
           GROUP BY user_id
         ) 
-            UPDATE listen_user_metadata lm
+            UPDATE listen_user_metadata_new lm
                SET count = count - deleted_count
               FROM update_counts uc
              WHERE lm.user_id = uc.user_id
@@ -126,8 +126,8 @@ def delete_listens():
     update_listen_min_ts = """
         WITH update_ts AS (
             SELECT user_id, min_listened_at, lm.created
-              FROM listen_delete_metadata dl
-              JOIN listen_user_metadata lm
+              FROM listen_delete_metadata_new dl
+              JOIN listen_user_metadata_new lm
              USING (user_id)
              WHERE dl.id <= :max_id
           GROUP BY user_id, min_listened_at, lm.created
@@ -141,7 +141,7 @@ def delete_listens():
               -- for each user calculate the new minimum timestamp
               JOIN LATERAL (
                     SELECT min(listened_at) AS min_listened_ts
-                      FROM listen l
+                      FROM listen_new l
                         -- new minimum will be greater than the last one
                      WHERE l.listened_at >= u.min_listened_at
                        AND l.user_id = u.user_id
@@ -149,7 +149,7 @@ def delete_listens():
                    ) AS new_ts
                 ON TRUE
         )
-            UPDATE listen_user_metadata lm
+            UPDATE listen_user_metadata_new lm
                SET min_listened_at = new_listened_at
               FROM calculate_new_ts mt
              WHERE lm.user_id = mt.user_id
@@ -160,8 +160,8 @@ def delete_listens():
     update_listen_max_ts = """
         WITH update_ts AS (
             SELECT user_id, max_listened_at, lm.created
-              FROM listen_delete_metadata dl
-              JOIN listen_user_metadata lm
+              FROM listen_delete_metadata_new dl
+              JOIN listen_user_metadata_new lm
              USING (user_id)
              WHERE dl.id <= :max_id
           GROUP BY user_id, max_listened_at, lm.created
@@ -175,7 +175,7 @@ def delete_listens():
                 -- for each user calculate the new maximum timestamp
               JOIN LATERAL (
                     SELECT max(listened_at) AS max_listened_ts
-                      FROM listen l
+                      FROM listen_new l
                         -- new maximum will be lesser than the last one
                      WHERE l.listened_at <= u.max_listened_at
                        AND l.user_id = u.user_id
@@ -183,12 +183,12 @@ def delete_listens():
                    ) AS new_ts
                 ON TRUE
         )
-            UPDATE listen_user_metadata lm
+            UPDATE listen_user_metadata_new lm
                SET max_listened_at = new_listened_at
               FROM calculate_new_ts mt
              WHERE lm.user_id = mt.user_id
     """
-    delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE id <= :max_id"
+    delete_user_metadata = "DELETE FROM listen_delete_metadata_new WHERE id <= :max_id"
 
     with timescale.engine.begin() as connection:
         result = connection.execute(text(select_max_id))
@@ -199,7 +199,7 @@ def delete_listens():
             return
 
         max_id = row.max_id
-        logger.info("Found max id in listen_delete_metadata table: %s", max_id)
+        logger.info("Found max id in listen_delete_metadata_new table: %s", max_id)
 
         logger.info("Deleting Listens and updating affected listens counts")
         connection.execute(text(delete_listens_and_update_listen_counts), {"max_id": max_id})
@@ -217,21 +217,21 @@ def delete_listens():
 
 
 def update_user_listen_data():
-    """ Scan listens created since last run and update metadata in listen_user_metadata accordingly """
+    """ Scan listens created since last run and update metadata in listen_user_metadata_new accordingly """
     query = """
         WITH new AS (
             SELECT user_id
                  , count(*) as count
                  , min(listened_at) AS min_listened_at
                  , max(listened_at) AS max_listened_at
-              FROM listen l
-              JOIN listen_user_metadata lm
+              FROM listen_new l
+              JOIN listen_user_metadata_new lm
              USING (user_id)
              WHERE l.created > lm.created
                AND l.created <= :until
           GROUP BY user_id
         )
-        UPDATE listen_user_metadata old
+        UPDATE listen_user_metadata_new old
            SET count = old.count + new.count
              , min_listened_at = least(old.min_listened_at, new.min_listened_at)
              , max_listened_at = greatest(old.max_listened_at, new.max_listened_at)
@@ -256,7 +256,7 @@ def delete_listens_and_update_user_listen_data():
 
 
 def add_missing_to_listen_users_metadata():
-    """ Fetch users from LB and add an entry those users which are missing from listen_user_metadata """
+    """ Fetch users from LB and add an entry those users which are missing from listen_user_metadata_new """
     # Select a list of users
     user_list = []
     query = 'SELECT id FROM "user"'
@@ -274,7 +274,7 @@ def add_missing_to_listen_users_metadata():
                 len(user_list))
 
     query = """
-        INSERT INTO listen_user_metadata (user_id, count, min_listened_at, max_listened_at, created)
+        INSERT INTO listen_user_metadata_new (user_id, count, min_listened_at, max_listened_at, created)
              VALUES %s
         ON CONFLICT (user_id)
          DO NOTHING
@@ -306,7 +306,7 @@ def recalculate_all_user_data():
     logger.info("Fetched %d users. Resetting created timestamps for all users.", len(user_list))
 
     query = """
-        INSERT INTO listen_user_metadata (user_id, count, min_listened_at, max_listened_at, created)
+        INSERT INTO listen_user_metadata_new (user_id, count, min_listened_at, max_listened_at, created)
              VALUES %s
         ON CONFLICT (user_id)
           DO UPDATE

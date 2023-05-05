@@ -68,7 +68,7 @@ class UserListensSessionQuery(Query):
                           , (l.data->'track_metadata'->'additional_info'->>'duration_ms')::INT / 1000
                           , {DEFAULT_TRACK_LENGTH}
                         ) AS duration
-                   FROM listen l
+                   FROM listen_new l
               LEFT JOIN mbid_mapping mm
                      ON (l.data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
               LEFT JOIN mbid_mapping_metadata mmm

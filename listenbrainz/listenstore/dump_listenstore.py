@@ -44,8 +44,8 @@ class DumpListenStore:
             Use listened_at timestamp, since not all listens have the created timestamp.
         """
 
-        query = """SELECT listened_at, track_name, user_id, created, data
-                      FROM listen
+        query = """SELECT extract(epoch from listened_at) as listened_at, user_id, created, recording_msid::TEXT, data
+                      FROM listen_new
                      WHERE listened_at >= :start_time
                        AND listened_at <= :end_time
                   ORDER BY listened_at ASC"""
@@ -54,7 +54,7 @@ class DumpListenStore:
             'end_time': end_time
         }
 
-        return (query, args)
+        return query, args
 
     def get_incremental_listens_query(self, start_time, end_time):
         """
@@ -62,8 +62,8 @@ class DumpListenStore:
             This uses the `created` column to fetch listens.
         """
 
-        query = """SELECT listened_at, track_name, user_id, created, data
-                      FROM listen
+        query = """SELECT extract(epoch from listened_at) as listened_at, user_id, created, recording_msid::TEXT, data
+                      FROM listen_new
                      WHERE created > :start_ts
                        AND created <= :end_ts
                   ORDER BY created ASC"""
@@ -72,7 +72,7 @@ class DumpListenStore:
             'start_ts': start_time,
             'end_ts': end_time,
         }
-        return (query, args)
+        return query, args
 
     def write_dump_metadata(self, archive_name, start_time, end_time, temp_dir, tar, full_dump=True):
         """ Write metadata files (schema version, timestamps, license) into the dump archive.
@@ -182,11 +182,9 @@ class DumpListenStore:
 
             query, args = None, None
             if full_dump:
-                query, args = self.get_listens_query_for_dump(int(start_time.strftime('%s')),
-                                                              int(end_time.strftime('%s')))
+                query, args = self.get_listens_query_for_dump(start_time, end_time)
             else:
-                query, args = self.get_incremental_listens_query(
-                    start_time, end_time)
+                query, args = self.get_incremental_listens_query(start_time, end_time)
 
             rows_added = 0
             with timescale.engine.connect() as connection:
@@ -204,10 +202,10 @@ class DumpListenStore:
                                 continue
                             listen = Listen.from_timescale(
                                 listened_at=result.listened_at,
-                                track_name=result.track_name,
+                                recording_msid=result.recording_msid,
                                 user_id=result.user_id,
                                 created=result.created,
-                                data=result.data,
+                                track_metadata=result.data,
                                 user_name=user_name
                             ).to_json()
                             out_file.write(orjson.dumps(listen).decode("utf-8") + "\n")
@@ -320,17 +318,12 @@ class DumpListenStore:
         # , so we can get upto date stats sooner.
         if dump_type == "full":
             criteria = "listened_at"
-            # listened_at column is bigint so need to convert datetime to timestamp
-            args = {
-                "start": int(start_time.timestamp()),
-                "end": int(end_time.timestamp())
-            }
         else:  # incremental dump
             criteria = "created"
-            args = {
-                "start": start_time,
-                "end": end_time
-            }
+        args = {
+            "start": start_time,
+            "end": end_time
+        }
 
         query = psycopg2.sql.SQL("""
         -- can't use coalesce here because we want all listen data or all mapping data to be used for a given
@@ -338,32 +331,32 @@ class DumpListenStore:
         -- an alternative is to use to CASE, but need to put case for each column because SQL CASE doesn't allow
         -- setting multiple columns at once.
                 WITH listen_with_mbid AS (
-                     SELECT listened_at
+                     SELECT l.listened_at
                           , l.user_id
-                          , data->'track_metadata'->'additional_info'->>'recording_msid' AS recording_msid
+                          , l.recording_msid
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
                           -- here and let psycopg2 adapt it to a python list which is what we want anyway
-                          , data->'track_metadata'->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
-                          , data->'track_metadata'->>'artist_name' AS l_artist_name
-                          , data->'track_metadata'->>'release_name' AS l_release_name
-                          , data->'track_metadata'->'additional_info'->>'release_mbid' AS l_release_mbid
-                          , track_name AS l_recording_name
-                          , data->'track_metadata'->'additional_info'->>'recording_mbid' AS l_recording_mbid
+                          , data->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
+                          , data->>'artist_name' AS l_artist_name
+                          , data->>'release_name' AS l_release_name
+                          , data->'additional_info'->>'release_mbid' AS l_release_mbid
+                          , data->>'track_name' AS l_recording_name
+                          , data->'additional_info'->>'recording_mbid' AS l_recording_mbid
                           -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
                           , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS m_recording_mbid
-                       FROM listen l
+                       FROM listen_new l
                   LEFT JOIN mbid_mapping mm
-                         ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = mm.recording_msid
+                         ON l.recording_msid = mm.recording_msid
                   LEFT JOIN mbid_manual_mapping user_mm
-                         ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = user_mm.recording_msid
+                         ON l.recording_msid = user_mm.recording_msid
                         AND user_mm.user_id = l.user_id 
                   LEFT JOIN mbid_manual_mapping_top other_mm
-                         ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = other_mm.recording_msid
+                         ON l.recording_msid = other_mm.recording_msid
                       WHERE {criteria} > %(start)s
                         AND {criteria} <= %(end)s
                 )    SELECT l.listened_at
                           , l.user_id
-                          , l.recording_msid
+                          , l.recording_msid::TEXT
                           , l_artist_credit_mbids
                           , l_artist_name
                           , l_release_name
@@ -433,7 +426,7 @@ class DumpListenStore:
                             + len(result["m_release_mbid"] or "0") + len(str(result["m_artist_credit_mbids"] or 0)) \
                             + len(str(result["artist_credit_id"]))
 
-                    current_listened_at = datetime.utcfromtimestamp(result["listened_at"])
+                    current_listened_at = result["listened_at"]
                     data["listened_at"].append(current_listened_at)
                     data["user_id"].append(result["user_id"])
                     data["recording_msid"].append(result["recording_msid"])
@@ -532,7 +525,7 @@ class DumpListenStore:
                     parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, dump_type,
                                                              start, end, parquet_index)
                 except Exception as err:
-                    self.log.info("likely test failure: " + str(err))
+                    self.log.exception("likely test failure: " + str(err))
                     raise
 
             shutil.rmtree(temp_dir)
