@@ -10,11 +10,11 @@ from listenbrainz.listen import Listen, NowPlayingListen
 
 class RedisListenStore:
 
-    RECENT_LISTENS_KEY = "new-rl-"
+    RECENT_LISTENS_KEY = "rl-"
     RECENT_LISTENS_MAX = 100
-    PLAYING_NOW_KEY = "new-pn."
+    PLAYING_NOW_KEY = "pn."
     LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
-    LISTEN_COUNT_PER_DAY_KEY = "new-lc-day-"
+    LISTEN_COUNT_PER_DAY_KEY = "lc-day-"
 
     def __init__(self, logger):
         self.log = logger
@@ -62,7 +62,6 @@ class RedisListenStore:
         recent = {}
         for listen in unique:
             recent[orjson.dumps(listen.to_json())] = float(listen.ts_since_epoch)
-        print(recent)
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:
