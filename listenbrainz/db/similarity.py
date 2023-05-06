@@ -15,7 +15,7 @@ def insert(table, data, algorithm):
         ON CONFLICT (mbid0, mbid1)
           DO UPDATE
                 SET metadata = sr.metadata || EXCLUDED.metadata
-    """).format(table=Identifier("similarity", table))
+    """).format(table=Identifier("similarity", f"{table}_dev"))
     values = [(x["mbid0"], x["mbid1"], x["score"]) for x in data]
     template = SQL("(%s, %s, jsonb_build_object({algorithm}, %s))").format(algorithm=Literal(algorithm))
 
@@ -85,7 +85,7 @@ def start_prod_table(name, algorithm):
         name: 'recording' or 'artist' dataset
         algorithm: the algorithm used to create the dataset
     """
-    table = Identifier("similarity", f"{name}_prod_tmp")
+    table = Identifier("similarity", f"{name}_tmp")
     conn = timescale.engine.raw_connection()
     try:
         with conn.cursor() as curs:
@@ -106,7 +106,7 @@ def start_prod_table(name, algorithm):
 
 def insert_prod_table(name, data, algorithm):
     """ Insert similar recordings for the production dataset. """
-    table = Identifier("similarity", f"{name}_prod_tmp")
+    table = Identifier("similarity", f"{name}_tmp")
     query = SQL("INSERT INTO {table} (mbid0, mbid1, score) VALUES %s").format(table=table)
     values = [(x["mbid0"], x["mbid1"], x["score"]) for x in data]
 
@@ -126,7 +126,7 @@ def end_prod_table(name, algorithm):
         name: 'recording' or 'artist' dataset
         algorithm: the algorithm used to create the dataset
     """
-    incoming_table = Identifier("similarity", f"{name}_prod_tmp")
+    incoming_table = Identifier("similarity", f"{name}_tmp")
 
     # add a random suffix to the index name to avoid issues while renaming
     suffix = int(time.time())
@@ -135,29 +135,29 @@ def end_prod_table(name, algorithm):
     try:
         with conn.cursor() as curs:
             query = SQL("""
-                CREATE UNIQUE INDEX similar_recordings_prod_uniq_idx_{suffix} ON {table} (mbid0, mbid1)
+                CREATE UNIQUE INDEX similar_recordings_uniq_idx_{suffix} ON {table} (mbid0, mbid1)
              """).format(table=incoming_table, suffix=Literal(suffix))
             curs.execute(query)
 
             query = SQL("""
-                CREATE UNIQUE INDEX similar_recordings_prod_reverse_uniq_idx_{suffix} ON {table} (mbid1, mbid0)
+                CREATE UNIQUE INDEX similar_recordings_reverse_uniq_idx_{suffix} ON {table} (mbid1, mbid0)
              """).format(table=incoming_table, suffix=Literal(suffix))
             curs.execute(query)
 
             # rotate tables
             query = SQL("""
                 ALTER TABLE {prod_table} RENAME TO {outgoing_table}
-             """).format(prod_table=Identifier("similarity", f"{name}_prod"), outgoing_table=Identifier(f"{name}_prod_old"))
+             """).format(prod_table=Identifier("similarity", name), outgoing_table=Identifier(f"{name}_old"))
             curs.execute(query)
             query = SQL("""
                 ALTER TABLE {incoming_table} RENAME TO {prod_table}
-             """).format(incoming_table=incoming_table, prod_table=Identifier(f"{name}_prod"))
+             """).format(incoming_table=incoming_table, prod_table=Identifier(name))
             curs.execute(query)
-            query = SQL("""DROP TABLE {old_table}""").format(old_table=Identifier("similarity", f"{name}_prod_old"))
+            query = SQL("""DROP TABLE {old_table}""").format(old_table=Identifier("similarity", f"{name}_old"))
             curs.execute(query)
 
             query = SQL("COMMENT ON TABLE {table} IS {comment}").format(
-                table=Identifier("similarity", f"{name}_prod"),
+                table=Identifier("similarity", name),
                 comment=Literal(f"This dataset is created using the algorithm {algorithm}")
             )
             curs.execute(query)
