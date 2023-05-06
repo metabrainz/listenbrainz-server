@@ -581,8 +581,8 @@ export default class APIService {
 
   getFeedbackForUserForRecordings = async (
     userName: string,
-    recording_msids: string,
-    recording_mbids: string
+    recording_msids: string[],
+    recording_mbids: string[]
   ) => {
     if (!userName) {
       throw new SyntaxError("Username missing");

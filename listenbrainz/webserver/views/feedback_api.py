@@ -245,15 +245,14 @@ def get_feedback_for_recordings_for_user(user_name):
         if msids_unparsed is None:
             msids_unparsed = request.args.get("recordings")
         mbids_unparsed = request.args.get("recording_mbids")
+        if msids_unparsed:
+            recording_msids = parse_param_list(msids_unparsed)
+        if mbids_unparsed:
+            recording_mbids = parse_param_list(mbids_unparsed)
     elif request.method == "POST":
-        msids_unparsed = request.json.get("recording_msids")
-        mbids_unparsed = request.json.get("recording_mbids")
+        recording_msids = request.json.get("recording_msids")
+        recording_mbids = request.json.get("recording_mbids")
         
-    if msids_unparsed:
-        recording_msids = parse_param_list(msids_unparsed)
-    if mbids_unparsed:
-        recording_mbids = parse_param_list(mbids_unparsed)
-
     if not recording_msids and not recording_mbids:
         log_raise_400("No valid recording msid or recording mbid found.")
 

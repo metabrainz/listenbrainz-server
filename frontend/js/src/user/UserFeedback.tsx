@@ -175,25 +175,23 @@ export default class UserFeedback extends React.Component<
       recordingMbidFeedbackMap,
     } = this.state;
 
-    let recording_msids = "";
-    let recording_mbids = "";
+    let recording_msids: string[] = [];
+    let recording_mbids: string[] = [];
     if (feedback?.length && currentUser?.name) {
       recording_msids = feedback
         .map((item) => item.recording_msid)
         // Only request non-undefined and non-empty string
         .filter(Boolean)
         // Only request feedback we don't already have
-        .filter((msid) => !has(recordingMsidFeedbackMap, msid))
-        .join(",");
+        .filter((msid) => !has(recordingMsidFeedbackMap, msid));
       recording_mbids = feedback
         .map((item) => item.recording_mbid)
         // Only request non-undefined and non-empty string
         .filter(Boolean)
         // Only request feedback we don't already have
         // @ts-ignore
-        .filter((mbid) => !has(recordingMbidFeedbackMap, mbid))
-        .join(",");
-      if (!recording_msids && !recording_mbids) {
+        .filter((mbid) => !has(recordingMbidFeedbackMap, mbid));
+      if (!recording_msids.length && !recording_mbids.length) {
         return [];
       }
       try {

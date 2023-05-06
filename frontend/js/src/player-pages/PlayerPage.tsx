@@ -91,8 +91,8 @@ export default class PlayerPage extends React.Component<
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          "",
-          recordings.join(",")
+          [],
+          recordings
         );
         return data.feedback;
       } catch (error) {
