@@ -101,7 +101,7 @@ class MBIDMapper:
         # Yes, this is actually correct.
         return ""
 
-    def compare(self, artist_credit_name, artist_credit_name_hit, recording_name, recording_name_hit, release_name=None, release_name_hit=None):
+    def compare(self, artist_credit_name, artist_credit_name_hit, recording_name, recording_name_hit, release_name=None, release_name_hit=None) -> tuple[int, int, int]:
         """
             Compare the fields, print debug info if turned on, and return edit distance as (a_dist, r_dist)
         """
@@ -137,26 +137,26 @@ class MBIDMapper:
         if (is_ac_detuned or is_r_detuned or is_rel_detuned) and \
                 ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
                 r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
-                (rel_dist is None or rel_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE):
+                rel_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
             self._log(match_details % "low quality")
             return ac_dist, r_dist, rel_dist, MATCH_TYPE_LOW_QUALITY
 
         # For exact matches, return exact match. duh.
-        if ac_dist == 0 and r_dist == 0 and (rel_dist is None or rel_dist == 0):
+        if ac_dist == 0 and r_dist == 0 and (rel_dist == -1 or rel_dist == 0):
             self._log(match_details % "exact match")
             return ac_dist, r_dist, rel_dist, MATCH_TYPE_EXACT_MATCH
 
         # If both fields are above the high quality threshold, call it high quality
         if ac_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE and \
                 r_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE and \
-                (rel_dist is None or rel_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE):
+                rel_dist <= self.MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE:
             self._log(match_details % "high quality")
             return ac_dist, r_dist, rel_dist, MATCH_TYPE_HIGH_QUALITY
 
         # If both fields are above the medium quality threshold, call it medium quality
         if ac_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
                 r_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE and \
-                (rel_dist is None or rel_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE):
+                rel_dist <= self.MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE:
             self._log(match_details % "med quality")
             return ac_dist, r_dist, rel_dist, MATCH_TYPE_MED_QUALITY
 
