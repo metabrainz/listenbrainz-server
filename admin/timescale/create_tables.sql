@@ -196,26 +196,26 @@ CREATE TABLE background_worker_state (
 COMMENT ON TABLE background_worker_state IS 'This table is used to store miscellaneous data by various background processes or the ListenBrainz webserver. Use it when storing the data is redis is not reliable enough.';
 
 
-CREATE TABLE similarity.recording (
+CREATE TABLE similarity.recording_dev (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     metadata JSONB NOT NULL
 );
 
-CREATE TABLE similarity.recording_prod (
+CREATE TABLE similarity.recording (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     score INT NOT NULL
 );
 
-CREATE TABLE similarity.artist_credit_mbids (
+CREATE TABLE similarity.artist_credit_mbids_dev (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     metadata JSONB NOT NULL
 );
 
 
-CREATE TABLE similarity.artist_credit_mbids_prod (
+CREATE TABLE similarity.artist_credit_mbids (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     score INT NOT NULL
