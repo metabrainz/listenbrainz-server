@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get, isEmpty, isEqual, isNil, isNumber } from "lodash";
+import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -378,6 +378,12 @@ export default class ListenCard extends React.Component<
           listenToMap: listen,
           newAlert,
         }).then((linkedTrackMetadata: any) => {
+          this.setState((prevState) => {
+            return {
+              listen: merge({}, prevState.listen, {
+                track_metadata: linkedTrackMetadata,
+              }),
+            };
           });
         });
       };
