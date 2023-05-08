@@ -150,16 +150,14 @@ def import_mlhd_dump_to_hdfs():
     """ Import the MLHD+ dump. """
     MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
 
-    # delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
-
-    # for filename in MLHD_PLUS_FILES:
-    #     with tempfile.TemporaryDirectory() as local_temp_dir:
-    #         downloaded_chunk = download_chunk(filename, local_temp_dir)
-    #         extract_chunk(filename, downloaded_chunk, local_temp_dir)
-    #         transform_chunk(local_temp_dir)
+    for filename in MLHD_PLUS_FILES:
+        with tempfile.TemporaryDirectory() as local_temp_dir:
+            downloaded_chunk = download_chunk(filename, local_temp_dir)
+            extract_chunk(filename, downloaded_chunk, local_temp_dir)
+            transform_chunk(local_temp_dir)
 
     post_process_mlhd_plus()
-    # delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
+    delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
 
     return [{
         'type': 'import_mlhd_dump',
