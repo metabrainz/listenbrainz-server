@@ -39,15 +39,15 @@ function getListenFromSelectedRecording(
 export default NiceModal.create(
   ({ listenToMap, newAlert }: MBIDMappingModalProps) => {
     const modal = useModal();
-
+    const { show, hide, remove, resolve } = modal;
     const [selectedRecording, setSelectedRecording] = React.useState<
       TrackMetadata
     >();
 
     const closeModal = React.useCallback(() => {
-      modal.hide();
-      setTimeout(modal.remove, 500);
-    }, [modal]);
+      hide();
+      setTimeout(remove, 500);
+    }, [hide, remove]);
 
     const handleError = React.useCallback(
       (error: string | Error, title?: string): void => {
@@ -84,18 +84,21 @@ export default NiceModal.create(
           return;
         }
 
+        resolve(selectedRecording);
+        closeModal();
+
         newAlert(
           "success",
           `You linked a track!`,
           `${getArtistName(listenToMap)} - ${getTrackName(listenToMap)}`
         );
-        closeModal();
       }
     }, [
       listenToMap,
       auth_token,
       newAlert,
       closeModal,
+      resolve,
       APIService,
       selectedRecording,
       handleError,

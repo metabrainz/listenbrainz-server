@@ -372,6 +372,8 @@ export default class ListenCard extends React.Component<
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
           newAlert,
+        }).then((linkedTrackMetadata: any) => {
+          });
         });
       };
       thumbnail = (
