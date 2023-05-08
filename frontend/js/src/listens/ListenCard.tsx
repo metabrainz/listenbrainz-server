@@ -88,6 +88,7 @@ export type ListenCardProps = {
 };
 
 export type ListenCardState = {
+  listen: Listen;
   isCurrentlyPlaying: boolean;
   thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
@@ -105,6 +106,7 @@ export default class ListenCard extends React.Component<
     super(props);
 
     this.state = {
+      listen: props.listen,
       isCurrentlyPlaying: false,
     };
   }
@@ -118,15 +120,19 @@ export default class ListenCard extends React.Component<
   }
 
   async componentDidUpdate(oldProps: ListenCardProps) {
+    const { listen: oldListen } = this.state;
     const { listen, customThumbnail } = this.props;
     const { userPreferences } = this.context;
-    if (
-      !customThumbnail &&
-      Boolean(listen) &&
-      !isEqual(listen, oldProps.listen) &&
-      userPreferences?.saveData !== true
-    ) {
-      await this.getCoverArt();
+    if (!isEqual(listen, oldListen)) {
+      this.setState({ listen }, async () => {
+        if (
+          !customThumbnail &&
+          Boolean(listen) &&
+          userPreferences?.saveData !== true
+        ) {
+          await this.getCoverArt();
+        }
+      });
     }
   }
 
@@ -136,7 +142,7 @@ export default class ListenCard extends React.Component<
 
   async getCoverArt() {
     const { spotifyAuth, APIService } = this.context;
-    const { listen } = this.props;
+    const { listen } = this.state;
     const albumArtSrc = await getAlbumArtFromListenMetadata(
       listen,
       spotifyAuth,
@@ -150,8 +156,7 @@ export default class ListenCard extends React.Component<
   }
 
   playListen = () => {
-    const { listen } = this.props;
-    const { isCurrentlyPlaying } = this.state;
+    const { listen, isCurrentlyPlaying } = this.state;
     if (isCurrentlyPlaying) {
       return;
     }
@@ -182,7 +187,7 @@ export default class ListenCard extends React.Component<
   };
 
   isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
-    const { listen } = this.props;
+    const { listen } = this.state;
     if (isNil(listen)) {
       return false;
     }
@@ -190,7 +195,8 @@ export default class ListenCard extends React.Component<
   };
 
   recommendListenToFollowers = async () => {
-    const { listen, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { listen } = this.state;
     const { APIService, currentUser } = this.context;
 
     if (currentUser?.auth_token) {
@@ -245,7 +251,6 @@ export default class ListenCard extends React.Component<
       additionalContent,
       beforeThumbnailContent,
       customThumbnail,
-      listen,
       className,
       showUsername,
       showTimestamp,
@@ -260,7 +265,7 @@ export default class ListenCard extends React.Component<
       additionalActions,
       ...otherProps
     } = this.props;
-    const { isCurrentlyPlaying, thumbnailSrc } = this.state;
+    const { listen, isCurrentlyPlaying, thumbnailSrc } = this.state;
     const { currentUser } = this.context;
     const isLoggedIn = !isEmpty(currentUser);
 
