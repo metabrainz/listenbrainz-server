@@ -39,7 +39,7 @@ function getListenFromSelectedRecording(
 export default NiceModal.create(
   ({ listenToMap, newAlert }: MBIDMappingModalProps) => {
     const modal = useModal();
-    const { show, hide, remove, resolve } = modal;
+    const { hide, remove, resolve } = modal;
     const [selectedRecording, setSelectedRecording] = React.useState<
       TrackMetadata
     >();

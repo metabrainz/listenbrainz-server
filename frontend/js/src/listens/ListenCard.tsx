@@ -113,23 +113,15 @@ export default class ListenCard extends React.Component<
 
   async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-    const { userPreferences } = this.context;
-    if (userPreferences?.saveData !== true) {
-      await this.getCoverArt();
-    }
+    await this.getCoverArt();
   }
 
   async componentDidUpdate(oldProps: ListenCardProps) {
-    const { listen: oldListen } = this.state;
+    const { listen: oldListen } = oldProps;
     const { listen, customThumbnail } = this.props;
-    const { userPreferences } = this.context;
     if (!isEqual(listen, oldListen)) {
       this.setState({ listen }, async () => {
-        if (
-          !customThumbnail &&
-          Boolean(listen) &&
-          userPreferences?.saveData !== true
-        ) {
+        if (!customThumbnail && Boolean(listen)) {
           await this.getCoverArt();
         }
       });
@@ -141,7 +133,10 @@ export default class ListenCard extends React.Component<
   }
 
   async getCoverArt() {
-    const { spotifyAuth, APIService } = this.context;
+    const { spotifyAuth, APIService, userPreferences } = this.context;
+    if (userPreferences?.saveData !== true) {
+      return;
+    }
     const { listen } = this.state;
     const albumArtSrc = await getAlbumArtFromListenMetadata(
       listen,
@@ -263,6 +258,7 @@ export default class ListenCard extends React.Component<
       newAlert,
       updateFeedbackCallback,
       additionalActions,
+      listen: listenFromProps,
       ...otherProps
     } = this.props;
     const { listen, isCurrentlyPlaying, thumbnailSrc } = this.state;
