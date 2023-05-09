@@ -405,8 +405,9 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
-                                                 " affects how the resulting dataset is stored in LB.", required=True)
+@click.option("--production", is_flag=True, default=False,
+              help="whether the dataset is being created as a production dataset. affects"
+                   " how the resulting dataset is stored in LB.", required=True)
 def request_similar_recordings(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
@@ -433,8 +434,9 @@ def request_similar_recordings(days, session, contribution, threshold, limit, sk
                                         " (the limit is instructive. upto 2x artists may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
-                                                 " affects how the resulting dataset is stored in LB.", required=True)
+@click.option("--production", is_flag=True, default=False,
+              help="whether the dataset is being created as a production dataset. affects how the resulting"
+                   " dataset is stored in LB.", required=True)
 def request_similar_artists(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar artists index. """
     send_request_to_spark_cluster(
