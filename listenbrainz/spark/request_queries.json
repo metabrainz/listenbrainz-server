@@ -143,6 +143,17 @@
       "max_num_users"
     ]
   },
+  "similarity.recording.mlhd": {
+    "name": "similarity.recording.mlhd",
+    "description": "Generate recording similarity from MLHD",
+    "params": [
+      "session",
+      "contribution",
+      "threshold",
+      "limit",
+      "skip"
+    ]
+  },
   "similarity.recording": {
     "name": "similarity.recording",
     "description": "Generate recording similarity",

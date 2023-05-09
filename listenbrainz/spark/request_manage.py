@@ -399,6 +399,29 @@ def request_similar_users(max_num_users):
     send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
 
 
+@cli.command(name="request_similar_recordings_mlhd")
+@click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
+                                          " session.", required=True)
+@click.option("--contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
+                                               " score of a recording pair.", required=True)
+@click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the"
+                                            " simlarity index.", required=True)
+@click.option("--limit", type=int, help="The maximum number of similar recordings to generate per recording"
+                                        " (the limit is instructive. upto 2x recordings may be returned than"
+                                        " the limit).", required=True)
+@click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
+def request_similar_recordings(session, contribution, threshold, limit, skip):
+    """ Send the cluster a request to generate similar recordings index. """
+    send_request_to_spark_cluster(
+        "similarity.recording.mlhd",
+        session=session,
+        contribution=contribution,
+        threshold=threshold,
+        limit=limit,
+        skip=skip
+    )
+
+
 @cli.command(name="request_similar_recordings")
 @click.option("--days", type=int, help="The number of days of listens to use.", required=True)
 @click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
