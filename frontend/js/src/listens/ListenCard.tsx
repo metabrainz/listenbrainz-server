@@ -391,9 +391,6 @@ export default class ListenCard extends React.Component<
           onKeyDown={openModal}
           role="button"
           tabIndex={0}
-          // onKeyPress={action}
-          data-toggle="modal"
-          data-target="#MapToMusicBrainzRecordingModal"
         >
           <div className="not-mapped">
             <FontAwesomeIcon icon={faLink} />
@@ -592,8 +589,6 @@ export default class ListenCard extends React.Component<
                             newAlert,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#MapToMusicBrainzRecordingModal"
                       />
                     )}
                     {isLoggedIn && isListenReviewable && (

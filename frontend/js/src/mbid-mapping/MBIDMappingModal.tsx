@@ -39,14 +39,14 @@ function getListenFromSelectedRecording(
 export default NiceModal.create(
   ({ listenToMap, newAlert }: MBIDMappingModalProps) => {
     const modal = useModal();
-    const { hide, remove, resolve } = modal;
+    const { hide, remove, resolve, visible } = modal;
     const [selectedRecording, setSelectedRecording] = React.useState<
       TrackMetadata
     >();
 
     const closeModal = React.useCallback(() => {
       hide();
-      setTimeout(remove, 500);
+      setTimeout(remove, 5000);
     }, [hide, remove]);
 
     const handleError = React.useCallback(
@@ -112,124 +112,124 @@ export default NiceModal.create(
       return null;
     }
     return (
-      <div
-        className="modal fade"
-        id="MapToMusicBrainzRecordingModal"
-        tabIndex={-1}
-        role="dialog"
-        aria-labelledby="MBIDMappingModalLabel"
-        data-backdrop="static"
-      >
-        <div className="modal-dialog" role="document">
-          <Tooltip id="musicbrainz-helptext" type="light" multiline>
-            Use the MusicBrainz search (musicbrainz.org/search) to search for
-            recordings (songs). When you have found the one that matches your
-            listen, copy its URL (link) into the field on this page.
-            <br />
-            You can also search for the album you listened to. When you have
-            found the album, click on the matching recording (song) in the track
-            listing, and copy its URL into the field on this page.
-          </Tooltip>
-          <form className="modal-content">
-            <div className="modal-header">
-              <button
-                type="button"
-                className="close"
-                data-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-              <h4 className="modal-title" id="MBIDMappingModalLabel">
-                Link this Listen with MusicBrainz
-              </h4>
-            </div>
-            <div className="modal-body">
-              <p>
-                Sometimes ListenBrainz is unable to automatically link your
-                Listen with a MusicBrainz recording (song). Paste a{" "}
-                <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>{" "}
-                recording URL{" "}
-                <FontAwesomeIcon
-                  icon={faQuestionCircle}
-                  data-tip
-                  data-for="musicbrainz-helptext"
-                  size="sm"
-                />{" "}
-                below to link this Listen, as well as your other Listens with
-                the same metadata.
-              </p>
-
-              <ListenCard
-                listen={listenToMap}
-                showTimestamp={false}
-                showUsername={false}
-                newAlert={newAlert}
-                // eslint-disable-next-line react/jsx-no-useless-fragment
-                feedbackComponent={<></>}
-                compact
-              />
-              <div className="text-center mb-10 mt-10">
-                <FontAwesomeIcon
-                  icon={faExchangeAlt}
-                  rotation={90}
-                  size="lg"
-                  color={
-                    selectedRecording ? COLOR_LB_GREEN : COLOR_LB_LIGHT_GRAY
-                  }
-                />
+      <>
+        <div
+          className={`modal fade ${visible ? "in" : ""}`}
+          style={visible ? { display: "block" } : {}}
+          id="MapToMusicBrainzRecordingModal"
+          tabIndex={-1}
+          role="dialog"
+          aria-labelledby="MBIDMappingModalLabel"
+        >
+          <div className="modal-dialog" role="document">
+            <Tooltip id="musicbrainz-helptext" type="light" multiline>
+              Use the MusicBrainz search (musicbrainz.org/search) to search for
+              recordings (songs). When you have found the one that matches your
+              listen, copy its URL (link) into the field on this page.
+              <br />
+              You can also search for the album you listened to. When you have
+              found the album, click on the matching recording (song) in the
+              track listing, and copy its URL into the field on this page.
+            </Tooltip>
+            <form className="modal-content" onSubmit={submitMBIDMapping}>
+              <div className="modal-header">
+                <button
+                  type="button"
+                  className="close"
+                  onClick={closeModal}
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 className="modal-title" id="MBIDMappingModalLabel">
+                  Link this Listen with MusicBrainz
+                </h4>
               </div>
-              {listenFromSelectedRecording ? (
+              <div className="modal-body">
+                <p>
+                  Sometimes ListenBrainz is unable to automatically link your
+                  Listen with a MusicBrainz recording (song). Paste a{" "}
+                  <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>{" "}
+                  recording URL{" "}
+                  <FontAwesomeIcon
+                    icon={faQuestionCircle}
+                    data-tip
+                    data-for="musicbrainz-helptext"
+                    size="sm"
+                  />{" "}
+                  below to link this Listen, as well as your other Listens with
+                  the same metadata.
+                </p>
+
                 <ListenCard
-                  listen={listenFromSelectedRecording}
+                  listen={listenToMap}
                   showTimestamp={false}
                   showUsername={false}
                   newAlert={newAlert}
+                  // eslint-disable-next-line react/jsx-no-useless-fragment
+                  feedbackComponent={<></>}
                   compact
-                  additionalActions={
-                    <ListenControl
-                      buttonClassName="btn-transparent"
-                      text=""
-                      title="Reset"
-                      icon={faTimesCircle}
-                      iconSize="lg"
-                      action={() => setSelectedRecording(undefined)}
-                    />
-                  }
                 />
-              ) : (
-                <div className="card listen-card">
-                  <SearchTrackOrMBID
-                    onSelectRecording={(trackMetadata) => {
-                      setSelectedRecording(trackMetadata);
-                    }}
-                    newAlert={newAlert}
+                <div className="text-center mb-10 mt-10">
+                  <FontAwesomeIcon
+                    icon={faExchangeAlt}
+                    rotation={90}
+                    size="lg"
+                    color={
+                      selectedRecording ? COLOR_LB_GREEN : COLOR_LB_LIGHT_GRAY
+                    }
                   />
                 </div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-default"
-                data-dismiss="modal"
-                onClick={closeModal}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-success"
-                onClick={submitMBIDMapping}
-                data-dismiss="modal"
-                disabled={!selectedRecording}
-              >
-                Add mapping
-              </button>
-            </div>
-          </form>
+                {listenFromSelectedRecording ? (
+                  <ListenCard
+                    listen={listenFromSelectedRecording}
+                    showTimestamp={false}
+                    showUsername={false}
+                    newAlert={newAlert}
+                    compact
+                    additionalActions={
+                      <ListenControl
+                        buttonClassName="btn-transparent"
+                        text=""
+                        title="Reset"
+                        icon={faTimesCircle}
+                        iconSize="lg"
+                        action={() => setSelectedRecording(undefined)}
+                      />
+                    }
+                  />
+                ) : (
+                  <div className="card listen-card">
+                    <SearchTrackOrMBID
+                      onSelectRecording={(trackMetadata) => {
+                        setSelectedRecording(trackMetadata);
+                      }}
+                      newAlert={newAlert}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-default"
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-success"
+                  disabled={!selectedRecording}
+                >
+                  Add mapping
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+        <div className={`modal-backdrop fade ${visible ? "in" : ""}`} />
+      </>
     );
   }
 );
