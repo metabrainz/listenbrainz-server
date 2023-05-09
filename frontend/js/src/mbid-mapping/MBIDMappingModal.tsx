@@ -9,7 +9,7 @@ import Tooltip from "react-tooltip";
 import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { getArtistName, getTrackName } from "../utils/utils";
+import { getArtistName, getRecordingMBID, getTrackName } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import { COLOR_LB_LIGHT_GRAY, COLOR_LB_GREEN } from "../utils/constants";
@@ -66,43 +66,57 @@ export default NiceModal.create(
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
     const { auth_token } = currentUser;
 
-    const submitMBIDMapping = React.useCallback(async () => {
-      if (listenToMap && selectedRecording?.recording_mbid && auth_token) {
-        const recordingMSID = _get(
-          listenToMap,
-          "track_metadata.additional_info.recording_msid"
-        );
-        const recordingMBIDToSubmit = selectedRecording.recording_mbid;
-        try {
-          await APIService.submitMBIDMapping(
-            auth_token,
-            recordingMSID,
-            recordingMBIDToSubmit
-          );
-        } catch (error) {
-          handleError(error, "Error while linking listen");
+    const submitMBIDMapping = React.useCallback(
+      async (event: React.FormEvent) => {
+        if (event) {
+          event.preventDefault();
+        }
+        if (!listenToMap || !selectedRecording || !auth_token) {
           return;
         }
-
-        resolve(selectedRecording);
-        closeModal();
-
-        newAlert(
-          "success",
-          `You linked a track!`,
-          `${getArtistName(listenToMap)} - ${getTrackName(listenToMap)}`
+        const selectedRecordingToListen = getListenFromSelectedRecording(
+          selectedRecording
         );
-      }
-    }, [
-      listenToMap,
-      auth_token,
-      newAlert,
-      closeModal,
-      resolve,
-      APIService,
-      selectedRecording,
-      handleError,
-    ]);
+        const recordingMBID =
+          selectedRecordingToListen &&
+          getRecordingMBID(selectedRecordingToListen);
+        if (recordingMBID) {
+          const recordingMSID = _get(
+            listenToMap,
+            "track_metadata.additional_info.recording_msid"
+          );
+          try {
+            await APIService.submitMBIDMapping(
+              auth_token,
+              recordingMSID,
+              recordingMBID
+            );
+          } catch (error) {
+            handleError(error, "Error while linking listen");
+            return;
+          }
+
+          resolve(selectedRecording);
+
+          newAlert(
+            "success",
+            `You linked a track!`,
+            `${getArtistName(listenToMap)} - ${getTrackName(listenToMap)}`
+          );
+          closeModal();
+        }
+      },
+      [
+        listenToMap,
+        auth_token,
+        newAlert,
+        closeModal,
+        resolve,
+        APIService,
+        selectedRecording,
+        handleError,
+      ]
+    );
 
     const listenFromSelectedRecording = getListenFromSelectedRecording(
       selectedRecording
