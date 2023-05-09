@@ -1,3 +1,4 @@
+from listenbrainz_spark.mlhd.download import MLHD_PLUS_CHUNKS
 from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME, MLHD_PLUS_DATA_DIRECTORY
 from listenbrainz_spark.similarity.recording import build_sessioned_index
 from listenbrainz_spark.stats import run_query
@@ -19,13 +20,21 @@ def main(session, contribution, threshold, limit, skip):
     """
     table = "mlhd_recording_similarity_listens"
     metadata_table = "recording_length"
-
-    read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY).createOrReplaceTempView(table)
-    read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME).createOrReplaceTempView(metadata_table)
-
     skip_threshold = -skip
-    query = build_sessioned_index(table, metadata_table, session, contribution, threshold, limit, skip_threshold)
-    run_query(query).write.mode("overwrite").parquet("/mlhd-session-output")
+
+    read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME).createOrReplaceTempView(metadata_table)
+    mlhd_df = read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
+
+    for chunk in MLHD_PLUS_CHUNKS:
+        mlhd_df.filter(f"user_id LIKE '{chunk}%'").createOrReplaceTempView(table)
+        query = build_sessioned_index(table, metadata_table, session, contribution, threshold, limit, skip_threshold)
+
+        if chunk == "0":
+            mode = "overwrite"
+        else:
+            mode = "append"
+
+        run_query(query).write.mode(mode).parquet("/mlhd-session-output")
 
     algorithm = f"session_based_mlhd_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
