@@ -9,7 +9,12 @@ import Tooltip from "react-tooltip";
 import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { getArtistName, getRecordingMBID, getTrackName } from "../utils/utils";
+import {
+  getArtistName,
+  getRecordingMBID,
+  getRecordingMSID,
+  getTrackName,
+} from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import { COLOR_LB_LIGHT_GRAY, COLOR_LB_GREEN } from "../utils/constants";
@@ -81,10 +86,7 @@ export default NiceModal.create(
           selectedRecordingToListen &&
           getRecordingMBID(selectedRecordingToListen);
         if (recordingMBID) {
-          const recordingMSID = _get(
-            listenToMap,
-            "track_metadata.additional_info.recording_msid"
-          );
+          const recordingMSID = getRecordingMSID(listenToMap);
           try {
             await APIService.submitMBIDMapping(
               auth_token,
