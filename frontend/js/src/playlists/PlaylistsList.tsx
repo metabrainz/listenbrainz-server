@@ -44,6 +44,18 @@ export default class PlaylistsList extends React.Component<
     };
   }
 
+  static getDerivedStateFromProps(
+    nextProps: React.PropsWithChildren<PlaylistsListProps>,
+    prevState: PlaylistsListState
+  ) {
+    if (nextProps.playlists !== prevState.playlists) {
+      return {
+        playlists: nextProps.playlists,
+      };
+    }
+    return null;
+  }
+
   async componentDidUpdate(
     prevProps: React.PropsWithChildren<PlaylistsListProps>
   ): Promise<void> {
@@ -178,6 +190,7 @@ export default class PlaylistsList extends React.Component<
                 onSuccessfulCopy={this.onCopiedPlaylist}
                 newAlert={newAlert}
                 selectPlaylistForEdit={selectPlaylistForEdit}
+                key={playlist.identifier}
               />
             );
           })}
