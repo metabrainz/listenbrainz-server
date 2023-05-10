@@ -1,3 +1,5 @@
+from more_itertools import chunked
+
 from listenbrainz_spark.mlhd.download import MLHD_PLUS_CHUNKS
 from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME, MLHD_PLUS_DATA_DIRECTORY
 from listenbrainz_spark.stats import run_query
@@ -88,12 +90,16 @@ def main(session, contribution, threshold, limit, skip):
     read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME).createOrReplaceTempView(metadata_table)
     mlhd_df = read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
 
-    for chunk in MLHD_PLUS_CHUNKS:
-        mlhd_df.filter(f"user_id LIKE '{chunk}%'").createOrReplaceTempView(table)
+    first_batch = True
+
+    for chunks in chunked(MLHD_PLUS_CHUNKS, 8):
+        filter_clause = " OR ".join([f"user_id LIKE '{chunk}%'" for chunk in chunks])
+        mlhd_df.filter(filter_clause).createOrReplaceTempView(table)
         query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
 
-        if chunk == "0":
+        if first_batch:
             mode = "overwrite"
+            first_batch = False
         else:
             mode = "append"
 
