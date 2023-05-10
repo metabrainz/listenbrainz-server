@@ -116,15 +116,15 @@ export default class ListenCard extends React.Component<
     await this.getCoverArt();
   }
 
-  async componentDidUpdate(oldProps: ListenCardProps) {
-    const { listen: oldListen } = oldProps;
-    const { listen, customThumbnail } = this.props;
-    if (!isEqual(listen, oldListen)) {
-      this.setState({ listen }, async () => {
-        if (!customThumbnail && Boolean(listen)) {
-          await this.getCoverArt();
-        }
-      });
+  async componentDidUpdate(
+    oldProps: ListenCardProps,
+    oldState: ListenCardState
+  ) {
+    const { listen: oldListen } = oldState;
+    const { customThumbnail } = this.props;
+    const { listen } = this.state;
+    if (!customThumbnail && Boolean(listen) && !isEqual(listen, oldListen)) {
+      await this.getCoverArt();
     }
   }
 
@@ -134,7 +134,7 @@ export default class ListenCard extends React.Component<
 
   async getCoverArt() {
     const { spotifyAuth, APIService, userPreferences } = this.context;
-    if (userPreferences?.saveData !== true) {
+    if (userPreferences?.saveData === true) {
       return;
     }
     const { listen } = this.state;
