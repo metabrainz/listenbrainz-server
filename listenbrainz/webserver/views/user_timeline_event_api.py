@@ -174,8 +174,13 @@ def create_user_cb_review_event(user_name):
 
         {
             "metadata": {
-                "message": "<the message to post, required>",
-            }
+                "entity_name": "<entity name, required>",
+                "entity_id": "<entity id, required>",
+                "entity_type": "<entity type, required>",
+                "text": "<the message to post, required>",
+                "language": "<language code, required>",
+                "rating": <rating, int>,
+            },
         }
 
     :param user_name: The MusicBrainz ID of the user who is creating the review.
