@@ -254,6 +254,7 @@ def user_feed(user_name: str):
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
 
+    # TODO: Remove these listen events from event list after listen events endpoint is active.
     # get all listen events
     if len(users_following) == 0:
         listen_events = []
@@ -325,7 +326,7 @@ def user_feed(user_name: str):
         key=lambda event: -event.created,
     )
 
-    # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(all_events):
         all_events[index].event_type = event.event_type.value
 
@@ -337,6 +338,53 @@ def user_feed(user_name: str):
         'events': [event.dict() for event in all_events],
     }})
 
+
+@user_timeline_event_api_bp.route('/user/<user_name>/feed/events/listens/following', methods=['OPTIONS', 'GET'])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def user_feed_listens_following(user_name: str):
+    ''' Get feed's listen events for followed users.
+
+    :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
+    :type user_name: ``str``
+    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned
+    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successful query, you have feed listen-events!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized, you do not have permission to view this user's feed.
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    '''
+
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIUnauthorized("You don't have permissions to view this user's timeline.")
+    
+    min_ts, max_ts, _ = _validate_get_endpoint_params()
+    if min_ts is None and max_ts is None:
+        max_ts = int(time.time())
+
+    users_following = db_user_relationship.get_following_for_user(user['id'])
+
+    # Get all listen events
+    if len(users_following) == 0:
+        listen_events = []
+    else:
+        listen_events = get_listen_events(users_following, min_ts, max_ts)
+
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
+    for index, event in enumerate(listen_events):
+        listen_events[index].event_type = event.event_type.value
+
+    return jsonify({'payload': {
+        'count': len(listen_events),
+        'user_id': user_name,
+        'events': [event.dict() for event in listen_events],
+    }})
+    
 
 @user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
 @crossdomain
