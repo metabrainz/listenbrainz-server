@@ -46,7 +46,7 @@ export default NiceModal.create(
 
     const closeModal = React.useCallback(() => {
       hide();
-      setTimeout(remove, 5000);
+      setTimeout(remove, 500);
     }, [hide, remove]);
 
     const handleError = React.useCallback(
