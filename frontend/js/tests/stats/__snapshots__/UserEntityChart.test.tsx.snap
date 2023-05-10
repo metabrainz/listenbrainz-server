@@ -256,8 +256,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -457,8 +455,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -658,8 +654,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -859,8 +853,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -1060,8 +1052,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -1261,8 +1251,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -1462,8 +1450,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -1663,8 +1649,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -1864,8 +1848,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -2065,8 +2047,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -2266,8 +2246,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -2467,8 +2445,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -2668,8 +2644,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -2869,8 +2843,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -3070,8 +3042,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -3271,8 +3241,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -3472,8 +3440,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -3673,8 +3639,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -3874,8 +3838,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -4075,8 +4037,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -4276,8 +4236,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -4477,8 +4435,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -4678,8 +4634,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -4879,8 +4833,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -5080,8 +5032,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -7558,8 +7508,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -9959,8 +9907,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -10180,8 +10126,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -11275,8 +11219,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -12371,8 +12313,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -12592,8 +12532,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -12813,8 +12751,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -13034,8 +12970,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -13255,8 +13189,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -13476,8 +13408,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -14129,8 +14059,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -14787,8 +14715,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -17558,8 +17484,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -17775,8 +17699,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -17984,8 +17906,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -18571,8 +18491,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -18982,8 +18900,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -19567,8 +19483,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -20157,8 +20071,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -21847,8 +21759,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -22056,8 +21966,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -22265,8 +22173,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -24747,8 +24653,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -26425,8 +26329,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -26634,8 +26536,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -26843,8 +26743,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -27420,8 +27318,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -27629,8 +27525,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -28022,8 +27916,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -28231,8 +28123,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -28440,8 +28330,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -28649,8 +28537,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -28858,8 +28744,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -29067,8 +28951,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -32501,8 +32383,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -32702,8 +32582,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -32903,8 +32781,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -33104,8 +32980,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -33305,8 +33179,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -33506,8 +33378,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -33707,8 +33577,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -33908,8 +33776,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -34109,8 +33975,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -34310,8 +34174,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -34511,8 +34373,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -34712,8 +34572,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -34913,8 +34771,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -35114,8 +34970,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -35315,8 +35169,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -35516,8 +35368,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -35717,8 +35567,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -35918,8 +35766,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -36119,8 +35965,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -36320,8 +36164,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -36521,8 +36363,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -36722,8 +36562,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -36923,8 +36761,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -37124,8 +36960,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -37325,8 +37159,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -39809,8 +39641,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -42210,8 +42040,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -42431,8 +42259,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -43526,8 +43352,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -44622,8 +44446,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -44843,8 +44665,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -45064,8 +44884,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -45285,8 +45103,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -45506,8 +45322,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -45727,8 +45541,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -46380,8 +46192,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -47038,8 +46848,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -49815,8 +49623,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -50032,8 +49838,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -50241,8 +50045,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -50828,8 +50630,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -51239,8 +51039,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -51824,8 +51622,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -52414,8 +52210,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -54104,8 +53898,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -54313,8 +54105,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -54522,8 +54312,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -57010,8 +56798,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -58688,8 +58474,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -58897,8 +58681,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -59106,8 +58888,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -59683,8 +59463,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -59892,8 +59670,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -60285,8 +60061,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -60494,8 +60268,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -60703,8 +60475,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -60912,8 +60682,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -61121,8 +60889,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"
@@ -61330,8 +61096,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   >
                     <div
                       className="listen-thumbnail"
-                      data-target="#MapToMusicBrainzRecordingModal"
-                      data-toggle="modal"
                       onClick={[Function]}
                       onKeyDown={[Function]}
                       role="button"

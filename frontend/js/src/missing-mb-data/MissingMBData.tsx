@@ -219,8 +219,6 @@ export default class MissingMBDataPage extends React.Component<
                             newAlert,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#MapToMusicBrainzRecordingModal"
                       />
                     );
                     additionalActions = linkWithMB;
