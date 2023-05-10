@@ -58,9 +58,9 @@ export type DataSourceProps = {
   ) => void;
   onTrackEnd: () => void;
   onTrackNotFound: () => void;
-  handleError: (error: BrainzPlayerError, title?: string) => void;
-  handleWarning: (message: string | JSX.Element, title?: string) => void;
-  handleSuccess: (message: string | JSX.Element, title?: string) => void;
+  handleError: (error: BrainzPlayerError, title: string) => void;
+  handleWarning: (message: string | JSX.Element, title: string) => void;
+  handleSuccess: (message: string | JSX.Element, title: string) => void;
   onInvalidateDataSource: (
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
@@ -317,7 +317,7 @@ export default class BrainzPlayer extends React.Component<
     this.playListen(nextListen);
   };
 
-  handleError = (error: BrainzPlayerError, title?: string): void => {
+  handleError = (error: BrainzPlayerError, title: string): void => {
     if (!error) {
       return;
     }
@@ -326,23 +326,27 @@ export default class BrainzPlayer extends React.Component<
       : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${
           error.message || error.statusText
         }`;
-    toast.error(
-      <ToastMsg title={title || "Playback error"} message={message} />
-    );
+    toast.error(<ToastMsg title={title} message={message} />, {
+      toastId: title,
+    });
   };
 
-  handleWarning = (message: string | JSX.Element, title?: string): void => {
-    toast.warn(
-      <ToastMsg title={title || "Playback error"} message={message} />
-    );
+  handleWarning = (message: string | JSX.Element, title: string): void => {
+    toast.warn(<ToastMsg title={title} message={message} />, {
+      toastId: title,
+    });
   };
 
-  handleSuccess = (message: string | JSX.Element, title?: string): void => {
-    toast.success(<ToastMsg title={title || "Success"} message={message} />);
+  handleSuccess = (message: string | JSX.Element, title: string): void => {
+    toast.success(<ToastMsg title={title} message={message} />, {
+      toastId: title,
+    });
   };
 
-  handleInfoMessage = (message: string | JSX.Element, title?: string): void => {
-    toast.info(<ToastMsg title={title || ""} message={message} />);
+  handleInfoMessage = (message: string | JSX.Element, title: string): void => {
+    toast.info(<ToastMsg title={title} message={message} />, {
+      toastId: title,
+    });
   };
 
   invalidateDataSource = (
@@ -433,7 +437,7 @@ export default class BrainzPlayer extends React.Component<
       }
       await dataSource.togglePlay();
     } catch (error) {
-      this.handleError(error);
+      this.handleError(error, "Could not play");
     }
   };
 
@@ -596,7 +600,10 @@ export default class BrainzPlayer extends React.Component<
             {album && ` — ${album}`}
           </>
         );
-        this.handleInfoMessage(message);
+        this.handleInfoMessage(
+          message,
+          `Playing ${title}${artist && ` — ${artist}`}`
+        );
       }
     });
 
