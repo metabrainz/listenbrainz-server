@@ -92,7 +92,7 @@ def main(session, contribution, threshold, limit, skip):
 
     first_batch = True
 
-    for chunks in chunked(MLHD_PLUS_CHUNKS, 4):
+    for chunks in chunked(MLHD_PLUS_CHUNKS, 2):
         filter_clause = " OR ".join([f"user_id LIKE '{chunk}%'" for chunk in chunks])
         mlhd_df.filter(filter_clause).createOrReplaceTempView(table)
         query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
