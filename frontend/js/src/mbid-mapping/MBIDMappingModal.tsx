@@ -144,7 +144,8 @@ export default NiceModal.create(
             <div className="modal-body">
               <p>
                 Sometimes ListenBrainz is unable to automatically link your
-                Listen with a MusicBrainz recording (song). Paste a{" "}
+                Listen with a MusicBrainz recording (song). Search by track and
+                artist name or paste a{" "}
                 <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>{" "}
                 recording URL{" "}
                 <FontAwesomeIcon
@@ -156,7 +157,10 @@ export default NiceModal.create(
                 below to link this Listen, as well as your other Listens with
                 the same metadata.
               </p>
-
+              <small className="help-block">
+                Recordings added to MusicBrainz within the last 4 hours may
+                temporarily look incomplete.
+              </small>
               <ListenCard
                 listen={listenToMap}
                 showTimestamp={false}
