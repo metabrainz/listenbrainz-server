@@ -176,8 +176,12 @@ export default class SpotifyPlayer
       onTrackNotFound,
     } = this.props;
     if (!trackName && !artistName && !releaseName) {
-      handleWarning("Not enough info to search on Spotify");
+      handleWarning(
+        "We are missing a track title, artist or album name to search on Spotify",
+        "Not enough info to search on Spotify"
+      );
       onTrackNotFound();
+      return;
     }
 
     try {
@@ -194,7 +198,10 @@ export default class SpotifyPlayer
       onTrackNotFound();
     } catch (errorObject) {
       if (!has(errorObject, "status")) {
-        handleError(errorObject.message ?? errorObject);
+        handleError(
+          errorObject.message ?? errorObject,
+          "Error searching on Spotify"
+        );
       }
       if (errorObject.status === 401) {
         // Handle token error and try again if fixed
@@ -273,9 +280,9 @@ export default class SpotifyPlayer
         return;
       }
       // catch-all
-      handleError(errorObject?.message ?? response);
+      handleError(errorObject?.message ?? response, "Spotify error");
     } catch (error) {
-      handleError(error.message);
+      handleError(error.message, "Error playing on Spotify");
     }
   };
 
@@ -309,7 +316,7 @@ export default class SpotifyPlayer
   togglePlay = (): void => {
     const { handleError } = this.props;
     this.spotifyPlayer.togglePlay().catch((error: Response) => {
-      handleError(error);
+      handleError(error, "Spotify playback error");
     });
   };
 
@@ -459,7 +466,7 @@ export default class SpotifyPlayer
         }
       })
       .catch((error: Error) => {
-        handleError(error);
+        handleError(error, "Error connecting to Spotify");
       });
   };
 
