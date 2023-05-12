@@ -5,6 +5,8 @@ import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Integrations } from "@sentry/tracing";
+import { capitalize } from "lodash";
+import { ToastContainer, toast } from "react-toastify";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
@@ -319,6 +321,44 @@ export default class LastFmImporter extends React.Component<
     this.startImport();
   };
 
+  importFeedback = async () => {
+    const { lastfmUsername, service } = this.state;
+    if (!lastfmUsername || service !== "lastfm") {
+      return;
+    }
+    const { importFeedback } = this.APIService;
+    const { profileUrl } = this.props;
+    let finalMsg;
+    try {
+      const importedCount = await importFeedback(
+        this.userToken,
+        lastfmUsername,
+        service
+      );
+      toast.success(
+        <div>
+          <FontAwesomeIcon icon={faCheck as IconProp} />
+          &nbsp; Succesfully imported ${importedCount} from $
+          {capitalize(service)}
+          <br />
+          <a href="/my/taste">Click here to see your newly loved tracks</a>
+        </div>
+      );
+    } catch (error) {
+      toast.error(
+        <div>
+          <FontAwesomeIcon icon={faTimes as IconProp} /> We were unable to
+          import your loved tracks from {capitalize(service)}, please try again
+          later.
+          <br />
+          If the problem persists please{" "}
+          <a href="mailto:support@metabrainz.org">contact us</a>.
+          <pre>{error.toString()}</pre>
+        </div>
+      );
+    }
+  };
+
   progressBarPercentage() {
     if (this.totalPages >= this.numCompleted)
       return Math.ceil((this.numCompleted / this.totalPages) * 100);
@@ -600,8 +640,18 @@ export default class LastFmImporter extends React.Component<
             type="submit"
             disabled={!lastfmUsername}
           >
-            Import Now!
+            Import listens
           </button>
+          {service === "lastfm" && (
+            <button
+              className="btn btn-secondary"
+              type="button"
+              disabled={!lastfmUsername}
+              onClick={this.importFeedback}
+            >
+              Import loved tracks
+            </button>
+          )}
         </form>
         {show && (
           <LastFMImporterModal onClose={this.toggleModal} disable={!canClose}>
@@ -650,14 +700,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
-    <LastFmImporter
-      user={user}
-      profileUrl={profile_url}
-      apiUrl={globalAppContext.APIService.APIBaseURI}
-      lastfmApiKey={lastfm_api_key}
-      lastfmApiUrl={lastfm_api_url}
-      librefmApiKey={librefm_api_key}
-      librefmApiUrl={librefm_api_url}
-    />
+    <>
+      <ToastContainer
+        position="bottom-right"
+        autoClose={8000}
+        hideProgressBar
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnHover
+        theme="light"
+      />
+      <LastFmImporter
+        user={user}
+        profileUrl={profile_url}
+        apiUrl={globalAppContext.APIService.APIBaseURI}
+        lastfmApiKey={lastfm_api_key}
+        lastfmApiUrl={lastfm_api_url}
+        librefmApiKey={librefm_api_key}
+        librefmApiUrl={librefm_api_url}
+      />
+    </>
   );
 });
