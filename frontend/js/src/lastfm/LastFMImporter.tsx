@@ -315,9 +315,8 @@ export default class LastFmImporter extends React.Component<
   };
 
   handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    const { lastfmUsername } = this.state;
-    this.toggleModal();
     event.preventDefault();
+    this.toggleModal();
     this.startImport();
   };
 
@@ -327,8 +326,6 @@ export default class LastFmImporter extends React.Component<
       return;
     }
     const { importFeedback } = this.APIService;
-    const { profileUrl } = this.props;
-    let finalMsg;
     try {
       const importedCount = await importFeedback(
         this.userToken,
@@ -644,7 +641,7 @@ export default class LastFmImporter extends React.Component<
           </button>
           {service === "lastfm" && (
             <button
-              className="btn btn-secondary"
+              className="btn btn-success"
               type="button"
               disabled={!lastfmUsername}
               onClick={this.importFeedback}
