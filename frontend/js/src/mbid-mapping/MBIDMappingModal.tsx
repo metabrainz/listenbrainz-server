@@ -133,7 +133,6 @@ export default NiceModal.create(
           className={`modal fade ${visible ? "in" : ""}`}
           style={visible ? { display: "block" } : {}}
           id="MapToMusicBrainzRecordingModal"
-          tabIndex={-1}
           role="dialog"
           aria-labelledby="MBIDMappingModalLabel"
         >

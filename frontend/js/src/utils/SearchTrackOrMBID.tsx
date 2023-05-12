@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-autofocus */
 import React, {
   useCallback,
   useContext,
@@ -157,6 +158,7 @@ export default function SearchTrackOrMBID({
       <div className="input-group track-search">
         <input
           type="search"
+          autoFocus
           value={inputValue}
           className="form-control"
           id="recording-mbid"
