@@ -1,10 +1,10 @@
-/* eslint-disable jsx-a11y/no-autofocus */
 import React, {
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 import { throttle, throttle as _throttle } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,12 +27,22 @@ export default function SearchTrackOrMBID({
 }: SearchTrackOrMBIDProps) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRecording } = APIService;
+  const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
   const [searchResults, setSearchResults] = useState<Array<ACRMSearchResult>>(
     []
   );
 
-  const handleError = React.useCallback(
+  useEffect(() => {
+    // autoFocus property on the input element does not work
+    // We need to wait for the modal animated transition to finish
+    // and trigger the focus manually.
+    setTimeout(() => {
+      inputRef?.current?.focus();
+    }, 600);
+  }, []);
+
+  const handleError = useCallback(
     (error: string | Error, title?: string): void => {
       if (!error) {
         return;
@@ -158,7 +168,6 @@ export default function SearchTrackOrMBID({
       <div className="input-group track-search">
         <input
           type="search"
-          autoFocus
           value={inputValue}
           className="form-control"
           id="recording-mbid"
@@ -168,6 +177,7 @@ export default function SearchTrackOrMBID({
           }}
           placeholder="Track name or MusicBrainz URL/MBID"
           required
+          ref={inputRef}
         />
         <span className="input-group-btn">
           <button className="btn btn-default" type="button" onClick={reset}>
