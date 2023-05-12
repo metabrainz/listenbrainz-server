@@ -7,6 +7,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Integrations } from "@sentry/tracing";
 import { capitalize } from "lodash";
 import { ToastContainer, toast } from "react-toastify";
+import { faHeart } from "@fortawesome/free-regular-svg-icons";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
@@ -345,9 +346,8 @@ export default class LastFmImporter extends React.Component<
     } catch (error) {
       toast.error(
         <div>
-          <FontAwesomeIcon icon={faTimes as IconProp} /> We were unable to
-          import your loved tracks from {capitalize(service)}, please try again
-          later.
+          We were unable to import your loved tracks from {capitalize(service)},
+          please try again later.
           <br />
           If the problem persists please{" "}
           <a href="mailto:support@metabrainz.org">contact us</a>.
@@ -647,7 +647,7 @@ export default class LastFmImporter extends React.Component<
               disabled={!lastfmUsername}
               onClick={this.importFeedback}
             >
-              Import loved tracks
+              <FontAwesomeIcon icon={faHeart as IconProp} /> Import loved tracks
             </button>
           )}
         </form>
