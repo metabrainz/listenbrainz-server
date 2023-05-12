@@ -327,16 +327,17 @@ export default class LastFmImporter extends React.Component<
     }
     const { importFeedback } = this.APIService;
     try {
-      const importedCount = await importFeedback(
+      const response = await importFeedback(
         this.userToken,
         lastfmUsername,
         service
       );
+      const { inserted, total } = response;
       toast.success(
         <div>
           <FontAwesomeIcon icon={faCheck as IconProp} />
-          &nbsp; Succesfully imported ${importedCount} from $
-          {capitalize(service)}
+          &nbsp; Succesfully imported {inserted} out of {total} tracks feedback
+          from {capitalize(service)}
           <br />
           <a href="/my/taste">Click here to see your newly loved tracks</a>
         </div>

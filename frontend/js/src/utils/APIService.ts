@@ -561,7 +561,13 @@ export default class APIService {
     userToken: string,
     userName: string,
     service: ImportService
-  ): Promise<number> => {
+  ): Promise<{
+    inserted: number;
+    invalid_mbid: number;
+    mbid_not_found: number;
+    missing_mbid: number;
+    total: number;
+  }> => {
     const url = `${this.APIBaseURI}/feedback/import`;
     if (!userName || !userToken || !service) {
       throw new Error("Missing user name, token or external service name");
