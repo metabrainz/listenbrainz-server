@@ -336,9 +336,8 @@ export default class LastFmImporter extends React.Component<
       const { inserted, total } = response;
       toast.success(
         <div>
-          <FontAwesomeIcon icon={faCheck as IconProp} />
-          &nbsp; Succesfully imported {inserted} out of {total} tracks feedback
-          from {capitalize(service)}
+          Succesfully imported {inserted} out of {total} tracks feedback from{" "}
+          {capitalize(service)}
           <br />
           <a href="/my/taste">Click here to see your newly loved tracks</a>
         </div>
