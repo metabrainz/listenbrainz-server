@@ -54,6 +54,16 @@ export default NiceModal.create(
       setTimeout(remove, 500);
     }, [hide, remove]);
 
+    React.useEffect(() => {
+      const closeOnEscape = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          closeModal();
+        }
+      };
+      window.addEventListener("keydown", closeOnEscape);
+      return () => window.removeEventListener("keydown", closeOnEscape);
+    }, [closeModal]);
+
     const handleError = React.useCallback(
       (error: string | Error, title?: string): void => {
         if (!error) {
