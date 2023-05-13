@@ -131,8 +131,8 @@ describe("UserFeedback", () => {
     expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
     expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
       "pikachu",
-      props.feedback.map((item) => item.recording_msid).filter(Boolean),
-      props.feedback.map((item) => item.recording_mbid).filter(Boolean)
+      props.feedback.map((item) => item.recording_mbid).filter(Boolean),
+      props.feedback.map((item) => item.recording_msid).filter(Boolean)
     );
 
     expect(instance.state.recordingMsidFeedbackMap).toEqual({
