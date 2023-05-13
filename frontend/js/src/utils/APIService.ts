@@ -581,44 +581,25 @@ export default class APIService {
 
   getFeedbackForUserForRecordings = async (
     userName: string,
-    recording_msids: string[],
-    recording_mbids: string[]
-  ) => {
-    if (!userName) {
-      throw new SyntaxError("Username missing");
-    }
-
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-      body: JSON.stringify({
-        recording_msids,
-        recording_mbids,
-      }),
-    });
-    await this.checkStatus(response);
-    return response.json();
-  };
-
-  getFeedbackForUserForMBIDs = async (
-    userName: string,
-    recording_mbids: string // Comma-separated list of MBIDs
+    recording_mbids: string[],
+    recording_msids?: string[]
   ) => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
     const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings`;
+    const requestBody: FeedbackForUserForRecordingsRequestBody = {
+      recording_mbids,
+    };
+    if (recording_msids?.length) {
+      requestBody.recording_msids = recording_msids;
+    }
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({
-        recording_mbids,
-      }),
+      body: JSON.stringify(requestBody),
     });
     await this.checkStatus(response);
     return response.json();

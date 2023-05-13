@@ -323,9 +323,9 @@ export default class PlaylistPage extends React.Component<
     if (currentUser && tracks) {
       const recordings = mbids ?? tracks.map(getRecordingMBIDFromJSPFTrack);
       try {
-        const data = await this.APIService.getFeedbackForUserForMBIDs(
+        const data = await this.APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recordings.join(", ")
+          recordings
         );
         return data.feedback;
       } catch (error) {
