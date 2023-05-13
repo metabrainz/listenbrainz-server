@@ -716,8 +716,8 @@ describe("getFeedbackForUserForRecordings", () => {
           "Content-Type": "application/json;charset=UTF-8",
         },
         body: JSON.stringify({
-          recording_mbids: ["new", "old"],
-          recording_msids: ["bar", "baz"],
+          recording_mbids: ["bar", "baz"],
+          recording_msids: ["new", "old"],
         }),
       }
     );

@@ -425,8 +425,8 @@ export default class Listens extends React.Component<
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
@@ -452,8 +452,8 @@ export default class Listens extends React.Component<
     try {
       const data = await APIService.getFeedbackForUserForRecordings(
         currentUser.name,
-        [],
-        [recordingMBID]
+        [recordingMBID],
+        []
       );
       if (data.feedback.length) {
         const { recordingMbidFeedbackMap } = this.state;
