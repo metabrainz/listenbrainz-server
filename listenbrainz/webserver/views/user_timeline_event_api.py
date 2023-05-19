@@ -359,14 +359,15 @@ def user_feed_listens_following(user_name: str):
     :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, you have feed listen-events!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
-    :statuscode 401: Unauthorized, you do not have permission to view this user's feed.
+    :statuscode 401: Invalid authorization. See error message for details.
+    :statuscode 403: Forbidden, you do not have permission to view this user's feed.
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     '''
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to view this user's timeline.")
+        raise APIForbidden("You don't have permissions to view this user's timeline.")
     
     min_ts, max_ts, _ = _validate_get_endpoint_params()
     if min_ts is None and max_ts is None:
