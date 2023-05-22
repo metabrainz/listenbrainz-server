@@ -10,16 +10,16 @@ Overview (TL;DR)
 
 Here is the expected update schedule:
 
-=============================================== ===================================
+=============================================== =========================================
 System                                          Update schedule
-=============================================== ===================================
+=============================================== =========================================
 Receiving listens, updating listen counts		Immediate
-Deleting listens					            Removed at the top of the next hour
+Deleting listens					            Removed at the top of the next hour (UTC)
 Updating statistics for new listens			    Daily
 Removing deleted listens from stats			    On the 2nd and 16th of each month
 Full dumps						                1st and 15th of each month
 Incremental dumps					            Daily
-=============================================== ===================================
+=============================================== =========================================
 
 This complicated schedule is caused by ListenBrainz having a lot of interconnected parts that work
 at different scales. For more details, read on!
