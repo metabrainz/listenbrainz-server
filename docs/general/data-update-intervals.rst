@@ -92,6 +92,9 @@ another as we need it. This, however, brings latency and delays in keeping our d
 
 Take a look at the general overview of how data flows between each of these systems:
 
-.. image:: ../images/dataflow-graph.png
+.. image:: ../images/dataflows-graph.png
   :alt: ListenBrainz Data Flow Graph
 
+In the future we hope to serve content (stats) directly from our Spark installation (with the help of 
+existing tools) as indicated by the dotted arrow between Spark and the API/web pages box. This will further
+reduce the latency of some of our services.
