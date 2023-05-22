@@ -21,6 +21,9 @@ Full dumps						                1st and 15th of each month
 Incremental dumps					            Daily
 =============================================== ===================================
 
+This complicated schedule is caused by ListenBrainz having a lot of interconnected parts that work
+at different scales. For more details, read on!
+
 
 Listens and Listen Counts
 ^^^^^^^^^^^^^^^^^^^^^^^^^
