@@ -49,11 +49,6 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
      */
     percentArr.unshift(0);
     percentArr.pop();
-    const middle = percentArr[Math.floor(percentArr.length / 2)];
-
-    // Scroll to the current date
-    setCurrentValue(middle);
-    window.scrollTo({ top: changeHandler(middle), behavior: "smooth" });
 
     return zipObject(percentArr, datesArr);
   }

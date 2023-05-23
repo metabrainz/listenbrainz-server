@@ -27,6 +27,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
               LEFT JOIN {metadata_table} r
                   USING (recording_mbid)
                   WHERE l.recording_mbid IS NOT NULL
+                    AND l.recording_mbid != ''
             ), ordered AS (
                 SELECT user_id
                      , listened_at
@@ -92,7 +93,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
     """
 
 
-def main(days, session, contribution, threshold, limit, skip):
+def main(days, session, contribution, threshold, limit, skip, is_production_dataset):
     """ Generate similar recordings based on user listening sessions.
 
     Args:
@@ -105,6 +106,7 @@ def main(days, session, contribution, threshold, limit, skip):
         skip: the minimum threshold in seconds to mark a listen as skipped. we cannot just mark a negative difference
             as skip because there may be a difference in track length in MB and music services and also issues in
             timestamping listens.
+        is_production_dataset: only determines how the dataset is stored in ListenBrainz database.
     """
     to_date = datetime.combine(date.today(), time.min)
     from_date = to_date + timedelta(days=-days)
@@ -123,10 +125,23 @@ def main(days, session, contribution, threshold, limit, skip):
 
     algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
+    if is_production_dataset:
+        yield {
+            "type": "similar_recordings_start",
+            "algorithm": algorithm
+        }
+
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]
         yield {
             "type": "similar_recordings",
             "algorithm": algorithm,
-            "data": items
+            "data": items,
+            "is_production_dataset": is_production_dataset
+        }
+
+    if is_production_dataset:
+        yield {
+            "type": "similar_recordings_end",
+            "algorithm": algorithm
         }

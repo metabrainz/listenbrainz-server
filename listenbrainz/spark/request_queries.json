@@ -147,7 +147,8 @@
       "contribution",
       "threshold",
       "limit",
-      "skip"
+      "skip",
+      "is_production_dataset"
     ]
   },
   "similarity.artist": {
@@ -159,7 +160,8 @@
       "contribution",
       "threshold",
       "limit",
-      "skip"
+      "skip",
+      "is_production_dataset"
     ]
   },
   "year_in_music.similar_users": {

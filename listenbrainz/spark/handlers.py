@@ -428,9 +428,31 @@ def handle_yim_tracks_of_the_year_end(message):
     yim_patch_runner(message["year"])
 
 
+def handle_similar_recordings_start(message):
+    similarity.start_prod_table("recording", message["algorithm"])
+
+
+def handle_similar_recordings_end(message):
+    similarity.end_prod_table("recording", message["algorithm"])
+
+
 def handle_similar_recordings(message):
-    similarity.insert("recording", message["data"], message["algorithm"])
+    if message.get("is_production_dataset"):
+        similarity.insert_prod_table("recording", message["data"], message["algorithm"])
+    else:
+        similarity.insert("recording", message["data"], message["algorithm"])
+
+
+def handle_similar_artists_start(message):
+    similarity.start_prod_table("artist_credit_mbids", message["algorithm"])
+
+
+def handle_similar_artists_end(message):
+    similarity.end_prod_table("artist_credit_mbids", message["algorithm"])
 
 
 def handle_similar_artists(message):
-    similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
+    if message.get("is_production_dataset"):
+        similarity.insert_prod_table("artist_credit_mbids", message["data"], message["algorithm"])
+    else:
+        similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])

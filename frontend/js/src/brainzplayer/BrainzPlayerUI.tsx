@@ -141,7 +141,8 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           <ToastMsg
             title="Error while submitting feedback"
             message={error?.message ?? error.toString()}
-          />
+          />,
+          { toastId: "submit-feedback-error" }
         );
       }
     }

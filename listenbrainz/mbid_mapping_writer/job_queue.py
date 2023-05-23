@@ -12,10 +12,11 @@ from flask import current_app
 import sqlalchemy
 from listenbrainz.listen import Listen
 from listenbrainz.db import timescale
+from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
 from listenbrainz.mbid_mapping_writer.matcher import process_listens
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES
 from listenbrainz.utils import init_cache
-from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS
+from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS, EPOCH
 from listenbrainz import messybrainz as msb_db
 from brainzutils import metrics, cache
 
@@ -32,7 +33,7 @@ NEW_LISTEN = 0
 UNMATCHED_LISTENS_COMPLETED_TIMEOUT = 86400  # in s
 
 # This is the point where the legacy listens should be processed from
-LEGACY_LISTENS_LOAD_WINDOW = 86400 * 3   # load 3 days of data per go
+LEGACY_LISTENS_LOAD_WINDOW = datetime.timedelta(days=3)
 LEGACY_LISTENS_INDEX_DATE_CACHE_KEY = "mbid.legacy_index_date"
 
 # How many listens should be re-checked every mapping pass?
@@ -66,7 +67,7 @@ class MappingJobQueue(threading.Thread):
         self.unmatched_listens_complete_time = 0
         self.legacy_load_thread = None
         self.legacy_next_run = 0
-        self.legacy_listens_index_date = 0
+        self.legacy_listens_index_date = EPOCH
         self.num_legacy_listens_loaded = 0
         self.last_processed = 0
 
@@ -155,10 +156,10 @@ class MappingJobQueue(threading.Thread):
            Listens are added to the queue with a low priority."""
 
         # Find listens that have no entry in the mapping yet.
-        legacy_query = """SELECT data->'track_metadata'->'additional_info'->>'recording_msid'::TEXT AS recording_msid
+        legacy_query = """SELECT data->'additional_info'->>'recording_msid'::TEXT AS recording_msid
                             FROM listen
                        LEFT JOIN mbid_mapping m
-                              ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::text
+                              ON data->'additional_info'->>'recording_msid' = m.recording_msid::text
                            WHERE m.recording_mbid IS NULL
                              AND listened_at <= :max_ts
                              AND listened_at > :min_ts"""
@@ -173,24 +174,25 @@ class MappingJobQueue(threading.Thread):
         if not self.legacy_listens_index_date:
             dt = cache.get(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, decode=False) or b""
             try:
-                self.legacy_listens_index_date = int(
-                    datetime.datetime.strptime(str(dt, "utf-8"), "%Y-%m-%d").timestamp())
-                self.app.logger.info("Loaded date index from cache: %d %s" % (
+                self.legacy_listens_index_date = datetime.datetime.strptime(str(dt, "utf-8"), "%Y-%m-%d")
+                self.app.logger.info("Loaded date index from cache: %s %s" % (
                     self.legacy_listens_index_date, str(dt)))
             except ValueError:
-                self.legacy_listens_index_date = int(
-                    datetime.datetime.now().timestamp())
+                self.legacy_listens_index_date = datetime.datetime.now()
                 self.app.logger.info("Use date index now()")
 
         # Check to see if we're done
-        if self.legacy_listens_index_date < DATA_START_YEAR_IN_SECONDS - LEGACY_LISTENS_LOAD_WINDOW:
-            self.app.logger.info(
-                "Finished looking up all legacy listens! Wooo!")
+        if self.legacy_listens_index_date < LISTEN_MINIMUM_DATE - LEGACY_LISTENS_LOAD_WINDOW:
+            self.app.logger.info("Finished looking up all legacy listens! Wooo!")
             self.legacy_next_run = monotonic() + UNMATCHED_LISTENS_COMPLETED_TIMEOUT
-            self.legacy_listens_index_date = int(datetime.datetime.now().timestamp())
+            self.legacy_listens_index_date = datetime.datetime.now()
             self.num_legacy_listens_loaded = 0
-            dt = datetime.datetime.fromtimestamp(self.legacy_listens_index_date)
-            cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
+            cache.set(
+                LEGACY_LISTENS_INDEX_DATE_CACHE_KEY,
+                self.legacy_listens_index_date.strftime("%Y-%m-%d"),
+                expirein=0,
+                encode=False
+            )
 
             return
 
@@ -201,16 +203,21 @@ class MappingJobQueue(threading.Thread):
             return
         else:
             # If none, check for old legacy listens
-            count = self.fetch_and_queue_listens(legacy_query, {"max_ts": self.legacy_listens_index_date,
-                                                                "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW},
-                                                 LEGACY_LISTEN)
-            self.app.logger.info("Loaded %s more legacy listens for %s" % (count, datetime.datetime.fromtimestamp(
-                self.legacy_listens_index_date).strftime("%Y-%m-%d")))
+            count = self.fetch_and_queue_listens(legacy_query, {
+                "max_ts": self.legacy_listens_index_date,
+                "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW
+            }, LEGACY_LISTEN)
+            self.app.logger.info("Loaded %s more legacy listens for %s" %
+                                 (count, self.legacy_listens_index_date.strftime("%Y-%m-%d")))
 
         # update cache entry and count
         self.legacy_listens_index_date -= LEGACY_LISTENS_LOAD_WINDOW
-        dt = datetime.datetime.fromtimestamp(self.legacy_listens_index_date)
-        cache.set(LEGACY_LISTENS_INDEX_DATE_CACHE_KEY, dt.strftime("%Y-%m-%d"), expirein=0, encode=False)
+        cache.set(
+            LEGACY_LISTENS_INDEX_DATE_CACHE_KEY,
+            self.legacy_listens_index_date.strftime("%Y-%m-%d"),
+            expirein=0,
+            encode=False
+        )
         self.num_legacy_listens_loaded = count
 
     def update_metrics(self, stats):
@@ -267,7 +274,7 @@ class MappingJobQueue(threading.Thread):
                         no_match_rate=stats["no_match"] - stats["last_no_match"],
                         listens_per_sec=listens_per_sec,
                         listens_matched_p=stats["listens_matched"] / (stats["listen_count"] or .000001) * 100.0,
-                        legacy_index_date=datetime.date.fromtimestamp(self.legacy_listens_index_date).strftime("%Y-%m-%d"))
+                        legacy_index_date=self.legacy_listens_index_date.strftime("%Y-%m-%d"))
 
             stats["last_exact_match"] = stats["exact_match"]
             stats["last_high_quality"] = stats["high_quality"]

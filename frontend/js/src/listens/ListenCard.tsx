@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get, isEmpty, isEqual, isNil, isNumber } from "lodash";
+import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -88,6 +88,7 @@ export type ListenCardProps = {
 };
 
 export type ListenCardState = {
+  listen: Listen;
   isCurrentlyPlaying: boolean;
   thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
@@ -105,27 +106,24 @@ export default class ListenCard extends React.Component<
     super(props);
 
     this.state = {
+      listen: props.listen,
       isCurrentlyPlaying: false,
     };
   }
 
   async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-    const { userPreferences } = this.context;
-    if (userPreferences?.saveData !== true) {
-      await this.getCoverArt();
-    }
+    await this.getCoverArt();
   }
 
-  async componentDidUpdate(oldProps: ListenCardProps) {
-    const { listen, customThumbnail } = this.props;
-    const { userPreferences } = this.context;
-    if (
-      !customThumbnail &&
-      Boolean(listen) &&
-      !isEqual(listen, oldProps.listen) &&
-      userPreferences?.saveData !== true
-    ) {
+  async componentDidUpdate(
+    oldProps: ListenCardProps,
+    oldState: ListenCardState
+  ) {
+    const { listen: oldListen } = oldState;
+    const { customThumbnail } = this.props;
+    const { listen } = this.state;
+    if (!customThumbnail && Boolean(listen) && !isEqual(listen, oldListen)) {
       await this.getCoverArt();
     }
   }
@@ -135,8 +133,11 @@ export default class ListenCard extends React.Component<
   }
 
   async getCoverArt() {
-    const { spotifyAuth, APIService } = this.context;
-    const { listen } = this.props;
+    const { spotifyAuth, APIService, userPreferences } = this.context;
+    if (userPreferences?.saveData === true) {
+      return;
+    }
+    const { listen } = this.state;
     const albumArtSrc = await getAlbumArtFromListenMetadata(
       listen,
       spotifyAuth,
@@ -150,8 +151,7 @@ export default class ListenCard extends React.Component<
   }
 
   playListen = () => {
-    const { listen } = this.props;
-    const { isCurrentlyPlaying } = this.state;
+    const { listen, isCurrentlyPlaying } = this.state;
     if (isCurrentlyPlaying) {
       return;
     }
@@ -182,7 +182,7 @@ export default class ListenCard extends React.Component<
   };
 
   isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
-    const { listen } = this.props;
+    const { listen } = this.state;
     if (isNil(listen)) {
       return false;
     }
@@ -190,7 +190,8 @@ export default class ListenCard extends React.Component<
   };
 
   recommendListenToFollowers = async () => {
-    const { listen, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { listen } = this.state;
     const { APIService, currentUser } = this.context;
 
     if (currentUser?.auth_token) {
@@ -245,7 +246,6 @@ export default class ListenCard extends React.Component<
       additionalContent,
       beforeThumbnailContent,
       customThumbnail,
-      listen,
       className,
       showUsername,
       showTimestamp,
@@ -258,9 +258,10 @@ export default class ListenCard extends React.Component<
       newAlert,
       updateFeedbackCallback,
       additionalActions,
+      listen: listenFromProps,
       ...otherProps
     } = this.props;
-    const { isCurrentlyPlaying, thumbnailSrc } = this.state;
+    const { listen, isCurrentlyPlaying, thumbnailSrc } = this.state;
     const { currentUser } = this.context;
     const isLoggedIn = !isEmpty(currentUser);
 
@@ -372,6 +373,14 @@ export default class ListenCard extends React.Component<
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
           newAlert,
+        }).then((linkedTrackMetadata: any) => {
+          this.setState((prevState) => {
+            return {
+              listen: merge({}, prevState.listen, {
+                track_metadata: linkedTrackMetadata,
+              }),
+            };
+          });
         });
       };
       thumbnail = (
@@ -382,9 +391,6 @@ export default class ListenCard extends React.Component<
           onKeyDown={openModal}
           role="button"
           tabIndex={0}
-          // onKeyPress={action}
-          data-toggle="modal"
-          data-target="#MapToMusicBrainzRecordingModal"
         >
           <div className="not-mapped">
             <FontAwesomeIcon icon={faLink} />
@@ -583,8 +589,6 @@ export default class ListenCard extends React.Component<
                             newAlert,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#MapToMusicBrainzRecordingModal"
                       />
                     )}
                     {isLoggedIn && isListenReviewable && (
