@@ -25,8 +25,8 @@ This complicated schedule is caused by ListenBrainz having a lot of interconnect
 at different scales. We also urge our users to keep calm when you find that some listens have not been
 recorded -- there are various reasons for that -- see below.
 
-However, sometimes things break -- its just a fact of life. If you think something is broken, please let us know
-either in our forums or on IRC. ( see https://metabrainz.org/contact ). We are very much engaged in
+However, sometimes things break -- it's just a fact of life. If you think something is broken, please let us know
+either in our forums or on IRC ( see https://metabrainz.org/contact ). We are very much engaged in
 making this project work correctly and not lose any critical data, so rest assured that we're
 taking all of this quite seriously.
 
