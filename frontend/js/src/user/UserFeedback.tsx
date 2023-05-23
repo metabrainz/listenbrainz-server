@@ -190,7 +190,7 @@ export default class UserFeedback extends React.Component<
         .filter(Boolean)
         // Only request feedback we don't already have
         // @ts-ignore
-        .filter((mbid) => !has(recordingMbidFeedbackMap, mbid));
+        .filter((mbid) => !has(recordingMbidFeedbackMap, mbid)) as string[];
       if (!recording_msids.length && !recording_mbids.length) {
         return [];
       }
