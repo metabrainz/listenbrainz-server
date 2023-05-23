@@ -185,7 +185,7 @@ export default class UserFeedback extends React.Component<
         // Only request feedback we don't already have
         .filter((msid) => !has(recordingMsidFeedbackMap, msid)) as string[];
       recording_mbids = feedback
-        .map((item) => item.recording_mbid!)
+        .map((item) => item.recording_mbid)
         // Only request non-undefined and non-empty string
         .filter(Boolean)
         // Only request feedback we don't already have
