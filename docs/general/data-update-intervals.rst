@@ -15,9 +15,9 @@ Incremental dumps					            Daily
 =============================================== =========================================
 
 Situations will occasionally arise where these take longer. If you have been a very patient user, and
-something still hasn't updated, check our `forum https://community.metabrainz.org/`_ for news or discussion.
+something still hasn't updated, check our `forum <https://community.metabrainz.org/>`_ for news or discussion.
 If you suspect something has gone very wrong you can also search for tickets, and lodge new tickets, in our
-`ticket tracker https://community.metabrainz.org/`_.
+`ticket tracker <https://tickets.metabrainz.org/projects/LB>`_.
 
 This complicated schedule is caused by ListenBrainz having a lot of interconnected parts that work at
 different scales. For more details, read on!
@@ -60,12 +60,25 @@ on the 17th will reflect the current stats of your listens as of the end of the 
 We recognize that this is less than ideal – we’re considering how to improve this and to make the ingestion
 of listens and the deletion of listens both happen in real time.
 
-MusicBrainz Metadata Cache
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+MBID Mapper & MusicBrainz Metadata Cache
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Our MBID Mapping system maps incoming listens to the correct MusicBrainz metadata. It may take up to 4 hours
-for data entered into MusicBrainz to become available in the mapping system or for manual mapping (manually
-linking listens to MusicBrainz entities).
+The MBID mapper is reponsible for taking an incoming listen and using nothing but artist name and recording
+name and finding the best match in MusicBrainz. This process normally works quite well, except for when music
+you'd like to listen to doesn't yet exist in MusicBrainz.
+
+The mapper attempts to map a recording when:
+
+#. A new listen comes in (we've never seen this listen before). If a listen is not matched, we set a timer for when to try to match the listen again. We start the timer at 1day, but for each time we fail to match it we will double the delay before try it again, up to a max of 30 days.
+#. When a previously unmatched listen comes in again, we'll attempt a remapping.
+#. Our periodic mapping process will go over all unmapped listens and attempt to map them. This process can take quite some time to complete (weeks at times!) and once complete it will start over again the next day.
+
+If a listen cannot be mapped, the user can optionally tell us how to map the listen with the "Link with
+MusicBrainz" feature from the listen card. A few notes about this:
+
+#. If you have an unmatched listen in your stats and then you manually link the listen, the stats will not update until the next time listens are loaded again (2nd and 16th of the month, see above)
+#. If you would like to manually map a listen, but the recording does not exist in MusicBrainz, you'll need to add it there (or wait for someone else to add it). Once it has been added to MusicBrainz, it will be available for manual mappping in about 4 hours.
+
 
 ListenBrainz data infrastructure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
