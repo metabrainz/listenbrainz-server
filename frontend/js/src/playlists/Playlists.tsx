@@ -80,8 +80,21 @@ export default class UserPlaylists extends React.Component<
     this.setState({ playlistSelectedForOperation: playlist });
   };
 
+  updatePlaylists = (playlists: JSPFPlaylist[]): void => {
+    this.setState({ playlists });
+  };
+
   setPlaylistType = (type: PlaylistType) => {
     this.setState({ playlistType: type });
+  };
+
+  onCopiedPlaylist = (newPlaylist: JSPFPlaylist): void => {
+    const { playlistType } = this.state;
+    if (this.isCurrentUserPage() && playlistType === PlaylistType.playlists) {
+      this.setState((prevState) => ({
+        playlists: [newPlaylist, ...prevState.playlists],
+      }));
+    }
   };
 
   createPlaylist = async (
@@ -313,33 +326,16 @@ export default class UserPlaylists extends React.Component<
           </Pill>
         </div>
         <PlaylistsList
+          onPaginatePlaylists={this.updatePlaylists}
           playlists={playlists}
           activeSection={playlistType}
           user={user}
           playlistCount={playlistCount}
           selectPlaylistForEdit={this.selectPlaylistForEdit}
           newAlert={newAlert}
-        >
-          {this.isCurrentUserPage() && (
-            <Card
-              className="new-playlist"
-              data-toggle="modal"
-              data-target="#playlistCreateModal"
-            >
-              <div>
-                <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
-                <span>Create new playlist</span>
-              </div>
-            </Card>
-          )}
-        </PlaylistsList>
+        />
         {this.isCurrentUserPage() && (
           <>
-            <CreateOrEditPlaylistModal
-              onSubmit={this.createPlaylist}
-              htmlId="playlistCreateModal"
-              newAlert={newAlert}
-            />
             <CreateOrEditPlaylistModal
               onSubmit={this.editPlaylist}
               playlist={playlistSelectedForOperation}
