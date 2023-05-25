@@ -551,6 +551,43 @@ export default class APIService {
     return response.status;
   };
 
+  /**
+   * Import feedback data from thir party services
+   * @param  {string} userToken
+   * @param  {string} userName
+   * @param  {ImportService} service
+   */
+  importFeedback = async (
+    userToken: string,
+    userName: string,
+    service: ImportService
+  ): Promise<{
+    inserted: number;
+    invalid_mbid: number;
+    mbid_not_found: number;
+    missing_mbid: number;
+    total: number;
+  }> => {
+    const url = `${this.APIBaseURI}/feedback/import`;
+    if (!userName || !userToken || !service) {
+      throw new Error("Missing user name, token or external service name");
+    }
+    const body = {
+      user_name: userName,
+      service,
+    };
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(body),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   getFeedbackForUser = async (
     userName: string,
     offset: number = 0,
