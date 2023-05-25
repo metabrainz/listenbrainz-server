@@ -155,7 +155,7 @@ export default class UserPlaylists extends React.Component<
       const JSPFObject: JSPFObject = await APIService.getPlaylist(
         newPlaylistId,
         currentUser.auth_token
-      );
+      ).then((res) => res.json());
       this.setState(
         (prevState) => ({
           playlists: [JSPFObject.playlist, ...prevState.playlists],
