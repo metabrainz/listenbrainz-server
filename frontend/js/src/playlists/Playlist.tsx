@@ -749,7 +749,7 @@ export default class PlaylistPage extends React.Component<
                           Export as JSPF
                         </a>
                       </li>
-                      <li>
+                      {/* <li>
                         <a
                           id="exportPlaylistToXSPF"
                           role="button"
@@ -761,7 +761,7 @@ export default class PlaylistPage extends React.Component<
                           <FontAwesomeIcon icon={faFileExport as IconProp} />{" "}
                           Export as XSPF
                         </a>
-                      </li>
+                      </li> */}
                     </ul>
                   </span>
                 </div>
