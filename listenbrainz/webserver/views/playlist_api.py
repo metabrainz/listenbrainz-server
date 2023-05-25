@@ -155,7 +155,9 @@ def serialize_jspf(playlist: Playlist):
 
 def serialize_xspf(playlist: Playlist):
     """
-        Given a playlist, return a stringified element tree
+        Given a playlist, return a stringified element tree.
+        Currently disabled on the front-end because the additional_metadata field in improperly constructed:
+        see https://github.com/metabrainz/listenbrainz-server/pull/2298#issuecomment-1485747813
     """
 
     playlist_root = ET.Element("playlist")
