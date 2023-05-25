@@ -150,7 +150,7 @@ def main(days, session, contribution, threshold, limit, skip, is_production_data
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]
         yield {
-            "type": "similar_recordings",
+            "type": "similar_artists",
             "algorithm": algorithm,
             "data": items,
             "is_production_dataset": is_production_dataset
