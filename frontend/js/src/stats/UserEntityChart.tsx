@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import {
   WithAlertNotificationsInjectedProps,
@@ -26,7 +26,6 @@ import {
   userChartEntityToListen,
 } from "./utils";
 import ListenCard from "../listens/ListenCard";
-import SimpleModal from "../utils/SimpleModal";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -165,6 +164,13 @@ export default class UserEntityChart extends React.Component<
         data.payload.total_recording_count / this.ROWS_PER_PAGE
       );
       entityCount = data.payload.total_recording_count;
+    } else if (entity === "release-group") {
+      data = data as UserReleaseGroupsResponse;
+      maxListens = data.payload.release_groups?.[0]?.listen_count;
+      totalPages = Math.ceil(
+        data.payload.total_release_group_count / this.ROWS_PER_PAGE
+      );
+      entityCount = data.payload.total_release_group_count;
     }
 
     return {
@@ -180,9 +186,7 @@ export default class UserEntityChart extends React.Component<
     page: number,
     range: UserStatsAPIRange,
     entity: Entity
-  ): Promise<
-    UserArtistsResponse | UserReleasesResponse | UserRecordingsResponse
-  > => {
+  ): Promise<UserEntityResponse> => {
     const { user } = this.props;
     const { APIService } = this.context;
     const offset = (page - 1) * this.ROWS_PER_PAGE;
@@ -196,7 +200,7 @@ export default class UserEntityChart extends React.Component<
   };
 
   processData = (
-    data: UserArtistsResponse | UserReleasesResponse | UserRecordingsResponse,
+    data: UserEntityResponse,
     page: number,
     entity?: Entity
   ): UserEntityData => {
@@ -260,6 +264,23 @@ export default class UserEntityChart extends React.Component<
           };
         })
         .reverse();
+    } else if (entity === "release-group") {
+      result = (data as UserReleaseGroupsResponse).payload.release_groups
+        ?.map((elem, idx: number) => {
+          return {
+            id: idx.toString(),
+            entity: elem.release_group_name,
+            entityType: entity as Entity,
+            entityMBID: elem.release_group_mbid,
+            artist: elem.artist_name,
+            artistMBID: elem.artist_mbids,
+            idx: offset + idx + 1,
+            count: elem.listen_count,
+            caaID: elem.caa_id,
+            caaReleaseMBID: elem.caa_release_mbid,
+          };
+        })
+        .reverse();
     }
 
     return result;
@@ -275,7 +296,7 @@ export default class UserEntityChart extends React.Component<
       });
     }
 
-    if (entity === "release") {
+    if (entity === "release-group") {
       this.setState({
         terminology: "album",
       });
@@ -316,7 +337,10 @@ export default class UserEntityChart extends React.Component<
           return;
         }
         // Check if given entity is valid
-        if (["artist", "release", "recording"].indexOf(entity) < 0) {
+        if (
+          ["artist", "release", "recording", "release-group"].indexOf(entity) <
+          0
+        ) {
           this.setState({
             hasError: true,
             loading: false,
@@ -475,9 +499,9 @@ export default class UserEntityChart extends React.Component<
                   Artists
                 </Pill>
                 <Pill
-                  active={entity === "release"}
+                  active={entity === "release-group"}
                   type="secondary"
-                  onClick={() => this.changeEntity("release")}
+                  onClick={() => this.changeEntity("release-group")}
                 >
                   Albums
                 </Pill>
@@ -593,12 +617,12 @@ export default class UserEntityChart extends React.Component<
                     <Bar data={data} maxValue={maxListens} />
                   </div>
                 </div>
-                {entity === "release" && (
+                {entity === "release-group" && (
                   <div className="row">
                     <div className="col-xs-12">
                       <small>
                         <sup>*</sup>The listen count denotes the number of times
-                        you have listened to a recording from the release.
+                        you have listened to a recording from the release group.
                       </small>
                     </div>
                   </div>
@@ -612,7 +636,7 @@ export default class UserEntityChart extends React.Component<
                         }`}
                       >
                         <a
-                          href=""
+                          href={this.buildURLParams(prevPage, range, entity)}
                           role="button"
                           onClick={(e) => {
                             this.handleClickEvent(e, () => {
@@ -650,7 +674,6 @@ export default class UserEntityChart extends React.Component<
 
         <BrainzPlayer
           listens={listenableItems}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
@@ -683,17 +706,10 @@ document.addEventListener("DOMContentLoaded", () => {
     UserEntityChart
   );
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <UserEntityChartWithAlertNotifications
             initialAlerts={optionalAlerts}

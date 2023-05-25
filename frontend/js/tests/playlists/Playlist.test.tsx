@@ -40,25 +40,10 @@ const GlobalContextMock: GlobalAppContextT = {
 };
 
 describe("PlaylistPage", () => {
-  let wrapper:
-    | ReactWrapper<PlaylistPageProps, PlaylistPageState, PlaylistPage>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders correctly", () => {
     // Mock timeago (returns an elapsed time string) otherwise snapshot won't match
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: GlobalContextMock,
@@ -68,7 +53,7 @@ describe("PlaylistPage", () => {
   });
 
   it("hides exportPlaylistToSpotify button if playlist permissions are absent", () => {
-    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: GlobalContextMock,
@@ -90,7 +75,7 @@ describe("PlaylistPage", () => {
         ] as Array<SpotifyPermission>,
       },
     };
-    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: alternativeContextMock,
@@ -100,7 +85,7 @@ describe("PlaylistPage", () => {
   });
 
   it("does not clear the add-a-track input on blur", async () => {
-    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: GlobalContextMock,
@@ -147,7 +132,7 @@ describe("PlaylistPage", () => {
   });
 
   it("filters out playlist owner from collaborators", async () => {
-    wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
+    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
       wrappingComponent: GlobalAppContext.Provider,
       wrappingComponentProps: {
         value: GlobalContextMock,

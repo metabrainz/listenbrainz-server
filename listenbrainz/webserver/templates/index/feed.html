@@ -1,5 +1,18 @@
 {%- extends 'base-react.html' -%} {%- block title -%}Feed - ListenBrainz{%-
-endblock -%} {% block scripts %} {{ super() }}
+endblock -%}
+{% set active_page = "feed" %}
+
+{% block content %}
+  <div class="secondary-nav">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="active"><a href="{{ url_for('index.feed') }}">My Feed</a></li>
+      <li ><a href="{{ url_for('index.recent_listens') }}">Global</a></li>
+    </ul>
+  </div>
+  {{ super() }}
+{% endblock %}
+
+{% block scripts %} {{ super() }}
 <script
   src="{{ get_static_path('userFeed.js') }}"
   type="text/javascript"

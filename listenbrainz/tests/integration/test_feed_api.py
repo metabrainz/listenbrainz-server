@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+from sqlalchemy import text
 
+from listenbrainz import messybrainz
+from listenbrainz.db import timescale
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from flask import url_for, current_app
@@ -29,6 +32,25 @@ import uuid
 
 
 class FeedAPITestCase(ListenAPIIntegrationTestCase):
+
+    def insert_metadata(self):
+        with timescale.engine.begin() as connection:
+            query = """
+                INSERT INTO mapping.mb_metadata_cache
+                           (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                    VALUES ('34c208ee-2de7-4d38-b47e-907074866dd3'
+                          , '{4a779683-5404-4b90-a0d7-242495158265}'::UUID[]
+                          , '1390f1b7-7851-48ae-983d-eb8a48f78048'
+                          , '{"name": "52 Bars", "rels": [], "length": 214024}'
+                          , '{"name": "Karan Aujla", "artists": [{"area": "Punjab", "name": "Karan Aujla", "rels": {"wikidata": "https://www.wikidata.org/wiki/Q58008320", "social network": "https://www.instagram.com/karanaujla_official/"}, "type": "Person", "gender": "Male", "begin_year": 1997, "join_phrase": ""}], "artist_credit_id": 2892477}'
+                          , '{"artist": [], "recording": [], "release_group": []}'
+                          , '{"mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "name": "Four You", "year": 2023, "caa_id": 34792503592, "caa_release_mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "album_artist_name": "Karan Aujla", "release_group_mbid": "eb8734c9-127d-495e-b908-9194cdbac45d"}'
+                          , 'f'
+                           )
+            """
+            connection.execute(text(query))
+            msid = messybrainz.submit_recording(connection, "Strangers", "Portishead", "Dummy", None, 291160)
+            return msid
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:
         following_user = db_user.get_or_create(mb_row_id, name)
@@ -214,34 +236,29 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('follow', r.json['payload']['events'][1]['event_type'])
         self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][1]['user_name'])
         self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][1]['metadata']['user_name_0'])
-        self.assertEqual(self.following_user_2['musicbrainz_id'], r.json['payload']['events'][1]['metadata']['user_name_1'])
+        self.assertEqual(self.following_user_2['musicbrainz_id'],
+                         r.json['payload']['events'][1]['metadata']['user_name_1'])
         self.assertEqual('follow', r.json['payload']['events'][1]['metadata']['relationship_type'])
 
         self.assertEqual('follow', r.json['payload']['events'][2]['event_type'])
         self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][2]['user_name'])
         self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][2]['metadata']['user_name_0'])
-        self.assertEqual(self.following_user_1['musicbrainz_id'], r.json['payload']['events'][2]['metadata']['user_name_1'])
+        self.assertEqual(self.following_user_1['musicbrainz_id'],
+                         r.json['payload']['events'][2]['metadata']['user_name_1'])
         self.assertEqual('follow', r.json['payload']['events'][2]['metadata']['relationship_type'])
 
     def test_it_returns_recording_recommendation_events(self):
+        msid = self.insert_metadata()
         # create a recording recommendation ourselves
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.main_user['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="Lose yourself to dance",
-                artist_name="Daft Punk",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_msid=msid)
         )
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.following_user_1['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="Sunflower",
-                artist_name="Swae Lee & Post Malone",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_mbid="34c208ee-2de7-4d38-b47e-907074866dd3")
         )
 
         # this should show up in the events
@@ -259,13 +276,33 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(2, payload['count'])
         self.assertEqual('recording_recommendation', payload['events'][0]['event_type'])
         self.assertEqual('following_1', payload['events'][0]['user_name'])
-        self.assertEqual('Sunflower', payload['events'][0]['metadata']['track_metadata']['track_name'])
-        self.assertEqual('Swae Lee & Post Malone', payload['events'][0]['metadata']['track_metadata']['artist_name'])
+        self.assertEqual({
+            'additional_info': None,
+            'artist_name': 'Karan Aujla',
+            'mbid_mapping': {
+                'artist_mbids': ['4a779683-5404-4b90-a0d7-242495158265'],
+                'artists': [
+                    {
+                        'artist_credit_name': 'Karan Aujla',
+                        'artist_mbid': '4a779683-5404-4b90-a0d7-242495158265',
+                        'join_phrase': ''
+                    }
+                ],
+                'caa_id': 34792503592,
+                'caa_release_mbid': '1390f1b7-7851-48ae-983d-eb8a48f78048',
+                'recording_mbid': '34c208ee-2de7-4d38-b47e-907074866dd3',
+                'release_mbid': '1390f1b7-7851-48ae-983d-eb8a48f78048'
+            },
+            'release_name': 'Four You',
+            'track_name': '52 Bars'
+        }, payload['events'][0]['metadata']['track_metadata'])
 
         self.assertEqual('recording_recommendation', payload['events'][1]['event_type'])
         self.assertEqual(self.main_user['musicbrainz_id'], payload['events'][1]['user_name'])
-        self.assertEqual('Lose yourself to dance', payload['events'][1]['metadata']['track_metadata']['track_name'])
-        self.assertEqual('Daft Punk', payload['events'][1]['metadata']['track_metadata']['artist_name'])
+        self.assertEqual('Portishead', payload['events'][1]['metadata']['track_metadata']['artist_name'])
+        self.assertEqual('Strangers', payload['events'][1]['metadata']['track_metadata']['track_name'])
+        self.assertEqual('Dummy', payload['events'][1]['metadata']['track_metadata']['release_name'])
+        self.assertEqual(msid, payload['events'][1]['metadata']['track_metadata']['additional_info']['recording_msid'])
 
     def test_it_returns_empty_list_if_user_does_not_follow_anyone(self):
         new_user = db_user.get_or_create(111, 'totally_new_user_with_no_friends')
@@ -292,15 +329,12 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
 
         time.sleep(1)  # sleep a bit to avoid ordering conflicts, cannot mock this time as it comes from postgres
+        self.insert_metadata()
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.following_user_1['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="Sunflower",
-                artist_name="Swae Lee & Post Malone",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_mbid="34c208ee-2de7-4d38-b47e-907074866dd3")
         )
 
         time.sleep(1)

@@ -31,7 +31,7 @@ import {
   WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import SpotifyAPIService from "../utils/SpotifyAPIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
@@ -50,7 +50,6 @@ import {
   JSPFTrackToListen,
 } from "./utils";
 import { getPageProps } from "../utils/utils";
-import SimpleModal from "../utils/SimpleModal";
 
 export type PlaylistPageProps = {
   labsApiUrl: string;
@@ -326,9 +325,9 @@ export default class PlaylistPage extends React.Component<
     if (currentUser && tracks) {
       const recordings = mbids ?? tracks.map(getRecordingMBIDFromJSPFTrack);
       try {
-        const data = await this.APIService.getFeedbackForUserForMBIDs(
+        const data = await this.APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recordings.join(", ")
+          recordings
         );
         return data.feedback;
       } catch (error) {
@@ -907,7 +906,6 @@ export default class PlaylistPage extends React.Component<
           </div>
           <BrainzPlayer
             listens={tracks.map(JSPFTrackToListen)}
-            newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
@@ -941,17 +939,10 @@ document.addEventListener("DOMContentLoaded", () => {
     PlaylistPage
   );
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <PlaylistPageWithAlertNotifications
             initialAlerts={optionalAlerts}

@@ -1,8 +1,8 @@
-{% extends 'base-react.html' %}
+{% extends 'user/settings.html' %}
 
 {% block title %}Import for "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
 
-{% block content %}
+{% block settings_content %}
     <h2 class="page-title">Import to user {{ user.musicbrainz_id }}</h2>
     {% if not user_has_email %}
         <div class="alert alert-danger">
@@ -48,6 +48,18 @@
                 </div>
             </div>
         {% endif %}
+
+        <h4> Reset Last.FM Import timestamp </h4>
+        <p>
+            If you think that a partial import has somehow missed some listens, you may reset your previous
+            import timestamp. This will cause your next import to be a complete import which should add any
+            missing listens while still avoiding adding duplicates to your history.
+        </p>
+
+        <p>If you want to reset your previous import timestamp, click below</p>
+        <p>
+            <span class="btn btn-info btn-lg" style="width: 300px"><a href="{{ url_for("profile.reset_latest_import_timestamp") }}" style="color: white;">Reset Import Timestamp</a></span>
+        </p>
     {% endif %}
 {% endblock %}
 

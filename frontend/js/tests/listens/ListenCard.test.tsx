@@ -54,23 +54,8 @@ const globalProps = {
 };
 
 describe("ListenCard", () => {
-  let wrapper:
-    | ReactWrapper<ListenCardProps, ListenCardState, ListenCard>
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders correctly", () => {
-    wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -91,8 +76,10 @@ describe("ListenCard", () => {
       },
       user_name: "test",
     };
-    wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, listen: playingNowListen }} />
+    const wrapper = mount<ListenCard>(
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...{ ...props, listen: playingNowListen }} />
+      </GlobalAppContext.Provider>
     );
 
     expect(
@@ -104,7 +91,7 @@ describe("ListenCard", () => {
 
   it("should render timestamp using preciseTimestamp", () => {
     const preciseTimestamp = jest.spyOn(utils, "preciseTimestamp");
-    wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     expect(preciseTimestamp).toHaveBeenCalledTimes(1);
 
     expect(wrapper).toMatchSnapshot();
@@ -132,7 +119,7 @@ describe("ListenCard", () => {
       },
       user_name: "test",
     };
-    wrapper = mount<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, listen: differentListen }} />
     );
     expect(
@@ -144,7 +131,7 @@ describe("ListenCard", () => {
   });
 
   it("should render a play button", () => {
-    wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     const playButton = wrapper.find(".play-button");
     expect(playButton).toHaveLength(1);
@@ -152,7 +139,7 @@ describe("ListenCard", () => {
   });
 
   it("should send an event to BrainzPlayer when playListen is called", async () => {
-    wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     const postMessageSpy = jest.spyOn(window, "postMessage");
     expect(postMessageSpy).not.toHaveBeenCalled();
@@ -169,7 +156,7 @@ describe("ListenCard", () => {
 
   it("should do nothing when playListen is called on currently playing listen", async () => {
     const postMessageSpy = jest.spyOn(window, "postMessage");
-    wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
     await act(() => {
       instance.setState({ isCurrentlyPlaying: true });
@@ -182,7 +169,7 @@ describe("ListenCard", () => {
   });
 
   it("should render the formatted duration_ms if present in the listen metadata", () => {
-    wrapper = mount<ListenCard>(<ListenCard {...props} />);
+    const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     const durationElement = wrapper.find('[title="Duration"]');
     expect(durationElement).toBeDefined();
     expect(durationElement.text()).toEqual("2:03");
@@ -194,7 +181,7 @@ describe("ListenCard", () => {
       "track_metadata.additional_info.duration_ms"
     );
     set(listenWithDuration, "track_metadata.additional_info.duration", 142);
-    wrapper = mount<ListenCard>(
+    const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, listen: listenWithDuration }} />
     );
     const durationElement = wrapper.find('[title="Duration"]');
@@ -204,7 +191,7 @@ describe("ListenCard", () => {
 
   describe("handleError", () => {
     it("calls newAlert", async () => {
-      wrapper = mount<ListenCard>(
+      const wrapper = mount<ListenCard>(
         <ListenCard {...{ ...props, newAlert: jest.fn() }} />
       );
       const instance = wrapper.instance();
@@ -223,7 +210,7 @@ describe("ListenCard", () => {
 
   describe("recommendTrackToFollowers", () => {
     it("calls API, and creates a new alert on success", async () => {
-      wrapper = mount<ListenCard>(
+      const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <ListenCard {...{ ...props, newAlert: jest.fn() }} />
         </GlobalAppContext.Provider>
@@ -242,8 +229,6 @@ describe("ListenCard", () => {
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("test", "baz", {
-        artist_name: instance.props.listen.track_metadata.artist_name,
-        track_name: instance.props.listen.track_metadata.track_name,
         recording_msid:
           instance.props.listen.track_metadata.additional_info?.recording_msid,
         recording_mbid:
@@ -254,7 +239,7 @@ describe("ListenCard", () => {
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
-      wrapper = mount<ListenCard>(
+      const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
@@ -278,7 +263,7 @@ describe("ListenCard", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      wrapper = mount<ListenCard>(
+      const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <ListenCard {...props} />
         </GlobalAppContext.Provider>
@@ -308,7 +293,7 @@ describe("ListenCard", () => {
   describe("pinRecordingModal", () => {
     it("renders the PinRecordingModal component with the correct props", async () => {
       const newAlert = jest.fn();
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <ListenCard {...props} newAlert={newAlert} />
@@ -319,7 +304,7 @@ describe("ListenCard", () => {
       expect(wrapper.find(PinRecordingModal)).toHaveLength(0);
 
       await act(() => {
-        const button = wrapper!.find("button[title='Pin this track']").first();
+        const button = wrapper.find("button[title='Pin this track']").first();
         button?.simulate("click");
       });
       await waitForComponentToPaint(wrapper);
@@ -336,7 +321,7 @@ describe("ListenCard", () => {
   describe("CBReviewModal", () => {
     it("renders the CBReviewModal component with the correct props", async () => {
       const newAlert = jest.fn();
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
             <ListenCard {...props} newAlert={newAlert} />
@@ -347,7 +332,7 @@ describe("ListenCard", () => {
       expect(wrapper.find(CBReviewModal)).toHaveLength(0);
 
       await act(() => {
-        const button = wrapper!.find("button[title='Write a review']").first();
+        const button = wrapper.find("button[title='Write a review']").first();
         button?.simulate("click");
       });
       await waitForComponentToPaint(wrapper);

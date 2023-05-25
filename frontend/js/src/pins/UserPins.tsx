@@ -125,26 +125,26 @@ export default class UserPins extends React.Component<
   getFeedback = async () => {
     const { pins, newAlert } = this.props;
     const { APIService, currentUser } = this.context;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (pins && currentUser?.name) {
       pins.forEach((item) => {
         if (item.recording_msid) {
-          recording_msids += `${item.recording_msid},`;
+          recording_msids.push(item.recording_msid);
         }
         if (item.recording_mbid) {
-          recording_mbids += `${item.recording_mbid},`;
+          recording_mbids.push(item.recording_mbid);
         }
       });
-      if (!recording_msids && !recording_mbids) {
+      if (!recording_msids.length && !recording_mbids.length) {
         return [];
       }
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {

@@ -6,9 +6,8 @@ import * as Sentry from "@sentry/react";
 import { get } from "lodash";
 
 import { Integrations } from "@sentry/tracing";
-import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
@@ -24,17 +23,18 @@ import {
   getTrackName,
   getRecordingMSID,
 } from "../utils/utils";
-import ListenControl from "../listens/ListenControl";
-import SimpleModal from "../utils/SimpleModal";
+
+import Card from "../components/Card";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
+  globalListenCount: number;
+  globalUserCount: string;
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
   listens: Array<Listen>;
   listenCount?: number;
-  recordingToMapToMusicbrainz?: Listen;
   recordingMsidFeedbackMap: RecordingFeedbackMap;
   recordingMbidFeedbackMap: RecordingFeedbackMap;
 }
@@ -50,7 +50,6 @@ export default class RecentListens extends React.Component<
     super(props);
     this.state = {
       listens: props.listens || [],
-      recordingToMapToMusicbrainz: props.listens?.[0],
       recordingMsidFeedbackMap: {},
       recordingMbidFeedbackMap: {},
     };
@@ -60,33 +59,29 @@ export default class RecentListens extends React.Component<
     this.loadFeedback();
   }
 
-  updateRecordingToMapToMusicbrainz = (recordingToMapToMusicbrainz: Listen) => {
-    this.setState({ recordingToMapToMusicbrainz });
-  };
-
   getFeedback = async () => {
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
         const recordingMsid = getRecordingMSID(listen);
         if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
+          recording_msids.push(recordingMsid);
         }
         const recordingMBID = getRecordingMBID(listen);
         if (recordingMBID) {
-          recording_mbids += `${recordingMBID},`;
+          recording_mbids.push(recordingMBID);
         }
       });
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
@@ -165,37 +160,37 @@ export default class RecentListens extends React.Component<
   };
 
   render() {
-    const { listens, recordingToMapToMusicbrainz } = this.state;
-    const { newAlert } = this.props;
-    const { APIService } = this.context;
+    const { listens } = this.state;
+    const { newAlert, globalListenCount, globalUserCount } = this.props;
+    const { APIService, currentUser } = this.context;
 
     return (
       <div role="main">
-        <h3>Recent listens</h3>
+        <h3>Global listens</h3>
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-4 col-md-push-8">
+            <Card id="listen-count-card">
+              <div>
+                {globalListenCount?.toLocaleString() ?? "-"}
+                <br />
+                <small className="text-muted">songs played</small>
+              </div>
+            </Card>
+            <Card id="listen-count-card">
+              <div>
+                {globalUserCount ?? "-"}
+                <br />
+                <small className="text-muted">users</small>
+              </div>
+            </Card>
+          </div>
+          <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
               <h5 className="text-center">No listens to show</h5>
             )}
             {listens.length > 0 && (
               <div id="listens">
                 {listens.map((listen) => {
-                  /* eslint-disable react/jsx-no-bind */
-                  const additionalMenuItems = [];
-                  additionalMenuItems.push(
-                    <ListenControl
-                      text="Map to a Recording"
-                      icon={faPencilAlt}
-                      action={this.updateRecordingToMapToMusicbrainz.bind(
-                        this,
-                        listen
-                      )}
-                      dataToggle="modal"
-                      dataTarget="#UpdateMusicbrainzMappingModal"
-                    />
-                  );
-
-                  /* eslint-enable react/jsx-no-bind */
                   return (
                     <ListenCard
                       key={`${listen.listened_at}-${getTrackName(listen)}-${
@@ -207,18 +202,15 @@ export default class RecentListens extends React.Component<
                       listen={listen}
                       newAlert={newAlert}
                       currentFeedback={this.getFeedbackForListen(listen)}
-                      additionalMenuItems={additionalMenuItems}
                     />
                   );
                 })}
               </div>
             )}
           </div>
-          <div className="col-md-4" />
         </div>
         <BrainzPlayer
           listens={listens}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
@@ -237,7 +229,6 @@ document.addEventListener("DOMContentLoaded", () => {
     optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
   if (sentry_dsn) {
     Sentry.init({
       dsn: sentry_dsn,
@@ -246,27 +237,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const { listens } = reactProps;
+  const { listens, globalListenCount, globalUserCount } = reactProps;
 
   const RecentListensWithAlertNotifications = withAlertNotifications(
     RecentListens
   );
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <RecentListensWithAlertNotifications
             initialAlerts={optionalAlerts}
             listens={listens}
+            globalListenCount={globalListenCount}
+            globalUserCount={globalUserCount}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

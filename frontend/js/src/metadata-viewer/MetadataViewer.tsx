@@ -91,9 +91,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         return;
       }
       try {
-        const feedbackObject = await APIService.getFeedbackForUserForMBIDs(
+        const feedbackObject = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recordingMBID
+          [recordingMBID]
         );
         if (feedbackObject?.feedback?.length) {
           const feedback: any = first(feedbackObject.feedback);
@@ -196,7 +196,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     (recordingData?.artist_credit_name ?? fallbackArtistName) ||
     "No artist to show";
   const duration =
-    metadata?.recording?.duration ??
+    metadata?.recording?.length ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
 
   const artist = metadata?.artist?.artists?.[0];

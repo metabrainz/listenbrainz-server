@@ -79,7 +79,6 @@ describe("PersonalRecommendationModal", () => {
     );
 
     expect(wrapper.html()).toMatchSnapshot();
-    wrapper.unmount();
   });
   describe("submitPersonalRecommendation", () => {
     it("calls API, and creates new alert on success", async () => {
@@ -126,9 +125,6 @@ describe("PersonalRecommendationModal", () => {
         {
           recording_mbid: "recording_mbid",
           recording_msid: "recording_msid",
-          artist_name: "TWICE",
-          track_name: "Feel Special",
-          release_name: undefined,
           blurb_content: "hii",
           users: ["fnord"],
         }
@@ -139,7 +135,6 @@ describe("PersonalRecommendationModal", () => {
         "You recommended this track to 1 user",
         "TWICE - Feel Special"
       );
-      wrapper.unmount();
     });
 
     it("does nothing if userToken not set", async () => {
@@ -166,7 +161,6 @@ describe("PersonalRecommendationModal", () => {
       });
       await waitForComponentToPaint(wrapper);
       expect(submitPersonalRecommendationSpy).not.toHaveBeenCalled();
-      wrapper.unmount();
     });
 
     it("calls handleError in case of error", async () => {
@@ -206,7 +200,6 @@ describe("PersonalRecommendationModal", () => {
         "Error while recommending a track",
         "error"
       );
-      wrapper.unmount();
     });
   });
 
@@ -243,7 +236,6 @@ describe("PersonalRecommendationModal", () => {
       expect(blurbTextArea.props().value).toEqual(
         "This string contains line breaks and multiple consecutive spaces."
       );
-      wrapper.unmount();
     });
 
     it("does not set blurbContent in state if input length is greater than MAX_BLURB_CONTENT_LENGTH ", async () => {
@@ -290,7 +282,6 @@ describe("PersonalRecommendationModal", () => {
 
       // blurbContent should not have changed
       expect(blurbTextArea.props().value).toEqual("This string is valid.");
-      wrapper.unmount();
     });
   });
 });

@@ -1,6 +1,5 @@
 import { createContext, createRef } from "react";
 import APIService from "./APIService";
-import SimpleModal from "./SimpleModal";
 
 export type GlobalAppContextT = {
   APIService: APIService;
@@ -8,7 +7,7 @@ export type GlobalAppContextT = {
   spotifyAuth?: SpotifyUser;
   youtubeAuth?: YoutubeUser;
   critiquebrainzAuth?: CritiqueBrainzUser;
-  modal?: React.RefObject<SimpleModal> | null;
+  userPreferences?: UserPreferences;
 };
 
 const GlobalAppContext = createContext<GlobalAppContextT>({
@@ -17,7 +16,7 @@ const GlobalAppContext = createContext<GlobalAppContextT>({
   spotifyAuth: {},
   youtubeAuth: {},
   critiquebrainzAuth: {},
-  modal: createRef<SimpleModal>(),
+  userPreferences: {},
 });
 
 export default GlobalAppContext;

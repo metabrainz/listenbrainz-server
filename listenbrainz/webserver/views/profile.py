@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import time
 
-import ujson
+import orjson
 from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
@@ -16,6 +16,7 @@ from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
 from listenbrainz.webserver import flash
 from listenbrainz.webserver import timescale_connection
@@ -64,7 +65,8 @@ def select_timezone():
     }
     return render_template(
         "profile/selecttimezone.html",
-        props=ujson.dumps(props),
+        props=orjson.dumps(props).decode("utf-8"),
+        active_settings_section="timezone"
     )
 
 
@@ -74,7 +76,8 @@ def set_troi_prefs():
     current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
     return render_template(
         "profile/troi_prefs.html",
-        props=ujson.dumps({"troi_prefs": current_troi_prefs})
+        props=orjson.dumps({"troi_prefs": current_troi_prefs}).decode("utf-8"),
+        active_settings_section = "playlist-preferences"
     )
 
 
@@ -97,6 +100,7 @@ def reset_latest_import_timestamp():
     return render_template(
         "profile/resetlatestimportts.html",
         form=form,
+        active_settings_section="import"
     )
 
 
@@ -109,6 +113,7 @@ def info():
         "profile/info.html",
         user=current_user,
         user_setting=user_setting,
+        active_settings_section="info"
     )
 
 
@@ -146,7 +151,8 @@ def import_data():
         "user/import.html",
         user=current_user,
         user_has_email=user_has_email,
-        props=ujson.dumps(props),
+        props=orjson.dumps(props).decode("utf-8"),
+        active_settings_section="import"
     )
 
 
@@ -161,7 +167,7 @@ def fetch_listens(musicbrainz_id, to_ts):
         if not batch:
             break
         yield from batch
-        to_ts = batch[-1].ts_since_epoch  # new to_ts will be the the timestamp of the last listen fetched
+        to_ts = batch[-1].timestamp.replace(tzinfo=None)  # new to_ts will be the the timestamp of the last listen fetched
 
 
 def fetch_feedback(user_id):
@@ -183,7 +189,7 @@ def stream_json_array(elements):
     """ Return a generator of string fragments of the elements encoded as array. """
     for i, element in enumerate(elements):
         yield '[' if i == 0 else ','
-        yield ujson.dumps(element)
+        yield orjson.dumps(element).decode("utf-8")
     yield ']'
 
 
@@ -198,7 +204,7 @@ def export_data():
         # Build a generator that streams the json response. We never load all
         # listens into memory at once, and we can start serving the response
         # immediately.
-        to_ts = int(time())
+        to_ts = datetime.utcnow()
         listens = fetch_listens(current_user.musicbrainz_id, to_ts)
         output = stream_json_array(listen.to_api() for listen in listens)
 
@@ -208,7 +214,7 @@ def export_data():
         response.mimetype = "text/json"
         return response
     else:
-        return render_template("user/export.html", user=current_user)
+        return render_template("user/export.html", user=current_user, active_settings_section="export-data")
 
 
 @profile_bp.route("/export-feedback/", methods=["POST"])
@@ -261,7 +267,8 @@ def delete():
     return render_template(
         'profile/delete.html',
         user=current_user,
-        form=form
+        form=form,
+        active_settings_section = 'delete-account'
     )
 
 
@@ -296,11 +303,12 @@ def delete_listens():
     return render_template(
         'profile/delete_listens.html',
         user=current_user,
-        form=form
+        form=form,
+        active_settings_section='delete-listens'
     )
 
 
-def _get_service_or_raise_404(name: str) -> ExternalService:
+def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
     """Returns the music service for the given name and raise 404 if
     service is not found
 
@@ -313,6 +321,8 @@ def _get_service_or_raise_404(name: str) -> ExternalService:
             return SpotifyService()
         elif service == ExternalServiceType.CRITIQUEBRAINZ:
             return CritiqueBrainzService()
+        elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
+            return MusicBrainzService()
     except KeyError:
         raise NotFound("Service %s is invalid." % name)
 
@@ -343,7 +353,8 @@ def music_services_details():
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
         critiquebrainz_user=critiquebrainz_user,
-        current_critiquebrainz_permissions=current_critiquebrainz_permissions
+        current_critiquebrainz_permissions=current_critiquebrainz_permissions,
+        active_settings_section="connect-services"
     )
 
 
@@ -365,7 +376,7 @@ def music_services_callback(service_name: str):
 @profile_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
 @api_login_required
 def refresh_service_token(service_name: str):
-    service = _get_service_or_raise_404(service_name)
+    service = _get_service_or_raise_404(service_name, include_mb=True)
     user = service.get_user(current_user.id)
     if not user:
         raise APINotFound("User has not authenticated to %s" % service_name.capitalize())

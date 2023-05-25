@@ -54,33 +54,18 @@ const props: PinnedRecordingCardProps = {
 };
 
 describe("PinnedRecordingCard", () => {
-  let wrapper:
-    | ReactWrapper<
-        PinnedRecordingCardProps,
-        PinnedRecordingCardState,
-        PinnedRecordingCard
-      >
-    | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders correctly", () => {
-    wrapper = mount<PinnedRecordingCard>(<PinnedRecordingCard {...props} />);
+    const wrapper = mount<PinnedRecordingCard>(
+      <PinnedRecordingCard {...props} />
+    );
     expect(wrapper).toMatchSnapshot();
   });
 
   describe("determineIfCurrentlyPinned", () => {
     it("returns true when pinned_until > now", async () => {
-      wrapper = mount<PinnedRecordingCard>(<PinnedRecordingCard {...props} />);
+      const wrapper = mount<PinnedRecordingCard>(
+        <PinnedRecordingCard {...props} />
+      );
       const instance = wrapper.instance();
 
       let isPlaying;
@@ -91,7 +76,7 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("returns false when pinned_until < now", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <PinnedRecordingCard
           {...{ ...props, pinnedRecording: expiredPinnedRecording }}
         />
@@ -107,7 +92,7 @@ describe("PinnedRecordingCard", () => {
 
   describe("handleError", () => {
     it("calls newAlert", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <PinnedRecordingCard {...{ ...props, newAlert: jest.fn() }} />
       );
       const instance = wrapper.instance();
@@ -125,7 +110,7 @@ describe("PinnedRecordingCard", () => {
 
   describe("unpinRecording", () => {
     it("calls API, updates currentlyPinned in state, and calls newAlert", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <PinnedRecordingCard {...{ ...props, newAlert: jest.fn() }} />
         </GlobalAppContext.Provider>
@@ -157,7 +142,7 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("does nothing if isCurrentUser is false", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <PinnedRecordingCard {...{ ...props, isCurrentUser: false }} />
         </GlobalAppContext.Provider>
@@ -179,7 +164,7 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
@@ -206,7 +191,7 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("doesn't update currentlyPinned in state if status code is not 200", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <PinnedRecordingCard {...{ ...props }} />
         </GlobalAppContext.Provider>
@@ -228,7 +213,7 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <PinnedRecordingCard {...{ ...props }} />
         </GlobalAppContext.Provider>
@@ -257,7 +242,7 @@ describe("PinnedRecordingCard", () => {
 
   describe("deletePin", () => {
     it("calls API and updates isDeleted and currentlyPinned in state", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <PinnedRecordingCard {...{ ...props }} />
         </GlobalAppContext.Provider>
@@ -291,7 +276,7 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("does nothing if isCurrentUser is false", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <PinnedRecordingCard {...{ ...props, isCurrentUser: false }} />
         </GlobalAppContext.Provider>
@@ -313,7 +298,7 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
@@ -340,7 +325,7 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("doesn't update currentlyPinned in state if status code is not 200", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <PinnedRecordingCard {...{ ...props }} />
         </GlobalAppContext.Provider>
@@ -362,7 +347,7 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      wrapper = mount<PinnedRecordingCard>(
+      const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
           <PinnedRecordingCard {...{ ...props }} />
         </GlobalAppContext.Provider>

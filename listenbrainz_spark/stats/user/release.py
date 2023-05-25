@@ -1,7 +1,9 @@
+from typing import List
+
 from listenbrainz_spark.stats import run_query
 
 
-def get_releases(table: str, cache_table: str, number_of_results: int):
+def get_releases(table: str, cache_tables: List[str], number_of_results: int):
     """
     Get release information (release_name, release_mbid etc) for every user
     ordered by listen count (number of times a user has listened to tracks
@@ -24,6 +26,7 @@ def get_releases(table: str, cache_table: str, number_of_results: int):
                     'user2' : [{...}],
                 }
     """
+    cache_table = cache_tables[0]
     result = run_query(f"""
         WITH gather_release_data AS (
             SELECT user_id

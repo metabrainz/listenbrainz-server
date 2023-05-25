@@ -581,28 +581,26 @@ export default class APIService {
 
   getFeedbackForUserForRecordings = async (
     userName: string,
-    recording_msids: string,
-    recording_mbids: string
+    recording_mbids: string[],
+    recording_msids?: string[]
   ) => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
-
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_msids=${recording_msids}&recording_mbids=${recording_mbids}`;
-    const response = await fetch(url);
-    await this.checkStatus(response);
-    return response.json();
-  };
-
-  getFeedbackForUserForMBIDs = async (
-    userName: string,
-    recording_mbids: string // Comma-separated list of MBIDs
-  ) => {
-    if (!userName) {
-      throw new SyntaxError("Username missing");
+    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings`;
+    const requestBody: FeedbackForUserForRecordingsRequestBody = {
+      recording_mbids,
+    };
+    if (recording_msids?.length) {
+      requestBody.recording_msids = recording_msids;
     }
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_mbids=${recording_mbids}`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(requestBody),
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -952,7 +950,7 @@ export default class APIService {
     return response.json();
   };
 
-  submitMbidMapping = async (
+  submitMBIDMapping = async (
     userToken: string,
     recordingMSID: string,
     recordingMBID: string
@@ -1045,21 +1043,29 @@ export default class APIService {
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"
-  ): Promise<any> => {
+  ): Promise<MusicBrainzRecording> => {
     const url = `${this.MBBaseURI}/recording/${recordingMBID}?fmt=json&inc=${inc}`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
   };
 
-  lookupMBRelease = async (releaseMBID: string): Promise<any> => {
+  lookupMBRelease = async (
+    releaseMBID: string
+  ): Promise<MusicBrainzReleaseWithReleaseGroup> => {
     const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
   };
 
-  lookupMBReleaseFromTrack = async (trackMBID: string): Promise<any> => {
+  lookupMBReleaseFromTrack = async (
+    trackMBID: string
+  ): Promise<{
+    "release-offset": number;
+    "release-count": number;
+    releases: MusicBrainzReleaseWithMedia[];
+  }> => {
     const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
@@ -1165,6 +1171,26 @@ export default class APIService {
     Object.keys(queryParams).map((key) =>
       url.searchParams.append(key, queryParams[key])
     );
+    if (metadata) {
+      url.searchParams.append("inc", "artist tag release");
+    }
+
+    const response = await fetch(url.toString());
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getRecordingMetadata = async (
+    recordingMBIDs: string[],
+    metadata: boolean = true
+  ): Promise<{ [mbid: string]: ListenMetadata } | null> => {
+    if (!recordingMBIDs?.length) {
+      return null;
+    }
+    const url = new URL(`${this.APIBaseURI}/metadata/recording/`);
+
+    url.searchParams.append("recording_mbids", recordingMBIDs.join(" "));
+
     if (metadata) {
       url.searchParams.append("inc", "artist tag release");
     }

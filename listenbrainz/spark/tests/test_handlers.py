@@ -1,10 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from unittest import mock
 from unittest.mock import call
 
-from flask import current_app
-
-from data.model.common_stat import StatRange, StatRecordList, StatApi
+from data.model.common_stat import StatRecordList, StatApi
 from data.model.user_artist_stat import ArtistRecord
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
                                                                   UserRecommendationsRecord)
@@ -394,8 +392,8 @@ class HandlersTestCase(DatabaseTestCase):
             mock_send_mail.assert_not_called()
 
             calls = [
-                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'type': 'top'}),
-                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'type': 'similar'}),
+                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'top'}),
+                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'similar'}),
             ]
             mock_gen_playlist.assert_has_calls(calls)
 

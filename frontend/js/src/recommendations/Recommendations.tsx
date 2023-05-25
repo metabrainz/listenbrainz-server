@@ -13,7 +13,7 @@ import {
 } from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../utils/APIService";
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
@@ -27,7 +27,6 @@ import {
 } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
-import SimpleModal from "../utils/SimpleModal";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -333,7 +332,6 @@ export default class Recommendations extends React.Component<
           </div>
           <BrainzPlayer
             listens={recommendations}
-            newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
@@ -363,20 +361,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const { recommendations, user } = reactProps;
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const RecommendationsWithAlertNotifications = withAlertNotifications(
     Recommendations
   );
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <RecommendationsWithAlertNotifications
             initialAlerts={optionalAlerts}

@@ -1,8 +1,9 @@
 import requests_mock
+import spotipy
 
 import listenbrainz.db.user as db_user
 import time
-import ujson
+import orjson
 
 from flask import url_for, g
 
@@ -129,7 +130,9 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertIsNone(self.service.get_user(self.user['id']))
 
     @patch('listenbrainz.domain.spotify.SpotifyService.fetch_access_token')
-    def test_spotify_callback(self, mock_fetch_access_token):
+    @patch.object(spotipy.Spotify, 'current_user')
+    def test_spotify_callback(self, mock_current_user, mock_fetch_access_token):
+        mock_current_user.return_value = {"id": "test-id"}
         mock_fetch_access_token.return_value = {
             'access_token': 'token',
             'refresh_token': 'refresh',
@@ -249,7 +252,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(r)
 
         # r.json returns None, so we decode the response manually.
-        results = ujson.loads(r.data.decode('utf-8'))
+        results = orjson.loads(r.data)
 
         self.assertDictEqual(results[0], {
             'inserted_at': 0,
@@ -316,7 +319,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(r)
 
         # r.json returns None, so we decode the response manually.
-        results = ujson.loads(r.data.decode('utf-8'))
+        results = orjson.loads(r.data)
 
         self.assertDictEqual(results[0], {
             'recording_mbid': None,

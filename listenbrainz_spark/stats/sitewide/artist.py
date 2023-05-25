@@ -1,7 +1,9 @@
+from typing import List
+
 from listenbrainz_spark.stats import run_query, SITEWIDE_STATS_ENTITY_LIMIT
 
 
-def get_artists(table: str, cache_table: str, user_listen_count_limit, top_artists_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
+def get_artists(table: str, cache_tables: List[str], user_listen_count_limit, top_artists_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
     """ Get artist information (artist_name etc) for every time range specified
         the "time_range" table ordered by listen count
 
@@ -12,6 +14,7 @@ def get_artists(table: str, cache_table: str, user_listen_count_limit, top_artis
         Returns:
             iterator (iter): An iterator over result
     """
+    cache_table = cache_tables[0]
     # we sort twice, the ORDER BY in CTE sorts to eliminate all
     # but top LIMIT results. collect_list's docs mention that the
     # order of collected results is not guaranteed so sort again

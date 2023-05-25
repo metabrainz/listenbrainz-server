@@ -39,21 +39,22 @@ exports[`ListenCard renders correctly 1`] = `
       <div
         className="main-content"
       >
-        <div
+        <a
           className="listen-thumbnail"
+          href="https://musicbrainz.org/release/foo/cover-art"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="Add cover art in MusicBrainz"
         >
-          <a
-            href="https://musicbrainz.org/release/foo/cover-art"
-            rel="noopener noreferrer"
-            target="_blank"
-            title="Add cover art in MusicBrainz"
+          <div
+            className="add-cover-art"
           >
             <img
               alt="Add cover art in MusicBrainz"
-              src="/static/img/cover-art-placeholder.jpg"
+              src="/static/img/add-cover-art.svg"
             />
-          </a>
-        </div>
+          </div>
+        </a>
         <div
           className="listen-details"
         >
@@ -116,144 +117,6 @@ exports[`ListenCard renders correctly 1`] = `
           <div
             className="listen-controls"
           >
-            <ListenFeedbackComponent
-              currentFeedback={1}
-              listen={
-                Object {
-                  "listened_at": 0,
-                  "playing_now": false,
-                  "track_metadata": Object {
-                    "additional_info": Object {
-                      "artist_mbids": Array [
-                        "xxxx",
-                      ],
-                      "duration_ms": 123000,
-                      "recording_mbid": "yyyy",
-                      "recording_msid": "bar",
-                      "release_mbid": "foo",
-                    },
-                    "artist_name": "Moondog",
-                    "track_name": "Bird's Lament",
-                  },
-                  "user_name": "test",
-                }
-              }
-              newAlert={[Function]}
-              updateFeedbackCallback={[Function]}
-            >
-              <FontAwesomeIcon
-                border={false}
-                className=" loved"
-                fixedWidth={false}
-                flip={null}
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f004",
-                      "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
-                    ],
-                    "iconName": "heart",
-                    "prefix": "fas",
-                  }
-                }
-                inverse={false}
-                listItem={false}
-                mask={null}
-                onClick={[Function]}
-                pull={null}
-                pulse={false}
-                rotation={null}
-                size={null}
-                spin={false}
-                swapOpacity={false}
-                symbol={false}
-                title="Love"
-                transform={null}
-              >
-                <svg
-                  aria-labelledby="svg-inline--fa-title-000000000000"
-                  className="svg-inline--fa fa-heart fa-w-16  loved"
-                  data-icon="heart"
-                  data-prefix="fas"
-                  onClick={[Function]}
-                  role="img"
-                  style={Object {}}
-                  viewBox="0 0 512 512"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title
-                    id="svg-inline--fa-title-000000000000"
-                    style={Object {}}
-                  >
-                    Love
-                  </title>
-                  <path
-                    d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
-                    fill="currentColor"
-                    style={Object {}}
-                  />
-                </svg>
-              </FontAwesomeIcon>
-              <FontAwesomeIcon
-                border={false}
-                className=""
-                fixedWidth={false}
-                flip={null}
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f7a9",
-                      "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
-                    ],
-                    "iconName": "heart-broken",
-                    "prefix": "fas",
-                  }
-                }
-                inverse={false}
-                listItem={false}
-                mask={null}
-                onClick={[Function]}
-                pull={null}
-                pulse={false}
-                rotation={null}
-                size={null}
-                spin={false}
-                swapOpacity={false}
-                symbol={false}
-                title="Hate"
-                transform={null}
-              >
-                <svg
-                  aria-labelledby="svg-inline--fa-title-000000000000"
-                  className="svg-inline--fa fa-heart-broken fa-w-16 "
-                  data-icon="heart-broken"
-                  data-prefix="fas"
-                  onClick={[Function]}
-                  role="img"
-                  style={Object {}}
-                  viewBox="0 0 512 512"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title
-                    id="svg-inline--fa-title-000000000000"
-                    style={Object {}}
-                  >
-                    Hate
-                  </title>
-                  <path
-                    d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
-                    fill="currentColor"
-                    style={Object {}}
-                  />
-                </svg>
-              </FontAwesomeIcon>
-            </ListenFeedbackComponent>
             <FontAwesomeIcon
               aria-expanded="true"
               aria-haspopup="true"
@@ -406,332 +269,7 @@ exports[`ListenCard renders correctly 1`] = `
               </ListenControl>
               <ListenControl
                 action={[Function]}
-                dataTarget="#PinRecordingModal"
-                dataToggle="modal"
-                icon={
-                  Object {
-                    "icon": Array [
-                      384,
-                      512,
-                      Array [],
-                      "f08d",
-                      "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
-                    ],
-                    "iconName": "thumbtack",
-                    "prefix": "fas",
-                  }
-                }
-                text="Pin this track"
-              >
-                <button
-                  aria-label="Pin this track"
-                  data-target="#PinRecordingModal"
-                  data-toggle="modal"
-                  disabled={false}
-                  onClick={[Function]}
-                  role="menuitem"
-                  title="Pin this track"
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    border={false}
-                    className=""
-                    fixedWidth={false}
-                    flip={null}
-                    icon={
-                      Object {
-                        "icon": Array [
-                          384,
-                          512,
-                          Array [],
-                          "f08d",
-                          "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
-                        ],
-                        "iconName": "thumbtack",
-                        "prefix": "fas",
-                      }
-                    }
-                    inverse={false}
-                    listItem={false}
-                    mask={null}
-                    pull={null}
-                    pulse={false}
-                    rotation={null}
-                    size={null}
-                    spin={false}
-                    swapOpacity={false}
-                    symbol={false}
-                    title=""
-                    transform={null}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="svg-inline--fa fa-thumbtack fa-w-12 "
-                      data-icon="thumbtack"
-                      data-prefix="fas"
-                      focusable="false"
-                      role="img"
-                      style={Object {}}
-                      viewBox="0 0 384 512"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z"
-                        fill="currentColor"
-                        style={Object {}}
-                      />
-                    </svg>
-                  </FontAwesomeIcon>
-                   
-                  Pin this track
-                </button>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f4ad",
-                      "M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32zM128 272c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z",
-                    ],
-                    "iconName": "comment-dots",
-                    "prefix": "fas",
-                  }
-                }
-                text="Recommend to my followers"
-                title="Recommend to my followers"
-              >
-                <button
-                  aria-label="Recommend to my followers"
-                  disabled={false}
-                  onClick={[Function]}
-                  role="menuitem"
-                  title="Recommend to my followers"
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    border={false}
-                    className=""
-                    fixedWidth={false}
-                    flip={null}
-                    icon={
-                      Object {
-                        "icon": Array [
-                          512,
-                          512,
-                          Array [],
-                          "f4ad",
-                          "M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32zM128 272c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z",
-                        ],
-                        "iconName": "comment-dots",
-                        "prefix": "fas",
-                      }
-                    }
-                    inverse={false}
-                    listItem={false}
-                    mask={null}
-                    pull={null}
-                    pulse={false}
-                    rotation={null}
-                    size={null}
-                    spin={false}
-                    swapOpacity={false}
-                    symbol={false}
-                    title=""
-                    transform={null}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="svg-inline--fa fa-comment-dots fa-w-16 "
-                      data-icon="comment-dots"
-                      data-prefix="fas"
-                      focusable="false"
-                      role="img"
-                      style={Object {}}
-                      viewBox="0 0 512 512"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32zM128 272c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z"
-                        fill="currentColor"
-                        style={Object {}}
-                      />
-                    </svg>
-                  </FontAwesomeIcon>
-                   
-                  Recommend to my followers
-                </button>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
-                dataTarget="#PersonalRecommendationModal"
-                dataToggle="modal"
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f1d8",
-                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
-                    ],
-                    "iconName": "paper-plane",
-                    "prefix": "fas",
-                  }
-                }
-                text="Personally recommend"
-              >
-                <button
-                  aria-label="Personally recommend"
-                  data-target="#PersonalRecommendationModal"
-                  data-toggle="modal"
-                  disabled={false}
-                  onClick={[Function]}
-                  role="menuitem"
-                  title="Personally recommend"
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    border={false}
-                    className=""
-                    fixedWidth={false}
-                    flip={null}
-                    icon={
-                      Object {
-                        "icon": Array [
-                          512,
-                          512,
-                          Array [],
-                          "f1d8",
-                          "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
-                        ],
-                        "iconName": "paper-plane",
-                        "prefix": "fas",
-                      }
-                    }
-                    inverse={false}
-                    listItem={false}
-                    mask={null}
-                    pull={null}
-                    pulse={false}
-                    rotation={null}
-                    size={null}
-                    spin={false}
-                    swapOpacity={false}
-                    symbol={false}
-                    title=""
-                    transform={null}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="svg-inline--fa fa-paper-plane fa-w-16 "
-                      data-icon="paper-plane"
-                      data-prefix="fas"
-                      focusable="false"
-                      role="img"
-                      style={Object {}}
-                      viewBox="0 0 512 512"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
-                        fill="currentColor"
-                        style={Object {}}
-                      />
-                    </svg>
-                  </FontAwesomeIcon>
-                   
-                  Personally recommend
-                </button>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
-                dataTarget="#CBReviewModal"
-                dataToggle="modal"
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f303",
-                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
-                    ],
-                    "iconName": "pencil-alt",
-                    "prefix": "fas",
-                  }
-                }
-                text="Write a review"
-              >
-                <button
-                  aria-label="Write a review"
-                  data-target="#CBReviewModal"
-                  data-toggle="modal"
-                  disabled={false}
-                  onClick={[Function]}
-                  role="menuitem"
-                  title="Write a review"
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    border={false}
-                    className=""
-                    fixedWidth={false}
-                    flip={null}
-                    icon={
-                      Object {
-                        "icon": Array [
-                          512,
-                          512,
-                          Array [],
-                          "f303",
-                          "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
-                        ],
-                        "iconName": "pencil-alt",
-                        "prefix": "fas",
-                      }
-                    }
-                    inverse={false}
-                    listItem={false}
-                    mask={null}
-                    pull={null}
-                    pulse={false}
-                    rotation={null}
-                    size={null}
-                    spin={false}
-                    swapOpacity={false}
-                    symbol={false}
-                    title=""
-                    transform={null}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="svg-inline--fa fa-pencil-alt fa-w-16 "
-                      data-icon="pencil-alt"
-                      data-prefix="fas"
-                      focusable="false"
-                      role="img"
-                      style={Object {}}
-                      viewBox="0 0 512 512"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
-                        fill="currentColor"
-                        style={Object {}}
-                      />
-                    </svg>
-                  </FontAwesomeIcon>
-                   
-                  Write a review
-                </button>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
-                dataTarget="#SimpleModal"
+                dataTarget="#ListenPayloadModal"
                 dataToggle="modal"
                 icon={
                   Object {
@@ -750,7 +288,7 @@ exports[`ListenCard renders correctly 1`] = `
               >
                 <button
                   aria-label="Inspect listen"
-                  data-target="#SimpleModal"
+                  data-target="#ListenPayloadModal"
                   data-toggle="modal"
                   disabled={false}
                   onClick={[Function]}
@@ -914,21 +452,22 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
       <div
         className="main-content"
       >
-        <div
+        <a
           className="listen-thumbnail"
+          href="https://musicbrainz.org/release/foo/cover-art"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="Add cover art in MusicBrainz"
         >
-          <a
-            href="https://musicbrainz.org/release/foo/cover-art"
-            rel="noopener noreferrer"
-            target="_blank"
-            title="Add cover art in MusicBrainz"
+          <div
+            className="add-cover-art"
           >
             <img
               alt="Add cover art in MusicBrainz"
-              src="/static/img/cover-art-placeholder.jpg"
+              src="/static/img/add-cover-art.svg"
             />
-          </a>
-        </div>
+          </div>
+        </a>
         <div
           className="listen-details"
         >
@@ -1659,7 +1198,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               </ListenControl>
               <ListenControl
                 action={[Function]}
-                dataTarget="#SimpleModal"
+                dataTarget="#ListenPayloadModal"
                 dataToggle="modal"
                 icon={
                   Object {
@@ -1678,7 +1217,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               >
                 <button
                   aria-label="Inspect listen"
-                  data-target="#SimpleModal"
+                  data-target="#ListenPayloadModal"
                   data-toggle="modal"
                   disabled={false}
                   onClick={[Function]}
@@ -1843,21 +1382,22 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
       <div
         className="main-content"
       >
-        <div
+        <a
           className="listen-thumbnail"
+          href="https://musicbrainz.org/release/foo/cover-art"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="Add cover art in MusicBrainz"
         >
-          <a
-            href="https://musicbrainz.org/release/foo/cover-art"
-            rel="noopener noreferrer"
-            target="_blank"
-            title="Add cover art in MusicBrainz"
+          <div
+            className="add-cover-art"
           >
             <img
               alt="Add cover art in MusicBrainz"
-              src="/static/img/cover-art-placeholder.jpg"
+              src="/static/img/add-cover-art.svg"
             />
-          </a>
-        </div>
+          </div>
+        </a>
         <div
           className="listen-details"
         >
@@ -1920,144 +1460,6 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
           <div
             className="listen-controls"
           >
-            <ListenFeedbackComponent
-              currentFeedback={1}
-              listen={
-                Object {
-                  "listened_at": 0,
-                  "playing_now": false,
-                  "track_metadata": Object {
-                    "additional_info": Object {
-                      "artist_mbids": Array [
-                        "xxxx",
-                      ],
-                      "duration_ms": 123000,
-                      "recording_mbid": "yyyy",
-                      "recording_msid": "bar",
-                      "release_mbid": "foo",
-                    },
-                    "artist_name": "Moondog",
-                    "track_name": "Bird's Lament",
-                  },
-                  "user_name": "test",
-                }
-              }
-              newAlert={[Function]}
-              updateFeedbackCallback={[Function]}
-            >
-              <FontAwesomeIcon
-                border={false}
-                className=" loved"
-                fixedWidth={false}
-                flip={null}
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f004",
-                      "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
-                    ],
-                    "iconName": "heart",
-                    "prefix": "fas",
-                  }
-                }
-                inverse={false}
-                listItem={false}
-                mask={null}
-                onClick={[Function]}
-                pull={null}
-                pulse={false}
-                rotation={null}
-                size={null}
-                spin={false}
-                swapOpacity={false}
-                symbol={false}
-                title="Love"
-                transform={null}
-              >
-                <svg
-                  aria-labelledby="svg-inline--fa-title-000000000000"
-                  className="svg-inline--fa fa-heart fa-w-16  loved"
-                  data-icon="heart"
-                  data-prefix="fas"
-                  onClick={[Function]}
-                  role="img"
-                  style={Object {}}
-                  viewBox="0 0 512 512"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title
-                    id="svg-inline--fa-title-000000000000"
-                    style={Object {}}
-                  >
-                    Love
-                  </title>
-                  <path
-                    d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
-                    fill="currentColor"
-                    style={Object {}}
-                  />
-                </svg>
-              </FontAwesomeIcon>
-              <FontAwesomeIcon
-                border={false}
-                className=""
-                fixedWidth={false}
-                flip={null}
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f7a9",
-                      "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
-                    ],
-                    "iconName": "heart-broken",
-                    "prefix": "fas",
-                  }
-                }
-                inverse={false}
-                listItem={false}
-                mask={null}
-                onClick={[Function]}
-                pull={null}
-                pulse={false}
-                rotation={null}
-                size={null}
-                spin={false}
-                swapOpacity={false}
-                symbol={false}
-                title="Hate"
-                transform={null}
-              >
-                <svg
-                  aria-labelledby="svg-inline--fa-title-000000000000"
-                  className="svg-inline--fa fa-heart-broken fa-w-16 "
-                  data-icon="heart-broken"
-                  data-prefix="fas"
-                  onClick={[Function]}
-                  role="img"
-                  style={Object {}}
-                  viewBox="0 0 512 512"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title
-                    id="svg-inline--fa-title-000000000000"
-                    style={Object {}}
-                  >
-                    Hate
-                  </title>
-                  <path
-                    d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
-                    fill="currentColor"
-                    style={Object {}}
-                  />
-                </svg>
-              </FontAwesomeIcon>
-            </ListenFeedbackComponent>
             <FontAwesomeIcon
               aria-expanded="true"
               aria-haspopup="true"
@@ -2210,332 +1612,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               </ListenControl>
               <ListenControl
                 action={[Function]}
-                dataTarget="#PinRecordingModal"
-                dataToggle="modal"
-                icon={
-                  Object {
-                    "icon": Array [
-                      384,
-                      512,
-                      Array [],
-                      "f08d",
-                      "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
-                    ],
-                    "iconName": "thumbtack",
-                    "prefix": "fas",
-                  }
-                }
-                text="Pin this track"
-              >
-                <button
-                  aria-label="Pin this track"
-                  data-target="#PinRecordingModal"
-                  data-toggle="modal"
-                  disabled={false}
-                  onClick={[Function]}
-                  role="menuitem"
-                  title="Pin this track"
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    border={false}
-                    className=""
-                    fixedWidth={false}
-                    flip={null}
-                    icon={
-                      Object {
-                        "icon": Array [
-                          384,
-                          512,
-                          Array [],
-                          "f08d",
-                          "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
-                        ],
-                        "iconName": "thumbtack",
-                        "prefix": "fas",
-                      }
-                    }
-                    inverse={false}
-                    listItem={false}
-                    mask={null}
-                    pull={null}
-                    pulse={false}
-                    rotation={null}
-                    size={null}
-                    spin={false}
-                    swapOpacity={false}
-                    symbol={false}
-                    title=""
-                    transform={null}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="svg-inline--fa fa-thumbtack fa-w-12 "
-                      data-icon="thumbtack"
-                      data-prefix="fas"
-                      focusable="false"
-                      role="img"
-                      style={Object {}}
-                      viewBox="0 0 384 512"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z"
-                        fill="currentColor"
-                        style={Object {}}
-                      />
-                    </svg>
-                  </FontAwesomeIcon>
-                   
-                  Pin this track
-                </button>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f4ad",
-                      "M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32zM128 272c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z",
-                    ],
-                    "iconName": "comment-dots",
-                    "prefix": "fas",
-                  }
-                }
-                text="Recommend to my followers"
-                title="Recommend to my followers"
-              >
-                <button
-                  aria-label="Recommend to my followers"
-                  disabled={false}
-                  onClick={[Function]}
-                  role="menuitem"
-                  title="Recommend to my followers"
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    border={false}
-                    className=""
-                    fixedWidth={false}
-                    flip={null}
-                    icon={
-                      Object {
-                        "icon": Array [
-                          512,
-                          512,
-                          Array [],
-                          "f4ad",
-                          "M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32zM128 272c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z",
-                        ],
-                        "iconName": "comment-dots",
-                        "prefix": "fas",
-                      }
-                    }
-                    inverse={false}
-                    listItem={false}
-                    mask={null}
-                    pull={null}
-                    pulse={false}
-                    rotation={null}
-                    size={null}
-                    spin={false}
-                    swapOpacity={false}
-                    symbol={false}
-                    title=""
-                    transform={null}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="svg-inline--fa fa-comment-dots fa-w-16 "
-                      data-icon="comment-dots"
-                      data-prefix="fas"
-                      focusable="false"
-                      role="img"
-                      style={Object {}}
-                      viewBox="0 0 512 512"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32zM128 272c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z"
-                        fill="currentColor"
-                        style={Object {}}
-                      />
-                    </svg>
-                  </FontAwesomeIcon>
-                   
-                  Recommend to my followers
-                </button>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
-                dataTarget="#PersonalRecommendationModal"
-                dataToggle="modal"
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f1d8",
-                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
-                    ],
-                    "iconName": "paper-plane",
-                    "prefix": "fas",
-                  }
-                }
-                text="Personally recommend"
-              >
-                <button
-                  aria-label="Personally recommend"
-                  data-target="#PersonalRecommendationModal"
-                  data-toggle="modal"
-                  disabled={false}
-                  onClick={[Function]}
-                  role="menuitem"
-                  title="Personally recommend"
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    border={false}
-                    className=""
-                    fixedWidth={false}
-                    flip={null}
-                    icon={
-                      Object {
-                        "icon": Array [
-                          512,
-                          512,
-                          Array [],
-                          "f1d8",
-                          "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
-                        ],
-                        "iconName": "paper-plane",
-                        "prefix": "fas",
-                      }
-                    }
-                    inverse={false}
-                    listItem={false}
-                    mask={null}
-                    pull={null}
-                    pulse={false}
-                    rotation={null}
-                    size={null}
-                    spin={false}
-                    swapOpacity={false}
-                    symbol={false}
-                    title=""
-                    transform={null}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="svg-inline--fa fa-paper-plane fa-w-16 "
-                      data-icon="paper-plane"
-                      data-prefix="fas"
-                      focusable="false"
-                      role="img"
-                      style={Object {}}
-                      viewBox="0 0 512 512"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
-                        fill="currentColor"
-                        style={Object {}}
-                      />
-                    </svg>
-                  </FontAwesomeIcon>
-                   
-                  Personally recommend
-                </button>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
-                dataTarget="#CBReviewModal"
-                dataToggle="modal"
-                icon={
-                  Object {
-                    "icon": Array [
-                      512,
-                      512,
-                      Array [],
-                      "f303",
-                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
-                    ],
-                    "iconName": "pencil-alt",
-                    "prefix": "fas",
-                  }
-                }
-                text="Write a review"
-              >
-                <button
-                  aria-label="Write a review"
-                  data-target="#CBReviewModal"
-                  data-toggle="modal"
-                  disabled={false}
-                  onClick={[Function]}
-                  role="menuitem"
-                  title="Write a review"
-                  type="button"
-                >
-                  <FontAwesomeIcon
-                    border={false}
-                    className=""
-                    fixedWidth={false}
-                    flip={null}
-                    icon={
-                      Object {
-                        "icon": Array [
-                          512,
-                          512,
-                          Array [],
-                          "f303",
-                          "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
-                        ],
-                        "iconName": "pencil-alt",
-                        "prefix": "fas",
-                      }
-                    }
-                    inverse={false}
-                    listItem={false}
-                    mask={null}
-                    pull={null}
-                    pulse={false}
-                    rotation={null}
-                    size={null}
-                    spin={false}
-                    swapOpacity={false}
-                    symbol={false}
-                    title=""
-                    transform={null}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      className="svg-inline--fa fa-pencil-alt fa-w-16 "
-                      data-icon="pencil-alt"
-                      data-prefix="fas"
-                      focusable="false"
-                      role="img"
-                      style={Object {}}
-                      viewBox="0 0 512 512"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
-                        fill="currentColor"
-                        style={Object {}}
-                      />
-                    </svg>
-                  </FontAwesomeIcon>
-                   
-                  Write a review
-                </button>
-              </ListenControl>
-              <ListenControl
-                action={[Function]}
-                dataTarget="#SimpleModal"
+                dataTarget="#ListenPayloadModal"
                 dataToggle="modal"
                 icon={
                   Object {
@@ -2554,7 +1631,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               >
                 <button
                   aria-label="Inspect listen"
-                  data-target="#SimpleModal"
+                  data-target="#ListenPayloadModal"
                   data-toggle="modal"
                   disabled={false}
                   onClick={[Function]}

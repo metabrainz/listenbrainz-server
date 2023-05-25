@@ -49,19 +49,6 @@ const globalContext: GlobalAppContextT = {
 };
 
 describe("UserPageHeading", () => {
-  let wrapper: ReactWrapper<any, any, any> | undefined;
-  beforeEach(() => {
-    wrapper = undefined;
-  });
-  afterEach(() => {
-    if (wrapper) {
-      /* Unmount the wrapper at the end of each test, otherwise react-dom throws errors
-        related to async lifecycle methods run against a missing dom 'document'.
-        See https://github.com/facebook/react/issues/15691
-      */
-      wrapper.unmount();
-    }
-  });
   it("renders the name of the user", () => {
     const shallowWrapper = shallow(
       <UserPageHeading
@@ -133,7 +120,7 @@ describe("UserPageHeading", () => {
     });
 
     it("renders the ReportUserButton and ReportUserModal components with the correct props inside the UserPageHeading", () => {
-      wrapper = mount(
+      const wrapper = mount(
         <UserPageHeading
           user={user}
           loggedInUser={loggedInUser}
@@ -155,7 +142,7 @@ describe("UserPageHeading", () => {
     });
 
     it("allows to report a user using the ReportUserModal", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
           <ReportUserButton user={user} alreadyReported={false} />
         </GlobalAppContext.Provider>
@@ -203,7 +190,7 @@ describe("UserPageHeading", () => {
     });
 
     it("displays a user firendly message in the button text in case of error", async () => {
-      wrapper = mount(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
           <ReportUserButton user={user} alreadyReported={false} />
         </GlobalAppContext.Provider>

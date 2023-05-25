@@ -3,7 +3,7 @@ MAILTO=""
 # NOTE: This file is organized in chronological order of the start hour of each job, keeping jobs spread over the night and not overlapping.
 
 # Delete pending listens and update our listen counts, timestamps hourly
-0 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py delete_listens_and_update_metadata >> /logs/listen_metadata.log 2>&1
+0 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py delete_listens >> /logs/listen_metadata.log 2>&1
 
 # Generating troi daily playlists runs hourly
 0 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py run-daily-jams >> /logs/troi.log 2>&1
@@ -52,3 +52,6 @@ MAILTO=""
 
 # run weekly cron job to remove expired do not recommends
 0 8 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py clear-expired-do-not-recommends >> /logs/do_not_recommend.log 2>&1
+
+# run weekly cron job to update similarity datasets
+0 9 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similarity_datasets >> /logs/similarity_datasets.log 2>&1

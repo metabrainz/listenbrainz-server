@@ -309,7 +309,6 @@ class BulkInsertTable:
             their process_row function called, this function takes its place for saving
             resultant rows in the table.
         """
-
         self.insert_rows.extend(rows)
         if len(self.insert_rows) >= self.batch_size:
             self._flush_insert_rows()

@@ -1,9 +1,10 @@
 import json
 import logging
 import time
+from datetime import datetime
 from unittest import mock
 
-import ujson
+import orjson
 from flask import url_for
 from sqlalchemy import text
 
@@ -11,6 +12,7 @@ import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth as db_oauth, timescale
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
+from listenbrainz.listenstore.timescale_listenstore import EPOCH
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.login import User
@@ -107,14 +109,14 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access(self):
@@ -128,7 +130,7 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
 
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
@@ -136,7 +138,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable("global_props"))
+        props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
             'access_token': 'token',
             'permission': ['user-read-recently-played', 'streaming'],
@@ -147,14 +149,14 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        props = ujson.loads(self.get_context_variable('props'))
+        props = orjson.loads(self.get_context_variable('props'))
         self.assertIsNone(props['logged_in_user_follows_user'])
 
         self.temporary_login(self.user.login_id)
         mock_is_following_user.return_value = False
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        props = ujson.loads(self.get_context_variable('props'))
+        props = orjson.loads(self.get_context_variable('props'))
         self.assertFalse(props['logged_in_user_follows_user'])
 
     def _create_test_data(self, user_name):
@@ -185,30 +187,29 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
         user = self.user.to_dict()
-        timescale.return_value = ([], 0, 0)
+        timescale.return_value = ([], EPOCH, EPOCH)
 
-        # If no parameter is given, use current time as the to_ts
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call(user, limit=25, from_ts=None)
+        req_call = mock.call(user, limit=25)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # max_ts query param -> to_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'max_ts': 1520946000})
-        req_call = mock.call(user, limit=25, to_ts=1520946000)
+        req_call = mock.call(user, limit=25, to_ts=datetime.utcfromtimestamp(1520946000))
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # min_ts query param -> from_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'min_ts': 1520941000})
-        req_call = mock.call(user, limit=25, from_ts=1520941000)
+        req_call = mock.call(user, limit=25, from_ts=datetime.utcfromtimestamp(1520941000))
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # If max_ts and min_ts set, only max_ts is used
         self.client.get(url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
-        req_call = mock.call(user, limit=25, to_ts=1520946000)
+        req_call = mock.call(user, limit=25, to_ts=datetime.utcfromtimestamp(1520946000))
         timescale.assert_has_calls([req_call])
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
@@ -306,7 +307,9 @@ class UserViewsTestCase(IntegrationTestCase):
             "artist_name": "Danny Elfman",
             "release_name": "Danny Elfman & Tim Burton 25th Anniversary Music Box",
             "additional_info": {
-                "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",
+                "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da"
+            },
+            "mbid_mapping": {
                 "recording_mbid": "1fe669c9-5a2b-4dcb-9e95-77480d1e732e",
                 "release_mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6",
                 "artist_mbids": ["5b24fbab-c58f-4c37-a59d-ab232e2d98c4"],

@@ -313,18 +313,126 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for all_time 1`]
       <Loader
         isLoading={false}
       >
-        <div
-          className="row"
+        <BarDualTone
+          data={
+            Array [
+              Object {
+                "id": "2002",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1009843200,
+              },
+              Object {
+                "id": "2003",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1041379200,
+              },
+              Object {
+                "id": "2004",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1072915200,
+              },
+              Object {
+                "id": "2005",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1104537600,
+              },
+              Object {
+                "id": "2006",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1136073600,
+              },
+              Object {
+                "id": "2007",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1167609600,
+              },
+              Object {
+                "id": "2008",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1199145600,
+              },
+              Object {
+                "id": "2009",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1230768000,
+              },
+              Object {
+                "id": "2010",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1262304000,
+              },
+              Object {
+                "id": "2011",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1293840000,
+              },
+              Object {
+                "id": "2012",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1325376000,
+              },
+              Object {
+                "id": "2013",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1356998400,
+              },
+              Object {
+                "id": "2014",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1388534400,
+              },
+              Object {
+                "id": "2015",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1420070400,
+              },
+              Object {
+                "id": "2016",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1451606400,
+              },
+              Object {
+                "id": "2017",
+                "thisRangeCount": 96,
+                "thisRangeTs": 1483228800,
+              },
+              Object {
+                "id": "2018",
+                "thisRangeCount": 169,
+                "thisRangeTs": 1514764800,
+              },
+              Object {
+                "id": "2019",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1546300800,
+              },
+              Object {
+                "id": "2020",
+                "thisRangeCount": 3580,
+                "thisRangeTs": 1577836800,
+              },
+            ]
+          }
+          lastRangePeriod={Object {}}
+          range="all_time"
+          showLegend={false}
+          thisRangePeriod={Object {}}
         >
           <div
-            className="col-xs-12"
-            style={
-              Object {
-                "height": 350,
-              }
-            }
+            className="stats-full-width-graph user-listening-activity"
           >
-            <BarDualTone
+            <Component
+              axisBottom={
+                Object {
+                  "format": undefined,
+                }
+              }
+              axisLeft={
+                Object {
+                  "format": ".2~s",
+                }
+              }
+              colors={[Function]}
               data={
                 Array [
                   Object {
@@ -424,168 +532,51 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for all_time 1`]
                   },
                 ]
               }
-              lastRangePeriod={Object {}}
-              range="all_time"
-              showLegend={false}
-              thisRangePeriod={Object {}}
+              enableGridY={false}
+              enableLabel={false}
+              groupMode="grouped"
+              indexBy="id"
+              innerPadding={2}
+              keys={
+                Array [
+                  "thisRangeCount",
+                ]
+              }
+              layers={
+                Array [
+                  "grid",
+                  "axes",
+                  "bars",
+                  "markers",
+                  "annotations",
+                  "legends",
+                ]
+              }
+              legends={Array []}
+              margin={
+                Object {
+                  "bottom": 40,
+                  "left": 45,
+                  "top": 20,
+                }
+              }
+              minValue={0}
+              padding={0.3}
+              tooltip={[Function]}
             >
-              <Component
-                axisBottom={
-                  Object {
-                    "format": undefined,
-                  }
-                }
-                axisLeft={
-                  Object {
-                    "format": ".2~s",
-                  }
-                }
-                colors={[Function]}
-                data={
-                  Array [
+              <Ee>
+                <div
+                  style={
                     Object {
-                      "id": "2002",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1009843200,
-                    },
-                    Object {
-                      "id": "2003",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1041379200,
-                    },
-                    Object {
-                      "id": "2004",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1072915200,
-                    },
-                    Object {
-                      "id": "2005",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1104537600,
-                    },
-                    Object {
-                      "id": "2006",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1136073600,
-                    },
-                    Object {
-                      "id": "2007",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1167609600,
-                    },
-                    Object {
-                      "id": "2008",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1199145600,
-                    },
-                    Object {
-                      "id": "2009",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1230768000,
-                    },
-                    Object {
-                      "id": "2010",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1262304000,
-                    },
-                    Object {
-                      "id": "2011",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1293840000,
-                    },
-                    Object {
-                      "id": "2012",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1325376000,
-                    },
-                    Object {
-                      "id": "2013",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1356998400,
-                    },
-                    Object {
-                      "id": "2014",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1388534400,
-                    },
-                    Object {
-                      "id": "2015",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1420070400,
-                    },
-                    Object {
-                      "id": "2016",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1451606400,
-                    },
-                    Object {
-                      "id": "2017",
-                      "thisRangeCount": 96,
-                      "thisRangeTs": 1483228800,
-                    },
-                    Object {
-                      "id": "2018",
-                      "thisRangeCount": 169,
-                      "thisRangeTs": 1514764800,
-                    },
-                    Object {
-                      "id": "2019",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1546300800,
-                    },
-                    Object {
-                      "id": "2020",
-                      "thisRangeCount": 3580,
-                      "thisRangeTs": 1577836800,
-                    },
-                  ]
-                }
-                enableGridY={false}
-                enableLabel={false}
-                groupMode="grouped"
-                indexBy="id"
-                innerPadding={2}
-                keys={
-                  Array [
-                    "thisRangeCount",
-                  ]
-                }
-                layers={
-                  Array [
-                    "grid",
-                    "axes",
-                    "bars",
-                    "markers",
-                    "annotations",
-                    "legends",
-                  ]
-                }
-                legends={Array []}
-                margin={
-                  Object {
-                    "bottom": 40,
-                    "left": 45,
-                    "top": 20,
-                  }
-                }
-                minValue={0}
-                padding={0.3}
-                tooltip={[Function]}
-              >
-                <Ee>
-                  <div
-                    style={
-                      Object {
-                        "height": "100%",
-                        "width": "100%",
-                      }
+                      "height": "100%",
+                      "width": "100%",
                     }
-                  />
-                </Ee>
-              </Component>
-            </BarDualTone>
+                  }
+                />
+              </Ee>
+            </Component>
           </div>
-        </div>
+        </BarDualTone>
         <div
           className="row mt-5 mb-15"
         >
@@ -721,18 +712,230 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for month 1`] = 
       <Loader
         isLoading={false}
       >
-        <div
-          className="row"
+        <BarDualTone
+          data={
+            Array [
+              Object {
+                "id": "01",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1588291200,
+                "thisRangeCount": 22,
+                "thisRangeTs": 1590969600,
+              },
+              Object {
+                "id": "02",
+                "lastRangeCount": 17,
+                "lastRangeTs": 1588377600,
+                "thisRangeCount": 10,
+                "thisRangeTs": 1591056000,
+              },
+              Object {
+                "id": "03",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1588464000,
+                "thisRangeCount": 18,
+                "thisRangeTs": 1591142400,
+              },
+              Object {
+                "id": "04",
+                "lastRangeCount": 32,
+                "lastRangeTs": 1588550400,
+                "thisRangeCount": 35,
+                "thisRangeTs": 1591228800,
+              },
+              Object {
+                "id": "05",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1588636800,
+                "thisRangeCount": 30,
+                "thisRangeTs": 1591315200,
+              },
+              Object {
+                "id": "06",
+                "lastRangeCount": 28,
+                "lastRangeTs": 1588723200,
+                "thisRangeCount": 3,
+                "thisRangeTs": 1591401600,
+              },
+              Object {
+                "id": "07",
+                "lastRangeCount": 21,
+                "lastRangeTs": 1588809600,
+                "thisRangeCount": 0,
+                "thisRangeTs": 1591488000,
+              },
+              Object {
+                "id": "08",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1588896000,
+                "thisRangeCount": 36,
+                "thisRangeTs": 1591574400,
+              },
+              Object {
+                "id": "09",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1588982400,
+                "thisRangeCount": 13,
+                "thisRangeTs": 1591660800,
+              },
+              Object {
+                "id": "10",
+                "lastRangeCount": 4,
+                "lastRangeTs": 1589068800,
+                "thisRangeCount": 8,
+                "thisRangeTs": 1591747200,
+              },
+              Object {
+                "id": "11",
+                "lastRangeCount": 28,
+                "lastRangeTs": 1589155200,
+                "thisRangeCount": 37,
+                "thisRangeTs": 1591833600,
+              },
+              Object {
+                "id": "12",
+                "lastRangeCount": 21,
+                "lastRangeTs": 1589241600,
+                "thisRangeCount": 17,
+                "thisRangeTs": 1591920000,
+              },
+              Object {
+                "id": "13",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1589328000,
+                "thisRangeCount": 22,
+                "thisRangeTs": 1592006400,
+              },
+              Object {
+                "id": "14",
+                "lastRangeCount": 15,
+                "lastRangeTs": 1589414400,
+                "thisRangeCount": 8,
+                "thisRangeTs": 1592092800,
+              },
+              Object {
+                "id": "15",
+                "lastRangeCount": 31,
+                "lastRangeTs": 1589500800,
+                "thisRangeCount": 66,
+                "thisRangeTs": 1592179200,
+              },
+              Object {
+                "id": "16",
+                "lastRangeCount": 8,
+                "lastRangeTs": 1589587200,
+                "thisRangeCount": 34,
+                "thisRangeTs": 1592265600,
+              },
+              Object {
+                "id": "17",
+                "lastRangeCount": 5,
+                "lastRangeTs": 1589673600,
+                "thisRangeCount": 0,
+                "thisRangeTs": 1592352000,
+              },
+              Object {
+                "id": "18",
+                "lastRangeCount": 37,
+                "lastRangeTs": 1589760000,
+                "thisRangeCount": 0,
+                "thisRangeTs": 1592438400,
+              },
+              Object {
+                "id": "19",
+                "lastRangeCount": 50,
+                "lastRangeTs": 1589846400,
+              },
+              Object {
+                "id": "20",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1589932800,
+              },
+              Object {
+                "id": "21",
+                "lastRangeCount": 34,
+                "lastRangeTs": 1590019200,
+              },
+              Object {
+                "id": "22",
+                "lastRangeCount": 36,
+                "lastRangeTs": 1590105600,
+              },
+              Object {
+                "id": "23",
+                "lastRangeCount": 14,
+                "lastRangeTs": 1590192000,
+              },
+              Object {
+                "id": "24",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1590278400,
+              },
+              Object {
+                "id": "25",
+                "lastRangeCount": 5,
+                "lastRangeTs": 1590364800,
+              },
+              Object {
+                "id": "26",
+                "lastRangeCount": 25,
+                "lastRangeTs": 1590451200,
+              },
+              Object {
+                "id": "27",
+                "lastRangeCount": 53,
+                "lastRangeTs": 1590537600,
+              },
+              Object {
+                "id": "28",
+                "lastRangeCount": 21,
+                "lastRangeTs": 1590624000,
+              },
+              Object {
+                "id": "29",
+                "lastRangeCount": 8,
+                "lastRangeTs": 1590710400,
+              },
+              Object {
+                "id": "30",
+                "lastRangeCount": 11,
+                "lastRangeTs": 1590796800,
+              },
+              Object {
+                "id": "31",
+                "lastRangeCount": 11,
+                "lastRangeTs": 1590883200,
+              },
+            ]
+          }
+          lastRangePeriod={
+            Object {
+              "start": 1588291200,
+            }
+          }
+          range="month"
+          showLegend={true}
+          thisRangePeriod={
+            Object {
+              "start": 1590969600,
+            }
+          }
         >
           <div
-            className="col-xs-12"
-            style={
-              Object {
-                "height": 350,
-              }
-            }
+            className="stats-full-width-graph user-listening-activity"
           >
-            <BarDualTone
+            <Component
+              axisBottom={
+                Object {
+                  "format": undefined,
+                }
+              }
+              axisLeft={
+                Object {
+                  "format": ".2~s",
+                }
+              }
+              colors={[Function]}
               data={
                 Array [
                   Object {
@@ -928,297 +1131,76 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for month 1`] = 
                   },
                 ]
               }
-              lastRangePeriod={
-                Object {
-                  "start": 1588291200,
-                }
+              enableGridY={false}
+              enableLabel={false}
+              groupMode="grouped"
+              indexBy="id"
+              innerPadding={2}
+              keys={
+                Array [
+                  "lastRangeCount",
+                  "thisRangeCount",
+                ]
               }
-              range="month"
-              showLegend={true}
-              thisRangePeriod={
-                Object {
-                  "start": 1590969600,
-                }
+              layers={
+                Array [
+                  "grid",
+                  "axes",
+                  "bars",
+                  "markers",
+                  "annotations",
+                  "legends",
+                ]
               }
-            >
-              <Component
-                axisBottom={
+              legends={
+                Array [
                   Object {
-                    "format": undefined,
-                  }
-                }
-                axisLeft={
-                  Object {
-                    "format": ".2~s",
-                  }
-                }
-                colors={[Function]}
-                data={
-                  Array [
-                    Object {
-                      "id": "01",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1588291200,
-                      "thisRangeCount": 22,
-                      "thisRangeTs": 1590969600,
-                    },
-                    Object {
-                      "id": "02",
-                      "lastRangeCount": 17,
-                      "lastRangeTs": 1588377600,
-                      "thisRangeCount": 10,
-                      "thisRangeTs": 1591056000,
-                    },
-                    Object {
-                      "id": "03",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1588464000,
-                      "thisRangeCount": 18,
-                      "thisRangeTs": 1591142400,
-                    },
-                    Object {
-                      "id": "04",
-                      "lastRangeCount": 32,
-                      "lastRangeTs": 1588550400,
-                      "thisRangeCount": 35,
-                      "thisRangeTs": 1591228800,
-                    },
-                    Object {
-                      "id": "05",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1588636800,
-                      "thisRangeCount": 30,
-                      "thisRangeTs": 1591315200,
-                    },
-                    Object {
-                      "id": "06",
-                      "lastRangeCount": 28,
-                      "lastRangeTs": 1588723200,
-                      "thisRangeCount": 3,
-                      "thisRangeTs": 1591401600,
-                    },
-                    Object {
-                      "id": "07",
-                      "lastRangeCount": 21,
-                      "lastRangeTs": 1588809600,
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1591488000,
-                    },
-                    Object {
-                      "id": "08",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1588896000,
-                      "thisRangeCount": 36,
-                      "thisRangeTs": 1591574400,
-                    },
-                    Object {
-                      "id": "09",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1588982400,
-                      "thisRangeCount": 13,
-                      "thisRangeTs": 1591660800,
-                    },
-                    Object {
-                      "id": "10",
-                      "lastRangeCount": 4,
-                      "lastRangeTs": 1589068800,
-                      "thisRangeCount": 8,
-                      "thisRangeTs": 1591747200,
-                    },
-                    Object {
-                      "id": "11",
-                      "lastRangeCount": 28,
-                      "lastRangeTs": 1589155200,
-                      "thisRangeCount": 37,
-                      "thisRangeTs": 1591833600,
-                    },
-                    Object {
-                      "id": "12",
-                      "lastRangeCount": 21,
-                      "lastRangeTs": 1589241600,
-                      "thisRangeCount": 17,
-                      "thisRangeTs": 1591920000,
-                    },
-                    Object {
-                      "id": "13",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1589328000,
-                      "thisRangeCount": 22,
-                      "thisRangeTs": 1592006400,
-                    },
-                    Object {
-                      "id": "14",
-                      "lastRangeCount": 15,
-                      "lastRangeTs": 1589414400,
-                      "thisRangeCount": 8,
-                      "thisRangeTs": 1592092800,
-                    },
-                    Object {
-                      "id": "15",
-                      "lastRangeCount": 31,
-                      "lastRangeTs": 1589500800,
-                      "thisRangeCount": 66,
-                      "thisRangeTs": 1592179200,
-                    },
-                    Object {
-                      "id": "16",
-                      "lastRangeCount": 8,
-                      "lastRangeTs": 1589587200,
-                      "thisRangeCount": 34,
-                      "thisRangeTs": 1592265600,
-                    },
-                    Object {
-                      "id": "17",
-                      "lastRangeCount": 5,
-                      "lastRangeTs": 1589673600,
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1592352000,
-                    },
-                    Object {
-                      "id": "18",
-                      "lastRangeCount": 37,
-                      "lastRangeTs": 1589760000,
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1592438400,
-                    },
-                    Object {
-                      "id": "19",
-                      "lastRangeCount": 50,
-                      "lastRangeTs": 1589846400,
-                    },
-                    Object {
-                      "id": "20",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1589932800,
-                    },
-                    Object {
-                      "id": "21",
-                      "lastRangeCount": 34,
-                      "lastRangeTs": 1590019200,
-                    },
-                    Object {
-                      "id": "22",
-                      "lastRangeCount": 36,
-                      "lastRangeTs": 1590105600,
-                    },
-                    Object {
-                      "id": "23",
-                      "lastRangeCount": 14,
-                      "lastRangeTs": 1590192000,
-                    },
-                    Object {
-                      "id": "24",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1590278400,
-                    },
-                    Object {
-                      "id": "25",
-                      "lastRangeCount": 5,
-                      "lastRangeTs": 1590364800,
-                    },
-                    Object {
-                      "id": "26",
-                      "lastRangeCount": 25,
-                      "lastRangeTs": 1590451200,
-                    },
-                    Object {
-                      "id": "27",
-                      "lastRangeCount": 53,
-                      "lastRangeTs": 1590537600,
-                    },
-                    Object {
-                      "id": "28",
-                      "lastRangeCount": 21,
-                      "lastRangeTs": 1590624000,
-                    },
-                    Object {
-                      "id": "29",
-                      "lastRangeCount": 8,
-                      "lastRangeTs": 1590710400,
-                    },
-                    Object {
-                      "id": "30",
-                      "lastRangeCount": 11,
-                      "lastRangeTs": 1590796800,
-                    },
-                    Object {
-                      "id": "31",
-                      "lastRangeCount": 11,
-                      "lastRangeTs": 1590883200,
-                    },
-                  ]
-                }
-                enableGridY={false}
-                enableLabel={false}
-                groupMode="grouped"
-                indexBy="id"
-                innerPadding={2}
-                keys={
-                  Array [
-                    "lastRangeCount",
-                    "thisRangeCount",
-                  ]
-                }
-                layers={
-                  Array [
-                    "grid",
-                    "axes",
-                    "bars",
-                    "markers",
-                    "annotations",
-                    "legends",
-                  ]
-                }
-                legends={
-                  Array [
-                    Object {
-                      "anchor": "top-right",
-                      "data": Array [
-                        Object {
-                          "color": "#353070",
-                          "id": "lastRangeName",
-                          "label": "May 2020",
-                        },
-                        Object {
-                          "color": "#eb743b",
-                          "id": "thisRangeName",
-                          "label": "June 2020",
-                        },
-                      ],
-                      "dataFrom": "keys",
-                      "direction": "row",
-                      "itemHeight": 20,
-                      "itemWidth": 100,
-                      "symbolSize": 10,
-                      "translateY": -20,
-                    },
-                  ]
-                }
-                margin={
-                  Object {
-                    "bottom": 40,
-                    "left": 45,
-                    "top": 30,
-                  }
-                }
-                minValue={0}
-                padding={0.3}
-                tooltip={[Function]}
-              >
-                <Ee>
-                  <div
-                    style={
+                    "anchor": "top-right",
+                    "data": Array [
                       Object {
-                        "height": "100%",
-                        "width": "100%",
-                      }
+                        "color": "#353070",
+                        "id": "lastRangeName",
+                        "label": "May 2020",
+                      },
+                      Object {
+                        "color": "#eb743b",
+                        "id": "thisRangeName",
+                        "label": "June 2020",
+                      },
+                    ],
+                    "dataFrom": "keys",
+                    "direction": "row",
+                    "itemHeight": 20,
+                    "itemWidth": 100,
+                    "symbolSize": 10,
+                    "translateY": -20,
+                  },
+                ]
+              }
+              margin={
+                Object {
+                  "bottom": 40,
+                  "left": 45,
+                  "top": 30,
+                }
+              }
+              minValue={0}
+              padding={0.3}
+              tooltip={[Function]}
+            >
+              <Ee>
+                <div
+                  style={
+                    Object {
+                      "height": "100%",
+                      "width": "100%",
                     }
-                  />
-                </Ee>
-              </Component>
-            </BarDualTone>
+                  }
+                />
+              </Ee>
+            </Component>
           </div>
-        </div>
+        </BarDualTone>
         <div
           className="row mt-5 mb-15"
         >
@@ -1354,18 +1336,90 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for week 1`] = `
       <Loader
         isLoading={false}
       >
-        <div
-          className="row"
+        <BarDualTone
+          data={
+            Array [
+              Object {
+                "id": "Mon",
+                "lastRangeCount": 22,
+                "lastRangeTs": 1590969600,
+                "thisRangeCount": 36,
+                "thisRangeTs": 1591574400,
+              },
+              Object {
+                "id": "Tue",
+                "lastRangeCount": 10,
+                "lastRangeTs": 1591056000,
+                "thisRangeCount": 13,
+                "thisRangeTs": 1591660800,
+              },
+              Object {
+                "id": "Wed",
+                "lastRangeCount": 18,
+                "lastRangeTs": 1591142400,
+                "thisRangeCount": 8,
+                "thisRangeTs": 1591747200,
+              },
+              Object {
+                "id": "Thu",
+                "lastRangeCount": 35,
+                "lastRangeTs": 1591228800,
+                "thisRangeCount": 37,
+                "thisRangeTs": 1591833600,
+              },
+              Object {
+                "id": "Fri",
+                "lastRangeCount": 30,
+                "lastRangeTs": 1591315200,
+                "thisRangeCount": 17,
+                "thisRangeTs": 1591920000,
+              },
+              Object {
+                "id": "Sat",
+                "lastRangeCount": 3,
+                "lastRangeTs": 1591401600,
+                "thisRangeCount": 22,
+                "thisRangeTs": 1592006400,
+              },
+              Object {
+                "id": "Sun",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1591488000,
+                "thisRangeCount": 8,
+                "thisRangeTs": 1592092800,
+              },
+            ]
+          }
+          lastRangePeriod={
+            Object {
+              "end": 1591488000,
+              "start": 1590969600,
+            }
+          }
+          range="week"
+          showLegend={true}
+          thisRangePeriod={
+            Object {
+              "end": 1592092800,
+              "start": 1591574400,
+            }
+          }
         >
           <div
-            className="col-xs-12"
-            style={
-              Object {
-                "height": 350,
-              }
-            }
+            className="stats-full-width-graph user-listening-activity"
           >
-            <BarDualTone
+            <Component
+              axisBottom={
+                Object {
+                  "format": undefined,
+                }
+              }
+              axisLeft={
+                Object {
+                  "format": ".2~s",
+                }
+              }
+              colors={[Function]}
               data={
                 Array [
                   Object {
@@ -1419,157 +1473,76 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for week 1`] = `
                   },
                 ]
               }
-              lastRangePeriod={
-                Object {
-                  "end": 1591488000,
-                  "start": 1590969600,
-                }
+              enableGridY={false}
+              enableLabel={false}
+              groupMode="grouped"
+              indexBy="id"
+              innerPadding={2}
+              keys={
+                Array [
+                  "lastRangeCount",
+                  "thisRangeCount",
+                ]
               }
-              range="week"
-              showLegend={true}
-              thisRangePeriod={
-                Object {
-                  "end": 1592092800,
-                  "start": 1591574400,
-                }
+              layers={
+                Array [
+                  "grid",
+                  "axes",
+                  "bars",
+                  "markers",
+                  "annotations",
+                  "legends",
+                ]
               }
-            >
-              <Component
-                axisBottom={
+              legends={
+                Array [
                   Object {
-                    "format": undefined,
-                  }
-                }
-                axisLeft={
-                  Object {
-                    "format": ".2~s",
-                  }
-                }
-                colors={[Function]}
-                data={
-                  Array [
-                    Object {
-                      "id": "Mon",
-                      "lastRangeCount": 22,
-                      "lastRangeTs": 1590969600,
-                      "thisRangeCount": 36,
-                      "thisRangeTs": 1591574400,
-                    },
-                    Object {
-                      "id": "Tue",
-                      "lastRangeCount": 10,
-                      "lastRangeTs": 1591056000,
-                      "thisRangeCount": 13,
-                      "thisRangeTs": 1591660800,
-                    },
-                    Object {
-                      "id": "Wed",
-                      "lastRangeCount": 18,
-                      "lastRangeTs": 1591142400,
-                      "thisRangeCount": 8,
-                      "thisRangeTs": 1591747200,
-                    },
-                    Object {
-                      "id": "Thu",
-                      "lastRangeCount": 35,
-                      "lastRangeTs": 1591228800,
-                      "thisRangeCount": 37,
-                      "thisRangeTs": 1591833600,
-                    },
-                    Object {
-                      "id": "Fri",
-                      "lastRangeCount": 30,
-                      "lastRangeTs": 1591315200,
-                      "thisRangeCount": 17,
-                      "thisRangeTs": 1591920000,
-                    },
-                    Object {
-                      "id": "Sat",
-                      "lastRangeCount": 3,
-                      "lastRangeTs": 1591401600,
-                      "thisRangeCount": 22,
-                      "thisRangeTs": 1592006400,
-                    },
-                    Object {
-                      "id": "Sun",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1591488000,
-                      "thisRangeCount": 8,
-                      "thisRangeTs": 1592092800,
-                    },
-                  ]
-                }
-                enableGridY={false}
-                enableLabel={false}
-                groupMode="grouped"
-                indexBy="id"
-                innerPadding={2}
-                keys={
-                  Array [
-                    "lastRangeCount",
-                    "thisRangeCount",
-                  ]
-                }
-                layers={
-                  Array [
-                    "grid",
-                    "axes",
-                    "bars",
-                    "markers",
-                    "annotations",
-                    "legends",
-                  ]
-                }
-                legends={
-                  Array [
-                    Object {
-                      "anchor": "top-right",
-                      "data": Array [
-                        Object {
-                          "color": "#353070",
-                          "id": "lastRangeName",
-                          "label": "Jun 01 - Jun 07",
-                        },
-                        Object {
-                          "color": "#eb743b",
-                          "id": "thisRangeName",
-                          "label": "Jun 08 - Jun 14",
-                        },
-                      ],
-                      "dataFrom": "keys",
-                      "direction": "row",
-                      "itemHeight": 20,
-                      "itemWidth": 120,
-                      "symbolSize": 10,
-                      "translateY": -20,
-                    },
-                  ]
-                }
-                margin={
-                  Object {
-                    "bottom": 40,
-                    "left": 45,
-                    "top": 30,
-                  }
-                }
-                minValue={0}
-                padding={0.3}
-                tooltip={[Function]}
-              >
-                <Ee>
-                  <div
-                    style={
+                    "anchor": "top-right",
+                    "data": Array [
                       Object {
-                        "height": "100%",
-                        "width": "100%",
-                      }
+                        "color": "#353070",
+                        "id": "lastRangeName",
+                        "label": "Jun 01 - Jun 07",
+                      },
+                      Object {
+                        "color": "#eb743b",
+                        "id": "thisRangeName",
+                        "label": "Jun 08 - Jun 14",
+                      },
+                    ],
+                    "dataFrom": "keys",
+                    "direction": "row",
+                    "itemHeight": 20,
+                    "itemWidth": 120,
+                    "symbolSize": 10,
+                    "translateY": -20,
+                  },
+                ]
+              }
+              margin={
+                Object {
+                  "bottom": 40,
+                  "left": 45,
+                  "top": 30,
+                }
+              }
+              minValue={0}
+              padding={0.3}
+              tooltip={[Function]}
+            >
+              <Ee>
+                <div
+                  style={
+                    Object {
+                      "height": "100%",
+                      "width": "100%",
                     }
-                  />
-                </Ee>
-              </Component>
-            </BarDualTone>
+                  }
+                />
+              </Ee>
+            </Component>
           </div>
-        </div>
+        </BarDualTone>
         <div
           className="row mt-5 mb-15"
         >
@@ -1705,18 +1678,111 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for year 1`] = `
       <Loader
         isLoading={false}
       >
-        <div
-          className="row"
+        <BarDualTone
+          data={
+            Array [
+              Object {
+                "id": "Jan",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1546300800,
+                "thisRangeCount": 0,
+                "thisRangeTs": 1577836800,
+              },
+              Object {
+                "id": "Feb",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1548979200,
+                "thisRangeCount": 425,
+                "thisRangeTs": 1580515200,
+              },
+              Object {
+                "id": "Mar",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1551398400,
+                "thisRangeCount": 1429,
+                "thisRangeTs": 1583020800,
+              },
+              Object {
+                "id": "Apr",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1554076800,
+                "thisRangeCount": 722,
+                "thisRangeTs": 1585699200,
+              },
+              Object {
+                "id": "May",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1556668800,
+                "thisRangeCount": 645,
+                "thisRangeTs": 1588291200,
+              },
+              Object {
+                "id": "Jun",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1559347200,
+                "thisRangeCount": 359,
+                "thisRangeTs": 1590969600,
+              },
+              Object {
+                "id": "Jul",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1561939200,
+              },
+              Object {
+                "id": "Aug",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1564617600,
+              },
+              Object {
+                "id": "Sep",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1567296000,
+              },
+              Object {
+                "id": "Oct",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1569888000,
+              },
+              Object {
+                "id": "Nov",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1572566400,
+              },
+              Object {
+                "id": "Dec",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1575158400,
+              },
+            ]
+          }
+          lastRangePeriod={
+            Object {
+              "start": 1546300800,
+            }
+          }
+          range="year"
+          showLegend={true}
+          thisRangePeriod={
+            Object {
+              "start": 1577836800,
+            }
+          }
         >
           <div
-            className="col-xs-12"
-            style={
-              Object {
-                "height": 350,
-              }
-            }
+            className="stats-full-width-graph user-listening-activity"
           >
-            <BarDualTone
+            <Component
+              axisBottom={
+                Object {
+                  "format": undefined,
+                }
+              }
+              axisLeft={
+                Object {
+                  "format": ".2~s",
+                }
+              }
+              colors={[Function]}
               data={
                 Array [
                   Object {
@@ -1793,178 +1859,76 @@ exports[`Sitewide Stats UserListeningActivity renders correctly for year 1`] = `
                   },
                 ]
               }
-              lastRangePeriod={
-                Object {
-                  "start": 1546300800,
-                }
+              enableGridY={false}
+              enableLabel={false}
+              groupMode="grouped"
+              indexBy="id"
+              innerPadding={2}
+              keys={
+                Array [
+                  "lastRangeCount",
+                  "thisRangeCount",
+                ]
               }
-              range="year"
-              showLegend={true}
-              thisRangePeriod={
-                Object {
-                  "start": 1577836800,
-                }
+              layers={
+                Array [
+                  "grid",
+                  "axes",
+                  "bars",
+                  "markers",
+                  "annotations",
+                  "legends",
+                ]
               }
-            >
-              <Component
-                axisBottom={
+              legends={
+                Array [
                   Object {
-                    "format": undefined,
-                  }
-                }
-                axisLeft={
-                  Object {
-                    "format": ".2~s",
-                  }
-                }
-                colors={[Function]}
-                data={
-                  Array [
-                    Object {
-                      "id": "Jan",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1546300800,
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1577836800,
-                    },
-                    Object {
-                      "id": "Feb",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1548979200,
-                      "thisRangeCount": 425,
-                      "thisRangeTs": 1580515200,
-                    },
-                    Object {
-                      "id": "Mar",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1551398400,
-                      "thisRangeCount": 1429,
-                      "thisRangeTs": 1583020800,
-                    },
-                    Object {
-                      "id": "Apr",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1554076800,
-                      "thisRangeCount": 722,
-                      "thisRangeTs": 1585699200,
-                    },
-                    Object {
-                      "id": "May",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1556668800,
-                      "thisRangeCount": 645,
-                      "thisRangeTs": 1588291200,
-                    },
-                    Object {
-                      "id": "Jun",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1559347200,
-                      "thisRangeCount": 359,
-                      "thisRangeTs": 1590969600,
-                    },
-                    Object {
-                      "id": "Jul",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1561939200,
-                    },
-                    Object {
-                      "id": "Aug",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1564617600,
-                    },
-                    Object {
-                      "id": "Sep",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1567296000,
-                    },
-                    Object {
-                      "id": "Oct",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1569888000,
-                    },
-                    Object {
-                      "id": "Nov",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1572566400,
-                    },
-                    Object {
-                      "id": "Dec",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1575158400,
-                    },
-                  ]
-                }
-                enableGridY={false}
-                enableLabel={false}
-                groupMode="grouped"
-                indexBy="id"
-                innerPadding={2}
-                keys={
-                  Array [
-                    "lastRangeCount",
-                    "thisRangeCount",
-                  ]
-                }
-                layers={
-                  Array [
-                    "grid",
-                    "axes",
-                    "bars",
-                    "markers",
-                    "annotations",
-                    "legends",
-                  ]
-                }
-                legends={
-                  Array [
-                    Object {
-                      "anchor": "top-right",
-                      "data": Array [
-                        Object {
-                          "color": "#353070",
-                          "id": "lastRangeName",
-                          "label": "2019",
-                        },
-                        Object {
-                          "color": "#eb743b",
-                          "id": "thisRangeName",
-                          "label": "2020",
-                        },
-                      ],
-                      "dataFrom": "keys",
-                      "direction": "row",
-                      "itemHeight": 20,
-                      "itemWidth": 70,
-                      "symbolSize": 10,
-                      "translateY": -20,
-                    },
-                  ]
-                }
-                margin={
-                  Object {
-                    "bottom": 40,
-                    "left": 45,
-                    "top": 30,
-                  }
-                }
-                minValue={0}
-                padding={0.3}
-                tooltip={[Function]}
-              >
-                <Ee>
-                  <div
-                    style={
+                    "anchor": "top-right",
+                    "data": Array [
                       Object {
-                        "height": "100%",
-                        "width": "100%",
-                      }
+                        "color": "#353070",
+                        "id": "lastRangeName",
+                        "label": "2019",
+                      },
+                      Object {
+                        "color": "#eb743b",
+                        "id": "thisRangeName",
+                        "label": "2020",
+                      },
+                    ],
+                    "dataFrom": "keys",
+                    "direction": "row",
+                    "itemHeight": 20,
+                    "itemWidth": 70,
+                    "symbolSize": 10,
+                    "translateY": -20,
+                  },
+                ]
+              }
+              margin={
+                Object {
+                  "bottom": 40,
+                  "left": 45,
+                  "top": 30,
+                }
+              }
+              minValue={0}
+              padding={0.3}
+              tooltip={[Function]}
+            >
+              <Ee>
+                <div
+                  style={
+                    Object {
+                      "height": "100%",
+                      "width": "100%",
                     }
-                  />
-                </Ee>
-              </Component>
-            </BarDualTone>
+                  }
+                />
+              </Ee>
+            </Component>
           </div>
-        </div>
+        </BarDualTone>
         <div
           className="row mt-5 mb-15"
         >
@@ -2304,18 +2268,126 @@ exports[`User Stats UserListeningActivity renders correctly for all_time 1`] = `
       <Loader
         isLoading={false}
       >
-        <div
-          className="row"
+        <BarDualTone
+          data={
+            Array [
+              Object {
+                "id": "2002",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1009843200,
+              },
+              Object {
+                "id": "2003",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1041379200,
+              },
+              Object {
+                "id": "2004",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1072915200,
+              },
+              Object {
+                "id": "2005",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1104537600,
+              },
+              Object {
+                "id": "2006",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1136073600,
+              },
+              Object {
+                "id": "2007",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1167609600,
+              },
+              Object {
+                "id": "2008",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1199145600,
+              },
+              Object {
+                "id": "2009",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1230768000,
+              },
+              Object {
+                "id": "2010",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1262304000,
+              },
+              Object {
+                "id": "2011",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1293840000,
+              },
+              Object {
+                "id": "2012",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1325376000,
+              },
+              Object {
+                "id": "2013",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1356998400,
+              },
+              Object {
+                "id": "2014",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1388534400,
+              },
+              Object {
+                "id": "2015",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1420070400,
+              },
+              Object {
+                "id": "2016",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1451606400,
+              },
+              Object {
+                "id": "2017",
+                "thisRangeCount": 96,
+                "thisRangeTs": 1483228800,
+              },
+              Object {
+                "id": "2018",
+                "thisRangeCount": 169,
+                "thisRangeTs": 1514764800,
+              },
+              Object {
+                "id": "2019",
+                "thisRangeCount": 0,
+                "thisRangeTs": 1546300800,
+              },
+              Object {
+                "id": "2020",
+                "thisRangeCount": 3580,
+                "thisRangeTs": 1577836800,
+              },
+            ]
+          }
+          lastRangePeriod={Object {}}
+          range="all_time"
+          showLegend={false}
+          thisRangePeriod={Object {}}
         >
           <div
-            className="col-xs-12"
-            style={
-              Object {
-                "height": 350,
-              }
-            }
+            className="stats-full-width-graph user-listening-activity"
           >
-            <BarDualTone
+            <Component
+              axisBottom={
+                Object {
+                  "format": undefined,
+                }
+              }
+              axisLeft={
+                Object {
+                  "format": ".2~s",
+                }
+              }
+              colors={[Function]}
               data={
                 Array [
                   Object {
@@ -2415,168 +2487,51 @@ exports[`User Stats UserListeningActivity renders correctly for all_time 1`] = `
                   },
                 ]
               }
-              lastRangePeriod={Object {}}
-              range="all_time"
-              showLegend={false}
-              thisRangePeriod={Object {}}
+              enableGridY={false}
+              enableLabel={false}
+              groupMode="grouped"
+              indexBy="id"
+              innerPadding={2}
+              keys={
+                Array [
+                  "thisRangeCount",
+                ]
+              }
+              layers={
+                Array [
+                  "grid",
+                  "axes",
+                  "bars",
+                  "markers",
+                  "annotations",
+                  "legends",
+                ]
+              }
+              legends={Array []}
+              margin={
+                Object {
+                  "bottom": 40,
+                  "left": 45,
+                  "top": 20,
+                }
+              }
+              minValue={0}
+              padding={0.3}
+              tooltip={[Function]}
             >
-              <Component
-                axisBottom={
-                  Object {
-                    "format": undefined,
-                  }
-                }
-                axisLeft={
-                  Object {
-                    "format": ".2~s",
-                  }
-                }
-                colors={[Function]}
-                data={
-                  Array [
+              <Ee>
+                <div
+                  style={
                     Object {
-                      "id": "2002",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1009843200,
-                    },
-                    Object {
-                      "id": "2003",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1041379200,
-                    },
-                    Object {
-                      "id": "2004",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1072915200,
-                    },
-                    Object {
-                      "id": "2005",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1104537600,
-                    },
-                    Object {
-                      "id": "2006",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1136073600,
-                    },
-                    Object {
-                      "id": "2007",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1167609600,
-                    },
-                    Object {
-                      "id": "2008",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1199145600,
-                    },
-                    Object {
-                      "id": "2009",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1230768000,
-                    },
-                    Object {
-                      "id": "2010",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1262304000,
-                    },
-                    Object {
-                      "id": "2011",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1293840000,
-                    },
-                    Object {
-                      "id": "2012",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1325376000,
-                    },
-                    Object {
-                      "id": "2013",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1356998400,
-                    },
-                    Object {
-                      "id": "2014",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1388534400,
-                    },
-                    Object {
-                      "id": "2015",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1420070400,
-                    },
-                    Object {
-                      "id": "2016",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1451606400,
-                    },
-                    Object {
-                      "id": "2017",
-                      "thisRangeCount": 96,
-                      "thisRangeTs": 1483228800,
-                    },
-                    Object {
-                      "id": "2018",
-                      "thisRangeCount": 169,
-                      "thisRangeTs": 1514764800,
-                    },
-                    Object {
-                      "id": "2019",
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1546300800,
-                    },
-                    Object {
-                      "id": "2020",
-                      "thisRangeCount": 3580,
-                      "thisRangeTs": 1577836800,
-                    },
-                  ]
-                }
-                enableGridY={false}
-                enableLabel={false}
-                groupMode="grouped"
-                indexBy="id"
-                innerPadding={2}
-                keys={
-                  Array [
-                    "thisRangeCount",
-                  ]
-                }
-                layers={
-                  Array [
-                    "grid",
-                    "axes",
-                    "bars",
-                    "markers",
-                    "annotations",
-                    "legends",
-                  ]
-                }
-                legends={Array []}
-                margin={
-                  Object {
-                    "bottom": 40,
-                    "left": 45,
-                    "top": 20,
-                  }
-                }
-                minValue={0}
-                padding={0.3}
-                tooltip={[Function]}
-              >
-                <Ee>
-                  <div
-                    style={
-                      Object {
-                        "height": "100%",
-                        "width": "100%",
-                      }
+                      "height": "100%",
+                      "width": "100%",
                     }
-                  />
-                </Ee>
-              </Component>
-            </BarDualTone>
+                  }
+                />
+              </Ee>
+            </Component>
           </div>
-        </div>
+        </BarDualTone>
         <div
           className="row mt-5 mb-15"
         >
@@ -2717,18 +2672,230 @@ exports[`User Stats UserListeningActivity renders correctly for month 1`] = `
       <Loader
         isLoading={false}
       >
-        <div
-          className="row"
+        <BarDualTone
+          data={
+            Array [
+              Object {
+                "id": "01",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1588291200,
+                "thisRangeCount": 22,
+                "thisRangeTs": 1590969600,
+              },
+              Object {
+                "id": "02",
+                "lastRangeCount": 17,
+                "lastRangeTs": 1588377600,
+                "thisRangeCount": 10,
+                "thisRangeTs": 1591056000,
+              },
+              Object {
+                "id": "03",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1588464000,
+                "thisRangeCount": 18,
+                "thisRangeTs": 1591142400,
+              },
+              Object {
+                "id": "04",
+                "lastRangeCount": 32,
+                "lastRangeTs": 1588550400,
+                "thisRangeCount": 35,
+                "thisRangeTs": 1591228800,
+              },
+              Object {
+                "id": "05",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1588636800,
+                "thisRangeCount": 30,
+                "thisRangeTs": 1591315200,
+              },
+              Object {
+                "id": "06",
+                "lastRangeCount": 28,
+                "lastRangeTs": 1588723200,
+                "thisRangeCount": 3,
+                "thisRangeTs": 1591401600,
+              },
+              Object {
+                "id": "07",
+                "lastRangeCount": 21,
+                "lastRangeTs": 1588809600,
+                "thisRangeCount": 0,
+                "thisRangeTs": 1591488000,
+              },
+              Object {
+                "id": "08",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1588896000,
+                "thisRangeCount": 36,
+                "thisRangeTs": 1591574400,
+              },
+              Object {
+                "id": "09",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1588982400,
+                "thisRangeCount": 13,
+                "thisRangeTs": 1591660800,
+              },
+              Object {
+                "id": "10",
+                "lastRangeCount": 4,
+                "lastRangeTs": 1589068800,
+                "thisRangeCount": 8,
+                "thisRangeTs": 1591747200,
+              },
+              Object {
+                "id": "11",
+                "lastRangeCount": 28,
+                "lastRangeTs": 1589155200,
+                "thisRangeCount": 37,
+                "thisRangeTs": 1591833600,
+              },
+              Object {
+                "id": "12",
+                "lastRangeCount": 21,
+                "lastRangeTs": 1589241600,
+                "thisRangeCount": 17,
+                "thisRangeTs": 1591920000,
+              },
+              Object {
+                "id": "13",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1589328000,
+                "thisRangeCount": 22,
+                "thisRangeTs": 1592006400,
+              },
+              Object {
+                "id": "14",
+                "lastRangeCount": 15,
+                "lastRangeTs": 1589414400,
+                "thisRangeCount": 8,
+                "thisRangeTs": 1592092800,
+              },
+              Object {
+                "id": "15",
+                "lastRangeCount": 31,
+                "lastRangeTs": 1589500800,
+                "thisRangeCount": 66,
+                "thisRangeTs": 1592179200,
+              },
+              Object {
+                "id": "16",
+                "lastRangeCount": 8,
+                "lastRangeTs": 1589587200,
+                "thisRangeCount": 34,
+                "thisRangeTs": 1592265600,
+              },
+              Object {
+                "id": "17",
+                "lastRangeCount": 5,
+                "lastRangeTs": 1589673600,
+                "thisRangeCount": 0,
+                "thisRangeTs": 1592352000,
+              },
+              Object {
+                "id": "18",
+                "lastRangeCount": 37,
+                "lastRangeTs": 1589760000,
+                "thisRangeCount": 0,
+                "thisRangeTs": 1592438400,
+              },
+              Object {
+                "id": "19",
+                "lastRangeCount": 50,
+                "lastRangeTs": 1589846400,
+              },
+              Object {
+                "id": "20",
+                "lastRangeCount": 26,
+                "lastRangeTs": 1589932800,
+              },
+              Object {
+                "id": "21",
+                "lastRangeCount": 34,
+                "lastRangeTs": 1590019200,
+              },
+              Object {
+                "id": "22",
+                "lastRangeCount": 36,
+                "lastRangeTs": 1590105600,
+              },
+              Object {
+                "id": "23",
+                "lastRangeCount": 14,
+                "lastRangeTs": 1590192000,
+              },
+              Object {
+                "id": "24",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1590278400,
+              },
+              Object {
+                "id": "25",
+                "lastRangeCount": 5,
+                "lastRangeTs": 1590364800,
+              },
+              Object {
+                "id": "26",
+                "lastRangeCount": 25,
+                "lastRangeTs": 1590451200,
+              },
+              Object {
+                "id": "27",
+                "lastRangeCount": 53,
+                "lastRangeTs": 1590537600,
+              },
+              Object {
+                "id": "28",
+                "lastRangeCount": 21,
+                "lastRangeTs": 1590624000,
+              },
+              Object {
+                "id": "29",
+                "lastRangeCount": 8,
+                "lastRangeTs": 1590710400,
+              },
+              Object {
+                "id": "30",
+                "lastRangeCount": 11,
+                "lastRangeTs": 1590796800,
+              },
+              Object {
+                "id": "31",
+                "lastRangeCount": 11,
+                "lastRangeTs": 1590883200,
+              },
+            ]
+          }
+          lastRangePeriod={
+            Object {
+              "start": 1588291200,
+            }
+          }
+          range="month"
+          showLegend={true}
+          thisRangePeriod={
+            Object {
+              "start": 1590969600,
+            }
+          }
         >
           <div
-            className="col-xs-12"
-            style={
-              Object {
-                "height": 350,
-              }
-            }
+            className="stats-full-width-graph user-listening-activity"
           >
-            <BarDualTone
+            <Component
+              axisBottom={
+                Object {
+                  "format": undefined,
+                }
+              }
+              axisLeft={
+                Object {
+                  "format": ".2~s",
+                }
+              }
+              colors={[Function]}
               data={
                 Array [
                   Object {
@@ -2924,297 +3091,76 @@ exports[`User Stats UserListeningActivity renders correctly for month 1`] = `
                   },
                 ]
               }
-              lastRangePeriod={
-                Object {
-                  "start": 1588291200,
-                }
+              enableGridY={false}
+              enableLabel={false}
+              groupMode="grouped"
+              indexBy="id"
+              innerPadding={2}
+              keys={
+                Array [
+                  "lastRangeCount",
+                  "thisRangeCount",
+                ]
               }
-              range="month"
-              showLegend={true}
-              thisRangePeriod={
-                Object {
-                  "start": 1590969600,
-                }
+              layers={
+                Array [
+                  "grid",
+                  "axes",
+                  "bars",
+                  "markers",
+                  "annotations",
+                  "legends",
+                ]
               }
-            >
-              <Component
-                axisBottom={
+              legends={
+                Array [
                   Object {
-                    "format": undefined,
-                  }
-                }
-                axisLeft={
-                  Object {
-                    "format": ".2~s",
-                  }
-                }
-                colors={[Function]}
-                data={
-                  Array [
-                    Object {
-                      "id": "01",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1588291200,
-                      "thisRangeCount": 22,
-                      "thisRangeTs": 1590969600,
-                    },
-                    Object {
-                      "id": "02",
-                      "lastRangeCount": 17,
-                      "lastRangeTs": 1588377600,
-                      "thisRangeCount": 10,
-                      "thisRangeTs": 1591056000,
-                    },
-                    Object {
-                      "id": "03",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1588464000,
-                      "thisRangeCount": 18,
-                      "thisRangeTs": 1591142400,
-                    },
-                    Object {
-                      "id": "04",
-                      "lastRangeCount": 32,
-                      "lastRangeTs": 1588550400,
-                      "thisRangeCount": 35,
-                      "thisRangeTs": 1591228800,
-                    },
-                    Object {
-                      "id": "05",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1588636800,
-                      "thisRangeCount": 30,
-                      "thisRangeTs": 1591315200,
-                    },
-                    Object {
-                      "id": "06",
-                      "lastRangeCount": 28,
-                      "lastRangeTs": 1588723200,
-                      "thisRangeCount": 3,
-                      "thisRangeTs": 1591401600,
-                    },
-                    Object {
-                      "id": "07",
-                      "lastRangeCount": 21,
-                      "lastRangeTs": 1588809600,
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1591488000,
-                    },
-                    Object {
-                      "id": "08",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1588896000,
-                      "thisRangeCount": 36,
-                      "thisRangeTs": 1591574400,
-                    },
-                    Object {
-                      "id": "09",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1588982400,
-                      "thisRangeCount": 13,
-                      "thisRangeTs": 1591660800,
-                    },
-                    Object {
-                      "id": "10",
-                      "lastRangeCount": 4,
-                      "lastRangeTs": 1589068800,
-                      "thisRangeCount": 8,
-                      "thisRangeTs": 1591747200,
-                    },
-                    Object {
-                      "id": "11",
-                      "lastRangeCount": 28,
-                      "lastRangeTs": 1589155200,
-                      "thisRangeCount": 37,
-                      "thisRangeTs": 1591833600,
-                    },
-                    Object {
-                      "id": "12",
-                      "lastRangeCount": 21,
-                      "lastRangeTs": 1589241600,
-                      "thisRangeCount": 17,
-                      "thisRangeTs": 1591920000,
-                    },
-                    Object {
-                      "id": "13",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1589328000,
-                      "thisRangeCount": 22,
-                      "thisRangeTs": 1592006400,
-                    },
-                    Object {
-                      "id": "14",
-                      "lastRangeCount": 15,
-                      "lastRangeTs": 1589414400,
-                      "thisRangeCount": 8,
-                      "thisRangeTs": 1592092800,
-                    },
-                    Object {
-                      "id": "15",
-                      "lastRangeCount": 31,
-                      "lastRangeTs": 1589500800,
-                      "thisRangeCount": 66,
-                      "thisRangeTs": 1592179200,
-                    },
-                    Object {
-                      "id": "16",
-                      "lastRangeCount": 8,
-                      "lastRangeTs": 1589587200,
-                      "thisRangeCount": 34,
-                      "thisRangeTs": 1592265600,
-                    },
-                    Object {
-                      "id": "17",
-                      "lastRangeCount": 5,
-                      "lastRangeTs": 1589673600,
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1592352000,
-                    },
-                    Object {
-                      "id": "18",
-                      "lastRangeCount": 37,
-                      "lastRangeTs": 1589760000,
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1592438400,
-                    },
-                    Object {
-                      "id": "19",
-                      "lastRangeCount": 50,
-                      "lastRangeTs": 1589846400,
-                    },
-                    Object {
-                      "id": "20",
-                      "lastRangeCount": 26,
-                      "lastRangeTs": 1589932800,
-                    },
-                    Object {
-                      "id": "21",
-                      "lastRangeCount": 34,
-                      "lastRangeTs": 1590019200,
-                    },
-                    Object {
-                      "id": "22",
-                      "lastRangeCount": 36,
-                      "lastRangeTs": 1590105600,
-                    },
-                    Object {
-                      "id": "23",
-                      "lastRangeCount": 14,
-                      "lastRangeTs": 1590192000,
-                    },
-                    Object {
-                      "id": "24",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1590278400,
-                    },
-                    Object {
-                      "id": "25",
-                      "lastRangeCount": 5,
-                      "lastRangeTs": 1590364800,
-                    },
-                    Object {
-                      "id": "26",
-                      "lastRangeCount": 25,
-                      "lastRangeTs": 1590451200,
-                    },
-                    Object {
-                      "id": "27",
-                      "lastRangeCount": 53,
-                      "lastRangeTs": 1590537600,
-                    },
-                    Object {
-                      "id": "28",
-                      "lastRangeCount": 21,
-                      "lastRangeTs": 1590624000,
-                    },
-                    Object {
-                      "id": "29",
-                      "lastRangeCount": 8,
-                      "lastRangeTs": 1590710400,
-                    },
-                    Object {
-                      "id": "30",
-                      "lastRangeCount": 11,
-                      "lastRangeTs": 1590796800,
-                    },
-                    Object {
-                      "id": "31",
-                      "lastRangeCount": 11,
-                      "lastRangeTs": 1590883200,
-                    },
-                  ]
-                }
-                enableGridY={false}
-                enableLabel={false}
-                groupMode="grouped"
-                indexBy="id"
-                innerPadding={2}
-                keys={
-                  Array [
-                    "lastRangeCount",
-                    "thisRangeCount",
-                  ]
-                }
-                layers={
-                  Array [
-                    "grid",
-                    "axes",
-                    "bars",
-                    "markers",
-                    "annotations",
-                    "legends",
-                  ]
-                }
-                legends={
-                  Array [
-                    Object {
-                      "anchor": "top-right",
-                      "data": Array [
-                        Object {
-                          "color": "#353070",
-                          "id": "lastRangeName",
-                          "label": "May 2020",
-                        },
-                        Object {
-                          "color": "#eb743b",
-                          "id": "thisRangeName",
-                          "label": "June 2020",
-                        },
-                      ],
-                      "dataFrom": "keys",
-                      "direction": "row",
-                      "itemHeight": 20,
-                      "itemWidth": 100,
-                      "symbolSize": 10,
-                      "translateY": -20,
-                    },
-                  ]
-                }
-                margin={
-                  Object {
-                    "bottom": 40,
-                    "left": 45,
-                    "top": 30,
-                  }
-                }
-                minValue={0}
-                padding={0.3}
-                tooltip={[Function]}
-              >
-                <Ee>
-                  <div
-                    style={
+                    "anchor": "top-right",
+                    "data": Array [
                       Object {
-                        "height": "100%",
-                        "width": "100%",
-                      }
+                        "color": "#353070",
+                        "id": "lastRangeName",
+                        "label": "May 2020",
+                      },
+                      Object {
+                        "color": "#eb743b",
+                        "id": "thisRangeName",
+                        "label": "June 2020",
+                      },
+                    ],
+                    "dataFrom": "keys",
+                    "direction": "row",
+                    "itemHeight": 20,
+                    "itemWidth": 100,
+                    "symbolSize": 10,
+                    "translateY": -20,
+                  },
+                ]
+              }
+              margin={
+                Object {
+                  "bottom": 40,
+                  "left": 45,
+                  "top": 30,
+                }
+              }
+              minValue={0}
+              padding={0.3}
+              tooltip={[Function]}
+            >
+              <Ee>
+                <div
+                  style={
+                    Object {
+                      "height": "100%",
+                      "width": "100%",
                     }
-                  />
-                </Ee>
-              </Component>
-            </BarDualTone>
+                  }
+                />
+              </Ee>
+            </Component>
           </div>
-        </div>
+        </BarDualTone>
         <div
           className="row mt-5 mb-15"
         >
@@ -3355,18 +3301,90 @@ exports[`User Stats UserListeningActivity renders correctly for week 1`] = `
       <Loader
         isLoading={false}
       >
-        <div
-          className="row"
+        <BarDualTone
+          data={
+            Array [
+              Object {
+                "id": "Mon",
+                "lastRangeCount": 22,
+                "lastRangeTs": 1590969600,
+                "thisRangeCount": 36,
+                "thisRangeTs": 1591574400,
+              },
+              Object {
+                "id": "Tue",
+                "lastRangeCount": 10,
+                "lastRangeTs": 1591056000,
+                "thisRangeCount": 13,
+                "thisRangeTs": 1591660800,
+              },
+              Object {
+                "id": "Wed",
+                "lastRangeCount": 18,
+                "lastRangeTs": 1591142400,
+                "thisRangeCount": 8,
+                "thisRangeTs": 1591747200,
+              },
+              Object {
+                "id": "Thu",
+                "lastRangeCount": 35,
+                "lastRangeTs": 1591228800,
+                "thisRangeCount": 37,
+                "thisRangeTs": 1591833600,
+              },
+              Object {
+                "id": "Fri",
+                "lastRangeCount": 30,
+                "lastRangeTs": 1591315200,
+                "thisRangeCount": 17,
+                "thisRangeTs": 1591920000,
+              },
+              Object {
+                "id": "Sat",
+                "lastRangeCount": 3,
+                "lastRangeTs": 1591401600,
+                "thisRangeCount": 22,
+                "thisRangeTs": 1592006400,
+              },
+              Object {
+                "id": "Sun",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1591488000,
+                "thisRangeCount": 8,
+                "thisRangeTs": 1592092800,
+              },
+            ]
+          }
+          lastRangePeriod={
+            Object {
+              "end": 1591488000,
+              "start": 1590969600,
+            }
+          }
+          range="week"
+          showLegend={true}
+          thisRangePeriod={
+            Object {
+              "end": 1592092800,
+              "start": 1591574400,
+            }
+          }
         >
           <div
-            className="col-xs-12"
-            style={
-              Object {
-                "height": 350,
-              }
-            }
+            className="stats-full-width-graph user-listening-activity"
           >
-            <BarDualTone
+            <Component
+              axisBottom={
+                Object {
+                  "format": undefined,
+                }
+              }
+              axisLeft={
+                Object {
+                  "format": ".2~s",
+                }
+              }
+              colors={[Function]}
               data={
                 Array [
                   Object {
@@ -3420,157 +3438,76 @@ exports[`User Stats UserListeningActivity renders correctly for week 1`] = `
                   },
                 ]
               }
-              lastRangePeriod={
-                Object {
-                  "end": 1591488000,
-                  "start": 1590969600,
-                }
+              enableGridY={false}
+              enableLabel={false}
+              groupMode="grouped"
+              indexBy="id"
+              innerPadding={2}
+              keys={
+                Array [
+                  "lastRangeCount",
+                  "thisRangeCount",
+                ]
               }
-              range="week"
-              showLegend={true}
-              thisRangePeriod={
-                Object {
-                  "end": 1592092800,
-                  "start": 1591574400,
-                }
+              layers={
+                Array [
+                  "grid",
+                  "axes",
+                  "bars",
+                  "markers",
+                  "annotations",
+                  "legends",
+                ]
               }
-            >
-              <Component
-                axisBottom={
+              legends={
+                Array [
                   Object {
-                    "format": undefined,
-                  }
-                }
-                axisLeft={
-                  Object {
-                    "format": ".2~s",
-                  }
-                }
-                colors={[Function]}
-                data={
-                  Array [
-                    Object {
-                      "id": "Mon",
-                      "lastRangeCount": 22,
-                      "lastRangeTs": 1590969600,
-                      "thisRangeCount": 36,
-                      "thisRangeTs": 1591574400,
-                    },
-                    Object {
-                      "id": "Tue",
-                      "lastRangeCount": 10,
-                      "lastRangeTs": 1591056000,
-                      "thisRangeCount": 13,
-                      "thisRangeTs": 1591660800,
-                    },
-                    Object {
-                      "id": "Wed",
-                      "lastRangeCount": 18,
-                      "lastRangeTs": 1591142400,
-                      "thisRangeCount": 8,
-                      "thisRangeTs": 1591747200,
-                    },
-                    Object {
-                      "id": "Thu",
-                      "lastRangeCount": 35,
-                      "lastRangeTs": 1591228800,
-                      "thisRangeCount": 37,
-                      "thisRangeTs": 1591833600,
-                    },
-                    Object {
-                      "id": "Fri",
-                      "lastRangeCount": 30,
-                      "lastRangeTs": 1591315200,
-                      "thisRangeCount": 17,
-                      "thisRangeTs": 1591920000,
-                    },
-                    Object {
-                      "id": "Sat",
-                      "lastRangeCount": 3,
-                      "lastRangeTs": 1591401600,
-                      "thisRangeCount": 22,
-                      "thisRangeTs": 1592006400,
-                    },
-                    Object {
-                      "id": "Sun",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1591488000,
-                      "thisRangeCount": 8,
-                      "thisRangeTs": 1592092800,
-                    },
-                  ]
-                }
-                enableGridY={false}
-                enableLabel={false}
-                groupMode="grouped"
-                indexBy="id"
-                innerPadding={2}
-                keys={
-                  Array [
-                    "lastRangeCount",
-                    "thisRangeCount",
-                  ]
-                }
-                layers={
-                  Array [
-                    "grid",
-                    "axes",
-                    "bars",
-                    "markers",
-                    "annotations",
-                    "legends",
-                  ]
-                }
-                legends={
-                  Array [
-                    Object {
-                      "anchor": "top-right",
-                      "data": Array [
-                        Object {
-                          "color": "#353070",
-                          "id": "lastRangeName",
-                          "label": "Jun 01 - Jun 07",
-                        },
-                        Object {
-                          "color": "#eb743b",
-                          "id": "thisRangeName",
-                          "label": "Jun 08 - Jun 14",
-                        },
-                      ],
-                      "dataFrom": "keys",
-                      "direction": "row",
-                      "itemHeight": 20,
-                      "itemWidth": 120,
-                      "symbolSize": 10,
-                      "translateY": -20,
-                    },
-                  ]
-                }
-                margin={
-                  Object {
-                    "bottom": 40,
-                    "left": 45,
-                    "top": 30,
-                  }
-                }
-                minValue={0}
-                padding={0.3}
-                tooltip={[Function]}
-              >
-                <Ee>
-                  <div
-                    style={
+                    "anchor": "top-right",
+                    "data": Array [
                       Object {
-                        "height": "100%",
-                        "width": "100%",
-                      }
+                        "color": "#353070",
+                        "id": "lastRangeName",
+                        "label": "Jun 01 - Jun 07",
+                      },
+                      Object {
+                        "color": "#eb743b",
+                        "id": "thisRangeName",
+                        "label": "Jun 08 - Jun 14",
+                      },
+                    ],
+                    "dataFrom": "keys",
+                    "direction": "row",
+                    "itemHeight": 20,
+                    "itemWidth": 120,
+                    "symbolSize": 10,
+                    "translateY": -20,
+                  },
+                ]
+              }
+              margin={
+                Object {
+                  "bottom": 40,
+                  "left": 45,
+                  "top": 30,
+                }
+              }
+              minValue={0}
+              padding={0.3}
+              tooltip={[Function]}
+            >
+              <Ee>
+                <div
+                  style={
+                    Object {
+                      "height": "100%",
+                      "width": "100%",
                     }
-                  />
-                </Ee>
-              </Component>
-            </BarDualTone>
+                  }
+                />
+              </Ee>
+            </Component>
           </div>
-        </div>
+        </BarDualTone>
         <div
           className="row mt-5 mb-15"
         >
@@ -3711,18 +3648,111 @@ exports[`User Stats UserListeningActivity renders correctly for year 1`] = `
       <Loader
         isLoading={false}
       >
-        <div
-          className="row"
+        <BarDualTone
+          data={
+            Array [
+              Object {
+                "id": "Jan",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1546300800,
+                "thisRangeCount": 0,
+                "thisRangeTs": 1577836800,
+              },
+              Object {
+                "id": "Feb",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1548979200,
+                "thisRangeCount": 425,
+                "thisRangeTs": 1580515200,
+              },
+              Object {
+                "id": "Mar",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1551398400,
+                "thisRangeCount": 1429,
+                "thisRangeTs": 1583020800,
+              },
+              Object {
+                "id": "Apr",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1554076800,
+                "thisRangeCount": 722,
+                "thisRangeTs": 1585699200,
+              },
+              Object {
+                "id": "May",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1556668800,
+                "thisRangeCount": 645,
+                "thisRangeTs": 1588291200,
+              },
+              Object {
+                "id": "Jun",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1559347200,
+                "thisRangeCount": 359,
+                "thisRangeTs": 1590969600,
+              },
+              Object {
+                "id": "Jul",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1561939200,
+              },
+              Object {
+                "id": "Aug",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1564617600,
+              },
+              Object {
+                "id": "Sep",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1567296000,
+              },
+              Object {
+                "id": "Oct",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1569888000,
+              },
+              Object {
+                "id": "Nov",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1572566400,
+              },
+              Object {
+                "id": "Dec",
+                "lastRangeCount": 0,
+                "lastRangeTs": 1575158400,
+              },
+            ]
+          }
+          lastRangePeriod={
+            Object {
+              "start": 1546300800,
+            }
+          }
+          range="year"
+          showLegend={true}
+          thisRangePeriod={
+            Object {
+              "start": 1577836800,
+            }
+          }
         >
           <div
-            className="col-xs-12"
-            style={
-              Object {
-                "height": 350,
-              }
-            }
+            className="stats-full-width-graph user-listening-activity"
           >
-            <BarDualTone
+            <Component
+              axisBottom={
+                Object {
+                  "format": undefined,
+                }
+              }
+              axisLeft={
+                Object {
+                  "format": ".2~s",
+                }
+              }
+              colors={[Function]}
               data={
                 Array [
                   Object {
@@ -3799,178 +3829,76 @@ exports[`User Stats UserListeningActivity renders correctly for year 1`] = `
                   },
                 ]
               }
-              lastRangePeriod={
-                Object {
-                  "start": 1546300800,
-                }
+              enableGridY={false}
+              enableLabel={false}
+              groupMode="grouped"
+              indexBy="id"
+              innerPadding={2}
+              keys={
+                Array [
+                  "lastRangeCount",
+                  "thisRangeCount",
+                ]
               }
-              range="year"
-              showLegend={true}
-              thisRangePeriod={
-                Object {
-                  "start": 1577836800,
-                }
+              layers={
+                Array [
+                  "grid",
+                  "axes",
+                  "bars",
+                  "markers",
+                  "annotations",
+                  "legends",
+                ]
               }
-            >
-              <Component
-                axisBottom={
+              legends={
+                Array [
                   Object {
-                    "format": undefined,
-                  }
-                }
-                axisLeft={
-                  Object {
-                    "format": ".2~s",
-                  }
-                }
-                colors={[Function]}
-                data={
-                  Array [
-                    Object {
-                      "id": "Jan",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1546300800,
-                      "thisRangeCount": 0,
-                      "thisRangeTs": 1577836800,
-                    },
-                    Object {
-                      "id": "Feb",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1548979200,
-                      "thisRangeCount": 425,
-                      "thisRangeTs": 1580515200,
-                    },
-                    Object {
-                      "id": "Mar",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1551398400,
-                      "thisRangeCount": 1429,
-                      "thisRangeTs": 1583020800,
-                    },
-                    Object {
-                      "id": "Apr",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1554076800,
-                      "thisRangeCount": 722,
-                      "thisRangeTs": 1585699200,
-                    },
-                    Object {
-                      "id": "May",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1556668800,
-                      "thisRangeCount": 645,
-                      "thisRangeTs": 1588291200,
-                    },
-                    Object {
-                      "id": "Jun",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1559347200,
-                      "thisRangeCount": 359,
-                      "thisRangeTs": 1590969600,
-                    },
-                    Object {
-                      "id": "Jul",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1561939200,
-                    },
-                    Object {
-                      "id": "Aug",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1564617600,
-                    },
-                    Object {
-                      "id": "Sep",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1567296000,
-                    },
-                    Object {
-                      "id": "Oct",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1569888000,
-                    },
-                    Object {
-                      "id": "Nov",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1572566400,
-                    },
-                    Object {
-                      "id": "Dec",
-                      "lastRangeCount": 0,
-                      "lastRangeTs": 1575158400,
-                    },
-                  ]
-                }
-                enableGridY={false}
-                enableLabel={false}
-                groupMode="grouped"
-                indexBy="id"
-                innerPadding={2}
-                keys={
-                  Array [
-                    "lastRangeCount",
-                    "thisRangeCount",
-                  ]
-                }
-                layers={
-                  Array [
-                    "grid",
-                    "axes",
-                    "bars",
-                    "markers",
-                    "annotations",
-                    "legends",
-                  ]
-                }
-                legends={
-                  Array [
-                    Object {
-                      "anchor": "top-right",
-                      "data": Array [
-                        Object {
-                          "color": "#353070",
-                          "id": "lastRangeName",
-                          "label": "2019",
-                        },
-                        Object {
-                          "color": "#eb743b",
-                          "id": "thisRangeName",
-                          "label": "2020",
-                        },
-                      ],
-                      "dataFrom": "keys",
-                      "direction": "row",
-                      "itemHeight": 20,
-                      "itemWidth": 70,
-                      "symbolSize": 10,
-                      "translateY": -20,
-                    },
-                  ]
-                }
-                margin={
-                  Object {
-                    "bottom": 40,
-                    "left": 45,
-                    "top": 30,
-                  }
-                }
-                minValue={0}
-                padding={0.3}
-                tooltip={[Function]}
-              >
-                <Ee>
-                  <div
-                    style={
+                    "anchor": "top-right",
+                    "data": Array [
                       Object {
-                        "height": "100%",
-                        "width": "100%",
-                      }
+                        "color": "#353070",
+                        "id": "lastRangeName",
+                        "label": "2019",
+                      },
+                      Object {
+                        "color": "#eb743b",
+                        "id": "thisRangeName",
+                        "label": "2020",
+                      },
+                    ],
+                    "dataFrom": "keys",
+                    "direction": "row",
+                    "itemHeight": 20,
+                    "itemWidth": 70,
+                    "symbolSize": 10,
+                    "translateY": -20,
+                  },
+                ]
+              }
+              margin={
+                Object {
+                  "bottom": 40,
+                  "left": 45,
+                  "top": 30,
+                }
+              }
+              minValue={0}
+              padding={0.3}
+              tooltip={[Function]}
+            >
+              <Ee>
+                <div
+                  style={
+                    Object {
+                      "height": "100%",
+                      "width": "100%",
                     }
-                  />
-                </Ee>
-              </Component>
-            </BarDualTone>
+                  }
+                />
+              </Ee>
+            </Component>
           </div>
-        </div>
+        </BarDualTone>
         <div
           className="row mt-5 mb-15"
         >

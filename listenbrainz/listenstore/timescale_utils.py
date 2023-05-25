@@ -24,9 +24,9 @@ def delete_listens():
     #
     # 1) Delete Mismatch
     #
-    # The listen_delete_metadata table holds the rows to be deleted from listen. We fetch the rows from it and delete
-    # corresponding listens from listen table. After that, we update counts and timestamps in listen_user_metadata table
-    # as necessary. Between the time rows are deleted from listen table and the time we get to clear up the
+    # The listen_delete_metadata table holds the rows to be deleted FROM listen. We fetch the rows from it and delete
+    # corresponding listens FROM listen table. After that, we update counts and timestamps in listen_user_metadata table
+    # as necessary. Between the time rows are deleted FROM listen table and the time we get to clear up the
     # listen_delete_metadata table, new rows may have been inserted in the latter. So, we would have deleted rows from
     # listen_delete_metadata table without deleting the actual listens.
     #
@@ -105,13 +105,11 @@ def delete_listens():
              WHERE ldm.id <= :max_id
                AND l.user_id = ldm.user_id
                AND l.listened_at = ldm.listened_at
-               AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = ldm.recording_msid::text
+               AND l.recording_msid = ldm.recording_msid
          RETURNING l.user_id, l.created
         ), update_counts AS (
             SELECT user_id
-                 -- count only listens which were created earlier than the the existing count high
-                 -- watermark in listen metadata table
-                 , count(*) FILTER (WHERE dl.created < lm.created) AS deleted_count
+                 , count(*) AS deleted_count
               FROM deleted_listens dl
               JOIN listen_user_metadata lm
              USING (user_id)

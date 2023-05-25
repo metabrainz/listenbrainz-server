@@ -1,10 +1,8 @@
 import calendar
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Dict, List, Tuple, Iterable
 
-import ujson
-from pydantic import ValidationError
 from requests import HTTPError
 
 import listenbrainz.db.stats as db_stats
@@ -27,7 +25,7 @@ from listenbrainz.webserver.errors import (APIBadRequest,
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
-                                                    get_non_negative_param)
+                                                    get_non_negative_param, is_valid_uuid)
 
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
@@ -165,6 +163,78 @@ def get_release(user_name):
     return _get_entity_stats(user_name, "releases", "total_release_count")
 
 
+@stats_api_bp.route("/user/<user_name>/release-groups")
+@crossdomain
+@ratelimit()
+def get_release_group(user_name):
+    """
+    Get top release groups for user ``user_name``.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "release_groups": [
+                    {
+                        "artist_mbids": [
+                            "62162215-b023-4f0e-84bd-1e9412d5b32c",
+                            "faf4cefb-036c-4c88-b93a-5b03dd0a0e6b",
+                            "e07d9474-00ea-4460-ac27-88b46b3d976e"
+                        ],
+                        "artist_name": "All Time Low ft. Demi Lovato & blackbear",
+                        "caa_id": 29179588350,
+                        "caa_release_mbid": "ee65192d-31f3-437a-b170-9158d2172dbc",
+                        "listen_count": 456,
+                        "release_group_mbid": "326b4a29-dff5-4fab-87dc-efc1494001c6",
+                        "release_group_name": "Monsters"
+                    },
+                    {
+                        "artist_mbids": [
+                            "c8b03190-306c-4120-bb0b-6f2ebfc06ea9"
+                        ],
+                        "artist_name": "The Weeknd",
+                        "caa_id": 25720993837,
+                        "caa_release_mbid": "19e4f6cc-ca0c-4897-8dfc-a36914b7f998",
+                        "listen_count": 381,
+                        "release_group_mbid": "78570bea-2a26-467c-a3db-c52723ceb394",
+                        "release_group_name": "After Hours"
+                    }
+                ],
+                "count": 2,
+                "total_release_group_count": 175,
+                "range": "all_time",
+                "last_updated": 1588494361,
+                "user_id": "John Doe",
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - ``artist_mbids`` and ``release_group_mbid`` are optional fields and
+          may not be present in all the responses
+
+    :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of releases to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 releases will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    return _get_entity_stats(user_name, "release_groups", "total_release_group_count")
+
+
 @stats_api_bp.route("/user/<user_name>/recordings")
 @crossdomain
 @ratelimit()
@@ -243,9 +313,6 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
         raise APINoContent('')
 
     entity_list, total_entity_count = _process_user_entity(stats, offset, count)
-
-    entity = "artists" if entity == "test_artists" else entity
-
     return jsonify({"payload": {
         "user_id": user_name,
         entity: entity_list,
@@ -486,6 +553,173 @@ def get_artist_map(user_name: str):
     })
 
 
+@stats_api_bp.route("/artist/<artist_mbid>/listeners")
+@crossdomain
+@ratelimit()
+def get_artist_listeners(artist_mbid):
+    """ Get top listeners for artist ``artist_mbid``. This includes the total listen count for the entity
+    and top N listeners with their individual listen count for that artist in a given time range. A sample
+    response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_mbid": "00034ede-a1f1-4219-be39-02f36853373e",
+            "artist_name": "O Rappa",
+            "from_ts": 1009843200,
+            "last_updated": 1681839677,
+            "listeners": [
+              {
+                "listen_count": 2469,
+                "user_name": "RosyPsanda"
+              },
+              {
+                "listen_count": 1858,
+                "user_name": "alexyagui"
+              },
+              {
+                "listen_count": 578,
+                "user_name": "rafael_gn"
+              },
+              {
+                "listen_count": 8,
+                "user_name": "italooliveira"
+              },
+              {
+                "listen_count": 7,
+                "user_name": "paulodesouza"
+              },
+              {
+                "listen_count": 1,
+                "user_name": "oldpunisher"
+              }
+            ],
+            "stats_range": "all_time",
+            "to_ts": 1681777035,
+            "total_listen_count": 16393
+          }
+        }
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated or the entity does not exist,
+        empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: Entity not found
+    :resheader Content-Type: *application/json*
+    """
+    return _get_entity_listeners("artists", artist_mbid)
+
+
+@stats_api_bp.route("/release-group/<release_group_mbid>/listeners")
+@crossdomain
+@ratelimit()
+def get_release_group_listeners(release_group_mbid):
+    """ Get top listeners for release group ``release_group_mbid``. This includes the total listen count
+    for the entity and top N listeners with their individual listen count for that release group in a
+    given time range. A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_mbids": [
+              "c234fa42-e6a6-443e-937e-2f4b073538a3"
+            ],
+            "artist_name": "Chris Brown",
+            "caa_id": 23564822587,
+            "caa_release_mbid": "25f18616-5a9c-470e-964d-4eb8a511435b",
+            "from_ts": 1009843200,
+            "last_updated": 1681843150,
+            "listeners": [
+              {
+                "listen_count": 2365,
+                "user_name": "purpleyor"
+              },
+              {
+                "listen_count": 570,
+                "user_name": "dndty"
+              },
+              {
+                "listen_count": 216,
+                "user_name": "iammsyre"
+              },
+              {
+                "listen_count": 141,
+                "user_name": "dpmittal"
+              },
+              {
+                "listen_count": 33,
+                "user_name": "tazlad"
+              },
+              {
+                "listen_count": 30,
+                "user_name": "ratkutti"
+              },
+              {
+                "listen_count": 22,
+                "user_name": "Raymorjamiek"
+              },
+              {
+                "listen_count": 21,
+                "user_name": "MJJMC"
+              },
+              {
+                "listen_count": 12,
+                "user_name": "fookever"
+              },
+              {
+                "listen_count": 8,
+                "user_name": "Jamjamk12071983"
+              },
+              {
+                "listen_count": 1,
+                "user_name": "hassanymoses"
+              },
+              {
+                "listen_count": 1,
+                "user_name": "iJays"
+              }
+            ],
+            "release_group_mbid": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+            "release_group_name": "Indigo",
+            "stats_range": "all_time",
+            "to_ts": 1681777035,
+            "total_listen_count": 10291
+          }
+        }
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated or the entity does not exist,
+        empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: Entity not found
+    :resheader Content-Type: *application/json*
+    """
+    return _get_entity_listeners("release_groups", release_group_mbid)
+
+
+def _get_entity_listeners(entity, mbid):
+    if not is_valid_uuid(mbid):
+        raise APIBadRequest(f"{mbid} mbid format invalid.")
+
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get_entity_listener(entity, mbid, stats_range)
+    if stats is None:
+        raise APINoContent("")
+
+    return jsonify({"payload": stats})
+
+
 @stats_api_bp.route("/sitewide/artists")
 @crossdomain
 @ratelimit()
@@ -609,6 +843,76 @@ def get_sitewide_release():
     :resheader Content-Type: *application/json*
     """
     return _get_sitewide_stats("releases")
+
+
+@stats_api_bp.route("/sitewide/release-groups")
+@crossdomain
+@ratelimit()
+def get_sitewide_release_group():
+    """
+    Get sitewide top release groups.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "release_groups": [
+                    {
+                        "artist_mbids": [
+                            "62162215-b023-4f0e-84bd-1e9412d5b32c",
+                            "faf4cefb-036c-4c88-b93a-5b03dd0a0e6b",
+                            "e07d9474-00ea-4460-ac27-88b46b3d976e"
+                        ],
+                        "artist_name": "All Time Low ft. Demi Lovato & blackbear",
+                        "caa_id": 29179588350,
+                        "caa_release_mbid": "ee65192d-31f3-437a-b170-9158d2172dbc",
+                        "listen_count": 456,
+                        "release_group_mbid": "326b4a29-dff5-4fab-87dc-efc1494001c6",
+                        "release_group_name": "Monsters"
+                    },
+                    {
+                        "artist_mbids": [
+                            "c8b03190-306c-4120-bb0b-6f2ebfc06ea9"
+                        ],
+                        "artist_name": "The Weeknd",
+                        "caa_id": 25720993837,
+                        "caa_release_mbid": "19e4f6cc-ca0c-4897-8dfc-a36914b7f998",
+                        "listen_count": 381,
+                        "release_group_mbid": "78570bea-2a26-467c-a3db-c52723ceb394",
+                        "release_group_name": "After Hours"
+                    }
+                ],
+                "offset": 0,
+                "count": 2,
+                "range": "year",
+                "last_updated": 1588494361,
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - ``artist_mbids`` and ``release_mbid`` are optional fields and may not be present in all the responses
+
+    :param count: Optional, number of artists to return for each time range,
+        Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of artists to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    return _get_sitewide_stats("release_groups")
 
 
 @stats_api_bp.route("/sitewide/recordings")

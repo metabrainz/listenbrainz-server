@@ -33,7 +33,7 @@ import {
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 
-import GlobalAppContext, { GlobalAppContextT } from "../utils/GlobalAppContext";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
@@ -51,7 +51,6 @@ import {
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
-import SimpleModal from "../utils/SimpleModal";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -316,8 +315,8 @@ export default class UserFeedPage extends React.Component<
   getFeedback = async () => {
     const { currentUser, APIService } = this.context;
     const { events, newAlert } = this.props;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (currentUser?.name && events) {
       events.forEach((event) => {
@@ -330,17 +329,17 @@ export default class UserFeedPage extends React.Component<
           "metadata.track_metadata.additional_info.recording_mbid"
         );
         if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
+          recording_msids.push(recordingMsid);
         }
         if (recordingMbid) {
-          recording_mbids += `${recordingMbid},`;
+          recording_mbids.push(recordingMbid);
         }
       });
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
@@ -889,7 +888,6 @@ export default class UserFeedPage extends React.Component<
           </div>
           <BrainzPlayer
             listens={listens}
-            newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
@@ -919,20 +917,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const { events } = reactProps;
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const UserFeedPageWithAlertNotifications = withAlertNotifications(
     UserFeedPage
   );
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <UserFeedPageWithAlertNotifications
             initialAlerts={optionalAlerts}

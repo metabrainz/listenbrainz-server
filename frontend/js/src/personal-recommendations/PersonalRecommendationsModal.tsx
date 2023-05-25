@@ -115,15 +115,20 @@ export default NiceModal.create(
         event.preventDefault();
         if (currentUser?.auth_token) {
           const metadata: UserTrackPersonalRecommendationMetadata = {
-            artist_name: getArtistName(listenToPersonallyRecommend),
-            track_name: getTrackName(listenToPersonallyRecommend),
-            release_name: listenToPersonallyRecommend!.track_metadata
-              .release_name,
-            recording_mbid: getRecordingMBID(listenToPersonallyRecommend),
-            recording_msid: getRecordingMSID(listenToPersonallyRecommend),
             users,
             blurb_content: blurbContent,
           };
+
+          const recording_mbid = getRecordingMBID(listenToPersonallyRecommend);
+          if (recording_mbid) {
+            metadata.recording_mbid = recording_mbid;
+          }
+
+          const recording_msid = getRecordingMSID(listenToPersonallyRecommend);
+          if (recording_msid) {
+            metadata.recording_msid = recording_msid;
+          }
+
           try {
             const status = await APIService.submitPersonalRecommendation(
               currentUser.auth_token,
@@ -136,7 +141,9 @@ export default NiceModal.create(
                 `You recommended this track to ${users.length} user${
                   users.length > 1 ? "s" : ""
                 }`,
-                `${metadata.artist_name} - ${metadata.track_name}`
+                `${getArtistName(listenToPersonallyRecommend)} - ${getTrackName(
+                  listenToPersonallyRecommend
+                )}`
               );
               closeModal();
             }

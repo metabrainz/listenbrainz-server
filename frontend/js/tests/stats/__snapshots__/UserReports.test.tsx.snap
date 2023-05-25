@@ -3,15 +3,9 @@
 exports[`Sitewide Stats UserReports renders without crashing 1`] = `
 <div>
   <div
-    className="row mt-15 flex flex-wrap"
+    className="tertiary-nav dragscroll"
   >
-    <div
-      style={
-        Object {
-          "flex": "initial",
-        }
-      }
-    >
+    <div>
       <Pill
         active={false}
         onClick={[Function]}
@@ -62,17 +56,11 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
         All time
       </Pill>
     </div>
-    <div
-      style={
-        Object {
-          "flex": "initial",
-          "marginLeft": "auto",
-        }
-      }
-    >
-      <a
+    <div>
+      <button
         className="pill secondary active"
-        href="http://localhost/statistics/?range=week"
+        onClick={[Function]}
+        type="button"
       >
         <FontAwesomeIcon
           border={false}
@@ -106,7 +94,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
           transform={null}
         />
          Global
-      </a>
+      </button>
     </div>
   </div>
   <section
@@ -144,7 +132,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
         <ErrorBoundary>
           <UserTopEntity
             apiUrl="foobar"
-            entity="release"
+            entity="release-group"
             newAlert={[Function]}
             range="week"
             terminology="album"
@@ -182,15 +170,9 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
 exports[`User Stats UserReports renders without crashing 1`] = `
 <div>
   <div
-    className="row mt-15 flex flex-wrap"
+    className="tertiary-nav dragscroll"
   >
-    <div
-      style={
-        Object {
-          "flex": "initial",
-        }
-      }
-    >
+    <div>
       <Pill
         active={false}
         onClick={[Function]}
@@ -241,17 +223,11 @@ exports[`User Stats UserReports renders without crashing 1`] = `
         All time
       </Pill>
     </div>
-    <div
-      style={
-        Object {
-          "flex": "initial",
-          "marginLeft": "auto",
-        }
-      }
-    >
-      <a
+    <div>
+      <button
         className="pill secondary active"
-        href="http://localhost/user/test_user/stats/?range=week"
+        onClick={[Function]}
+        type="button"
       >
         <FontAwesomeIcon
           border={false}
@@ -286,10 +262,11 @@ exports[`User Stats UserReports renders without crashing 1`] = `
         />
          
         test_user
-      </a>
-      <a
+      </button>
+      <button
         className="pill secondary "
-        href="http://localhost/statistics/?range=week"
+        onClick={[Function]}
+        type="button"
       >
         <FontAwesomeIcon
           border={false}
@@ -323,7 +300,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
           transform={null}
         />
          Global
-      </a>
+      </button>
     </div>
   </div>
   <section
@@ -371,7 +348,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
         <ErrorBoundary>
           <UserTopEntity
             apiUrl="foobar"
-            entity="release"
+            entity="release-group"
             newAlert={[Function]}
             range="week"
             terminology="album"

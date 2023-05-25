@@ -3,6 +3,7 @@
 {% block title %}Sign in - ListenBrainz{% endblock %}
 
 {% block content %}
+<div role="main" class="text-center">
   <h2 class="page-title">Sign in</h2>
 
   <p>To sign in, use your MusicBrainz account, and authorize ListenBrainz to access your profile data.</p>
@@ -35,4 +36,5 @@
     <a href="{{ url_for('login.musicbrainz', next=request.args.get('next')) }}"
        class="btn btn-primary btn-lg btn-block">Sign in with MusicBrainz</a>
   </div>
+</div>
 {% endblock %}

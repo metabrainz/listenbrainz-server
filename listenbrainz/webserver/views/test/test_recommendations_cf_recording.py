@@ -1,7 +1,7 @@
 import uuid
 from unittest import mock
 
-import ujson
+import orjson
 import listenbrainz.db.user as db_user
 from datetime import datetime
 
@@ -228,7 +228,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             },
             "recommendations": recommendations,
         }
-        received_props = ujson.loads(self.get_context_variable('props'))
+        received_props = orjson.loads(self.get_context_variable('props'))
         self.assertEqual(expected_props, received_props)
 
         # only assert fields that should change with 'active_section'
@@ -247,7 +247,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'similar_artist')
-        received_props = ujson.loads(self.get_context_variable('props'))
+        received_props = orjson.loads(self.get_context_variable('props'))
         self.assertEqual(expected_props, received_props)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.load_recordings_from_mbids')

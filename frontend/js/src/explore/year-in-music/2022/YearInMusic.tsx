@@ -46,7 +46,6 @@ import ListenCard from "../../../listens/ListenCard";
 import UserListModalEntry from "../../../follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
-import SimpleModal from "../../../utils/SimpleModal";
 import CustomChoropleth from "../../../stats/Choropleth";
 
 export type YearInMusicProps = {
@@ -55,7 +54,7 @@ export type YearInMusicProps = {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
-      artist_mbids: string[];
+      artist_mbid: string;
       listen_count: number;
     }>;
     top_releases: Array<{
@@ -326,7 +325,7 @@ export default class YearInMusic extends React.Component<
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
-        <div role="main" id="year-in-music" className="yim-2022 container">
+        <div id="year-in-music" className="yim-2022 container">
           <div id="main-header" className="flex-center">
             <img
               className="img-responsive header-image"
@@ -474,7 +473,7 @@ export default class YearInMusic extends React.Component<
     );
     const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2022`;
     return (
-      <div role="main" id="year-in-music" className="yim-2022">
+      <div id="year-in-music" className="yim-2022">
         <div id="main-header" className="flex-center">
           <img
             className="img-responsive header-image"
@@ -702,7 +701,7 @@ export default class YearInMusic extends React.Component<
                           const details = getEntityLink(
                             "artist",
                             artist.artist_name,
-                            artist.artist_mbids[0]
+                            artist.artist_mbid
                           );
                           const thumbnail = (
                             <span className="badge badge-info">
@@ -719,7 +718,7 @@ export default class YearInMusic extends React.Component<
                               track_name: "",
                               artist_name: artist.artist_name,
                               additional_info: {
-                                artist_mbids: artist.artist_mbids,
+                                artist_mbids: [artist.artist_mbid],
                               },
                             },
                           };
@@ -727,7 +726,7 @@ export default class YearInMusic extends React.Component<
                           return (
                             <ListenCard
                               compact
-                              key={`top-artists-${artist.artist_name}-${artist.artist_mbids}`}
+                              key={`top-artists-${artist.artist_name}-${artist.artist_mbid}`}
                               listen={listenHere}
                               customThumbnail={thumbnail}
                               listenDetails={details}
@@ -951,7 +950,6 @@ export default class YearInMusic extends React.Component<
                       </span>
                     </div>
                     <CustomChoropleth
-                      width={1000}
                       data={artistMapDataForGraph}
                       selectedMetric={selectedMetric}
                       colorScaleRange={[
@@ -1228,7 +1226,6 @@ export default class YearInMusic extends React.Component<
         </div>
         <BrainzPlayer
           listens={listens}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
@@ -1250,17 +1247,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
 
-  const modalRef = React.createRef<SimpleModal>();
-  const globalProps: GlobalAppContextT = {
-    ...globalAppContext,
-    modal: modalRef,
-  };
-
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <SimpleModal ref={modalRef} />
-      <GlobalAppContext.Provider value={globalProps}>
+      <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <YearInMusicWithAlertNotifications
             user={user}
