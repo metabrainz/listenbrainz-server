@@ -161,7 +161,7 @@ def serialize_xspf(playlist: Playlist):
     playlist_root = ET.Element("playlist")
     playlist_root.attrib = {
         "version": "1",
-        "xmlns": "http://xspf.org/ns/0"
+        "xmlns": "http://xspf.org/ns/0/"
     }
 
     creator = ET.SubElement(playlist_root, "creator")
