@@ -327,6 +327,7 @@ export default class UserPlaylists extends React.Component<
         </div>
         <PlaylistsList
           onPaginatePlaylists={this.updatePlaylists}
+          onCopiedPlaylist={this.onCopiedPlaylist}
           playlists={playlists}
           activeSection={playlistType}
           user={user}
