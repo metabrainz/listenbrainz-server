@@ -4,7 +4,11 @@ import * as React from "react";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import { faGlobe, faUser } from "@fortawesome/free-solid-svg-icons";
+import {
+  faGlobe,
+  faInfoCircle,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Pill from "../components/Pill";
@@ -144,6 +148,17 @@ export default class UserReports extends React.Component<
             </button>
           </div>
         </div>
+        <small>
+          <FontAwesomeIcon icon={faInfoCircle} />
+          &nbsp;
+          <a
+            href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            How often are my stats updated?
+          </a>
+        </small>
         <section id="listening-activity">
           <ErrorBoundary>
             <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
