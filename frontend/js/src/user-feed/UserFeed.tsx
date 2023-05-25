@@ -315,8 +315,8 @@ export default class UserFeedPage extends React.Component<
   getFeedback = async () => {
     const { currentUser, APIService } = this.context;
     const { events, newAlert } = this.props;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (currentUser?.name && events) {
       events.forEach((event) => {
@@ -329,17 +329,17 @@ export default class UserFeedPage extends React.Component<
           "metadata.track_metadata.additional_info.recording_mbid"
         );
         if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
+          recording_msids.push(recordingMsid);
         }
         if (recordingMbid) {
-          recording_mbids += `${recordingMbid},`;
+          recording_mbids.push(recordingMbid);
         }
       });
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {

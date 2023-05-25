@@ -91,9 +91,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         return;
       }
       try {
-        const feedbackObject = await APIService.getFeedbackForUserForMBIDs(
+        const feedbackObject = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recordingMBID
+          [recordingMBID]
         );
         if (feedbackObject?.feedback?.length) {
           const feedback: any = first(feedbackObject.feedback);

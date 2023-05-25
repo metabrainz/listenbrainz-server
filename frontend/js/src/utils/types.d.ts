@@ -712,3 +712,8 @@ declare type SearchUser = {
 declare type UserPreferences = {
   saveData?: boolean;
 };
+
+declare type FeedbackForUserForRecordingsRequestBody = {
+  recording_mbids: string[];
+  recording_msids?: string[];
+};
