@@ -5,7 +5,6 @@ import { createRoot } from "react-dom/client";
 import { get, findIndex, omit } from "lodash";
 import { saveAs } from "file-saver";
 
-import { ActionMeta, InputActionMeta, ValueType } from "react-select";
 import {
   faCog,
   faFileExport,
@@ -15,11 +14,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 
-import AsyncSelect from "react-select/async";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { ReactSortable } from "react-sortablejs";
-import debounceAsync from "debounce-async";
 import { sanitize } from "dompurify";
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import * as Sentry from "@sentry/react";
@@ -32,7 +29,6 @@ import {
 } from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import SpotifyAPIService from "../utils/SpotifyAPIService";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
@@ -50,9 +46,9 @@ import {
   JSPFTrackToListen,
 } from "./utils";
 import { getPageProps } from "../utils/utils";
+import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
 
 export type PlaylistPageProps = {
-  labsApiUrl: string;
   playlist: JSPFObject;
 } & WithAlertNotificationsInjectedProps;
 
@@ -60,8 +56,6 @@ export interface PlaylistPageState {
   playlist: JSPFPlaylist;
   recordingFeedbackMap: RecordingFeedbackMap;
   loading: boolean;
-  searchInputValue: string;
-  cachedSearchResults: OptionType[];
 }
 
 type OptionType = { label: string; value: ACRMSearchResult };
@@ -72,19 +66,19 @@ export default class PlaylistPage extends React.Component<
 > {
   static contextType = GlobalAppContext;
 
-  static makeJSPFTrack(track: ACRMSearchResult): JSPFTrack {
+  static makeJSPFTrack(trackMetadata: TrackMetadata): JSPFTrack {
     return {
-      identifier: `${PLAYLIST_TRACK_URI_PREFIX}${track.recording_mbid}`,
-      title: track.recording_name,
-      creator: track.artist_credit_name,
+      identifier: `${PLAYLIST_TRACK_URI_PREFIX}${
+        trackMetadata.recording_mbid ??
+        trackMetadata.additional_info?.recording_mbid
+      }`,
+      title: trackMetadata.track_name,
+      creator: trackMetadata.artist_name,
     };
   }
 
   declare context: React.ContextType<typeof GlobalAppContext>;
   private APIService!: APIServiceClass;
-
-  private SpotifyAPIService?: SpotifyAPIService;
-  private searchForTrackDebounced: any;
 
   private socket!: Socket;
 
@@ -103,24 +97,15 @@ export default class PlaylistPage extends React.Component<
       playlist: props.playlist?.playlist || {},
       recordingFeedbackMap: {},
       loading: false,
-      searchInputValue: "",
-      cachedSearchResults: [],
     };
-
-    this.searchForTrackDebounced = debounceAsync(this.searchForTrack, 500, {
-      leading: false,
-    });
   }
 
   async componentDidMount(): Promise<void> {
-    const { APIService, spotifyAuth } = this.context;
+    const { APIService } = this.context;
     this.APIService = APIService;
     this.connectWebsockets();
     const recordingFeedbackMap = await this.loadFeedback();
     this.setState({ recordingFeedbackMap });
-    if (spotifyAuth) {
-      this.SpotifyAPIService = new SpotifyAPIService(spotifyAuth);
-    }
   }
 
   componentWillUnmount(): void {
@@ -170,83 +155,48 @@ export default class PlaylistPage extends React.Component<
     this.setState({ playlist: newPlaylist });
   };
 
-  addTrack = async (
-    track: ValueType<OptionType>,
-    actionMeta: ActionMeta<OptionType>
-  ): Promise<void> => {
-    if (actionMeta.action === "select-option") {
-      if (!track) {
-        return;
-      }
-      const { label, value: selectedRecording } = track as OptionType;
-      const { newAlert } = this.props;
-      const { playlist } = this.state;
-      const { currentUser } = this.context;
-      if (!currentUser?.auth_token) {
-        this.alertMustBeLoggedIn();
-        return;
-      }
-      if (!this.hasRightToEdit()) {
-        this.alertNotAuthorized();
-        return;
-      }
-      try {
-        const jspfTrack = PlaylistPage.makeJSPFTrack(selectedRecording);
-        await this.APIService.addPlaylistItems(
-          currentUser.auth_token,
-          getPlaylistId(playlist),
-          [jspfTrack]
-        );
-        newAlert("success", "Added track", `Added track ${label}`);
-        const recordingFeedbackMap = await this.loadFeedback([
-          selectedRecording.recording_mbid,
-        ]);
-        jspfTrack.id = selectedRecording.recording_mbid;
-        this.setState(
-          {
-            playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
-            recordingFeedbackMap,
-            searchInputValue: "",
-            cachedSearchResults: [],
-          },
-          this.emitPlaylistChanged
-        );
-      } catch (error) {
-        this.handleError(error);
-      }
+  addTrack = async (selectedTrackMetadata: TrackMetadata): Promise<void> => {
+    if (!selectedTrackMetadata) {
+      return;
     }
-    if (actionMeta.action === "clear") {
-      this.setState({ searchInputValue: "", cachedSearchResults: [] });
+    const { newAlert } = this.props;
+    const { playlist } = this.state;
+    const { currentUser } = this.context;
+    if (!currentUser?.auth_token) {
+      this.alertMustBeLoggedIn();
+      return;
     }
-  };
-
-  searchForTrack = async (inputValue: string): Promise<OptionType[]> => {
+    if (!this.hasRightToEdit()) {
+      this.alertNotAuthorized();
+      return;
+    }
     try {
-      const { labsApiUrl } = this.props;
-      const recordingSearchURI = `${labsApiUrl}${
-        labsApiUrl.endsWith("/") ? "" : "/"
-      }recording-search/json`;
-      const response = await fetch(recordingSearchURI, {
-        method: "POST",
-        body: JSON.stringify([{ query: inputValue }]),
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
+      const jspfTrack = PlaylistPage.makeJSPFTrack(selectedTrackMetadata);
+      await this.APIService.addPlaylistItems(
+        currentUser.auth_token,
+        getPlaylistId(playlist),
+        [jspfTrack]
+      );
+      newAlert(
+        "success",
+        "Added track",
+        `${selectedTrackMetadata.track_name} by ${selectedTrackMetadata.artist_name}`
+      );
+      const recordingFeedbackMap = await this.loadFeedback([
+        (selectedTrackMetadata.recording_mbid ??
+          selectedTrackMetadata.additional_info?.recording_mbid) as string,
+      ]);
+      jspfTrack.id = selectedTrackMetadata.recording_mbid;
+      this.setState(
+        {
+          playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
+          recordingFeedbackMap,
         },
-      });
-      // Converting to JSON
-      const parsedResponse: ACRMSearchResult[] = await response.json();
-      // Format the received items to a react-select option
-      const results = parsedResponse.map((hit: ACRMSearchResult) => ({
-        label: `${hit.recording_name} — ${hit.artist_credit_name}`,
-        value: hit,
-      }));
-      this.setState({ cachedSearchResults: results });
-      return results;
+        this.emitPlaylistChanged
+      );
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.debug(error);
+      this.handleError(error);
     }
-    return [];
   };
 
   copyPlaylist = async (): Promise<void> => {
@@ -625,23 +575,8 @@ export default class PlaylistPage extends React.Component<
     this.setState({ loading: false });
   };
 
-  handleInputChange = (inputValue: string, params: InputActionMeta) => {
-    /* Prevent clearing the search value on select dropdown close and input blur */
-    if (["menu-close", "set-value", "input-blur"].includes(params.action)) {
-      const { searchInputValue } = this.state;
-      this.setState({ searchInputValue });
-    } else {
-      this.setState({ searchInputValue: inputValue, cachedSearchResults: [] });
-    }
-  };
-
   render() {
-    const {
-      playlist,
-      loading,
-      searchInputValue,
-      cachedSearchResults,
-    } = this.state;
+    const { playlist, loading } = this.state;
     const { APIService, spotifyAuth } = this.context;
     const { newAlert } = this.props;
     const { track: tracks } = playlist;
@@ -658,7 +593,7 @@ export default class PlaylistPage extends React.Component<
       <div role="main">
         <Loader
           isLoading={loading}
-          loaderText="Exporting playlist to Spotify"
+          loaderText="Exporting playlist…"
           className="full-page-loader"
         />
         <div className="row">
@@ -872,20 +807,9 @@ export default class PlaylistPage extends React.Component<
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
                   </span>
-                  <AsyncSelect
-                    className="search"
-                    cacheOptions
-                    isClearable
-                    closeMenuOnSelect={false}
-                    loadingMessage={({ inputValue }) =>
-                      `Searching for '${inputValue}'…`
-                    }
-                    loadOptions={this.searchForTrackDebounced}
-                    defaultOptions={cachedSearchResults}
-                    onChange={this.addTrack}
-                    placeholder="Artist followed by track name"
-                    inputValue={searchInputValue}
-                    onInputChange={this.handleInputChange}
+                  <SearchTrackOrMBID
+                    onSelectRecording={this.addTrack}
+                    newAlert={newAlert}
                   />
                 </Card>
               )}
@@ -933,7 +857,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
-  const { labs_api_url, playlist } = reactProps;
+  const { playlist } = reactProps;
 
   const PlaylistPageWithAlertNotifications = withAlertNotifications(
     PlaylistPage
@@ -946,7 +870,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <NiceModal.Provider>
           <PlaylistPageWithAlertNotifications
             initialAlerts={optionalAlerts}
-            labsApiUrl={labs_api_url}
             playlist={playlist}
           />
         </NiceModal.Provider>
