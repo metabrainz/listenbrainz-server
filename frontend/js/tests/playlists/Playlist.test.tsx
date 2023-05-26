@@ -19,6 +19,8 @@ import { waitForComponentToPaint } from "../test-utils";
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
+jest.mock("../../src/utils/SearchTrackOrMBID");
+
 const { labsApiUrl, currentUser, playlist } = playlistPageProps;
 
 const props = {
