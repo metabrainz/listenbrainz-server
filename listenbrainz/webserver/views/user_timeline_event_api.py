@@ -76,12 +76,13 @@ def create_user_recording_recommendation_event(user_name):
     :statuscode 200: Successful query, recording has been recommended!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend recordings on the behalf of this user
+    :statuscode 403: Forbidden, you are not an approved user.
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+        raise APIForbidden("You don't have permissions to post to this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -188,7 +189,7 @@ def create_user_cb_review_event(user_name):
     """
     user = validate_auth_header()
     if user_name != user["musicbrainz_id"]:
-        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+        raise APIForbidden("You don't have permissions to post to this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -240,13 +241,14 @@ def user_feed(user_name: str):
     :statuscode 200: Successful query, you have feed events!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permission to view this user's feed.
+    :statuscode 403: Forbidden, you do not have permission to view this user's feed.
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to view this user's timeline.")
+        raise APIForbidden("You don't have permissions to view this user's timeline.")
 
     min_ts, max_ts, count = _validate_get_endpoint_params()
     if min_ts is None and max_ts is None:
@@ -367,13 +369,14 @@ def delete_feed_events(user_name):
     :statuscode 200: Successful deletion
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
+    :statuscode 403: Forbidden, you do not have permission to delete from this user's feed.
     :statuscode 404: User not found
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
     '''
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
+        raise APIForbidden("You don't have permissions to delete from this user's timeline.")
 
     try:
         event = orjson.loads(request.get_data())
@@ -425,6 +428,7 @@ def hide_user_timeline_event(user_name):
     :statuscode 200: Event hidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
+    :statuscode 403: Forbidden, you don't have permissions to hide events from this user's timeline.
     :statuscode 404: User not found
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
@@ -432,7 +436,7 @@ def hide_user_timeline_event(user_name):
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to hide events from this user's timeline.")
+        raise APIForbidden("You don't have permissions to hide events from this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -480,6 +484,7 @@ def unhide_user_timeline_event(user_name):
     :statuscode 200: Event unhidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
+    :statuscode 403: Forbidden
     :statuscode 404: User not found
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
@@ -487,7 +492,7 @@ def unhide_user_timeline_event(user_name):
     
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
+        raise APIForbidden("You don't have permissions to delete events from this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -527,6 +532,7 @@ def create_personal_recommendation_event(user_name):
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend
     personal recordings on the behalf of this user
+    :statuscode 403: Forbidden, you do not have permissions to recommend
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     '''
@@ -534,7 +540,7 @@ def create_personal_recommendation_event(user_name):
     user = validate_auth_header()
 
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+        raise APIForbidden("You don't have permissions to post to this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
