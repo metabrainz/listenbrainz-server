@@ -41,7 +41,9 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_yim_artist_map, handle_similar_recordings_start,
                                          handle_similar_recordings_end, handle_troi_playlists,
                                          handle_troi_playlists_end, handle_lb_tag_radio_insert, handle_lb_tag_radio_start,
-                                         handle_lb_tag_radio_end)
+                                         handle_lb_tag_radio_end, handle_popularity_recording,
+                                         handle_popularity_release, handle_popularity_artist,
+                                         handle_popularity_top_recording, handle_popularity_top_release)
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
@@ -70,6 +72,11 @@ response_handler_map = {
     'similar_recordings_start': handle_similar_recordings_start,
     'similar_recordings_end': handle_similar_recordings_end,
     'similar_artists': handle_similar_artists,
+    'mlhd_popularity_recording': handle_popularity_recording,
+    'mlhd_popularity_artist': handle_popularity_artist,
+    'mlhd_popularity_release': handle_popularity_release,
+    'mlhd_popularity_top_recording': handle_popularity_top_recording,
+    'mlhd_popularity_top_release': handle_popularity_top_release,
     'year_in_music_top_stats': handle_yim_top_stats,
     'year_in_music_listens_per_day': handle_yim_listens_per_day,
     'year_in_music_listen_count': handle_yim_listen_counts,

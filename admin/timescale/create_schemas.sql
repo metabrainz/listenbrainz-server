@@ -4,3 +4,4 @@ CREATE SCHEMA mapping;
 CREATE SCHEMA spotify_cache;
 CREATE SCHEMA similarity;
 CREATE SCHEMA tags;
+CREATE SCHEMA popularity;
