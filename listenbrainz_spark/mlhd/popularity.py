@@ -84,4 +84,4 @@ def main():
     }
 
     for name, query in queries.items():
-        generate(name, query)
+        yield generate(name, query)
