@@ -84,4 +84,5 @@ def main():
     }
 
     for name, query in queries.items():
-        yield generate(name, query)
+        for message in generate(name, query):
+            yield message
