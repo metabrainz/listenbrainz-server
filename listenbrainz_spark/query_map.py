@@ -30,6 +30,7 @@ import listenbrainz_spark.troi.periodic_jams
 import listenbrainz_spark.tags.tags
 import listenbrainz_spark.mlhd.download
 import listenbrainz_spark.mlhd.similarity
+import listenbrainz_spark.mlhd.popularity
 
 functions = {
     'stats.entity.listeners': listenbrainz_spark.stats.listener.entity.get_listener_stats,
@@ -54,6 +55,7 @@ functions = {
     'similarity.recording.mlhd': listenbrainz_spark.mlhd.similarity.main,
     'similarity.recording': listenbrainz_spark.similarity.recording.main,
     'similarity.artist': listenbrainz_spark.similarity.artist.main,
+    'mlhd.popularity.all': listenbrainz_spark.mlhd.popularity.main,
     'year_in_music.new_releases_of_top_artists':
         listenbrainz_spark.year_in_music.new_releases_of_top_artists.get_new_releases_of_top_artists,
     'year_in_music.tracks_of_the_year': listenbrainz_spark.year_in_music.tracks_of_the_year.calculate_tracks_of_the_year,

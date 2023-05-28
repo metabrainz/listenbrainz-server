@@ -217,5 +217,10 @@
     "name": "tags.default",
     "description": "Generate the tags dataset with percent rank",
     "params": []
+  },
+  "mlhd.popularity.all": {
+    "name": "mlhd.popularity.all",
+    "description": "Calculate all popularity data from mlhd.",
+    "params": []
   }
 }
