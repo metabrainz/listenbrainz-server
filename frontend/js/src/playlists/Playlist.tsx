@@ -509,7 +509,7 @@ export default class PlaylistPage extends React.Component<
       auth_token,
       playlistId
     );
-    const { external_url } = await result.json();
+    const { external_url } = result;
     newAlert(
       "success",
       "Playlist exported to Spotify",
