@@ -2,4 +2,33 @@
 #recommendations {
   &:extend(#listens);
 }
-/* stylelint-enable */
+/* stylelint-enable */  display: flex;
+  gap:1em;
+  margin-top: 2em;
+  border-top: 1px solid @light;
+  padding-top: 2em;
+  
+  .playlist-items{
+    flex:1;
+  }
+  .playlist-settings{
+    width: 350px;
+    padding: 1em;
+    overflow: hidden;
+
+    .playlist-settings-header{
+      background: @blue;
+      color: @white;
+      padding: 1em;
+      margin: -1em -1em 0;
+      .title{
+        margin-top:0.6em;
+        font-size: 1.3em;
+        font-weight: 600;
+      }
+    }
+    .buttons {
+      padding: 0.7em 0;
+    }
+  }
+}
