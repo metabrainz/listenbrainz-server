@@ -43,7 +43,6 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
     APIForbidden
 from listenbrainz.webserver.views.api_tools import validate_auth_header, \
     _validate_get_endpoint_params
-from listenbrainz.webserver.views.api_tools import DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET
 
 MAX_LISTEN_EVENTS_PER_USER = 2  # the maximum number of listens we want to return in the feed per user
 MAX_LISTEN_EVENTS_OVERALL = 10  # the maximum number of listens we want to return in the feed overall across users
