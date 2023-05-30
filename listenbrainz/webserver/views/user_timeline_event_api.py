@@ -43,6 +43,7 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
     APIForbidden
 from listenbrainz.webserver.views.api_tools import validate_auth_header, \
     _validate_get_endpoint_params
+from listenbrainz.webserver.views.api_tools import DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET
 
 MAX_LISTEN_EVENTS_PER_USER = 2  # the maximum number of listens we want to return in the feed per user
 MAX_LISTEN_EVENTS_OVERALL = 10  # the maximum number of listens we want to return in the feed overall across users
@@ -355,6 +356,8 @@ def user_feed_listens_following(user_name: str):
     :type user_name: ``str``
     :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned
     :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned
+    :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, you have feed listen-events!
@@ -369,7 +372,7 @@ def user_feed_listens_following(user_name: str):
     if user_name != user['musicbrainz_id']:
         raise APIForbidden("You don't have permissions to view this user's timeline.")
     
-    min_ts, max_ts, _ = _validate_get_endpoint_params()
+    min_ts, max_ts, count = _validate_get_endpoint_params()
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
@@ -379,7 +382,7 @@ def user_feed_listens_following(user_name: str):
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events(users_following, min_ts, max_ts)
+        listen_events = get_listen_events_new(users_following, min_ts, max_ts, count)
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
@@ -650,6 +653,59 @@ def get_listen_events(
         max_ts=max_ts,
         per_user_limit=MAX_LISTEN_EVENTS_PER_USER,
         limit=MAX_LISTEN_EVENTS_OVERALL
+    )
+
+    events = []
+    for listen in listens:
+        try:
+            listen_dict = listen.to_api()
+            api_listen = APIListen(**listen_dict)
+            events.append(APITimelineEvent(
+                event_type=UserTimelineEventType.LISTEN,
+                user_name=api_listen.user_name,
+                created=api_listen.listened_at,
+                metadata=api_listen,
+                hidden=False
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            continue
+    return events
+
+
+def get_listen_events_new(
+    users: List[Dict],
+    min_ts: int,
+    max_ts: int,
+    count: int
+) -> List[APITimelineEvent]:
+    """ Gets all listen events in the feed.
+    """
+    # to avoid timeouts while fetching listen events, we want to make
+    # sure that both min_ts and max_ts are defined. if only one of those
+    # is set, calculate the other from it using a default window length.
+    # if neither is set, use current time as max_ts and subtract window
+    # length to get min_ts.
+    if min_ts and max_ts:
+        min_ts = datetime.utcfromtimestamp(min_ts)
+        max_ts = datetime.utcfromtimestamp(max_ts)
+    else:
+        if min_ts:
+            min_ts = datetime.utcfromtimestamp(min_ts)
+            max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW
+        elif max_ts:
+            max_ts = datetime.utcfromtimestamp(max_ts)
+            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
+        else:
+            max_ts = datetime.utcnow()
+            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
+
+    listens = timescale_connection._ts.fetch_recent_listens_for_users(
+        users,
+        min_ts=min_ts,
+        max_ts=max_ts,
+        per_user_limit=count,
+        limit=count
     )
 
     events = []
