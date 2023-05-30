@@ -161,24 +161,30 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         # for now, so let's remove them for this test.
         payload = self.remove_own_follow_events(payload)
 
-        # should now only have 4 listens, 2 per user
-        self.assertEqual(4, payload['count'])
+        # should have all 6 listens.
+        self.assertEqual(6, payload['count'])
 
-        # first 2 events should have higher timestamps and user should be following_1
+        # first 3 events should have higher timestamps and user should be following_1
         self.assertEqual('listen', payload['events'][0]['event_type'])
         self.assertEqual(ts, payload['events'][0]['created'])
         self.assertEqual('following_1', payload['events'][0]['user_name'])
         self.assertEqual('listen', payload['events'][1]['event_type'])
         self.assertEqual(ts - 1, payload['events'][1]['created'])
         self.assertEqual('following_1', payload['events'][1]['user_name'])
-
-        # next 2 events should have lower timestamps and user should be following_2
         self.assertEqual('listen', payload['events'][2]['event_type'])
-        self.assertEqual(ts - 10, payload['events'][2]['created'])
-        self.assertEqual('following_2', payload['events'][2]['user_name'])
+        self.assertEqual(ts - 2, payload['events'][2]['created'])
+        self.assertEqual('following_1', payload['events'][2]['user_name'])
+
+        # next 3 events should have lower timestamps and user should be following_2
         self.assertEqual('listen', payload['events'][3]['event_type'])
-        self.assertEqual(ts - 11, payload['events'][3]['created'])
+        self.assertEqual(ts - 10, payload['events'][3]['created'])
         self.assertEqual('following_2', payload['events'][3]['user_name'])
+        self.assertEqual('listen', payload['events'][4]['event_type'])
+        self.assertEqual(ts - 11, payload['events'][4]['created'])
+        self.assertEqual('following_2', payload['events'][4]['user_name'])
+        self.assertEqual('listen', payload['events'][5]['event_type'])
+        self.assertEqual(ts - 12, payload['events'][5]['created'])
+        self.assertEqual('following_2', payload['events'][5]['user_name'])
 
     def test_it_raises_unauthorized_for_a_different_user(self):
         r = self.client.get('/1/user/someotheruser/feed/events')
