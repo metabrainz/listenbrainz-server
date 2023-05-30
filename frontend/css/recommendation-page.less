@@ -2,7 +2,65 @@
 #recommendations {
   &:extend(#listens);
 }
-/* stylelint-enable */  display: flex;
+/* stylelint-enable */
+
+.playlists-masonry{
+  width: 100%;
+  display: grid;
+  grid-gap: 1em;
+  grid-auto-rows: 150px;
+  grid-auto-columns: 300px;
+  grid-auto-flow: column;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  
+  // hide overflow behind gradient to indicate there's more
+  &::after {
+    content: "";
+    width: 4em;
+    background: linear-gradient(270deg, #fff, transparent);
+    position: sticky;
+    pointer-events: none;
+    right: 0;
+    height: 220%;
+  }
+  
+  > *{
+    padding:1em;
+    background: yellowgreen;
+    display: flex;
+    align-items: flex-end;
+    .title{
+      font-family: Roboto, sans-serif;
+      font-weight: 900;
+      font-size:2em;
+      line-height: 1.1em;
+      color: @blue;
+    }
+    .btn {
+      margin-left: auto;
+    }
+    &.selected{
+      border: 5px solid @blue;
+      border-radius: 3px;
+    }
+  }
+  .weekly-jams{
+    // fancy css background
+    grid-column-end: span 2;
+    grid-row-end: span 2;
+    .title {
+      width: 5em;
+      font-size: 4em;
+    }
+  }
+  &:nth-child(2){
+    // fancy css background #2
+  }
+}
+
+#selected-playlist{
+  display: flex;
   gap:1em;
   margin-top: 2em;
   border-top: 1px solid @light;
