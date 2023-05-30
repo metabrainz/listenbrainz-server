@@ -21,6 +21,7 @@ import { getPageProps } from "../utils/utils";
 import { getPlaylistId, JSPFTrackToListen } from "../playlists/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationPlaylistSettings from "./RecommendationPlaylistSettings";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -70,10 +71,13 @@ export default class RecommendationsPage extends React.Component<
 
   render() {
     const { user, newAlert } = this.props;
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     const { playlists, selectedPlaylist, loading } = this.state;
     const isLoggedIn = Boolean(currentUser?.auth_token);
     const [weeklyJams, ...otherPlaylists] = playlists;
+
+    const listensFromJSPFTracks =
+      selectedPlaylist?.track.map(JSPFTrackToListen) ?? [];
     return (
       <div id="recommendations">
         <h3>Created for {user.name}</h3>
@@ -131,8 +135,8 @@ export default class RecommendationsPage extends React.Component<
         {selectedPlaylist && (
           <section id="selected-playlist">
             <div className="playlist-items">
-              {selectedPlaylist.track.map((playlistTrack) => {
-                const listen = JSPFTrackToListen(playlistTrack);
+              {selectedPlaylist.track.map((playlistTrack, index) => {
+                const listen = listensFromJSPFTracks?.[index];
 
                 return (
                   <ListenCard
@@ -149,6 +153,12 @@ export default class RecommendationsPage extends React.Component<
             <RecommendationPlaylistSettings playlist={selectedPlaylist} />
           </section>
         )}
+        <BrainzPlayer
+          listens={listensFromJSPFTracks}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+        />
       </div>
     );
   }
