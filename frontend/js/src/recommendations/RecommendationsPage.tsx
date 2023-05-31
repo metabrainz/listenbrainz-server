@@ -52,8 +52,6 @@ export default class RecommendationsPage extends React.Component<
     const extension = getPlaylistExtension(playlist);
     const sourcePatch =
       extension?.additional_metadata?.algorithm_metadata.source_patch;
-    // get year from title, fallback to using creationg date minus 1
-    // Used for "top discoveries 2022" type of playlists
     let year;
     switch (sourcePatch) {
       case "weekly-jams":
@@ -72,6 +70,7 @@ export default class RecommendationsPage extends React.Component<
           cssClasses: "green",
         };
       case "top-discoveries-for-year":
+        // get year from title, fallback to using creationg date minus 1
         year =
           playlist.title.match(/\d{2,4}/)?.[0] ??
           new Date(playlist.date).getUTCFullYear() - 1;
@@ -80,6 +79,7 @@ export default class RecommendationsPage extends React.Component<
           cssClasses: "red",
         };
       case "top-missed-recordings-for-year":
+        // get year from title, fallback to using creationg date minus 1
         year =
           playlist.title.match(/\d{2,4}/)?.[0] ??
           new Date(playlist.date).getUTCFullYear() - 1;
@@ -108,7 +108,6 @@ export default class RecommendationsPage extends React.Component<
   selectPlaylist = async (playlist: JSPFPlaylist) => {
     // The playlist prop only contains generic info, not the actual tracks
     // We need to fetch the playlist to get it in full.
-    // Perhaps this should be revisited and we can send the full palylists directly.
     const { APIService, currentUser } = this.context;
     const playlistId = getPlaylistId(playlist);
     try {
@@ -210,22 +209,22 @@ export default class RecommendationsPage extends React.Component<
         <Loader isLoading={loading} />
         <div className="playlists-masonry">
           {playlists.map((playlist, index) => {
-            let isOld = false;
             const extension = getPlaylistExtension(playlist);
             const sourcePatch =
               extension?.additional_metadata?.algorithm_metadata.source_patch;
-            // if(sourcePatch === "")
-            const firstOfType = playlists.findIndex((pl) => {
-              const extension2 = getPlaylistExtension(playlist);
-              const sourcePatch2 =
-                extension2?.additional_metadata?.algorithm_metadata
-                  .source_patch;
-              return sourcePatch === sourcePatch2;
-            });
-            if (firstOfType !== index) {
-              isOld = true;
-            }
-            const info = RecommendationsPage.getPlaylistInfo(playlist, isOld);
+            const isFirstOfType =
+              playlists.findIndex((pl) => {
+                const extension2 = getPlaylistExtension(pl);
+                const sourcePatch2 =
+                  extension2?.additional_metadata?.algorithm_metadata
+                    .source_patch;
+                return sourcePatch === sourcePatch2;
+              }) === index;
+
+            const info = RecommendationsPage.getPlaylistInfo(
+              playlist,
+              !isFirstOfType
+            );
             return this.getPlaylistCard(playlist, info);
           })}
         </div>
