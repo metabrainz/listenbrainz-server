@@ -25,17 +25,34 @@
     height: 220%;
   }
   
-  > *{
+  > div {
     padding:1em;
-    background: yellowgreen;
     display: flex;
     align-items: flex-end;
+    background-size: cover;
+    background-color: #b2d4b0;
+    transition: filter 300ms ease-out;
+    filter: saturate(1);
+    &:hover {
+      filter: saturate(1.3);
+      .title {
+        margin-left: 5px;
+      }
+    }
+    // Magic background image cycler
+    each(range(12), {
+      &:nth-child(12n+@{value}) {
+        background-image: url("../img/recommendations/@{value}.svg");
+      }
+    });
     .title{
       font-family: Roboto, sans-serif;
       font-weight: 900;
       font-size:2em;
       line-height: 1.1em;
       color: @blue;
+      transition: margin-left 300ms ease-out;
+      margin-left: 0px;
     }
     .btn {
       margin-left: auto;
@@ -46,17 +63,18 @@
     }
   }
   .weekly-jams{
-    // fancy css background
+    // bigger item at the start
     grid-column-end: span 2;
     grid-row-end: span 2;
     .title {
       width: 5em;
       font-size: 4em;
     }
+    &:hover .title {
+      margin-left: 10px;
+    }
   }
-  &:nth-child(2){
-    // fancy css background #2
-  }
+  
 }
 
 #selected-playlist{
