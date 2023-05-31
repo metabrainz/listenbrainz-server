@@ -18,7 +18,11 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import { getPageProps } from "../utils/utils";
-import { getPlaylistId, JSPFTrackToListen } from "../playlists/utils";
+import {
+  getPlaylistExtension,
+  getPlaylistId,
+  JSPFTrackToListen,
+} from "../playlists/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationPlaylistSettings from "./RecommendationPlaylistSettings";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
@@ -40,6 +44,56 @@ export default class RecommendationsPage extends React.Component<
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
+
+  static getPlaylistInfo(
+    playlist: JSPFPlaylist,
+    isOld = false
+  ): { shortTitle: string; cssClasses: string } {
+    const extension = getPlaylistExtension(playlist);
+    const sourcePatch =
+      extension?.additional_metadata?.algorithm_metadata.source_patch;
+    // get year from title, fallback to using creationg date minus 1
+    // Used for "top discoveries 2022" type of playlists
+    let year;
+    switch (sourcePatch) {
+      case "weekly-jams":
+        return {
+          shortTitle: !isOld ? "Weekly Jams" : `Last Week's Jams`,
+          cssClasses: "weekly-jams green",
+        };
+      case "weekly-new-jams":
+        return {
+          shortTitle: !isOld ? "Weekly New Jams" : `Last Week's New Jams`,
+          cssClasses: "green",
+        };
+      case "daily-jams":
+        return {
+          shortTitle: "Daily Jams",
+          cssClasses: "green",
+        };
+      case "top-discoveries-for-year":
+        year =
+          playlist.title.match(/\d{2,4}/)?.[0] ??
+          new Date(playlist.date).getUTCFullYear() - 1;
+        return {
+          shortTitle: `${year} Top Discoveries`,
+          cssClasses: "red",
+        };
+      case "top-missed-recordings-for-year":
+        year =
+          playlist.title.match(/\d{2,4}/)?.[0] ??
+          new Date(playlist.date).getUTCFullYear() - 1;
+        return {
+          shortTitle: `${year} Missed Tracks`,
+          cssClasses: "red",
+        };
+      default:
+        return {
+          shortTitle: playlist.title,
+          cssClasses: "blue",
+        };
+    }
+  }
 
   constructor(props: RecommendationsPageProps) {
     super(props);
@@ -97,12 +151,55 @@ export default class RecommendationsPage extends React.Component<
     }
   };
 
+  getPlaylistCard = (
+    playlist: JSPFPlaylist,
+    info: {
+      shortTitle: string;
+      cssClasses: string;
+    }
+  ) => {
+    const { shortTitle, cssClasses } = info;
+    const { currentUser } = this.context;
+    const { selectedPlaylist } = this.state;
+    const isLoggedIn = Boolean(currentUser?.auth_token);
+    return (
+      <div
+        className={`${
+          selectedPlaylist?.identifier === playlist.identifier ? "selected" : ""
+        } ${cssClasses}`}
+        onClick={this.selectPlaylist.bind(this, playlist)}
+        onKeyDown={this.selectPlaylist.bind(this, playlist)}
+        role="button"
+        tabIndex={0}
+      >
+        <div className="title">{shortTitle ?? playlist.title}</div>
+        {isLoggedIn && (
+          <button
+            type="button"
+            className="btn btn-info btn-rounded btn-sm"
+            onClick={this.copyPlaylist.bind(this, playlist)}
+          >
+            <FontAwesomeIcon icon={faSave} title="Save to my playlists" /> Save
+          </button>
+        )}
+      </div>
+    );
+  };
+
   render() {
     const { user, newAlert } = this.props;
     const { currentUser, APIService } = this.context;
     const { playlists, selectedPlaylist, loading } = this.state;
-    const isLoggedIn = Boolean(currentUser?.auth_token);
-    const [weeklyJams, ...otherPlaylists] = playlists;
+
+    const weeklyJamsIds = playlists
+      .filter((pl) => {
+        const extension = getPlaylistExtension(pl);
+        return (
+          extension?.additional_metadata?.algorithm_metadata.source_patch ===
+          "weekly-jams"
+        );
+      })
+      .map((pl) => pl.identifier);
 
     const listensFromJSPFTracks =
       selectedPlaylist?.track.map(JSPFTrackToListen) ?? [];
@@ -112,59 +209,24 @@ export default class RecommendationsPage extends React.Component<
 
         <Loader isLoading={loading} />
         <div className="playlists-masonry">
-          {weeklyJams && (
-            <div
-              className={`weekly-jams ${
-                selectedPlaylist?.identifier === weeklyJams.identifier
-                  ? "selected"
-                  : ""
-              }`}
-              onClick={this.selectPlaylist.bind(this, weeklyJams)}
-              onKeyDown={this.selectPlaylist.bind(this, weeklyJams)}
-              role="button"
-              tabIndex={0}
-            >
-              <div className="title">Weekly Jams</div>
-              {isLoggedIn && (
-                <button
-                  type="button"
-                  className="btn btn-info btn-rounded"
-                  onClick={this.copyPlaylist.bind(this, weeklyJams)}
-                >
-                  <FontAwesomeIcon icon={faSave} title="Save to my playlists" />{" "}
-                  Save
-                </button>
-              )}
-            </div>
-          )}
-          {otherPlaylists.map((playlist) => {
-            return (
-              <div
-                className={`${
-                  selectedPlaylist?.identifier === playlist.identifier
-                    ? "selected"
-                    : ""
-                }`}
-                onClick={this.selectPlaylist.bind(this, playlist)}
-                onKeyDown={this.selectPlaylist.bind(this, playlist)}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="title">{playlist.title}</div>
-                {isLoggedIn && (
-                  <button
-                    type="button"
-                    className="btn btn-info btn-rounded btn-sm"
-                    onClick={this.copyPlaylist.bind(this, playlist)}
-                  >
-                    <FontAwesomeIcon
-                      icon={faSave}
-                      title="Save to my playlists"
-                    />
-                  </button>
-                )}
-              </div>
-            );
+          {playlists.map((playlist, index) => {
+            let isOld = false;
+            const extension = getPlaylistExtension(playlist);
+            const sourcePatch =
+              extension?.additional_metadata?.algorithm_metadata.source_patch;
+            // if(sourcePatch === "")
+            const firstOfType = playlists.findIndex((pl) => {
+              const extension2 = getPlaylistExtension(playlist);
+              const sourcePatch2 =
+                extension2?.additional_metadata?.algorithm_metadata
+                  .source_patch;
+              return sourcePatch === sourcePatch2;
+            });
+            if (firstOfType !== index) {
+              isOld = true;
+            }
+            const info = RecommendationsPage.getPlaylistInfo(playlist, isOld);
+            return this.getPlaylistCard(playlist, info);
           })}
         </div>
 

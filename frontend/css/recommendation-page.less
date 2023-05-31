@@ -13,7 +13,7 @@
   grid-auto-flow: column;
   overflow-x: scroll;
   overflow-y: hidden;
-  
+  scroll-snap-type: x mandatory;
   // hide overflow behind gradient to indicate there's more
   &::after {
     content: "";
@@ -31,6 +31,7 @@
     align-items: flex-end;
     background-size: cover;
     background-color: #b2d4b0;
+    scroll-snap-align: start;
     transition: filter 300ms ease-out;
     filter: saturate(1);
     &:hover {
@@ -72,7 +73,7 @@
       border-radius: 3px;
     }
   }
-  .weekly-jams{
+  .weekly-jams:first-of-type{
     // bigger item at the start
     grid-column-end: span 2;
     grid-row-end: span 2;
