@@ -4,6 +4,20 @@
 }
 /* stylelint-enable */
 
+.playlists-masonry-container{
+  position: relative;
+  // hide overflow behind gradient to indicate there's more
+  &::after {
+    content: "";
+    width: 4em;
+    background: linear-gradient(270deg, #fff, transparent);
+    position: sticky;
+    pointer-events: none;
+    right: -1px;
+    bottom: 0;
+    height: 100%;
+  }
+}
 .playlists-masonry{
   width: 100%;
   display: grid;
@@ -14,16 +28,6 @@
   overflow-x: scroll;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
-  // hide overflow behind gradient to indicate there's more
-  &::after {
-    content: "";
-    width: 4em;
-    background: linear-gradient(270deg, #fff, transparent);
-    position: sticky;
-    pointer-events: none;
-    right: 0;
-    height: 220%;
-  }
   
   > div {
     padding:1em;
@@ -87,20 +91,28 @@
     }
   }
   
+  @media (max-width: @screen-sm) {
+    grid-auto-columns: unset;
+  }
 }
 
 #selected-playlist{
   display: flex;
+  flex-wrap: wrap-reverse;
+  align-items: flex-end;
   gap:1em;
   margin-top: 2em;
   border-top: 1px solid @light;
   padding-top: 2em;
   
   .playlist-items{
-    flex:1;
+    flex: 2;
+    flex-basis: 350px;
   }
   .playlist-settings{
     width: 350px;
+    flex:1;
+    flex-basis: 300px;
     padding: 1em;
     overflow: hidden;
 

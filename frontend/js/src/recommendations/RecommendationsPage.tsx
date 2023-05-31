@@ -207,26 +207,28 @@ export default class RecommendationsPage extends React.Component<
         <h3>Created for {user.name}</h3>
 
         <Loader isLoading={loading} />
-        <div className="playlists-masonry">
-          {playlists.map((playlist, index) => {
-            const extension = getPlaylistExtension(playlist);
-            const sourcePatch =
-              extension?.additional_metadata?.algorithm_metadata.source_patch;
-            const isFirstOfType =
-              playlists.findIndex((pl) => {
-                const extension2 = getPlaylistExtension(pl);
-                const sourcePatch2 =
-                  extension2?.additional_metadata?.algorithm_metadata
-                    .source_patch;
-                return sourcePatch === sourcePatch2;
-              }) === index;
+        <div className="playlists-masonry-container">
+          <div className="playlists-masonry">
+            {playlists.map((playlist, index) => {
+              const extension = getPlaylistExtension(playlist);
+              const sourcePatch =
+                extension?.additional_metadata?.algorithm_metadata.source_patch;
+              const isFirstOfType =
+                playlists.findIndex((pl) => {
+                  const extension2 = getPlaylistExtension(pl);
+                  const sourcePatch2 =
+                    extension2?.additional_metadata?.algorithm_metadata
+                      .source_patch;
+                  return sourcePatch === sourcePatch2;
+                }) === index;
 
-            const info = RecommendationsPage.getPlaylistInfo(
-              playlist,
-              !isFirstOfType
-            );
-            return this.getPlaylistCard(playlist, info);
-          })}
+              const info = RecommendationsPage.getPlaylistInfo(
+                playlist,
+                !isFirstOfType
+              );
+              return this.getPlaylistCard(playlist, info);
+            })}
+          </div>
         </div>
 
         {selectedPlaylist && (
