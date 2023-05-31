@@ -40,9 +40,19 @@
       }
     }
     // Magic background image cycler
-    each(range(12), {
-      &:nth-child(12n+@{value}) {
-        background-image: url("../img/recommendations/@{value}.svg");
+    each(range(2,4), {
+      &.green:nth-of-type(3n+@{value}) {
+        background-image: url("../img/recommendations/green-@{value}.svg");
+      }
+    });
+    each(range(4), {
+      &.red:nth-of-type(4n+@{value}) {
+        background-image: url("../img/recommendations/red-@{value}.svg");
+      }
+    });
+    each(range(4), {
+      &.blue:nth-of-type(4n+@{value}) {
+        background-image: url("../img/recommendations/blue-@{value}.svg");
       }
     });
     .title{
@@ -66,6 +76,7 @@
     // bigger item at the start
     grid-column-end: span 2;
     grid-row-end: span 2;
+    background-image: url("../img/recommendations/green-1.svg");
     .title {
       width: 5em;
       font-size: 4em;
