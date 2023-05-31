@@ -69,6 +69,34 @@ export default class RecommendationsPage extends React.Component<
     }
   };
 
+  copyPlaylist = async (playlist: JSPFPlaylist): Promise<void> => {
+    const { APIService, currentUser } = this.context;
+
+    if (!currentUser?.auth_token) {
+      toast.warning("You must be logged in to save playlists");
+      return;
+    }
+    if (!playlist) {
+      toast.error("No playlist to copy");
+      return;
+    }
+    try {
+      const newPlaylistId = await APIService.copyPlaylist(
+        currentUser.auth_token,
+        getPlaylistId(playlist)
+      );
+
+      toast.success(
+        <>
+          Duplicated to playlist&ensp;
+          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+        </>
+      );
+    } catch (error) {
+      toast.error(error.message ?? error);
+    }
+  };
+
   render() {
     const { user, newAlert } = this.props;
     const { currentUser, APIService } = this.context;
@@ -98,10 +126,14 @@ export default class RecommendationsPage extends React.Component<
             >
               <div className="title">Weekly Jams</div>
               {isLoggedIn && (
-                <div className="btn btn-info btn-rounded">
+                <button
+                  type="button"
+                  className="btn btn-info btn-rounded"
+                  onClick={this.copyPlaylist.bind(this, weeklyJams)}
+                >
                   <FontAwesomeIcon icon={faSave} title="Save to my playlists" />{" "}
                   Save
-                </div>
+                </button>
               )}
             </div>
           )}
@@ -120,12 +152,16 @@ export default class RecommendationsPage extends React.Component<
               >
                 <div className="title">{playlist.title}</div>
                 {isLoggedIn && (
-                  <div className="btn btn-info btn-rounded btn-sm">
+                  <button
+                    type="button"
+                    className="btn btn-info btn-rounded btn-sm"
+                    onClick={this.copyPlaylist.bind(this, playlist)}
+                  >
                     <FontAwesomeIcon
                       icon={faSave}
                       title="Save to my playlists"
                     />
-                  </div>
+                  </button>
                 )}
               </div>
             );
