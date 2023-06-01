@@ -213,7 +213,7 @@ export default class RecommendationsPage extends React.Component<
 
         <Loader isLoading={loading} />
         <div className="playlists-masonry-container">
-          <div className="playlists-masonry">
+          <div className="playlists-masonry dragscroll">
             {playlists.map((playlist, index) => {
               const extension = getPlaylistExtension(playlist);
               const sourcePatch =
