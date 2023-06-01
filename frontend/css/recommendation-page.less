@@ -29,7 +29,7 @@
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
   
-  > div {
+  > * {
     padding:1em;
     display: flex;
     align-items: flex-end;
@@ -44,10 +44,30 @@
         margin-left: 5px;
       }
     }
+    &.selected{
+      border: 5px solid @blue;
+      border-radius: 3px;
+    }
+    .title{
+      font-family: Roboto, sans-serif;
+      font-weight: 900;
+      font-size:2em;
+      line-height: 1.1em;
+      color: @blue;
+      transition: margin-left 300ms ease-out;
+      margin-left: 0px;
+      text-align: left;
+      border: none;
+    }
+    .btn {
+      margin-left: auto;
+    }
     // Magic background image cycler
-    each(range(2,4), {
-      &.green:nth-of-type(3n+@{value}) {
-        background-image: url("../img/recommendations/green-@{value}.svg");
+    each(range(0,2), {
+      //We only have three backgrounds available for green (#1 is only used for weekly jams)
+      &.green:not(.weekly-jams):nth-of-type(3n+@{value}) {
+        @backgroundValue: (@value + 2);
+        background-image: url("../img/recommendations/green-@{backgroundValue}.svg");
       }
     });
     each(range(4), {
@@ -60,27 +80,14 @@
         background-image: url("../img/recommendations/blue-@{value}.svg");
       }
     });
-    .title{
-      font-family: Roboto, sans-serif;
-      font-weight: 900;
-      font-size:2em;
-      line-height: 1.1em;
-      color: @blue;
-      transition: margin-left 300ms ease-out;
-      margin-left: 0px;
-    }
-    .btn {
-      margin-left: auto;
-    }
-    &.selected{
-      border: 5px solid @blue;
-      border-radius: 3px;
-    }
+    
   }
-  .weekly-jams:first-of-type{
+  > .weekly-jams{
     // bigger item at the start
-    grid-column-end: span 2;
-    grid-row-end: span 2;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    grid-row-start: 1;
+    grid-row-end: 3;
     background-image: url("../img/recommendations/green-1.svg");
     .title {
       width: 5em;
