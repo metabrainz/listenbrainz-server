@@ -195,16 +195,6 @@ export default class RecommendationsPage extends React.Component<
     const { currentUser, APIService } = this.context;
     const { playlists, selectedPlaylist, loading } = this.state;
 
-    const weeklyJamsIds = playlists
-      .filter((pl) => {
-        const extension = getPlaylistExtension(pl);
-        return (
-          extension?.additional_metadata?.algorithm_metadata.source_patch ===
-          "weekly-jams"
-        );
-      })
-      .map((pl) => pl.identifier);
-
     const listensFromJSPFTracks =
       selectedPlaylist?.track.map(JSPFTrackToListen) ?? [];
     return (

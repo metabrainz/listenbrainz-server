@@ -34,10 +34,11 @@
     align-items: flex-end;
     background-size: cover;
     background-color: #b2d4b0;
+    border:none;
+    filter: unset;
     transition: filter 300ms ease-out;
-    filter: saturate(1);
     &:hover {
-      filter: saturate(1.3);
+      filter: saturate(1.4);
       .title {
         margin-left: 5px;
       }
@@ -61,11 +62,11 @@
       margin-left: auto;
     }
     // Magic background image cycler
-    each(range(0,2), {
+    each(range(3), {
       //We only have three backgrounds available for green (#1 is only used for weekly jams)
-      &.green:not(.weekly-jams):nth-of-type(3n+@{value}) {
-        @backgroundValue: (@value + 2);
-        background-image: url("../img/recommendations/green-@{backgroundValue}.svg");
+      &.green:nth-of-type(3n+@{value}) {
+        @bgValue = (@value + 1);
+        background-image: url("../img/recommendations/green-@{bgValue}.svg");
       }
     });
     each(range(4), {
@@ -79,20 +80,20 @@
       }
     });
     
-  }
-  > .weekly-jams{
-    // bigger item at the start
-    grid-column-start: 1;
-    grid-column-end: 3;
-    grid-row-start: 1;
-    grid-row-end: 3;
-    background-image: url("../img/recommendations/green-1.svg");
-    .title {
-      width: 5em;
-      font-size: 4em;
-    }
-    &:hover .title {
-      margin-left: 10px;
+    &:nth-child(1 of .weekly-jams){
+      // Make first weekly-jams element bigger and placed at the start
+      grid-column-start: 1;
+      grid-column-end: 3;
+      grid-row-start: 1;
+      grid-row-end: 3;
+      background-image: url("../img/recommendations/green-1.svg");
+      .title {
+        width: 5em;
+        font-size: 4em;
+      }
+      &:hover .title {
+        margin-left: 10px;
+      }
     }
   }
   
