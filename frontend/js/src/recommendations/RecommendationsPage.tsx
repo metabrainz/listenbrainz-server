@@ -122,21 +122,26 @@ export default class RecommendationsPage extends React.Component<
     }
   };
 
-  copyPlaylist = async (playlist: JSPFPlaylist): Promise<void> => {
+  copyPlaylist: React.ReactEventHandler<HTMLElement> = async (event) => {
+    if (!(event?.target instanceof HTMLElement)) {
+      return;
+    }
+    event?.stopPropagation();
     const { APIService, currentUser } = this.context;
+    const { playlistId } = event.target.dataset;
 
     if (!currentUser?.auth_token) {
       toast.warning("You must be logged in to save playlists");
       return;
     }
-    if (!playlist) {
+    if (!playlistId) {
       toast.error("No playlist to copy");
       return;
     }
     try {
       const newPlaylistId = await APIService.copyPlaylist(
         currentUser.auth_token,
-        getPlaylistId(playlist)
+        playlistId
       );
 
       toast.success(
@@ -161,6 +166,7 @@ export default class RecommendationsPage extends React.Component<
     const { currentUser } = this.context;
     const { selectedPlaylist } = this.state;
     const isLoggedIn = Boolean(currentUser?.auth_token);
+    const playlistId = getPlaylistId(playlist);
     return (
       <div
         className={`${
@@ -176,7 +182,8 @@ export default class RecommendationsPage extends React.Component<
           <button
             type="button"
             className="btn btn-info btn-rounded btn-sm"
-            onClick={this.copyPlaylist.bind(this, playlist)}
+            data-playlist-id={playlistId}
+            onClick={this.copyPlaylist}
           >
             <FontAwesomeIcon icon={faSave} title="Save to my playlists" /> Save
           </button>
