@@ -27,6 +27,10 @@
   grid-auto-flow: column;
   overflow-x: scroll;
   overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  &.dragging{
+    scroll-snap-type: none;
+  }
   
   > * {
     padding:1em;
@@ -35,6 +39,7 @@
     background-size: cover;
     background-color: #b2d4b0;
     border:none;
+    scroll-snap-align: start;
     filter: unset;
     transition: filter 300ms ease-out;
     &:hover {
@@ -65,7 +70,7 @@
     each(range(3), {
       //We only have three backgrounds available for green (#1 is only used for weekly jams)
       &.green:nth-of-type(3n+@{value}) {
-        @bgValue = (@value + 1);
+        @bgValue: (@value + 1);
         background-image: url("../img/recommendations/green-@{bgValue}.svg");
       }
     });

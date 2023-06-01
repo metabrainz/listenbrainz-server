@@ -105,11 +105,23 @@ export default class RecommendationsPage extends React.Component<
     };
   }
 
-  selectPlaylist = async (playlist: JSPFPlaylist) => {
-    // The playlist prop only contains generic info, not the actual tracks
-    // We need to fetch the playlist to get it in full.
+  // The playlist prop only contains generic info, not the actual tracks
+  // We need to fetch the playlist to get it in full.
+  selectPlaylist: React.ReactEventHandler<HTMLElement> = async (event) => {
+    if (!(event?.target instanceof HTMLElement)) {
+      return;
+    }
+    if (event.target.closest(".dragscroll")?.classList.contains("dragging")) {
+      // We are dragging with the dragscroll library, ignore the click
+      event.preventDefault();
+      return;
+    }
+    const { playlistId } = event.target.dataset;
     const { APIService, currentUser } = this.context;
-    const playlistId = getPlaylistId(playlist);
+    if (!playlistId) {
+      toast.error("No playlist to copy");
+      return;
+    }
     try {
       const response = await APIService.getPlaylist(
         playlistId,
@@ -127,8 +139,13 @@ export default class RecommendationsPage extends React.Component<
       return;
     }
     event?.stopPropagation();
+    if (event.target.closest(".dragscroll")?.classList.contains("dragging")) {
+      // We are dragging with the dragscroll library, ignore the click
+      event.preventDefault();
+      return;
+    }
     const { APIService, currentUser } = this.context;
-    const { playlistId } = event.target.dataset;
+    const playlistId = event.target?.parentElement?.dataset?.playlistId;
 
     if (!currentUser?.auth_token) {
       toast.warning("You must be logged in to save playlists");
@@ -172,15 +189,15 @@ export default class RecommendationsPage extends React.Component<
         className={`${
           selectedPlaylist?.identifier === playlist.identifier ? "selected" : ""
         } ${cssClasses}`}
-        onClick={this.selectPlaylist.bind(this, playlist)}
+        onClick={this.selectPlaylist}
         type="button"
+        data-playlist-id={playlistId}
       >
         <div className="title">{shortTitle ?? playlist.title}</div>
         {isLoggedIn && (
           <button
             type="button"
             className="btn btn-info btn-rounded btn-sm"
-            data-playlist-id={playlistId}
             onClick={this.copyPlaylist}
           >
             <FontAwesomeIcon icon={faSave} title="Save to my playlists" /> Save
