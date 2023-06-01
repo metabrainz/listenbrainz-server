@@ -168,14 +168,12 @@ export default class RecommendationsPage extends React.Component<
     const isLoggedIn = Boolean(currentUser?.auth_token);
     const playlistId = getPlaylistId(playlist);
     return (
-      <div
+      <button
         className={`${
           selectedPlaylist?.identifier === playlist.identifier ? "selected" : ""
         } ${cssClasses}`}
         onClick={this.selectPlaylist.bind(this, playlist)}
-        onKeyDown={this.selectPlaylist.bind(this, playlist)}
-        role="button"
-        tabIndex={0}
+        type="button"
       >
         <div className="title">{shortTitle ?? playlist.title}</div>
         {isLoggedIn && (
@@ -188,7 +186,7 @@ export default class RecommendationsPage extends React.Component<
             <FontAwesomeIcon icon={faSave} title="Save to my playlists" /> Save
           </button>
         )}
-      </div>
+      </button>
     );
   };
 
