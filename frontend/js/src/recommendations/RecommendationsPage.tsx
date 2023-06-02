@@ -137,34 +137,38 @@ export default class RecommendationsPage extends React.Component<
   // The playlist prop only contains generic info, not the actual tracks
   // We need to fetch the playlist to get it in full.
   selectPlaylist: React.ReactEventHandler<HTMLElement> = async (event) => {
-    if (!(event?.target instanceof HTMLElement)) {
+    if (!(event?.currentTarget instanceof HTMLElement)) {
       return;
     }
-    if (event.target.closest(".dragscroll")?.classList.contains("dragging")) {
+    if (
+      event.currentTarget.closest(".dragscroll")?.classList.contains("dragging")
+    ) {
       // We are dragging with the dragscroll library, ignore the click
       event.preventDefault();
       return;
     }
-    const { playlistId } = event.target.dataset;
+    const { playlistId } = event.currentTarget.dataset;
     if (!playlistId) {
-      toast.error("No playlist to copy");
+      toast.error("No playlist to select");
       return;
     }
     await this.fetchPlaylist(playlistId);
   };
 
   copyPlaylist: React.ReactEventHandler<HTMLElement> = async (event) => {
-    if (!(event?.target instanceof HTMLElement)) {
+    if (!(event?.currentTarget instanceof HTMLElement)) {
       return;
     }
     event?.stopPropagation();
-    if (event.target.closest(".dragscroll")?.classList.contains("dragging")) {
+    if (
+      event.currentTarget.closest(".dragscroll")?.classList.contains("dragging")
+    ) {
       // We are dragging with the dragscroll library, ignore the click
       event.preventDefault();
       return;
     }
     const { APIService, currentUser } = this.context;
-    const playlistId = event.target?.parentElement?.dataset?.playlistId;
+    const playlistId = event.currentTarget?.parentElement?.dataset?.playlistId;
 
     if (!currentUser?.auth_token) {
       toast.warning("You must be logged in to save playlists");
