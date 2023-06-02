@@ -59,9 +59,9 @@ export default class RecommendationsPage extends React.Component<
           shortTitle: !isOld ? "Weekly Jams" : `Last Week's Jams`,
           cssClasses: "weekly-jams green",
         };
-      case "weekly-new-jams":
+      case "weekly-exploration":
         return {
-          shortTitle: !isOld ? "Weekly New Jams" : `Last Week's New Jams`,
+          shortTitle: !isOld ? "Weekly Exploration" : `Last Week's Exploration`,
           cssClasses: "green",
         };
       case "daily-jams":
