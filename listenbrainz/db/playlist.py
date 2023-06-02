@@ -157,7 +157,7 @@ def get_recommendation_playlists_for_user(user_id: int):
 
     """
 
-    params = {"creator_id": LISTENBRAINZ_USER_ID, "created_for_id": user_id, "patches": RECOMMENDATION_PATCHES}
+    params = {"creator_id": (LISTENBRAINZ_USER_ID, TROI_BOT_USER_ID), "created_for_id": user_id, "patches": RECOMMENDATION_PATCHES}
     query = sqlalchemy.text(f"""
            SELECT pl.id
                 , pl.mbid
@@ -174,7 +174,7 @@ def get_recommendation_playlists_for_user(user_id: int):
             FROM playlist.playlist pl
            WHERE additional_metadata->'algorithm_metadata'->>'source_patch' IN :patches
              AND created_for_id = :created_for_id
-             AND creator_id = :creator_id
+             AND creator_id IN :creator_id
         ORDER BY pl.created DESC""")
 
     with ts.engine.connect() as connection:
