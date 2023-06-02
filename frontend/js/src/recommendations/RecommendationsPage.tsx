@@ -115,7 +115,8 @@ export default class RecommendationsPage extends React.Component<
         return sourcePatch === "weekly-jams";
       }) ?? playlists[0];
     if (selectedPlaylist) {
-      this.fetchPlaylist(selectedPlaylist.identifier);
+      const playlistId = getPlaylistId(selectedPlaylist);
+      this.fetchPlaylist(playlistId);
     }
   }
 
