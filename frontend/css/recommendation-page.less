@@ -6,16 +6,34 @@
 
 .playlists-masonry-container{
   position: relative;
-  // hide overflow behind gradient to indicate there's more
-  &::after {
-    content: "";
-    width: 4em;
-    background: linear-gradient(270deg, #fff, transparent);
-    position:  absolute;
-    pointer-events: none;
-    right: -1px;
+  padding: 0 1em;
+  // hide overflow behind button with gradient to indicate there's more
+  .nav-button {
+    position: absolute;
+    top: 0;
     bottom: 0;
-    height: 100%;
+    width: 2.5em;
+    border: none;
+    font-size: 1.5em;
+    color: @light-grey;
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 300ms linear;
+    &.backward{
+      background: linear-gradient(to right, @white 25%, transparent 100%);
+      text-align: left;
+      left: -5px;
+    }
+    &.forward{
+      background: linear-gradient(to left, @white 25%, transparent 100%);
+      right:-5px;
+      text-align: right;
+    }
+  }
+  &.scroll-start .nav-button.backward,
+  &.scroll-end& .nav-button.forward {
+    opacity: 0;
+    pointer-events: none;
   }
 }
 .playlists-masonry{
@@ -27,7 +45,7 @@
   grid-auto-flow: column;
   overflow-x: scroll;
   overflow-y: hidden;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
   &.dragging{
     scroll-snap-type: none;
   }

@@ -9,7 +9,12 @@ import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import { toast, ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSave } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronLeft,
+  faChevronRight,
+  faSave,
+} from "@fortawesome/free-solid-svg-icons";
+import { throttle } from "lodash";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -44,6 +49,7 @@ export default class RecommendationsPage extends React.Component<
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
+  private scrollContainer: React.RefObject<HTMLDivElement>;
 
   static getPlaylistInfo(
     playlist: JSPFPlaylist,
@@ -95,6 +101,8 @@ export default class RecommendationsPage extends React.Component<
     }
   }
 
+  throttledOnScroll: React.ReactEventHandler<HTMLDivElement>;
+
   constructor(props: RecommendationsPageProps) {
     super(props);
 
@@ -103,6 +111,8 @@ export default class RecommendationsPage extends React.Component<
       playlists: playlists ?? [],
       loading: false,
     };
+    this.scrollContainer = React.createRef();
+    this.throttledOnScroll = throttle(this.onScroll, 400, { leading: true });
   }
 
   componentDidMount(): void {
@@ -233,6 +243,47 @@ export default class RecommendationsPage extends React.Component<
     );
   };
 
+  onScroll: React.ReactEventHandler<HTMLDivElement> = (event) => {
+    const element = event.target as HTMLDivElement;
+    const parent = element.parentElement;
+    if (!element || !parent) {
+      return;
+    }
+    // calculate horizontal scroll percentage
+    const scrollPercentage =
+      (100 * element.scrollLeft) / (element.scrollWidth - element.clientWidth);
+
+    if (scrollPercentage > 95) {
+      parent.classList.add("scroll-end");
+      parent.classList.remove("scroll-start");
+    } else if (scrollPercentage < 5) {
+      parent.classList.add("scroll-start");
+      parent.classList.remove("scroll-end");
+    } else {
+      parent.classList.remove("scroll-end");
+      parent.classList.remove("scroll-start");
+    }
+  };
+
+  manualScroll: React.ReactEventHandler<HTMLElement> = (event) => {
+    if (!this.scrollContainer?.current) {
+      return;
+    }
+    if (event?.currentTarget.classList.contains("forward")) {
+      this.scrollContainer.current.scrollBy({
+        left: 300,
+        top: 0,
+        behavior: "smooth",
+      });
+    } else {
+      this.scrollContainer.current.scrollBy({
+        left: -300,
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  };
+
   render() {
     const { user, newAlert } = this.props;
     const { currentUser, APIService } = this.context;
@@ -258,8 +309,19 @@ export default class RecommendationsPage extends React.Component<
             </p>
           </div>
         ) : (
-          <div className="playlists-masonry-container">
-            <div className="playlists-masonry dragscroll">
+          <div className="playlists-masonry-container scroll-start">
+            <button
+              className="nav-button backward"
+              type="button"
+              onClick={this.manualScroll}
+            >
+              <FontAwesomeIcon icon={faChevronLeft} />
+            </button>
+            <div
+              className="playlists-masonry dragscroll"
+              onScroll={this.throttledOnScroll}
+              ref={this.scrollContainer}
+            >
               {playlists.map((playlist, index) => {
                 const extension = getPlaylistExtension(playlist);
                 const sourcePatch =
@@ -281,6 +343,13 @@ export default class RecommendationsPage extends React.Component<
                 return this.getPlaylistCard(playlist, info);
               })}
             </div>
+            <button
+              className="nav-button forward"
+              type="button"
+              onClick={this.manualScroll}
+            >
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
           </div>
         )}
         {selectedPlaylist && (
