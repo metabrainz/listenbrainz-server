@@ -67,7 +67,7 @@ export default class RecommendationsPage extends React.Component<
       case "daily-jams":
         return {
           shortTitle: "Daily Jams",
-          cssClasses: "green",
+          cssClasses: "blue",
         };
       case "top-discoveries-for-year":
         // get year from title, fallback to using creationg date minus 1
