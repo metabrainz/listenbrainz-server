@@ -200,8 +200,10 @@ export default class RecommendationsPage extends React.Component<
   ) => {
     const { shortTitle, cssClasses } = info;
     const { currentUser } = this.context;
+    const { user } = this.props;
     const { selectedPlaylist } = this.state;
     const isLoggedIn = Boolean(currentUser?.auth_token);
+    const isCurrentUser = user.name === currentUser?.name;
     const playlistId = getPlaylistId(playlist);
     return (
       <button
@@ -219,7 +221,8 @@ export default class RecommendationsPage extends React.Component<
             className="btn btn-info btn-rounded btn-sm"
             onClick={this.copyPlaylist}
           >
-            <FontAwesomeIcon icon={faSave} title="Save to my playlists" /> Save
+            <FontAwesomeIcon icon={faSave} title="Save to my playlists" />{" "}
+            {isCurrentUser ? "Save" : "Duplicate"}
           </button>
         )}
       </button>
