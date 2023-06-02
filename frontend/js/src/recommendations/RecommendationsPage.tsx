@@ -98,12 +98,40 @@ export default class RecommendationsPage extends React.Component<
   constructor(props: RecommendationsPageProps) {
     super(props);
 
-    const concatenatedPlaylists = props.playlists?.map((pl) => pl.playlist);
+    const playlists = props.playlists?.map((pl) => pl.playlist);
     this.state = {
-      playlists: concatenatedPlaylists ?? [],
+      playlists: playlists ?? [],
       loading: false,
     };
   }
+
+  componentDidMount(): void {
+    const { playlists } = this.state;
+    const selectedPlaylist =
+      playlists.find((pl) => {
+        const extension = getPlaylistExtension(pl);
+        const sourcePatch =
+          extension?.additional_metadata?.algorithm_metadata.source_patch;
+        return sourcePatch === "weekly-jams";
+      }) ?? playlists[0];
+    if (selectedPlaylist) {
+      this.fetchPlaylist(selectedPlaylist.identifier);
+    }
+  }
+
+  fetchPlaylist = async (playlistId: string) => {
+    const { APIService, currentUser } = this.context;
+    try {
+      const response = await APIService.getPlaylist(
+        playlistId,
+        currentUser?.auth_token
+      );
+      const JSPFObject: JSPFObject = await response.json();
+      this.setState({ selectedPlaylist: JSPFObject.playlist });
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   // The playlist prop only contains generic info, not the actual tracks
   // We need to fetch the playlist to get it in full.
@@ -117,21 +145,11 @@ export default class RecommendationsPage extends React.Component<
       return;
     }
     const { playlistId } = event.target.dataset;
-    const { APIService, currentUser } = this.context;
     if (!playlistId) {
       toast.error("No playlist to copy");
       return;
     }
-    try {
-      const response = await APIService.getPlaylist(
-        playlistId,
-        currentUser?.auth_token
-      );
-      const JSPFObject: JSPFObject = await response.json();
-      this.setState({ selectedPlaylist: JSPFObject.playlist });
-    } catch (error) {
-      toast.error(error.message);
-    }
+    await this.fetchPlaylist(playlistId);
   };
 
   copyPlaylist: React.ReactEventHandler<HTMLElement> = async (event) => {
