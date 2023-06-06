@@ -81,7 +81,7 @@ declare type ListenMetadata = {
     duration?: number;
   };
   release?: {
-    caa_id: ?number;
+    caa_id?: number;
     caa_release_mbid: ?string;
     mbid?: string;
     year?: number;
