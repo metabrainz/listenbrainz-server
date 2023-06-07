@@ -6,27 +6,26 @@
 
 .playlists-masonry-container{
   position: relative;
-  padding: 0 1em;
   // hide overflow behind button with gradient to indicate there's more
   .nav-button {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 2.5em;
+    width: 55px;
     border: none;
-    font-size: 1.5em;
+    font-size: 2em;
     color: @light-grey;
     z-index: 1;
     opacity: 1;
     transition: opacity 300ms linear;
     &.backward{
-      background: linear-gradient(to right, @white 25%, transparent 100%);
+      background: linear-gradient(to right, @white 10%, transparent);
       text-align: left;
-      left: -5px;
+      left: 0;
     }
     &.forward{
-      background: linear-gradient(to left, @white 25%, transparent 100%);
-      right:-5px;
+      background: linear-gradient(to left, @white 10%, transparent);
+      right:0;
       text-align: right;
     }
   }
@@ -51,19 +50,23 @@
   }
   
   > * {
+    min-width: 260px;
     padding:1em;
     display: flex;
     align-items: flex-end;
     background-size: cover;
     background-color: #b2d4b0;
+    background-size: 100%;
+    background-position: center;
     border:none;
     scroll-snap-align: start;
     filter: unset;
-    transition: filter 300ms ease-out;
+    transition: all 300ms ease-out;
     &:hover {
       filter: saturate(1.4);
+      background-size: 105%;
       .title {
-        margin-left: 5px;
+        margin-bottom: 5px;
       }
     }
     &.selected{
@@ -76,8 +79,8 @@
       font-size:2em;
       line-height: 1.1em;
       color: @blue;
-      transition: margin-left 300ms ease-out;
-      margin-left: 0px;
+      transition: margin-bottom 300ms ease-out;
+      margin-bottom: 0px;
       text-align: left;
       border: none;
     }
@@ -105,6 +108,7 @@
     
     &:nth-child(1 of .weekly-jams){
       // Make first weekly-jams element bigger and placed at the start
+      min-width: 320px;
       grid-column-start: 1;
       grid-column-end: 3;
       grid-row-start: 1;
@@ -115,7 +119,7 @@
         font-size: 4em;
       }
       &:hover .title {
-        margin-left: 10px;
+        margin-bottom: 10px;
       }
     }
   }
