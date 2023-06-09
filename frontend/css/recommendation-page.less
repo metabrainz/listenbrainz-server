@@ -56,7 +56,6 @@
     align-items: flex-end;
     background-size: cover;
     background-color: #b2d4b0;
-    background-size: 100%;
     background-position: center;
     border:none;
     scroll-snap-align: start;
@@ -64,7 +63,6 @@
     transition: all 300ms ease-out;
     &:hover {
       filter: saturate(1.4);
-      background-size: 105%;
       .title {
         margin-bottom: 5px;
       }
@@ -120,6 +118,13 @@
       }
       &:hover .title {
         margin-bottom: 10px;
+      }
+    }
+    &:not(:nth-child(1 of .weekly-jams)) button {
+      aspect-ratio: 1;
+      padding: 3px 7px;
+      .button-text{
+        display:none;
       }
     }
   }

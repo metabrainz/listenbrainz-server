@@ -336,13 +336,17 @@ export default class RecommendationsPage extends React.Component<
     const isCurrentUser = user.name === currentUser?.name;
     const playlistId = getPlaylistId(playlist);
     return (
-      <button
+      <div
         className={`${
           selectedPlaylist?.identifier === playlist.identifier ? "selected" : ""
         } ${cssClasses}`}
         onClick={this.selectPlaylist}
-        type="button"
+        onKeyDown={(event) => {
+          if (["Enter", " "].includes(event.key)) this.selectPlaylist(event);
+        }}
         data-playlist-id={playlistId}
+        role="button"
+        tabIndex={0}
       >
         <div className="title">{shortTitle ?? playlist.title}</div>
         {isLoggedIn && (
@@ -351,11 +355,14 @@ export default class RecommendationsPage extends React.Component<
             className="btn btn-info btn-rounded btn-sm"
             onClick={this.copyPlaylist}
           >
-            <FontAwesomeIcon icon={faSave} title="Save to my playlists" />{" "}
-            {isCurrentUser ? "Save" : "Duplicate"}
+            <FontAwesomeIcon icon={faSave} title="Save to my playlists" />
+            <span className="button-text">
+              {" "}
+              {isCurrentUser ? "Save" : "Duplicate"}
+            </span>
           </button>
         )}
-      </button>
+      </div>
     );
   };
 
