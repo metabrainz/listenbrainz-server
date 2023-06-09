@@ -5,7 +5,7 @@ from typing import List, Optional
 import sqlalchemy
 import orjson
 from psycopg2.extras import execute_values
-from psycopg2.sql import SQL
+from psycopg2.sql import SQL, Literal
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import timescale as ts
@@ -737,7 +737,11 @@ def bulk_insert(slug, playlists):
 
     users = [(f"{jam_name} for {user_names[user_id]}, {jam_date}", user_id) for user_id in user_ids]
     playlist_template = SQL("""({creator_id}, %s, {description}, 't', %s, jsonb_build_object('algorithm_metadata', jsonb_build_object('source_patch', {slug})))""")\
-        .format(creator_id=TROI_BOT_USER_ID, description=f"{jam_name} Playlist!", slug=slug)
+        .format(
+            creator_id=Literal(TROI_BOT_USER_ID),
+            description=Literal(f"{jam_name} Playlist!"),
+            slug=Literal(slug)
+        )
 
     conn = ts.engine.raw_connection()
     try:
@@ -748,8 +752,8 @@ def bulk_insert(slug, playlists):
             for playlist in playlists:
                 recordings = [(r["position"], r["recording_mbid"]) for r in playlist["recordings"]]
                 template = SQL("({playlist_id}, %s, %s, {added_by_id})").format(
-                    playlist_id=playlist_ids[playlist["user_id"]],
-                    added_by_id=TROI_BOT_USER_ID
+                    playlist_id=Literal(playlist_ids[playlist["user_id"]]),
+                    added_by_id=Literal(TROI_BOT_USER_ID)
                 )
                 execute_values(curs, recording_query, recordings, template)
 
