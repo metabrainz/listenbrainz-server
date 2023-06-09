@@ -7,6 +7,7 @@ from listenbrainz_spark.stats import run_query
 
 DAYS_OF_RECENT_LISTENS_TO_EXCLUDE = 60
 USERS_PER_MESSAGE = 100
+MAX_TRACKS_PER_PLAYLIST = 50
 
 
 def main(slug):
@@ -33,7 +34,7 @@ def main(slug):
         )   SELECT user_id
                  , collect_list(struct(position, recording_mbid)) AS recordings
               FROM recommendations
-             WHERE position < 50
+             WHERE position <= {MAX_TRACKS_PER_PLAYLIST}
           GROUP BY user_id  
     """
     data = run_query(query).toLocalIterator()
