@@ -138,9 +138,9 @@ export default class RecommendationsPage extends React.Component<
   getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
     const { currentUser, APIService } = this.context;
     const { selectedPlaylist } = this.state;
-    if (currentUser && selectedPlaylist?.track) {
-      const recordings =
-        mbids ?? selectedPlaylist.track.map(getRecordingMBIDFromJSPFTrack);
+    const recordings =
+      mbids ?? selectedPlaylist?.track.map(getRecordingMBIDFromJSPFTrack);
+    if (currentUser && recordings?.length) {
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
