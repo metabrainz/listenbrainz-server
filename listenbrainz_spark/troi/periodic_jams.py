@@ -43,10 +43,10 @@ def main(slug):
         yield {
             "slug": slug,
             "data": playlists,
-            "type": "troi_bulk_playlists"
+            "type": "troi_playlists"
         }
 
     yield {
         "slug": slug,
-        "type": "troi_bulk_playlists_end"
+        "type": "troi_playlists_end"
     }
