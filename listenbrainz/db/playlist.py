@@ -6,6 +6,7 @@ import sqlalchemy
 import orjson
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Literal
+from sqlalchemy import text
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import timescale as ts
@@ -760,3 +761,22 @@ def bulk_insert(slug, playlists):
         conn.commit()
     finally:
         conn.close()
+
+
+def bulk_delete(slug):
+    """ Once bulk generated playlists have been inserted in Spark, remove all but the
+        two latest playlists of that slug. """
+    query = """
+        WITH all_playlists AS (
+            SELECT id
+                 , rank() OVER (PARTITION BY created_for_id ORDER BY created DESC) AS position
+              FROM playlist.playlist
+             WHERE creator_id = 12939
+               AND additional_metadata->'algorithm_metadata'->>'source_patch' = 'weekly-jams'
+        )   DELETE FROM playlist.playlist pp
+                  USING all_playlists ap
+                  WHERE pp.id = ap.id
+                    AND ap.position >= 2
+    """
+    with ts.engine.begin() as connection:
+        connection.execute(text(query), {"source_patch": slug})

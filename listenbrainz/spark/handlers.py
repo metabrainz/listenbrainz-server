@@ -461,3 +461,7 @@ def handle_similar_artists(message):
 
 def handle_troi_playlists(message):
     db_playlist.bulk_insert(message["slug"], message["data"])
+
+
+def handle_troi_playlists_end(message):
+    db_playlist.bulk_delete(message["slug"])

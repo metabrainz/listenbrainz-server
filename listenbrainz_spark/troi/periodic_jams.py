@@ -46,7 +46,7 @@ def main(slug):
             "type": "troi_playlists"
         }
 
-    yield {
-        "slug": slug,
-        "type": "troi_playlists_end"
-    }
+    # yield {
+    #     "slug": slug,
+    #     "type": "troi_playlists_end"
+    # }

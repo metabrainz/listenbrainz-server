@@ -39,7 +39,8 @@ from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_yim_tracks_of_the_year_data,
                                          handle_yim_tracks_of_the_year_end,
                                          handle_yim_artist_map, handle_similar_recordings_start,
-                                         handle_similar_recordings_end, handle_troi_playlists)
+                                         handle_similar_recordings_end, handle_troi_playlists,
+                                         handle_troi_playlists_end)
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
@@ -81,7 +82,8 @@ response_handler_map = {
     'year_in_music_tracks_of_the_year_start': handle_yim_tracks_of_the_year_start,
     'year_in_music_tracks_of_the_year_data': handle_yim_tracks_of_the_year_data,
     'year_in_music_tracks_of_the_year_end': handle_yim_tracks_of_the_year_end,
-    'troi_playlists': handle_troi_playlists
+    'troi_playlists': handle_troi_playlists,
+    'troi_playlists_end': handle_troi_playlists_end
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds
