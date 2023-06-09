@@ -29,7 +29,7 @@ def main(slug):
          LEFT JOIN parquet.`{RECORDING_FEEDBACK_DATAFRAME}`
              USING (user_id, recording_mbid)
              WHERE {time_filter}
-               AND feedback != -1
+               AND (feedback IS NULL OR feedback != -1)
         )   SELECT user_id
                  , collect_list(struct(position, recording_mbid)) AS recordings
               FROM recommendations
