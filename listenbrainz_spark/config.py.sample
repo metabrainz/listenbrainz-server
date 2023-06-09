@@ -36,3 +36,15 @@ FTP_ARTIST_RELATION_DIR = '/pub/musicbrainz/listenbrainz/labs/artist-credit-arti
 FTP_LISTENS_DIR = '/pub/musicbrainz/listenbrainz/'
 
 MAPPING_NAME_PREFIX = 'msid-mbid-mapping-with-matchable'
+
+PG_JDBC_URI = ""
+PG_USER = ""
+PG_PASSWORD = ""
+
+TS_JDBC_URI = ""
+TS_USER = ""
+TS_PASSWORD = ""
+
+LB_JDBC_URI = ""
+LB_USER = ""
+LB_PASSWORD = ""

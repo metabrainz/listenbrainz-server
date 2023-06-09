@@ -27,6 +27,7 @@ import listenbrainz_spark.similarity.recording
 import listenbrainz_spark.similarity.artist
 import listenbrainz_spark.similarity.user
 import listenbrainz_spark.postgres
+import listenbrainz_spark.troi.periodic_jams
 
 functions = {
     'stats.entity.listeners': listenbrainz_spark.stats.listener.entity.get_listener_stats,
@@ -64,6 +65,7 @@ functions = {
     'year_in_music.artist_map': listenbrainz_spark.year_in_music.artist_map.get_artist_map_stats,
     'import.pg_metadata_tables': listenbrainz_spark.postgres.import_all_pg_tables,
     'releases.fresh': listenbrainz_spark.fresh_releases.fresh_releases.main,
+    'troi.playlists': listenbrainz_spark.troi.periodic_jams.main,
 }
 
 
