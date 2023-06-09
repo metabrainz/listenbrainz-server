@@ -14,7 +14,7 @@ import {
   faChevronRight,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
-import { throttle } from "lodash";
+import { get, isUndefined, throttle } from "lodash";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -26,6 +26,7 @@ import { getPageProps } from "../utils/utils";
 import {
   getPlaylistExtension,
   getPlaylistId,
+  getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../playlists/utils";
 import ListenCard from "../listens/ListenCard";
@@ -41,6 +42,7 @@ export type RecommendationsPageState = {
   playlists: JSPFPlaylist[];
   selectedPlaylist?: JSPFPlaylist;
   loading: boolean;
+  recordingFeedbackMap: RecordingFeedbackMap;
 };
 
 export default class RecommendationsPage extends React.Component<
@@ -109,13 +111,14 @@ export default class RecommendationsPage extends React.Component<
     const playlists = props.playlists?.map((pl) => pl.playlist);
     this.state = {
       playlists: playlists ?? [],
+      recordingFeedbackMap: {},
       loading: false,
     };
     this.scrollContainer = React.createRef();
     this.throttledOnScroll = throttle(this.onScroll, 400, { leading: true });
   }
 
-  componentDidMount(): void {
+  async componentDidMount(): Promise<void> {
     const { playlists } = this.state;
     const selectedPlaylist =
       playlists.find((pl) => {
@@ -126,9 +129,66 @@ export default class RecommendationsPage extends React.Component<
       }) ?? playlists[0];
     if (selectedPlaylist) {
       const playlistId = getPlaylistId(selectedPlaylist);
-      this.fetchPlaylist(playlistId);
+      await this.fetchPlaylist(playlistId);
+      const recordingFeedbackMap = await this.loadFeedback();
+      this.setState({ recordingFeedbackMap });
     }
   }
+
+  getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
+    const { currentUser, APIService } = this.context;
+    const { selectedPlaylist } = this.state;
+    if (currentUser && selectedPlaylist?.track) {
+      const recordings =
+        mbids ?? selectedPlaylist.track.map(getRecordingMBIDFromJSPFTrack);
+      try {
+        const data = await APIService.getFeedbackForUserForRecordings(
+          currentUser.name,
+          recordings
+        );
+        return data.feedback;
+      } catch (error) {
+        toast.error(
+          `Could not get love/hat feedback: ${
+            error.message ?? error.toString()
+          }`
+        );
+      }
+    }
+    return [];
+  };
+
+  loadFeedback = async (mbids?: string[]): Promise<RecordingFeedbackMap> => {
+    const { recordingFeedbackMap } = this.state;
+    const feedback = await this.getFeedback(mbids);
+    const newRecordingFeedbackMap: RecordingFeedbackMap = {
+      ...recordingFeedbackMap,
+    };
+    feedback.forEach((fb: FeedbackResponse) => {
+      if (fb.recording_mbid) {
+        newRecordingFeedbackMap[fb.recording_mbid] = fb.score;
+      }
+    });
+    return newRecordingFeedbackMap;
+  };
+
+  updateFeedback = (
+    recordingMbid: string,
+    score: ListenFeedBack | RecommendationFeedBack
+  ) => {
+    if (recordingMbid) {
+      const { recordingFeedbackMap } = this.state;
+      recordingFeedbackMap[recordingMbid] = score as ListenFeedBack;
+      this.setState({ recordingFeedbackMap });
+    }
+  };
+
+  getFeedbackForRecordingMbid = (
+    recordingMbid?: string | null
+  ): ListenFeedBack => {
+    const { recordingFeedbackMap } = this.state;
+    return recordingMbid ? get(recordingFeedbackMap, recordingMbid, 0) : 0;
+  };
 
   fetchPlaylist = async (playlistId: string) => {
     const { APIService, currentUser } = this.context;
