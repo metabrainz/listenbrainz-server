@@ -774,7 +774,7 @@ export default class PlaylistPage extends React.Component<
                   handle=".drag-handle"
                   list={tracks as (JSPFTrack & { id: string })[]}
                   onEnd={this.movePlaylistItem}
-                  setList={(newState: JSPFTrack[]) =>
+                  setList={(newState) =>
                     this.setState({
                       playlist: { ...playlist, track: newState },
                     })

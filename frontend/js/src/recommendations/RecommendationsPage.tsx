@@ -14,7 +14,8 @@ import {
   faChevronRight,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
-import { get, isUndefined, throttle } from "lodash";
+import { get, isUndefined, set, throttle } from "lodash";
+import { ReactSortable } from "react-sortablejs";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -32,6 +33,7 @@ import {
 import ListenCard from "../listens/ListenCard";
 import RecommendationPlaylistSettings from "./RecommendationPlaylistSettings";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import PlaylistItemCard from "../playlists/PlaylistItemCard";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -130,8 +132,6 @@ export default class RecommendationsPage extends React.Component<
     if (selectedPlaylist) {
       const playlistId = getPlaylistId(selectedPlaylist);
       await this.fetchPlaylist(playlistId);
-      const recordingFeedbackMap = await this.loadFeedback();
-      this.setState({ recordingFeedbackMap });
     }
   }
 
@@ -149,7 +149,7 @@ export default class RecommendationsPage extends React.Component<
         return data.feedback;
       } catch (error) {
         toast.error(
-          `Could not get love/hat feedback: ${
+          `Could not get love/hate feedback: ${
             error.message ?? error.toString()
           }`
         );
@@ -198,7 +198,20 @@ export default class RecommendationsPage extends React.Component<
         currentUser?.auth_token
       );
       const JSPFObject: JSPFObject = await response.json();
-      this.setState({ selectedPlaylist: JSPFObject.playlist });
+
+      // React-SortableJS expects an 'id' attribute (non-negociable), so add it to each object
+      JSPFObject.playlist?.track?.forEach((jspfTrack: JSPFTrack) => {
+        set(jspfTrack, "id", getRecordingMBIDFromJSPFTrack(jspfTrack));
+      });
+      // Fetch feedback for loaded tracks
+      const newTracksMBIDS = JSPFObject.playlist.track.map(
+        getRecordingMBIDFromJSPFTrack
+      );
+      const recordingFeedbackMap = await this.loadFeedback(newTracksMBIDS);
+      this.setState({
+        selectedPlaylist: JSPFObject.playlist,
+        recordingFeedbackMap,
+      });
     } catch (error) {
       toast.error(error.message);
     }
@@ -262,6 +275,49 @@ export default class RecommendationsPage extends React.Component<
       );
     } catch (error) {
       toast.error(error.message ?? error);
+    }
+  };
+
+  hasRightToEdit = (): boolean => {
+    const { currentUser } = this.context;
+    const { user } = this.props;
+    return currentUser?.name === user.name;
+  };
+
+  movePlaylistItem = async (evt: any) => {
+    const { currentUser, APIService } = this.context;
+    const { selectedPlaylist } = this.state;
+    if (!currentUser?.auth_token) {
+      toast.error("You must be logged in to modify this playlist");
+      return;
+    }
+    if (!this.hasRightToEdit()) {
+      toast.error("You are not authorized to modify this playlist");
+      return;
+    }
+    try {
+      await APIService.movePlaylistItem(
+        currentUser.auth_token,
+        getPlaylistId(selectedPlaylist),
+        evt.item.getAttribute("data-recording-mbid"),
+        evt.oldIndex,
+        evt.newIndex,
+        1
+      );
+    } catch (error) {
+      toast.error(error.toString());
+      // Revert the move in state.playlist order
+      const newTracks = isUndefined(selectedPlaylist)
+        ? []
+        : [...selectedPlaylist.track];
+      // The ol' switcheroo !
+      const toMoveBack = newTracks[evt.newIndex];
+      newTracks[evt.newIndex] = newTracks[evt.oldIndex];
+      newTracks[evt.oldIndex] = toMoveBack;
+
+      this.setState((prevState) => ({
+        selectedPlaylist: { ...prevState.selectedPlaylist!, track: newTracks },
+      }));
     }
   };
 
@@ -415,20 +471,45 @@ export default class RecommendationsPage extends React.Component<
         {selectedPlaylist && (
           <section id="selected-playlist">
             <div className="playlist-items">
-              {selectedPlaylist.track.map((playlistTrack, index) => {
-                const listen = listensFromJSPFTracks?.[index];
-
-                return (
-                  <ListenCard
-                    key={playlistTrack.identifier}
-                    className="playlist-item-card"
-                    listen={listen}
-                    showTimestamp={false}
-                    showUsername={false}
-                    newAlert={newAlert}
-                  />
-                );
-              })}
+              {selectedPlaylist.track.length > 0 ? (
+                <ReactSortable
+                  handle=".drag-handle"
+                  list={
+                    selectedPlaylist.track as (JSPFTrack & { id: string })[]
+                  }
+                  onEnd={this.movePlaylistItem}
+                  setList={(newState) =>
+                    this.setState((prevState) => ({
+                      selectedPlaylist: {
+                        ...prevState.selectedPlaylist!,
+                        track: newState,
+                      },
+                    }))
+                  }
+                >
+                  {selectedPlaylist.track.map((track: JSPFTrack, index) => {
+                    return (
+                      <PlaylistItemCard
+                        key={`${track.id}-${index.toString()}`}
+                        canEdit={this.hasRightToEdit()}
+                        track={track}
+                        currentFeedback={this.getFeedbackForRecordingMbid(
+                          track.id
+                        )}
+                        showTimestamp={false}
+                        showUsername={false}
+                        // removeTrackFromPlaylist={this.deletePlaylistItem}
+                        updateFeedbackCallback={this.updateFeedback}
+                        newAlert={newAlert}
+                      />
+                    );
+                  })}
+                </ReactSortable>
+              ) : (
+                <div className="lead text-center">
+                  <p>Nothing in this playlist yet</p>
+                </div>
+              )}
             </div>
             <RecommendationPlaylistSettings playlist={selectedPlaylist} />
           </section>
