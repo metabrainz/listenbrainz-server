@@ -4,7 +4,7 @@
 }
 /* stylelint-enable */
 
-.playlists-masonry-container{
+.playlists-masonry-container {
   position: relative;
   // hide overflow behind button with gradient to indicate there's more
   .nav-button {
@@ -18,14 +18,14 @@
     z-index: 1;
     opacity: 1;
     transition: opacity 300ms linear;
-    &.backward{
+    &.backward {
       background: linear-gradient(to right, @white 10%, transparent);
       text-align: left;
       left: 0;
     }
-    &.forward{
+    &.forward {
       background: linear-gradient(to left, @white 10%, transparent);
-      right:0;
+      right: 0;
       text-align: right;
     }
   }
@@ -35,7 +35,7 @@
     pointer-events: none;
   }
 }
-.playlists-masonry{
+.playlists-masonry {
   width: 100%;
   display: grid;
   grid-gap: 1em;
@@ -45,19 +45,19 @@
   overflow-x: scroll;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
-  &.dragging{
+  &.dragging {
     scroll-snap-type: none;
   }
-  
+
   > * {
     min-width: 260px;
-    padding:1em;
+    padding: 1em;
     display: flex;
     align-items: flex-end;
     background-size: cover;
     background-color: #b2d4b0;
     background-position: center;
-    border:none;
+    border: none;
     scroll-snap-align: start;
     filter: unset;
     transition: all 300ms ease-out;
@@ -67,14 +67,14 @@
         margin-bottom: 5px;
       }
     }
-    &.selected{
+    &.selected {
       border: 5px solid @blue;
       border-radius: 3px;
     }
-    .title{
+    .title {
       font-family: Roboto, sans-serif;
       font-weight: 900;
-      font-size:2em;
+      font-size: 2em;
       line-height: 1.1em;
       color: @blue;
       transition: margin-bottom 300ms ease-out;
@@ -87,6 +87,7 @@
       margin-left: auto;
     }
     // Magic background image cycler
+    /* stylelint-disable */
     each(range(3), {
       //We only have three backgrounds available for green (#1 is only used for weekly jams)
       &.green:nth-of-type(3n+@{value}) {
@@ -104,8 +105,9 @@
         background-image: url("../img/recommendations/blue-@{value}.svg");
       }
     });
-    
-    &:nth-child(1 of .weekly-jams){
+    /* stylelint-ensable */
+
+    &:nth-child(1 of .weekly-jams) {
       // Make first weekly-jams element bigger and placed at the start
       min-width: 320px;
       grid-column-start: 1;
@@ -124,44 +126,44 @@
     &:not(:nth-child(1 of .weekly-jams)) button {
       aspect-ratio: 1;
       padding: 3px 7px;
-      .button-text{
-        display:none;
+      .button-text {
+        display: none;
       }
     }
   }
-  
+
   @media (max-width: @screen-sm) {
     grid-auto-columns: unset;
   }
 }
 
-#selected-playlist{
+#selected-playlist {
   display: flex;
   flex-wrap: wrap-reverse;
   align-items: flex-end;
-  gap:1em;
+  gap: 1em;
   margin-top: 2em;
   border-top: 1px solid @light;
   padding-top: 2em;
-  
-  .playlist-items{
+
+  .playlist-items {
     flex: 2;
     flex-basis: 350px;
   }
-  .playlist-settings{
+  .playlist-settings {
     width: 350px;
-    flex:1;
+    flex: 1;
     flex-basis: 300px;
     padding: 1em;
     overflow: hidden;
 
-    .playlist-settings-header{
+    .playlist-settings-header {
       background: @blue;
       color: @white;
       padding: 1em;
       margin: -1em -1em 0;
-      .title{
-        margin-top:0.6em;
+      .title {
+        margin-top: 0.6em;
         font-size: 1.3em;
         font-weight: 600;
       }
