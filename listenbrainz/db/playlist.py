@@ -731,7 +731,7 @@ def bulk_insert(slug, playlists):
     playlist_query = """
         INSERT INTO playlist.playlist (creator_id, name, description, public, created_for_id, additional_metadata)
              VALUES %s
-          RETURNING created_for_id, mbid
+          RETURNING created_for_id, id
     """
     recording_query = """INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id) VALUES %s"""
 
