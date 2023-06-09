@@ -734,9 +734,16 @@ def bulk_insert(slug, playlists):
              VALUES %s
           RETURNING created_for_id, id
     """
-    recording_query = """INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id) VALUES %s"""
+    recording_query = "INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id) VALUES %s"
 
-    users = [(f"{jam_name} for {user_names[user_id]}, {jam_date}", user_id) for user_id in user_ids]
+    users = []
+    for user_id in user_ids:
+        if user_id not in user_names:
+            # user has been deleted but data not completely removed from spark cluster yet
+            continue
+        playlist_name = f"{jam_name} for {user_names[user_id]}, {jam_date}"
+        users.append((playlist_name, user_id))
+
     playlist_template = SQL("""({creator_id}, %s, {description}, 't', %s, jsonb_build_object('algorithm_metadata', jsonb_build_object('source_patch', {slug})))""")\
         .format(
             creator_id=Literal(TROI_BOT_USER_ID),
@@ -776,7 +783,7 @@ def bulk_delete(slug):
         )   DELETE FROM playlist.playlist pp
                   USING all_playlists ap
                   WHERE pp.id = ap.id
-                    AND ap.position >= 2
+                    AND ap.position > 2
     """
     with ts.engine.begin() as connection:
         connection.execute(text(query), {"source_patch": slug})
