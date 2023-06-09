@@ -758,9 +758,12 @@ def bulk_insert(slug, playlists):
 
             playlist_ids = {r[0]: r[1] for r in results}
             for playlist in playlists:
+                if playlist["user_id"] not in playlist_ids:
+                    continue
+                playlist_id = playlist_ids[playlist["user_id"]]
                 recordings = [(r["position"], r["recording_mbid"]) for r in playlist["recordings"]]
                 template = SQL("({playlist_id}, %s, %s, {added_by_id})").format(
-                    playlist_id=Literal(playlist_ids[playlist["user_id"]]),
+                    playlist_id=Literal(playlist_id),
                     added_by_id=Literal(TROI_BOT_USER_ID)
                 )
                 execute_values(curs, recording_query, recordings, template)
