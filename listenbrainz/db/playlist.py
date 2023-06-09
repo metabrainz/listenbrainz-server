@@ -781,12 +781,12 @@ def bulk_delete(slug):
             SELECT id
                  , rank() OVER (PARTITION BY created_for_id ORDER BY created DESC) AS position
               FROM playlist.playlist
-             WHERE creator_id = 12939
-               AND additional_metadata->'algorithm_metadata'->>'source_patch' = 'weekly-jams'
+             WHERE creator_id = :creator_id
+               AND additional_metadata->'algorithm_metadata'->>'source_patch' = :source_patch
         )   DELETE FROM playlist.playlist pp
                   USING all_playlists ap
                   WHERE pp.id = ap.id
                     AND ap.position > 2
     """
     with ts.engine.begin() as connection:
-        connection.execute(text(query), {"source_patch": slug})
+        connection.execute(text(query), {"creator_id": TROI_BOT_USER_ID, "source_patch": slug})
