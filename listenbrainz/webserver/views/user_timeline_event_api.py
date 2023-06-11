@@ -371,8 +371,6 @@ def user_feed_listens_following(user_name: str):
         raise APIForbidden("You don't have permissions to view this user's timeline.")
     
     min_ts, max_ts, _ = _validate_get_endpoint_params()
-    if min_ts is None and max_ts is None:
-        max_ts = int(time.time())
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
 
