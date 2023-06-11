@@ -29,6 +29,7 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 import time
 import json
 import uuid
+from listenbrainz.webserver.views.user_timeline_event_api import DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
 
 class FeedAPITestCase(ListenAPIIntegrationTestCase):
@@ -146,6 +147,12 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
+        # Sending a listen with time difference greater than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW.microseconds/1000 - 5
+        response = self.send_data(payload, user=self.following_user_1)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
         # This sleep allows for the timescale subscriber to take its time in getting
         # the listen submitted from redis and writing it to timescale.
         time.sleep(1)
@@ -161,7 +168,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         # for now, so let's remove them for this test.
         payload = self.remove_own_follow_events(payload)
 
-        # should have all 6 listens.
+        # should have 6 listens only. As one listen is out of seach interval, it should not be in payload.
         self.assertEqual(6, payload['count'])
 
         # first 3 events should have higher timestamps and user should be following_1
