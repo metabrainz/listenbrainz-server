@@ -133,14 +133,14 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         ts = int(time.time())
-        # send 3 listens for the following_user_1
+        # Send 3 listens for the following_user_1
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts - i
             response = self.send_data(payload, user=self.following_user_1)
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
-        # send 3 listens with lower timestamps for following_user_2
+        # Send 3 listens with lower timestamps for following_user_2
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts - 10 - i
             response = self.send_data(payload, user=self.following_user_2)
