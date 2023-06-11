@@ -47,6 +47,7 @@ from listenbrainz.webserver.views.api_tools import validate_auth_header, \
 MAX_LISTEN_EVENTS_PER_USER = 2  # the maximum number of listens we want to return in the feed per user
 MAX_LISTEN_EVENTS_OVERALL = 10  # the maximum number of listens we want to return in the feed overall across users
 DEFAULT_LISTEN_EVENT_WINDOW = timedelta(days=14) # to limit the search space of listen events and avoid timeouts
+DEFAULT_LISTEN_EVENT_WINDOW_NEW = timedelta(days=7) # to limit the search space of listen events and avoid timeouts
 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
@@ -353,10 +354,8 @@ def user_feed_listens_following(user_name: str):
 
     :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
     :type user_name: ``str``
-    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned
-    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned
-    :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
-    :type count: ``int``
+    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned.
+    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned.
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, you have feed listen-events!
@@ -371,7 +370,7 @@ def user_feed_listens_following(user_name: str):
     if user_name != user['musicbrainz_id']:
         raise APIForbidden("You don't have permissions to view this user's timeline.")
     
-    min_ts, max_ts, count = _validate_get_endpoint_params()
+    min_ts, max_ts, _ = _validate_get_endpoint_params()
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
@@ -381,7 +380,7 @@ def user_feed_listens_following(user_name: str):
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events_new(users_following, min_ts, max_ts, count)
+        listen_events = get_listen_events_new(users_following, min_ts, max_ts)
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
@@ -675,36 +674,39 @@ def get_listen_events(
 def get_listen_events_new(
     users: List[Dict],
     min_ts: int,
-    max_ts: int,
-    count: int
+    max_ts: int
 ) -> List[APITimelineEvent]:
     """ Gets all listen events in the feed.
     """
-    # to avoid timeouts while fetching listen events, we want to make
+    # To avoid timeouts while fetching listen events, we want to make
     # sure that both min_ts and max_ts are defined. if only one of those
     # is set, calculate the other from it using a default window length.
     # if neither is set, use current time as max_ts and subtract window
     # length to get min_ts.
     if min_ts and max_ts:
-        min_ts = datetime.utcfromtimestamp(min_ts)
+        temp = datetime.utcfromtimestamp(min_ts)
         max_ts = datetime.utcfromtimestamp(max_ts)
+        if max_ts - temp < DEFAULT_LISTEN_EVENT_WINDOW_NEW:
+            min_ts = temp 
+        else:
+            # If the given interval for search is greater than :DEFAULT_LISTEN_EVENT_WINDOW_NEW:,
+            # then we must limit the search interval to :DEFAULT_LISTEN_EVENT_WINDOW_NEW:.
+            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
     else:
         if min_ts:
             min_ts = datetime.utcfromtimestamp(min_ts)
-            max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW
+            max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW_NEW
         elif max_ts:
             max_ts = datetime.utcfromtimestamp(max_ts)
-            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
+            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
         else:
             max_ts = datetime.utcnow()
-            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
+            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
-    listens = timescale_connection._ts.fetch_recent_listens_for_users(
+    listens = timescale_connection._ts.fetch_recent_listens_for_users_new(
         users,
         min_ts=min_ts,
-        max_ts=max_ts,
-        per_user_limit=count,
-        limit=count
+        max_ts=max_ts
     )
 
     events = []
