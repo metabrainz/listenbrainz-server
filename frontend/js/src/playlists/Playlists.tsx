@@ -80,8 +80,21 @@ export default class UserPlaylists extends React.Component<
     this.setState({ playlistSelectedForOperation: playlist });
   };
 
+  updatePlaylists = (playlists: JSPFPlaylist[]): void => {
+    this.setState({ playlists });
+  };
+
   setPlaylistType = (type: PlaylistType) => {
     this.setState({ playlistType: type });
+  };
+
+  onCopiedPlaylist = (newPlaylist: JSPFPlaylist): void => {
+    const { playlistType } = this.state;
+    if (this.isCurrentUserPage() && playlistType === PlaylistType.playlists) {
+      this.setState((prevState) => ({
+        playlists: [newPlaylist, ...prevState.playlists],
+      }));
+    }
   };
 
   createPlaylist = async (
@@ -155,7 +168,7 @@ export default class UserPlaylists extends React.Component<
       const JSPFObject: JSPFObject = await APIService.getPlaylist(
         newPlaylistId,
         currentUser.auth_token
-      );
+      ).then((res) => res.json());
       this.setState(
         (prevState) => ({
           playlists: [JSPFObject.playlist, ...prevState.playlists],
@@ -313,6 +326,8 @@ export default class UserPlaylists extends React.Component<
           </Pill>
         </div>
         <PlaylistsList
+          onPaginatePlaylists={this.updatePlaylists}
+          onCopiedPlaylist={this.onCopiedPlaylist}
           playlists={playlists}
           activeSection={playlistType}
           user={user}

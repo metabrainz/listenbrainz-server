@@ -516,7 +516,7 @@ def cron_request_all_stats(ctx):
             ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)
 
         for entity in ["artists", "release_groups"]:
-            ctx.invoke(request_entity_stats, type="listeners", range_=stats_range, entity=entity)
+            ctx.invoke(request_entity_stats, type_="listeners", range_=stats_range, entity=entity)
 
 
 @cli.command(name='cron_request_similar_users')

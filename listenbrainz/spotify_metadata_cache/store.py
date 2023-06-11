@@ -24,7 +24,7 @@ def insert_album(curs, data, last_refresh, expires_at):
         "release_date": data["release_date"],
         "last_refresh": last_refresh,
         "expires_at": expires_at,
-        "data": orjson.dumps(data)
+        "data": orjson.dumps(data).decode("utf-8")
     })
 
 
@@ -42,7 +42,7 @@ def insert_artists(curs, data):
     values = []
     for artist in data:
         if artist["id"] not in artist_ids:
-            values.append((artist["id"], artist["name"], orjson.dumps(artist)))
+            values.append((artist["id"], artist["name"], orjson.dumps(artist).decode("utf-8")))
             artist_ids.add(artist["id"])
     execute_values(curs, query, values)
 
@@ -73,7 +73,7 @@ def insert_tracks(curs, album_id, data):
                   , album_id = EXCLUDED.album_id
                   , data = EXCLUDED.data
     """
-    values = [(t["id"], t["name"], int(t["track_number"]), orjson.dumps(t)) for t in data]
+    values = [(t["id"], t["name"], int(t["track_number"]), orjson.dumps(t).decode("utf-8")) for t in data]
     template = SQL("(%s, %s, %s, {album_id}, %s)").format(album_id=Literal(album_id))
     execute_values(curs, query, values, template)
 
@@ -139,7 +139,7 @@ def insert_raw(curs, album, last_refresh, expires_at):
     """
     curs.execute(query, {
         "album_id": album["id"],
-        "data": orjson.dumps(album),
+        "data": orjson.dumps(album).decode("utf-8"),
         "last_refresh": last_refresh,
         "expires_at": expires_at
     })
