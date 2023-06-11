@@ -29,6 +29,12 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: ListenBrainz Data Update Intervals
+
+   general/data-update-intervals
+
+.. toctree::
+   :maxdepth: 2
    :caption: Developer Documentation
 
    developers/devel-env
@@ -56,4 +62,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

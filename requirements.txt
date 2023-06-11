@@ -37,7 +37,7 @@ werkzeug==2.2.3
 Flask-DebugToolbar==0.13.1
 Flask-UUID==0.2
 msgpack==0.5.6
-requests==2.27.1
+requests==2.31.0
 SQLAlchemy==1.4.37
 mbdata@git+https://github.com/amCap1712/mbdata.git@fix-sqlalchemy-warnings
 sqlalchemy-dst==1.0.1

@@ -3,6 +3,7 @@ import { get as _get } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faExchangeAlt,
+  faInfoCircle,
   faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import Tooltip from "react-tooltip";
@@ -53,6 +54,16 @@ export default NiceModal.create(
       hide();
       setTimeout(remove, 500);
     }, [hide, remove]);
+
+    React.useEffect(() => {
+      const closeOnEscape = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          closeModal();
+        }
+      };
+      window.addEventListener("keydown", closeOnEscape);
+      return () => window.removeEventListener("keydown", closeOnEscape);
+    }, [closeModal]);
 
     const handleError = React.useCallback(
       (error: string | Error, title?: string): void => {
@@ -133,7 +144,6 @@ export default NiceModal.create(
           className={`modal fade ${visible ? "in" : ""}`}
           style={visible ? { display: "block" } : {}}
           id="MapToMusicBrainzRecordingModal"
-          tabIndex={-1}
           role="dialog"
           aria-labelledby="MBIDMappingModalLabel"
         >
@@ -164,10 +174,10 @@ export default NiceModal.create(
               <div className="modal-body">
                 <p>
                   Sometimes ListenBrainz is unable to automatically link your
-                  Listen with a MusicBrainz recording (song). Search by track
-                  and artist name or paste a{" "}
+                  Listen with a MusicBrainz recording. Search by track and
+                  artist name or paste a{" "}
                   <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>{" "}
-                  recording URL{" "}
+                  recording URL or MBID{" "}
                   <FontAwesomeIcon
                     icon={faQuestionCircle}
                     data-tip
@@ -178,8 +188,15 @@ export default NiceModal.create(
                   the same metadata.
                 </p>
                 <small className="help-block">
-                  Recordings added to MusicBrainz within the last 4 hours may
-                  temporarily look incomplete.
+                  <FontAwesomeIcon icon={faInfoCircle} />
+                  &nbsp;
+                  <a
+                    href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    How long until my stats reflect the change?
+                  </a>
                 </small>
                 <ListenCard
                   listen={listenToMap}
@@ -201,23 +218,36 @@ export default NiceModal.create(
                   />
                 </div>
                 {listenFromSelectedRecording ? (
-                  <ListenCard
-                    listen={listenFromSelectedRecording}
-                    showTimestamp={false}
-                    showUsername={false}
-                    newAlert={newAlert}
-                    compact
-                    additionalActions={
-                      <ListenControl
-                        buttonClassName="btn-transparent"
-                        text=""
-                        title="Reset"
-                        icon={faTimesCircle}
-                        iconSize="lg"
-                        action={() => setSelectedRecording(undefined)}
-                      />
-                    }
-                  />
+                  <>
+                    <ListenCard
+                      listen={listenFromSelectedRecording}
+                      showTimestamp={false}
+                      showUsername={false}
+                      newAlert={newAlert}
+                      compact
+                      additionalActions={
+                        <ListenControl
+                          buttonClassName="btn-transparent"
+                          text=""
+                          title="Reset"
+                          icon={faTimesCircle}
+                          iconSize="lg"
+                          action={() => setSelectedRecording(undefined)}
+                        />
+                      }
+                    />
+                    <small className="help-block">
+                      Recordings added to MusicBrainz within the last 4 hours
+                      may temporarily look incomplete.
+                      <a
+                        href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Click here to learn why.
+                      </a>
+                    </small>
+                  </>
                 ) : (
                   <div className="card listen-card">
                     <SearchTrackOrMBID
