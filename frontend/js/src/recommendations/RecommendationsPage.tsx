@@ -337,7 +337,7 @@ export default class RecommendationsPage extends React.Component<
     const playlistId = getPlaylistId(playlist);
     return (
       <div
-        key={selectedPlaylist?.identifier}
+        key={playlist.identifier}
         className={`${
           selectedPlaylist?.identifier === playlist.identifier ? "selected" : ""
         } ${cssClasses}`}

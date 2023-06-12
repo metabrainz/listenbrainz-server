@@ -80,7 +80,8 @@ export default function RecommendationPlaylistSettings({
         </div>
         <div>
           {extension?.public ? "Public" : "Private"} playlist by&nbsp;
-          {playlist.creator} | For {extension?.collaborators?.[0]}
+          {playlist.creator} |{" "}
+          {extension?.created_for && `For ${extension?.created_for}`}
         </div>
         <hr />
         {playlist.annotation && (
