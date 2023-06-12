@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { get, findIndex, omit } from "lodash";
+import { get, join, findIndex, omit } from "lodash";
 import { saveAs } from "file-saver";
 
 import {
@@ -715,16 +715,17 @@ export default class PlaylistPage extends React.Component<
                   Boolean(customFields.collaborators.length) && (
                     <div>
                       With the help of:&ensp;
-                      {customFields.collaborators.map((collaborator, index) => (
-                        <React.Fragment key={collaborator}>
-                          <a href={sanitizeUrl(`/user/${collaborator}`)}>
+                      {join(
+                        customFields.collaborators.map((collaborator) => (
+                          <a
+                            href={sanitizeUrl(`/user/${collaborator}`)}
+                            key={collaborator}
+                          >
                             {collaborator}
                           </a>
-                          {index < customFields.collaborators.length - 1
-                            ? ", "
-                            : ""}
-                        </React.Fragment>
-                      ))}
+                        )),
+                        ", "
+                      )}
                     </div>
                   )}
                 {customFields?.last_modified_at && (

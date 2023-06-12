@@ -79,8 +79,8 @@ export default function RecommendationPlaylistSettings({
           </button>
         </div>
         <div>
-          {extension?.public ? "Public" : "Pr	ivate"} playlist by&nbsp;
-          {playlist.creator} | For {extension?.collaborators[0]}
+          {extension?.public ? "Public" : "Private"} playlist by&nbsp;
+          {playlist.creator} | For {extension?.collaborators?.[0]}
         </div>
         <hr />
         {playlist.annotation && (

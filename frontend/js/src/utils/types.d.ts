@@ -489,7 +489,7 @@ declare type JSPFPlaylistMetadata = {
 };
 
 declare type JSPFPlaylistExtension = {
-  collaborators: string[];
+  collaborators?: string[];
   public: boolean;
   created_for?: string;
   copied_from?: string; // Full ListenBrainz playlist URI
