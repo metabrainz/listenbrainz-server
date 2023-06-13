@@ -21,6 +21,7 @@ from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.troi_bot import run_post_recommendation_troi_bot
 from listenbrainz.troi.year_in_music import yim_patch_runner
+from listenbrainz.db import playlist as db_playlist
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -456,3 +457,11 @@ def handle_similar_artists(message):
         similarity.insert_prod_table("artist_credit_mbids", message["data"], message["algorithm"])
     else:
         similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
+
+
+def handle_troi_playlists(message):
+    db_playlist.bulk_insert(message["slug"], message["data"])
+
+
+def handle_troi_playlists_end(message):
+    db_playlist.bulk_delete(message["slug"])

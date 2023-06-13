@@ -495,6 +495,13 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_playlists, year=year)
 
 
+@cli.command(name="request_troi_playlists")
+@click.option("--slug", type=click.Choice(['weekly-jams', 'weekly-exploration']))
+def request_troi_playlists(slug):
+    """ Bulk generate troi playlists for all users """
+    send_request_to_spark_cluster("troi.playlists", slug=slug)
+
+
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
 # rather combine multiple commands related to a task so that they are always invoked in the correct order.
 
