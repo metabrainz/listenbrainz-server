@@ -775,7 +775,7 @@ def bulk_insert(slug, playlists):
 
 def bulk_delete(slug):
     """ Once bulk generated playlists have been inserted in Spark, remove all but the
-        two latest playlists of that slug. """
+        two latest playlists of that slug for all users. """
     query = """
         WITH all_playlists AS (
             SELECT id
