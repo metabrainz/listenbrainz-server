@@ -25,17 +25,22 @@ def main(slug):
         WITH recommendations AS (
             SELECT user_id
                  , recording_mbid
-                 , rank() OVER (PARTITION BY user_id ORDER BY score DESC) AS position
+                 , rank() OVER (PARTITION BY user_id ORDER BY score DESC) AS ranking
               FROM parquet.`{RAW_RECOMMENDATIONS}`
          LEFT JOIN parquet.`{RECORDING_FEEDBACK_DATAFRAME}`
              USING (user_id, recording_mbid)
              WHERE {time_filter}
                AND (feedback IS NULL OR feedback != -1)
+        ), randomized AS (
+            SELECT user_id
+                 , recording_mbid
+                 , rank() over (PARTITION BY user_id ORDER BY RANDOM()) AS position
+              FROM recommendations
+             WHERE ranking <= {MAX_TRACKS_PER_PLAYLIST}
         )   SELECT user_id
                  , collect_list(struct(position, recording_mbid)) AS recordings
-              FROM recommendations
-             WHERE position <= {MAX_TRACKS_PER_PLAYLIST}
-          GROUP BY user_id  
+              FROM randomized
+          GROUP BY user_id
     """
     data = run_query(query).toLocalIterator()
 
