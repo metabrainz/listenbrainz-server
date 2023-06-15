@@ -8,18 +8,15 @@ import { createRoot } from "react-dom/client";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import {
-  faCompactDisc,
-  faTrashAlt
-} from "@fortawesome/free-solid-svg-icons";
+import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Integrations } from "@sentry/tracing";
 import { get, isEqual } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
-import { io, Socket } from "socket.io-client";
+import { Socket, io } from "socket.io-client";
 import {
-  withAlertNotifications,
   WithAlertNotificationsInjectedProps,
+  withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
@@ -346,8 +343,11 @@ export default class Listens extends React.Component<
       event.preventDefault();
     }
     const { user, latestListenTs } = this.props;
-    const { listens } = this.state;
-    if (listens?.[0]?.listened_at >= latestListenTs) {
+    const { listens, webSocketListens } = this.state;
+    if (
+      listens?.[0]?.listened_at >= latestListenTs &&
+      webSocketListens?.[0]?.listened_at < latestListenTs
+    ) {
       return;
     }
     this.setState({ loading: true });
@@ -355,6 +355,7 @@ export default class Listens extends React.Component<
     this.setState(
       {
         listens: newListens,
+        webSocketListens: [],
         lastFetchedDirection: "newer",
       },
       this.afterListensFetch
@@ -840,8 +841,25 @@ export default class Listens extends React.Component<
                 <div className="listen-header">
                   <h3>Listens since the page is opened</h3>
                 </div>
-                <div id="webSocketListens" ref={this.webSocketListensTable}>
-                  {webSocketListens.map((listen) => this.getListenCard(listen))}
+                <div className="webSocket-box">
+                  <div id="webSocketListens" ref={this.webSocketListensTable}>
+                    {webSocketListens.map((listen) =>
+                      this.getListenCard(listen)
+                    )}
+                  </div>
+                  <p className="read-more">
+                    <a
+                      role="button"
+                      href="#"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") this.handleClickNewest();
+                      }}
+                      onClick={this.handleClickNewest}
+                      className="button"
+                    >
+                      See all your listens
+                    </a>
+                  </p>
                 </div>
               </>
             )}
