@@ -1,7 +1,9 @@
+from typing import List
+
 from listenbrainz_spark.stats import run_query
 
 
-def get_recordings(table: str, cache_table: str, number_of_results: int):
+def get_recordings(table: str, cache_tables: List[str], number_of_results: int):
     """
     Get recording information (recording_name, recording_mbid etc) for every user
     ordered by listen count (number of times a user has listened to the track/recording).
@@ -27,6 +29,7 @@ def get_recordings(table: str, cache_table: str, number_of_results: int):
                     'user2' : [{...}],
                 }
     """
+    cache_table = cache_tables[0]
     result = run_query(f"""
         WITH intermediate_table as (
             SELECT user_id

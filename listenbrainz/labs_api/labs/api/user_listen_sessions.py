@@ -59,25 +59,28 @@ class UserListensSessionQuery(Query):
         query = f"""
             WITH listens AS (
                  SELECT listened_at
-                      , COALESCE(mmm.artist_credit_name, l.data->'track_metadata'->>'artist_name') AS artist_name
-                      , COALESCE(mmm.recording_name, l.track_name) AS track_name
-                      , COALESCE(mmm.recording_mbid::TEXT, l.data->'track_metadata'->'additional_info'->>'recording_mbid') AS recording_mbid
+                      , COALESCE(mbc.artist_data->>'name', l.data->>'artist_name') AS artist_name
+                      , COALESCE(mbc.recording_data->>'name', l.data->>'track_name') AS track_name
+                      , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
                       , COALESCE(
                             (mbc.recording_data->>'length')::INT / 1000
-                          , (l.data->'track_metadata'->'additional_info'->>'duration')::INT
-                          , (l.data->'track_metadata'->'additional_info'->>'duration_ms')::INT / 1000
+                          , (l.data->'additional_info'->>'duration')::INT
+                          , (l.data->'additional_info'->>'duration_ms')::INT / 1000
                           , {DEFAULT_TRACK_LENGTH}
                         ) AS duration
                    FROM listen l
               LEFT JOIN mbid_mapping mm
-                     ON (l.data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = recording_msid
-              LEFT JOIN mbid_mapping_metadata mmm
-                     ON mm.recording_mbid = mmm.recording_mbid
+                     ON l.recording_msid = mm.recording_msid
+              LEFT JOIN mbid_manual_mapping user_mm
+                     ON l.recording_msid = user_mm.recording_msid
+                    AND user_mm.user_id = l.user_id 
+              LEFT JOIN mbid_manual_mapping_top other_mm
+                     ON l.recording_msid = other_mm.recording_msid
               LEFT JOIN mapping.mb_metadata_cache mbc
-                     ON mbc.recording_mbid = COALESCE(mmm.recording_mbid::TEXT, data->'track_metadata'->'additional_info'->>'recording_mbid')::uuid
+                     ON mbc.recording_mbid = COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid)
                   WHERE listened_at > :from_ts
                     AND listened_at <= :to_ts
-                    AND user_id = :user_id
+                    AND l.user_id = :user_id
                ORDER BY listened_at
             ), ordered AS (
                 SELECT listened_at

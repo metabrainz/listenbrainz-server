@@ -10,6 +10,7 @@ import listenbrainz_spark.stats.sitewide.listening_activity
 import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
 import listenbrainz_spark.stats.user.listening_activity
+import listenbrainz_spark.stats.listener.entity
 import listenbrainz_spark.year_in_music.new_releases_of_top_artists
 import listenbrainz_spark.year_in_music.similar_users
 import listenbrainz_spark.year_in_music.day_of_week
@@ -26,8 +27,10 @@ import listenbrainz_spark.similarity.recording
 import listenbrainz_spark.similarity.artist
 import listenbrainz_spark.similarity.user
 import listenbrainz_spark.postgres
+import listenbrainz_spark.troi.periodic_jams
 
 functions = {
+    'stats.entity.listeners': listenbrainz_spark.stats.listener.entity.get_listener_stats,
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
     'stats.user.listening_activity': listenbrainz_spark.stats.user.listening_activity.get_listening_activity,
     'stats.user.daily_activity': listenbrainz_spark.stats.user.daily_activity.get_daily_activity,
@@ -62,6 +65,7 @@ functions = {
     'year_in_music.artist_map': listenbrainz_spark.year_in_music.artist_map.get_artist_map_stats,
     'import.pg_metadata_tables': listenbrainz_spark.postgres.import_all_pg_tables,
     'releases.fresh': listenbrainz_spark.fresh_releases.fresh_releases.main,
+    'troi.playlists': listenbrainz_spark.troi.periodic_jams.main,
 }
 
 

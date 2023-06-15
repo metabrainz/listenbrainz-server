@@ -163,6 +163,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(received[0]["track_metadata"], {
             "track_name": "Wicked Game",
             "artist_name": "Tom Ellis",
+            "release_name": "Lucifer",
             "additional_info": {
                 "recording_msid": msids[1]
             }
@@ -176,6 +177,9 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             "artist_name": "Portishead",
             "release_name": "Dummy",
             "additional_info": {
+                "recording_msid": msids[0]
+            },
+            "mbid_mapping": {
                 "recording_mbid": "2f3d422f-8890-41a1-9762-fbe16f107c31",
                 "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
                 "artist_mbids": ["8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"],
@@ -185,8 +189,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
                         "join_phrase": "",
                         "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
                     }
-                ],
-                "recording_msid": msids[0]
+                ]
             }
         })
 

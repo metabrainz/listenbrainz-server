@@ -116,7 +116,7 @@ describe("YoutubePlayer", () => {
       expect(instance.props.onTrackInfoChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onTrackInfoChange).toHaveBeenCalledWith(
         "FNORD",
-        "IhaveSeenTheFnords",
+        "https://www.youtube.com/watch?v=IhaveSeenTheFnords",
         undefined,
         undefined,
         [

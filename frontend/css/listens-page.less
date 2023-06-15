@@ -287,7 +287,6 @@
       .cover-art-fallback {
         background-color: @gray-lighter;
         min-width: @cover-art-thumbnail-size;
-        height: inherit;
         display: flex;
         align-items: center;
         color: #cbcbcb;
@@ -297,6 +296,7 @@
           max-width: @cover-art-thumbnail-size / 2;
           aspect-ratio: unset;
           border-radius: unset;
+          height: auto;
         }
       }
       img {
@@ -677,10 +677,9 @@
 }
 
 .add-listen-btn {
-  border-radius: 3px;
-  height: 30px;
-  margin-top: 20px;
-  margin-bottom: 10px;
+  position: relative;
+  align-self: center;
+  margin-left: auto;
 }
 
 .listen-header {

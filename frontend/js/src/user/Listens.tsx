@@ -1,43 +1,46 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import * as React from "react";
-import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
+import * as React from "react";
+import { createRoot } from "react-dom/client";
 
-import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import { io, Socket } from "socket.io-client";
-import { get, isEqual } from "lodash";
-import { Integrations } from "@sentry/tracing";
-import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
-import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext from "../utils/GlobalAppContext";
 import {
-  WithAlertNotificationsInjectedProps,
+  faCompactDisc,
+  faTrashAlt
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Integrations } from "@sentry/tracing";
+import { get, isEqual } from "lodash";
+import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
+import { io, Socket } from "socket.io-client";
+import {
   withAlertNotifications,
+  WithAlertNotificationsInjectedProps,
 } from "../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
-import APIServiceClass from "../utils/APIService";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import ListenCard from "../listens/ListenCard";
-import Loader from "../components/Loader";
 import AddListenModal from "../add-listen/AddListenModal";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import Loader from "../components/Loader";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
+import ListenCard from "../listens/ListenCard";
+import ListenControl from "../listens/ListenControl";
+import ListenCountCard from "../listens/ListenCountCard";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
+import APIServiceClass from "../utils/APIService";
+import ErrorBoundary from "../utils/ErrorBoundary";
 import {
   formatWSMessageToListen,
-  getPageProps,
   getListenablePin,
+  getPageProps,
   getRecordingMBID,
-  getTrackName,
   getRecordingMSID,
+  getTrackName,
 } from "../utils/utils";
-import ListenControl from "../listens/ListenControl";
-import UserSocialNetwork from "../follow/UserSocialNetwork";
-import ListenCountCard from "../listens/ListenCountCard";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -64,6 +67,7 @@ export interface ListensState {
   deletedListen: Listen | null;
   userPinnedRecording?: PinnedRecording;
   playingNowListen?: Listen;
+  followingList: Array<string>;
 }
 
 export default class Listens extends React.Component<
@@ -102,13 +106,14 @@ export default class Listens extends React.Component<
       deletedListen: null,
       userPinnedRecording: props.userPinnedRecording,
       playingNowListen,
+      followingList: [],
     };
 
     this.listensTable = React.createRef();
     this.webSocketListensTable = React.createRef();
   }
 
-  componentDidMount(): void {
+  componentDidMount() {
     const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService } = this.context;
@@ -138,6 +143,7 @@ export default class Listens extends React.Component<
     if (playingNowListen) {
       this.receiveNewPlayingNow(playingNowListen);
     }
+    this.getFollowing();
     this.loadFeedback();
   }
 
@@ -258,7 +264,7 @@ export default class Listens extends React.Component<
         newAlert(
           "danger",
           "We could not load data for the now playing listen",
-          typeof error === "object" ? error.message : error
+          typeof error === "object" ? error.message : error.toString()
         );
       }
     }
@@ -403,26 +409,26 @@ export default class Listens extends React.Component<
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
         const recordingMsid = getRecordingMSID(listen);
         if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
+          recording_msids.push(recordingMsid);
         }
         const recordingMBID = getRecordingMBID(listen);
         if (recordingMBID) {
-          recording_mbids += `${recordingMBID},`;
+          recording_mbids.push(recordingMBID);
         }
       });
 
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
@@ -442,15 +448,14 @@ export default class Listens extends React.Component<
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const recordingMBID = getRecordingMBID(listen);
-
     if (!currentUser?.name || !recordingMBID) {
       return;
     }
     try {
       const data = await APIService.getFeedbackForUserForRecordings(
         currentUser.name,
-        "",
-        recordingMBID
+        [recordingMBID],
+        []
       );
       if (data.feedback.length) {
         const { recordingMbidFeedbackMap } = this.state;
@@ -570,6 +575,52 @@ export default class Listens extends React.Component<
         );
       }
     }
+  };
+
+  getFollowing = async () => {
+    const { APIService, currentUser } = this.context;
+    const { getFollowingForUser } = APIService;
+    if (!currentUser?.name) {
+      return;
+    }
+    try {
+      const response = await getFollowingForUser(currentUser.name);
+      const { following } = response;
+
+      this.setState({ followingList: following });
+    } catch (err) {
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
+    }
+  };
+
+  updateFollowingList = (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => {
+    const { followingList } = this.state;
+    const newFollowingList = [...followingList];
+    const index = newFollowingList.findIndex(
+      (following) => following === user.name
+    );
+    if (action === "follow" && index === -1) {
+      newFollowingList.push(user.name);
+    }
+    if (action === "unfollow" && index !== -1) {
+      newFollowingList.splice(index, 1);
+    }
+    this.setState({ followingList: newFollowingList });
+  };
+
+  loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
+    const { currentUser } = this.context;
+    const { followingList } = this.state;
+
+    if (_.isNil(currentUser) || _.isEmpty(currentUser)) {
+      return false;
+    }
+
+    return followingList.includes(user.name);
   };
 
   removeListenFromListenList = (listen: Listen) => {
@@ -950,7 +1001,6 @@ export default class Listens extends React.Component<
         </div>
         <BrainzPlayer
           listens={allListenables}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}

@@ -1,10 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from unittest import mock
 from unittest.mock import call
 
-from flask import current_app
-
-from data.model.common_stat import StatRange, StatRecordList, StatApi
+from data.model.common_stat import StatRecordList, StatApi
 from data.model.user_artist_stat import ArtistRecord
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
                                                                   UserRecommendationsRecord)

@@ -13,6 +13,7 @@ class UserEntityTestCase(StatsTestCase):
     def setUpClass(cls):
         super(UserEntityTestCase, cls).setUpClass()
         entity.entity_handler_map['test'] = MagicMock(return_value="sample_test_data")
+        entity.entity_cache_map['test'] = []
 
     @patch('listenbrainz_spark.stats.user.entity.get_listens_from_dump')
     @patch('listenbrainz_spark.stats.user.entity.create_messages')

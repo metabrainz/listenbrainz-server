@@ -77,7 +77,9 @@ describe("ListenCard", () => {
       user_name: "test",
     };
     const wrapper = mount<ListenCard>(
-      <ListenCard {...{ ...props, listen: playingNowListen }} />
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCard {...{ ...props, listen: playingNowListen }} />
+      </GlobalAppContext.Provider>
     );
 
     expect(
@@ -227,8 +229,6 @@ describe("ListenCard", () => {
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("test", "baz", {
-        artist_name: instance.props.listen.track_metadata.artist_name,
-        track_name: instance.props.listen.track_metadata.track_name,
         recording_msid:
           instance.props.listen.track_metadata.additional_info?.recording_msid,
         recording_mbid:

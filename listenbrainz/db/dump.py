@@ -326,6 +326,7 @@ def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=DUMP_D
 
 
 def dump_statistics(location: str):
+    # TODO: when adding support to dump entity listener statistics, replace user_id with user_name
     stats = [
         f"{stat_type}_{stat_range}"
         # not including aritst_map because those databases are always incomplete we only generate it on demand

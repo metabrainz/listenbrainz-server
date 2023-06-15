@@ -22,7 +22,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Union, Optional, List
 
-from data.model.listen import APIListen
+from data.model.listen import APIListen, TrackMetadata
 from listenbrainz.db.model.review import CBReviewTimelineMetadata
 from listenbrainz.db.msid_mbid_mapping import MsidMbidModel
 
@@ -38,12 +38,10 @@ class UserTimelineEventType(Enum):
 
 
 class RecordingRecommendationMetadata(MsidMbidModel):
-    artist_name: constr(min_length=1)
-    track_name: constr(min_length=1)
-    release_name: Optional[str]
+    pass
 
 
-class PersonalRecordingRecommendationMetadata(RecordingRecommendationMetadata):
+class PersonalRecordingRecommendationMetadata(MsidMbidModel):
     users: conlist(str, min_items=1)
     blurb_content: Optional[str]
 
@@ -92,16 +90,12 @@ class APICBReviewEvent(BaseModel):
 
 
 class APIPersonalRecommendationEvent(BaseModel):
-    artist_name: constr(min_length=1)
-    track_name: constr(min_length=1)
-    release_name: Optional[str]
-    recording_mbid: Optional[str]
-    recording_msid: constr(min_length=1)
     users: List[str]
     blurb_content: Optional[str]
+    track_metadata: TrackMetadata
 
 
-APIEventMetadata = Union[APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent, APIPersonalRecommendationEvent]
+APIEventMetadata = Union[APIPersonalRecommendationEvent, APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent]
 
 
 class APITimelineEvent(BaseModel):

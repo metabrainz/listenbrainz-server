@@ -174,16 +174,33 @@ const getReleaseGroupMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.mbid_mapping.release_group_mbid");
 
 const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
-  _.get(listen, "track_metadata.track_name", "") || _.get(listen, "title", "");
+  _.get(listen, "track_metadata.mbid_mapping.recording_name", "") ||
+  _.get(listen, "track_metadata.track_name", "") ||
+  _.get(listen, "title", "");
 
 const getTrackDurationInMs = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "track_metadata.additional_info.duration_ms", "") ||
   _.get(listen, "track_metadata.additional_info.duration", "") * 1000 ||
   _.get(listen, "duration", "");
 
-const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
-  _.get(listen, "track_metadata.artist_name", "") ||
-  _.get(listen, "creator", "");
+const getArtistName = (
+  listen?: Listen | JSPFTrack | PinnedRecording
+): string => {
+  const artists: MBIDMappingArtist[] = _.get(
+    listen,
+    "track_metadata.mbid_mapping.artists",
+    []
+  );
+  if (artists?.length) {
+    return artists
+      .map((artist) => `${artist.artist_credit_name}${artist.join_phrase}`)
+      .join("");
+  }
+  return (
+    _.get(listen, "track_metadata.artist_name", "") ||
+    _.get(listen, "creator", "")
+  );
+};
 
 const getArtistLink = (listen: Listen) => {
   const artists = listen.track_metadata?.mbid_mapping?.artists;
@@ -196,6 +213,7 @@ const getArtistLink = (listen: Listen) => {
               href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
               target="_blank"
               rel="noopener noreferrer"
+              title={artist.artist_credit_name}
             >
               {artist.artist_credit_name}
             </a>
@@ -419,6 +437,7 @@ type GlobalAppProps = {
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
   critiquebrainz?: CritiqueBrainzUser;
+  user_preferences?: UserPreferences;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 
@@ -467,6 +486,17 @@ const getPageProps = (): {
       sentry_dsn,
     } = globalReactProps;
 
+    let { user_preferences } = globalReactProps;
+
+    user_preferences = { ...user_preferences, saveData: false };
+
+    if ("connection" in navigator) {
+      // @ts-ignore
+      if (navigator.connection?.saveData === true) {
+        user_preferences.saveData = true;
+      }
+    }
+
     const apiService = new APIServiceClass(
       api_url || `${window.location.origin}/1`
     );
@@ -476,6 +506,7 @@ const getPageProps = (): {
       spotifyAuth: spotify,
       youtubeAuth: youtube,
       critiquebrainzAuth: critiquebrainz,
+      userPreferences: user_preferences,
     };
     sentryProps = {
       sentry_dsn,
@@ -544,47 +575,76 @@ const generateAlbumArtThumbnailLink = (
   return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb250.jpg`;
 };
 
+const getThumbnailFromCAAResponse = (
+  body: CoverArtArchiveResponse
+): string | undefined => {
+  if (!body.images?.length) {
+    return undefined;
+  }
+  const { release } = body;
+  const regexp = /musicbrainz.org\/release\/(?<mbid>[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})/g;
+  const releaseMBID = regexp.exec(release)?.groups?.mbid;
+
+  const frontImage = body.images.find((image) => image.front);
+
+  if (frontImage?.id && releaseMBID) {
+    // CAA links are http redirects instead of https, causing LB-1067 (mixed content warning).
+    // We also don't need or want the redirect from CAA, instead we can reconstruct
+    // the link to the underlying archive.org resource directly
+    // Also see https://github.com/metabrainz/listenbrainz-server/commit/9e40ad440d0b280b6c53d13e804f911657469c8b
+    const { id } = frontImage;
+    return generateAlbumArtThumbnailLink(id, releaseMBID);
+  }
+
+  // No front image? Fallback to whatever the first image is
+  const { thumbnails, image } = body.images[0];
+  return thumbnails[250] ?? thumbnails.small ?? image;
+};
+
 const getAlbumArtFromReleaseMBID = async (
-  userSubmittedReleaseMBID: string
+  userSubmittedReleaseMBID: string,
+  useReleaseGroupFallback: boolean = false,
+  APIService?: APIServiceClass
 ): Promise<string | undefined> => {
   try {
+    const retryParams = {
+      retries: 4,
+      retryOn: [429],
+      retryDelay(attempt: number) {
+        // Exponential backoff at random interval between maxRetryTime and minRetryTime,
+        // adding minRetryTime for every attempt. `attempt` starts at 0
+        const maxRetryTime = 2500;
+        const minRetryTime = 1800;
+        const clampedRandomTime =
+          Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
+        // Make it exponential
+        return Math.floor(clampedRandomTime) * 2 ** attempt;
+      },
+    };
+
     const CAAResponse = await fetchWithRetry(
       `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
-      {
-        retries: 4,
-        retryOn: [429],
-        retryDelay(attempt: number) {
-          // Exponential backoff at random interval between maxRetryTime and minRetryTime,
-          // adding minRetryTime for every attempt. `attempt` starts at 0
-          const maxRetryTime = 2500;
-          const minRetryTime = 1800;
-          const clampedRandomTime =
-            Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
-          // Make it exponential
-          return Math.floor(clampedRandomTime) * 2 ** attempt;
-        },
-      }
+      retryParams
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      if (!body.images?.length) {
-        return undefined;
+      return getThumbnailFromCAAResponse(body);
+    }
+
+    if (CAAResponse.status === 404 && useReleaseGroupFallback && APIService) {
+      const releaseGroupResponse = await APIService.lookupMBRelease(
+        userSubmittedReleaseMBID
+      );
+      const releaseGroupMBID = releaseGroupResponse["release-group"].id;
+
+      const CAAReleaseGroupResponse = await fetchWithRetry(
+        `https://coverartarchive.org/release-group/${releaseGroupMBID}`,
+        retryParams
+      );
+      if (CAAReleaseGroupResponse.ok) {
+        const body: CoverArtArchiveResponse = await CAAReleaseGroupResponse.json();
+        return getThumbnailFromCAAResponse(body);
       }
-
-      const frontImage = body.images.find((image) => image.front);
-
-      if (frontImage?.id) {
-        // CAA links are http redirects instead of https, causing LB-1067 (mixed content warning).
-        // We also don't need or want the redirect from CAA, instead we can reconstruct
-        // the link to the underlying archive.org resource directly
-        // Also see https://github.com/metabrainz/listenbrainz-server/commit/9e40ad440d0b280b6c53d13e804f911657469c8b
-        const { id } = frontImage;
-        return generateAlbumArtThumbnailLink(id, userSubmittedReleaseMBID);
-      }
-
-      // No front image? Fallback to whatever the first image is
-      const { thumbnails, image } = body.images[0];
-      return thumbnails[250] ?? thumbnails.small ?? image;
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -598,7 +658,8 @@ const getAlbumArtFromReleaseMBID = async (
 
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
-  spotifyUser?: SpotifyUser
+  spotifyUser?: SpotifyUser,
+  APIService?: APIServiceClass
 ): Promise<string | undefined> => {
   // if spotifyListen
   if (
@@ -620,18 +681,22 @@ const getAlbumArtFromListenMetadata = async (
   // to query CAA for user submitted mbids.
   const userSubmittedReleaseMBID =
     listen.track_metadata?.additional_info?.release_mbid;
+  const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
+  const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
   if (userSubmittedReleaseMBID) {
+    // try getting the cover art using user submitted release mbid. if user submitted release mbid
+    // does not have a cover art and the mapper matched to a different release, try to fallback to
+    // release group cover art of the user submitted release mbid next
     const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
-      userSubmittedReleaseMBID
+      userSubmittedReleaseMBID,
+      Boolean(caaReleaseMbid) && userSubmittedReleaseMBID !== caaReleaseMbid,
+      APIService
     );
-    // if user submitted release mbid does not have a cover art, we will try to fallback to release group cover art next
     if (userSubmittedReleaseAlbumArt) {
       return userSubmittedReleaseAlbumArt;
     }
   }
   // user submitted release mbids not found, check if there is a match from mbid mapper.
-  const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
-  const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
   if (caaId && caaReleaseMbid) {
     return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
   }
@@ -740,16 +805,8 @@ export function personalRecommendationEventToListen(
 ): BaseListenFormat {
   return {
     listened_at: -1,
-    track_metadata: {
-      track_name: eventMetadata.track_name,
-      artist_name: eventMetadata.artist_name,
-      release_name: eventMetadata.release_name ?? "",
-      additional_info: {
-        recording_mbid: eventMetadata.recording_mbid,
-        recording_msid: eventMetadata.recording_msid,
-      },
-    },
-  };
+    track_metadata: eventMetadata.track_metadata,
+  } as BaseListenFormat;
 }
 
 export function getReviewEventContent(

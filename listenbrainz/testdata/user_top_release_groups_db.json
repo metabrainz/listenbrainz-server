@@ -1,0 +1,32 @@
+{
+    "from_ts": 0,
+    "to_ts": 10,
+    "data": [
+        {
+            "artist_mbids": [
+                "62162215-b023-4f0e-84bd-1e9412d5b32c",
+                "faf4cefb-036c-4c88-b93a-5b03dd0a0e6b",
+                "e07d9474-00ea-4460-ac27-88b46b3d976e"
+            ],
+            "artist_name": "All Time Low ft. Demi Lovato & blackbear",
+            "caa_id": 29179588350,
+            "caa_release_mbid": "ee65192d-31f3-437a-b170-9158d2172dbc",
+            "listen_count": 456,
+            "release_group_mbid": "326b4a29-dff5-4fab-87dc-efc1494001c6",
+            "release_group_name": "Monsters"
+        },
+        {
+            "artist_mbids": [
+                "c8b03190-306c-4120-bb0b-6f2ebfc06ea9"
+            ],
+            "artist_name": "The Weeknd",
+            "caa_id": 25720993837,
+            "caa_release_mbid": "19e4f6cc-ca0c-4897-8dfc-a36914b7f998",
+            "listen_count": 381,
+            "release_group_mbid": "78570bea-2a26-467c-a3db-c52723ceb394",
+            "release_group_name": "After Hours"
+        }
+    ],
+    "count": 2,
+    "stats_range": "all_time"
+}

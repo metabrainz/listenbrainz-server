@@ -7,7 +7,6 @@ import orjson
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
-from listenbrainz.troi.year_in_music import yim_patch_runner
 from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
@@ -87,11 +86,11 @@ def send_request_to_spark_cluster(query, **params):
 
 
 @cli.command(name="request_user_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'listeners']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
-@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
+@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings', 'release_groups']),
               help="Entity for which statistics should be calculated")
 @click.option("--database", type=str, help="Name of the couchdb database to store data in")
 def request_user_stats(type_, range_, entity, database):
@@ -100,12 +99,17 @@ def request_user_stats(type_, range_, entity, database):
     params = {
         "stats_range": range_
     }
-    if type_ == "entity" and entity:
+    if type_ in ["entity", "listener"] and entity:
         params["entity"] = entity
 
     if not database:
         today = date.today().strftime("%Y%m%d")
-        prefix = entity if type_ == "entity" else type_
+        if type_ == "entity":
+            prefix = entity
+        elif type_ == "listeners":
+            prefix = f"{entity}_listeners"
+        else:
+            prefix = type_
         database = f"{prefix}_{range_}_{today}"
 
     params["database"] = database
@@ -118,7 +122,7 @@ def request_user_stats(type_, range_, entity, database):
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
-@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
+@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings', 'release_groups']),
               help="Entity for which statistics should be calculated")
 def request_sitewide_stats(type_, range_, entity):
     """ Send request to calculate sitewide stats to the spark cluster
@@ -130,6 +134,33 @@ def request_sitewide_stats(type_, range_, entity):
         params["entity"] = entity
 
     send_request_to_spark_cluster(f"stats.sitewide.{type_}", **params)
+
+
+@cli.command(name="request_entity_stats")
+@click.option("--type", 'type_', type=click.Choice(['listeners']), help="Type of statistics to calculate", required=True)
+@click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
+              help="Time range of statistics to calculate", required=True)
+@click.option("--entity", type=click.Choice(['artists', 'release_groups']),
+              help="Entity for which statistics should be calculated")
+@click.option("--database", type=str, help="Name of the couchdb database to store data in")
+def request_entity_stats(type_, range_, entity, database):
+    """ Send an entity stats request to the spark cluster """
+    params = {
+        "stats_range": range_,
+        "entity": entity
+    }
+
+    if not database:
+        today = date.today().strftime("%Y%m%d")
+        if type_ == "listeners":
+            prefix = f"{entity}_listeners"
+        else:
+            prefix = type_
+        database = f"{prefix}_{range_}_{today}"
+
+    params["database"] = database
+
+    send_request_to_spark_cluster(f"stats.entity.{type_}", **params)
 
 
 @cli.command(name="request_yim_new_release_stats")
@@ -374,7 +405,9 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_recordings(days, session, contribution, threshold, limit, skip):
+@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
+                                                 " affects how the resulting dataset is stored in LB.", required=True)
+def request_similar_recordings(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
         "similarity.recording",
@@ -383,7 +416,8 @@ def request_similar_recordings(days, session, contribution, threshold, limit, sk
         contribution=contribution,
         threshold=threshold,
         limit=limit,
-        skip=skip
+        skip=skip,
+        is_production_dataset=production
     )
 
 
@@ -399,7 +433,9 @@ def request_similar_recordings(days, session, contribution, threshold, limit, sk
                                         " (the limit is instructive. upto 2x artists may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_artists(days, session, contribution, threshold, limit, skip):
+@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
+                                                 " affects how the resulting dataset is stored in LB.", required=True)
+def request_similar_artists(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar artists index. """
     send_request_to_spark_cluster(
         "similarity.artist",
@@ -408,7 +444,8 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip)
         contribution=contribution,
         threshold=threshold,
         limit=limit,
-        skip=skip
+        skip=skip,
+        is_production_dataset=production
     )
 
 
@@ -458,6 +495,13 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_playlists, year=year)
 
 
+@cli.command(name="request_troi_playlists")
+@click.option("--slug", type=click.Choice(['weekly-jams', 'weekly-exploration']))
+def request_troi_playlists(slug):
+    """ Bulk generate troi playlists for all users """
+    send_request_to_spark_cluster("troi.playlists", slug=slug)
+
+
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
 # rather combine multiple commands related to a task so that they are always invoked in the correct order.
 
@@ -466,17 +510,20 @@ def request_year_in_music(ctx, year: int):
 def cron_request_all_stats(ctx):
     ctx.invoke(request_import_pg_tables)
     for stats_range in ALLOWED_STATISTICS_RANGE:
-        for entity in ["artists", "releases", "recordings"]:
+        for entity in ["artists", "releases", "recordings", "release_groups"]:
             ctx.invoke(request_user_stats, type_="entity", range_=stats_range, entity=entity)
 
         for stat in ["listening_activity", "daily_activity"]:
             ctx.invoke(request_user_stats, type_=stat, range_=stats_range)
 
-        for entity in ["artists", "releases", "recordings"]:
+        for entity in ["artists", "releases", "recordings", "release_groups"]:
             ctx.invoke(request_sitewide_stats, type_="entity", range_=stats_range, entity=entity)
 
         for stat in ["listening_activity"]:
             ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)
+
+        for entity in ["artists", "release_groups"]:
+            ctx.invoke(request_entity_stats, type_="listeners", range_=stats_range, entity=entity)
 
 
 @cli.command(name='cron_request_similar_users')
@@ -494,3 +541,12 @@ def cron_request_recommendations(ctx):
     ctx.invoke(request_candidate_sets)
     ctx.invoke(request_recording_discovery)
     ctx.invoke(request_recommendations)
+
+
+@cli.command(name='cron_request_similarity_datasets')
+@click.pass_context
+def cron_request_similarity_datasets(ctx):
+    ctx.invoke(request_similar_recordings, days=7500, session=300, contribution=5,
+               threshold=10, limit=100, skip=30, production=True)
+    ctx.invoke(request_similar_artists, days=7500, session=300, contribution=5,
+               threshold=10, limit=100, skip=30, production=True)

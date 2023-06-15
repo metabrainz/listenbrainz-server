@@ -6,12 +6,15 @@ from typing import List, Optional
 from data.model.sitewide_entity import SitewideEntityStatMessage
 from data.model.user_artist_stat import ArtistRecord
 from data.model.user_recording_stat import RecordingRecord
+from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
-from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME, \
+    RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.sitewide.artist import get_artists
 from listenbrainz_spark.stats.sitewide.recording import get_recordings
 from listenbrainz_spark.stats.sitewide.release import get_releases
+from listenbrainz_spark.stats.sitewide.release_group import get_release_groups
 from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
 from pydantic import ValidationError
 
@@ -22,19 +25,22 @@ logger = logging.getLogger(__name__)
 entity_handler_map = {
     "artists": get_artists,
     "releases": get_releases,
-    "recordings": get_recordings
+    "recordings": get_recordings,
+    "release_groups": get_release_groups,
 }
 
 entity_model_map = {
     "artists": ArtistRecord,
     "releases": ReleaseRecord,
-    "recordings": RecordingRecord
+    "recordings": RecordingRecord,
+    "release_groups": ReleaseGroupRecord,
 }
 
 entity_cache_map = {
-    "artists": ARTIST_COUNTRY_CODE_DATAFRAME,
-    "releases": RELEASE_METADATA_CACHE_DATAFRAME,
-    "recordings": RELEASE_METADATA_CACHE_DATAFRAME
+    "artists": [ARTIST_COUNTRY_CODE_DATAFRAME],
+    "releases": [RELEASE_METADATA_CACHE_DATAFRAME],
+    "recordings": [RELEASE_METADATA_CACHE_DATAFRAME],
+    "release_groups": [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 }
 
 def get_listen_count_limit(stats_range: str) -> int:
@@ -60,13 +66,15 @@ def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEnt
 
     listen_count_limit = get_listen_count_limit(stats_range)
 
-    df_name = "entity_data_cache"
-    cache_table_path = entity_cache_map.get(entity)
-    if cache_table_path:
-        read_files_from_HDFS(cache_table_path).createOrReplaceTempView(df_name)
+    cache_dfs = []
+    for idx, df_path in enumerate(entity_cache_map.get(entity)):
+        df_name = f"entity_data_cache_{idx}"
+        cache_dfs.append(df_name)
+        read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
+
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, df_name, listen_count_limit)
+    data = handler(table_name, cache_dfs, listen_count_limit)
 
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
                                from_date=from_date, to_date=to_date)

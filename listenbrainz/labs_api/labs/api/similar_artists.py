@@ -90,7 +90,7 @@ class SimilarArtistsViewerQuery(Query):
             results = [{"type": "markup", "data": Markup("<p><b>Reference artist</b></p>")}]
             results.append(references)
 
-            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "artist_credit_mbids", artist_mbids, algorithm, count)
+            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "artist_credit_mbids_dev", artist_mbids, algorithm, count)
             if len(similar_mbids) == 0:
                 results.append({
                     "type": "markup",

@@ -1,0 +1,281 @@
+{
+    "payload": {
+        "count": 25,
+        "from_ts": 1680307200,
+        "last_updated": 1681742052,
+        "offset": 0,
+        "range": "this_month",
+        "release_groups": [
+            {
+                "artist_mbids": [
+                    "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+                ],
+                "artist_name": "Nusrat Fateh Ali Khan",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 15,
+                "release_group_mbid": "f6804962-d5a3-4099-899c-95c360938502",
+                "release_group_name": "Reformed (feat. A1Melodymaster)"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "A.R. Rahman, Arijit Singh, Shashaa Tirupati",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 8,
+                "release_group_mbid": null,
+                "release_group_name": "Atrangi Re"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Jatin-Lalit, Udit Narayan, Jaspinder Narula, Udbhav, Manohar Shetty, Ishaan, Shweta Pandit, Sonali Bhatawdekar, Pritha Mazumdar, Anand Bakshi",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 6,
+                "release_group_mbid": null,
+                "release_group_name": "Mohabbatein"
+            },
+            {
+                "artist_mbids": [
+                    "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+                ],
+                "artist_name": "Shakira",
+                "caa_id": 8319144714,
+                "caa_release_mbid": "46f25a39-1630-4bed-8b5c-5aef1e464757",
+                "listen_count": 5,
+                "release_group_mbid": "2dbd0eff-17ce-34da-83f1-c707a199bc1e",
+                "release_group_name": "Laundry Service"
+            },
+            {
+                "artist_mbids": [
+                    "c234fa42-e6a6-443e-937e-2f4b073538a3"
+                ],
+                "artist_name": "Chris Brown",
+                "caa_id": 23564822587,
+                "caa_release_mbid": "25f18616-5a9c-470e-964d-4eb8a511435b",
+                "listen_count": 5,
+                "release_group_mbid": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+                "release_group_name": "Indigo"
+            },
+            {
+                "artist_mbids": [
+                    "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+                ],
+                "artist_name": "Nusrat Fateh Ali Khan",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 5,
+                "release_group_mbid": "3d66159a-5805-4219-b827-814226a5279e",
+                "release_group_name": "Greatest Hits"
+            },
+            {
+                "artist_mbids": [
+                    "cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493"
+                ],
+                "artist_name": "Adele",
+                "caa_id": 34029007881,
+                "caa_release_mbid": "d0a60bc8-b4e9-4f1c-b9b5-c84c284493c4",
+                "listen_count": 4,
+                "release_group_mbid": "e4174758-d333-4a8e-a31f-dd0edd51518e",
+                "release_group_name": "21"
+            },
+            {
+                "artist_mbids": [
+                    "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+                ],
+                "artist_name": "Nusrat Fateh Ali Khan",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 3,
+                "release_group_mbid": "b7365a6f-fdd7-4f18-8520-8ece5fc1179f",
+                "release_group_name": "Nusrat - Pyar Ki Hasrat"
+            },
+            {
+                "artist_mbids": [
+                    "a9c38fd2-04be-4bc6-a3bc-96508b226508"
+                ],
+                "artist_name": "Stephen Sanchez",
+                "caa_id": 32337530682,
+                "caa_release_mbid": "f6da0110-0283-441b-a619-efaf5721bda1",
+                "listen_count": 2,
+                "release_group_mbid": "555f06a8-5d9b-4ec1-9d73-a5a529ab3010",
+                "release_group_name": "Until I Found You"
+            },
+            {
+                "artist_mbids": [
+                    "2bcf2e02-5bc3-4c76-bf76-41126cb11444"
+                ],
+                "artist_name": "Ghost",
+                "caa_id": 31504962641,
+                "caa_release_mbid": "e799d36f-3c76-4028-a02d-bc7be77db8ba",
+                "listen_count": 2,
+                "release_group_mbid": "1f25d940-89e2-4813-a86f-955b0e99c391",
+                "release_group_name": "Prequelle"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Jatin-Lalit, Lata Mangeshkar, Udit Narayan, Udbhav, Manohar Shetty, Ishaan, Shweta Pandit, Sonali Bhatawdekar, Pritha Mazumdar, Shah Rukh Khan, Anand Bakshi",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 2,
+                "release_group_mbid": null,
+                "release_group_name": "Mohabbatein"
+            },
+            {
+                "artist_mbids": [
+                    "cefe551f-33a4-45b2-9c59-abfe741654c7",
+                    "b9542aba-c2bd-46c0-8100-4c9b5356a95f",
+                    "7569dad3-210b-49ae-9a80-4972798b7fca"
+                ],
+                "artist_name": "Sharn, 40k & The Paul",
+                "caa_id": 34601875426,
+                "caa_release_mbid": "5460dad9-4dc8-4e0c-8e88-083e23c480f2",
+                "listen_count": 2,
+                "release_group_mbid": "eb20f028-6f59-4a64-95f1-1bc56b87dd5c",
+                "release_group_name": "Mi Amor"
+            },
+            {
+                "artist_mbids": [
+                    "ef2686fe-0bdf-4e0c-b902-cc6609acc95d"
+                ],
+                "artist_name": "Shubh",
+                "caa_id": 34225088247,
+                "caa_release_mbid": "1af68516-c673-4df5-9b5b-d03cf88352dd",
+                "listen_count": 2,
+                "release_group_mbid": "966d9b30-3937-4aeb-848c-db6b5c9a74ed",
+                "release_group_name": "Her"
+            },
+            {
+                "artist_mbids": [
+                    "014431e3-c5a3-4a57-b86b-fe8f2e3253ff",
+                    "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+                ],
+                "artist_name": "Rahat Fateh Ali Khan & Nusrat Fateh Ali Khan",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 2,
+                "release_group_mbid": "111857eb-16f1-4489-8091-1740dfa3d635",
+                "release_group_name": "Greatest Top 30 Hits of Rahat and Nusrat Fateh Ali Khan"
+            },
+            {
+                "artist_mbids": [
+                    "ada7a83c-e3e1-40f1-93f9-3e73dbc9298a"
+                ],
+                "artist_name": "Arctic Monkeys",
+                "caa_id": 32131848311,
+                "caa_release_mbid": "55171afe-440e-4c63-947c-e49074f3d5b5",
+                "listen_count": 2,
+                "release_group_mbid": "a348ba2f-f8b3-4686-b928-e63d8d94d543",
+                "release_group_name": "AM"
+            },
+            {
+                "artist_mbids": [
+                    "b8a7c51f-362c-4dcb-a259-bc6e0095f0a6"
+                ],
+                "artist_name": "Ed Sheeran",
+                "caa_id": 31935928002,
+                "caa_release_mbid": "14c13329-88f5-426f-90d7-0170b4017e15",
+                "listen_count": 1,
+                "release_group_mbid": "e05f9927-e24b-41c5-928d-d0e008a12444",
+                "release_group_name": "\u00f7"
+            },
+            {
+                "artist_mbids": [
+                    "db92a151-1ac2-438b-bc43-b82e149ddd50"
+                ],
+                "artist_name": "Rick Astley",
+                "caa_id": 30721131344,
+                "caa_release_mbid": "bf9e91ea-8029-4a04-a26a-224e00a83266",
+                "listen_count": 1,
+                "release_group_mbid": "082c6aff-a7cc-36e0-a960-35a578ecd937",
+                "release_group_name": "Whenever You Need Somebody"
+            },
+            {
+                "artist_mbids": [
+                    "e7e8031d-f232-4883-bb5d-bd97589bc29b"
+                ],
+                "artist_name": "Abhishek-Akshay",
+                "caa_id": 3193866265,
+                "caa_release_mbid": "3a29d02a-d29a-40f8-86f8-c9dab6eba7ac",
+                "listen_count": 1,
+                "release_group_mbid": "1ce1ed6e-ee15-4891-8bf8-00921b5873ad",
+                "release_group_name": "Vicky Donor"
+            },
+            {
+                "artist_mbids": [
+                    "ee421ee4-f861-405d-8730-29cb512dfdbd"
+                ],
+                "artist_name": "K\u2019naan",
+                "caa_id": 33619033925,
+                "caa_release_mbid": "00abc2ed-c874-4a4b-88c0-be6716141b6e",
+                "listen_count": 1,
+                "release_group_mbid": "1507bca6-9459-3aa3-9d07-36a7063b3ba7",
+                "release_group_name": "Troubadour"
+            },
+            {
+                "artist_mbids": [
+                    "596ffa74-3d08-44ef-b113-765d43d12738"
+                ],
+                "artist_name": "Justin Timberlake",
+                "caa_id": 8227935106,
+                "caa_release_mbid": "bd2a6877-71a3-4819-b2bb-b373deb3a756",
+                "listen_count": 1,
+                "release_group_mbid": "deae6fc2-a675-4f35-9565-d2aaea4872c7",
+                "release_group_name": "The 20/20 Experience"
+            },
+            {
+                "artist_mbids": [
+                    "042b6b13-6e02-42c8-a5e5-67abd22a93f4"
+                ],
+                "artist_name": "Krsna",
+                "caa_id": 3186066125,
+                "caa_release_mbid": "7f5be286-79a8-429e-aac7-e4155c6737c1",
+                "listen_count": 1,
+                "release_group_mbid": "454dd3a6-3f05-47fa-a284-c27de9fc75f9",
+                "release_group_name": "Tanu Weds Manu"
+            },
+            {
+                "artist_mbids": [
+                    "4f2ea2cb-923d-487e-a517-a2a03089546b",
+                    "b088fe42-db0b-4ef9-9c7d-e546b785c171"
+                ],
+                "artist_name": "Gajendra Verma & Sachin Gupta",
+                "caa_id": 3197539768,
+                "caa_release_mbid": "4f1f8e13-656a-46bf-900e-18b28f3b3991",
+                "listen_count": 1,
+                "release_group_mbid": "e98fb052-a99e-4275-99d5-0e9a9a45f5f1",
+                "release_group_name": "Table No. 21"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Nusrat Fateh Ali Khan",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 1,
+                "release_group_mbid": null,
+                "release_group_name": "Sochta Hoon Keh Woh Kitne Masoom Teh"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Satinder Sartaaj",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 1,
+                "release_group_mbid": null,
+                "release_group_name": "Seasons of Sartaaj"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Yashal Shahid",
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 1,
+                "release_group_mbid": null,
+                "release_group_name": "Sajna"
+            }
+        ],
+        "to_ts": 1681689600,
+        "total_release_group_count": 51,
+        "user_id": "lucifer"
+    }
+}

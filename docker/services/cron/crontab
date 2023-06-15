@@ -25,6 +25,8 @@ MAILTO=""
 2 2 * * 1 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_missing_mb_data >> /logs/stats.log 2>&1
 # Calculate user similarity
 3 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
+4 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_troi_playlists --slug weekly-jams >> /logs/troi_spark.log
+5 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_troi_playlists --slug weekly-exploration >> /logs/troi_spark.log
 
 # Dump user feedback before we generate recommendations
 15 2 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
@@ -52,3 +54,6 @@ MAILTO=""
 
 # run weekly cron job to remove expired do not recommends
 0 8 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py clear-expired-do-not-recommends >> /logs/do_not_recommend.log 2>&1
+
+# run weekly cron job to update similarity datasets
+0 9 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similarity_datasets >> /logs/similarity_datasets.log 2>&1

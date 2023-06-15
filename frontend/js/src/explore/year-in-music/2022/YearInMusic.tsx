@@ -325,7 +325,7 @@ export default class YearInMusic extends React.Component<
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
-        <div role="main" id="year-in-music" className="yim-2022 container">
+        <div id="year-in-music" className="yim-2022 container">
           <div id="main-header" className="flex-center">
             <img
               className="img-responsive header-image"
@@ -473,7 +473,7 @@ export default class YearInMusic extends React.Component<
     );
     const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2022`;
     return (
-      <div role="main" id="year-in-music" className="yim-2022">
+      <div id="year-in-music" className="yim-2022">
         <div id="main-header" className="flex-center">
           <img
             className="img-responsive header-image"
@@ -950,7 +950,6 @@ export default class YearInMusic extends React.Component<
                       </span>
                     </div>
                     <CustomChoropleth
-                      width={1000}
                       data={artistMapDataForGraph}
                       selectedMetric={selectedMetric}
                       colorScaleRange={[
@@ -1227,7 +1226,6 @@ export default class YearInMusic extends React.Component<
         </div>
         <BrainzPlayer
           listens={listens}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}

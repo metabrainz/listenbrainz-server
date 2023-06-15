@@ -39,7 +39,6 @@ class CandidateSetsTestClass(RecommendationsTestCase):
         self.assertEqual(from_date, datetime(2021, 8, 2))
 
     def test_get_listens_to_fetch_top_artists(self):
-        self.maxDiff = None
         mapped_df = utils.read_files_from_HDFS(RECOMMENDATION_RECORDING_MAPPED_LISTENS)
         from_date, to_date = candidate_sets.get_dates_to_generate_candidate_sets(mapped_df, 7)
         mapped_listens_subset = candidate_sets.get_listens_to_fetch_top_artists(mapped_df, from_date, to_date)
