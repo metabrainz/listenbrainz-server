@@ -6,7 +6,6 @@ import * as Sentry from "@sentry/react";
 import { get } from "lodash";
 
 import { Integrations } from "@sentry/tracing";
-import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import {
@@ -25,8 +24,12 @@ import {
   getRecordingMSID,
 } from "../utils/utils";
 
+import Card from "../components/Card";
+
 export type RecentListensProps = {
   listens: Array<Listen>;
+  globalListenCount: number;
+  globalUserCount: string;
 } & WithAlertNotificationsInjectedProps;
 
 export interface RecentListensState {
@@ -60,25 +63,25 @@ export default class RecentListens extends React.Component<
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
         const recordingMsid = getRecordingMSID(listen);
         if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
+          recording_msids.push(recordingMsid);
         }
         const recordingMBID = getRecordingMBID(listen);
         if (recordingMBID) {
-          recording_mbids += `${recordingMBID},`;
+          recording_mbids.push(recordingMBID);
         }
       });
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
@@ -158,14 +161,30 @@ export default class RecentListens extends React.Component<
 
   render() {
     const { listens } = this.state;
-    const { newAlert } = this.props;
-    const { APIService } = this.context;
+    const { newAlert, globalListenCount, globalUserCount } = this.props;
+    const { APIService, currentUser } = this.context;
 
     return (
       <div role="main">
-        <h3>Recent listens</h3>
+        <h3>Global listens</h3>
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-4 col-md-push-8">
+            <Card id="listen-count-card">
+              <div>
+                {globalListenCount?.toLocaleString() ?? "-"}
+                <br />
+                <small className="text-muted">songs played</small>
+              </div>
+            </Card>
+            <Card id="listen-count-card">
+              <div>
+                {globalUserCount ?? "-"}
+                <br />
+                <small className="text-muted">users</small>
+              </div>
+            </Card>
+          </div>
+          <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
               <h5 className="text-center">No listens to show</h5>
             )}
@@ -189,11 +208,9 @@ export default class RecentListens extends React.Component<
               </div>
             )}
           </div>
-          <div className="col-md-4" />
         </div>
         <BrainzPlayer
           listens={listens}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
@@ -212,7 +229,6 @@ document.addEventListener("DOMContentLoaded", () => {
     optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
   if (sentry_dsn) {
     Sentry.init({
       dsn: sentry_dsn,
@@ -221,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const { listens } = reactProps;
+  const { listens, globalListenCount, globalUserCount } = reactProps;
 
   const RecentListensWithAlertNotifications = withAlertNotifications(
     RecentListens
@@ -235,6 +251,8 @@ document.addEventListener("DOMContentLoaded", () => {
           <RecentListensWithAlertNotifications
             initialAlerts={optionalAlerts}
             listens={listens}
+            globalListenCount={globalListenCount}
+            globalUserCount={globalUserCount}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

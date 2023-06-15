@@ -55,9 +55,9 @@ export default class UserTopEntity extends React.Component<
   }
 
   componentDidUpdate(prevProps: UserTopEntityProps) {
-    const { range: prevRange } = prevProps;
-    const { range: currRange } = this.props;
-    if (prevRange !== currRange) {
+    const { range: prevRange, user: prevUser } = prevProps;
+    const { range: currRange, user: currUser } = this.props;
+    if (prevRange !== currRange || prevUser !== currUser) {
       if (isInvalidStatRange(currRange)) {
         this.setState({
           loading: false,
@@ -257,6 +257,46 @@ export default class UserTopEntity extends React.Component<
                         <span className="badge badge-info">{listen_count}</span>
                       }
                       // Disabling the feedback component here because of display issues with the badge
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      feedbackComponent={<></>}
+                      compact
+                    />
+                  );
+                }
+              )}
+            {entity === "release-group" &&
+              Object.keys(data).length > 0 &&
+              (data as UserReleaseGroupsResponse).payload.release_groups.map(
+                (releaseGroup, index) => {
+                  const interchangeFormat = {
+                    id: index.toString(),
+                    entity: releaseGroup.release_group_name,
+                    entityType: "release-group" as Entity,
+                    entityMBID: releaseGroup.release_group_mbid,
+                    artist: releaseGroup.artist_name,
+                    artistMBID: releaseGroup.artist_mbids,
+                    idx: index + 1,
+                    count: releaseGroup.listen_count,
+                    caaID: releaseGroup.caa_id,
+                    caaReleaseMBID: releaseGroup.caa_release_mbid,
+                  };
+                  const listenDetails = getChartEntityDetails(
+                    interchangeFormat
+                  );
+                  return (
+                    <ListenCard
+                      key={releaseGroup.release_group_mbid}
+                      listenDetails={listenDetails}
+                      listen={userChartEntityToListen(interchangeFormat)}
+                      showTimestamp={false}
+                      showUsername={false}
+                      currentFeedback={0}
+                      newAlert={newAlert}
+                      additionalActions={
+                        <span className="badge badge-info">
+                          {releaseGroup.listen_count}
+                        </span>
+                      }
                       // eslint-disable-next-line react/jsx-no-useless-fragment
                       feedbackComponent={<></>}
                       compact

@@ -4,6 +4,11 @@
     "description": "Entity statistics for all users for the requested stats_range",
     "params": ["entity", "stats_range", "database"]
   },
+  "stats.entity.listeners": {
+    "name": "stats.entity.listeners",
+    "description": "Listener statistics for all entities of given type for the requested stats_range",
+    "params": ["entity", "stats_range", "database"]
+  },
   "stats.user.listening_activity": {
     "name": "stats.user.listening_activity",
     "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
@@ -142,7 +147,8 @@
       "contribution",
       "threshold",
       "limit",
-      "skip"
+      "skip",
+      "is_production_dataset"
     ]
   },
   "similarity.artist": {
@@ -154,7 +160,8 @@
       "contribution",
       "threshold",
       "limit",
-      "skip"
+      "skip",
+      "is_production_dataset"
     ]
   },
   "year_in_music.similar_users": {
@@ -196,5 +203,10 @@
     "name": "releases.fresh",
     "description": "Calculate the intersection of fresh releases and user's listening history",
     "params": ["days", "database"]
+  },
+  "troi.playlists": {
+    "name": "troi.playlists",
+    "description": "Generate troi playlists for all users",
+    "params": ["slug"]
   }
 }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get, isEqual, isNil, isNumber } from "lodash";
+import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import {
   faMusic,
   faEllipsisV,
@@ -88,6 +88,7 @@ export type ListenCardProps = {
 };
 
 export type ListenCardState = {
+  listen: Listen;
   isCurrentlyPlaying: boolean;
   thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
@@ -97,6 +98,7 @@ export default class ListenCard extends React.Component<
   ListenCardState
 > {
   static addCoverArtThumbnailSrc: string = "/static/img/add-cover-art.svg";
+  static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -104,6 +106,7 @@ export default class ListenCard extends React.Component<
     super(props);
 
     this.state = {
+      listen: props.listen,
       isCurrentlyPlaying: false,
     };
   }
@@ -113,13 +116,14 @@ export default class ListenCard extends React.Component<
     await this.getCoverArt();
   }
 
-  async componentDidUpdate(oldProps: ListenCardProps) {
-    const { listen, customThumbnail } = this.props;
-    if (
-      !customThumbnail &&
-      Boolean(listen) &&
-      !isEqual(listen, oldProps.listen)
-    ) {
+  async componentDidUpdate(
+    oldProps: ListenCardProps,
+    oldState: ListenCardState
+  ) {
+    const { listen: oldListen } = oldState;
+    const { customThumbnail } = this.props;
+    const { listen } = this.state;
+    if (!customThumbnail && Boolean(listen) && !isEqual(listen, oldListen)) {
       await this.getCoverArt();
     }
   }
@@ -129,11 +133,15 @@ export default class ListenCard extends React.Component<
   }
 
   async getCoverArt() {
-    const { spotifyAuth } = this.context;
-    const { listen } = this.props;
+    const { spotifyAuth, APIService, userPreferences } = this.context;
+    if (userPreferences?.saveData === true) {
+      return;
+    }
+    const { listen } = this.state;
     const albumArtSrc = await getAlbumArtFromListenMetadata(
       listen,
-      spotifyAuth
+      spotifyAuth,
+      APIService
     );
     if (albumArtSrc) {
       this.setState({ thumbnailSrc: albumArtSrc });
@@ -143,8 +151,7 @@ export default class ListenCard extends React.Component<
   }
 
   playListen = () => {
-    const { listen } = this.props;
-    const { isCurrentlyPlaying } = this.state;
+    const { listen, isCurrentlyPlaying } = this.state;
     if (isCurrentlyPlaying) {
       return;
     }
@@ -175,7 +182,7 @@ export default class ListenCard extends React.Component<
   };
 
   isCurrentlyPlaying = (element: BaseListenFormat): boolean => {
-    const { listen } = this.props;
+    const { listen } = this.state;
     if (isNil(listen)) {
       return false;
     }
@@ -183,15 +190,12 @@ export default class ListenCard extends React.Component<
   };
 
   recommendListenToFollowers = async () => {
-    const { listen, newAlert } = this.props;
+    const { newAlert } = this.props;
+    const { listen } = this.state;
     const { APIService, currentUser } = this.context;
 
     if (currentUser?.auth_token) {
-      const metadata: UserTrackRecommendationMetadata = {
-        artist_name: getArtistName(listen),
-        track_name: getTrackName(listen),
-        release_name: get(listen, "track_metadata.release_name"),
-      };
+      const metadata: UserTrackRecommendationMetadata = {};
 
       const recording_mbid = getRecordingMBID(listen);
       if (recording_mbid) {
@@ -213,7 +217,7 @@ export default class ListenCard extends React.Component<
           newAlert(
             "success",
             `You recommended a track to your followers!`,
-            `${metadata.artist_name} - ${metadata.track_name}`
+            `${getArtistName(listen)} - ${getTrackName(listen)}`
           );
         }
       } catch (error) {
@@ -242,7 +246,6 @@ export default class ListenCard extends React.Component<
       additionalContent,
       beforeThumbnailContent,
       customThumbnail,
-      listen,
       className,
       showUsername,
       showTimestamp,
@@ -255,10 +258,12 @@ export default class ListenCard extends React.Component<
       newAlert,
       updateFeedbackCallback,
       additionalActions,
+      listen: listenFromProps,
       ...otherProps
     } = this.props;
-    const { isCurrentlyPlaying, thumbnailSrc } = this.state;
+    const { listen, isCurrentlyPlaying, thumbnailSrc } = this.state;
     const { currentUser } = this.context;
+    const isLoggedIn = !isEmpty(currentUser);
 
     const recordingMSID = getRecordingMSID(listen);
     const recordingMBID = getRecordingMBID(listen);
@@ -363,11 +368,19 @@ export default class ListenCard extends React.Component<
           </div>
         </a>
       );
-    } else {
+    } else if (!recordingMBID) {
       const openModal = () => {
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
           newAlert,
+        }).then((linkedTrackMetadata: any) => {
+          this.setState((prevState) => {
+            return {
+              listen: merge({}, prevState.listen, {
+                track_metadata: linkedTrackMetadata,
+              }),
+            };
+          });
         });
       };
       thumbnail = (
@@ -378,14 +391,30 @@ export default class ListenCard extends React.Component<
           onKeyDown={openModal}
           role="button"
           tabIndex={0}
-          // onKeyPress={action}
-          data-toggle="modal"
-          data-target="#MapToMusicBrainzRecordingModal"
         >
           <div className="not-mapped">
             <FontAwesomeIcon icon={faLink} />
           </div>
         </div>
+      );
+    } else {
+      // Edge case: has no thumbnail, has a recording_mbid
+      // but no release_mbid for some reason
+      thumbnail = (
+        <a
+          href={`https://musicbrainz.org/recording/${recordingMBID}`}
+          title="Open in MusicBrainz"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="listen-thumbnail"
+        >
+          <div className="cover-art-fallback">
+            <img
+              src={ListenCard.coverartPlaceholder}
+              alt="Open in MusicBrainz"
+            />
+          </div>
+        </a>
       );
     }
 
@@ -442,14 +471,15 @@ export default class ListenCard extends React.Component<
               </div>
             )}
             <div className="listen-controls">
-              {feedbackComponent ?? (
-                <ListenFeedbackComponent
-                  newAlert={newAlert}
-                  listen={listen}
-                  currentFeedback={currentFeedback as ListenFeedBack}
-                  updateFeedbackCallback={updateFeedbackCallback}
-                />
-              )}
+              {isLoggedIn &&
+                (feedbackComponent ?? (
+                  <ListenFeedbackComponent
+                    newAlert={newAlert}
+                    listen={listen}
+                    currentFeedback={currentFeedback as ListenFeedBack}
+                    updateFeedbackCallback={updateFeedbackCallback}
+                  />
+                ))}
               {hideActionsMenu ? null : (
                 <>
                   <FontAwesomeIcon
@@ -513,7 +543,7 @@ export default class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    {hasInfoAndMBID && (
+                    {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         text="Pin this track"
                         icon={faThumbtack}
@@ -527,7 +557,7 @@ export default class ListenCard extends React.Component<
                         dataTarget="#PinRecordingModal"
                       />
                     )}
-                    {hasInfoAndMBID && (
+                    {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         icon={faCommentDots}
                         title="Recommend to my followers"
@@ -535,7 +565,7 @@ export default class ListenCard extends React.Component<
                         action={this.recommendListenToFollowers}
                       />
                     )}
-                    {hasInfoAndMBID && (
+                    {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         text="Personally recommend"
                         icon={faPaperPlane}
@@ -549,7 +579,7 @@ export default class ListenCard extends React.Component<
                         dataTarget="#PersonalRecommendationModal"
                       />
                     )}
-                    {Boolean(currentUser) && Boolean(recordingMSID) && (
+                    {isLoggedIn && Boolean(recordingMSID) && (
                       <ListenControl
                         text="Link with MusicBrainz"
                         icon={faLink}
@@ -559,11 +589,9 @@ export default class ListenCard extends React.Component<
                             newAlert,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#MapToMusicBrainzRecordingModal"
                       />
                     )}
-                    {isListenReviewable && (
+                    {isLoggedIn && isListenReviewable && (
                       <ListenControl
                         text="Write a review"
                         icon={faPencilAlt}

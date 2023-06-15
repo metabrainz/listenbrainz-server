@@ -20,11 +20,6 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const props = {
   listens: [],
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => {},
   listenBrainzAPIBaseURI: "base-uri",
   refreshSpotifyToken: jest.fn(),
   refreshYoutubeToken: jest.fn(),

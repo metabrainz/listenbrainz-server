@@ -21,6 +21,7 @@ from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.troi_bot import run_post_recommendation_troi_bot
 from listenbrainz.troi.year_in_music import yim_patch_runner
+from listenbrainz.db import playlist as db_playlist
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -62,14 +63,15 @@ def handle_couchdb_data_end(message):
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
-def _handle_stats(message, stats_type):
+def _handle_stats(message, stats_type, key):
     try:
         with start_transaction(op="insert", name=f'insert {stats_type} - {message["stats_range"]} stats'):
             db_stats.insert(
                 message["database"],
                 message["from_ts"],
                 message["to_ts"],
-                message["data"]
+                message["data"],
+                key
             )
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
@@ -77,17 +79,30 @@ def _handle_stats(message, stats_type):
 
 def handle_user_entity(message):
     """ Take entity stats for a user and save it in the database. """
-    _handle_stats(message, message["entity"])
+    _handle_stats(message, f'user {message["entity"]}', "user_id")
+
+
+def handle_entity_listener(message):
+    """ Take listener stats for an entity and save it in the database """
+    if message["entity"] == "artists":
+        key = "artist_mbid"
+    elif message["entity"] == "releases":
+        key = "release_mbid"
+    elif message["entity"] == "release_groups":
+        key = "release_group_mbid"
+    else:
+        key = "recording_mbid"
+    _handle_stats(message, f'{message["entity"]} listeners', key)
 
 
 def handle_user_listening_activity(message):
     """ Take listening activity stats for user and save it in database. """
-    _handle_stats(message, "listening_activity")
+    _handle_stats(message, "listening_activity", "user_id")
 
 
 def handle_user_daily_activity(message):
     """ Take daily activity stats for user and save it in database. """
-    _handle_stats(message, "daily_activity")
+    _handle_stats(message, "daily_activity", "user_id")
 
 
 def _handle_sitewide_stats(message, stat_type, has_count=False):
@@ -414,9 +429,39 @@ def handle_yim_tracks_of_the_year_end(message):
     yim_patch_runner(message["year"])
 
 
+def handle_similar_recordings_start(message):
+    similarity.start_prod_table("recording", message["algorithm"])
+
+
+def handle_similar_recordings_end(message):
+    similarity.end_prod_table("recording", message["algorithm"])
+
+
 def handle_similar_recordings(message):
-    similarity.insert("recording", message["data"], message["algorithm"])
+    if message.get("is_production_dataset"):
+        similarity.insert_prod_table("recording", message["data"], message["algorithm"])
+    else:
+        similarity.insert("recording", message["data"], message["algorithm"])
+
+
+def handle_similar_artists_start(message):
+    similarity.start_prod_table("artist_credit_mbids", message["algorithm"])
+
+
+def handle_similar_artists_end(message):
+    similarity.end_prod_table("artist_credit_mbids", message["algorithm"])
 
 
 def handle_similar_artists(message):
-    similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
+    if message.get("is_production_dataset"):
+        similarity.insert_prod_table("artist_credit_mbids", message["data"], message["algorithm"])
+    else:
+        similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
+
+
+def handle_troi_playlists(message):
+    db_playlist.bulk_insert(message["slug"], message["data"])
+
+
+def handle_troi_playlists_end(message):
+    db_playlist.bulk_delete(message["slug"])

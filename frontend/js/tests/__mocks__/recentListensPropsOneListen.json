@@ -30,6 +30,8 @@
     "access_token": "access token",
     "permission": ["streaming", "user-read-email", "user-read-private"]
   },
-  "searchLargerTimeRange": 0
+  "searchLargerTimeRange": 0,
+  "globalListenCount": "666",
+  "globalUserCount": "42"
 }
 

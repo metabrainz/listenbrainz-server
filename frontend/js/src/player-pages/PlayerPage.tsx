@@ -91,8 +91,8 @@ export default class PlayerPage extends React.Component<
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          "",
-          recordings.join(",")
+          recordings,
+          []
         );
         return data.feedback;
       } catch (error) {
@@ -309,7 +309,6 @@ export default class PlayerPage extends React.Component<
           </div>
           <BrainzPlayer
             listens={tracks?.map(JSPFTrackToListen)}
-            newAlert={newAlert}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}

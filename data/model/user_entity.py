@@ -5,11 +5,12 @@ from pydantic import constr, NonNegativeInt
 from data.model.common_stat_spark import StatMessage, UserStatRecords
 from data.model.user_artist_stat import ArtistRecord
 from data.model.user_recording_stat import RecordingRecord
+from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 
 # Order of the records in union is important and should be from more specific to less specific
 # For more info read https://pydantic-docs.helpmanual.io/usage/types/#unions
-EntityRecord = Union[RecordingRecord, ReleaseRecord, ArtistRecord]
+EntityRecord = Union[RecordingRecord, ReleaseGroupRecord, ReleaseRecord, ArtistRecord]
 
 
 class UserEntityRecords(UserStatRecords[EntityRecord]):

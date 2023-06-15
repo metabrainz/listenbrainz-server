@@ -8,7 +8,11 @@ import { createRoot } from "react-dom/client";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCompactDisc,
+  faPlusCircle,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Integrations } from "@sentry/tracing";
 import { get, isEqual } from "lodash";
@@ -23,6 +27,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import AddListenModal from "../add-listen/AddListenModal";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
+import FollowButton from "../follow/FollowButton";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
@@ -63,6 +68,7 @@ export interface ListensState {
   deletedListen: Listen | null;
   userPinnedRecording?: PinnedRecording;
   playingNowListen?: Listen;
+  followingList: Array<string>;
 }
 
 export default class Listens extends React.Component<
@@ -99,12 +105,13 @@ export default class Listens extends React.Component<
       deletedListen: null,
       userPinnedRecording: props.userPinnedRecording,
       playingNowListen,
+      followingList: [],
     };
 
     this.listensTable = React.createRef();
   }
 
-  componentDidMount(): void {
+  componentDidMount() {
     const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService } = this.context;
@@ -134,6 +141,7 @@ export default class Listens extends React.Component<
     if (playingNowListen) {
       this.receiveNewPlayingNow(playingNowListen);
     }
+    this.getFollowing();
     this.loadFeedback();
   }
 
@@ -275,7 +283,7 @@ export default class Listens extends React.Component<
         newAlert(
           "danger",
           "We could not load data for the now playing listen",
-          typeof error === "object" ? error.message : error
+          typeof error === "object" ? error.message : error.toString()
         );
       }
     }
@@ -420,26 +428,26 @@ export default class Listens extends React.Component<
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
         const recordingMsid = getRecordingMSID(listen);
         if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
+          recording_msids.push(recordingMsid);
         }
         const recordingMBID = getRecordingMBID(listen);
         if (recordingMBID) {
-          recording_mbids += `${recordingMBID},`;
+          recording_mbids.push(recordingMBID);
         }
       });
 
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
@@ -459,15 +467,14 @@ export default class Listens extends React.Component<
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const recordingMBID = getRecordingMBID(listen);
-
     if (!currentUser?.name || !recordingMBID) {
       return;
     }
     try {
       const data = await APIService.getFeedbackForUserForRecordings(
         currentUser.name,
-        "",
-        recordingMBID
+        [recordingMBID],
+        []
       );
       if (data.feedback.length) {
         const { recordingMbidFeedbackMap } = this.state;
@@ -587,6 +594,52 @@ export default class Listens extends React.Component<
         );
       }
     }
+  };
+
+  getFollowing = async () => {
+    const { APIService, currentUser } = this.context;
+    const { getFollowingForUser } = APIService;
+    if (!currentUser?.name) {
+      return;
+    }
+    try {
+      const response = await getFollowingForUser(currentUser.name);
+      const { following } = response;
+
+      this.setState({ followingList: following });
+    } catch (err) {
+      const { newAlert } = this.props;
+      newAlert("danger", "Error while fetching followers", err.toString());
+    }
+  };
+
+  updateFollowingList = (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => {
+    const { followingList } = this.state;
+    const newFollowingList = [...followingList];
+    const index = newFollowingList.findIndex(
+      (following) => following === user.name
+    );
+    if (action === "follow" && index === -1) {
+      newFollowingList.push(user.name);
+    }
+    if (action === "unfollow" && index !== -1) {
+      newFollowingList.splice(index, 1);
+    }
+    this.setState({ followingList: newFollowingList });
+  };
+
+  loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
+    const { currentUser } = this.context;
+    const { followingList } = this.state;
+
+    if (_.isNil(currentUser) || _.isEmpty(currentUser)) {
+      return false;
+    }
+
+    return followingList.includes(user.name);
   };
 
   removeListenFromListenList = (listen: Listen) => {
@@ -759,23 +812,81 @@ export default class Listens extends React.Component<
     const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
       <div role="main">
-        <div className="listen-header">
-          {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
-          {isCurrentUsersPage && (
-            <button
-              type="button"
-              className="btn btn-primary add-listen-btn"
-              onClick={() => {
-                NiceModal.show(AddListenModal, {
-                  newAlert,
-                });
-              }}
-              data-Toggle="modal"
-              data-Target="#AddListenModal"
+        <div className="row">
+          <div className="col-md-8 listen-header">
+            {listens.length === 0 ? (
+              <div id="spacer" />
+            ) : (
+              <h3>Recent listens</h3>
+            )}
+            {isCurrentUsersPage && (
+              <div className="dropdow add-listen-btn">
+                <button
+                  className="btn btn-info dropdown-toggle"
+                  type="button"
+                  id="addListensDropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                >
+                  <FontAwesomeIcon icon={faPlusCircle} title="Add listens" />
+                  &nbsp;Add listens&nbsp;
+                  <span className="caret" />
+                </button>
+                <ul
+                  className="dropdown-menu dropdown-menu-right"
+                  aria-labelledby="addListensDropdown"
+                >
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show(AddListenModal, {
+                          newAlert,
+                        });
+                      }}
+                      data-toggle="modal"
+                      data-target="#AddListenModal"
+                    >
+                      Manual addition
+                    </button>
+                  </li>
+                  <li>
+                    <a href="/profile/music-services/details/">
+                      Connect music services
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/profile/import/">Import your listens</a>
+                  </li>
+                  <li>
+                    <a href="/add-data/">Submit from music players</a>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+          <div className="col-md-4" style={{ marginTop: "1em" }}>
+            {!isCurrentUsersPage && (
+              <FollowButton
+                type="icon-only"
+                user={user}
+                loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
+                updateFollowingList={this.updateFollowingList}
+              />
+            )}
+            <a
+              href={`https://musicbrainz.org/user/${user.name}`}
+              className="btn lb-follow-button" // for same style as follow button next to it
+              target="_blank"
+              rel="noreferrer"
             >
-              Add listen
-            </button>
-          )}
+              <img
+                src="/static/img/musicbrainz-16.svg"
+                alt="MusicBrainz Logo"
+              />{" "}
+              MusicBrainz
+            </a>
+          </div>
         </div>
 
         <div className="row">
@@ -952,7 +1063,6 @@ export default class Listens extends React.Component<
         </div>
         <BrainzPlayer
           listens={allListenables}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}

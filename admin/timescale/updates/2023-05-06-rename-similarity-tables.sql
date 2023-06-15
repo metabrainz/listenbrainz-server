@@ -1,0 +1,12 @@
+BEGIN;
+ALTER TABLE similarity.recording RENAME TO recording_dev;
+ALTER TABLE similarity.artist_credit_mbids RENAME TO artist_credit_mbids_dev;
+
+ALTER INDEX similarity.similar_recordings_reverse_uniq_idx RENAME TO similar_recordings_dev_reverse_uniq_idx;
+ALTER INDEX similarity.similar_recordings_uniq_idx RENAME TO similar_recordings_dev_uniq_idx;
+ALTER INDEX similarity.similar_recordings_algorithm_idx RENAME TO similar_recordings_dev_algorithm_idx;
+
+ALTER INDEX similarity.similar_artist_credit_mbids_reverse_uniq_idx RENAME TO similar_artist_credit_mbids_dev_reverse_uniq_idx;
+ALTER INDEX similarity.similar_artist_credit_mbids_uniq_idx RENAME TO similar_artist_credit_mbids_dev_uniq_idx;
+ALTER INDEX similarity.similar_artist_credit_mbids_algorithm_idx RENAME TO similar_artist_credit_mbids_dev_algorithm_idx;
+COMMIT;

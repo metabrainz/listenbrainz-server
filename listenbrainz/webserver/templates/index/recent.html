@@ -1,6 +1,17 @@
 {%- extends 'base-react.html' -%}
 
 {%- block title -%}Recent listens - ListenBrainz{%- endblock -%}
+{% set active_page = "feed" %}
+
+{% block content %}
+  <div class="secondary-nav">
+    <ul class="nav nav-tabs" role="tablist">
+      <li {{ 'class=disabled' if not current_user.is_authenticated }}><a href="{{ url_for('index.feed') if current_user.is_authenticated else '#'}}">My Feed</a></li>
+      <li class="active"><a href="{{ url_for('index.recent_listens') }}">Global</a></li>
+    </ul>
+  </div>
+  {{ super() }}
+{% endblock %}
 
 {% block scripts %}
   {{ super() }}

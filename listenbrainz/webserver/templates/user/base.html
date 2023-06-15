@@ -4,29 +4,30 @@
     User "{{ user.musicbrainz_id }}" - ListenBrainz
 {% endblock %}
 
+<!-- these props are used in the navbar to highlight the navbar items -->
+{% set active_page = "dashboard" %}
+{% if user %}
+  {% set user = user %}
+  {% set my_profile = current_user.id == user.id %}
+{% elif not current_user.is_anonymous%}
+  {% set user = current_user %}
+{% endif %}
 {% block content %}
-  <div id="user-profile">
-      <p style="float: right">
-          See profile on&nbsp;
-          <img
-                  src="/static/img/musicbrainz-16.svg"
-                  alt="MusicBrainz Logo"
-          />
-          <a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">
-              MusicBrainz
-          </a>
-      </p>
-    <div id="user-page-heading-container"></div>
+  <div class="secondary-nav dragscroll nochilddrag">
     <ul class="nav nav-tabs" role="tablist">
-        <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
-        <li {{ 'class=active' if active_section=='stats' }}><a href="{{ url_for('user.stats', user_name=user.musicbrainz_id) }}">Statistics</a></li>
-        <li {{ 'class=active' if active_section=='taste' }}><a href="{{ url_for('user.taste', user_name=user.musicbrainz_id) }}">Taste</a></li>
-        <li {{ 'class=active' if active_section=='playlists' }}><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) }}">Playlists</a></li>
-        <li {{ 'class=active' if active_section=='recommendations' }}><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) }}">Recommendations</a></li>
-      </ul>
-
-    {% block profile_content %} {% endblock %}
-
+      <li class="username">
+        {% if user %}
+        <div>{{ user.musicbrainz_id }}</div>
+        {% else %}
+        <div><a href="{{ url_for('login.index') }}">Sign in</a></div>
+        {% endif %}
+      </li>
+      <li class="{{ 'active' if active_section=='listens' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) if user else '#'}}">Listens</a></li>
+      <li {{ 'class=active' if active_section=='stats' }}><a href="{{ url_for('user.stats', user_name=user.musicbrainz_id) if user else url_for('index.stats') }}">Stats</a></li>
+      <li class="{{ 'active' if active_section=='taste' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.taste', user_name=user.musicbrainz_id) if user else '#' }}">Taste</a></li>
+      <li class="{{ 'active' if active_section=='playlists' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) if user else '#' }}">Playlists</a></li>
+      <li class="{{ 'active' if active_section=='recommendations' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) if user else '#'}}">Recommendations</a></li>
+    </ul>
   </div>
 
   {{ super() }}
@@ -34,5 +35,7 @@
 
 {% block scripts %}
   {{ super() }}
-  <script src="{{ get_static_path('userPageHeading.js') }}" type="text/javascript"></script>
+  
+  <!-- This dragscroll library will need to be replaced with a React hook once we move to a SPA -->
+  <script src="{{ url_for('static', filename='js/lib/dragscroll.js') }}"></script>
 {% endblock %}

@@ -226,7 +226,6 @@ export default class ColorPlay extends React.Component<
                 </div>
               </div>
               <BrainzPlayer
-                newAlert={newAlert}
                 listens={selectedReleaseTracks}
                 listenBrainzAPIBaseURI={APIService.APIBaseURI}
                 refreshSpotifyToken={APIService.refreshSpotifyToken}

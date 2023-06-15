@@ -30,6 +30,8 @@ export function userChartEntityToListen(
     artistMBID: artistMBIDs,
     release,
     releaseMBID,
+    releaseGroup,
+    releaseGroupMBID,
     caaID,
     caaReleaseMBID,
   } = datum;
@@ -37,9 +39,12 @@ export function userChartEntityToListen(
   const trackName = entityType === "recording" ? entityName : "";
   const artistName = entityType === "artist" ? entityName : artist;
   const releaseName = entityType === "release" ? entityName : release;
+  const releaseGroupName =
+    entityType === "release-group" ? entityName : releaseGroup;
   let artist_mbids = artistMBIDs;
   let release_mbid = releaseMBID;
   let recording_mbid;
+  let release_group_mbid = releaseGroupMBID;
   if (entityType === "artist" && entityMBID) {
     artist_mbids = [entityMBID] as string[];
   }
@@ -48,6 +53,9 @@ export function userChartEntityToListen(
   }
   if (entityType === "recording" && entityMBID) {
     recording_mbid = entityMBID;
+  }
+  if (entityType === "release-group" && entityMBID) {
+    release_group_mbid = entityMBID;
   }
   return {
     listened_at: -1,
@@ -61,6 +69,8 @@ export function userChartEntityToListen(
         release_mbid: release_mbid ?? "",
         caa_id: caaID,
         caa_release_mbid: caaReleaseMBID,
+        release_group_mbid: release_group_mbid ?? "",
+        release_group_name: releaseGroupName ?? "",
       },
     },
   };
@@ -75,6 +85,8 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
     artistMBID: artistMBIDs,
     release: releaseName,
     releaseMBID,
+    releaseGroup,
+    releaseGroupMBID,
     idx,
   } = datum;
 
@@ -91,13 +103,19 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
 
       <div
         className="small text-muted ellipsis"
-        title={`${artistName || ""}, ${releaseName || ""}`}
+        title={`${artistName || ""}, ${releaseName || releaseGroup || ""}`}
       >
         {artistName && getEntityLink("artist", artistName, artistMBID)}
         {releaseName && (
           <span>
             &nbsp;-&nbsp;
             {getEntityLink("release", releaseName, releaseMBID)}
+          </span>
+        )}
+        {releaseGroup && (
+          <span>
+            &nbsp;-&nbsp;
+            {getEntityLink("release-group", releaseGroup, releaseGroupMBID)}
           </span>
         )}
       </div>

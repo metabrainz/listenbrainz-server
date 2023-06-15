@@ -175,70 +175,71 @@ export default function BarDualTone(props: BarDualToneProps) {
   const tickFormatter = (tick: any) => {
     return (Number(tick) % 3) - 1 === 0 ? tick : "";
   };
-
   return (
-    <ResponsiveBar
-      data={data}
-      indexBy="id"
-      keys={keys}
-      groupMode="grouped"
-      colors={({ id }) => {
-        return id === "thisRangeCount" ? COLOR_LB_ORANGE : COLOR_LB_BLUE;
-      }}
-      axisBottom={{
-        format:
-          (range === "all_time" || range === "month") && isMobile
-            ? tickFormatter
-            : undefined,
-      }}
-      axisLeft={{
-        format: ".2~s",
-      }}
-      minValue={0}
-      padding={0.3}
-      innerPadding={2}
-      enableLabel={false}
-      tooltip={customTooltip}
-      margin={{
-        left: 45,
-        bottom: 40,
-        top: showLegend ? 30 : 20,
-      }}
-      enableGridY={false}
-      layers={["grid", "axes", "bars", "markers", "annotations", "legends"]}
-      legends={
-        showLegend
-          ? [
-              {
-                dataFrom: "keys",
-                data: [
-                  {
-                    id: "lastRangeName",
-                    label: generateLegendLabel(
-                      lastRangePeriod.start,
-                      lastRangePeriod.end
-                    ),
-                    color: COLOR_LB_BLUE,
-                  },
-                  {
-                    id: "thisRangeName",
-                    label: generateLegendLabel(
-                      thisRangePeriod.start,
-                      thisRangePeriod.end
-                    ),
-                    color: COLOR_LB_ORANGE,
-                  },
-                ],
-                anchor: "top-right",
-                direction: "row",
-                itemHeight: 20,
-                translateY: -20,
-                symbolSize: 10,
-                itemWidth,
-              },
-            ]
-          : []
-      }
-    />
+    <div className="stats-full-width-graph user-listening-activity">
+      <ResponsiveBar
+        data={data}
+        indexBy="id"
+        keys={keys}
+        groupMode="grouped"
+        colors={({ id }) => {
+          return id === "thisRangeCount" ? COLOR_LB_ORANGE : COLOR_LB_BLUE;
+        }}
+        axisBottom={{
+          format:
+            (range === "all_time" || range === "month") && isMobile
+              ? tickFormatter
+              : undefined,
+        }}
+        axisLeft={{
+          format: ".2~s",
+        }}
+        minValue={0}
+        padding={0.3}
+        innerPadding={2}
+        enableLabel={false}
+        tooltip={customTooltip}
+        margin={{
+          left: 45,
+          bottom: 40,
+          top: showLegend ? 30 : 20,
+        }}
+        enableGridY={false}
+        layers={["grid", "axes", "bars", "markers", "annotations", "legends"]}
+        legends={
+          showLegend
+            ? [
+                {
+                  dataFrom: "keys",
+                  data: [
+                    {
+                      id: "lastRangeName",
+                      label: generateLegendLabel(
+                        lastRangePeriod.start,
+                        lastRangePeriod.end
+                      ),
+                      color: COLOR_LB_BLUE,
+                    },
+                    {
+                      id: "thisRangeName",
+                      label: generateLegendLabel(
+                        thisRangePeriod.start,
+                        thisRangePeriod.end
+                      ),
+                      color: COLOR_LB_ORANGE,
+                    },
+                  ],
+                  anchor: "top-right",
+                  direction: "row",
+                  itemHeight: 20,
+                  translateY: -20,
+                  symbolSize: 10,
+                  itemWidth,
+                },
+              ]
+            : []
+        }
+      />
+    </div>
   );
 }

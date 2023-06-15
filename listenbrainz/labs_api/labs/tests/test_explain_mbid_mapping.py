@@ -178,5 +178,5 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(q.names()[0], "explain-mbid-mapping")
         self.assertEqual(q.names()[1], "Explain MusicBrainz ID Mapping lookup")
         self.assertNotEqual(q.introduction(), "")
-        self.assertEqual(q.inputs(), ['artist_credit_name', 'recording_name'])
+        self.assertEqual(q.inputs(), ['artist_credit_name', 'recording_name', 'release_name'])
         self.assertEqual(q.outputs(), None)

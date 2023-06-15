@@ -3,7 +3,6 @@ from unittest.mock import patch
 import flask_testing
 from datasethoster.main import create_app
 from listenbrainz.labs_api.labs.api.recording_search import RecordingSearchQuery
-from listenbrainz.mbid_mapping_writer.mbid_mapper import COLLECTION_NAME
 
 
 json_request = [

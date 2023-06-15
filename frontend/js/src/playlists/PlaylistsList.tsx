@@ -2,6 +2,7 @@
 /* eslint-disable camelcase */
 
 import * as React from "react";
+import { noop } from "lodash";
 import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
@@ -14,11 +15,12 @@ export type PlaylistsListProps = {
   paginationOffset?: number;
   playlistCount: number;
   activeSection: PlaylistType;
+  onCopiedPlaylist?: (playlist: JSPFPlaylist) => void;
   selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
+  onPaginatePlaylists: (playlists: JSPFPlaylist[]) => void;
 } & WithAlertNotificationsInjectedProps;
 
 export type PlaylistsListState = {
-  playlists: JSPFPlaylist[];
   playlistSelectedForOperation?: JSPFPlaylist;
   loading: boolean;
   paginationOffset: number;
@@ -37,7 +39,6 @@ export default class PlaylistsList extends React.Component<
   constructor(props: React.PropsWithChildren<PlaylistsListProps>) {
     super(props);
     this.state = {
-      playlists: props.playlists ?? [],
       loading: false,
       paginationOffset: props.paginationOffset || 0,
       playlistCount: props.playlistCount,
@@ -66,15 +67,6 @@ export default class PlaylistsList extends React.Component<
       "Not allowed",
       "You are not authorized to modify this playlist"
     );
-  };
-
-  onCopiedPlaylist = async (newPlaylist: JSPFPlaylist): Promise<void> => {
-    const { activeSection } = this.props;
-    if (this.isCurrentUserPage() && activeSection === PlaylistType.playlists) {
-      this.setState((prevState) => ({
-        playlists: [newPlaylist, ...prevState.playlists],
-      }));
-    }
   };
 
   isCurrentUserPage = () => {
@@ -119,13 +111,16 @@ export default class PlaylistsList extends React.Component<
     count: string;
     offset: string;
   }) => {
+    const { onPaginatePlaylists } = this.props;
     const parsedOffset = parseInt(newPlaylists.offset, 10);
     this.setState({
-      playlists: newPlaylists.playlists.map((pl: JSPFObject) => pl.playlist),
       playlistCount: newPlaylists.playlist_count,
       paginationOffset: parsedOffset,
       loading: false,
     });
+    onPaginatePlaylists(
+      newPlaylists.playlists.map((pl: JSPFObject) => pl.playlist)
+    );
   };
 
   fetchPlaylists = async (newOffset: number = 0) => {
@@ -151,12 +146,14 @@ export default class PlaylistsList extends React.Component<
 
   render() {
     const {
+      playlists,
       newAlert,
       selectPlaylistForEdit,
       activeSection,
       children,
+      onCopiedPlaylist,
     } = this.props;
-    const { playlists, paginationOffset, playlistCount, loading } = this.state;
+    const { paginationOffset, playlistCount, loading } = this.state;
     return (
       <div>
         <Loader isLoading={loading} />
@@ -175,9 +172,10 @@ export default class PlaylistsList extends React.Component<
                 showOptions={activeSection !== PlaylistType.recommendations}
                 playlist={playlist}
                 isOwner={isOwner}
-                onSuccessfulCopy={this.onCopiedPlaylist}
+                onSuccessfulCopy={onCopiedPlaylist ?? noop}
                 newAlert={newAlert}
                 selectPlaylistForEdit={selectPlaylistForEdit}
+                key={playlist.identifier}
               />
             );
           })}

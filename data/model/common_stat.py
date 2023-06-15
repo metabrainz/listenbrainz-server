@@ -37,17 +37,13 @@ class StatRecordList(GenericModel, Generic[StatT]):
     __root__: List[StatT]
 
 
-class StatRange(GenericModel, Generic[StatT]):
-    """Generic base model representing a stat when it is inserted into the database."""
-    to_ts: int
-    from_ts: int
-    count: Optional[int]
-    stats_range: str
-    data: StatRecordList[StatT]
-
-
-class StatApi(StatRange[StatT], Generic[StatT]):
-    """ Generic base mode for representing a stat retrieved from the database and
+class StatApi(GenericModel, Generic[StatT]):
+    """ Generic base mode for representing a user/sitewide stat retrieved from the database and
     to send using the api."""
     user_id: int
+    count: Optional[int]
+    to_ts: int
+    from_ts: int
+    stats_range: str
+    data: StatRecordList[StatT]
     last_updated: int

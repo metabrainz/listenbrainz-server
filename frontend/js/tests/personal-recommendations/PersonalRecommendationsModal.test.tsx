@@ -125,9 +125,6 @@ describe("PersonalRecommendationModal", () => {
         {
           recording_mbid: "recording_mbid",
           recording_msid: "recording_msid",
-          artist_name: "TWICE",
-          track_name: "Feel Special",
-          release_name: undefined,
           blurb_content: "hii",
           users: ["fnord"],
         }

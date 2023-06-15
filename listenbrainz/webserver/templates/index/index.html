@@ -1,6 +1,6 @@
 {%- extends 'base-react.html' -%}
 {%- block content -%}
-  <div id="homepage" class="row">
+  <div id="homepage" role="main">
       <h2 class="page-title">
         Visualize and share your music listening history
       </h2>
@@ -60,47 +60,48 @@
         For more information about this project and its goals, please take a look at our
         <a href="{{ url_for('index.about') }}">about page</a>.
       </p>
-      <div class="col-md-7"
-        style="margin-top: 12px; margin-bottom: 12px"
-        id="stats">
-        <div class="card">
-          <div class="panel-heading center-p"><strong>Data Statistics</strong></div>
-          <div class="panel-body">
-            <table class="table table-collapsed">
-              <thead>
-              <tr>
-                <th>Description</th>
-                <th>Number</th>
-              </tr>
-              </thead>
-              <tbody>
-              {% if listen_count %}
-              <tr>
-                <td>Number of listens</td>
-                <td>{{ listen_count }}</td>
-              </tr>
-              {% endif %}
-              {% if user_count %}
-              <tr>
-                <td>Number of users</td>
-                <td>{{ user_count }}</td>
-              </tr>
-              {% endif %}
-              </tbody>
-            </table>
-          </div>
-          <div class="panel-footer" style="text-align: center">
-            <small>Updated every 5 minutes</small><br />
-            <small><a href="{{ url_for('index.current_status') }}">more on the current status page</a></small>
+      <div class="row" style="padding: 12px 0;">
+        <div class="col-md-7"
+          id="stats">
+          <div class="card">
+            <div class="panel-heading center-p"><strong>Data Statistics</strong></div>
+            <div class="panel-body">
+              <table class="table table-collapsed">
+                <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Number</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if listen_count %}
+                <tr>
+                  <td>Number of listens</td>
+                  <td>{{ listen_count }}</td>
+                </tr>
+                {% endif %}
+                {% if user_count %}
+                <tr>
+                  <td>Number of users</td>
+                  <td>{{ user_count }}</td>
+                </tr>
+                {% endif %}
+                </tbody>
+              </table>
+            </div>
+            <div class="panel-footer" style="text-align: center">
+              <small>Updated every 5 minutes</small><br />
+              <small><a href="{{ url_for('index.current_status') }}">more on the current status page</a></small>
+            </div>
           </div>
         </div>
+        
+        <div class="col-md-5"
+          id="blogs"></div>
       </div>
 
     </div>
 
-    <div class="col-md-5"
-         style="margin-top: 12px; margin-bottom: 12px"
-         id="blogs"></div>
   </div>
 {%- endblock -%}
 
