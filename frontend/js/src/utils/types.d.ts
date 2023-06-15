@@ -57,7 +57,7 @@ declare type MBIDMapping = {
   artist_mbids: Array<string>;
   artists?: Array<MBIDMappingArtist>;
   caa_id?: number;
-  caa_release_mbid?: string | null;
+  caa_release_mbid?: string;
 };
 
 declare type BaseListenFormat = {
