@@ -13,7 +13,7 @@ class SoundCloudService(BaseBrainzService):
 
     def __init__(self):
         super(SoundCloudService, self).__init__(
-            ExternalServiceType.MUSICBRAINZ,
+            ExternalServiceType.SOUNDCLOUD,
             client_id=current_app.config["SOUNDCLOUD_CLIENT_ID"],
             client_secret=current_app.config["SOUNDCLOUD_CLIENT_SECRET"],
             redirect_uri=current_app.config["SOUNDCLOUD_REDIRECT_URI"],
