@@ -169,8 +169,7 @@ const searchForSoundcloudTrack = async (
   if (!response.ok) {
     throw responseBody;
   }
-  // Valid response
-  return _.get(responseBody, "collection[0].stream_url", null);
+  return responseBody?.[0]?.stream_url;
 };
 
 const getAdditionalContent = (metadata: EventMetadata): string =>
