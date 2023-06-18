@@ -9,10 +9,15 @@ import {
   DataSourceProps,
   DataSourceTypes,
 } from "../../src/brainzplayer/BrainzPlayer";
+import APIService from "../../src/utils/APIService";
 
 const props = {
   show: true,
   playerPaused: false,
+  soundcloudUser: {
+    access_token: "heyo-soundcloud",
+  },
+  refreshSoundcloudToken: new APIService("base-uri").refreshSoundcloudToken,
   onPlayerPausedChange: (paused: boolean) => {},
   onProgressChange: (progressMs: number) => {},
   onDurationChange: (durationMs: number) => {},

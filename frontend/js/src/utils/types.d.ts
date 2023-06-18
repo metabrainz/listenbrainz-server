@@ -92,6 +92,10 @@ declare type YoutubeUser = {
   api_key?: string;
 };
 
+declare type SoundCloudUser = {
+  access_token?: string;
+};
+
 declare type MetaBrainzProjectUser = {
   access_token?: string;
 };

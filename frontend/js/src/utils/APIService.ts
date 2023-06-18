@@ -137,6 +137,10 @@ export default class APIService {
     return parseInt(result.payload.count, 10);
   };
 
+  refreshSoundcloudToken = async (): Promise<string> => {
+    return this.refreshAccessToken("soundcloud");
+  };
+
   refreshYoutubeToken = async (): Promise<string> => {
     return this.refreshAccessToken("youtube");
   };

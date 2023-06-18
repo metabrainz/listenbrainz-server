@@ -1,7 +1,8 @@
 import * as React from "react";
-import { get as _get, throttle as _throttle } from "lodash";
-import { faSoundcloud } from "@fortawesome/free-brands-svg-icons";
-import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
+import {get as _get, has, isString, throttle as _throttle} from "lodash";
+import {faSoundcloud} from "@fortawesome/free-brands-svg-icons";
+import {DataSourceProps, DataSourceType} from "./BrainzPlayer";
+import {getArtistName, getTrackName, searchForSoundcloudTrack,} from "../utils/utils";
 
 require("../../lib/soundcloud-player-api");
 
@@ -54,8 +55,13 @@ export type SoundcloudPlayerState = {
   currentSoundId?: number;
 };
 
+export type SoundCloudPlayerProps = DataSourceProps & {
+  soundcloudUser?: SpotifyUser;
+  refreshSoundcloudToken: () => Promise<string>;
+};
+
 export default class SoundcloudPlayer
-  extends React.Component<DataSourceProps, SoundcloudPlayerState>
+  extends React.Component<SoundCloudPlayerProps, SoundcloudPlayerState>
   implements DataSourceType {
   static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
@@ -93,8 +99,14 @@ export default class SoundcloudPlayer
     hide_related: true,
   };
 
-  constructor(props: DataSourceProps) {
+  // Saving the access token outside of React state , we do not need it for any rendering purposes
+  // and it simplifies some of the closure issues we've had with old tokens.
+  private accessToken = "";
+  private authenticationRetries = 0;
+
+  constructor(props: SoundCloudPlayerProps) {
     super(props);
+    this.accessToken = props.soundcloudUser?.access_token || "";
     this.state = { currentSoundId: undefined };
     this.iFrameRef = React.createRef();
   }
@@ -180,11 +192,100 @@ export default class SoundcloudPlayer
   };
 
   canSearchAndPlayTracks = (): boolean => {
-    return false;
+    return true;
   };
 
   datasourceRecordsListens = (): boolean => {
     return false;
+  };
+
+  searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
+    // TODO: Implement token refresh for SoundCloud
+    const trackName = getTrackName(listen);
+    const artistName = getArtistName(listen);
+    // Using the releaseName has paradoxically given worst search results,
+    // so we're only using it when track name isn't provided (for example for an album search)
+    const releaseName = trackName
+      ? ""
+      : _get(listen, "track_metadata.release_name");
+    const { handleError, handleWarning, onTrackNotFound } = this.props;
+    if (!trackName && !artistName && !releaseName) {
+      handleWarning(
+        "We are missing a track title, artist or album name to search on Soundcloud",
+        "Not enough info to search on Soundcloud"
+      );
+      onTrackNotFound();
+      return;
+    }
+
+    try {
+      const streamUrl = await searchForSoundcloudTrack(
+        this.accessToken,
+        trackName,
+        artistName,
+        releaseName
+      );
+      if (streamUrl) {
+        this.playStreamUrl(streamUrl);
+        return;
+      }
+      onTrackNotFound();
+    } catch (errorObject) {
+      if (errorObject.code === 401) {
+        // Handle token error and try again if fixed
+        await this.handleTokenError(
+          errorObject.message,
+          this.searchAndPlayTrack.bind(this, listen)
+        );
+      }
+      if (errorObject.code === 400) {
+        onTrackNotFound();
+      }
+      handleError(
+        errorObject.message ?? errorObject,
+        "Error searching on Soundcloud"
+      );
+    }
+  };
+
+  handleTokenError = async (
+    error: Error | string | Spotify.Error,
+    callbackFunction: () => void
+  ): Promise<void> => {
+    const { refreshSoundcloudToken, onTrackNotFound, handleError } = this.props;
+    if (this.authenticationRetries > 5) {
+      handleError(
+        isString(error) ? error : error?.message,
+        "Soundcloud token error"
+      );
+      onTrackNotFound();
+      return;
+    }
+    this.authenticationRetries += 1;
+    try {
+      this.accessToken = await refreshSoundcloudToken();
+      this.authenticationRetries = 0;
+      callbackFunction();
+    } catch (refreshError) {
+      handleError(refreshError, "Error connecting to SoundCloud");
+    }
+  };
+
+  handleAccountError = (): void => {
+    const errorMessage = (
+      <p>
+        In order to play music with SoundCloud, you will need a SoundCloud
+        account linked to your ListenBrainz account.
+        <br />
+        Please try to{" "}
+        <a href="/profile/music-services/details/" target="_blank">
+          link for &quot;playing music&quot; feature
+        </a>{" "}
+        and refresh this page
+      </p>
+    );
+    const { onInvalidateDataSource } = this.props;
+    onInvalidateDataSource(this, errorMessage);
   };
 
   playListen = (listen: Listen | JSPFTrack) => {
@@ -192,16 +293,23 @@ export default class SoundcloudPlayer
     if (!show) {
       return;
     }
-    if (!SoundcloudPlayer.isListenFromThisService(listen)) {
-      onTrackNotFound();
-      return;
+    if (SoundcloudPlayer.isListenFromThisService(listen)) {
+      const originURL = _get(
+        listen,
+        "track_metadata.additional_info.origin_url"
+      );
+      this.playStreamUrl(originURL);
+    } else {
+      this.searchAndPlayTrack(listen);
     }
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+  };
+
+  playStreamUrl = (streamUrl: string) => {
     if (this.soundcloudPlayer) {
-      this.soundcloudPlayer.load(originURL, this.options);
+      this.soundcloudPlayer.load(streamUrl, this.options);
     } else if (this.retries <= 3) {
       this.retries += 1;
-      setTimeout(this.playListen.bind(this, listen), 500);
+      setTimeout(this.playStreamUrl.bind(this, streamUrl), 500);
     } else {
       // Abort!
       const { onInvalidateDataSource } = this.props;

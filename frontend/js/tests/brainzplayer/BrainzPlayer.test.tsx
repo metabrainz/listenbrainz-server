@@ -23,6 +23,7 @@ const props = {
   listenBrainzAPIBaseURI: "base-uri",
   refreshSpotifyToken: jest.fn(),
   refreshYoutubeToken: jest.fn(),
+  refreshSoundcloudToken: jest.fn(),
 };
 const spotifyAccountWithPermissions = {
   access_token: "haveyouseenthefnords",
@@ -41,6 +42,9 @@ const GlobalContextMock = {
         "user-read-currently-playing",
         "user-read-recently-played",
       ] as Array<SpotifyPermission>,
+    },
+    soundcloudAuth: {
+      access_token: "heyo-soundcloud",
     },
     youtubeAuth: {
       api_key: "fake-api-key",
