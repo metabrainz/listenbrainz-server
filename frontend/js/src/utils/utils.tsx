@@ -156,7 +156,7 @@ const searchForSoundcloudTrack = async (
   const response = await fetch(
     `https://api.soundcloud.com/tracks?q=${encodeURIComponent(
       query
-    )}&access=playable&limit=1`,
+    )}&access=playable`,
     {
       method: "GET",
       headers: {

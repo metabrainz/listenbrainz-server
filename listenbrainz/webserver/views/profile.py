@@ -394,6 +394,7 @@ def refresh_service_token(service_name: str):
         except ExternalServiceInvalidGrantError:
             raise APINotFound("User has revoked authorization to %s" % service_name.capitalize())
         except Exception:
+            current_app.logger.error("Unable to refresh %s token:", exc_info=True)
             raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
     return jsonify({"access_token": user["access_token"]})
