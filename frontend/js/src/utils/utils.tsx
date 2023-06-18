@@ -169,7 +169,17 @@ const searchForSoundcloudTrack = async (
   if (!response.ok) {
     throw responseBody;
   }
-  return responseBody?.[0]?.stream_url;
+  const streamUrl = responseBody?.[0]?.stream_url;
+  if (!streamUrl) {
+    return null;
+  }
+
+  const response2 = await fetch(streamUrl);
+  const responseBody2 = await response2.json();
+  if (!response.ok) {
+    throw responseBody;
+  }
+  return responseBody2?.http_mp3_128_url;
 };
 
 const getAdditionalContent = (metadata: EventMetadata): string =>
