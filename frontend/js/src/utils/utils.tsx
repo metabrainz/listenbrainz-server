@@ -174,7 +174,13 @@ const searchForSoundcloudTrack = async (
     return null;
   }
 
-  const response2 = await fetch(streamUrl);
+  const response2 = await fetch(streamUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `OAuth ${soundcloudToken}`,
+    },
+  });
   const responseBody2 = await response2.json();
   if (!response.ok) {
     throw responseBody;
