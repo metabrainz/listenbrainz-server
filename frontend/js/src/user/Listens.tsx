@@ -191,8 +191,8 @@ export default class Listens extends React.Component<
   };
 
   connectWebsockets = (): void => {
-    this.createWebsocketsConnection();
-    this.addWebsocketsHandlers();
+    // this.createWebsocketsConnection();
+    // this.addWebsocketsHandlers();
   };
 
   createWebsocketsConnection = (): void => {

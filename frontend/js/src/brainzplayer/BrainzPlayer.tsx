@@ -3,7 +3,6 @@ import {
   isEqual as _isEqual,
   isNil as _isNil,
   isString as _isString,
-  get as _get,
   has as _has,
   throttle as _throttle,
   assign,
@@ -20,6 +19,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import SoundcloudPlayer from "./SoundcloudPlayer";
+import AppleMusicPlayer from "./AppleMusicPlayer";
 import {
   hasNotificationPermission,
   createNotification,
@@ -41,7 +41,11 @@ export type DataSourceType = {
   datasourceRecordsListens: () => boolean;
 };
 
-export type DataSourceTypes = SpotifyPlayer | YoutubePlayer | SoundcloudPlayer;
+export type DataSourceTypes =
+  | SpotifyPlayer
+  | YoutubePlayer
+  | SoundcloudPlayer
+  | AppleMusicPlayer;
 
 export type DataSourceProps = {
   show: boolean;
@@ -112,7 +116,7 @@ function isListenFromDatasource(
   if (datasource instanceof SoundcloudPlayer) {
     return SoundcloudPlayer.isListenFromThisService(listen);
   }
-  return undefined;
+  return AppleMusicPlayer.isListenFromThisService(listen);
 }
 
 export default class BrainzPlayer extends React.Component<
@@ -125,6 +129,7 @@ export default class BrainzPlayer extends React.Component<
   spotifyPlayer?: React.RefObject<SpotifyPlayer>;
   youtubePlayer?: React.RefObject<YoutubePlayer>;
   soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
+  appleMusicPlayer?: React.RefObject<AppleMusicPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
   playerStateTimerID?: NodeJS.Timeout;
@@ -146,13 +151,16 @@ export default class BrainzPlayer extends React.Component<
     super(props);
 
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
-    this.dataSources.push(this.spotifyPlayer);
+    // this.dataSources.push(this.spotifyPlayer);
 
     this.youtubePlayer = React.createRef<YoutubePlayer>();
-    this.dataSources.push(this.youtubePlayer);
+    // this.dataSources.push(this.youtubePlayer);
 
     this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
-    this.dataSources.push(this.soundcloudPlayer);
+    // this.dataSources.push(this.soundcloudPlayer);
+
+    this.appleMusicPlayer = React.createRef<AppleMusicPlayer>();
+    this.dataSources.push(this.appleMusicPlayer);
 
     this.state = {
       currentDataSourceIndex: 0,
@@ -875,6 +883,25 @@ export default class BrainzPlayer extends React.Component<
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.soundcloudPlayer}
+            playerPaused={playerPaused}
+            onPlayerPausedChange={this.playerPauseChange}
+            onProgressChange={this.progressChange}
+            onDurationChange={this.durationChange}
+            onTrackInfoChange={this.throttledTrackInfoChange}
+            onTrackEnd={this.playNextTrack}
+            onTrackNotFound={this.failedToPlayTrack}
+            handleError={this.handleError}
+            handleWarning={this.handleWarning}
+            handleSuccess={this.handleSuccess}
+          />
+          <AppleMusicPlayer
+            show={
+              isActivated &&
+              this.dataSources[currentDataSourceIndex]?.current instanceof
+                AppleMusicPlayer
+            }
+            onInvalidateDataSource={this.invalidateDataSource}
+            ref={this.appleMusicPlayer}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
