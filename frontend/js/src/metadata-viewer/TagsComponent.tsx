@@ -1,7 +1,13 @@
 import * as React from "react";
 import { isFunction } from "lodash";
+import Select, { ActionMeta, SingleValue } from "react-select";
 import TagComponent, { TagActionType } from "./TagComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
+
+type TagOptionType = {
+  value: string;
+  label: string;
+};
 
 function AddTagComponent(props: {
   entityType: "artist" | "release-group" | "recording";
@@ -9,28 +15,33 @@ function AddTagComponent(props: {
   callback?: Function;
 }) {
   const [expanded, setExpanded] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const { APIService, musicbrainzAuth } = React.useContext(GlobalAppContext);
+  const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
+    GlobalAppContext
+  );
   const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
   const { submitTagToMusicBrainz } = APIService;
   const { entityMBID, entityType, callback } = props;
 
   const submitNewTag = React.useCallback(
-    async (event: React.FormEvent) => {
-      event.preventDefault();
-      const newTag = inputRef?.current?.value;
-      if (!newTag || !entityMBID || !musicbrainzAuthToken) {
+    async (
+      selectedTag: SingleValue<TagOptionType>,
+      actionMeta: ActionMeta<TagOptionType>
+    ) => {
+      if (!selectedTag?.value || !entityMBID || !musicbrainzAuthToken) {
+        return;
+      }
+      if (!["select-option", "create-option"].includes(actionMeta.action)) {
         return;
       }
       const success = await submitTagToMusicBrainz(
         entityType,
         entityMBID,
-        newTag,
+        selectedTag.value,
         TagActionType.UPVOTE,
         musicbrainzAuthToken
       );
       if (success && isFunction(callback)) {
-        callback(newTag);
+        callback(selectedTag);
       }
     },
     [
@@ -44,30 +55,15 @@ function AddTagComponent(props: {
   return (
     <div className={`add-tag ${expanded ? "expanded" : ""}`}>
       {expanded ? (
-        <form className="input-group" onSubmit={submitNewTag}>
-          <input
-            ref={inputRef}
-            type="text"
-            minLength={1}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            placeholder="Enter a new tag…"
-            className="form-control"
-          />
-          <div className="input-group-btn btn-group-sm">
-            <button className="btn btn-success" type="submit">
-              OK
-            </button>
-            <button
-              title="cancel"
-              className="btn btn-danger"
-              type="button"
-              onClick={() => setExpanded(false)}
-            >
-              x
-            </button>
-          </div>
-        </form>
+        <Select
+          options={musicbrainzGenres?.map((genre) => ({
+            value: genre,
+            label: genre,
+          }))}
+          isSearchable
+          onChange={submitNewTag}
+          onMenuClose={() => setExpanded(false)}
+        />
       ) : (
         <button
           className="btn btn-xs btn-outline"
