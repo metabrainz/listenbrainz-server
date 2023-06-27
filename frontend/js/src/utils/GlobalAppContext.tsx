@@ -9,6 +9,7 @@ export type GlobalAppContextT = {
   critiquebrainzAuth?: MetaBrainzProjectUser;
   musicbrainzAuth?: MetaBrainzProjectUser;
   userPreferences?: UserPreferences;
+  musicbrainzGenres?: string[];
 };
 
 const GlobalAppContext = createContext<GlobalAppContextT>({
@@ -19,6 +20,7 @@ const GlobalAppContext = createContext<GlobalAppContextT>({
   critiquebrainzAuth: {},
   musicbrainzAuth: {},
   userPreferences: {},
+  musicbrainzGenres: [],
 });
 
 export default GlobalAppContext;

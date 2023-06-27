@@ -3,7 +3,7 @@ import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { faPauseCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as tinycolor from "tinycolor2";
-import { first, get, isEmpty, isNumber, isPlainObject, pick } from "lodash";
+import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
 import TagsComponent from "./TagsComponent";
 import {
   getArtistName,
@@ -74,6 +74,7 @@ function getNowPlayingRecordingMBID(
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { recordingData, playingNow } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  let { musicbrainzGenres } = React.useContext(GlobalAppContext);
   const { getFeedbackForUserForRecordings, submitFeedback } = APIService;
   const { auth_token, name: username } = currentUser;
 
@@ -85,6 +86,25 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     g: 0,
     b: 0,
   });
+
+  React.useEffect(() => {
+    const fetchGenres = async () => {
+      /** Fetch and save list of MusicBrainz genres on startup
+       * Not sure where this should end (list of genres sent by back-end instead?)
+       * but for now genres are only used on this page
+       */
+      try {
+        const response = await fetch(
+          `${musicBrainzURLRoot}ws/2/genre/all?fmt=txt`
+        );
+        const genresList = await response.text();
+        musicbrainzGenres = Array.from(genresList.split("\n"));
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchGenres();
+  }, []);
 
   React.useEffect(() => {
     const setAverageColor = () => {
