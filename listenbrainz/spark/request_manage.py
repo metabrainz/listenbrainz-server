@@ -7,7 +7,6 @@ import orjson
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
-from listenbrainz.troi.year_in_music import yim_patch_runner
 from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
@@ -406,7 +405,9 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_recordings(days, session, contribution, threshold, limit, skip):
+@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
+                                                 " affects how the resulting dataset is stored in LB.", required=True)
+def request_similar_recordings(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
         "similarity.recording",
@@ -415,7 +416,8 @@ def request_similar_recordings(days, session, contribution, threshold, limit, sk
         contribution=contribution,
         threshold=threshold,
         limit=limit,
-        skip=skip
+        skip=skip,
+        is_production_dataset=production
     )
 
 
@@ -431,7 +433,9 @@ def request_similar_recordings(days, session, contribution, threshold, limit, sk
                                         " (the limit is instructive. upto 2x artists may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_artists(days, session, contribution, threshold, limit, skip):
+@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
+                                                 " affects how the resulting dataset is stored in LB.", required=True)
+def request_similar_artists(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar artists index. """
     send_request_to_spark_cluster(
         "similarity.artist",
@@ -440,7 +444,8 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip)
         contribution=contribution,
         threshold=threshold,
         limit=limit,
-        skip=skip
+        skip=skip,
+        is_production_dataset=production
     )
 
 
@@ -490,6 +495,13 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_playlists, year=year)
 
 
+@cli.command(name="request_troi_playlists")
+@click.option("--slug", type=click.Choice(['weekly-jams', 'weekly-exploration']))
+def request_troi_playlists(slug):
+    """ Bulk generate troi playlists for all users """
+    send_request_to_spark_cluster("troi.playlists", slug=slug)
+
+
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
 # rather combine multiple commands related to a task so that they are always invoked in the correct order.
 
@@ -511,7 +523,7 @@ def cron_request_all_stats(ctx):
             ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)
 
         for entity in ["artists", "release_groups"]:
-            ctx.invoke(request_entity_stats, type="listeners", range_=stats_range, entity=entity)
+            ctx.invoke(request_entity_stats, type_="listeners", range_=stats_range, entity=entity)
 
 
 @cli.command(name='cron_request_similar_users')
@@ -529,3 +541,12 @@ def cron_request_recommendations(ctx):
     ctx.invoke(request_candidate_sets)
     ctx.invoke(request_recording_discovery)
     ctx.invoke(request_recommendations)
+
+
+@cli.command(name='cron_request_similarity_datasets')
+@click.pass_context
+def cron_request_similarity_datasets(ctx):
+    ctx.invoke(request_similar_recordings, days=7500, session=300, contribution=5,
+               threshold=10, limit=100, skip=30, production=True)
+    ctx.invoke(request_similar_artists, days=7500, session=300, contribution=5,
+               threshold=10, limit=100, skip=30, production=True)

@@ -27,9 +27,11 @@ from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            SparkSessionNotInitializedException,
                                            RecommendationsNotGeneratedException,
                                            EmptyDataframeExcpetion)
+from listenbrainz_spark.path import RAW_RECOMMENDATIONS
 from listenbrainz_spark.recommendations.recording.candidate_sets import _is_empty_dataframe
 from listenbrainz_spark.recommendations.recording.train_models import get_model_path
 from listenbrainz_spark.stats import run_query
+from listenbrainz_spark.utils import save_parquet
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +72,8 @@ def process_recommendations(recommendation_df, limit):
         3. Add the latest_listened_at time for the recommendation if it has been previously
            listened by the user.
 
+        Save these recommendations to HDFS and then re-structure the recs to send it to LB via rabbitmq.
+
         Args:
             recommendation_df: Dataframe of user, product and rating.
             limit (int): Number of recommendations to be filtered for each user.
@@ -97,7 +101,19 @@ def process_recommendations(recommendation_df, limit):
              WHERE rank <= {limit}
           GROUP BY user_id
                  , recording_mbid
-        )
+        )   SELECT user_id
+                 , recording_mbid
+                 , score
+                 , latest_listened_at
+              FROM distinct_recommendations
+         LEFT JOIN recording_discovery rd
+             USING (user_id, recording_mbid)
+    """
+    df = run_query(query)
+    save_parquet(df, RAW_RECOMMENDATIONS)
+    df.createOrReplaceTempView("raw_recommendations")
+
+    query = """
         SELECT user_id
              , array_sort(
                     collect_list(
@@ -114,9 +130,7 @@ def process_recommendations(recommendation_df, limit):
                                      END
                     -- sort in descending order of score
                ) AS recs
-          FROM distinct_recommendations rm
-     LEFT JOIN recording_discovery rd
-         USING (user_id, recording_mbid)
+          FROM raw_recommendations
       GROUP BY user_id
     """
     return run_query(query)

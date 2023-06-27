@@ -164,7 +164,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
-        self.assert401(r)
+        self.assert403(r)
         data = json.loads(r.data)
         self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
 
@@ -932,7 +932,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(user_one['auth_token'])},
         )
-        self.assert401(r)
+        self.assert403(r)
         data = json.loads(r.data)
         self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
 
@@ -1015,7 +1015,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(1, len(events))
 
         received = events[0].metadata.dict(exclude_none=True)
-        self.assertDictEqual(metadata, received)
+        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
+        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
+        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
+        self.assertCountEqual(metadata["users"], received["users"])
 
     def test_personal_recommendation_mbid_only(self):
         """ Test that we can recommend a recording with only mbid """

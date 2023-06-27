@@ -147,7 +147,8 @@
       "contribution",
       "threshold",
       "limit",
-      "skip"
+      "skip",
+      "is_production_dataset"
     ]
   },
   "similarity.artist": {
@@ -159,7 +160,8 @@
       "contribution",
       "threshold",
       "limit",
-      "skip"
+      "skip",
+      "is_production_dataset"
     ]
   },
   "year_in_music.similar_users": {
@@ -201,5 +203,10 @@
     "name": "releases.fresh",
     "description": "Calculate the intersection of fresh releases and user's listening history",
     "params": ["days", "database"]
+  },
+  "troi.playlists": {
+    "name": "troi.playlists",
+    "description": "Generate troi playlists for all users",
+    "params": ["slug"]
   }
 }

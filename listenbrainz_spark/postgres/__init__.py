@@ -1,5 +1,6 @@
 from listenbrainz_spark.postgres.artist import create_artist_country_cache
 from listenbrainz_spark.postgres.artist_credit import create_artist_credit_cache
+from listenbrainz_spark.postgres.feedback import create_feedback_cache
 from listenbrainz_spark.postgres.recording import create_recording_length_cache
 from listenbrainz_spark.postgres.release import create_release_metadata_cache
 from listenbrainz_spark.postgres.release_group import create_release_group_metadata_cache
@@ -12,3 +13,4 @@ def import_all_pg_tables():
     create_recording_length_cache()
     create_release_metadata_cache()
     create_release_group_metadata_cache()
+    create_feedback_cache()

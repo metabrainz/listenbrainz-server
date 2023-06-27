@@ -69,8 +69,7 @@ class Listen(object):
         'release_name',
     )
 
-    def __init__(self, user_id=None, user_name=None, timestamp=None, recording_msid=None,
-                 dedup_tag=0, inserted_timestamp=None, data=None):
+    def __init__(self, user_id=None, user_name=None, timestamp=None, recording_msid=None, inserted_timestamp=None, data=None):
         self.user_id = user_id
         self.user_name = user_name
 
@@ -81,13 +80,12 @@ class Listen(object):
         else:
             if timestamp:
                 self.timestamp = timestamp
-                self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple())
+                self.ts_since_epoch = int(self.timestamp.timestamp())
             else:
                 self.timestamp = None
                 self.ts_since_epoch = None
 
         self.recording_msid = recording_msid
-        self.dedup_tag = dedup_tag
         self.inserted_timestamp = inserted_timestamp
         if data is None:
             self.data = {'additional_info': {}}
@@ -105,7 +103,6 @@ class Listen(object):
     @classmethod
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
-
         # Let's go play whack-a-mole with our lovely whicket of timestamp fields. Hopefully one will work!
         try:
             j['listened_at'] = datetime.utcfromtimestamp(float(j['listened_at']))
@@ -117,30 +114,27 @@ class Listen(object):
 
         return cls(
             user_id=j.get('user_id'),
-            user_name=j.get('user_name', ''),
+            user_name=j.get('user_name'),
             timestamp=j['listened_at'],
             recording_msid=j.get('recording_msid'),
-            dedup_tag=j.get('dedup_tag', 0),
             data=j.get('track_metadata')
         )
 
     @classmethod
-    def from_timescale(cls, listened_at, track_name, user_id, created, data,
+    def from_timescale(cls, listened_at, user_id, created, recording_msid, track_metadata,
                        recording_mbid=None, recording_name=None, release_mbid=None, artist_mbids=None,
                        ac_names=None, ac_join_phrases=None, user_name=None,
                        caa_id=None, caa_release_mbid=None):
         """Factory to make Listen() objects from a timescale dict"""
-
-        data["listened_at"] = datetime.utcfromtimestamp(float(listened_at))
-        data["track_metadata"]["track_name"] = track_name
+        track_metadata["additional_info"]["recording_msid"] = recording_msid
         if recording_mbid is not None:
-            data["track_metadata"]["mbid_mapping"] = {"recording_mbid": str(recording_mbid)}
+            track_metadata["mbid_mapping"] = {"recording_mbid": str(recording_mbid)}
 
             if recording_name is not None:
-                data["track_metadata"]["mbid_mapping"]["recording_name"] = recording_name
+                track_metadata["mbid_mapping"]["recording_name"] = recording_name
 
             if release_mbid is not None:
-                data["track_metadata"]["mbid_mapping"]["release_mbid"] = str(release_mbid)
+                track_metadata["mbid_mapping"]["release_mbid"] = str(release_mbid)
 
             if artist_mbids is not None and ac_names is not None and ac_join_phrases is not None:
                 artists = []
@@ -151,21 +145,20 @@ class Listen(object):
                         "join_phrase": join_phrase
                     })
 
-                data["track_metadata"]["mbid_mapping"]["artists"] = artists
-                data["track_metadata"]["mbid_mapping"]["artist_mbids"] = [str(m) for m in artist_mbids]
+                track_metadata["mbid_mapping"]["artists"] = artists
+                track_metadata["mbid_mapping"]["artist_mbids"] = [str(m) for m in artist_mbids]
 
             if caa_id is not None and caa_release_mbid is not None:
-                data["track_metadata"]["mbid_mapping"]["caa_id"] = caa_id
-                data["track_metadata"]["mbid_mapping"]["caa_release_mbid"] = caa_release_mbid
+                track_metadata["mbid_mapping"]["caa_id"] = caa_id
+                track_metadata["mbid_mapping"]["caa_release_mbid"] = caa_release_mbid
 
         return cls(
             user_id=user_id,
             user_name=user_name,
-            timestamp=data['listened_at'],
-            recording_msid=data['track_metadata']['additional_info'].get('recording_msid'),
-            dedup_tag=data.get('dedup_tag', 0),
+            timestamp=listened_at,
+            recording_msid=recording_msid,
             inserted_timestamp=created,
-            data=data.get('track_metadata')
+            data=track_metadata
         )
 
     def to_api(self):
@@ -200,20 +193,8 @@ class Listen(object):
     def to_timescale(self):
         track_metadata = deepcopy(self.data)
         track_metadata['additional_info']['recording_msid'] = self.recording_msid
-        track_name = track_metadata['track_name']
-        del track_metadata['track_name']
-        return (self.ts_since_epoch, track_name, self.user_name, self.user_id, orjson.dumps({
-            'user_id': self.user_id,
-            'track_metadata': track_metadata
-        }).decode("utf-8"))
-
-    def validate(self):
-        return (self.user_id is not None and self.timestamp is not None
-                and self.recording_msid is not None and self.data is not None)
-
-    @property
-    def date(self):
-        return self.timestamp
+        del track_metadata['additional_info']['recording_msid']
+        return self.timestamp, self.user_id, self.recording_msid, orjson.dumps(track_metadata).decode("utf-8")
 
     def __repr__(self):
         from pprint import pformat
@@ -254,25 +235,3 @@ class NowPlayingListen:
     def __str__(self):
         return "<Now Playing Listen: user_name: %s, artist_name: %s, track_name: %s>" % \
                (self.user_name, self.data['artist_name'], self.data['track_name'])
-
-
-def convert_dump_row_to_spark_row(row):
-    data = {
-        'listened_at': str(datetime.utcfromtimestamp(row['timestamp'])),
-        'user_name': row['user_name'],
-        'artist_name': row['track_metadata'].get('artist_name', ''),
-        'artist_mbids': convert_comma_seperated_string_to_list(row['track_metadata']['additional_info'].get('artist_mbids', '')),
-        'release_name': row['track_metadata'].get('release_name', ''),
-        'release_mbid': row['track_metadata']['additional_info'].get('release_mbid', ''),
-        'track_name': row['track_metadata']['track_name'],
-        'recording_msid': row['recording_msid'],
-        'recording_mbid': row['track_metadata']['additional_info'].get('recording_mbid', ''),
-        'tags': convert_comma_seperated_string_to_list(row['track_metadata']['additional_info'].get('tags', [])),
-    }
-
-    if 'inserted_timestamp' in row and row['inserted_timestamp'] is not None:
-        data['inserted_timestamp'] = str(datetime.utcfromtimestamp(row['inserted_timestamp']))
-    else:
-        data['inserted_timestamp'] = str(datetime.utcfromtimestamp(0))
-
-    return data

@@ -556,6 +556,43 @@ export default class APIService {
     return response.status;
   };
 
+  /**
+   * Import feedback data from thir party services
+   * @param  {string} userToken
+   * @param  {string} userName
+   * @param  {ImportService} service
+   */
+  importFeedback = async (
+    userToken: string,
+    userName: string,
+    service: ImportService
+  ): Promise<{
+    inserted: number;
+    invalid_mbid: number;
+    mbid_not_found: number;
+    missing_mbid: number;
+    total: number;
+  }> => {
+    const url = `${this.APIBaseURI}/feedback/import`;
+    if (!userName || !userToken || !service) {
+      throw new Error("Missing user name, token or external service name");
+    }
+    const body = {
+      user_name: userName,
+      service,
+    };
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(body),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   getFeedbackForUser = async (
     userName: string,
     offset: number = 0,
@@ -586,28 +623,26 @@ export default class APIService {
 
   getFeedbackForUserForRecordings = async (
     userName: string,
-    recording_msids: string,
-    recording_mbids: string
+    recording_mbids: string[],
+    recording_msids?: string[]
   ) => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
-
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_msids=${recording_msids}&recording_mbids=${recording_mbids}`;
-    const response = await fetch(url);
-    await this.checkStatus(response);
-    return response.json();
-  };
-
-  getFeedbackForUserForMBIDs = async (
-    userName: string,
-    recording_mbids: string // Comma-separated list of MBIDs
-  ) => {
-    if (!userName) {
-      throw new SyntaxError("Username missing");
+    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings`;
+    const requestBody: FeedbackForUserForRecordingsRequestBody = {
+      recording_mbids,
+    };
+    if (recording_msids?.length) {
+      requestBody.recording_msids = recording_msids;
     }
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_mbids=${recording_mbids}`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(requestBody),
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -727,7 +762,7 @@ export default class APIService {
       headers,
     });
     await this.checkStatus(response);
-    return response.json();
+    return response;
   };
 
   addPlaylistItems = async (
@@ -1275,6 +1310,22 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.json();
+  };
+
+  exportPlaylistToXSPF = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<Blob> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/xspf`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/xspf+xml;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.blob();
   };
 
   fetchSitewideFreshReleases = async (

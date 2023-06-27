@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 import { throttle, throttle as _throttle } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -25,13 +26,23 @@ export default function SearchTrackOrMBID({
   newAlert,
 }: SearchTrackOrMBIDProps) {
   const { APIService } = useContext(GlobalAppContext);
-  const { getRecordingMetadata } = APIService;
+  const { lookupMBRecording } = APIService;
+  const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
   const [searchResults, setSearchResults] = useState<Array<ACRMSearchResult>>(
     []
   );
 
-  const handleError = React.useCallback(
+  useEffect(() => {
+    // autoFocus property on the input element does not work
+    // We need to wait for the modal animated transition to finish
+    // and trigger the focus manually.
+    setTimeout(() => {
+      inputRef?.current?.focus();
+    }, 600);
+  }, []);
+
+  const handleError = useCallback(
     (error: string | Error, title?: string): void => {
       if (!error) {
         return;
@@ -82,38 +93,29 @@ export default function SearchTrackOrMBID({
           )![2].toLowerCase();
 
           try {
-            const recordingMetadataResponse = await getRecordingMetadata([
+            const recordingLookupResponse = (await lookupMBRecording(
               newRecordingMBID,
-            ]);
-            const recordingMetadata =
-              recordingMetadataResponse?.[newRecordingMBID];
-            if (recordingMetadata) {
-              const newMetadata: TrackMetadata = {
-                additional_info: {
-                  release_mbid: recordingMetadata.release?.mbid,
-                  recording_mbid: newRecordingMBID,
-                  duration_ms: recordingMetadata.recording?.length,
-                  release_artist_name:
-                    recordingMetadata.release?.album_artist_name,
+              "artists+releases"
+            )) as MusicBrainzRecordingWithReleases;
 
-                  release_group_mbid:
-                    recordingMetadata.release?.release_group_mbid,
-                },
-                mbid_mapping: {
-                  caa_id: recordingMetadata?.release?.caa_id,
-                  caa_release_mbid:
-                    recordingMetadata?.release?.caa_release_mbid,
-                  recording_mbid: newRecordingMBID,
-                  release_mbid: recordingMetadata.release?.mbid as string,
-                  // we don't get artist mbids from the metadata endpoint
-                  artist_mbids: [],
-                },
-                artist_name: recordingMetadata.artist?.name as string,
-                track_name: recordingMetadata.recording?.name as string,
-                release_name: recordingMetadata.release?.name,
-              };
-              onSelectRecording(newMetadata);
-            }
+            const newMetadata: TrackMetadata = {
+              track_name: recordingLookupResponse.title,
+              artist_name: recordingLookupResponse["artist-credit"]
+                .map((ac) => ac.name + ac.joinphrase)
+                .join(""),
+              additional_info: {
+                duration_ms: recordingLookupResponse.length,
+                artist_mbids: recordingLookupResponse["artist-credit"].map(
+                  (ac) => ac.artist.id
+                ),
+                release_artist_names: recordingLookupResponse[
+                  "artist-credit"
+                ].map((ac) => ac.artist.name),
+                recording_mbid: recordingLookupResponse.id,
+                release_mbid: recordingLookupResponse.releases[0]?.id,
+              },
+            };
+            onSelectRecording(newMetadata);
           } catch (error) {
             handleError(
               `We could not find a recording on MusicBrainz with the MBID ${newRecordingMBID} ('${error.message}')`,
@@ -126,7 +128,7 @@ export default function SearchTrackOrMBID({
         800,
         { leading: false, trailing: true }
       ),
-    [getRecordingMetadata, handleError, onSelectRecording]
+    [lookupMBRecording, handleError, onSelectRecording]
   );
 
   const selectSearchResult = (track: ACRMSearchResult) => {
@@ -175,6 +177,7 @@ export default function SearchTrackOrMBID({
           }}
           placeholder="Track name or MusicBrainz URL/MBID"
           required
+          ref={inputRef}
         />
         <span className="input-group-btn">
           <button className="btn btn-default" type="button" onClick={reset}>

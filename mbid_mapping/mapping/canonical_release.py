@@ -10,7 +10,7 @@ import config
 TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
 
 
-class CanonicalMusicBrainzDataRelease(BulkInsertTable):
+class CanonicalRelease(BulkInsertTable):
     """
         This class creates the MBID mapping release table.
 
@@ -19,7 +19,7 @@ class CanonicalMusicBrainzDataRelease(BulkInsertTable):
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_musicbrainz_data_release", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_release", mb_conn, lb_conn, batch_size)
         self.release_index = {}
 
     def get_create_table_columns(self):
@@ -84,8 +84,8 @@ class CanonicalMusicBrainzDataRelease(BulkInsertTable):
         return queries
 
     def get_index_names(self):
-        return [("canonical_musicbrainz_data_release_idx_release", "release", False),
-                ("canonical_musicbrainz_data_release_idx_id",      "id", False)]
+        return [("canonical_release_idx_release", "release", False),
+                ("canonical_release_idx_id",      "id", False)]
 
     def process_row(self, row):
         if row["release"] in self.release_index:

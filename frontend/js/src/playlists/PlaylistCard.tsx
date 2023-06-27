@@ -62,7 +62,7 @@ export default function PlaylistCard({
       const JSPFObject: JSPFObject = await APIService.getPlaylist(
         newPlaylistId,
         currentUser.auth_token
-      );
+      ).then((res) => res.json());
       newAlert(
         "success",
         "Duplicated playlist",

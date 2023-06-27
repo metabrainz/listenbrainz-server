@@ -7,7 +7,7 @@ class CanonicalReleaseRedirect(BulkInsertTable):
         This maps any given release mbid to the "most canonical" release in that release group,
         along with the release group mbid.
 
-        When reading the `canonical_musicbrainz_data_release` table, the first release
+        When reading the `canonical_release` table, the first release
         (ordered by id) for a given release group is the canonical release.
 
         For documentation on what each of the functions in this class does, please refer
@@ -36,7 +36,7 @@ class CanonicalReleaseRedirect(BulkInsertTable):
                         FROM musicbrainz.release
                         JOIN musicbrainz.release_group rg
                           ON release.release_group = rg.id
-                        JOIN mapping.canonical_musicbrainz_data_release_tmp cmdr
+                        JOIN mapping.canonical_release_tmp cmdr
                           ON cmdr.release = release.id),
                         first_release AS (select * from canonical_release where rank = 1),
                         release_rg AS (

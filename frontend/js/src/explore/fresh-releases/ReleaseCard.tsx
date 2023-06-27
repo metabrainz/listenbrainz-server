@@ -64,7 +64,6 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
     return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
   }
-  React.useEffect(() => {}, [releaseMBID, setCoverartSrc]);
 
   React.useEffect(() => {
     async function getCoverArt() {
@@ -85,16 +84,22 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   return (
     <div className="release-card-container">
       <div className="release-date">{formatReleaseDate(releaseDate)}</div>
-      <LazyLoadImage
-        className="release-coverart"
-        src={coverartSrc}
-        alt={`${releaseName} by ${artistCreditName}`}
-        placeholderSrc={COVERART_PLACEHOLDER}
-      />
+      <a
+        href={`/player/release/${releaseMBID}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <LazyLoadImage
+          className="release-coverart"
+          src={coverartSrc}
+          alt={`${releaseName} by ${artistCreditName}`}
+          placeholderSrc={COVERART_PLACEHOLDER}
+        />
+      </a>
       <div className="name-type-container">
         <div className="release-name" title={releaseName}>
           <a
-            href={`https://musicbrainz.org/release/${releaseMBID}`}
+            href={`/player/release/${releaseMBID}`}
             target="_blank"
             rel="noopener noreferrer"
           >

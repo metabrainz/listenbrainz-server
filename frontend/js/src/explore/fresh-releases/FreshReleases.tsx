@@ -37,7 +37,9 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
     []
   );
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [pageType, setPageType] = React.useState<string>(PAGE_TYPE_SITEWIDE);
+  const [pageType, setPageType] = React.useState<string>(
+    isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
+  );
 
   React.useEffect(() => {
     const fetchReleases = async () => {

@@ -74,7 +74,7 @@ function getNowPlayingRecordingMBID(
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { recordingData, playingNow } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
-  const { getFeedbackForUserForMBIDs, submitFeedback } = APIService;
+  const { getFeedbackForUserForRecordings, submitFeedback } = APIService;
   const { auth_token, name: username } = currentUser;
 
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
@@ -112,10 +112,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         return;
       }
       try {
-        const feedbackObject = await getFeedbackForUserForMBIDs(
-          username,
-          recordingMBID
-        );
+        const feedbackObject = await getFeedbackForUserForRecordings(username, [
+          recordingMBID,
+        ]);
         if (feedbackObject?.feedback?.length) {
           const feedback: any = first(feedbackObject.feedback);
           setCurrentListenFeedback(feedback.score);
@@ -130,7 +129,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       }
     };
     getFeedbackPromise();
-  }, [recordingData, playingNow, getFeedbackForUserForMBIDs, username]);
+  }, [recordingData, playingNow, getFeedbackForUserForRecordings, username]);
 
   const submitFeedbackCallback = React.useCallback(
     async (score: ListenFeedBack) => {

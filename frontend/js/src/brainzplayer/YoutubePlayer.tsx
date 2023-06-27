@@ -217,7 +217,7 @@ export default class YoutubePlayer
       </p>
     );
     const { onTrackNotFound, handleWarning } = this.props;
-    handleWarning(errorMessage);
+    handleWarning(errorMessage, "Youtube account error");
     onTrackNotFound();
   };
 
@@ -247,7 +247,10 @@ export default class YoutubePlayer
       return;
     }
     if (!trackName && !artistName && !releaseName) {
-      handleWarning("Not enough info to search on Youtube");
+      handleWarning(
+        "We are missing a track title, artist or album name to search on Youtube",
+        "Not enough info to search on Youtube"
+      );
       onTrackNotFound();
       return;
     }

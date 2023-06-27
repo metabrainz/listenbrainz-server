@@ -585,11 +585,12 @@ const getThumbnailFromCAAResponse = (
     return undefined;
   }
   const { release } = body;
-  const releaseMBID = release.replace("https://musicbrainz.org/release/", "");
+  const regexp = /musicbrainz.org\/release\/(?<mbid>[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})/g;
+  const releaseMBID = regexp.exec(release)?.groups?.mbid;
 
   const frontImage = body.images.find((image) => image.front);
 
-  if (frontImage?.id) {
+  if (frontImage?.id && releaseMBID) {
     // CAA links are http redirects instead of https, causing LB-1067 (mixed content warning).
     // We also don't need or want the redirect from CAA, instead we can reconstruct
     // the link to the underlying archive.org resource directly

@@ -1,48 +1,48 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import * as React from "react";
-import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
+import * as React from "react";
+import { createRoot } from "react-dom/client";
 
-import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import { io, Socket } from "socket.io-client";
-import { get, isEqual } from "lodash";
-import { Integrations } from "@sentry/tracing";
 import {
   faCompactDisc,
   faPlusCircle,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Integrations } from "@sentry/tracing";
+import { get, isEqual } from "lodash";
+import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
+import { Socket, io } from "socket.io-client";
 import {
   WithAlertNotificationsInjectedProps,
   withAlertNotifications,
 } from "../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
-import APIServiceClass from "../utils/APIService";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import ListenCard from "../listens/ListenCard";
-import Loader from "../components/Loader";
 import AddListenModal from "../add-listen/AddListenModal";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import Loader from "../components/Loader";
+import FollowButton from "../follow/FollowButton";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
+import ListenCard from "../listens/ListenCard";
+import ListenControl from "../listens/ListenControl";
+import ListenCountCard from "../listens/ListenCountCard";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
+import APIServiceClass from "../utils/APIService";
+import ErrorBoundary from "../utils/ErrorBoundary";
 import {
   formatWSMessageToListen,
-  getPageProps,
   getListenablePin,
+  getPageProps,
   getRecordingMBID,
-  getTrackName,
   getRecordingMSID,
+  getTrackName,
 } from "../utils/utils";
-import ListenControl from "../listens/ListenControl";
-import UserSocialNetwork from "../follow/UserSocialNetwork";
-import ListenCountCard from "../listens/ListenCountCard";
-import FollowButton from "../follow/FollowButton";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -248,12 +248,33 @@ export default class Listens extends React.Component<
     const playingNow = newPlayingNow;
     const { APIService } = this.context;
     try {
-      const metadata = await APIService.lookupRecordingMetadata(
+      const response = await APIService.lookupRecordingMetadata(
         playingNow.track_metadata.track_name,
         playingNow.track_metadata.artist_name,
-        false
+        true
       );
-      playingNow.track_metadata.mbid_mapping = metadata as MBIDMapping;
+      if (response) {
+        const {
+          metadata,
+          recording_mbid,
+          release_mbid,
+          artist_mbids,
+        } = response;
+        playingNow.track_metadata.mbid_mapping = {
+          recording_mbid,
+          release_mbid,
+          artist_mbids,
+          caa_id: metadata?.release?.caa_id,
+          caa_release_mbid: metadata?.release?.caa_release_mbid,
+          artists: metadata?.artist?.artists?.map((artist, index)=>{
+            return {
+              artist_credit_name: artist.name,
+              join_phrase: artist.join_phrase,
+              artist_mbid: artist_mbids[index]
+            }
+          })
+        };
+      }
 
       await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {
@@ -407,26 +428,26 @@ export default class Listens extends React.Component<
     const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
         const recordingMsid = getRecordingMSID(listen);
         if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
+          recording_msids.push(recordingMsid);
         }
         const recordingMBID = getRecordingMBID(listen);
         if (recordingMBID) {
-          recording_mbids += `${recordingMBID},`;
+          recording_mbids.push(recordingMBID);
         }
       });
 
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
@@ -452,8 +473,8 @@ export default class Listens extends React.Component<
     try {
       const data = await APIService.getFeedbackForUserForRecordings(
         currentUser.name,
-        "",
-        recordingMBID
+        [recordingMBID],
+        []
       );
       if (data.feedback.length) {
         const { recordingMbidFeedbackMap } = this.state;
