@@ -108,7 +108,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const {
     domContainer,
     reactProps,
@@ -127,6 +127,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const { playing_now } = reactProps;
+
+  /** Fetch and save list of MusicBrainz genres on startup
+   * Not sure where this should end (list of genres sent by back-end instead?)
+   * but for now genres are only used on this page
+   */
+  try {
+    const response = await fetch(
+      "https://musicbrainz.org/ws/2/genre/all?fmt=txt"
+    );
+    const genresList = await response.text();
+    globalAppContext.musicbrainzGenres = Array.from(genresList.split("\n"));
+  } catch (error) {
+    console.error(error);
+  }
 
   const PlayingNowPageWithAlertNotifications = withAlertNotifications(
     PlayingNowPage
