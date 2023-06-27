@@ -208,5 +208,10 @@
     "name": "troi.playlists",
     "description": "Generate troi playlists for all users",
     "params": ["slug", "users"]
+  },
+  "tags.default": {
+    "name": "tags.default",
+    "description": "Generate the tags dataset with percent rank",
+    "params": []
   }
 }
