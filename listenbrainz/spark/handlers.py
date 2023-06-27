@@ -15,7 +15,7 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import year_in_music, couchdb
+from listenbrainz.db import year_in_music, couchdb, tags
 from listenbrainz.db.fresh_releases import insert_fresh_releases
 from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
@@ -465,3 +465,7 @@ def handle_troi_playlists(message):
 
 def handle_troi_playlists_end(message):
     batch_process_playlists_end(message["slug"])
+
+
+def handle_tags_dataset(message):
+    tags.insert(message["source"], message["data"])
