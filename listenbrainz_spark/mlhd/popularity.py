@@ -1,5 +1,6 @@
 from more_itertools import chunked
 
+from listenbrainz_spark import config
 from listenbrainz_spark.path import MLHD_PLUS_DATA_DIRECTORY
 from listenbrainz_spark.stats import run_query
 
@@ -9,7 +10,13 @@ STATS_PER_MESSAGE = 10000
 
 def generate(name, query):
     """ Execute the given query and generate statistics. """
-    itr = run_query(query).toLocalIterator()
+    df = run_query(query)
+    df\
+        .write\
+        .format('parquet')\
+        .save(config.HDFS_CLUSTER_URI + "/" + name, mode="overwrite")
+
+    itr = df.toLocalIterator()
 
     for rows in chunked(itr, STATS_PER_MESSAGE):
         entries = []
