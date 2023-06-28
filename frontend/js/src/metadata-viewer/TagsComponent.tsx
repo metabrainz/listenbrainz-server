@@ -27,21 +27,22 @@ function AddTagComponent(props: {
       selectedTag: SingleValue<TagOptionType>,
       actionMeta: ActionMeta<TagOptionType>
     ) => {
-      if (!selectedTag?.value || !entityMBID || !musicbrainzAuthToken) {
+      if (!selectedTag || !entityMBID || !musicbrainzAuthToken) {
         return;
       }
+      const { value } = selectedTag;
       if (!["select-option", "create-option"].includes(actionMeta.action)) {
         return;
       }
       const success = await submitTagToMusicBrainz(
         entityType,
         entityMBID,
-        selectedTag.value,
+        value,
         TagActionType.UPVOTE,
         musicbrainzAuthToken
       );
       if (success && isFunction(callback)) {
-        callback(selectedTag);
+        callback(value);
       }
     },
     [
