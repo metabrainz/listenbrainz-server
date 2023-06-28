@@ -24,7 +24,7 @@ def create_messages(recordings_table, popularity_table, source):
             SELECT tag
                  , recording_mbid
                  , tag_count
-                 , (ranking - 1) / (max(ranking) OVER (PARTITION BY tag) - 1) AS _percent
+                 , COALESCE((ranking - 1) / (max(ranking) OVER (PARTITION BY tag) - 1), 1) AS _percent
               FROM intermediate   
         )   SELECT recording_mbid
                  , collect_list(struct(tag, tag_count, _percent)) AS tags
