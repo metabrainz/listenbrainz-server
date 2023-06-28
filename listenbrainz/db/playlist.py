@@ -750,7 +750,7 @@ def bulk_insert(slug, playlists):
     playlist_template = SQL("""({creator_id}, %s, {description}, 't', %s, jsonb_build_object('algorithm_metadata', jsonb_build_object('source_patch', {slug})))""")\
         .format(
             creator_id=Literal(TROI_BOT_USER_ID),
-            description=description,
+            description=Literal(description),
             slug=Literal(slug)
         )
 
