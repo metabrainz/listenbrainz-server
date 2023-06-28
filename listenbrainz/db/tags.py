@@ -97,7 +97,7 @@ def get(tag, begin_percent, end_percent, count):
                 "tag_count": row["tag_count"]
             })
 
-        rows = connection.execute(count_query, params)
+        rows = connection.execute(text(count_query), params)
 
         counts = {x["source"]: x["total_count"] for x in rows}
         results["total_recording_count"] = counts.get("recording", 0)
