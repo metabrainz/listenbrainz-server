@@ -23,7 +23,7 @@ def insert(source, recordings):
         conn.close()
 
 
-def get(tag, begin_percent, end_percent, count, offset):
+def get(tag, begin_percent, end_percent, count):
     """ Retrieve the recordings for a given tag within the percent bounds, ordered by tag_count within it. """
     results = {
         "recording": [],
@@ -34,15 +34,14 @@ def get(tag, begin_percent, end_percent, count, offset):
         WITH recording_tags AS (
             SELECT recording_mbid
                  , tag_count
-                 , 'recording'
+                 , source
               FROM tags.tags
              WHERE tag = :tag
-               AND source = ''
-               AND begin_percent <= percent
-               AND percent < end_percent
-          ORDER BY tag_count DESC
-             LIMIT :limit
-            OFFSET :offset
+               AND source = 'recording'
+               AND :begin_percent <= percent
+               AND percent < :end_percent
+          ORDER BY RANDOM() DESC
+             LIMIT :count
         ), artist_tags AS (
             SELECT recording_mbid
                  , tag_count
@@ -50,11 +49,10 @@ def get(tag, begin_percent, end_percent, count, offset):
               FROM tags.tags
              WHERE tag = :tag
                AND source = 'artist'
-               AND begin_percent <= percent
-               AND percent < end_percent
-          ORDER BY tag_count DESC
-             LIMIT :limit
-            OFFSET :offset
+               AND :begin_percent <= percent
+               AND percent < :end_percent
+          ORDER BY RANDOM() DESC
+             LIMIT :count
         ), release_tags AS (
             SELECT recording_mbid
                  , tag_count
@@ -62,11 +60,10 @@ def get(tag, begin_percent, end_percent, count, offset):
               FROM tags.tags
              WHERE tag = :tag
                AND source = 'release-group'
-               AND begin_percent <= percent
-               AND percent < end_percent
-          ORDER BY tag_count DESC
-             LIMIT :limit
-            OFFSET :offset
+               AND :begin_percent <= percent
+               AND percent < :end_percent
+          ORDER BY RANDOM() DESC
+             LIMIT :count
         )   SELECT *
               FROM recording_tags
              UNION ALL
@@ -75,14 +72,36 @@ def get(tag, begin_percent, end_percent, count, offset):
              UNION ALL
             SELECT *
               FROM release_tags
-          ORDER BY tag_count DESC
     """
+    count_query = """
+        SELECT source
+             , count(*) AS total_count
+          FROM tags.tags
+         WHERE tag = :tag
+           AND :begin_percent <= percent
+           AND percent < :end_percent
+      GROUP BY source     
+    """
+    params = {
+        "tag": tag,
+        "begin_percent": begin_percent,
+        "end_percent": end_percent,
+        "count": count
+    }
     with timescale.engine.connect() as connection:
-        rows = connection.execute(text(query))
+        rows = connection.execute(text(query), params)
         for row in rows:
             source = row["source"]
             results[source].append({
                 "recording_mbid": row["recording_mbid"],
                 "tag_count": row["tag_count"]
             })
+
+        rows = connection.execute(count_query, params)
+
+        counts = {x["source"]: x["total_count"] for x in rows}
+        results["total_recording_count"] = counts.get("recording", 0)
+        results["total_release-group_count"] = counts.get("release-group", 0)
+        results["total_artist_count"] = counts.get("artist", 0)
+
     return results

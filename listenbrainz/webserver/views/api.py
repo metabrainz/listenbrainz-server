@@ -12,7 +12,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_external_service_oauth
 import listenbrainz.webserver.redis_connection as redis_connection
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db import listens_importer
+from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from listenbrainz.webserver import timescale_connection
@@ -663,6 +663,49 @@ def get_service_details(user_name):
 
     services = db_external_service_oauth.get_services(user["id"])
     return jsonify({'user_name': user_name, 'services': services})
+
+
+@api_bp.route("/tags/", methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+def get_tags_dataset():
+    """ Get the recordings with the specified tag. """
+    tag = request.args.get("tag")
+    if tag is not None:
+        raise APIBadRequest("tag param is missing")
+
+    try:
+        begin_percent = request.args.get("begin_percent")
+        if begin_percent is None:
+            raise APIBadRequest("begin_percent param is missing")
+        begin_percent = float(begin_percent)
+        if begin_percent < 0 or begin_percent > 1:
+            raise APIBadRequest("begin_percent should be between the range: 0.0 to 1.0")
+    except ValueError:
+        raise APIBadRequest(f"begin_percent: '{begin_percent}' is not a valid number")
+
+    try:
+        end_percent = request.args.get("end_percent")
+        if end_percent is None:
+            raise APIBadRequest("end_percent param is missing")
+        end_percent = float(end_percent)
+        if end_percent < 0 or end_percent > 1:
+            raise APIBadRequest("end_percent should be between the range: 0.0 to 1.0")
+    except ValueError:
+        raise APIBadRequest(f"end_percent: '{end_percent}' is not a valid number")
+
+    try:
+        count = request.args.get("count")
+        if count is None:
+            raise APIBadRequest("count param is missing")
+        count = int(count)
+        if count <= 0:
+            raise APIBadRequest("count should be a positive number")
+    except ValueError:
+        raise APIBadRequest(f"count: '{count}' is not a valid positive number")
+
+    results = tags.get(tag, begin_percent, end_percent, count)
+    return jsonify(results)
 
 
 def _get_listen_type(listen_type):
