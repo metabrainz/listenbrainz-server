@@ -45,6 +45,7 @@ def get(tag, begin_percent, end_percent, count):
                    WHEN percent < :end_percent THEN :end_percent - percent
                    ELSE 1
                    END
+                 , RANDOM()
              LIMIT :count
         ), artist_tags AS (
             SELECT recording_mbid
@@ -60,6 +61,7 @@ def get(tag, begin_percent, end_percent, count):
                    WHEN percent < :end_percent THEN :end_percent - percent
                    ELSE 1
                    END
+                 , RANDOM()
              LIMIT :count
         ), release_tags AS (
             SELECT recording_mbid
@@ -75,9 +77,9 @@ def get(tag, begin_percent, end_percent, count):
                    WHEN percent < :end_percent THEN :end_percent - percent
                    ELSE 1
                    END
+                 , RANDOM()
              LIMIT :count
-        ), combined_tags AS  (
-            SELECT *
+        )   SELECT *
               FROM recording_tags
              UNION ALL
             SELECT *
@@ -85,9 +87,6 @@ def get(tag, begin_percent, end_percent, count):
              UNION ALL
             SELECT *
               FROM release_tags
-        )   SELECT *
-              FROM combined_tags
-          ORDER BY RANDOM()
     """
     count_query = """
         SELECT source
