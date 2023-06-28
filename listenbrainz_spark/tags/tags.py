@@ -28,7 +28,7 @@ def create_messages(recordings_table, popularity_table, source):
     results = run_query(query).toLocalIterator()
 
     for result in chunked(results, RECORDINGS_PER_MESSAGE):
-        data = [tag.dict(recursive=True) for tag in result]
+        data = [tag.asDict(recursive=True) for tag in result]
         yield {
             "type": "tags_dataset",
             "data": data,
