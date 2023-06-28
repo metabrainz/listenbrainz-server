@@ -34,6 +34,7 @@ def get(tag, begin_percent, end_percent, count):
         WITH recording_tags AS (
             SELECT recording_mbid
                  , tag_count
+                 , percent
                  , source
               FROM tags.tags
              WHERE tag = :tag
@@ -48,6 +49,7 @@ def get(tag, begin_percent, end_percent, count):
         ), artist_tags AS (
             SELECT recording_mbid
                  , tag_count
+                 , percent
                  , source
               FROM tags.tags
              WHERE tag = :tag
@@ -62,6 +64,7 @@ def get(tag, begin_percent, end_percent, count):
         ), release_tags AS (
             SELECT recording_mbid
                  , tag_count
+                 , percent
                  , source
               FROM tags.tags
              WHERE tag = :tag
@@ -82,9 +85,9 @@ def get(tag, begin_percent, end_percent, count):
              UNION ALL
             SELECT *
               FROM release_tags
-        ) SELECT *
-            FROM combined_tags
-        ORDER BY RANDOM()
+        )   SELECT *
+              FROM combined_tags
+          ORDER BY RANDOM()
     """
     count_query = """
         SELECT source
@@ -107,7 +110,8 @@ def get(tag, begin_percent, end_percent, count):
             source = row["source"]
             results[source].append({
                 "recording_mbid": row["recording_mbid"],
-                "tag_count": row["tag_count"]
+                "tag_count": row["tag_count"],
+                "percent": row["percent"]
             })
 
         rows = connection.execute(text(count_query), params)

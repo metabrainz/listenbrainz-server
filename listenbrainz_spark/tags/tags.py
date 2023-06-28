@@ -44,6 +44,6 @@ def create_messages(recordings_table, popularity_table, source):
 
 def main():
     # """ Generate the tags dataset using recording, artist and release group tags """
-    # yield from create_messages(RECORDING_RECORDING_TAG_DATAFRAME, MLHD_RECORDING_POPULARITY_DATAFRAME, "recording")
-    # yield from create_messages(RECORDING_ARTIST_TAG_DATAFRAME, MLHD_RECORDING_POPULARITY_DATAFRAME, "artist")
+    yield from create_messages(RECORDING_RECORDING_TAG_DATAFRAME, MLHD_RECORDING_POPULARITY_DATAFRAME, "recording")
+    yield from create_messages(RECORDING_ARTIST_TAG_DATAFRAME, MLHD_RECORDING_POPULARITY_DATAFRAME, "artist")
     yield from create_messages(RECORDING_RELEASE_GROUP_TAG_DATAFRAME, MLHD_RECORDING_POPULARITY_DATAFRAME, "release-group")
