@@ -38,9 +38,12 @@ def get(tag, begin_percent, end_percent, count):
               FROM tags.tags
              WHERE tag = :tag
                AND source = 'recording'
-               AND :begin_percent <= percent
-               AND percent < :end_percent
-          ORDER BY RANDOM() DESC
+          ORDER BY CASE 
+                   WHEN :begin_percent <= percent AND percent <= :end_percent THEN 0
+                   WHEN :begin_percent < percent THEN percent - :begin_percent
+                   WHEN percent < :end_percent THEN :end_percent - percent
+                   ELSE 1
+                   END
              LIMIT :count
         ), artist_tags AS (
             SELECT recording_mbid
@@ -49,9 +52,12 @@ def get(tag, begin_percent, end_percent, count):
               FROM tags.tags
              WHERE tag = :tag
                AND source = 'artist'
-               AND :begin_percent <= percent
-               AND percent < :end_percent
-          ORDER BY RANDOM() DESC
+          ORDER BY CASE 
+                   WHEN :begin_percent <= percent AND percent <= :end_percent THEN 0
+                   WHEN :begin_percent < percent THEN percent - :begin_percent
+                   WHEN percent < :end_percent THEN :end_percent - percent
+                   ELSE 1
+                   END
              LIMIT :count
         ), release_tags AS (
             SELECT recording_mbid
@@ -60,18 +66,19 @@ def get(tag, begin_percent, end_percent, count):
               FROM tags.tags
              WHERE tag = :tag
                AND source = 'release-group'
-               AND :begin_percent <= percent
-               AND percent < :end_percent
-          ORDER BY RANDOM() DESC
+          ORDER BY CASE 
+                   WHEN :begin_percent <= percent AND percent <= :end_percent THEN 0
+                   WHEN :begin_percent < percent THEN percent - :begin_percent
+                   WHEN percent < :end_percent THEN :end_percent - percent
+                   ELSE 1
+                   END
              LIMIT :count
-        )   SELECT *
-              FROM recording_tags
-             UNION ALL
-            SELECT *
-              FROM artist_tags
-             UNION ALL
-            SELECT *
-              FROM release_tags
+        )  (SELECT * FROM recording_tags)
+         UNION ALL
+           (SELECT * FROM artist_tags)
+         UNION ALL
+           (SELECT * FROM release_tags)
+          ORDER BY RANDOM()
     """
     count_query = """
         SELECT source
