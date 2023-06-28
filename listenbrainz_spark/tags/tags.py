@@ -16,7 +16,7 @@ def create_messages(recordings_table, popularity_table, source):
             SELECT tag
                  , recording_mbid
                  , tag_count
-                 , percent_rank() OVER (PARTITION BY tag ORDER BY COALESCE(total_listen_count, 0) DESC) AS "percent"
+                 , percent_rank() OVER (PARTITION BY tag ORDER BY COALESCE(total_listen_count, 0) DESC) AS _percent
               FROM parquet.`{recordings_table}`
          LEFT JOIN parquet.`{popularity_table}`
              USING (recording_mbid)
