@@ -73,12 +73,18 @@ def get(tag, begin_percent, end_percent, count):
                    ELSE 1
                    END
              LIMIT :count
-        )  (SELECT * FROM recording_tags)
-         UNION ALL
-           (SELECT * FROM artist_tags)
-         UNION ALL
-           (SELECT * FROM release_tags)
-          ORDER BY RANDOM()
+        ), combined_tags AS  (
+            SELECT *
+              FROM recording_tags
+             UNION ALL
+            SELECT *
+              FROM artist_tags
+             UNION ALL
+            SELECT *
+              FROM release_tags
+        ) SELECT *
+            FROM combined_tags
+        ORDER BY RANDOM()
     """
     count_query = """
         SELECT source
