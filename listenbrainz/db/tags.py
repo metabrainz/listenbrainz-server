@@ -8,7 +8,7 @@ from listenbrainz.db import timescale
 def insert(source, recordings):
     values = []
     for rec in recordings:
-        tags = [(rec["recording_mbid"], tag["tag"], tag["tag_count"], tag["percent"]) for tag in rec["tags"]]
+        tags = [(rec["recording_mbid"], tag["tag"], tag["tag_count"], tag["_percent"]) for tag in rec["tags"]]
         values.extend(tags)
 
     query = "INSERT INTO tags.tags (recording_mbid, tag, tag_count, percent, source) VALUES %s"
