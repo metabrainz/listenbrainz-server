@@ -82,7 +82,7 @@ def create_tag_cache():
              , t.name
     ) SELECT recording_mbid
            , tag
-           , SUM(tag_count) AS tag_count
+           , BIGINT(SUM(tag_count)) AS tag_count
         FROM intermediate
     GROUP BY recording_mbid
            , tag
