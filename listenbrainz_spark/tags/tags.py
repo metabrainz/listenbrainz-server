@@ -16,13 +16,19 @@ def create_messages(recordings_table, popularity_table, source):
             SELECT tag
                  , recording_mbid
                  , tag_count
-                 , percent_rank() OVER (PARTITION BY tag ORDER BY COALESCE(total_listen_count, 0) DESC) AS _percent
+                 , dense_rank() OVER (PARTITION BY tag ORDER BY COALESCE(total_listen_count, 0) DESC) AS ranking
               FROM parquet.`{recordings_table}`
          LEFT JOIN parquet.`{popularity_table}`
              USING (recording_mbid)
+        ), percent_ranking AS (
+            SELECT tag
+                 , recording_mbid
+                 , tag_count
+                 , (ranking - 1) / (max(ranking) OVER (PARTITION BY tag) - 1) AS _percent
+              FROM intermediate   
         )   SELECT recording_mbid
                  , collect_list(struct(tag, tag_count, _percent)) AS tags
-              FROM intermediate
+              FROM percent_ranking
           GROUP BY recording_mbid
     """
     results = run_query(query).toLocalIterator()
