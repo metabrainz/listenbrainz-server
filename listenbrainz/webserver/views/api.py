@@ -671,7 +671,7 @@ def get_service_details(user_name):
 def get_tags_dataset():
     """ Get the recordings with the specified tag. """
     tag = request.args.get("tag")
-    if tag is not None:
+    if tag is None:
         raise APIBadRequest("tag param is missing")
 
     try:
