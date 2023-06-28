@@ -55,7 +55,7 @@ def create_tag_cache():
             ON tr.medium = m.id
           JOIN musicbrainz.recording r
             ON tr.recording = r.id
-         WHERE t.count > 0
+         WHERE count > 0
       GROUP BY r.gid
              , t.name
          UNION ALL
@@ -64,7 +64,7 @@ def create_tag_cache():
              , SUM(count) AS tag_count
           FROM musicbrainz.release_tag rlt
           JOIN musicbrainz.tag t
-            ON rgt.tag = t.id
+            ON rlt.tag = t.id
           JOIN musicbrainz.release rl
             ON rlt.release = rl.id  
           JOIN musicbrainz.release_group rg
@@ -77,7 +77,7 @@ def create_tag_cache():
             ON tr.medium = m.id
           JOIN musicbrainz.recording r
             ON tr.recording = r.id
-         WHERE t.count > 0
+         WHERE count > 0
       GROUP BY r.gid
              , t.name
     ) SELECT recording_mbid
