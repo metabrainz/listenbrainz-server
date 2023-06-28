@@ -21,7 +21,7 @@ def create_messages(recordings_table, popularity_table, source):
          LEFT JOIN parquet.`{popularity_table}`
              USING (recording_mbid)
         )   SELECT recording_mbid
-                 , collect_list(struct(tag, tag_count, "percent")) AS tags
+                 , collect_list(struct(tag, tag_count, _percent)) AS tags
               FROM intermediate
           GROUP BY recording_mbid
     """
