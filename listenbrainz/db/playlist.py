@@ -12,6 +12,7 @@ from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import timescale as ts
 from listenbrainz.db import user as db_user
 from listenbrainz.db.user import get_users_by_id
+from troi.patches.periodic_jams import WEEKLY_JAMS_DESCRIPTION, WEEKLY_EXPLORATION_DESCRIPTION
 
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
@@ -722,8 +723,10 @@ def bulk_insert(slug, playlists):
 
     if slug == "weekly-jams":
         jam_name = "Weekly Jams"
+        description = WEEKLY_JAMS_DESCRIPTION
     elif slug == "weekly-exploration":
         jam_name = "Weekly Exploration"
+        description = WEEKLY_EXPLORATION_DESCRIPTION
     else:
         return
 
@@ -747,7 +750,7 @@ def bulk_insert(slug, playlists):
     playlist_template = SQL("""({creator_id}, %s, {description}, 't', %s, jsonb_build_object('algorithm_metadata', jsonb_build_object('source_patch', {slug})))""")\
         .format(
             creator_id=Literal(TROI_BOT_USER_ID),
-            description=Literal(f"{jam_name} Playlist!"),
+            description=description,
             slug=Literal(slug)
         )
 
