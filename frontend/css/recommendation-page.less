@@ -84,27 +84,32 @@
       border: none;
       max-width: 80%;
     }
-    .playlist-timer{
-      --timer-color: fade( white ,50%);
+    .playlist-timer {
+      --timer-color: fade(white, 50%);
       width: 25px;
       height: 25px;
       border-radius: 50%;
-      background: conic-gradient( fade(white,15%) var(--degrees-progress), var(--timer-color) calc(360deg - var(--degrees-progress)));
+      background: conic-gradient(
+        fade(white, 15%) var(--degrees-progress),
+        var(--timer-color) calc(360deg - var(--degrees-progress))
+      );
       align-self: flex-start;
       order: 3;
       position: absolute;
-      left: calc(100% - 1em - 25px); // width of parent minus padding minus width of timer
-      &.pressing{
+      left: calc(
+        100% - 1em - 25px
+      ); // width of parent minus padding minus width of timer
+      &.pressing {
         animation: blink 1s ease-out alternate infinite;
         --timer-color: fade(red, 70%);
         background-color: fade(white, 50%);
       }
       @keyframes blink {
         0% {
-          opacity: .3;
+          opacity: 0.3;
         }
         50% {
-          opacity: .75;
+          opacity: 0.75;
         }
         100% {
           opacity: 1;
