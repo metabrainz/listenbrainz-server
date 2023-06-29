@@ -176,14 +176,24 @@ export default class MissingMBDataPage extends React.Component<
             ),
           }));
           toast.info(
-            <ToastMsg title={"Success"}message={"This listen has not been deleted yet, but is scheduled for deletion," +
-            " which usually happens shortly after the hour."} />,
+            <ToastMsg
+              title="Success"
+              message={
+                "This listen has not been deleted yet, but is scheduled for deletion," +
+                " which usually happens shortly after the hour."
+              }
+            />,
             { toastId: "deleted-track" }
           );
         }
       } catch (error) {
         toast.error(
-          <ToastMsg title={"Error while deleting listen"} message={typeof error === "object" ? error.message : error.toString()} />,
+          <ToastMsg
+            title="Error while deleting listen"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
           { toastId: "deleted-track-error" }
         );
       }

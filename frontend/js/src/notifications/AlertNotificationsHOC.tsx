@@ -5,10 +5,6 @@ export function withAlertNotifications<P extends object>(
   WrappedComponent: React.ComponentType<P>
 ) {
   class AlertNotifications extends React.Component<P> {
-    constructor(props: P) {
-      super(props);
-    }
-
     render() {
       return (
         <>

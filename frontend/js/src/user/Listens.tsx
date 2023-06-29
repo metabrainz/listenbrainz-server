@@ -266,13 +266,13 @@ export default class Listens extends React.Component<
           artist_mbids,
           caa_id: metadata?.release?.caa_id,
           caa_release_mbid: metadata?.release?.caa_release_mbid,
-          artists: metadata?.artist?.artists?.map((artist, index)=>{
+          artists: metadata?.artist?.artists?.map((artist, index) => {
             return {
               artist_credit_name: artist.name,
               join_phrase: artist.join_phrase,
-              artist_mbid: artist_mbids[index]
-            }
-          })
+              artist_mbid: artist_mbids[index],
+            };
+          }),
         };
       }
 

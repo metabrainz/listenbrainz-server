@@ -176,7 +176,10 @@ export default class PlaylistPage extends React.Component<
         [jspfTrack]
       );
       toast.success(
-        <ToastMsg title="Added Track" message={`${selectedTrackMetadata.track_name} by ${selectedTrackMetadata.artist_name}`} />,
+        <ToastMsg
+          title="Added Track"
+          message={`${selectedTrackMetadata.track_name} by ${selectedTrackMetadata.artist_name}`}
+        />,
         { toastId: "added-track" }
       );
       const recordingFeedbackMap = await this.loadFeedback([
@@ -526,7 +529,6 @@ export default class PlaylistPage extends React.Component<
     playlistTitle: string,
     auth_token: string
   ) => {
-
     const result = await this.APIService.exportPlaylistToSpotify(
       auth_token,
       playlistId
@@ -835,9 +837,7 @@ export default class PlaylistPage extends React.Component<
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
                   </span>
-                  <SearchTrackOrMBID
-                    onSelectRecording={this.addTrack}
-                  />
+                  <SearchTrackOrMBID onSelectRecording={this.addTrack} />
                 </Card>
               )}
             </div>
@@ -893,9 +893,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <PlaylistPageWithAlertNotifications
-            playlist={playlist}
-          />
+          <PlaylistPageWithAlertNotifications playlist={playlist} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

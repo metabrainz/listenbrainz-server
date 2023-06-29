@@ -19,7 +19,7 @@ export type PlaylistsListProps = {
   onCopiedPlaylist?: (playlist: JSPFPlaylist) => void;
   selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
   onPaginatePlaylists: (playlists: JSPFPlaylist[]) => void;
-}
+};
 
 export type PlaylistsListState = {
   playlistSelectedForOperation?: JSPFPlaylist;
