@@ -514,7 +514,7 @@ describe("Listens page", () => {
       expect(instance.state.listens).toContainEqual(listenToDelete);
     });
 
-    it("calls newAlert if error is returned", async () => {
+    it("handles error for delete listen", async () => {
       
       const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>

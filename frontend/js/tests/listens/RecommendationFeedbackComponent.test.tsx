@@ -144,7 +144,7 @@ describe("Recommendation feedback", () => {
       expect(instance.props.currentFeedback).toEqual("love");
     });
 
-    it("calls newAlert if error is returned", async () => {
+    it("handles errors for submitRecommendationFeedback", async () => {
       const updateFeedbackSpy = jest.fn();
 
       const wrapper = mount<RecommendationFeedbackComponent>(
