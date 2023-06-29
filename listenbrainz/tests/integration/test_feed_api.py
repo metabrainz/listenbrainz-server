@@ -147,8 +147,17 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
-        # Sending a listen with time difference greater than DEFAULT_LISTEN_EVENT_WINDOW_NEW
-        payload['payload'][0]['listened_at'] = ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW.microseconds/1000 - 5
+        from datetime import timedelta
+        listenWindowMillisec = DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(milliseconds=1)
+
+        # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
+        response = self.send_data(payload, user=self.following_user_1)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # Sending a listen with time difference slightly greater than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec - 1000
         response = self.send_data(payload, user=self.following_user_1)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
@@ -168,8 +177,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         # for now, so let's remove them for this test.
         payload = self.remove_own_follow_events(payload)
 
-        # should have 6 listens only. As one listen is out of seach interval, it should not be in payload.
-        self.assertEqual(6, payload['count'])
+        # should have 7 listens only. As one listen is out of seach interval, it should not be in payload.
+        self.assertEqual(7, payload['count'])
 
         # first 3 events should have higher timestamps and user should be following_1
         self.assertEqual('listen', payload['events'][0]['event_type'])

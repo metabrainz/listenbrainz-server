@@ -372,7 +372,7 @@ def user_feed_listens_following(user_name: str):
     if user_name != user['musicbrainz_id']:
         raise APIForbidden("You don't have permissions to view this user's timeline.")
     
-    min_ts, max_ts, _ = _validate_get_endpoint_params()
+    min_ts, max_ts, count = _validate_get_endpoint_params()
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
 
@@ -380,7 +380,7 @@ def user_feed_listens_following(user_name: str):
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events_new(users_following, min_ts, max_ts)
+        listen_events = get_listen_events_new(users_following, min_ts, max_ts, count)
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
@@ -678,7 +678,8 @@ def get_listen_events(
 def get_listen_events_new(
     users: List[Dict],
     min_ts: int,
-    max_ts: int
+    max_ts: int,
+    limit: int
 ) -> List[APITimelineEvent]:
     """ Gets all listen events in the feed.
     """
@@ -710,8 +711,8 @@ def get_listen_events_new(
     listens = timescale_connection._ts.fetch_recent_listens_for_users_new(
         users,
         min_ts=min_ts,
-        max_ts=max_ts
-        # limit=25
+        max_ts=max_ts,
+        limit=limit
     )
 
     events = []

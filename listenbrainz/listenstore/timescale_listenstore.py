@@ -458,14 +458,14 @@ class TimescaleListenStore:
     def fetch_recent_listens_for_users_new(self, users, min_ts: datetime, max_ts: datetime, limit=25):
         """ Fetch recent listens for a list of users.
 
-            user_ids: A list containing the users for which you'd like to retrieve recent listens.
+            users: A list containing the users for which you'd like to retrieve recent listens.
             min_ts: Only return listens with listened_at after this timestamp, required.
             max_ts: Only return listens with listened_at before this timestamp, required.
         """
 
         user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
 
-        args = {"user_ids": tuple(user_id_map.keys()), "limit": limit}
+        args = {"user_ids": tuple(user_id_map.keys()), "limit": max(limit, 100)}
 
         # min_ts and max_ts must exist.
         if min_ts and max_ts:
