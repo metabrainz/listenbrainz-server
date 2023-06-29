@@ -21,6 +21,7 @@ import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import NiceModal from "@ebay/nice-modal-react";
+import { toast } from "react-toastify";
 import {
   getArtistLink,
   getTrackLink,
@@ -50,6 +51,7 @@ import CBReviewModal from "../cb-review/CBReviewModal";
 import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
 import ListenPayloadModal from "./ListenPayloadModal";
 import CoverArtWithFallback from "./CoverArtWithFallback";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -62,11 +64,6 @@ export type ListenCardProps = {
     recordingMsid: string,
     score: ListenFeedBack | RecommendationFeedBack,
     recordingMbid?: string
-  ) => void;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
   ) => void;
   // This show under the first line of listen details. It's meant for reviews, etc.
   additionalContent?: string | JSX.Element;
@@ -190,7 +187,6 @@ export default class ListenCard extends React.Component<
   };
 
   recommendListenToFollowers = async () => {
-    const { newAlert } = this.props;
     const { listen } = this.state;
     const { APIService, currentUser } = this.context;
 
@@ -214,10 +210,12 @@ export default class ListenCard extends React.Component<
           metadata
         );
         if (status === 200) {
-          newAlert(
-            "success",
-            `You recommended a track to your followers!`,
-            `${getArtistName(listen)} - ${getTrackName(listen)}`
+          toast.success(
+            <ToastMsg
+              title="You recommended a track to your followers"
+              message={`${getArtistName(listen)} - ${getTrackName(listen)}`}
+            />,
+            { toastId: "recommended-success" }
           );
         }
       } catch (error) {
@@ -230,14 +228,15 @@ export default class ListenCard extends React.Component<
   };
 
   handleError = (error: string | Error, title?: string): void => {
-    const { newAlert } = this.props;
     if (!error) {
       return;
     }
-    newAlert(
-      "danger",
-      title || "Error",
-      typeof error === "object" ? error.message : error
+    toast.error(
+      <ToastMsg
+        title={title || "Error"}
+        message={typeof error === "object" ? error.message : error}
+      />,
+      { toastId: "recommended-error" }
     );
   };
 
@@ -255,7 +254,6 @@ export default class ListenCard extends React.Component<
       feedbackComponent,
       additionalMenuItems,
       currentFeedback,
-      newAlert,
       updateFeedbackCallback,
       additionalActions,
       listen: listenFromProps,
@@ -372,7 +370,6 @@ export default class ListenCard extends React.Component<
       const openModal = () => {
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
-          newAlert,
         }).then((linkedTrackMetadata: any) => {
           this.setState((prevState) => {
             return {
@@ -474,7 +471,6 @@ export default class ListenCard extends React.Component<
               {isLoggedIn &&
                 (feedbackComponent ?? (
                   <ListenFeedbackComponent
-                    newAlert={newAlert}
                     listen={listen}
                     currentFeedback={currentFeedback as ListenFeedBack}
                     updateFeedbackCallback={updateFeedbackCallback}
@@ -550,7 +546,6 @@ export default class ListenCard extends React.Component<
                         action={() => {
                           NiceModal.show(PinRecordingModal, {
                             recordingToPin: listen,
-                            newAlert,
                           });
                         }}
                         dataToggle="modal"
@@ -572,7 +567,6 @@ export default class ListenCard extends React.Component<
                         action={() => {
                           NiceModal.show(PersonalRecommendationModal, {
                             listenToPersonallyRecommend: listen,
-                            newAlert,
                           });
                         }}
                         dataToggle="modal"
@@ -586,7 +580,6 @@ export default class ListenCard extends React.Component<
                         action={() => {
                           NiceModal.show(MBIDMappingModal, {
                             listenToMap: listen,
-                            newAlert,
                           });
                         }}
                       />
@@ -598,7 +591,6 @@ export default class ListenCard extends React.Component<
                         action={() => {
                           NiceModal.show(CBReviewModal, {
                             listen,
-                            newAlert,
                           });
                         }}
                         dataToggle="modal"

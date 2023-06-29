@@ -7,23 +7,23 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import { toast } from "react-toastify";
+import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import APIServiceClass from "../utils/APIService";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import { getPageProps } from "../utils/utils";
 import PlaylistsList from "../playlists/PlaylistsList";
 import { PlaylistType } from "../playlists/utils";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
   paginationOffset: string;
   playlistCount: number;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type RecommendationsPageState = {
   playlists: JSPFPlaylist[];
@@ -53,8 +53,13 @@ export default class RecommendationsPage extends React.Component<
   }
 
   alertMustBeLoggedIn = () => {
-    const { newAlert } = this.props;
-    newAlert("danger", "Error", "You must be logged in for this operation");
+    toast.error(
+      <ToastMsg
+        title="Error"
+        message="You must be logged in for this operation"
+      />,
+      { toastId: "auth-error" }
+    );
   };
 
   updatePlaylists = (playlists: JSPFPlaylist[]): void => {
@@ -62,7 +67,7 @@ export default class RecommendationsPage extends React.Component<
   };
 
   render() {
-    const { user, newAlert } = this.props;
+    const { user } = this.props;
     const { playlists, paginationOffset, playlistCount, loading } = this.state;
 
     return (
@@ -81,7 +86,6 @@ export default class RecommendationsPage extends React.Component<
           paginationOffset={paginationOffset}
           playlistCount={playlistCount}
           selectPlaylistForEdit={() => {}}
-          newAlert={newAlert}
         />
       </div>
     );
@@ -94,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -123,7 +126,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <RecommendationsPageWithAlertNotifications
-            initialAlerts={optionalAlerts}
             playlistCount={playlistCount}
             playlists={playlists}
             paginationOffset={paginationOffset}

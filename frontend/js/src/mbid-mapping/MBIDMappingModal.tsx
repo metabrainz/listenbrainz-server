@@ -9,6 +9,7 @@ import {
 import Tooltip from "react-tooltip";
 import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   getArtistName,
@@ -20,14 +21,10 @@ import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import { COLOR_LB_LIGHT_GRAY, COLOR_LB_GREEN } from "../utils/constants";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type MBIDMappingModalProps = {
   listenToMap?: Listen;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 function getListenFromSelectedRecording(
@@ -43,7 +40,7 @@ function getListenFromSelectedRecording(
 }
 
 export default NiceModal.create(
-  ({ listenToMap, newAlert }: MBIDMappingModalProps) => {
+  ({ listenToMap }: MBIDMappingModalProps) => {
     const modal = useModal();
     const { hide, remove, resolve, visible } = modal;
     const [selectedRecording, setSelectedRecording] = React.useState<
@@ -70,13 +67,15 @@ export default NiceModal.create(
         if (!error) {
           return;
         }
-        newAlert(
-          "danger",
-          title || "Error",
-          typeof error === "object" ? error.message : error
+        toast.error(
+          <ToastMsg
+            title={title || "Error"}
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "linked-track-error" }
         );
       },
-      [newAlert]
+      []
     );
 
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
@@ -111,10 +110,14 @@ export default NiceModal.create(
 
           resolve(selectedRecording);
 
-          newAlert(
-            "success",
-            `You linked a track!`,
-            `${getArtistName(listenToMap)} - ${getTrackName(listenToMap)}`
+          toast.success(
+            <ToastMsg
+              title="You linked a track!"
+              message={`${getArtistName(listenToMap)} - ${getTrackName(
+                listenToMap
+              )}`}
+            />,
+            { toastId: "linked-track" }
           );
           closeModal();
         }
@@ -122,7 +125,6 @@ export default NiceModal.create(
       [
         listenToMap,
         auth_token,
-        newAlert,
         closeModal,
         resolve,
         APIService,
@@ -202,7 +204,6 @@ export default NiceModal.create(
                   listen={listenToMap}
                   showTimestamp={false}
                   showUsername={false}
-                  newAlert={newAlert}
                   // eslint-disable-next-line react/jsx-no-useless-fragment
                   feedbackComponent={<></>}
                   compact
@@ -223,7 +224,6 @@ export default NiceModal.create(
                       listen={listenFromSelectedRecording}
                       showTimestamp={false}
                       showUsername={false}
-                      newAlert={newAlert}
                       compact
                       additionalActions={
                         <ListenControl
@@ -254,7 +254,6 @@ export default NiceModal.create(
                       onSelectRecording={(trackMetadata) => {
                         setSelectedRecording(trackMetadata);
                       }}
-                      newAlert={newAlert}
                     />
                   </div>
                 )}

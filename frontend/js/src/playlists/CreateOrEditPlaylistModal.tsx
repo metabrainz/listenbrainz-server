@@ -3,7 +3,6 @@ import { getPlaylistExtension, getPlaylistId } from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import UserSearch from "./UserSearch";
 import NamePill from "../personal-recommendations/NamePill";
-import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
@@ -16,7 +15,7 @@ type CreateOrEditPlaylistModalProps = {
     onSuccessCallback?: () => void
   ) => void;
   htmlId?: string;
-} & WithAlertNotificationsInjectedProps;
+};
 
 type CreateOrEditPlaylistModalState = {
   name: string;
@@ -127,7 +126,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
 
   render() {
     const { name, description, isPublic, collaborators } = this.state;
-    const { htmlId, playlist, newAlert } = this.props;
+    const { htmlId, playlist } = this.props;
     const { currentUser } = this.context;
     const isEdit = Boolean(getPlaylistId(playlist));
     return (
@@ -210,7 +209,6 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                 <UserSearch
                   onSelectUser={this.addCollaborator}
                   placeholder="Add collaborator"
-                  newAlert={newAlert}
                 />
               </div>
             </div>

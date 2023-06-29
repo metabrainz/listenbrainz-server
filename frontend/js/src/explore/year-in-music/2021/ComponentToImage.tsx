@@ -130,7 +130,6 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
                   listenDetails={details}
                   showTimestamp={false}
                   showUsername={false}
-                  newAlert={() => {}}
                 />
               );
             })}
@@ -157,7 +156,6 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
                 }}
                 showTimestamp={false}
                 showUsername={false}
-                newAlert={() => {}}
               />
             ))}
           </div>

@@ -18,11 +18,6 @@ export type PlaylistItemCardProps = {
     score: ListenFeedBack | RecommendationFeedBack,
     recordingMbid?: string
   ) => void;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 export default class PlaylistItemCard extends React.Component<
@@ -38,7 +33,6 @@ export default class PlaylistItemCard extends React.Component<
       track,
       canEdit,
       currentFeedback,
-      newAlert,
       updateFeedbackCallback,
     } = this.props;
     // const customFields = getTrackExtension(track);
@@ -74,7 +68,7 @@ export default class PlaylistItemCard extends React.Component<
         showTimestamp={Boolean(listen.listened_at_iso)}
         showUsername={Boolean(listen.user_name)}
         // showTrackLength
-        newAlert={newAlert}
+
         beforeThumbnailContent={dragHandle}
         data-recording-mbid={track.id}
         additionalMenuItems={additionalMenuItems}
