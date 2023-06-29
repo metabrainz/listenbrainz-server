@@ -486,6 +486,7 @@ declare type JSPFPlaylistMetadata = {
   algorithm_metadata: {
     source_patch: string;
   };
+  expires_at?: string; // ISO date string
 };
 
 declare type JSPFPlaylistExtension = {

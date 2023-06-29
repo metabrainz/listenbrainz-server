@@ -50,6 +50,7 @@
   }
 
   > * {
+    position: relative;
     min-width: 260px;
     padding: 1em;
     display: flex;
@@ -82,6 +83,33 @@
       text-align: left;
       border: none;
       max-width: 80%;
+    }
+    .playlist-timer{
+      --timer-color: fade( white ,50%);
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: conic-gradient( fade(white,15%) var(--degrees-progress), var(--timer-color) calc(360deg - var(--degrees-progress)));
+      align-self: flex-start;
+      order: 3;
+      position: absolute;
+      left: calc(100% - 1em - 25px); // width of parent minus padding minus width of timer
+      &.pressing{
+        animation: blink 1s ease-out alternate infinite;
+        --timer-color: fade(red, 70%);
+        background-color: fade(white, 50%);
+      }
+      @keyframes blink {
+        0% {
+          opacity: .3;
+        }
+        50% {
+          opacity: .75;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
     }
     .btn {
       margin-left: auto;
@@ -121,6 +149,11 @@
       }
       &:hover .title {
         margin-bottom: 10px;
+      }
+      .playlist-timer {
+        width: 35px;
+        height: 35px;
+        left: calc(100% - 1em - 35px);
       }
     }
     &:not(:nth-child(1 of .weekly-jams)) button {

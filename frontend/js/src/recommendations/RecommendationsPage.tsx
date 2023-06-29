@@ -23,14 +23,13 @@ import {
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import { getPageProps } from "../utils/utils";
+import { getPageProps, preciseTimestamp } from "../utils/utils";
 import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../playlists/utils";
-import ListenCard from "../listens/ListenCard";
 import RecommendationPlaylistSettings from "./RecommendationPlaylistSettings";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import PlaylistItemCard from "../playlists/PlaylistItemCard";
@@ -80,7 +79,7 @@ export default class RecommendationsPage extends React.Component<
           cssClasses: "blue",
         };
       case "top-discoveries-for-year":
-        // get year from title, fallback to using creationg date minus 1
+        // get year from title, fallback to using creation date minus 1
         year =
           playlist.title.match(/\d{2,4}/)?.[0] ??
           new Date(playlist.date).getUTCFullYear() - 1;
@@ -89,7 +88,7 @@ export default class RecommendationsPage extends React.Component<
           cssClasses: "red",
         };
       case "top-missed-recordings-for-year":
-        // get year from title, fallback to using creationg date minus 1
+        // get year from title, fallback to using creation date minus 1
         year =
           playlist.title.match(/\d{2,4}/)?.[0] ??
           new Date(playlist.date).getUTCFullYear() - 1;
@@ -335,6 +334,18 @@ export default class RecommendationsPage extends React.Component<
     const isLoggedIn = Boolean(currentUser?.auth_token);
     const isCurrentUser = user.name === currentUser?.name;
     const playlistId = getPlaylistId(playlist);
+    const extension = getPlaylistExtension(playlist);
+    const expiryDate = extension?.additional_metadata?.expires_at;
+    let percentTimeLeft;
+    if (expiryDate) {
+      const start = new Date(playlist.date).getTime();
+      const end = new Date(expiryDate).getTime();
+      const today = new Date().getTime();
+
+      const elapsed = Math.abs(today - start);
+      const total = Math.abs(end - start);
+      percentTimeLeft = Math.round((elapsed / total) * 100);
+    }
     return (
       <div
         key={playlist.identifier}
@@ -349,6 +360,19 @@ export default class RecommendationsPage extends React.Component<
         role="button"
         tabIndex={0}
       >
+        {!isUndefined(percentTimeLeft) && (
+          <div
+            className={`playlist-timer ${
+              percentTimeLeft > 75 ? "pressing" : ""
+            }`}
+            title={`Deleted in ${preciseTimestamp(expiryDate!, "timeAgo")}`}
+            style={{
+              ["--degrees-progress" as any]: `${
+                (percentTimeLeft / 100) * 360
+              }deg`,
+            }}
+          />
+        )}
         <div className="title">{shortTitle ?? playlist.title}</div>
         {isLoggedIn && (
           <button
