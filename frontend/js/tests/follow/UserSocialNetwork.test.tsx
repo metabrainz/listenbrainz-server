@@ -40,7 +40,6 @@ jest.useFakeTimers();
 const { loggedInUser, ...otherProps } = userSocialNetworkProps;
 const props = {
   ...otherProps,
-  newAlert: jest.fn(),
 };
 
 const globalContext: GlobalAppContextT = {

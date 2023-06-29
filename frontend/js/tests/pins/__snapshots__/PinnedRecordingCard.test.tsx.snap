@@ -3,7 +3,6 @@
 exports[`PinnedRecordingCard renders correctly 1`] = `
 <PinnedRecordingCard
   isCurrentUser={true}
-  newAlert={[Function]}
   pinnedRecording={
     Object {
       "blurb_content": "I LOVE",
@@ -100,7 +99,6 @@ exports[`PinnedRecordingCard renders correctly 1`] = `
         },
       }
     }
-    newAlert={[Function]}
     showTimestamp={true}
     showUsername={false}
   >

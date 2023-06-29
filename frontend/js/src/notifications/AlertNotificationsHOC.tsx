@@ -5,12 +5,14 @@ export function withAlertNotifications<P extends object>(
   WrappedComponent: React.ComponentType<P>
 ) {
   class AlertNotifications extends React.Component<P> {
+    constructor(props: P) {
+      super(props);
+    }
+
     render() {
-      // Pass all props except initialAlerts to the wrapped component
-      const { ...passthroughProps } = this.props;
       return (
         <>
-          <WrappedComponent {...(passthroughProps as P)} />
+          <WrappedComponent {...(this.props as P)} />
           <ToastContainer
             position="bottom-right"
             autoClose={5000}

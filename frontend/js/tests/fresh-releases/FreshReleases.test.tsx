@@ -8,9 +8,7 @@ import GlobalAppContext, {
 } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 
-import FreshReleases, {
-  FreshReleasesProps,
-} from "../../src/explore/fresh-releases/FreshReleases";
+import FreshReleases from "../../src/explore/fresh-releases/FreshReleases";
 import ReleaseFilters from "../../src/explore/fresh-releases/ReleaseFilters";
 import ReleaseTimeline from "../../src/explore/fresh-releases/ReleaseTimeline";
 
@@ -35,11 +33,6 @@ const freshReleasesProps = {
 
 const { youtube, spotify, user } = freshReleasesProps;
 
-const props = {
-  ...freshReleasesProps,
-  newAlert: () => {},
-};
-
 // Create a new instance of GlobalAppContext
 const mountOptions: { context: GlobalAppContextT } = {
   context: {
@@ -58,7 +51,7 @@ describe("FreshReleases", () => {
     mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
     const wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
-        <FreshReleases {...props} />
+        <FreshReleases />
       </GlobalAppContext.Provider>
     );
     await waitForComponentToPaint(wrapper);
@@ -73,7 +66,7 @@ describe("FreshReleases", () => {
     mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases;
     const wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
-        <FreshReleases {...props} />
+        <FreshReleases />
       </GlobalAppContext.Provider>
     );
     await waitForComponentToPaint(wrapper);
