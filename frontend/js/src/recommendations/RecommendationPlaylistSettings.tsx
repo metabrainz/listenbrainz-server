@@ -106,6 +106,7 @@ export default function RecommendationPlaylistSettings({
           {extension?.public ? "Public" : "Private"} playlist by&nbsp;
           {playlist.creator} |{" "}
           {extension?.created_for && `For ${extension?.created_for}`}
+          <br />
           <a href={playlist.identifier}>Link to this playlist</a>
         </div>
         <hr />
