@@ -1,11 +1,17 @@
 import * as React from "react";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlayCircle, faSave } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCode,
+  faPlayCircle,
+  faSave,
+} from "@fortawesome/free-solid-svg-icons";
 import { sanitize } from "dompurify";
+import NiceModal from "@ebay/nice-modal-react";
 import { getPlaylistExtension, getPlaylistId } from "../playlists/utils";
 import { preciseTimestamp } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import ListenPayloadModal from "../listens/ListenPayloadModal";
 
 export type RecommendationPlaylistSettingsProps = {
   playlist: JSPFPlaylist;
@@ -59,6 +65,11 @@ export default function RecommendationPlaylistSettings({
         <div className="title">{playlist.title}</div>
         <div>
           {track.length} tracks | Updated {preciseTimestamp(playlist.date)}
+          {extension?.additional_metadata?.expires_at &&
+            ` | Deleted in ${preciseTimestamp(
+              extension?.additional_metadata?.expires_at,
+              "timeAgo"
+            )}`}
         </div>
       </div>
       <div>
@@ -77,11 +88,25 @@ export default function RecommendationPlaylistSettings({
           >
             <FontAwesomeIcon icon={faSave} title="Save to my playlists" />
           </button>
+          <button
+            className="btn btn-icon btn-info"
+            onClick={() => {
+              NiceModal.show(ListenPayloadModal, {
+                listen: playlist,
+              });
+            }}
+            data-toggle="modal"
+            data-target="#ListenPayloadModal"
+            type="button"
+          >
+            <FontAwesomeIcon icon={faCode} title="Inspect playlist" />
+          </button>
         </div>
         <div>
           {extension?.public ? "Public" : "Private"} playlist by&nbsp;
           {playlist.creator} |{" "}
           {extension?.created_for && `For ${extension?.created_for}`}
+          <a href={playlist.identifier}>Link to this playlist</a>
         </div>
         <hr />
         {playlist.annotation && (
