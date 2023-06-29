@@ -37,6 +37,7 @@ RECOMMENDATION_RECORDING_DATA_DIR = os.path.join(
 RECORDING_SIMILARITY = "/data/recording-similarity"
 
 RECORDING_DISCOVERY = os.path.join(RECOMMENDATION_RECORDING_PARENT_DIR, 'discovery')
+RAW_RECOMMENDATIONS = os.path.join(RECOMMENDATION_RECORDING_PARENT_DIR, 'raw')
 
 # Absolute path to dataframes used in processing raw data/listens for `recording` recommendations.
 RECOMMENDATION_RECORDING_USERS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + \
@@ -103,3 +104,4 @@ RELEASE_GROUP_METADATA_CACHE_DATAFRAME = "/release_group_metadata_cache"
 ARTIST_COUNTRY_CODE_DATAFRAME = "/artist_country_code"
 RECORDING_LENGTH_DATAFRAME = "/recording_length"
 ARTIST_CREDIT_MBID_DATAFRAME = "/artist_credit_mbid"
+RECORDING_FEEDBACK_DATAFRAME = "/recording_feedback"
