@@ -1,0 +1,60 @@
+@tagBorderRadius: 6px;
+.tag {
+  flex: none;
+  color: currentcolor;
+  > * {
+    background-color: rgb(236, 235, 228);
+    display: inline-block;
+    padding: 3px 7px;
+    vertical-align: middle;
+    &:first-child {
+      border-top-left-radius: @tagBorderRadius;
+      border-bottom-left-radius: @tagBorderRadius;
+    }
+    &:last-child {
+      border-top-right-radius: @tagBorderRadius;
+      border-bottom-right-radius: @tagBorderRadius;
+    }
+  }
+  .tag-vote-button {
+    margin: 0;
+    border-left: 1px dashed #f7f7f7;
+    opacity: 0;
+    line-height: 1.5em;
+    vertical-align: baseline;
+    padding-left: 0px;
+    width: 0px;
+    padding-right: 0px;
+    transition-duration: 0.3s;
+    transition-property: padding, width, opacity;
+    transition-timing-function: cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    // Cancelling some .btn styling; we want the .btn class applied
+    // for interactivity reasons, but not all the CSS styling
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+    vertical-align: initial;
+
+    &.upvote:hover,
+    &.upvote.selected {
+      color: @btn-success-color;
+      background-color: lighten(@btn-success-bg, 20%);
+    }
+    &.downvote:hover,
+    &.downvote.selected,
+    &.delete:hover {
+      color: @btn-danger-color;
+      background-color: lighten(@btn-danger-bg, 20%);
+    }
+  }
+  &:hover > .tag-vote-button {
+    width: 2em;
+    opacity: 1;
+  }
+  &:not(:hover) > :first-child {
+    border-radius: @tagBorderRadius;
+  }
+  & + .tag {
+    margin-left: 0.3em;
+  }
+}
