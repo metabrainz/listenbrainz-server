@@ -4,7 +4,7 @@ import { faPauseCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as tinycolor from "tinycolor2";
 import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
-import TagsComponent from "./TagsComponent";
+import TagsComponent from "../tags/TagsComponent";
 import {
   getArtistName,
   getAverageRGBOfImage,

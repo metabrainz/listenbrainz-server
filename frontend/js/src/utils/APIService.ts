@@ -1,5 +1,5 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
-import { TagActionType } from "../metadata-viewer/TagComponent";
+import { TagActionType } from "../tags/TagComponent";
 import APIError from "./APIError";
 
 export default class APIService {
