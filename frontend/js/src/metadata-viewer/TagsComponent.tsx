@@ -1,122 +1,174 @@
+import { noop } from "lodash";
 import * as React from "react";
-import { isFunction } from "lodash";
-import Select, { ActionMeta, SingleValue } from "react-select";
+import { useCallback, useState } from "react";
+import {
+  ActionMeta,
+  DropdownIndicatorProps,
+  MultiValue,
+  MultiValueGenericProps,
+  components,
+} from "react-select";
+import CreatableSelect from "react-select/creatable";
+import { toast } from "react-toastify";
 import TagComponent, { TagActionType } from "./TagComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 type TagOptionType = {
   value: string;
   label: string;
+  isFixed?: boolean;
+  entityType: Entity;
+  entityMBID: string;
 };
 
-function AddTagComponent(props: {
+function DropdownIndicator(props: DropdownIndicatorProps<TagOptionType>) {
+  const { isDisabled } = props;
+  if (isDisabled) {
+    return null;
+  }
+  return (
+    <components.DropdownIndicator {...props}>
+      <button className="btn btn-xs btn-outline" type="button">
+        + add genre
+      </button>
+    </components.DropdownIndicator>
+  );
+}
+
+function MultiValueContainer(props: MultiValueGenericProps<TagOptionType>) {
+  const { data, selectProps } = props;
+  return (
+    <TagComponent
+      tag={{ tag: data.value, count: 1 }}
+      entityType={data.entityType}
+      entityMBID={data.entityMBID}
+      isNew={!data.isFixed}
+      deleteCallback={
+        data.isFixed
+          ? noop
+          : (tagName) => {
+              selectProps.onChange(selectProps.value, {
+                action: "remove-value",
+                removedValue: data,
+              });
+            }
+      }
+    />
+  );
+}
+
+export default function AddTagSelect(props: {
   entityType: "artist" | "release-group" | "recording";
   entityMBID: string;
-  callback?: Function;
+  tags?: Array<ArtistTag | RecordingTag | ReleaseGroupTag>;
 }) {
-  const [expanded, setExpanded] = React.useState(false);
+  const { tags, entityType, entityMBID } = props;
+  const [selected, setSelected] = useState<TagOptionType[]>(
+    tags?.map((tag) => ({
+      value: tag.tag,
+      label: tag.tag,
+      isFixed: true,
+      entityMBID,
+      entityType,
+    })) ?? []
+  );
+
   const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
     GlobalAppContext
   );
   const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
   const { submitTagToMusicBrainz } = APIService;
-  const { entityMBID, entityType, callback } = props;
 
-  const submitNewTag = React.useCallback(
-    async (
-      selectedTag: SingleValue<TagOptionType>,
-      actionMeta: ActionMeta<TagOptionType>
-    ) => {
-      if (!selectedTag || !entityMBID || !musicbrainzAuthToken) {
-        return;
-      }
-      const { value } = selectedTag;
-      if (!["select-option", "create-option"].includes(actionMeta.action)) {
-        return;
+  const submitTagVote = useCallback(
+    async (action: TagActionType, tag?: string) => {
+      if (!musicbrainzAuthToken || !tag) {
+        return false;
       }
       const success = await submitTagToMusicBrainz(
         entityType,
         entityMBID,
-        value,
-        TagActionType.UPVOTE,
+        tag,
+        action,
         musicbrainzAuthToken
       );
-      if (success && isFunction(callback)) {
-        callback(value);
+      if (!success) {
+        toast.error("Could not vote on or create tag");
+      }
+      return success;
+    },
+    [entityType, entityMBID, musicbrainzAuthToken, submitTagToMusicBrainz]
+  );
+
+  const onChange = useCallback(
+    async (
+      selectedTags: MultiValue<TagOptionType>,
+      actionMeta: ActionMeta<TagOptionType>
+    ) => {
+      let callbackValue: TagOptionType | undefined;
+
+      switch (actionMeta.action) {
+        case "select-option":
+        case "create-option": {
+          callbackValue = actionMeta.option;
+          const success = await submitTagVote(
+            TagActionType.UPVOTE,
+            callbackValue?.value
+          );
+          if (!success) {
+            return;
+          }
+          setSelected(selectedTags as TagOptionType[]);
+          break;
+        }
+        case "remove-value": {
+          callbackValue = actionMeta.removedValue;
+          const success = await submitTagVote(
+            TagActionType.WITHDRAW,
+            callbackValue?.value
+          );
+          if (!success) {
+            return;
+          }
+          setSelected(
+            selectedTags.filter((tag) => tag.value !== callbackValue?.value)
+          );
+          break;
+        }
+        default:
+          setSelected(selectedTags as TagOptionType[]);
+          break;
       }
     },
-    [
-      entityType,
-      entityMBID,
-      musicbrainzAuthToken,
-      submitTagToMusicBrainz,
-      callback,
-    ]
+    [submitTagVote]
   );
-  return (
-    <div className={`add-tag ${expanded ? "expanded" : ""}`}>
-      {expanded ? (
-        <Select
-          options={musicbrainzGenres?.map((genre) => ({
-            value: genre,
-            label: genre,
-          }))}
-          isSearchable
-          onChange={submitNewTag}
-          onMenuClose={() => setExpanded(false)}
-        />
-      ) : (
-        <button
-          className="btn btn-xs btn-outline"
-          type="button"
-          onClick={entityMBID ? () => setExpanded(!expanded) : undefined}
-          disabled={!entityMBID}
-        >
-          + Add tag
-        </button>
-      )}
-    </div>
-  );
-}
 
-export default function TagsComponent(props: {
-  tags?: Array<ArtistTag | RecordingTag | ReleaseGroupTag>;
-  entityType: "artist" | "release-group" | "recording";
-  entityMBID: string;
-}) {
-  const { tags, entityType, entityMBID } = props;
-  const [newTags, setNewTags] = React.useState<EntityTag[]>([]);
-  const onAddNewTag = React.useCallback(
-    (newTagName: string) => {
-      const newTag: EntityTag = { count: 1, tag: newTagName };
-      setNewTags((prevTags) => prevTags.concat(newTag));
-    },
-    [setNewTags]
-  );
-  const allTags: Array<
-    EntityTag | ArtistTag | ReleaseGroupTag
-  > = newTags.concat(tags ? tags.filter((tag) => tag.genre_mbid) : []);
   return (
-    <div className="tags-wrapper content-box">
-      <div className="tags">
-        {allTags?.length ? (
-          allTags
-            .sort((t1, t2) => t2.count - t1.count)
-            .map((tag) => (
-              <TagComponent
-                tag={tag}
-                entityType={entityType}
-                entityMBID={entityMBID}
-              />
-            ))
-        ) : (
-          <span>Be the first to add a tag</span>
-        )}
-      </div>
-      <AddTagComponent
-        entityType={entityType}
-        entityMBID={entityMBID}
-        callback={onAddNewTag}
+    <div className="add-tag-select">
+      <CreatableSelect
+        value={selected}
+        options={musicbrainzGenres?.map((genre) => ({
+          value: genre,
+          label: genre,
+          entityMBID,
+          entityType,
+        }))}
+        placeholder="Add genre"
+        isSearchable
+        isMulti
+        isDisabled={!musicbrainzAuthToken}
+        isClearable={false}
+        openMenuOnClick={false}
+        onChange={onChange}
+        components={{
+          MultiValueContainer,
+          DropdownIndicator,
+        }}
+        styles={{
+          container: (baseStyles, state) => ({
+            ...baseStyles,
+            border: "0px",
+          }),
+        }}
       />
     </div>
   );
