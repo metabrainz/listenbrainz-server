@@ -25,7 +25,7 @@ def insert(source, recordings):
         conn.close()
 
 
-def get(connection, query, count_query, params, results, counts):
+def get_once(connection, query, count_query, params, results, counts):
     rows = connection.execute(text(query), params)
     for row in rows:
         source = row["source"]
@@ -37,13 +37,45 @@ def get(connection, query, count_query, params, results, counts):
         counts[source] += row["total_count"]
 
 
-def get_and(tags, begin_percent, end_percent, count):
+def get(query, count_query, more_query, more_count_query, params):
     results = defaultdict(list)
     counts = defaultdict(int)
 
-    params = {"count": count, "begin_percent": begin_percent, "end_percent": end_percent}
+    count = params["count"]
 
+    with timescale.engine.connect() as connection:
+        get_once(connection, query, count_query, params, results, counts)
+        if len(results["artist"]) < count or len(results["recording"]) < count or len(results["release-group"]) < count:
+            get_once(connection, more_query, more_count_query, params, results, counts)
+
+    results["count"] = counts
+    return results
+
+
+def get_partial_clauses(expanded):
+    if expanded:
+        order_clause = """
+            ORDER BY CASE 
+                     WHEN :begin_percent > percent THEN percent - :begin_percent
+                     WHEN :end_percent < percent THEN :end_percent - percent
+                     ELSE 1
+                     END
+                   , RANDOM()
+        """
+        percent_clause = ":begin_percent <= percent AND percent < :end_percent"
+    else:
+        order_clause = "ORDER BY RANDOM()"
+        percent_clause = "percent < :begin_percent OR percent >= :end_percent"
+
+    return order_clause, percent_clause
+
+
+def build_and_query(tags, expanded):
+    order_clause, percent_clause = get_partial_clauses(expanded)
+
+    params = {}
     clauses = []
+
     for idx, tag in enumerate(tags):
         param = f"tag_{idx}"
         params[param] = tag
@@ -52,18 +84,17 @@ def get_and(tags, begin_percent, end_percent, count):
                  , source
               FROM tags.tags
              WHERE tag = :{param}
-               AND :begin_percent <= percent
-               AND percent < :end_percent
+               AND ({percent_clause})
         """)
-    clause = " INTERSECT ".join(clauses)
 
+    clause = " INTERSECT ".join(clauses)
     query = f"""
         WITH all_recs AS (
             {clause}
          ), randomize_recs AS (
             SELECT recording_mbid
                  , source
-                 , row_number() OVER (PARTITION BY source ORDER BY RANDOM()) AS rnum
+                 , row_number() OVER (PARTITION BY source {order_clause}) AS rnum
               FROM all_recs    
          ), selected_recs AS (
             SELECT recording_mbid
@@ -87,8 +118,7 @@ def get_and(tags, begin_percent, end_percent, count):
              WHERE tag = :tag_0
           GROUP BY source
     """
-
-    count_query = f"""
+    count_query = """
         WITH all_recs AS (
             {clause}
          ) SELECT source
@@ -97,33 +127,23 @@ def get_and(tags, begin_percent, end_percent, count):
          GROUP BY source
     """
 
-    more_clauses = []
-    for idx, tag in enumerate(tags):
-        param = f"tag_{idx}"
-        params[param] = tag
-        more_clauses.append(f"""
-            SELECT recording_mbid
-                 , source
-              FROM tags.tags
-             WHERE tag = :{param}
-               AND (percent < :begin_percent
-                OR percent >= :end_percent)
-        """)
-    more_clause = " INTERSECT ".join(clauses)
+    return query, count_query
 
-    more_query = f"""
-        WITH all_recs AS (
-            {more_clause}
-         ), randomize_recs AS (
-            SELECT recording_mbid
+
+def build_or_query(expanded=True):
+    order_clause, percent_clause = get_partial_clauses(expanded)
+
+    query = f"""
+        WITH all_tags AS (
+            SELECT tag
+                 , recording_mbid
+                 , tag_count
+                 , percent
                  , source
-                 , row_number() OVER (PARTITION BY source ORDER BY RANDOM()) AS rnum
-              FROM all_recs    
-         ), selected_recs AS (
-            SELECT recording_mbid
-                 , source
-              FROM randomize_recs
-             WHERE rnum <= :count
+                 , row_number() OVER (PARTITION BY source ORDER BY {order_clause}) AS rnum
+              FROM tags.tags
+             WHERE tag IN :tags
+               AND ({percent_clause})
         )   SELECT source
                  , jsonb_agg(
                         jsonb_build_object(
@@ -135,131 +155,33 @@ def get_and(tags, begin_percent, end_percent, count):
                            , percent
                         )
                    ) AS recordings
-              FROM selected_recs
-              JOIN tags.tags
-             USING (recording_mbid, source)
-             WHERE tag = :tag_0
+              FROM all_tags
+             WHERE rnum <= :count
           GROUP BY source
     """
 
-    more_count_query = f"""
-        WITH all_recs AS (
-            {more_clause}
-         ) SELECT source
-                , count(*) AS total_count
-             FROM all_recs
-         GROUP BY source
+    count_query = f"""
+        SELECT source
+             , count(*) AS total_count
+          FROM tags.tags
+         WHERE tag IN :tags
+           AND ({percent_clause})
+      GROUP BY source
     """
 
-    with timescale.engine.connect() as connection:
-        get(connection, query, count_query, params, results, counts)
-        if len(results["artist"]) < count or len(results["recording"]) < count or len(results["release-group"]) < count:
-            get(connection, more_query, more_count_query, params, results, counts)
+    return query, count_query
 
-    results["count"] = counts
-    return results
+
+def get_and(tags, begin_percent, end_percent, count):
+    params = {"count": count, "begin_percent": begin_percent, "end_percent": end_percent}
+    query, count_query = build_and_query(tags, False)
+    more_query, more_count_query = build_and_query(tags, True)
+    return get(query, count_query, more_query, more_count_query, params)
 
 
 def get_or(tags, begin_percent, end_percent, count):
     """ Retrieve the recordings for any of the given tags within the percent bounds. """
-    results = defaultdict(list)
-    counts = defaultdict(int)
-
-    query = """
-        WITH all_tags AS (
-            SELECT tag
-                 , recording_mbid
-                 , tag_count
-                 , percent
-                 , source
-                 , row_number() OVER (PARTITION BY source ORDER BY RANDOM()) AS rnum
-              FROM tags.tags
-             WHERE tag IN :tags
-               AND :begin_percent <= percent
-               AND percent < :end_percent
-        )   SELECT source
-                 , jsonb_agg(
-                        jsonb_build_object(
-                            'recording_mbid'
-                           , recording_mbid
-                           , 'tag_count'
-                           , tag_count
-                           , 'percent'
-                           , percent
-                        )
-                   ) AS recordings
-              FROM all_tags
-             WHERE rnum <= :count
-          GROUP BY source
-    """
-
-    count_query = """
-        SELECT source
-             , count(*) AS total_count
-          FROM tags.tags
-         WHERE tag IN :tags
-           AND :begin_percent <= percent
-           AND percent < :end_percent
-      GROUP BY source
-    """
-
-    more_query = """
-        WITH all_tags AS (
-            SELECT tag
-                 , recording_mbid
-                 , tag_count
-                 , percent
-                 , source
-                 , row_number() OVER (
-                        PARTITION BY source
-                            ORDER BY CASE 
-                                     WHEN :begin_percent > percent THEN percent - :begin_percent
-                                     WHEN :end_percent < percent THEN :end_percent - percent
-                                     ELSE 1
-                                     END
-                                   , RANDOM()
-                   ) AS rnum
-              FROM tags.tags
-             WHERE tag IN :tags
-               AND (percent < :begin_percent
-                OR percent >= :end_percent)
-        )   SELECT source
-                 , jsonb_agg(
-                        jsonb_build_object(
-                            'recording_mbid'
-                           , recording_mbid
-                           , 'tag_count'
-                           , tag_count
-                           , 'percent'
-                           , percent
-                        )
-                   ) AS recordings
-              FROM all_tags
-             WHERE rnum <= :count
-          GROUP BY source
-    """
-
-    more_count_query = """
-        SELECT source
-             , count(*) AS total_count
-          FROM tags.tags
-         WHERE tag IN :tags
-           AND (percent < :begin_percent
-            OR percent >= :end_percent)
-      GROUP BY source
-    """
-
-    params = {
-        "tags": tuple(tags),
-        "begin_percent": begin_percent,
-        "end_percent": end_percent,
-        "count": count
-    }
-
-    with timescale.engine.connect() as connection:
-        get(connection, query, count_query, params, results, counts)
-        if len(results["artist"]) < count or len(results["recording"]) < count or len(results["release-group"]) < count:
-            get(connection, more_query, more_count_query, params, results, counts)
-
-    results["count"] = counts
-    return results
+    params = {"tags": tuple(tags), "begin_percent": begin_percent, "end_percent": end_percent, "count": count}
+    query, count_query = build_and_query(tags, False)
+    more_query, more_count_query = build_and_query(tags, True)
+    return get(query, count_query, more_query, more_count_query, params)
