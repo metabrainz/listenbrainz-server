@@ -38,8 +38,8 @@ def get_once(connection, query, count_query, params, results, counts):
 
 
 def get(query, count_query, more_query, more_count_query, params):
-    results = defaultdict(list)
-    counts = defaultdict(int)
+    results = {"artist": [], "recording": [], "release-group": []}
+    counts = {"artist": 0, "recording": 0, "release-group": 0}
 
     count = params["count"]
 
@@ -82,6 +82,7 @@ def build_and_query(tags, expanded):
         clauses.append(f"""
             SELECT recording_mbid
                  , source
+                 , percent
               FROM tags.tags
              WHERE tag = :{param}
                AND ({percent_clause})
@@ -118,7 +119,7 @@ def build_and_query(tags, expanded):
              WHERE tag = :tag_0
           GROUP BY source
     """
-    count_query = """
+    count_query = f"""
         WITH all_recs AS (
             {clause}
          ) SELECT source
@@ -127,7 +128,7 @@ def build_and_query(tags, expanded):
          GROUP BY source
     """
 
-    return query, count_query
+    return query, count_query, params
 
 
 def build_or_query(expanded=True):
@@ -140,7 +141,7 @@ def build_or_query(expanded=True):
                  , tag_count
                  , percent
                  , source
-                 , row_number() OVER (PARTITION BY source ORDER BY {order_clause}) AS rnum
+                 , row_number() OVER (PARTITION BY source {order_clause}) AS rnum
               FROM tags.tags
              WHERE tag IN :tags
                AND ({percent_clause})
@@ -174,14 +175,15 @@ def build_or_query(expanded=True):
 
 def get_and(tags, begin_percent, end_percent, count):
     params = {"count": count, "begin_percent": begin_percent, "end_percent": end_percent}
-    query, count_query = build_and_query(tags, False)
-    more_query, more_count_query = build_and_query(tags, True)
+    query, count_query, _params = build_and_query(tags, False)
+    more_query, more_count_query, _ = build_and_query(tags, True)
+    params.update(_params)
     return get(query, count_query, more_query, more_count_query, params)
 
 
 def get_or(tags, begin_percent, end_percent, count):
     """ Retrieve the recordings for any of the given tags within the percent bounds. """
     params = {"tags": tuple(tags), "begin_percent": begin_percent, "end_percent": end_percent, "count": count}
-    query, count_query = build_and_query(tags, False)
-    more_query, more_count_query = build_and_query(tags, True)
+    query, count_query = build_or_query(False)
+    more_query, more_count_query = build_or_query(True)
     return get(query, count_query, more_query, more_count_query, params)
