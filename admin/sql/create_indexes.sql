@@ -64,6 +64,6 @@ CREATE UNIQUE INDEX user_id_ndx_user_setting ON user_setting (user_id);
 
 CREATE UNIQUE INDEX user_id_year_in_music_uniq_idx ON statistics.year_in_music (user_id, year);
 
-CREATE INDEX tags_dataset_uniq_idx ON tags.tags (tag, source, percent) INCLUDE (recording_mbid, tag_count);
+CREATE INDEX tags_dataset_uniq_idx_2 ON tags.tags (tag) INCLUDE (source, percent, recording_mbid, tag_count);
 
 COMMIT;

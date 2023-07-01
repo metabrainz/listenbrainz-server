@@ -23,88 +23,79 @@ def insert(source, recordings):
         conn.close()
 
 
-def get(tag, begin_percent, end_percent, count):
-    """ Retrieve the recordings for a given tag within the percent bounds, ordered by tag_count within it. """
+def get_and(tags, begin_percent, end_percent, count):
     results = {
         "recording": [],
         "artist": [],
         "release-group": []
     }
-    query = """
-        WITH recording_tags AS (
+
+    params = {}
+    clauses = []
+
+    for idx, tag in enumerate(tags):
+        param = f"tag_{idx}"
+        params[param] = tag
+        clauses.append(f"""
             SELECT recording_mbid
-                 , tag_count
-                 , percent
                  , source
               FROM tags.tags
-             WHERE tag = :tag
-               AND source = 'recording'
-          ORDER BY CASE 
-                   WHEN :begin_percent <= percent AND percent <= :end_percent THEN 0
-                   WHEN :begin_percent < percent THEN percent - :begin_percent
-                   WHEN percent < :end_percent THEN :end_percent - percent
-                   ELSE 1
-                   END
-                 , RANDOM()
-             LIMIT :count
-        ), artist_tags AS (
-            SELECT recording_mbid
-                 , tag_count
-                 , percent
-                 , source
-              FROM tags.tags
-             WHERE tag = :tag
-               AND source = 'artist'
-          ORDER BY CASE 
-                   WHEN :begin_percent <= percent AND percent <= :end_percent THEN 0
-                   WHEN :begin_percent < percent THEN percent - :begin_percent
-                   WHEN percent < :end_percent THEN :end_percent - percent
-                   ELSE 1
-                   END
-                 , RANDOM()
-             LIMIT :count
-        ), release_tags AS (
-            SELECT recording_mbid
-                 , tag_count
-                 , percent
-                 , source
-              FROM tags.tags
-             WHERE tag = :tag
-               AND source = 'release-group'
-          ORDER BY CASE 
-                   WHEN :begin_percent <= percent AND percent <= :end_percent THEN 0
-                   WHEN :begin_percent < percent THEN percent - :begin_percent
-                   WHEN percent < :end_percent THEN :end_percent - percent
-                   ELSE 1
-                   END
-                 , RANDOM()
-             LIMIT :count
-        )   SELECT *
-              FROM recording_tags
-             UNION ALL
-            SELECT *
-              FROM artist_tags
-             UNION ALL
-            SELECT *
-              FROM release_tags
-    """
-    count_query = """
-        SELECT source
-             , count(*) AS total_count
-          FROM tags.tags
-         WHERE tag = :tag
-           AND :begin_percent <= percent
-           AND percent < :end_percent
-      GROUP BY source     
-    """
-    params = {
-        "tag": tag,
+             WHERE tag = :{param}
+               AND percent
+           BETWEEN :begin_percent
+               AND :end_percent
+        """)
+
+    clause = " INTERSECT ".join(clauses)
+
+    params.update({
         "begin_percent": begin_percent,
         "end_percent": end_percent,
         "count": count
-    }
+    })
+
+    query = text(f"""
+        WITH all_recs AS (
+            {clause}
+         ), randomize_recs AS (
+            SELECT recording_mbid
+                 , source
+                 , row_number() OVER (PARTITION BY source ORDER BY RANDOM()) AS rnum
+              FROM all_recs    
+         ), selected_recs AS (
+            SELECT recording_mbid
+                 , source
+              FROM randomize_recs
+             WHERE rnum <= :count
+         )  SELECT recording_mbid
+                 , jsonb_agg(
+                        jsonb_build_object(
+                            'source'
+                           , source
+                           , 'tag_count'
+                           , tag_count
+                           , 'percent'
+                           , percent
+                        )
+                   )
+              FROM selected_recs
+              JOIN tags.tags
+             USING (recording_mbid, source)
+             WHERE tag = :tag_0
+          GROUP BY recording_mbid
+    """)
+
+    count_query = text(f"""
+        WITH all_recs AS (
+            {clause}
+         ) SELECT source
+                , count(*) AS total_count
+             FROM all_recs
+         GROUP BY source
+    """)
+
     with timescale.engine.connect() as connection:
-        rows = connection.execute(text(query), params)
+        rows = connection.execute(query, params)
         for row in rows:
             source = row["source"]
             results[source].append({
@@ -113,7 +104,7 @@ def get(tag, begin_percent, end_percent, count):
                 "percent": row["percent"]
             })
 
-        rows = connection.execute(text(count_query), params)
+        rows = connection.execute(count_query, params)
 
         counts = {x["source"]: x["total_count"] for x in rows}
         results["total_recording_count"] = counts.get("recording", 0)
@@ -121,3 +112,116 @@ def get(tag, begin_percent, end_percent, count):
         results["total_artist_count"] = counts.get("artist", 0)
 
     return results
+
+
+def get_or(tags, begin_percent, end_percent, count):
+    """ Retrieve the recordings for any of the given tags within the percent bounds. """
+    results = {
+        "recording": [],
+        "artist": [],
+        "release-group": []
+    }
+
+    query = text("""
+        WITH all_tags AS (
+            SELECT tag
+                 , recording_mbid
+                 , tag_count
+                 , percent
+                 , source
+                 , row_number() OVER (PARTITION BY source, tag ORDER BY RANDOM()) AS rnum
+              FROM tags.tags
+             WHERE tag IN :tags
+               AND percent
+           BETWEEN :begin_percent
+               AND :end_percent
+        )   SELECT recording_mbid
+                 , jsonb_agg(
+                        jsonb_build_object(
+                            'source'
+                           , source
+                           , 'tag_count'
+                           , tag_count
+                           , 'percent'
+                           , percent
+                        )
+                   )
+              FROM all_tags
+             WHERE rnum <= :count
+          GROUP BY recording_mbid
+    """)
+    count_query = text("""
+        SELECT source
+             , count(*) AS total_count
+          FROM tags.tags
+         WHERE tag IN :tags
+           AND :begin_percent <= percent
+           AND percent < :end_percent
+      GROUP BY source
+    """)
+
+    params = {
+        "tags": tuple(tags),
+        "begin_percent": begin_percent,
+        "end_percent": end_percent,
+        "count": count
+    }
+
+    with timescale.engine.connect() as connection:
+        rows = connection.execute(query, params)
+        for row in rows:
+            source = row["source"]
+            results[source].append({
+                "recording_mbid": row["recording_mbid"],
+                "tag_count": row["tag_count"],
+                "percent": row["percent"]
+            })
+
+        rows = connection.execute(count_query, params)
+
+        counts = {x["source"]: x["total_count"] for x in rows}
+        results["total_recording_count"] = counts.get("recording", 0)
+        results["total_release-group_count"] = counts.get("release-group", 0)
+        results["total_artist_count"] = counts.get("artist", 0)
+
+    return results
+
+
+"""
+WITH all_recs AS (
+    SELECT recording_mbid
+         , tag_count
+         , percent
+         , source
+      FROM tags.tags
+     WHERE tag = 'rock'
+       AND source = 'recording'
+ INTERSECT
+    SELECT recording_mbid
+         , tag_count
+         , percent
+         , source
+      FROM tags.tags
+     WHERE tag = 'electronic'
+       AND source = 'recording'
+) SELECT * FROM all_recs
+  ORDER BY RANDOM()
+     LIMIT 5
+"""
+
+"""
+    WITH recordings AS (
+       SELECT recording_mbid
+            , tag
+            , row_number() OVER (PARTITION BY recording_mbid ORDER BY tag) AS rnum
+            , random() AS rand
+         FROM tags.tags
+        WHERE tag in ('rock', 'electronic')
+     GROUP BY recording_mbid, tag
+  )
+       SELECT recording_mbid
+         FROM recordings recs
+       WHERE recs.rnum = 2 
+     ORDER BY recs.rand
+        LIMIT 5
+"""

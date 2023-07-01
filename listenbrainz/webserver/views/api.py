@@ -670,9 +670,16 @@ def get_service_details(user_name):
 @ratelimit()
 def get_tags_dataset():
     """ Get the recordings with the specified tag. """
-    tag = request.args.get("tag")
+    tag = request.args.getlist("tag")
     if tag is None:
         raise APIBadRequest("tag param is missing")
+
+    condition = request.args.get("condition")
+    if condition is None:
+        raise APIBadRequest("condition param is missing")
+    condition = condition.upper()
+    if condition != "AND" and condition != "OR":
+        raise APIBadRequest("condition param should be either 'AND' or 'OR'")
 
     try:
         begin_percent = request.args.get("begin_percent")
@@ -704,7 +711,10 @@ def get_tags_dataset():
     except ValueError:
         raise APIBadRequest(f"count: '{count}' is not a valid positive number")
 
-    results = tags.get(tag, begin_percent, end_percent, count)
+    if condition == "AND":
+        results = tags.get_and(tag, begin_percent, end_percent, count)
+    else:
+        results = tags.get_or(tag, begin_percent, end_percent, count)
     return jsonify(results)
 
 
