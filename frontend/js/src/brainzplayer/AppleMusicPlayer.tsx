@@ -152,6 +152,7 @@ export default class AppleMusicPlayer
     );
     const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
     if (apple_music_id) {
+      await this.appleMusicPlayer.authorize();
       await this.playAppleMusicId(apple_music_id);
     }
   };
@@ -167,6 +168,7 @@ export default class AppleMusicPlayer
     }
     const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
     if (apple_music_id) {
+      this.appleMusicPlayer.authorize();
       this.playAppleMusicId(apple_music_id);
       return;
     }
@@ -180,6 +182,7 @@ export default class AppleMusicPlayer
     ) {
       this.appleMusicPlayer.pause();
     } else {
+      this.appleMusicPlayer.authorize();
       this.appleMusicPlayer.play();
     }
   };
