@@ -38,14 +38,21 @@ def main(slug):
               FROM recommendations
              WHERE ranking <= {MAX_TRACKS_PER_PLAYLIST}
         )   SELECT user_id
-                 , collect_list(recording_mbid) OVER (PARTITION BY user_id ORDER BY position) AS recordings
+                 , array_sort(collect_list(struct(position, recording_mbid))) AS recordings
               FROM randomized
           GROUP BY user_id
     """
     data = run_query(query).toLocalIterator()
 
     for entry in chunked(data, USERS_PER_MESSAGE):
-        playlists = [row.asDict(recursive=True) for row in entry]
+        raw_playlists = [row.asDict(recursive=True) for row in entry]
+        playlists = []
+        for playlist in raw_playlists:
+            playlists.append({
+                "user_id": playlist["user_id"],
+                "recordings": [r["recording_mbid"] for r in playlist["recordings"]]
+            })
+
         yield {
             "slug": slug,
             "data": playlists,
