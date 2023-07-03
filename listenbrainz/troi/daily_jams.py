@@ -13,9 +13,7 @@ from listenbrainz.db.user import get_by_mb_id
 from listenbrainz.db.user_relationship import get_followers_of_user
 from listenbrainz.db.user_timeline_event import create_user_timeline_event, UserTimelineEventType, NotificationMetadata
 from listenbrainz.domain.spotify import SpotifyService
-from listenbrainz.troi.utils import get_existing_playlist_urls
-
-SPOTIFY_EXPORT_PREFERENCE = "export_to_spotify"
+from listenbrainz.troi.utils import get_existing_playlist_urls, SPOTIFY_EXPORT_PREFERENCE
 
 
 def run_post_recommendation_troi_bot():

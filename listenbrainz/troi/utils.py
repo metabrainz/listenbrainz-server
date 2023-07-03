@@ -2,6 +2,8 @@ from sqlalchemy import text
 
 from listenbrainz.db import timescale
 
+SPOTIFY_EXPORT_PREFERENCE = "export_to_spotify"
+
 
 def get_existing_playlist_urls(user_ids: list[int], playlist_slug):
     """ Retrieve urls of the existing spotify playlists of daily jams users """
