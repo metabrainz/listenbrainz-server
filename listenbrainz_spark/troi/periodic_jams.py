@@ -38,7 +38,7 @@ def main(slug):
               FROM recommendations
              WHERE ranking <= {MAX_TRACKS_PER_PLAYLIST}
         )   SELECT user_id
-                 , collect_list(struct(position, recording_mbid)) AS recordings
+                 , collect_list(recording_mbid) OVER (PARTITION BY user_id ORDER BY position) AS recordings
               FROM randomized
           GROUP BY user_id
     """
