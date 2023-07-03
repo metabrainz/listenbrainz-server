@@ -1,7 +1,6 @@
 """ This module contains code to run the various troi-bot functions after
     recommendations have been generated.
 """
-import spotipy
 from flask import current_app
 from sqlalchemy import text
 from troi.core import generate_playlist
@@ -9,13 +8,12 @@ from troi.patches.recs_to_playlist import RecommendationsToPlaylistPatch
 from troi.patches.periodic_jams import PeriodicJamsPatch
 
 from listenbrainz import db
-from listenbrainz.db import timescale
 from listenbrainz.db.playlist import TROI_BOT_USER_ID, TROI_BOT_DEBUG_USER_ID
 from listenbrainz.db.user import get_by_mb_id
 from listenbrainz.db.user_relationship import get_followers_of_user
 from listenbrainz.db.user_timeline_event import create_user_timeline_event, UserTimelineEventType, NotificationMetadata
 from listenbrainz.domain.spotify import SpotifyService
-
+from listenbrainz.troi.utils import get_existing_playlist_urls
 
 SPOTIFY_EXPORT_PREFERENCE = "export_to_spotify"
 
@@ -38,7 +36,7 @@ def run_daily_jams_troi_bot(create_all):
     """
     # Now generate daily jams (and other in the future) for users who follow troi bot
     users = get_users_for_daily_jams(create_all)
-    existing_urls = get_existing_daily_jams_urls([x["id"] for x in users])
+    existing_urls = get_existing_playlist_urls([x["id"] for x in users], "daily-jams")
     service = SpotifyService()
     for user in users:
         try:
@@ -73,22 +71,6 @@ def get_users_for_daily_jams(create_all):
             "export_preference": SPOTIFY_EXPORT_PREFERENCE
         })
         return result.mappings().all()
-
-
-def get_existing_daily_jams_urls(user_ids: list[int]):
-    """ Retrieve urls of the existing spotify playlists of daily jams users """
-    query = """
-        SELECT DISTINCT ON (created_for_id)
-               created_for_id
-             , additional_metadata->'external_urls'->>'spotify' AS spotify_url
-          FROM playlist.playlist
-         WHERE additional_metadata->'algorithm_metadata'->>'source_patch' = 'daily-jams'
-           AND created_for_id = ANY(:user_ids)
-      ORDER BY created_for_id, created DESC
-    """
-    with timescale.engine.connect() as conn:
-        results = conn.execute(text(query), {"user_ids": user_ids})
-        return {r.created_for_id: r.spotify_url for r in results}
 
 
 def make_playlist_from_recommendations(user):
@@ -159,7 +141,7 @@ def run_daily_jams(user, existing_url, service):
         external_urls = getattr(playlist.playlists[0], "external_urls", None)
         if external_urls and len(external_urls) > 0:
             spotify_link = playlist.playlists[0].external_urls
-            message += f""" You can also listen it on <a href="{spotify_link}">Spotify!</a>."""
+            message += f"""You can also listen it on <a href="{spotify_link}">Spotify!</a>."""
 
         enter_timeline_notification(username, message)
 

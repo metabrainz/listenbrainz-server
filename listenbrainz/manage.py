@@ -18,7 +18,7 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
 from listenbrainz.domain import spotify_fill_user_id
 from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
 from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
-from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
+from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
 
 
