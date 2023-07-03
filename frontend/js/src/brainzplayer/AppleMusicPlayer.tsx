@@ -151,6 +151,7 @@ export default class AppleMusicPlayer
     // eslint-disable-next-line no-console
     console.log("Apple Music Id:", apple_music_id);
     if (apple_music_id) {
+      await this.appleMusicPlayer.authorize();
       await this.playAppleMusicId(apple_music_id);
     }
   };
@@ -168,6 +169,7 @@ export default class AppleMusicPlayer
     // eslint-disable-next-line no-console
     console.log("Apple Music Id:", apple_music_id);
     if (apple_music_id) {
+      this.appleMusicPlayer.authorize();
       this.playAppleMusicId(apple_music_id);
       return;
     }
@@ -181,6 +183,9 @@ export default class AppleMusicPlayer
     ) {
       this.appleMusicPlayer.pause();
     } else {
+      console.log("Apple Music Player:", this.appleMusicPlayer);
+      console.log("#######################################");
+      this.appleMusicPlayer.authorize();
       this.appleMusicPlayer.play();
     }
   };
