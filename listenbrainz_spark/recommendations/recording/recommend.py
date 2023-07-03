@@ -90,14 +90,14 @@ def process_recommendations(recommendation_df, limit):
                  , row_number() OVER(PARTITION BY spark_user_id ORDER BY prediction DESC) AS rank
               FROM recommendation
         ), distinct_recommendations AS (
-            SELECT user_id
-                 , recording_mbid
+            SELECT u.user_id
+                 , r.recording_mbid
                  , max(score) AS score
-              FROM ranked_recommendation
+              FROM ranked_recommendation rr
               JOIN recording r
-             USING (recording_id)
+                ON r.recording_id = rr.recording_id
               JOIN user u
-             USING (spark_user_id)
+                ON rr.spark_user_id = u.spark_user_id
              WHERE rank <= {limit}
           GROUP BY user_id
                  , recording_mbid
@@ -178,26 +178,25 @@ def get_candidate_set_rdd_for_user(candidate_set_df, users):
     return candidate_set_user_df
 
 
-def get_user_name_and_user_id(top_artist_candidate_set_df, users):
+def get_user_name_and_user_id(all_users_df, users):
     """ Get users from top artist candidate set.
 
         Args:
-            top_artist_candidate_set_df: candidate set to get users from
+            all_users_df: dataframe of all users
             users: list of users names to generate recommendations.
 
         Returns:
             users_df: dataframe of user id and user names.
     """
     if len(users) == 0:
-        users_df = top_artist_candidate_set_df.select('spark_user_id', 'user_id').distinct()
-
+        users_df = all_users_df.select('spark_user_id', 'user_id').distinct()
     else:
-        users_df = top_artist_candidate_set_df \
+        users_df = all_users_df \
             .select('spark_user_id', 'user_id') \
-            .where(top_artist_candidate_set_df.user_id.isin(users)) \
+            .where(all_users_df.user_id.isin(users)) \
             .distinct()
 
-    if _is_empty_dataframe(users_df):
+    if _is_empty_dataframe(all_users_df):
         raise EmptyDataframeExcpetion('No active users found!')
 
     return users_df
@@ -338,6 +337,7 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
 
     try:
         recordings_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDINGS_DATAFRAME)
+        all_users_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)
         top_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
         similar_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
 
@@ -361,7 +361,7 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     try:
         # timestamp when the script was invoked
         ts_initial = time.monotonic()
-        users_df = get_user_name_and_user_id(top_artist_candidate_set_df, users)
+        users_df = get_user_name_and_user_id(all_users_df, users)
         # Some users are excluded from the top_artist_candidate_set because of the limited data
         # in the mapping. Therefore, active_user_count may or may not be equal to number of users
         # active in the last week. Ideally, top_artist_candidate_set should give the active user count.
