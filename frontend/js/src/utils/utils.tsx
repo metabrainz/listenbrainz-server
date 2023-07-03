@@ -59,52 +59,6 @@ const searchForSpotifyTrack = async (
   return null;
 };
 
-const searchForAppleMusicTrack = async (
-  spotifyToken?: string,
-  trackName?: string,
-  artistName?: string,
-  releaseName?: string
-): Promise<SpotifyTrack | null> => {
-  if (!spotifyToken) {
-    // eslint-disable-next-line no-throw-literal
-    throw {
-      status: 403,
-      message: "You need to connect to your Spotify account",
-    };
-  }
-  let queryString = `type=track&q=`;
-  if (trackName) {
-    queryString += `track:${encodeURIComponent(trackName)}`;
-  }
-  if (artistName) {
-    queryString += ` artist:${encodeURIComponent(artistName)}`;
-  }
-  if (releaseName) {
-    queryString += ` album:${encodeURIComponent(releaseName)}`;
-  }
-
-  const response = await fetch(
-    `https://api.spotify.com/v1/search?${queryString}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${spotifyToken}`,
-      },
-    }
-  );
-  const responseBody = await response.json();
-  if (!response.ok) {
-    throw responseBody.error;
-  }
-  // Valid response
-  const tracks: SpotifyTrack[] = _.get(responseBody, "tracks.items");
-  if (tracks && tracks.length) {
-    return tracks[0];
-  }
-  return null;
-};
-
 const searchForYoutubeTrack = async (
   apiKey?: string,
   trackName?: string,
@@ -451,19 +405,12 @@ const convertDateToUnixTimestamp = (date: Date): number => {
 };
 
 /** Loads a script asynchronously into the HTML page */
-export function loadScriptAsync(
-  document: any,
-  scriptSrc: string,
-  attribute?: any
-): void {
+export function loadScriptAsync(document: any, scriptSrc: string): void {
   const el = document.createElement("script");
   const container = document.head || document.body;
   el.type = "text/javascript";
   el.async = true;
   el.src = scriptSrc;
-  if (attribute) {
-    el.dataset.webComponents = "";
-  }
   container.appendChild(el);
 }
 
@@ -917,7 +864,6 @@ export function getPersonalRecommendationEventContent(
 
 export {
   searchForSpotifyTrack,
-  searchForAppleMusicTrack,
   getArtistLink,
   getTrackLink,
   formatWSMessageToListen,

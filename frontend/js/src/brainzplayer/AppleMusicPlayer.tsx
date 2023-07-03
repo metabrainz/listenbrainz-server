@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import * as React from "react";
-import { debounce as _debounce, get as _get, isString } from "lodash";
+import { get as _get, isString } from "lodash";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
 import { getArtistName, getTrackName, loadScriptAsync } from "../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
@@ -10,7 +10,7 @@ export type AppleMusicPlayerProps = DataSourceProps & {
 };
 
 export type AppleMusicPlayerState = {
-  currentAppleMusicTrack?: any;
+  currentAppleMusicTrack?: MusicKit.MediaItem;
   progressMs: number;
   durationMs: number;
 };
@@ -52,13 +52,23 @@ export default class AppleMusicPlayer
   // and it simplifies some of the closure issues we've had with old tokens.
   private accessToken = "";
 
-  private readonly _boundOnPlaybackStateChange: (event: any) => any;
-  private readonly _boundOnPlaybackTimeChange: (event: any) => any;
-  private readonly _boundOnPlaybackDurationChange: (event: any) => any;
-  private readonly _boundOnNowPlayingItemChange: (event: any) => any;
+  private readonly _boundOnPlaybackStateChange: (
+    event: MusicKit.PlayerPlaybackState
+  ) => void;
+
+  private readonly _boundOnPlaybackTimeChange: (
+    event: MusicKit.PlayerPlaybackTime
+  ) => void;
+
+  private readonly _boundOnPlaybackDurationChange: (
+    event: MusicKit.PlayerDurationTime
+  ) => void;
+
+  private readonly _boundOnNowPlayingItemChange: (
+    event: MusicKit.NowPlayingItem
+  ) => void;
 
   appleMusicPlayer?: AppleMusicPlayerType;
-  debouncedOnTrackEnd: () => void;
 
   constructor(props: AppleMusicPlayerProps) {
     super(props);
@@ -68,19 +78,12 @@ export default class AppleMusicPlayer
     };
 
     this.accessToken = props.appleMusicUser?.music_user_token || "";
-
-    this.debouncedOnTrackEnd = _debounce(props.onTrackEnd, 700, {
-      leading: true,
-      trailing: false,
-    });
-
     // Do an initial check of the AppleMusic token permissions (scopes) before loading the SDK library
     if (AppleMusicPlayer.hasPermissions(props.appleMusicUser)) {
       window.addEventListener("musickitloaded", this.connectAppleMusicPlayer);
       loadScriptAsync(
         document,
-        "https://js-cdn.music.apple.com/musickit/v3/musickit.js",
-        true
+        "https://js-cdn.music.apple.com/musickit/v3/musickit.js"
       );
     } else {
       this.handleAccountError();
@@ -114,7 +117,7 @@ export default class AppleMusicPlayer
       handleError("Could not play AppleMusic track", "Playback error");
       return;
     }
-    if (!this.appleMusicPlayer) {
+    if (!this.appleMusicPlayer || !this.appleMusicPlayer.isAuthorized) {
       await this.connectAppleMusicPlayer();
       return;
     }
@@ -144,14 +147,11 @@ export default class AppleMusicPlayer
       return;
     }
     const response = await this.appleMusicPlayer.api.music(
-      `/v1/catalog/us/search`,
+      `/v1/catalog/{{storefrontId}}/search`,
       { term: searchTerm, types: "songs" }
     );
     const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
-    // eslint-disable-next-line no-console
-    console.log("Apple Music Id:", apple_music_id);
     if (apple_music_id) {
-      await this.appleMusicPlayer.authorize();
       await this.playAppleMusicId(apple_music_id);
     }
   };
@@ -166,10 +166,7 @@ export default class AppleMusicPlayer
       return;
     }
     const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
-    // eslint-disable-next-line no-console
-    console.log("Apple Music Id:", apple_music_id);
     if (apple_music_id) {
-      this.appleMusicPlayer.authorize();
       this.playAppleMusicId(apple_music_id);
       return;
     }
@@ -183,9 +180,6 @@ export default class AppleMusicPlayer
     ) {
       this.appleMusicPlayer.pause();
     } else {
-      console.log("Apple Music Player:", this.appleMusicPlayer);
-      console.log("#######################################");
-      this.appleMusicPlayer.authorize();
       this.appleMusicPlayer.play();
     }
   };
@@ -252,14 +246,14 @@ export default class AppleMusicPlayer
       return;
     }
     await musickit.configure({
-      developerToken: "developer token here",
+      developerToken: "developer Token here",
+      debug: true,
       app: {
         name: "ListenBrainz",
         build: "latest",
       },
     });
     this.appleMusicPlayer = musickit.getInstance();
-    await this.appleMusicPlayer.authorize();
     this.appleMusicPlayer.addEventListener(
       "playbackStateDidChange",
       this._boundOnPlaybackStateChange
@@ -276,9 +270,12 @@ export default class AppleMusicPlayer
       "nowPlayingItemDidChange",
       this._boundOnNowPlayingItemChange
     );
+    await this.appleMusicPlayer.authorize();
   };
 
-  onPlaybackStateChange = ({ state: currentState }: any) => {
+  onPlaybackStateChange = ({
+    state: currentState,
+  }: MusicKit.PlayerPlaybackState) => {
     const { onPlayerPausedChange, onTrackEnd } = this.props;
     if (currentState === MusicKit.PlaybackStates.playing) {
       onPlayerPausedChange(false);
@@ -291,7 +288,9 @@ export default class AppleMusicPlayer
     }
   };
 
-  onPlaybackTimeChange = ({ currentPlaybackTime }: any) => {
+  onPlaybackTimeChange = ({
+    currentPlaybackTime,
+  }: MusicKit.PlayerPlaybackTime) => {
     const { onProgressChange } = this.props;
     const { progressMs } = this.state;
     const currentPlaybackTimeMs = currentPlaybackTime * 1000;
@@ -301,7 +300,7 @@ export default class AppleMusicPlayer
     }
   };
 
-  onPlaybackDurationChange = ({ duration }: any) => {
+  onPlaybackDurationChange = ({ duration }: MusicKit.PlayerDurationTime) => {
     const { onDurationChange } = this.props;
     const { durationMs } = this.state;
     const currentDurationMs = duration * 1000;
@@ -311,7 +310,7 @@ export default class AppleMusicPlayer
     }
   };
 
-  onNowPlayingItemChange = ({ item }: any) => {
+  onNowPlayingItemChange = ({ item }: MusicKit.NowPlayingItem) => {
     if (!item) {
       return;
     }
@@ -330,8 +329,6 @@ export default class AppleMusicPlayer
     }
     onTrackInfoChange(name, url, artistName, albumName, mediaImages);
     this.setState({ currentAppleMusicTrack: item });
-    // eslint-disable-next-line no-console
-    console.log("Now Playing Item Change:", item);
   };
 
   getAlbumArt = (): JSX.Element | null => {

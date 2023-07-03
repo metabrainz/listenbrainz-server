@@ -151,13 +151,13 @@ export default class BrainzPlayer extends React.Component<
     super(props);
 
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
-    // this.dataSources.push(this.spotifyPlayer);
+    this.dataSources.push(this.spotifyPlayer);
 
     this.youtubePlayer = React.createRef<YoutubePlayer>();
-    // this.dataSources.push(this.youtubePlayer);
+    this.dataSources.push(this.youtubePlayer);
 
     this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
-    // this.dataSources.push(this.soundcloudPlayer);
+    this.dataSources.push(this.soundcloudPlayer);
 
     this.appleMusicPlayer = React.createRef<AppleMusicPlayer>();
     this.dataSources.push(this.appleMusicPlayer);
