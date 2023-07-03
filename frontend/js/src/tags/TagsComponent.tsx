@@ -18,7 +18,7 @@ type TagOptionType = {
   label: string;
   isFixed?: boolean;
   entityType: Entity;
-  entityMBID: string;
+  entityMBID?: string;
 };
 
 function DropdownIndicator(props: DropdownIndicatorProps<TagOptionType>) {
@@ -59,7 +59,7 @@ function MultiValueContainer(props: MultiValueGenericProps<TagOptionType>) {
 
 export default function AddTagSelect(props: {
   entityType: "artist" | "release-group" | "recording";
-  entityMBID: string;
+  entityMBID?: string;
   tags?: Array<ArtistTag | RecordingTag | ReleaseGroupTag>;
 }) {
   const { tags, entityType, entityMBID } = props;
@@ -68,7 +68,7 @@ export default function AddTagSelect(props: {
       value: tag.tag,
       label: tag.tag,
       isFixed: true,
-      entityMBID,
+      entityMBID: entityMBID ?? (tag as ArtistTag).artist_mbid ?? undefined,
       entityType,
     })) ?? []
   );
@@ -81,7 +81,16 @@ export default function AddTagSelect(props: {
 
   const submitTagVote = useCallback(
     async (action: TagActionType, tag?: string) => {
-      if (!musicbrainzAuthToken || !tag) {
+      if (!musicbrainzAuthToken) {
+        toast.warning(
+          "You need to be logged in to MusicBrainz in order to vote on or create tags"
+        );
+        return false;
+      }
+      if (!tag || !entityMBID) {
+        toast.error(
+          "Something went wrong, missing some information to vote on a tag (tag name or entity MBID)"
+        );
         return false;
       }
       const success = await submitTagToMusicBrainz(
@@ -155,7 +164,7 @@ export default function AddTagSelect(props: {
         placeholder="Add genre"
         isSearchable
         isMulti
-        isDisabled={!musicbrainzAuthToken}
+        isDisabled={!musicbrainzAuthToken || !entityMBID}
         isClearable={false}
         openMenuOnClick={false}
         onChange={onChange}

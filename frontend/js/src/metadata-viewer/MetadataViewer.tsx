@@ -313,7 +313,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <TagsComponent
                 tags={metadata?.tag?.recording}
                 entityType="recording"
-                entityMBID={recordingMBID ?? ""}
+                entityMBID={recordingMBID}
               />
               {/* <div className="ratings content-box" /> */}
               {Boolean(flattenedRecRels?.length) && (
@@ -405,7 +405,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 <TagsComponent
                   tags={metadata?.tag?.release_group}
                   entityType="release-group"
-                  entityMBID={metadata?.release?.release_group_mbid ?? ""}
+                  entityMBID={metadata?.release?.release_group_mbid}
                 />
                 <OpenInMusicBrainzButton
                   entityType="release"
@@ -452,7 +452,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <TagsComponent
                 tags={metadata?.tag?.artist}
                 entityType="artist"
-                entityMBID={artistMBID ?? ""}
+                entityMBID={artistMBID}
               />
               {/* <div className="ratings content-box" /> */}
               {(artist?.begin_year || artist?.area) && (

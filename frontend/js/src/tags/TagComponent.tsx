@@ -95,7 +95,16 @@ export default function TagComponent(props: {
    */
   const vote = React.useCallback(
     async (action: TagActionType) => {
-      if (!tagEntityMBID || !musicbrainzAuthToken) {
+      if (!musicbrainzAuthToken) {
+        toast.warning(
+          "You need to be logged in to MusicBrainz in order to vote on or create tags"
+        );
+        return;
+      }
+      if (!tagEntityMBID) {
+        toast.error(
+          "Something went wrong, missing an entity MBID to vote on a tag"
+        );
         return;
       }
       const success = await submitTagToMusicBrainz(
