@@ -6,7 +6,7 @@ from flask import current_app
 from sqlalchemy import text
 from troi.core import generate_playlist
 from troi.patches.recs_to_playlist import RecommendationsToPlaylistPatch
-from troi.patches.daily_jams import DailyJamsPatch
+from troi.patches.periodic_jams import PeriodicJamsPatch
 
 from listenbrainz import db
 from listenbrainz.db import timescale
@@ -139,7 +139,8 @@ def run_daily_jams(user, existing_url, service):
         "upload": True,
         "token": token,
         "created_for": username,
-        "jam_date": user["jam_date"]
+        "jam_date": user["jam_date"],
+        "type": "daily-jams"
     }
 
     if user["export_to_spotify"]:
@@ -149,7 +150,7 @@ def run_daily_jams(user, existing_url, service):
                 spotify["existing_urls"] = [existing_url]
             args["spotify"] = spotify
 
-    playlist = generate_playlist(DailyJamsPatch(), args)
+    playlist = generate_playlist(PeriodicJamsPatch(), args)
 
     if playlist is not None and len(playlist.playlists) > 0:
         url = current_app.config["SERVER_ROOT_URL"] + "/playlist/" + playlist.playlists[0].mbid
