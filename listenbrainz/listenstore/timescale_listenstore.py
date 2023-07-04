@@ -468,11 +468,8 @@ class TimescaleListenStore:
         args = {"user_ids": tuple(user_id_map.keys()), "limit": max(limit, 100)}
 
         # min_ts and max_ts must exist.
-        if min_ts and max_ts:
-            args["min_ts"] = min_ts
-            args["max_ts"] = max_ts
-        else: 
-            raise ValueError("min_ts and max_ts should be defined.")
+        args["min_ts"] = min_ts
+        args["max_ts"] = max_ts
 
         query = f"""
               WITH intermediate AS (
