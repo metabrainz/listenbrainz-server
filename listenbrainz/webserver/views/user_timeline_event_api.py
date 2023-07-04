@@ -380,7 +380,7 @@ def user_feed_listens_following(user_name: str):
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_listen_events_new(users_following, min_ts, max_ts, count)
+        listen_events = get_all_listen_events(users_following, min_ts, max_ts, count)
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
@@ -675,7 +675,7 @@ def get_listen_events(
     return events
 
 
-def get_listen_events_new(
+def get_all_listen_events(
     users: List[Dict],
     min_ts: int,
     max_ts: int,
@@ -707,7 +707,7 @@ def get_listen_events_new(
         max_ts = datetime.utcnow()
         min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
-    listens = timescale_connection._ts.fetch_recent_listens_for_users_new(
+    listens = timescale_connection._ts.fetch_all_recent_listens_for_users(
         users,
         min_ts=min_ts,
         max_ts=max_ts,
