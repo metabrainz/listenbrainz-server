@@ -459,8 +459,9 @@ class TimescaleListenStore:
         """ Fetch recent listens for a list of users.
 
             users: A list containing the users for which you'd like to retrieve recent listens.
-            min_ts: Only return listens with listened_at after this timestamp, required.
-            max_ts: Only return listens with listened_at before this timestamp, required.
+            min_ts: Only return listens with listened_at greater this timestamp, required.
+            max_ts: Only return listens with listened_at lesser than this timestamp, required.
+            limit: Listens returned per call. Should not exceed 100. Default value is 25, optional.
         """
 
         user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
