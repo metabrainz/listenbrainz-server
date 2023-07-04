@@ -196,7 +196,7 @@ def get_user_name_and_user_id(all_users_df, users):
             .where(all_users_df.user_id.isin(users)) \
             .distinct()
 
-    if _is_empty_dataframe(all_users_df):
+    if _is_empty_dataframe(users_df):
         raise EmptyDataframeExcpetion('No active users found!')
 
     return users_df
