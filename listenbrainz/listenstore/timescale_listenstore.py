@@ -465,7 +465,7 @@ class TimescaleListenStore:
 
         user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
 
-        args = {"user_ids": tuple(user_id_map.keys()), "limit": max(limit, 100)}
+        args = {"user_ids": tuple(user_id_map.keys()), "limit": min(limit, 100)}
 
         # min_ts and max_ts must exist.
         args["min_ts"] = min_ts
