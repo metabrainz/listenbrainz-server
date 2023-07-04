@@ -1,0 +1,18 @@
+.color-picker {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+}
+
+.color-picker .color-half {
+    width: 50%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+}
+
+.color-picker .color-half:last-child {
+    left: 50%;
+}

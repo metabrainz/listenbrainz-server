@@ -1,0 +1,9 @@
+.dropdown-list {
+    height: 35px;
+    background: white;
+    width: 100%;
+    border-left: 0.50px #E0E0E0 solid;
+    border-top: 0.50px #E0E0E0 solid;
+    border-right: 0.50px #E0E0E0 solid;
+    border-bottom: 0.50px #E0E0E0 solid;
+}

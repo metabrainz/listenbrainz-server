@@ -111,6 +111,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/user-settings/SelectTroiPreferences.tsx"
       ),
+      artCreator: path.resolve(
+        jsDir,
+        "src/explore/stats-art-designer/ArtCreator.tsx"
+      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
