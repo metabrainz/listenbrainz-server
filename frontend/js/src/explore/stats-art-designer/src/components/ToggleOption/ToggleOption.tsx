@@ -4,18 +4,23 @@ import "./ToggleOption.css";
 type ToggleOptionProps = {
   buttonName: string;
   onClick: () => void;
-}
+};
 
-const ToggleOption = ({buttonName, onClick}: ToggleOptionProps) => {
+function ToggleOption({ buttonName, onClick }: ToggleOptionProps) {
   return (
-    <div className="cl-toggle-switch" onClick={onClick}>
-        <label className="cl-switch">
-            <input type="checkbox"/>
-            <span></span>
-        </label>
-        {buttonName}
-    </div> 
-  )
+    <div
+      className="cl-toggle-switch"
+      role="presentation"
+      onClick={onClick}
+      onKeyDown={onClick}
+    >
+      <label className="cl-switch">
+        <input type="checkbox" />
+        <span />
+      </label>
+      {buttonName}
+    </div>
+  );
 }
 
 export default ToggleOption;

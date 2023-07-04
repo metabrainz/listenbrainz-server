@@ -1,6 +1,6 @@
+import * as React from "react";
 import { useCallback } from "react";
 import "./GalleryTile.css";
-
 
 enum StyleEnum {
   designerTop5 = "designer-top-5",
@@ -16,7 +16,7 @@ type GalleryTileProps = {
 };
 
 function GalleryTile(props: GalleryTileProps) {
-  const { name, url, onStyleSelect, isSelected} = props;
+  const { name, url, onStyleSelect, isSelected } = props;
   const updateStyleCallback = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
       onStyleSelect(name);
@@ -25,10 +25,13 @@ function GalleryTile(props: GalleryTileProps) {
   );
 
   return (
-    <div onClick={updateStyleCallback}>
-      <object className={isSelected? "selected-gallery-tile": "gallery-tile"} data={url}></object>
+    <div role="presentation" onClick={updateStyleCallback}>
+      <object
+        title="galleryTile"
+        className={isSelected ? "selected-gallery-tile" : "gallery-tile"}
+        data={url}
+      />
     </div>
   );
 }
-export default GalleryTile
- 
+export default GalleryTile;

@@ -6,8 +6,16 @@ type PreviewProps = {
 };
 
 function Preview(props: PreviewProps) {
-    const {url} = props;
-  return <object className="preview" data={url} width={700} height={700}></object>;
+  const { url } = props;
+  return (
+    <object
+      className="preview"
+      title="preview"
+      data={url}
+      width={700}
+      height={700}
+    />
+  );
 }
 
 export default Preview;

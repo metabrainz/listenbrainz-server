@@ -21,7 +21,6 @@ import IconTray from "./components/IconTray/IconTray";
 import Preview from "./components/Preview/Preview";
 import ToggleOption from "./components/ToggleOption/ToggleOption";
 
-
 enum StyleEnum {
   designerTop5 = "designer-top-5",
   designerTop10 = "designer-top-10",
@@ -50,9 +49,9 @@ function ArtCreator() {
   const [vaToggle, setVaToggle] = useState(false);
 
   const userToggler = useCallback(() => {
-    if(usersToggle){
+    if (usersToggle) {
       setUsersToggle(false);
-    } else{
+    } else {
       setUsersToggle(true);
     }
   }, [usersToggle]);
@@ -60,31 +59,41 @@ function ArtCreator() {
   const dateToggler = useCallback(() => {
     if (dateToggle) {
       setDateToggle(false);
-    } else{
-      setDateToggle(true)
+    } else {
+      setDateToggle(true);
     }
   }, [dateToggle]);
 
   const rangeToggler = useCallback(() => {
     if (rangeToggle) {
-      setRangeToggle(false) 
-    } else{
+      setRangeToggle(false);
+    } else {
       setRangeToggle(true);
     }
   }, [rangeToggle]);
 
   const totalToggler = useCallback(() => {
-    if(totalToggle){
+    if (totalToggle) {
       setTotalToggle(false);
-    } else{
+    } else {
       setTotalToggle(true);
-    } 
+    }
   }, [totalToggle]);
+
   const genresToggler = useCallback(() => {
-    genresToggle ? setGenresToggle(false) : setGenresToggle(true);
+    if (genresToggle) {
+      setGenresToggle(false);
+    } else {
+      setGenresToggle(true);
+    }
   }, [genresToggle]);
+
   const vaToggler = useCallback(() => {
-    vaToggle ? setVaToggle(false) : setVaToggle(true);
+    if (vaToggle) {
+      setVaToggle(false);
+    } else {
+      setVaToggle(true);
+    }
   }, [vaToggle]);
 
   const styleOpts = [
@@ -329,7 +338,9 @@ function ArtCreator() {
         </div>
         <div className="generate-button-container">
           <div className="btn-container border">
-            <button type="button" className="generate-button btn">GENERATE</button>
+            <button type="button" className="generate-button btn">
+              GENERATE
+            </button>
           </div>
         </div>
       </div>
@@ -338,7 +349,6 @@ function ArtCreator() {
 }
 
 export default ArtCreator;
-
 
 document.addEventListener("DOMContentLoaded", () => {
   const {
@@ -363,7 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
-        <ArtCreatorPageWithAlertNotifications initialAlerts={optionalAlerts}/>
+        <ArtCreatorPageWithAlertNotifications initialAlerts={optionalAlerts} />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer

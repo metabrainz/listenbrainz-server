@@ -1,3 +1,4 @@
+import * as React from "react";
 import GalleryTile from "../GalleryTile/GalleryTile";
 
 enum StyleEnum {
@@ -19,16 +20,18 @@ type GalleryProps = {
 };
 
 function Gallery(props: GalleryProps) {
-    const {currentStyle, galleryOpts, onStyleSelect} = props;
+  const { currentStyle, galleryOpts, onStyleSelect } = props;
   return (
     <div className="d-flex">
-      {galleryOpts.map(opt => <GalleryTile
+      {galleryOpts.map((opt) => (
+        <GalleryTile
           key={opt.name}
           name={opt.name}
           onStyleSelect={onStyleSelect}
           isSelected={currentStyle === opt.name}
           url={opt.url}
-        />)}
+        />
+      ))}
     </div>
   );
 }
