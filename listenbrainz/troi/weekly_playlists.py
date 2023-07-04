@@ -75,6 +75,7 @@ def export_to_spotify(slug, description, playlists):
 
 
 def insert_recordings(cursor, playlist_id: str, recordings: list):
+    """ Insert given recordings for the given playlist id in the database """
     query = "INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id) VALUES %s"
     template = SQL("({playlist_id}, %s, %s, {added_by_id})").format(
         playlist_id=Literal(playlist_id),
@@ -85,6 +86,7 @@ def insert_recordings(cursor, playlist_id: str, recordings: list):
 
 
 def insert_playlists(cursor, playlists, description: str):
+    """ Create playlists with metadata in the database, the recordings for these are inserted separately. """
     query = """
         INSERT INTO playlist.playlist (creator_id, name, description, public, created_for_id, additional_metadata)
              VALUES %s
@@ -99,8 +101,8 @@ def insert_playlists(cursor, playlists, description: str):
     return {r[0]: r[1] for r in results}
 
 
-def filter_and_update_playlists(slug, jam_name, all_playlists):
-    """ Remove playlists for users who have deleted their accounts, add more metadata to remaining playlists """
+def exclude_playlists_from_deleted_users(slug, jam_name, all_playlists):
+    """ Remove playlists for users who have deleted their accounts. Also, add more metadata to remaining playlists """
     jam_date = "week of " + datetime.now().strftime("%Y-%m-%d %a")
 
     user_ids = [p["user_id"] for p in all_playlists]
@@ -139,7 +141,7 @@ def batch_process_playlists(slug, all_playlists):
     else:
         return
 
-    playlists, playlists_to_export = filter_and_update_playlists(slug, jam_name, all_playlists)
+    playlists, playlists_to_export = exclude_playlists_from_deleted_users(slug, jam_name, all_playlists)
 
     export_to_spotify(slug, description, playlists_to_export)
 
