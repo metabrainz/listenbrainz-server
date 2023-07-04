@@ -472,12 +472,7 @@ class TimescaleListenStore:
             args["min_ts"] = min_ts
             args["max_ts"] = max_ts
         else: 
-            raise ValueError()
-
-        filters = """user_id IN :user_ids 
-                    AND listened_at > :min_ts 
-                    AND listened_at < :max_ts
-                """
+            raise ValueError("min_ts and max_ts should be defined.")
 
         query = f"""
               WITH intermediate AS (
@@ -487,7 +482,9 @@ class TimescaleListenStore:
                          , recording_msid
                          , data
                       FROM listen l
-                     WHERE {filters} 
+                     WHERE user_id IN :user_ids 
+                       AND listened_at > :min_ts 
+                       AND listened_at < :max_ts
               ), selected_listens AS (
                     SELECT l.*
                         -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings

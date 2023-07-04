@@ -697,16 +697,15 @@ def get_listen_events_new(
             # If the given interval for search is greater than :DEFAULT_LISTEN_EVENT_WINDOW_NEW:,
             # then we must limit the search interval to :DEFAULT_LISTEN_EVENT_WINDOW_NEW:.
             min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
+    elif min_ts:
+        min_ts = datetime.utcfromtimestamp(min_ts)
+        max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW_NEW
+    elif max_ts:
+        max_ts = datetime.utcfromtimestamp(max_ts)
+        min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
     else:
-        if min_ts:
-            min_ts = datetime.utcfromtimestamp(min_ts)
-            max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW_NEW
-        elif max_ts:
-            max_ts = datetime.utcfromtimestamp(max_ts)
-            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
-        else:
-            max_ts = datetime.utcnow()
-            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        max_ts = datetime.utcnow()
+        min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
     listens = timescale_connection._ts.fetch_recent_listens_for_users_new(
         users,

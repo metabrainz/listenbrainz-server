@@ -148,7 +148,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assertEqual(response.json['status'], 'ok')
 
         from datetime import timedelta
-        listenWindowMillisec = DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(milliseconds=1)
+        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(seconds=1))
 
         # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
         payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
@@ -164,7 +164,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # This sleep allows for the timescale subscriber to take its time in getting
         # the listen submitted from redis and writing it to timescale.
-        time.sleep(1)
+        time.sleep(2)
 
         response = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed_listens_following', user_name=self.main_user['musicbrainz_id']),
