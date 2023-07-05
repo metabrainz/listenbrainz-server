@@ -10,6 +10,8 @@ import {
 } from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TagComponent, { TagActionType } from "./TagComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
@@ -21,6 +23,14 @@ type TagOptionType = {
   entityMBID?: string;
 };
 
+function CreateTagText(input: string) {
+  return (
+    <>
+      <FontAwesomeIcon icon={faPlus} /> Submit new tag {input}
+    </>
+  );
+}
+
 function DropdownIndicator(props: DropdownIndicatorProps<TagOptionType>) {
   const { isDisabled } = props;
   if (isDisabled) {
@@ -29,7 +39,7 @@ function DropdownIndicator(props: DropdownIndicatorProps<TagOptionType>) {
   return (
     <components.DropdownIndicator {...props}>
       <button className="btn btn-xs btn-outline" type="button">
-        + add genre
+        + tag
       </button>
     </components.DropdownIndicator>
   );
@@ -161,7 +171,8 @@ export default function AddTagSelect(props: {
           entityMBID,
           entityType,
         }))}
-        placeholder="Add genre"
+        placeholder="Add tag"
+        formatCreateLabel={CreateTagText}
         isSearchable
         isMulti
         isDisabled={!musicbrainzAuthToken || !entityMBID}
