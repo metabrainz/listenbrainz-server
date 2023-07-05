@@ -21,14 +21,13 @@
     opacity: 0;
     padding: 3px 0;
     width: 0px;
+    height: 2.2em;
     transition-duration: 0.3s;
     transition-property: padding, width, opacity;
     transition-timing-function: cubic-bezier(0.18, 0.89, 0.32, 1.28);
     // Cancelling some .btn styling; we want the .btn class applied
     // for interactivity reasons, but not all the CSS styling
     margin: 0;
-    font-size: inherit;
-    line-height: inherit;
     vertical-align: initial;
 
     &.upvote:hover,
@@ -52,5 +51,16 @@
   }
   & + .tag {
     margin-left: 0.3em;
+  }
+  @media (hover: none), (hover: on-demand), (-moz-touch-enabled: 1), (pointer:coarse) {
+    /* only on touch devices */
+    > a {
+      pointer-events: none;
+    }
+    &:hover > a,
+    &:focus > a,
+    &:focus-within > a {
+      pointer-events: initial;
+    }
   }
 }
