@@ -29,6 +29,7 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 import time
 import json
 import uuid
+from listenbrainz.webserver.views.user_timeline_event_api import DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
 
 class FeedAPITestCase(ListenAPIIntegrationTestCase):
@@ -73,6 +74,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.following_user_1 = self.create_and_follow_user(self.main_user['id'], 102, 'following_1')
         self.following_user_2 = self.create_and_follow_user(self.main_user['id'], 103, 'following_2')
 
+    # TODO: Remove this test when user_feed_listens_following enpoint is active.
     def test_it_sends_listens_for_users_that_are_being_followed(self):
         with open(self.path_to_data_file('valid_single.json'), 'r') as f:
             payload = json.load(f)
@@ -125,6 +127,80 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('listen', payload['events'][3]['event_type'])
         self.assertEqual(ts - 11, payload['events'][3]['created'])
         self.assertEqual('following_2', payload['events'][3]['user_name'])
+
+    def test_it_sends_listens_for_users_that_are_being_followed_new(self):
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        ts = int(time.time())
+        # Send 3 listens for the following_user_1
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - i
+            response = self.send_data(payload, user=self.following_user_1)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        # Send 3 listens with lower timestamps for following_user_2
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - 10 - i
+            response = self.send_data(payload, user=self.following_user_2)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        from datetime import timedelta
+        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(seconds=1))
+
+        # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
+        response = self.send_data(payload, user=self.following_user_1)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # Sending a listen with time difference slightly greater than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec - 1000
+        response = self.send_data(payload, user=self.following_user_1)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # This sleep allows for the timescale subscriber to take its time in getting
+        # the listen submitted from redis and writing it to timescale.
+        time.sleep(2)
+
+        response = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed_listens_following', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+        )
+        self.assert200(response)
+        payload = response.json['payload']
+
+        # the payload contains events for the users we've followed, but we don't care about those
+        # for now, so let's remove them for this test.
+        payload = self.remove_own_follow_events(payload)
+
+        # should have 7 listens only. As one listen is out of seach interval, it should not be in payload.
+        self.assertEqual(7, payload['count'])
+
+        # first 3 events should have higher timestamps and user should be following_1
+        self.assertEqual('listen', payload['events'][0]['event_type'])
+        self.assertEqual(ts, payload['events'][0]['created'])
+        self.assertEqual('following_1', payload['events'][0]['user_name'])
+        self.assertEqual('listen', payload['events'][1]['event_type'])
+        self.assertEqual(ts - 1, payload['events'][1]['created'])
+        self.assertEqual('following_1', payload['events'][1]['user_name'])
+        self.assertEqual('listen', payload['events'][2]['event_type'])
+        self.assertEqual(ts - 2, payload['events'][2]['created'])
+        self.assertEqual('following_1', payload['events'][2]['user_name'])
+
+        # next 3 events should have lower timestamps and user should be following_2
+        self.assertEqual('listen', payload['events'][3]['event_type'])
+        self.assertEqual(ts - 10, payload['events'][3]['created'])
+        self.assertEqual('following_2', payload['events'][3]['user_name'])
+        self.assertEqual('listen', payload['events'][4]['event_type'])
+        self.assertEqual(ts - 11, payload['events'][4]['created'])
+        self.assertEqual('following_2', payload['events'][4]['user_name'])
+        self.assertEqual('listen', payload['events'][5]['event_type'])
+        self.assertEqual(ts - 12, payload['events'][5]['created'])
+        self.assertEqual('following_2', payload['events'][5]['user_name'])
 
     def test_it_raises_unauthorized_for_a_different_user(self):
         r = self.client.get('/1/user/someotheruser/feed/events')

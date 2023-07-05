@@ -25,6 +25,7 @@ MAILTO=""
 2 2 * * 1 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_missing_mb_data >> /logs/stats.log 2>&1
 # Calculate user similarity
 3 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
+# Batch generate playlists
 4 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_troi_playlists --slug weekly-jams >> /logs/troi_spark.log
 5 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_troi_playlists --slug weekly-exploration >> /logs/troi_spark.log
 
