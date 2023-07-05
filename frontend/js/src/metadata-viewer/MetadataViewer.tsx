@@ -310,11 +310,13 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingOne"
           >
             <div className="panel-body">
-              <TagsComponent
-                tags={metadata?.tag?.recording}
-                entityType="recording"
-                entityMBID={recordingMBID}
-              />
+              {Boolean(metadata?.recording) && (
+                <TagsComponent
+                  tags={metadata?.tag?.recording}
+                  entityType="recording"
+                  entityMBID={recordingMBID}
+                />
+              )}
               {/* <div className="ratings content-box" /> */}
               {Boolean(flattenedRecRels?.length) && (
                 <div className="white content-box">
@@ -347,16 +349,6 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 </div>
               )}
               <div className="flex flex-wrap">
-                {lyricsLink?.lyrics && (
-                  <a
-                    href={lyricsLink.lyrics}
-                    className="btn btn-outline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Lyrics
-                  </a>
-                )}
                 <OpenInMusicBrainzButton
                   entityType="recording"
                   entityMBID={recordingMBID}
@@ -449,11 +441,13 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingThree"
           >
             <div className="panel-body">
-              <TagsComponent
-                tags={metadata?.tag?.artist}
-                entityType="artist"
-                entityMBID={artistMBID}
-              />
+              {Boolean(metadata?.artist) && (
+                <TagsComponent
+                  tags={metadata?.tag?.artist}
+                  entityType="artist"
+                  entityMBID={artistMBID}
+                />
+              )}
               {/* <div className="ratings content-box" /> */}
               {(artist?.begin_year || artist?.area) && (
                 <div>
@@ -462,10 +456,22 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   {artist?.area && ` in ${artist.area}`}
                 </div>
               )}
-              <OpenInMusicBrainzButton
-                entityType="artist"
-                entityMBID={artistMBID}
-              />
+              <div className="flex flex-wrap">
+                {lyricsLink?.lyrics && (
+                  <a
+                    href={lyricsLink.lyrics}
+                    className="btn btn-outline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Lyrics
+                  </a>
+                )}
+                <OpenInMusicBrainzButton
+                  entityType="artist"
+                  entityMBID={artistMBID}
+                />
+              </div>
             </div>
           </div>
         </div>
