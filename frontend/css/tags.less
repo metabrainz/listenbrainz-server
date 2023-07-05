@@ -2,7 +2,9 @@
 .tag {
   flex: none;
   color: currentcolor;
+  height: 2.4rem;
   > * {
+    height: 100%;
     background-color: rgb(236, 235, 228);
     display: inline-block;
     padding: 3px 7px;
@@ -19,17 +21,15 @@
   .tag-vote-button {
     border-left: 1px dashed #f7f7f7;
     opacity: 0;
-    padding: 3px 0;
     width: 0px;
-    height: 2.2em;
     transition-duration: 0.3s;
     transition-property: padding, width, opacity;
     transition-timing-function: cubic-bezier(0.18, 0.89, 0.32, 1.28);
     // Cancelling some .btn styling; we want the .btn class applied
     // for interactivity reasons, but not all the CSS styling
     margin: 0;
-    vertical-align: initial;
-
+    padding: 3px 0;
+    
     &.upvote:hover,
     &.upvote.selected {
       color: @btn-success-color;
@@ -53,7 +53,12 @@
     margin-left: 0.3em;
   }
   @media (hover: none), (hover: on-demand), (-moz-touch-enabled: 1), (pointer:coarse) {
-    /* only on touch devices */
+    /* on touch devices, make tags bigger so they are easier to interact with */
+    height: 3.3rem;
+    font-size: 1.9rem;
+    &:hover > .tag-vote-button {
+      width: 3em;
+    }
     > a {
       pointer-events: none;
     }
