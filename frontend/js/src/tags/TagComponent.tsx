@@ -77,10 +77,20 @@ export default function TagComponent(props: {
   entityMBID?: string;
   isNew?: boolean;
   deleteCallback: (tag: string) => void;
+  initialScore?: UserTagScore;
 }) {
-  const { tag, entityType, entityMBID, isNew, deleteCallback } = props;
+  const {
+    tag,
+    entityType,
+    entityMBID,
+    isNew,
+    deleteCallback,
+    initialScore,
+  } = props;
   // TODO: Fetch user's tag votes for this entity? That's a lot of API queries…
-  const [userScore, setUserScore] = React.useState<UserTagScore>(0);
+  const [userScore, setUserScore] = React.useState<UserTagScore>(
+    initialScore ?? 0
+  );
   const { APIService, musicbrainzAuth } = React.useContext(GlobalAppContext);
   const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
   const { submitTagToMusicBrainz } = APIService;
@@ -90,9 +100,10 @@ export default function TagComponent(props: {
     tagEntityMBID = (tag as ArtistTag).artist_mbid;
   }
 
-  /** We can't generate the callback frunction from an array.map to refactor this,
-   * the callback functions have to be defined separately, duplicating some code.
-   */
+  React.useEffect(() => {
+    setUserScore(initialScore ?? 0);
+  }, [tag, initialScore]);
+
   const vote = React.useCallback(
     async (action: TagActionType) => {
       if (!musicbrainzAuthToken) {
@@ -131,7 +142,7 @@ export default function TagComponent(props: {
       }
     },
     [
-      tag.tag,
+      tag,
       entityType,
       tagEntityMBID,
       musicbrainzAuthToken,

@@ -1,6 +1,6 @@
 import { noop } from "lodash";
 import * as React from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   ActionMeta,
   DropdownIndicatorProps,
@@ -66,6 +66,19 @@ function MultiValueContainer(props: MultiValueGenericProps<TagOptionType>) {
     />
   );
 }
+function getOptionFromTag(
+  tag: ArtistTag | RecordingTag | ReleaseGroupTag,
+  entityType: Entity,
+  entityMBID?: string
+) {
+  return {
+    value: tag.tag,
+    label: tag.tag,
+    isFixed: true,
+    entityMBID: entityMBID ?? (tag as ArtistTag).artist_mbid ?? undefined,
+    entityType,
+  };
+}
 
 export default function AddTagSelect(props: {
   entityType: "artist" | "release-group" | "recording";
@@ -74,14 +87,16 @@ export default function AddTagSelect(props: {
 }) {
   const { tags, entityType, entityMBID } = props;
   const [selected, setSelected] = useState<TagOptionType[]>(
-    tags?.map((tag) => ({
-      value: tag.tag,
-      label: tag.tag,
-      isFixed: true,
-      entityMBID: entityMBID ?? (tag as ArtistTag).artist_mbid ?? undefined,
-      entityType,
-    })) ?? []
+    tags?.length
+      ? tags.map((tag) => getOptionFromTag(tag, entityType, entityMBID))
+      : []
   );
+  useEffect(() => {
+    if (tags?.length)
+      setSelected(
+        tags?.map((tag) => getOptionFromTag(tag, entityType, entityMBID))
+      );
+  }, [tags, entityType, entityMBID]);
 
   const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
     GlobalAppContext
