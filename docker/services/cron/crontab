@@ -7,6 +7,9 @@ MAILTO=""
 
 # Generating troi daily playlists runs hourly
 0 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py run-daily-jams >> /logs/troi.log 2>&1
+# Batch generate weekly playlists
+4 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_troi_playlists --slug weekly-jams >> /logs/troi_spark.log
+5 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_troi_playlists --slug weekly-exploration >> /logs/troi_spark.log
 
 ## Trigger an incremental dump everyday, near noon, far away from whole dump times, again do not block for the lock.
 0 0 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental >> /logs/dumps.log 2>&1
@@ -25,9 +28,6 @@ MAILTO=""
 2 2 * * 1 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_missing_mb_data >> /logs/stats.log 2>&1
 # Calculate user similarity
 3 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
-# Batch generate playlists
-4 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_troi_playlists --slug weekly-jams >> /logs/troi_spark.log
-5 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_troi_playlists --slug weekly-exploration >> /logs/troi_spark.log
 
 # Dump user feedback before we generate recommendations
 15 2 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
