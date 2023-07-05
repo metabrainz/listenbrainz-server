@@ -22,7 +22,7 @@ pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v2.7.1
 spotipy>=2.22.1
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@a1e12968af93d2f296a42a8094ebff83f3ed33f3
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@ad2cf2fe2486efc5f9c40b5456ec7be0d949cf42
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2023-07-05
 PyYAML==6.0
 eventlet == 0.33.1
 # eventlet fails to patch dnspython >= 2.3 https://github.com/eventlet/eventlet/issues/781
@@ -55,11 +55,3 @@ countryinfo==0.1.2
 urllib3==1.26.9
 orjson==3.8.7
 dnspython==2.2.1
-
-brainzutils~=2.7.1
-troi~=0.1.0
-oauthlib~=3.2.2
-datasethoster~=0.1
-pyspark~=3.4.0
-py4j~=0.10.9.7
-numpy~=1.24.3
