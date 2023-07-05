@@ -502,7 +502,9 @@ def request_year_in_music(ctx, year: int):
               help="whether to create the periodic playlists for all users or only for users according to timezone.")
 def request_troi_playlists(slug, create_all):
     """ Bulk generate troi playlists for all users """
-    users = get_users_for_weekly_playlists(create_all)
+    app = create_app()
+    with app.app_context():
+        users = get_users_for_weekly_playlists(create_all)
     send_request_to_spark_cluster("troi.playlists", slug=slug, users=users)
 
 
