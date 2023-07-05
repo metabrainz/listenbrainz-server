@@ -33,7 +33,7 @@ def get_users_for_weekly_playlists(create_all):
         query += " " + timezone_filter
     with db.engine.connect() as connection:
         result = connection.execute(text(query))
-        return result.mappings().all()
+        return [dict(r) for r in result.mappings()]
 
 
 def get_user_details(slug, user_ids):
