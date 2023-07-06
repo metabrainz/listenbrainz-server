@@ -207,6 +207,6 @@
   "troi.playlists": {
     "name": "troi.playlists",
     "description": "Generate troi playlists for all users",
-    "params": ["slug"]
+    "params": ["slug", "users"]
   }
 }

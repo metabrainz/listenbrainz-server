@@ -3,7 +3,7 @@ from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.user_setting as db_usersetting
-from listenbrainz.troi.troi_bot import SPOTIFY_EXPORT_PREFERENCE
+from listenbrainz.troi.daily_jams import SPOTIFY_EXPORT_PREFERENCE
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIInternalServerError, APIBadRequest
 from listenbrainz.webserver.views.api_tools import (
