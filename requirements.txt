@@ -56,3 +56,4 @@ urllib3==1.26.9
 orjson==3.8.7
 dnspython==2.2.1
 pyjwt==2.7.0
+cryptography==41.0.1
