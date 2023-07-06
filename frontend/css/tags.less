@@ -3,9 +3,17 @@
   flex: none;
   color: currentcolor;
   height: 2.4rem;
+  background-color: rgb(236, 235, 228);
+  &.upvoted {
+    color: @btn-success-color;
+    background-color: lighten(@btn-success-bg, 20%);
+  }
+  &.downvoted {
+    color: @btn-danger-color;
+    background-color: lighten(@btn-danger-bg, 20%);
+  }
   > * {
     height: 100%;
-    background-color: rgb(236, 235, 228);
     display: inline-block;
     padding: 3px 7px;
     vertical-align: middle;
@@ -33,13 +41,13 @@
     &.upvote:hover,
     &.upvote.selected {
       color: @btn-success-color;
-      background-color: lighten(@btn-success-bg, 20%);
+      background-color: lighten(@btn-success-bg, 30%);
     }
     &.downvote:hover,
     &.downvote.selected,
     &.withdraw:hover {
       color: @btn-danger-color;
-      background-color: lighten(@btn-danger-bg, 20%);
+      background-color: lighten(@btn-danger-bg, 30%);
     }
   }
   &:hover > .tag-vote-button {

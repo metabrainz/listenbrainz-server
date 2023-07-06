@@ -53,6 +53,7 @@ function MultiValueContainer(props: MultiValueGenericProps<TagOptionType>) {
       entityType={data.entityType}
       entityMBID={data.entityMBID}
       isNew={!data.isFixed}
+      isOwnTag={data.isOwnTag}
       deleteCallback={
         data.isFixed
           ? noop
@@ -86,6 +87,7 @@ export default function AddTagSelect(props: {
   tags?: Array<ArtistTag | RecordingTag | ReleaseGroupTag>;
 }) {
   const { tags, entityType, entityMBID } = props;
+  const [prevEntityMBID, setPrevEntityMBID] = useState(entityMBID);
   const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
     GlobalAppContext
   );
@@ -97,6 +99,51 @@ export default function AddTagSelect(props: {
       ? tags.map((tag) => getOptionFromTag(tag, entityType, entityMBID))
       : []
   );
+  const getUserTags = useCallback(async () => {
+    /* Get user's own tags */
+    if (!musicbrainzAuthToken || !entityType || !entityMBID) {
+      return;
+    }
+    const url = `${MBBaseURI}/${entityType}/${entityMBID}?fmt=json&inc=user-tags`;
+    const response = await fetch(encodeURI(url), {
+      headers: {
+        "Content-Type": "application/xml; charset=utf-8",
+        Authorization: `Bearer ${musicbrainzAuthToken}`,
+      },
+    });
+    if (response.ok) {
+      const responseJSON = await response.json();
+      const userTags = responseJSON["user-tags"];
+      if (userTags?.length) {
+        setSelected((prevSelected) =>
+          userTags
+            .map(
+              (tag: string): TagOptionType => ({
+                value: tag,
+                label: tag,
+                entityType,
+                entityMBID,
+                isFixed: false,
+                isOwnTag: true,
+              })
+            )
+            .concat(prevSelected)
+        );
+      }
+    }
+  }, [entityType, entityMBID, musicbrainzAuthToken, MBBaseURI]);
+
+  if (prevEntityMBID !== entityMBID) {
+    // Will only run once when the entityMBID changes,
+    // contrarily to a useEffect with entityMBID as a dependency
+    // see https://react.dev/reference/react/useState#my-initializer-or-updater-function-runs-twice
+    setPrevEntityMBID(entityMBID);
+    try {
+      getUserTags();
+    } catch (error) {
+      toast.error(error.toString());
+    }
+  }
 
   const submitTagVote = useCallback(
     async (action: TagActionType, tag?: string) => {

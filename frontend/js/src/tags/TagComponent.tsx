@@ -76,6 +76,7 @@ export default function TagComponent(props: {
   entityType: "artist" | "release-group" | "recording";
   entityMBID?: string;
   isNew?: boolean;
+  isOwnTag?: boolean;
   deleteCallback: (tag: string) => void;
   initialScore?: UserTagScore;
 }) {
@@ -84,6 +85,7 @@ export default function TagComponent(props: {
     entityType,
     entityMBID,
     isNew,
+    isOwnTag,
     deleteCallback,
     initialScore,
   } = props;
@@ -149,9 +151,14 @@ export default function TagComponent(props: {
       submitTagToMusicBrainz,
     ]
   );
-
+  let cssClasses = "tag";
+  if (userScore === -1) {
+    cssClasses += " downvoted";
+  } else if (userScore === 1 || isOwnTag) {
+    cssClasses += " upvoted";
+  }
   return (
-    <span key={tag.tag + tag.count} className="tag">
+    <span key={tag.tag + tag.count} className={cssClasses}>
       <a
         href={`https://musicbrainz.org/tag/${tag.tag}`}
         target="_blank"
