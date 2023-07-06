@@ -1361,12 +1361,6 @@ export default class APIService {
   };
   /** MusicBrainz */
 
-  getMusicBrainzAccessToken = async (): Promise<string | null> => {
-    const response = await fetch(`${this.APIBaseURI}/profile/mbtoken`);
-    await this.checkStatus(response);
-    return response.text();
-  };
-
   submitTagToMusicBrainz = async (
     entityType: string,
     entityMBID: string,
