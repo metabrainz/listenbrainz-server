@@ -19,6 +19,7 @@ type TagOptionType = {
   value: string;
   label: string;
   isFixed?: boolean;
+  isOwnTag?: boolean;
   entityType: Entity;
   entityMBID?: string;
 };
