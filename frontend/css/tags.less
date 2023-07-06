@@ -37,7 +37,6 @@
     // for interactivity reasons, but not all the CSS styling
     margin: 0;
     padding: 3px 0;
-    
     &.upvote:hover,
     &.upvote.selected {
       color: @btn-success-color;
@@ -60,7 +59,10 @@
   & + .tag {
     margin-left: 0.3em;
   }
-  @media (hover: none), (hover: on-demand), (-moz-touch-enabled: 1), (pointer:coarse) {
+  @media (hover: none),
+    (hover: on-demand),
+    (-moz-touch-enabled: 1),
+    (pointer: coarse) {
     /* on touch devices, make tags bigger so they are easier to interact with */
     height: 3.3rem;
     font-size: 1.9rem;
