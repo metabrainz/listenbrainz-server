@@ -218,6 +218,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const artistName =
     (recordingData?.artist_credit_name ?? fallbackArtistName) ||
     "No artist to show";
+  const releaseName = metadata?.release?.name ?? recordingData?.release_name;
+
   const duration =
     metadata?.recording?.length ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
@@ -310,13 +312,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingOne"
           >
             <div className="panel-body">
-              {Boolean(metadata?.recording) && (
-                <TagsComponent
-                  tags={metadata?.tag?.recording}
-                  entityType="recording"
-                  entityMBID={recordingMBID}
-                />
-              )}
+              <TagsComponent
+                key={recordingMBID}
+                tags={metadata?.tag?.recording}
+                entityType="recording"
+                entityMBID={recordingMBID}
+              />
               {/* <div className="ratings content-box" /> */}
               {Boolean(flattenedRecRels?.length) && (
                 <div className="white content-box">
@@ -357,7 +358,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             </div>
           </div>
         </div>
-        {Boolean(metadata?.release || recordingData?.release_name) && (
+        {Boolean(releaseName) && (
           <div
             className={`panel panel-default ${
               expandedAccordion === 2 ? "expanded" : ""
@@ -376,9 +377,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             >
               <h4 className="panel-title">
                 <div className="releaseheader">
-                  <div className="name strong">
-                    {recordingData?.release_name}
-                  </div>
+                  <div className="name strong">{releaseName}</div>
                   &nbsp;<small>Album</small>
                   <div className="date">{metadata?.release?.year}</div>
                   <div className="caret" />
@@ -395,6 +394,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             >
               <div className="panel-body">
                 <TagsComponent
+                  key={releaseName}
                   tags={metadata?.tag?.release_group}
                   entityType="release-group"
                   entityMBID={metadata?.release?.release_group_mbid}
@@ -441,13 +441,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingThree"
           >
             <div className="panel-body">
-              {Boolean(metadata?.artist) && (
-                <TagsComponent
-                  tags={metadata?.tag?.artist}
-                  entityType="artist"
-                  entityMBID={artistMBID}
-                />
-              )}
+              <TagsComponent
+                key={artistName}
+                tags={metadata?.tag?.artist}
+                entityType="artist"
+                entityMBID={artistMBID}
+              />
               {/* <div className="ratings content-box" /> */}
               {(artist?.begin_year || artist?.area) && (
                 <div>

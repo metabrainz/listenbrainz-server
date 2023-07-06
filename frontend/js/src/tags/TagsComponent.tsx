@@ -86,23 +86,17 @@ export default function AddTagSelect(props: {
   tags?: Array<ArtistTag | RecordingTag | ReleaseGroupTag>;
 }) {
   const { tags, entityType, entityMBID } = props;
+  const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
+    GlobalAppContext
+  );
+  const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
+  const { submitTagToMusicBrainz, MBBaseURI } = APIService;
+
   const [selected, setSelected] = useState<TagOptionType[]>(
     tags?.length
       ? tags.map((tag) => getOptionFromTag(tag, entityType, entityMBID))
       : []
   );
-  useEffect(() => {
-    if (tags?.length)
-      setSelected(
-        tags?.map((tag) => getOptionFromTag(tag, entityType, entityMBID))
-      );
-  }, [tags, entityType, entityMBID]);
-
-  const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
-    GlobalAppContext
-  );
-  const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
-  const { submitTagToMusicBrainz } = APIService;
 
   const submitTagVote = useCallback(
     async (action: TagActionType, tag?: string) => {
