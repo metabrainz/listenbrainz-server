@@ -14,6 +14,7 @@ import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 from listenbrainz.domain.musicbrainz import MusicBrainzService
@@ -321,6 +322,8 @@ def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
             return SpotifyService()
         elif service == ExternalServiceType.CRITIQUEBRAINZ:
             return CritiqueBrainzService()
+        elif service == ExternalServiceType.APPLE:
+            return AppleService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
             return MusicBrainzService()
     except KeyError:
@@ -362,10 +365,15 @@ def music_services_details():
 @login_required
 def music_services_callback(service_name: str):
     service = _get_service_or_raise_404(service_name)
-    code = request.args.get('code')
-    if not code:
-        raise BadRequest('missing code')
-    token = service.fetch_access_token(code)
+
+    if isinstance(service, AppleService):
+        token = service.generate_developer_token()
+    else:
+        code = request.args.get('code')
+        if not code:
+            raise BadRequest('missing code')
+        token = service.fetch_access_token(code)
+
     if service.add_new_user(current_user.id, token):
         flash.success('Successfully authenticated with %s!' % service_name.capitalize())
     else:
@@ -422,5 +430,7 @@ def music_services_disconnect(service_name: str):
             action = request.form.get('critiquebrainz')
             if action:
                 return redirect(service.get_authorize_url(CRITIQUEBRAINZ_SCOPES))
+        elif service_name == 'apple':
+            return redirect(url_for("profile.music_services_callback", service_name="apple"))
 
     return redirect(url_for('profile.music_services_details'))

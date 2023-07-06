@@ -101,6 +101,7 @@ declare type SpotifyUser = {
 };
 
 declare type AppleMusicUser = {
+  developer_token?: string;
   music_user_token?: string;
 };
 

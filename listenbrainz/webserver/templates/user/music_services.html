@@ -70,6 +70,34 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
+                <h3 class="panel-title">Apple Music</h3>
+            </div>
+            <div class="panel-body">
+                <p>
+                    Connect your Apple Music account to play music on ListenBrainz (requires a paid Apple Music subscription).
+                    For music playing, make sure your browser allows autoplaying media on listenbrainz.org. Due to restrictions
+                    imposed by Apple Music, you might have to disconnect and reconnect your Apple Music account again in a few
+                    months.
+                </p>
+                <br/>
+                <div class="music-service-selection">
+                    <form action="{{ url_for('profile.music_services_disconnect', service_name='apple') }}"
+                          method="post">
+                        {{ service_permission_button("apple", current_spotify_permissions, "listen",
+                        "Play music on ListenBrainz",
+                        "Discover and play songs directly on ListenBrainz. "
+                        "Note: Full length track playback requires a paid Apple Music subscription") }}
+
+                        {{ service_permission_button("apple", current_spotify_permissions, "disable",
+                        "Disable",
+                        "Apple Music integration will be disabled. You won't be able to listen to music on ListenBrainz using Apple Music.") }}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
                 <h3 class="panel-title">CritiqueBrainz</h3>
             </div>
             <div class="panel-body">

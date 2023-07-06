@@ -1,6 +1,7 @@
 from flask import current_app
 from flask_login import current_user
 
+from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
@@ -57,3 +58,18 @@ def get_current_musicbrainz_user():
     return {
         "access_token": user["access_token"],
     }
+
+
+def get_current_apple_music_user():
+    """Returns the apple music developer token for the current
+    authenticated user. If the user is unauthenticated or has not
+    linked their apple music account returns empty dict."""
+    if not current_user.is_authenticated:
+        return {}
+    user = AppleService().get_user(current_user.id)
+    if user is None:
+        return {}
+    return {
+        "developer_token": user["access_token"],
+    }
+

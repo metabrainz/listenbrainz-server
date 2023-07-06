@@ -188,12 +188,18 @@ export default class BrainzPlayer extends React.Component<
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
     window.addEventListener("beforeunload", this.alertBeforeClosingPage);
     // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
-    const { spotifyAuth } = this.context;
+    const { spotifyAuth, appleAuth } = this.context;
     if (
       !SpotifyPlayer.hasPermissions(spotifyAuth) &&
       this.spotifyPlayer?.current
     ) {
       this.invalidateDataSource(this.spotifyPlayer.current);
+    }
+    if (
+      !AppleMusicPlayer.hasPermissions(appleAuth) &&
+      this.appleMusicPlayer?.current
+    ) {
+      this.invalidateDataSource(this.appleMusicPlayer.current);
     }
   }
 
@@ -807,7 +813,7 @@ export default class BrainzPlayer extends React.Component<
       refreshYoutubeToken,
       listenBrainzAPIBaseURI,
     } = this.props;
-    const { youtubeAuth, spotifyAuth } = this.context;
+    const { youtubeAuth, spotifyAuth, appleAuth } = this.context;
 
     return (
       <div>
@@ -900,6 +906,7 @@ export default class BrainzPlayer extends React.Component<
               this.dataSources[currentDataSourceIndex]?.current instanceof
                 AppleMusicPlayer
             }
+            appleMusicUser={appleAuth}
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.appleMusicPlayer}
             playerPaused={playerPaused}

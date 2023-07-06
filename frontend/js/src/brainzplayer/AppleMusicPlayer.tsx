@@ -19,7 +19,7 @@ export default class AppleMusicPlayer
   extends React.Component<AppleMusicPlayerProps, AppleMusicPlayerState>
   implements DataSourceType {
   static hasPermissions = (appleMusicUser?: AppleMusicUser) => {
-    return true;
+    return Boolean(appleMusicUser?.developer_token);
   };
 
   static isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
@@ -48,9 +48,9 @@ export default class AppleMusicPlayer
   public name = "Apple Music";
   public domainName = "music.apple.com";
   public icon = faApple;
-  // Saving the access token outside of React state , we do not need it for any rendering purposes
+  // Saving the developer token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
-  private accessToken = "";
+  private readonly developerToken: string = "";
 
   private readonly _boundOnPlaybackStateChange: (
     event: MusicKit.PlayerPlaybackState
@@ -77,8 +77,9 @@ export default class AppleMusicPlayer
       progressMs: 0,
     };
 
-    this.accessToken = props.appleMusicUser?.music_user_token || "";
-    // Do an initial check of the AppleMusic token permissions (scopes) before loading the SDK library
+    this.developerToken = props.appleMusicUser?.developer_token || "";
+
+    // Do an initial check of whether the user wants to link Apple Music before loading the SDK library
     if (AppleMusicPlayer.hasPermissions(props.appleMusicUser)) {
       window.addEventListener("musickitloaded", this.connectAppleMusicPlayer);
       loadScriptAsync(
@@ -249,7 +250,7 @@ export default class AppleMusicPlayer
       return;
     }
     await musickit.configure({
-      developerToken: "developer Token here",
+      developerToken: this.developerToken,
       debug: true,
       app: {
         name: "ListenBrainz",
