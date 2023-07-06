@@ -681,7 +681,7 @@ def get_tags_dataset():
         condition = "OR"
 
     if condition is None:
-        raise APIBadRequest("multiple tags are specified but the ccondition param is missing")
+        raise APIBadRequest("multiple tags are specified but the condition param is missing")
     condition = condition.upper()
     if condition != "AND" and condition != "OR":
         raise APIBadRequest("condition param should be either 'AND' or 'OR'")
