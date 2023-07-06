@@ -3,14 +3,14 @@
 <!-- these props are used in the navbar to highlight the navbar items -->
 {% set active_page = "explore" %}
 
-{%- block title -%}Fresh releases - ListenBrainz{%- endblock -%}
+{%- block title -%}Art Creator - ListenBrainz{%- endblock -%}
 
 {% block content %}
 
 <div class="secondary-nav">
     <ol class="breadcrumb">
         <li><a href="{{ url_for('explore.index') }}">Explore</a></li>
-        <li class="active">Fresh Releases</li>
+        <li class="active">Art Creator</li>
     </ol>
 </div>
 {{ super() }}
