@@ -112,6 +112,7 @@ def build_and_query(tags, expanded):
                            , 'percent'
                            , percent
                         )
+                        ORDER BY tag_count DESC
                    ) AS recordings
               FROM selected_recs
               JOIN tags.tags
@@ -155,6 +156,7 @@ def build_or_query(expanded=True):
                            , 'percent'
                            , percent
                         )
+                        ORDER BY tag_count DESC
                    ) AS recordings
               FROM all_tags
              WHERE rnum <= :count
