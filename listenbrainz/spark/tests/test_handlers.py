@@ -366,8 +366,8 @@ class HandlersTestCase(DatabaseTestCase):
             )
         )
 
-    @mock.patch('listenbrainz.troi.troi_bot.get_followers_of_user')
-    @mock.patch('listenbrainz.troi.troi_bot.generate_playlist')
+    @mock.patch('listenbrainz.troi.daily_jams.get_followers_of_user')
+    @mock.patch('listenbrainz.troi.daily_jams.generate_playlist')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_gen_playlist, mock_get_followers):
         with self.app.app_context():

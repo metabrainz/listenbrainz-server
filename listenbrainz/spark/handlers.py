@@ -19,9 +19,9 @@ from listenbrainz.db import year_in_music, couchdb
 from listenbrainz.db.fresh_releases import insert_fresh_releases
 from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
-from listenbrainz.troi.troi_bot import run_post_recommendation_troi_bot
+from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
+from listenbrainz.troi.weekly_playlists import batch_process_playlists, batch_process_playlists_end
 from listenbrainz.troi.year_in_music import yim_patch_runner
-from listenbrainz.db import playlist as db_playlist
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -460,8 +460,8 @@ def handle_similar_artists(message):
 
 
 def handle_troi_playlists(message):
-    db_playlist.bulk_insert(message["slug"], message["data"])
+    batch_process_playlists(message["slug"], message["data"])
 
 
 def handle_troi_playlists_end(message):
-    db_playlist.bulk_delete(message["slug"])
+    batch_process_playlists_end(message["slug"])

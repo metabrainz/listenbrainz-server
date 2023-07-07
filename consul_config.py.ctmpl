@@ -236,6 +236,12 @@ SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
 SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
 SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
 
+# APPLE MUSIC
+APPLE_MUSIC_TEAM_ID = '''{{template "KEY" "apple/team_id"}}'''
+APPLE_MUSIC_KID = '''{{template "KEY" "apple/kid"}}'''
+APPLE_MUSIC_KEY = '''{{template "KEY" "apple/key"}}'''
+APPLE_MUSIC_CALLBACK_URL = '''{{template "KEY" "apple/redirect_uri"}}'''
+
 # CRITIQUEBRAINZ
 CRITIQUEBRAINZ_CLIENT_ID = '''{{template "KEY" "critiquebrainz/client_id"}}'''
 CRITIQUEBRAINZ_CLIENT_SECRET = '''{{template "KEY" "critiquebrainz/client_secret"}}'''
