@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { io } from "socket.io-client";
+import { ToastContainer } from "react-toastify";
 import {
   withAlertNotifications,
   WithAlertNotificationsInjectedProps,
@@ -149,6 +150,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
+      <ToastContainer
+        position="bottom-right"
+        autoClose={8000}
+        hideProgressBar
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnHover
+        theme="light"
+      />
       <GlobalAppContext.Provider value={globalAppContext}>
         <PlayingNowPageWithAlertNotifications
           initialAlerts={optionalAlerts}
