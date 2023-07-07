@@ -71,6 +71,19 @@ function getNowPlayingRecordingMBID(
   );
 }
 
+function filterAndSortTags(tags?: EntityTag[]): EntityTag[] | undefined {
+  return tags
+    ?.filter((tag) => {
+      return tag.genre_mbid;
+    })
+    .sort((a, b) => {
+      if (a.genre_mbid && !b.genre_mbid) {
+        return 1;
+      }
+      return b.count - a.count;
+    });
+}
+
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { recordingData, playingNow } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
@@ -314,7 +327,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <div className="panel-body">
               <TagsComponent
                 key={recordingMBID}
-                tags={metadata?.tag?.recording}
+                tags={filterAndSortTags(metadata?.tag?.recording)}
                 entityType="recording"
                 entityMBID={recordingMBID}
               />
@@ -395,7 +408,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <div className="panel-body">
                 <TagsComponent
                   key={releaseName}
-                  tags={metadata?.tag?.release_group}
+                  tags={filterAndSortTags(metadata?.tag?.release_group)}
                   entityType="release-group"
                   entityMBID={metadata?.release?.release_group_mbid}
                 />
@@ -443,7 +456,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <div className="panel-body">
               <TagsComponent
                 key={artistName}
-                tags={metadata?.tag?.artist}
+                tags={filterAndSortTags(metadata?.tag?.artist)}
                 entityType="artist"
                 entityMBID={artistMBID}
               />
