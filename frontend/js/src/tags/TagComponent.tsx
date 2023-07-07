@@ -97,10 +97,9 @@ export default function TagComponent(props: {
   const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
   const { submitTagToMusicBrainz } = APIService;
 
-  let tagEntityMBID = entityMBID;
-  if (entityType === "artist") {
-    tagEntityMBID = (tag as ArtistTag).artist_mbid;
-  }
+  // If we have multiple MB artists, make sure we vote for the tag on the right entity
+  const tagEntityMBID =
+    entityType === "artist" ? (tag as ArtistTag).artist_mbid : entityMBID;
 
   React.useEffect(() => {
     setUserScore(initialScore ?? 0);

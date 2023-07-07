@@ -1,4 +1,4 @@
-import { noop } from "lodash";
+import { isUndefined, noop } from "lodash";
 import * as React from "react";
 import { useCallback, useState, useEffect } from "react";
 import {
@@ -88,7 +88,7 @@ export default function AddTagSelect(props: {
   tags?: Array<ArtistTag | RecordingTag | ReleaseGroupTag>;
 }) {
   const { tags, entityType, entityMBID } = props;
-  const [prevEntityMBID, setPrevEntityMBID] = useState(entityMBID);
+  const [prevEntityMBID, setPrevEntityMBID] = useState<string>();
   const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
     GlobalAppContext
   );
@@ -134,7 +134,7 @@ export default function AddTagSelect(props: {
     }
   }, [entityType, entityMBID, musicbrainzAuthToken, MBBaseURI]);
 
-  if (prevEntityMBID !== entityMBID) {
+  if (!isUndefined(entityMBID) && prevEntityMBID !== entityMBID) {
     // Will only run once when the entityMBID changes,
     // contrarily to a useEffect with entityMBID as a dependency
     // see https://react.dev/reference/react/useState#my-initializer-or-updater-function-runs-twice
