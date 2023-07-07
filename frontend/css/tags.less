@@ -4,13 +4,14 @@
   color: currentcolor;
   height: 2.4rem;
   background-color: rgb(236, 235, 228);
+  border-radius: @tagBorderRadius;
   &.upvoted {
     color: @btn-success-color;
-    background-color: lighten(@btn-success-bg, 20%);
+    background-color: lighten(@btn-success-bg, 40%);
   }
   &.downvoted {
     color: @btn-danger-color;
-    background-color: lighten(@btn-danger-bg, 20%);
+    background-color: lighten(@btn-danger-bg, 40%);
   }
   > * {
     height: 100%;
