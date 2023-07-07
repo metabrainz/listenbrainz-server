@@ -2,23 +2,26 @@ import React, {useState} from 'react';
 import { ResponsiveNetwork, NodeProps, LinkProps, NodeTooltipProps, NetworkSvgProps } from '@nivo/network';
 import { animated, to } from '@react-spring/web';
 import { InputNode } from '@nivo/network';
+import type { NodeType, LinkType, GraphDataType } from './Data';
+
 interface GraphProps {
-    data: any;
-    fetchData: Function;
-    backgroundColor: string;
+    data: GraphDataType;
+    onArtistChange: (artist_mbid: string) => void;
+    background: string;
 }
 
-const Graph = (props: GraphProps) => {
-    type Node = (typeof props.data)['nodes'][number];
-    type Link = (typeof props.data)['links'][number];
-    const CustomNodeComponent = <Node extends InputNode>({
+const SimilarArtistsGraph = (props: GraphProps) => {
+    const MAX_LINES = 2;
+    const MAX_WORD_LENGTH = 10;
+
+    const CustomNodeComponent = <NodeType extends InputNode>({
         node,
         animated: animatedProps,
         onClick,
         onMouseEnter,
         onMouseMove,
         onMouseLeave,
-    }: NodeProps<Node>) => (
+    }: NodeProps<NodeType>) => (
         <animated.g 
         transform={to([animatedProps.x, animatedProps.y, animatedProps.scale], (x, y, scale) => {
             return `translate(${x},${y}) scale(${scale})`
@@ -45,13 +48,16 @@ const Graph = (props: GraphProps) => {
         style={{ pointerEvents: 'none', fill: 'white'}}
         >
             {
+            // SVG text does not allow for easy multi line text
+            // So, we split the text into words and render each word as a separate tspan element in a different line
+            // We use ellipsis if word length exceeds MAX_WORD_LENGTH or if number of words(each in a separate line) exceed MAX_LINES
             node.id.split(" ").map((word, index) => (
-                index < 2 ?
+                index < MAX_LINES ?
                 <animated.tspan x={0} dy={index === 0 ? "0" : to([animatedProps.size], size => size / 6)}>
-                    {word.length > 10 ? word.substring(0, 10) + "..." : word}
+                    {word.length > MAX_WORD_LENGTH ? word.substring(0, MAX_WORD_LENGTH - 3) + "..." : word}
                 </animated.tspan>
                 :
-                index == 2 && <animated.tspan x={0} dy={to([animatedProps.size], size => size / 6)}>
+                index == MAX_LINES && <animated.tspan x={0} dy={to([animatedProps.size], size => size / 6)}>
                     ...
                 </animated.tspan>
             ))
@@ -60,7 +66,7 @@ const Graph = (props: GraphProps) => {
         </animated.g>
     )
     
-    const CustomNodeTooltipComponent = ({ node }: NodeTooltipProps<Node>) => (
+    const CustomNodeTooltipComponent = ({ node }: NodeTooltipProps<NodeType>) => (
         <div
             style={{
                 background: node.color,
@@ -69,15 +75,15 @@ const Graph = (props: GraphProps) => {
                 borderRadius: '3px'
             }}
         >
-            <strong>Name: {node.id}</strong>
+            <strong>{node.id}</strong>
             <br />
-            {node.data.score!= 0 && <>Score: {node.data.score}</>}
+            {node.data.score && <>Score: {node.data.score}</>}
         </div>
     )
 
-    const chartProperties: NetworkSvgProps<Node, Link> = {
+    const chartProperties: NetworkSvgProps<NodeType, LinkType> = {
         data: props.data,
-        height: 1000,
+        height: 900,
         width: 1000,
         repulsivity: 200,
         iterations: 120,
@@ -85,18 +91,18 @@ const Graph = (props: GraphProps) => {
         nodeBorderWidth: 5,
         linkThickness: 2,
         nodeColor: node => node.color,
-        linkColor: { from: 'source.color', modifiers: [['brighter', 0.8]] },
+        linkColor: { from: 'source.color'},
         linkDistance: link => link.distance,
         nodeSize: node => node.size,
         activeNodeSize: node => node.size * 1.2,
         inactiveNodeSize: node => node.size / 1.2,
         isInteractive: true,
-        onClick: node => props.fetchData(node.data.artist_mbid)
+        onClick: node => props.onArtistChange(node.data.artist_mbid)
     }
     
     return (
         props.data ?
-        <div style={{ height: '1000px', background: props.backgroundColor }}>
+        <div style={{ height: '97.5vh', background: props.background }}>
             <ResponsiveNetwork
                 {...chartProperties}
                 nodeComponent={CustomNodeComponent}
@@ -109,4 +115,4 @@ const Graph = (props: GraphProps) => {
         </p>
     );
 }
-export default Graph;
+export default SimilarArtistsGraph;

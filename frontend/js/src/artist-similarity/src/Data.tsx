@@ -1,14 +1,7 @@
 import React, {useState, useEffect} from "react";
-import Graph from "./Graph";
+import SimilarArtistsGraph from "./SimilarArtistsGraph";
 import Input from "./Input";
-
-type ColorType = {
-    red: number;
-    green: number;
-    blue: number;
-    opacity: number;
-    mixed: string;
-}
+import tinycolor from "tinycolor2";
 
 type ArtistType = {
     artist_mbid: string;
@@ -33,136 +26,142 @@ type DatasetResponseType = {
 
 type ApiResponseType = MarkupResponseType | DatasetResponseType;
 
-const Color = (red: number, green: number, blue: number): ColorType => {
-    return {
-        red: red,
-        green: green,
-        blue: blue,
-        opacity: 1.0,
-        mixed: "rgba(" + red + "," + green + "," + blue + "," + 1.0 + ")",
-    }
+type NodeType = {
+    id: string;
+    artist_mbid: string;
+    size: number;
+    color: string;
+    score: number;
 }
 
-const changeOpacity = (color: ColorType, opacity: number): ColorType => {
-    return {
-        red: color.red,
-        green: color.green,
-        blue: color.blue,
-        opacity: opacity,
-        mixed: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + opacity + ")",
-    }
+type LinkType = {
+    source: string;
+    target: string;
+    distance: number;
 }
 
-const colorGenerator = (): ColorType => {
-    var red = Math.floor(Math.random() * 200);
-    var green = Math.floor(Math.random() * 200);
-    var blue  = Math.floor(Math.random() * 200);
-
-    return Color(red, green, blue);
+type GraphDataType = {
+    nodes: Array<NodeType>;
+    links: Array<LinkType>;
 }
 
-const mixColor = (color1: ColorType, color2: ColorType, weight: number): ColorType => {
+const colorGenerator = ():  tinycolor.Instance=> {
+    var color = tinycolor("hsv(" + Math.random() * 360 + ", 100%, 90%)");
+    return color;
+}
+
+/*const mixColor = (color1: ColorType, color2: ColorType, weight: number): ColorType => {
     var red = Math.floor((color2.red - color1.red) * weight + color1.red);
     var green = Math.floor((color2.green - color1.green) * weight + color1.green);
     var blue = Math.floor((color2.blue - color1.blue) * weight + color1.blue);          
     var opacity = Math.floor((color2.opacity - color1.opacity) * weight + color1.opacity);
 
     return Color(red, green, blue);
-}
+}*/
 
 const Data = () => {
-    const LIMIT_VALUE = 18;
+    const ARTIST_MBID = "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11";
+    const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
     const BASE_URL = "https://labs.api.listenbrainz.org/similar-artists/json?algorithm=session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30&artist_mbid=";
+    const LINK_DIST_MULTIPLIER = 200;
+    const MIN_LINK_DIST = 50;
+    const MAIN_NODE_SIZE = 150;
+    const SIMILAR_NODE_SIZE = 85;
+    const BACKGROUND_ALPHA = 0.2;
+    const COLOR_MIX_WEIGHT = 0.3;
     
-    var artist_mbid = "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11";
     var color1 = colorGenerator();
     var color2 = colorGenerator();
 
-    const [similarArtists, setSimilarArtists] = useState({} as DatasetResponseType);
-    const [artist, setArtist] = useState({} as DatasetResponseType);
-    const [limit, setLimit] = useState(LIMIT_VALUE);
+    const [similarArtists, setSimilarArtists] = useState<DatasetResponseType>();
+    const [artist, setArtist] = useState<DatasetResponseType>();
+    const [similarArtistsLimit, setSimilarArtistsLimit] = useState(SIMILAR_ARTISTS_LIMIT_VALUE);
     const [colors, setColors] = useState([color1, color2]);
-    
-    var transformedArtists = {};
+    const [artistMBID, setArtistMBID] = useState(ARTIST_MBID);
+
     var scoreList: Array<number> = [];
-    var similarArtistsList: Array<ArtistType> = [];
-    var mainArtist: ArtistType = {} as ArtistType;
-    var minScore = 0;
     
-    const fetchData = (artist_mbid: string): void => {
-        fetch(BASE_URL + artist_mbid)
-        .then((response) => response.json())
-        .then((data) => processData(data))   
+    const fetchData = async (ARTIST_MBID: string): Promise<void> => {
+        try {
+          const response = await fetch(BASE_URL + ARTIST_MBID);
+          const data = await response.json();
+          console.log(data);
+          processData(data);
+        }
+        catch (error){
+          //Error message goes here.
+          alert("Something went wrong while loading information, please try again");
+        }
     }
     
     const processData = (data: Array<ApiResponseType>): void => {
-        let mainArtist = data[1] as DatasetResponseType;
-        setArtist(mainArtist);
+        let mainArtist = data[1];
+        setArtist(mainArtist.type === "dataset" ? mainArtist : undefined);
 
-        let similarArtists = data[3] as DatasetResponseType;
-        setSimilarArtists(similarArtists);
-        setColors([mixColor(colors[0], colors[1], 0.3), color2]);
+        let similarArtists = data[3];
+        setSimilarArtists(similarArtists.type === "dataset" ? similarArtists : undefined);
+
+        setColors([tinycolor.mix(color1, color2, COLOR_MIX_WEIGHT), color2]);
     }
     
     useEffect(() => {
-        fetchData(artist_mbid);
-        setColors([color1, color2]);
-    }, []);
+        fetchData(artistMBID);
+    }, [artistMBID]);
 
-    similarArtistsList = similarArtists && similarArtists.data && (similarArtists.data.map((artist: any) => artist));
-    similarArtistsList = similarArtistsList && similarArtistsList.splice(0, limit);
-    
-    mainArtist = artist && artist.data && artist.data[0];
-    similarArtistsList && similarArtistsList.push(mainArtist);
+    // Creating the list of similar artists
+    const similarArtistsList: Array<ArtistType> = similarArtists?.data?.slice(0, similarArtistsLimit) ?? [];
+    const mainArtist = artist?.data?.[0];
+    if(mainArtist){
+        similarArtistsList.push(mainArtist);
+    }
 
     // Calculating minScore for normalization which is always the last element of the array (because it's sorted)
-    minScore = similarArtistsList && similarArtistsList[LIMIT_VALUE - 1].score as number;
+    var minScore = similarArtistsList[similarArtistsLimit - 1]?.score ?? 0;
     minScore = Math.sqrt(minScore);
 
-    transformedArtists = similarArtistsList && {
+    var transformedArtists: GraphDataType = similarArtistsList && {
         
-        "nodes": similarArtistsList.map((artist: ArtistType, index: number) => {
-
-            if(artist !== mainArtist) {
-                var computedScore = minScore / Math.sqrt(artist.score as number);
-                var computedColor = mixColor(colors[0], colors[1], (index / LIMIT_VALUE * computedScore));
+        nodes: similarArtistsList.map((similarArtist: ArtistType, index: number): NodeType => {
+            let computedScore;
+            let computedColor;
+            if(similarArtist !== mainArtist) {
+                computedScore = minScore / Math.sqrt(similarArtist?.score ?? 1);
+                computedColor = tinycolor.mix(colors[0], colors[1], (index / SIMILAR_ARTISTS_LIMIT_VALUE * computedScore) * 100);
                 scoreList.push(computedScore);
             }
             
-            else{
+            else {
                 computedColor = colors[0];
                 similarArtistsList.pop();
             }
 
             return {
-                "id": artist.name,
-                "artist_mbid": artist.artist_mbid,
-                "size": artist.artist_mbid === mainArtist.artist_mbid ? 150 : 85,
-                "color": computedColor.mixed,
-                "colorObject": computedColor,
-                "seed": artist.artist_mbid === mainArtist.artist_mbid ? 1 : 0,
-                "score": artist.score
+                id: similarArtist.name,
+                artist_mbid: similarArtist.artist_mbid,
+                size: similarArtist.artist_mbid === mainArtist?.artist_mbid ? MAIN_NODE_SIZE : SIMILAR_NODE_SIZE,
+                color: computedColor.toRgbString(),
+                score: similarArtist.score ?? 0
             };
         }),
 
-        "links": similarArtistsList.map((artist: ArtistType, index: number) => {
+        links: similarArtistsList.map((similarArtist: ArtistType, index: number): LinkType => {
             return {
-                "source": mainArtist.name,
-                "target": artist.name,
-                "distance": (artist.artist_mbid != mainArtist.artist_mbid ? scoreList[index] * 250 : 0),
-                "strength": artist.score as number < 5000 ? 2 : artist.score as number < 6000 ? 4 : 8,
-                };
+                source: mainArtist?.name ?? "",
+                target: similarArtist.name,
+                distance: scoreList[index] * LINK_DIST_MULTIPLIER + MIN_LINK_DIST,
+            };
         }),
     }
-
-    var backgroundColor = `linear-gradient(` + changeOpacity(colors[1], 0.2).mixed + `,` + changeOpacity(colors[0], 0.2).mixed + `)`;
-    
+    const backgroundColor1 = colors[0].clone().setAlpha(BACKGROUND_ALPHA).toRgbString();
+    const backgroundColor2 = colors[1].clone().setAlpha(BACKGROUND_ALPHA).toRgbString();
+    const backgroundGradient = `linear-gradient(` + backgroundColor1 + `,` + backgroundColor2 + `)`;
     return (
         <div>
-            <Input fetchData={fetchData} setLimit={setLimit}/>
-            <Graph data={transformedArtists} fetchData={fetchData} backgroundColor={backgroundColor}/>
+            <Input onArtistChange={setArtistMBID} setSimilarArtistsLimit={setSimilarArtistsLimit}/>
+            <SimilarArtistsGraph onArtistChange={setArtistMBID} data={transformedArtists} background={backgroundGradient}/>
         </div>
     );
 }
 
 export default Data;
+export type { GraphDataType, NodeType, LinkType};
