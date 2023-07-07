@@ -158,7 +158,7 @@ export default function TagComponent(props: {
     cssClasses += " upvoted";
   }
   return (
-    <span key={tag.tag + tag.count} className={cssClasses}>
+    <span className={cssClasses}>
       <a
         href={`https://musicbrainz.org/tag/${tag.tag}`}
         target="_blank"
