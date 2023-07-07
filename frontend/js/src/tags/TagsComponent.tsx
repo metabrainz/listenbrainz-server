@@ -22,6 +22,7 @@ type TagOptionType = {
   isOwnTag?: boolean;
   entityType: Entity;
   entityMBID?: string;
+  originalTag?: ArtistTag | RecordingTag | ReleaseGroupTag;
 };
 
 function CreateTagText(input: string) {
@@ -50,7 +51,7 @@ function MultiValueContainer(props: MultiValueGenericProps<TagOptionType>) {
   const { data, selectProps } = props;
   return (
     <TagComponent
-      tag={{ tag: data.value, count: 1 }}
+      tag={data.originalTag ?? { tag: data.value }}
       entityType={data.entityType}
       entityMBID={data.entityMBID}
       isNew={!data.isFixed}
@@ -72,13 +73,14 @@ function getOptionFromTag(
   tag: ArtistTag | RecordingTag | ReleaseGroupTag,
   entityType: Entity,
   entityMBID?: string
-) {
+): TagOptionType {
   return {
     value: tag.tag,
     label: tag.tag,
     isFixed: true,
     entityMBID: entityMBID ?? (tag as ArtistTag).artist_mbid ?? undefined,
     entityType,
+    originalTag: tag,
   };
 }
 
@@ -96,9 +98,7 @@ export default function AddTagSelect(props: {
   const { submitTagToMusicBrainz, MBBaseURI } = APIService;
 
   const [selected, setSelected] = useState<TagOptionType[]>(
-    tags?.length
-      ? tags.map((tag) => getOptionFromTag(tag, entityType, entityMBID))
-      : []
+    tags?.map((tag) => getOptionFromTag(tag, entityType, entityMBID)) ?? []
   );
   const getUserTags = useCallback(async () => {
     /* Get user's own tags */
@@ -126,6 +126,7 @@ export default function AddTagSelect(props: {
                 entityMBID,
                 isFixed: false,
                 isOwnTag: true,
+                originalTag: { tag: tag.name, count: 1 },
               })
             )
             .concat(prevSelected)
