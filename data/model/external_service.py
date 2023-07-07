@@ -7,3 +7,4 @@ class ExternalServiceType(Enum):
     MUSICBRAINZ = 'musicbrainz'
     LASTFM = 'lastfm'
     LIBREFM = 'librefm'
+    APPLE = 'apple'
