@@ -119,9 +119,9 @@ export default function AddTagSelect(props: {
         setSelected((prevSelected) =>
           userTags
             .map(
-              (tag: string): TagOptionType => ({
-                value: tag,
-                label: tag,
+              (tag: { name: string }): TagOptionType => ({
+                value: tag.name,
+                label: tag.name,
                 entityType,
                 entityMBID,
                 isFixed: false,
