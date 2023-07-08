@@ -465,9 +465,9 @@ class TimescaleListenStore:
         """
 
         if isSimilarListens:
-            user_id_map = {user["id"]: Tuple(user["musicbrainz_id"], user["similarity"]) for user in users}
+            user_id_map = {user["id"]: (user["musicbrainz_id"], user["similarity"]) for user in users}
         else:
-            user_id_map = {user["id"]: Tuple(user["musicbrainz_id"], None) for user in users}
+            user_id_map = {user["id"]: (user["musicbrainz_id"], None) for user in users}
 
 
         args = {"user_ids": tuple(user_id_map.keys()), "limit": limit}
