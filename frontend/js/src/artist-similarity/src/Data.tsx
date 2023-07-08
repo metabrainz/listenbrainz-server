@@ -24,7 +24,7 @@ type DatasetResponseType = {
     type: "dataset";
 }
 
-type ApiResponseType = MarkupResponseType | DatasetResponseType;
+type ApiResponseType = Array<MarkupResponseType | DatasetResponseType>;
 
 type NodeType = {
     id: string;
@@ -50,15 +50,6 @@ const colorGenerator = ():  tinycolor.Instance=> {
     return color;
 }
 
-/*const mixColor = (color1: ColorType, color2: ColorType, weight: number): ColorType => {
-    var red = Math.floor((color2.red - color1.red) * weight + color1.red);
-    var green = Math.floor((color2.green - color1.green) * weight + color1.green);
-    var blue = Math.floor((color2.blue - color1.blue) * weight + color1.blue);          
-    var opacity = Math.floor((color2.opacity - color1.opacity) * weight + color1.opacity);
-
-    return Color(red, green, blue);
-}*/
-
 const Data = () => {
     const ARTIST_MBID = "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11";
     const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
@@ -73,8 +64,8 @@ const Data = () => {
     var color1 = colorGenerator();
     var color2 = colorGenerator();
 
-    const [similarArtists, setSimilarArtists] = useState<DatasetResponseType>();
-    const [artist, setArtist] = useState<DatasetResponseType>();
+    const [similarArtists, setSimilarArtists] = useState<Array<ArtistType>>();
+    const [mainArtist, setMainArtist] = useState<ArtistType>();
     const [similarArtistsLimit, setSimilarArtistsLimit] = useState(SIMILAR_ARTISTS_LIMIT_VALUE);
     const [colors, setColors] = useState([color1, color2]);
     const [artistMBID, setArtistMBID] = useState(ARTIST_MBID);
@@ -94,12 +85,12 @@ const Data = () => {
         }
     }
     
-    const processData = (data: Array<ApiResponseType>): void => {
-        let mainArtist = data[1];
-        setArtist(mainArtist.type === "dataset" ? mainArtist : undefined);
-
-        let similarArtists = data[3];
-        setSimilarArtists(similarArtists.type === "dataset" ? similarArtists : undefined);
+    const processData = (dataResponse: ApiResponseType): void => {
+        let mainArtistResponse = dataResponse[1];
+        setMainArtist(mainArtistResponse.type === "dataset" ? mainArtistResponse.data[0] : undefined);
+        
+        let similarArtistsResponce = dataResponse[3];
+        setSimilarArtists(similarArtistsResponce.type === "dataset" ? similarArtistsResponce.data.slice(0, similarArtistsLimit) : undefined);
 
         setColors([tinycolor.mix(color1, color2, COLOR_MIX_WEIGHT), color2]);
     }
@@ -108,20 +99,13 @@ const Data = () => {
         fetchData(artistMBID);
     }, [artistMBID]);
 
-    // Creating the list of similar artists
-    const similarArtistsList: Array<ArtistType> = similarArtists?.data?.slice(0, similarArtistsLimit) ?? [];
-    const mainArtist = artist?.data?.[0];
-    if(mainArtist){
-        similarArtistsList.push(mainArtist);
-    }
-
     // Calculating minScore for normalization which is always the last element of the array (because it's sorted)
-    var minScore = similarArtistsList[similarArtistsLimit - 1]?.score ?? 0;
+    var minScore = similarArtists?.[similarArtistsLimit - 1]?.score ?? 0;
     minScore = Math.sqrt(minScore);
 
-    var transformedArtists: GraphDataType = similarArtistsList && {
+    var transformedArtists: GraphDataType = similarArtists! && {
         
-        nodes: similarArtistsList.map((similarArtist: ArtistType, index: number): NodeType => {
+        nodes: [mainArtist! , ...similarArtists].map((similarArtist: ArtistType, index: number): NodeType => {
             let computedScore;
             let computedColor;
             if(similarArtist !== mainArtist) {
@@ -132,7 +116,6 @@ const Data = () => {
             
             else {
                 computedColor = colors[0];
-                similarArtistsList.pop();
             }
 
             return {
@@ -144,7 +127,7 @@ const Data = () => {
             };
         }),
 
-        links: similarArtistsList.map((similarArtist: ArtistType, index: number): LinkType => {
+        links: similarArtists.map((similarArtist: ArtistType, index: number): LinkType => {
             return {
                 source: mainArtist?.name ?? "",
                 target: similarArtist.name,

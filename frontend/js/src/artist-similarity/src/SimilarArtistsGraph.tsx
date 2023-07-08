@@ -13,7 +13,7 @@ interface GraphProps {
 const SimilarArtistsGraph = (props: GraphProps) => {
     const MAX_LINES = 2;
     const MAX_WORD_LENGTH = 10;
-
+    
     const CustomNodeComponent = <NodeType extends InputNode>({
         node,
         animated: animatedProps,
@@ -77,7 +77,7 @@ const SimilarArtistsGraph = (props: GraphProps) => {
         >
             <strong>{node.id}</strong>
             <br />
-            {node.data.score && <>Score: {node.data.score}</>}
+            {node.data.score != 0 && <>Score: {node.data.score}</>}
         </div>
     )
 

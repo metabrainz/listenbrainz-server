@@ -15,12 +15,11 @@ const Input = (props: InputProps) => {
         var limit = form.limit.value;
         props.setSimilarArtistsLimit(limit);
         props.onArtistChange(artist_mbid);
-        
     }
 
     return (
         <div>
-            <form method="post" onSubmit={(e) => handleInput(e)}>
+            <form onSubmit={handleInput}>
                 <label>
                     Artist MBID:
                     <input type="text" name="artist_mbid" defaultValue="8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"/>
