@@ -455,7 +455,7 @@ class TimescaleListenStore:
         return listens
 
 
-    def fetch_all_recent_listens_for_users(self, users, min_ts: datetime, max_ts: datetime, limit=25):
+    def fetch_all_recent_listens_for_users(self, users, min_ts: datetime, max_ts: datetime, limit=25, isSimilarListens: bool=False):
         """ Fetch recent listens for a list of users.
 
             users: A list containing the users for which you'd like to retrieve recent listens.
@@ -464,7 +464,11 @@ class TimescaleListenStore:
             limit: Listens returned per call. Should not exceed 100. Default value is 25, optional.
         """
 
-        user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
+        if isSimilarListens:
+            user_id_map = {user["id"]: Tuple(user["musicbrainz_id"], user["similarity"]) for user in users}
+        else:
+            user_id_map = {user["id"]: Tuple(user["musicbrainz_id"], None) for user in users}
+
 
         args = {"user_ids": tuple(user_id_map.keys()), "limit": limit}
 
@@ -535,10 +539,11 @@ class TimescaleListenStore:
                 result = curs.fetchone()
                 if not result:
                     break
-                user_name = user_id_map[result.user_id]
+                user_name = user_id_map[result.user_id][0]
                 listens.append(Listen.from_timescale(
                     listened_at=result.listened_at,
                     user_id=result.user_id,
+                    similarity=user_id_map[result.user_id][1],
                     created=result.created,
                     recording_msid=result.recording_msid,
                     track_metadata=result.data,
@@ -552,6 +557,7 @@ class TimescaleListenStore:
                     caa_id=result.caa_id,
                     caa_release_mbid=result.caa_release_mbid
                 ))
+
         return listens
 
     def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):

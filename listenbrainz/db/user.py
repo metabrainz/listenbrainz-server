@@ -456,6 +456,42 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
         return SimilarUsers(user_id=user_id, similar_users=users)
 
 
+def get_similar_users_as_list(user_id: int) -> List[dict]:
+    """ Given a user_id, fetch the similar users for that given user.
+        Returns a list order by "similarity" in descending order:
+        [   
+            { 
+                "musicbrainz_id" : "user_x",
+                "id": 123, 
+                "similarity": 0.54 
+            },
+            { 
+                "musicbrainz_id" : "user_y",
+                "id": 545, 
+                "similarity": 0.22 
+            }
+        ]
+
+    """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT musicbrainz_id
+                 , id
+                 , value->0 AS similarity -- first element of array is local similarity, second is global_similarity
+              FROM recommendation.similar_user r 
+              JOIN jsonb_each(r.similar_users) j
+                ON TRUE
+              JOIN "user" u
+                ON j.key::int = u.id 
+             WHERE user_id = :user_id
+             ORDER BY similarity DESC
+        """), {
+            "user_id": user_id
+        })
+        return result.mappings().all()
+
+
 def get_users_by_id(user_ids: List[int]):
     """ Given a list of user ids, fetch one ore more users at the same time.
         Returns a dict mapping user_ids to user_names. """

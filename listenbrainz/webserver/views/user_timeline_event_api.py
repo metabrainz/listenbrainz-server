@@ -393,6 +393,54 @@ def user_feed_listens_following(user_name: str):
     }})
     
 
+@user_timeline_event_api_bp.route('/user/<user_name>/feed/events/listens/similar', methods=['OPTIONS', 'GET'])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def user_feed_listens_similar(user_name: str):
+    """ Get feed's listen events for similar users.
+
+    :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
+    :type user_name: ``str``
+    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned.
+    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned.
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successful query, you have feed listen-events!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Invalid authorization. See error message for details.
+    :statuscode 403: Forbidden, you do not have permission to view this user's feed.
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIForbidden("You don't have permissions to view this user's timeline.")
+    
+    min_ts, max_ts, count = _validate_get_endpoint_params()
+
+    # Here, list is in descending order as we want similar_users with 
+    # highest similarity to be processed first and lowest at last.    
+    users_list = db_user.get_similar_users_as_list(user['id'])
+
+    # Get all listen events
+    if len(users_list) == 0:
+        listen_events = []
+    else:
+        listen_events = get_all_listen_events(users_list, min_ts, max_ts, count, True)
+
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
+    for index, event in enumerate(listen_events):
+        listen_events[index].event_type = event.event_type.value
+
+    return jsonify({'payload': {
+        'count': len(listen_events),
+        'user_id': user_name,
+        'events': [event.dict() for event in listen_events],
+    }})
+
+
 @user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
 @crossdomain
 @ratelimit()
@@ -679,7 +727,8 @@ def get_all_listen_events(
     users: List[Dict],
     min_ts: int,
     max_ts: int,
-    limit: int
+    limit: int,
+    isSimilarListens=False
 ) -> List[APITimelineEvent]:
     """ Gets all listen events in the feed.
     """
@@ -711,7 +760,8 @@ def get_all_listen_events(
         users,
         min_ts=min_ts,
         max_ts=max_ts,
-        limit=limit
+        limit=limit,
+        isSimilarListens=isSimilarListens
     )
 
     events = []
