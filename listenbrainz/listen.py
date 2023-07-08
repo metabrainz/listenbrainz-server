@@ -69,11 +69,9 @@ class Listen(object):
         'release_name',
     )
 
-    def __init__(self, user_id=None, user_name=None, timestamp=None, recording_msid=None, inserted_timestamp=None, data=None, similarity=None):
+    def __init__(self, user_id=None, user_name=None, timestamp=None, recording_msid=None, inserted_timestamp=None, data=None):
         self.user_id = user_id
         self.user_name = user_name
-        # When a listen is being shown to user x wrt to another user y, similarity can used to show similarity of y to x.
-        self.similarity = similarity
 
         # determine the type of timestamp and do the right thing
         if isinstance(timestamp, int) or isinstance(timestamp, float):
@@ -123,7 +121,7 @@ class Listen(object):
         )
 
     @classmethod
-    def from_timescale(cls, listened_at, user_id, created, recording_msid, track_metadata, similarity=None,
+    def from_timescale(cls, listened_at, user_id, created, recording_msid, track_metadata,
                        recording_mbid=None, recording_name=None, release_mbid=None, artist_mbids=None,
                        ac_names=None, ac_join_phrases=None, user_name=None,
                        caa_id=None, caa_release_mbid=None):
@@ -157,7 +155,6 @@ class Listen(object):
         return cls(
             user_id=user_id,
             user_name=user_name,
-            similarity=similarity,
             timestamp=listened_at,
             recording_msid=recording_msid,
             inserted_timestamp=created,
