@@ -1,6 +1,12 @@
-#!/usr/bin/env python3
+from pydantic import BaseModel
 
 from listenbrainz.labs_api.labs.api.recording_lookup_base import RecordingLookupBaseQuery
+
+
+class ArtistCreditRecordingReleaseLookupInput(BaseModel):
+    artist_credit_name: str
+    recording_name: str
+    release_name: str
 
 
 class ArtistCreditRecordingReleaseLookupQuery(RecordingLookupBaseQuery):
@@ -15,7 +21,7 @@ class ArtistCreditRecordingReleaseLookupQuery(RecordingLookupBaseQuery):
         return "acrr-lookup", "MusicBrainz Artist Credit Recording Release lookup"
 
     def inputs(self):
-        return ['[artist_credit_name]', '[recording_name]', '[release_name]']
+        return ArtistCreditRecordingReleaseLookupInput
 
     def introduction(self):
         return """

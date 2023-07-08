@@ -1,11 +1,35 @@
+from typing import Union, Optional
+from uuid import UUID
+
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
 from flask import current_app
 from markupsafe import Markup
+from pydantic import BaseModel
 
 from listenbrainz.db import similarity
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+
+
+class SimilarRecordingsViewerInput(BaseModel):
+    recording_mbids: list[UUID]
+    algorithm: str
+
+
+class SimilarRecordingsViewerOutputItem(BaseModel):
+    artist_credit_name: Optional[str]
+    recording_name: Optional[str]
+    artist_credit_id: Optional[int]
+    artist_credit_mbids: Optional[list[UUID]]
+    recording_mbid: Optional[UUID]
+
+
+class SimilarRecordingsViewerOutputComment(BaseModel):
+    comment: str
+
+
+SimilarRecordingsViewerOutput = Union[SimilarRecordingsViewerOutputComment, SimilarRecordingsViewerOutputItem]
 
 
 class SimilarRecordingsViewerQuery(Query):
@@ -18,13 +42,13 @@ class SimilarRecordingsViewerQuery(Query):
         return "similar-recordings", "Similar Recordings Viewer"
 
     def inputs(self):
-        return ['recording_mbid', 'algorithm']
+        return SimilarRecordingsViewerInput
 
     def introduction(self):
         return """This page allows you to view recordings similar to a given recording and algorithm."""
 
     def outputs(self):
-        return None
+        return SimilarRecordingsViewerOutput
 
     @staticmethod
     def get_recordings_dataset(mb_curs, ts_curs, mbids, score_idx=None, similar_mbid_idx=None):
@@ -43,15 +67,11 @@ class SimilarRecordingsViewerQuery(Query):
             r.pop("artist_credit_id", None)
             r.pop("length", None)
 
-        return {
-            "type": "dataset",
-            "columns": list(metadata[0].keys()),
-            "data": metadata
-        }
+        return [SimilarRecordingsViewerOutputItem(**item) for item in metadata]
 
     def fetch(self, params, offset=-1, count=-1):
-        recording_mbids = [p["recording_mbid"].strip() for p in params]
-        algorithm = params[0]["algorithm"].strip()
+        recording_mbids = params[0].recording_mbids
+        algorithm = params[0].algorithm
         count = count if count > 0 else 100
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
@@ -60,19 +80,16 @@ class SimilarRecordingsViewerQuery(Query):
                 ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
 
             references = self.get_recordings_dataset(mb_curs, ts_curs, recording_mbids)
-            results = [{"type": "markup", "data": Markup("<p><b>Reference recording</b></p>")}]
-            results.append(references)
+            results = [SimilarRecordingsViewerOutputComment(comment=Markup("<p><b>Reference recording</b></p>"))]
+            results.extend(references)
 
             similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "recording_dev", recording_mbids, algorithm, count)
             if len(similar_mbids) == 0:
-                results.append({
-                    "type": "markup",
-                    "data": Markup("<p><b>No similar recordings found!</b></p>")
-                })
+                results.append(SimilarRecordingsViewerOutputComment(comment=Markup("<p><b>No similar recordings found!</b></p>")))
                 return results
 
+            results.append(SimilarRecordingsViewerOutputComment(comment=Markup("<p><b>Similar Recordings</b></p>")))
             similar_dataset = self.get_recordings_dataset(mb_curs, ts_curs, similar_mbids, score_idx, mbid_idx)
-            results.append({"type": "markup", "data": Markup("<p><b>Similar Recordings</b></p>")})
-            results.append(similar_dataset)
+            results.extend(similar_dataset)
 
             return results

@@ -1,7 +1,11 @@
-from datasethoster import Query
+from pydantic import BaseModel
 
-from listenbrainz.labs_api.labs.api.base_mbid_mapping import BaseMBIDMappingQuery
-from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
+from listenbrainz.labs_api.labs.api.base_mbid_mapping import BaseMBIDMappingQuery, BaseMBIDMappingOutput
+
+
+class MBIDMappingInput(BaseModel):
+    artist_credit_name: str
+    recording_name: str
 
 
 class MBIDMappingQuery(BaseMBIDMappingQuery):
@@ -13,7 +17,7 @@ class MBIDMappingQuery(BaseMBIDMappingQuery):
         return "mbid-mapping", "MusicBrainz ID Mapping lookup"
 
     def inputs(self):
-        return ['[artist_credit_name]', '[recording_name]']
+        return MBIDMappingInput
 
     def introduction(self):
         return """Given the name of an artist and the name of a recording (track)
@@ -24,8 +28,7 @@ class MBIDMappingQuery(BaseMBIDMappingQuery):
 
         args = []
         for i, param in enumerate(params):
-            args.append((i, param['[artist_credit_name]'],
-                         param['[recording_name]']))
+            args.append((i, param.artist_credit_name, param.recording_name))
 
         results = []
         for index, artist_credit_name, recording_name in args:
@@ -36,4 +39,4 @@ class MBIDMappingQuery(BaseMBIDMappingQuery):
                 hit["index"] = index
                 results.append(hit)
 
-        return results
+        return [BaseMBIDMappingOutput(**row) for row in results]
