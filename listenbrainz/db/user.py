@@ -456,7 +456,7 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
         return SimilarUsers(user_id=user_id, similar_users=users)
 
 
-def get_similar_users_as_list(user_id: int) -> List[dict]:
+def get_similar_users_as_list(user_id: int) -> Tuple[List[dict], dict]:
     """ Given a user_id, fetch the similar users for that given user.
         Returns a list order by "similarity" in descending order:
         [   
@@ -471,6 +471,7 @@ def get_similar_users_as_list(user_id: int) -> List[dict]:
                 "similarity": 0.22 
             }
         ]
+        And a dict { "user_x" : .453, "user_y": .123 }
 
     """
 
@@ -489,7 +490,9 @@ def get_similar_users_as_list(user_id: int) -> List[dict]:
         """), {
             "user_id": user_id
         })
-        return result.mappings().all()
+        user_list = result.mappings().all()
+        user_map = {row.musicbrainz_id: row.similarity for row in result.fetchall()}
+        return user_list, user_map
 
 
 def get_users_by_id(user_ids: List[int]):
