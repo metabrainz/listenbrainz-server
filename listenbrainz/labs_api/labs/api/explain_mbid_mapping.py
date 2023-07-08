@@ -1,5 +1,34 @@
+from typing import Optional, Union
+from uuid import UUID
+
 from datasethoster import Query
+from pydantic import BaseModel
+
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
+
+
+class ExplainMBIDMappingInput(BaseModel):
+    artist_credit_name: str
+    recording_name: str
+    release_name: str
+
+
+class ExplainMBIDMappingOutputLog(BaseModel):
+    log_lines: str
+
+
+class ExplainMBIDMappingOutputItem(BaseModel):
+    artist_credit_name: Optional[str]
+    release_name: Optional[str]
+    recording_name: Optional[str]
+    artist_credit_id: Optional[int]
+    artist_mbids: Optional[list[UUID]]
+    release_mbid: Optional[UUID]
+    recording_mbid: Optional[UUID]
+    year: Optional[int]
+
+
+ExplainMBIDMappingOutput = Union[ExplainMBIDMappingOutputItem, ExplainMBIDMappingOutputLog]
 
 
 class ExplainMBIDMappingQuery(Query):
@@ -14,31 +43,19 @@ class ExplainMBIDMappingQuery(Query):
         return "explain-mbid-mapping", "Explain MusicBrainz ID Mapping lookup"
 
     def inputs(self):
-        return ['artist_credit_name', 'recording_name', 'release_name']
+        return ExplainMBIDMappingInput
 
     def introduction(self):
         return """Given the name of an artist and the name of a recording (track)
                   this uery execute the mapping and print its debug log"""
 
     def outputs(self):
-        return None
+        return ExplainMBIDMappingOutput
 
     def fetch(self, params, offset=-1, count=-1):
         """ Call the MBIDMapper and carry out this mapping search """
-        hit = self.mapper.search(params[0]["artist_credit_name"], params[0]["recording_name"], params[0].get("release_name"))
-
-        results = [
-            {
-                "type": "dataset",
-                "columns": ["log_lines"],
-                "data": [{"log_lines": line} for line in self.mapper.read_log()]
-            }
-        ]
+        hit = self.mapper.search(params[0].artist_credit_name, params[0].recording_name, params[0].release_name)
+        results = [ExplainMBIDMappingOutputItem(log_lines=line) for line in self.mapper.read_log()]
         if hit:
-            results.append({
-                "type": "dataset",
-                "columns": hit.keys(),
-                "data": [hit]
-            })
-
+            results.append(ExplainMBIDMappingOutputItem(**hit))
         return results

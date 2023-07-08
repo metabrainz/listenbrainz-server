@@ -2,12 +2,29 @@
 import abc
 import re
 from abc import ABC
+from typing import Optional
+from uuid import UUID
 
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
+from pydantic import BaseModel
 from unidecode import unidecode
 from listenbrainz import config
+
+
+class RecordingLookupBaseOutput(BaseModel):
+    index: int
+    artist_credit_arg: str
+    recording_arg: str
+    artist_credit_name: Optional[str]
+    release_name: Optional[str]
+    recording_name: Optional[str]
+    artist_credit_id: Optional[int]
+    artist_mbids: Optional[list[UUID]]
+    release_mbid: Optional[UUID]
+    recording_mbid: Optional[UUID]
+    year: Optional[int]
 
 
 class RecordingLookupBaseQuery(Query, ABC):
@@ -20,9 +37,7 @@ class RecordingLookupBaseQuery(Query, ABC):
         pass
 
     def outputs(self):
-        return ['index', 'artist_credit_arg', 'recording_arg',
-                'artist_credit_name', 'release_name', 'recording_name',
-                'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid', 'year']
+        return RecordingLookupBaseOutput
 
     def get_debug_log_lines(self):
         lines = self.log_lines

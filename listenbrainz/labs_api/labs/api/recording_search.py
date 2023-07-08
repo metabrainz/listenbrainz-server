@@ -1,12 +1,29 @@
+from typing import Optional
+from uuid import UUID
+
 import typesense
 import typesense.exceptions
 from datasethoster import Query
+from pydantic import BaseModel
 
 from listenbrainz import config
 from listenbrainz.mbid_mapping_writer.mbid_mapper import prepare_query, COLLECTION_NAME_WITHOUT_RELEASE
 
 
 NUM_TYPOS = 5
+
+
+class RecordingSearchInput(BaseModel):
+    query: str
+
+
+class RecordingSearchOutput(BaseModel):
+    recording_name: Optional[str]
+    recording_mbid: Optional[UUID]
+    release_name: Optional[str]
+    release_mbid: Optional[UUID]
+    artist_credit_name: Optional[str]
+    artist_credit_id: Optional[int]
 
 
 class RecordingSearchQuery(Query):
@@ -31,10 +48,10 @@ class RecordingSearchQuery(Query):
         })
 
     def names(self):
-        return ("recording-search", "MusicBrainz Recording search")
+        return "recording-search", "MusicBrainz Recording search"
 
     def inputs(self):
-        return ['query']
+        return RecordingSearchInput
 
     def introduction(self):
         return """This page allows you to enter the name of an artist and the name of a recording (track)
@@ -42,14 +59,11 @@ class RecordingSearchQuery(Query):
                   the search query by combining artist name and recording name. (e.g. 'portishead strangers')"""
 
     def outputs(self):
-        return ['recording_name', 'recording_mbid',
-                'release_name', 'release_mbid',
-                'artist_credit_name', 'artist_credit_id']
+        return RecordingSearchOutput
 
     def fetch(self, params, offset=-1, count=-1):
-
         search_parameters = {
-            'q': prepare_query(params[0]['query']),
+            'q': prepare_query(params[0].query),
             'query_by': "combined",
             'prefix': 'no',
             'num_typos': NUM_TYPOS

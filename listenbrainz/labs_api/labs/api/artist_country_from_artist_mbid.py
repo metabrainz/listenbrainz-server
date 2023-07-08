@@ -1,20 +1,29 @@
-from operator import itemgetter
+from uuid import UUID
 
 from datasethoster import Query
 import psycopg2
 import psycopg2.extras
 from flask import current_app
-from werkzeug.exceptions import NotFound
-from listenbrainz import config
+from pydantic import BaseModel
+
+
+class ArtistCountryFromArtistMBIDInput(BaseModel):
+    artist_mbid: UUID
+
+
+class ArtistCountryFromArtistMBIDOutput(BaseModel):
+    artist_mbid: UUID
+    artist_name: str
+    country_code: str
 
 
 class ArtistCountryFromArtistMBIDQuery(Query):
 
     def names(self):
-        return ("artist-country-code-from-artist-mbid", "MusicBrainz Artist Country From Artist MBID")
+        return "artist-country-code-from-artist-mbid", "MusicBrainz Artist Country From Artist MBID"
 
     def inputs(self):
-        return ['artist_mbid']
+        return ArtistCountryFromArtistMBIDInput
 
     def introduction(self):
         return """Given artist MBIDs look up countries for those artists. Any artist_mbids
@@ -22,16 +31,16 @@ class ArtistCountryFromArtistMBIDQuery(Query):
                   found a 404 error is returned."""
 
     def outputs(self):
-        return ['artist_mbid', 'artist_name', 'country_code']
+        return ArtistCountryFromArtistMBIDOutput
 
-    def fetch(self, params, count=-1, offset=-1):
+    def fetch(self, params: list[ArtistCountryFromArtistMBIDInput], count=-1, offset=-1) -> list[ArtistCountryFromArtistMBIDOutput]:
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
-                acs = tuple([r['artist_mbid'] for r in params])
+                acs = tuple([r.artist_mbid for r in params])
                 query = """ SELECT a.gid AS artist_mbid,
                                    a.name AS artist_name,
                                    ar.id AS area_id,
@@ -94,8 +103,6 @@ class ArtistCountryFromArtistMBIDQuery(Query):
                     r = dict(row)
                     area_index[r['area']] = r['country_code']
 
-
-                result = []
                 for i, row in enumerate(mapping):
                     if not row['country_code']:
                         try:
@@ -103,4 +110,4 @@ class ArtistCountryFromArtistMBIDQuery(Query):
                         except KeyError:
                             mapping[i]['country_code'] = ''
 
-                return mapping
+                return [ArtistCountryFromArtistMBIDOutput(**row) for row in mapping]

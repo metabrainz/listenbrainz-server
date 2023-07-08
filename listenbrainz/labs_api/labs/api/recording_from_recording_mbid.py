@@ -1,8 +1,27 @@
+from typing import Optional
+from uuid import UUID
+
 import psycopg2.extras
 from datasethoster import Query
 from flask import current_app
+from pydantic import BaseModel
 
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+
+
+class RecordingFromRecordingMBIDInput(BaseModel):
+    recording_mbid: str
+
+
+class RecordingFromRecordingMBIDOutput(BaseModel):
+    artist_credit_name: Optional[str]
+    recording_name: Optional[str]
+    artist_credit_id: Optional[int]
+    artist_credit_mbids: Optional[list[UUID]]
+    recording_mbid: Optional[UUID]
+    length: Optional[int]
+    canonical_recording_mbid: Optional[UUID]
+    original_recording_mbid: Optional[UUID]
 
 
 class RecordingFromRecordingMBIDQuery(Query):
@@ -12,7 +31,7 @@ class RecordingFromRecordingMBIDQuery(Query):
         return "recording-mbid-lookup", "MusicBrainz Recording by MBID Lookup"
 
     def inputs(self):
-        return ['[recording_mbid]']
+        return RecordingFromRecordingMBIDInput
 
     def introduction(self):
         return """Look up recording and artist information given a recording MBID"""
@@ -25,7 +44,7 @@ class RecordingFromRecordingMBIDQuery(Query):
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 
-        mbids = [p['[recording_mbid]'] for p in params]
+        mbids = [p.recording_mbid for p in params]
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
                 psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
@@ -49,4 +68,4 @@ class RecordingFromRecordingMBIDQuery(Query):
         if offset < 0 and count > 0:
             return output[:count]
 
-        return output
+        return [RecordingFromRecordingMBIDOutput(**row) for row in output]

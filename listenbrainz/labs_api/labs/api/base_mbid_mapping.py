@@ -1,5 +1,24 @@
+from typing import Optional
+from uuid import UUID
+
 from datasethoster import Query
+from pydantic import BaseModel
+
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
+
+
+class BaseMBIDMappingOutput(BaseModel):
+    index: int
+    artist_credit_arg: str
+    recording_arg: str
+    artist_credit_name: Optional[str]
+    release_name: Optional[str]
+    recording_name: Optional[str]
+    artist_credit_id: Optional[int]
+    artist_mbids: Optional[list[UUID]]
+    release_mbid: Optional[UUID]
+    recording_mbid: Optional[UUID]
+    year: Optional[int]
 
 
 class BaseMBIDMappingQuery(Query):
@@ -11,9 +30,7 @@ class BaseMBIDMappingQuery(Query):
         self.mapper = MBIDMapper(timeout=timeout, remove_stop_words=remove_stop_words, debug=debug)
 
     def outputs(self):
-        return ['index', 'artist_credit_arg', 'recording_arg',
-                'artist_credit_name', 'artist_mbids', 'release_name', 'recording_name',
-                'release_mbid', 'recording_mbid', 'artist_credit_id', 'year']
+        return BaseMBIDMappingOutput
 
     def get_debug_log_lines(self):
         return self.mapper.read_log()
