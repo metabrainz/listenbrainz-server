@@ -192,7 +192,7 @@ export default class YearInMusic extends React.Component<
     } catch (err) {
       toast.error(
         <ToastMsg
-          title="Error while fetching following"
+          title="Error while fetching the users you follow"
           message={err.toString()}
         />,
         { toastId: "fetch-following-error" }

@@ -44,7 +44,7 @@ export default function PlaylistCard({
     if (!currentUser?.auth_token) {
       toast.error(
         <ToastMsg
-          title="Duplicated playlist"
+          title="Error"
           message="You must be logged in for this operation"
         />,
         { toastId: "auth-error" }
@@ -55,7 +55,7 @@ export default function PlaylistCard({
     if (!playlistId?.length) {
       toast.error(
         <ToastMsg
-          title="Duplicated playlist"
+          title="Error"
           message="No playlist to copy; missing a playlist ID"
         />,
         { toastId: "copy-playlist-error" }

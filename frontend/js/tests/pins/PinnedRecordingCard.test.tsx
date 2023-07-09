@@ -95,7 +95,7 @@ describe("PinnedRecordingCard", () => {
     it("calls API, updates currentlyPinned in state", async () => {
       const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard {...{ ...props }} />
+          <PinnedRecordingCard { ...props } />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();

@@ -143,7 +143,7 @@ export default class PlayerPage extends React.Component<
       );
     } catch (error) {
       toast.error(
-        <ToastMsg title="Created playlist" message={error.message} />,
+        <ToastMsg title="Could not save playlist" message={error.message} />,
         { toastId: "create-playlist-error" }
       );
     }

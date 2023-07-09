@@ -81,7 +81,7 @@ export default class UserSocialNetwork extends React.Component<
     } catch (err) {
       toast.error(
         <ToastMsg
-          title=" Error while fetching followers"
+          title="Error while fetching followers"
           message={err.toString()}
         />,
         { toastId: "fetch-followers-error" }
@@ -101,7 +101,7 @@ export default class UserSocialNetwork extends React.Component<
     } catch (err) {
       toast.error(
         <ToastMsg
-          title=" Error while fetching following"
+          title={`Error while fetching ${user?.name}'s following`}
           message={err.toString()}
         />,
         { toastId: "fetch-following-error" }
@@ -123,7 +123,7 @@ export default class UserSocialNetwork extends React.Component<
     } catch (err) {
       toast.error(
         <ToastMsg
-          title=" Error while fetching following"
+          title="Error while fetching the users you follow"
           message={err.toString()}
         />,
         { toastId: "fetch-following-error" }
