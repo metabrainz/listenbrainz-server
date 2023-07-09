@@ -238,8 +238,10 @@ def user_feed(user_name: str):
 
     :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
     :type user_name: ``str``
-    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned
-    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned
+    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned.
+    :type max_ts: ``int``
+    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned.
+    :type min_ts: ``int``
     :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :type count: ``int``
     :reqheader Authorization: Token <user token>
@@ -357,7 +359,11 @@ def user_feed_listens_following(user_name: str):
     :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
     :type user_name: ``str``
     :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned.
+    :type max_ts: ``int``
     :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned.
+    :type min_ts: ``int``
+    :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, you have feed listen-events!
@@ -403,7 +409,11 @@ def user_feed_listens_similar(user_name: str):
     :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
     :type user_name: ``str``
     :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned.
+    :type max_ts: ``int``
     :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned.
+    :type min_ts: ``int``
+    :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
     :statuscode 200: Successful query, you have feed listen-events!
