@@ -63,10 +63,10 @@ These instructions help you get started with the development process.
 Installation in a production environment may be different.
 
 **Read the [development environment
-documentation](https://listenbrainz.readthedocs.io/en/production/dev/devel-env.html "Setting up a development environment - ListenBrainz documentation")**
+documentation](https://listenbrainz.readthedocs.io/en/latest/developers/devel-env.html  "Setting up a development environment - ListenBrainz documentation")**
 
 In order to work with Spark, you'll have to setup the Spark development environment.
-Read the [documentation](https://listenbrainz.readthedocs.io/en/production/dev/spark-devel-env.html).
+Read the [documentation](https://listenbrainz.readthedocs.io/en/latest/developers/spark-devel-env.html).
 
 ## Documentation
 
