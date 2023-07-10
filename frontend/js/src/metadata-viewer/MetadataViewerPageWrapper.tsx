@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { io } from "socket.io-client";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import { getPageProps } from "../utils/utils";

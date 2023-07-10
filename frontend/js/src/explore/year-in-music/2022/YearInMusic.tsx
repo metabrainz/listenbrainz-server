@@ -31,7 +31,7 @@ import GlobalAppContext, {
 } from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
 
-import { withAlertNotifications } from "../../../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
 import {
   generateAlbumArtThumbnailLink,

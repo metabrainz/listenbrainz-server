@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { toast } from "react-toastify";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import { getPageProps } from "../utils/utils";

@@ -5,7 +5,7 @@ import { Integrations } from "@sentry/tracing";
 import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
-import { withAlertNotifications } from "../../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";

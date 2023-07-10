@@ -28,7 +28,7 @@ import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import * as _ from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";

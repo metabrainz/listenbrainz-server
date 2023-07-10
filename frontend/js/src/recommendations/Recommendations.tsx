@@ -8,7 +8,7 @@ import { get, isEqual, isInteger } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext from "../utils/GlobalAppContext";

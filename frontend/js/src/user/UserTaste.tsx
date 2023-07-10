@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";

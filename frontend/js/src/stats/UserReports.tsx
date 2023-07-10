@@ -18,7 +18,7 @@ import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
 import { getPageProps } from "../utils/utils";
 import { getAllStatRanges } from "./utils";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 export type UserReportsProps = {

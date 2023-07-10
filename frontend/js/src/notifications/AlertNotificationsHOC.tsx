@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ToastContainer } from "react-toastify";
 
-export function withAlertNotifications<P extends object>(
+export default function withAlertNotifications<P extends object>(
   WrappedComponent: React.ComponentType<P>
 ) {
   class AlertNotifications extends React.Component<P> {

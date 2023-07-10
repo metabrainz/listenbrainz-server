@@ -23,7 +23,7 @@ import GlobalAppContext, {
 } from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
 
-import { withAlertNotifications } from "../../../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
 import { getPageProps } from "../../../utils/utils";
 import { getEntityLink } from "../../../stats/utils";

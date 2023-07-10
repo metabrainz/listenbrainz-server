@@ -19,7 +19,7 @@ import { get, isEqual } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { Socket, io } from "socket.io-client";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import AddListenModal from "../add-listen/AddListenModal";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";

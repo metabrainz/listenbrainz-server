@@ -12,7 +12,7 @@ import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../utils/GlobalAppContext";
-import { withAlertNotifications } from "../../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";

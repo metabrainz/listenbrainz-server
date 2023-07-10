@@ -15,7 +15,7 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";

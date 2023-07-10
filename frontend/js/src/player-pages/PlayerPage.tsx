@@ -12,7 +12,7 @@ import { sanitize } from "dompurify";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import { withAlertNotifications } from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
