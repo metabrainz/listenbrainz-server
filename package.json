@@ -48,6 +48,7 @@
     "@nivo/geo": "^0.81.0",
     "@nivo/heatmap": "^0.81.0",
     "@nivo/legends": "^0.81.0",
+    "@nivo/network": "^0.81.0",
     "@nivo/tooltip": "^0.81.0",
     "@sentry/react": "^7.17.4",
     "@sentry/tracing": "^7.17.4",
