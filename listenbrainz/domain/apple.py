@@ -58,3 +58,14 @@ class AppleService(ExternalService):
             user_id (int): the ListenBrainz row ID of the user
         """
         external_service_oauth.delete_token(user_id, self.service, remove_import_log=False)
+
+    def update_music_user_token(self, user_id: int, music_user_token: str):
+        """ Update the music user token for the given user. """
+        token = self.get_user(user_id)
+        external_service_oauth.update_token(
+            user_id=user_id,
+            service=ExternalServiceType.APPLE,
+            access_token=token["access_token"],
+            refresh_token=music_user_token,
+            expires_at=int(token["token_expires"].timestamp())
+        )

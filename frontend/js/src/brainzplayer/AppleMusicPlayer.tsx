@@ -7,6 +7,11 @@ import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 export type AppleMusicPlayerProps = DataSourceProps & {
   appleMusicUser?: AppleMusicUser;
+  submitMusicUserToken: (
+    submitMusicUserToken: string,
+    musicUserToken: string
+  ) => Promise<void>;
+  listenBrainzToken: string;
 };
 
 export type AppleMusicPlayerState = {
@@ -51,6 +56,7 @@ export default class AppleMusicPlayer
   // Saving the developer token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
   private readonly developerToken: string = "";
+  private readonly musicUserToken: string = "";
 
   private readonly _boundOnPlaybackStateChange: (
     event: MusicKit.PlayerPlaybackState
@@ -78,6 +84,7 @@ export default class AppleMusicPlayer
     };
 
     this.developerToken = props.appleMusicUser?.developer_token || "";
+    this.musicUserToken = props.appleMusicUser?.music_user_token || "";
 
     // Do an initial check of whether the user wants to link Apple Music before loading the SDK library
     if (AppleMusicPlayer.hasPermissions(props.appleMusicUser)) {
@@ -108,6 +115,20 @@ export default class AppleMusicPlayer
   componentWillUnmount(): void {
     this.disconnectAppleMusicPlayer();
   }
+
+  authorizeApplePlayer = async (): Promise<void> => {
+    const {
+      listenBrainzToken,
+      appleMusicUser,
+      submitMusicUserToken,
+    } = this.props;
+    const music_user_token = appleMusicUser?.music_user_token;
+
+    const newToken = await this.appleMusicPlayer?.authorize();
+    if (newToken && (!music_user_token || newToken !== music_user_token)) {
+      await submitMusicUserToken(listenBrainzToken, newToken);
+    }
+  };
 
   playAppleMusicId = async (
     appleMusicId: string,
@@ -153,7 +174,7 @@ export default class AppleMusicPlayer
     );
     const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
     if (apple_music_id) {
-      await this.appleMusicPlayer.authorize();
+      await this.authorizeApplePlayer();
       await this.playAppleMusicId(apple_music_id);
     }
   };
@@ -162,29 +183,30 @@ export default class AppleMusicPlayer
     return false;
   };
 
-  playListen = (listen: Listen | JSPFTrack): void => {
+  playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
     const { show } = this.props;
     if (!show) {
       return;
     }
     const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
     if (apple_music_id) {
-      this.appleMusicPlayer.authorize();
-      this.playAppleMusicId(apple_music_id);
+      await this.authorizeApplePlayer();
+      await this.playAppleMusicId(apple_music_id);
       return;
     }
-    this.searchAndPlayTrack(listen);
+    await this.searchAndPlayTrack(listen);
   };
 
   togglePlay = (): void => {
     if (
-      this.appleMusicPlayer.playbackState === MusicKit.PlaybackStates.playing ||
-      this.appleMusicPlayer.playbackState === MusicKit.PlaybackStates.loading
+      this.appleMusicPlayer?.playbackState ===
+        MusicKit.PlaybackStates.playing ||
+      this.appleMusicPlayer?.playbackState === MusicKit.PlaybackStates.loading
     ) {
       this.appleMusicPlayer.pause();
     } else {
-      this.appleMusicPlayer.authorize();
-      this.appleMusicPlayer.play();
+      this.authorizeApplePlayer();
+      this.appleMusicPlayer?.play();
     }
   };
 
@@ -215,14 +237,14 @@ export default class AppleMusicPlayer
 
   seekToPositionMs = (msTimecode: number): void => {
     const timeCode = Math.floor(msTimecode / 1000);
-    this.appleMusicPlayer.seekToTime(timeCode);
+    this.appleMusicPlayer?.seekToTime(timeCode);
   };
 
   disconnectAppleMusicPlayer = (): void => {
     if (!this.appleMusicPlayer) {
       return;
     }
-    this.appleMusicPlayer.removeEventListener(
+    this.appleMusicPlayer?.removeEventListener(
       "playbackStateDidChange",
       this._boundOnPlaybackStateChange
     );
@@ -238,7 +260,7 @@ export default class AppleMusicPlayer
       "nowPlayingItemDidChange",
       this._boundOnNowPlayingItemChange
     );
-    this.appleMusicPlayer = null;
+    this.appleMusicPlayer = undefined;
   };
 
   connectAppleMusicPlayer = async (): Promise<void> => {
@@ -258,23 +280,28 @@ export default class AppleMusicPlayer
       },
     });
     this.appleMusicPlayer = musickit.getInstance();
-    this.appleMusicPlayer.addEventListener(
+
+    if (this.appleMusicPlayer && this.musicUserToken) {
+      this.appleMusicPlayer.musicUserToken = this.musicUserToken;
+    }
+
+    this.appleMusicPlayer?.addEventListener(
       "playbackStateDidChange",
       this._boundOnPlaybackStateChange
     );
-    this.appleMusicPlayer.addEventListener(
+    this.appleMusicPlayer?.addEventListener(
       "playbackTimeDidChange",
       this._boundOnPlaybackTimeChange
     );
-    this.appleMusicPlayer.addEventListener(
+    this.appleMusicPlayer?.addEventListener(
       "playbackDurationDidChange",
       this._boundOnPlaybackDurationChange
     );
-    this.appleMusicPlayer.addEventListener(
+    this.appleMusicPlayer?.addEventListener(
       "nowPlayingItemDidChange",
       this._boundOnNowPlayingItemChange
     );
-    await this.appleMusicPlayer.authorize();
+    await this.authorizeApplePlayer();
   };
 
   onPlaybackStateChange = ({

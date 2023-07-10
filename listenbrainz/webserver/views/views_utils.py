@@ -71,5 +71,6 @@ def get_current_apple_music_user():
         return {}
     return {
         "developer_token": user["access_token"],
+        "music_user_token": user["refresh_token"]
     }
 

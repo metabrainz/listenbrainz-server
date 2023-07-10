@@ -214,6 +214,7 @@ export default class RecentListens extends React.Component<
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
+          submitMusicUserToken={APIService.submitMusicUserToken}
         />
       </div>
     );

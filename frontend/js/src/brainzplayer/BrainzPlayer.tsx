@@ -75,6 +75,10 @@ export type BrainzPlayerProps = {
   listens: Array<Listen | JSPFTrack>;
   refreshSpotifyToken: () => Promise<string>;
   refreshYoutubeToken: () => Promise<string>;
+  submitMusicUserToken: (
+    submitMusicUserToken: string,
+    musicUserToken: string
+  ) => Promise<void>;
   listenBrainzAPIBaseURI: string;
 };
 
@@ -811,9 +815,10 @@ export default class BrainzPlayer extends React.Component<
     const {
       refreshSpotifyToken,
       refreshYoutubeToken,
+      submitMusicUserToken,
       listenBrainzAPIBaseURI,
     } = this.props;
-    const { youtubeAuth, spotifyAuth, appleAuth } = this.context;
+    const { youtubeAuth, spotifyAuth, appleAuth, currentUser } = this.context;
 
     return (
       <div>
@@ -907,7 +912,9 @@ export default class BrainzPlayer extends React.Component<
                 AppleMusicPlayer
             }
             appleMusicUser={appleAuth}
+            listenBrainzToken={currentUser?.auth_token || ""}
             onInvalidateDataSource={this.invalidateDataSource}
+            submitMusicUserToken={submitMusicUserToken}
             ref={this.appleMusicPlayer}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}

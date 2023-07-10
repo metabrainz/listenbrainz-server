@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from time import time
 
@@ -24,6 +25,7 @@ from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
 from listenbrainz.webserver.login import api_login_required
+from listenbrainz.webserver.views.api_tools import validate_auth_header
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
 
@@ -379,6 +381,16 @@ def music_services_callback(service_name: str):
     else:
         flash.error('Unable to connect to %s! Please try again.' % service_name.capitalize())
     return redirect(url_for('profile.music_services_details'))
+
+
+@profile_bp.route('/music-services/apple/submit/', methods=["POST"])
+@api_login_required
+def submit_apple_music_user_token():
+    """ Submit a new music user token for a user's apple music account """
+    user = validate_auth_header()
+    service = AppleService()
+    service.update_music_user_token(user["id"], request.json.get("musicUserToken"))
+    return json.dumps({"status": "ok"})
 
 
 @profile_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])

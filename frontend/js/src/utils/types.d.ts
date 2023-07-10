@@ -223,7 +223,7 @@ declare type SpotifyPagingObject<T> = {
 // TODO: remove this any eventually
 declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
 
-declare type AppleMusicPlayerType = any | MusicKit.MusicKitInstance;
+declare type AppleMusicPlayerType = MusicKit.MusicKitInstance;
 
 // Expect either a string or an Error or an html Response object
 declare type BrainzPlayerError =

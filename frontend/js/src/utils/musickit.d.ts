@@ -4,6 +4,15 @@ interface Window {
 
 declare namespace MusicKit {
   /**
+   * Configure a MusicKit instance.
+   */
+  function configure(configuration: Configuration): MusicKitInstance;
+  /**
+   * Returns the configured MusicKit instance.
+   */
+  function getInstance(): MusicKitInstance;
+
+  /**
    * This class represents the Apple Music API.
    */
   interface API {
@@ -15,19 +24,7 @@ declare namespace MusicKit {
      * @param options An object with additional options to control how requests are made
      * directly to the Apple Music API.
      */
-    music(
-      path: string,
-      parameters?: QueryParameters,
-      options?: any
-    ): Promise<Resource[]>;
-  }
-
-  interface Resource {
-    [key: string]: any;
-  }
-
-  interface QueryParameters {
-    [key: string]: any;
+    music(path: string, parameters?: any, options?: any): Promise<any>;
   }
 
   /**
@@ -106,7 +103,7 @@ declare namespace MusicKit {
    * This object provides access to a player instance, and through the player
    * instance, access to control playback.
    */
-  interface MusicKitInstance {
+  class MusicKitInstance {
     /**
      * An instance of the MusicKit API.
      */
@@ -124,18 +121,19 @@ declare namespace MusicKit {
     /**
      * A user token used to access personalized Apple Music content.
      */
-    readonly musicUserToken: string;
+    musicUserToken: string;
     /**
      * The current storefront for the configured MusicKit instance.
      */
     readonly storefrontId: string;
+    readonly playbackState: PlaybackStates;
     /**
      * Add an event listener for a MusicKit instance by name.
      *
      * @param name The name of the event.
      * @param callback The callback function to invoke when the event occurs.
      */
-    addEventListener(name: string, callback: () => any): void;
+    addEventListener(name: string, callback: (event: any) => any): void;
     /**
      * Returns a promise containing a music user token when a user has
      * authenticated and authorized the app.
@@ -151,7 +149,7 @@ declare namespace MusicKit {
      * @param name The name of the event.
      * @param callback The callback function to remove.
      */
-    removeEventListener(name: string, callback: () => any): void;
+    removeEventListener(name: string, callback: (event: any) => any): void;
     /**
      * Sets the playback point to a specified time in seconds.
      *
@@ -187,7 +185,4 @@ declare namespace MusicKit {
     state: MusicKit.PlaybackStates;
     nowPlayingItem?: MusicKit.MediaItem;
   };
-
-
 }
-

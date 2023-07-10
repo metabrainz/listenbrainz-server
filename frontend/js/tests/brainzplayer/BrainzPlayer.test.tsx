@@ -23,6 +23,7 @@ const props = {
   listenBrainzAPIBaseURI: "base-uri",
   refreshSpotifyToken: jest.fn(),
   refreshYoutubeToken: jest.fn(),
+  submitMusicUserToken: jest.fn(),
 };
 const spotifyAccountWithPermissions = {
   access_token: "haveyouseenthefnords",
