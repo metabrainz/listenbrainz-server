@@ -4,6 +4,7 @@ import { ToastContainer } from "react-toastify";
 export default function withAlertNotifications<P extends object>(
   WrappedComponent: React.ComponentType<P>
 ) {
+  // eslint-disable-next-line react/prefer-stateless-function
   class AlertNotifications extends React.Component<P> {
     render() {
       return (
