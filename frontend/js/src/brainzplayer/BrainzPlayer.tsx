@@ -120,7 +120,10 @@ function isListenFromDatasource(
   if (datasource instanceof SoundcloudPlayer) {
     return SoundcloudPlayer.isListenFromThisService(listen);
   }
-  return AppleMusicPlayer.isListenFromThisService(listen);
+  if (datasource instanceof AppleMusicPlayer) {
+    return AppleMusicPlayer.isListenFromThisService(listen);
+  }
+  return undefined;
 }
 
 export default class BrainzPlayer extends React.Component<
