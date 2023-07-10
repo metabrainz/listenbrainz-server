@@ -24,7 +24,11 @@ function GalleryTile(props: GalleryTileProps) {
   );
 
   return (
-    <div role="presentation" onClick={updateStyleCallback}>
+    <div
+      role="presentation"
+      onClick={updateStyleCallback}
+      className="galleryItem"
+    >
       <object
         title="galleryTile"
         className={isSelected ? "selected-gallery-tile" : "gallery-tile"}

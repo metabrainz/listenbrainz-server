@@ -224,7 +224,7 @@ function ArtCreator() {
           <IconTray previewUrl={previewUrl} />
         </div>
       </div>
-      <div className="col-sm-2 p-0 offset-md-2">
+      <div className="col-sm-2 setting-navbar">
         <div className="basic-settings-container">
           <div className="content-container">
             <h4>Settings</h4>
@@ -338,7 +338,7 @@ function ArtCreator() {
         </div>
         <div className="generate-button-container">
           <div className="btn-container border">
-            <button type="button" className="generate-button btn">
+            <button type="button" className="btn btn-primary generate-button">
               GENERATE
             </button>
           </div>

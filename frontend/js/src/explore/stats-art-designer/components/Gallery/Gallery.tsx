@@ -22,7 +22,7 @@ type GalleryProps = {
 function Gallery(props: GalleryProps) {
   const { currentStyle, galleryOpts, onStyleSelect } = props;
   return (
-    <div className="d-flex">
+    <div>
       {galleryOpts.map((opt) => (
         <GalleryTile
           key={opt.name}
