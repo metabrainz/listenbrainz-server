@@ -77,7 +77,7 @@ const SimilarArtistsGraph = (props: GraphProps) => {
         >
             <strong>{node.id}</strong>
             <br />
-            {node.data.score != 0 && <>Score: {node.data.score}</>}
+            {node.data.score != Infinity && <>Score: {node.data.score}</>}
         </div>
     )
 

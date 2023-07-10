@@ -1,7 +1,7 @@
 import React from "react";
 
 interface InputProps {
-    setSimilarArtistsLimit: (limit: number) => void;
+    onLimitChange: (limit: number) => void;
     onArtistChange: (artist_mbid: string) => void;
 }
 
@@ -13,7 +13,7 @@ const Input = (props: InputProps) => {
         
         var artist_mbid = form.artist_mbid.value;
         var limit = form.limit.value;
-        props.setSimilarArtistsLimit(limit);
+        props.onLimitChange(limit);
         props.onArtistChange(artist_mbid);
     }
 
