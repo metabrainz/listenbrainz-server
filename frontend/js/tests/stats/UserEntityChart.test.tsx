@@ -28,8 +28,10 @@ const userProps = {
     id: 0,
     name: "dummyUser",
   },
+  apiUrl: "apiUrl",
 };
 
+const sitewideProps = {};
 
 const GlobalContextMock = {
   APIService: new APIService("base-uri"),
@@ -48,6 +50,7 @@ const GlobalContextMock = {
 
 describe.each([
   ["User Stats", userProps],
+  ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
   describe("UserEntityChart Page", () => {
     it("renders correctly for artists", async () => {
