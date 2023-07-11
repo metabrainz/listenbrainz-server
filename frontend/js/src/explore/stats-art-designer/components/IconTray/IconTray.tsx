@@ -1,7 +1,11 @@
-import { faClipboard, faCode, faUser } from "@fortawesome/free-solid-svg-icons";
+// import NiceModal from "@ebay/nice-modal-react";
+import { faClipboard, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import MagicShareButton from "../../../year-in-music/2022/MagicShareButton";
+
+// import ListenControl from "../../../../listens/ListenControl";
+// import ListenPayloadModal from "../../../../listens/ListenPayloadModal";
 
 type IconTrayProps = {
   previewUrl: string;
@@ -37,9 +41,20 @@ function IconTray(props: IconTrayProps) {
           <button type="button">
             <FontAwesomeIcon className="icon-bar-item mx-2" icon={faDownload} />
           </button> */}
-          <button type="button">
+          {/* <button type="button">
             <FontAwesomeIcon className="icon-bar-item mx-2" icon={faCode} />
-          </button>
+          </button> */}
+          {/* <ListenControl
+            text="Inspect listen"
+            icon={faCode}
+            action={() => {
+              NiceModal.show(ListenPayloadModal, {
+                listen,
+              });
+            }}
+            dataToggle="modal"
+            dataTarget="#ListenPayloadModal"
+          /> */}
         </div>
         <div className="bb border p-0 link-container">
           <input type="text" id="Link" value={previewUrl} disabled />
