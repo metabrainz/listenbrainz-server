@@ -17,6 +17,25 @@ from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.troi.utils import get_existing_playlist_urls, SPOTIFY_EXPORT_PREFERENCE
 
 
+def get_users_for_weekly_playlists(create_all):
+    """ Retrieve the users who had midnight in their timezone less than 59 minutes ago and generate
+        the weekly playlists for them.
+    """
+    timezone_filter = "WHERE EXTRACT('hour' from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0"
+    query = """
+        SELECT "user".id as user_id
+             , to_char(NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT'), 'YYYY-MM-DD Dy') AS jam_date
+          FROM "user"
+     LEFT JOIN user_setting us
+            ON us.user_id = "user".id
+    """
+    if not create_all:
+        query += " " + timezone_filter
+    with db.engine.connect() as connection:
+        result = connection.execute(text(query))
+        return [dict(r) for r in result.mappings()]
+
+
 def get_user_details(slug, user_ids):
     """ For all users, get usernames, export preferences and existing spotify playlist urls if preferred to export """
     users_for_urls = []
@@ -103,8 +122,6 @@ def insert_playlists(cursor, playlists, description: str):
 
 def exclude_playlists_from_deleted_users(slug, jam_name, all_playlists):
     """ Remove playlists for users who have deleted their accounts. Also, add more metadata to remaining playlists """
-    jam_date = "week of " + datetime.now().strftime("%Y-%m-%d %a")
-
     user_ids = [p["user_id"] for p in all_playlists]
     user_details = get_user_details(slug, user_ids)
 
@@ -118,8 +135,7 @@ def exclude_playlists_from_deleted_users(slug, jam_name, all_playlists):
             continue
 
         user = user_details[user_id]
-        username = user["username"]
-        playlist["name"] = f"{jam_name} for {username}, {jam_date}"
+        playlist["name"] = f"{jam_name} for {user['username']}, week of {playlist['jam_date']}"
         playlist["existing_url"] = user["existing_url"]
         playlist["additional_metadata"] = {"algorithm_metadata": {"source_patch": slug}}
 

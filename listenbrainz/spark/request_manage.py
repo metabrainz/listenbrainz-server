@@ -7,6 +7,7 @@ import orjson
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
+from listenbrainz.troi.weekly_playlists import get_users_for_weekly_playlists
 from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
@@ -497,9 +498,14 @@ def request_year_in_music(ctx, year: int):
 
 @cli.command(name="request_troi_playlists")
 @click.option("--slug", required=True, type=click.Choice(['weekly-jams', 'weekly-exploration']))
-def request_troi_playlists(slug):
+@click.option("--create-all", is_flag=True, default=False,
+              help="whether to create the periodic playlists for all users or only for users according to timezone.")
+def request_troi_playlists(slug, create_all):
     """ Bulk generate troi playlists for all users """
-    send_request_to_spark_cluster("troi.playlists", slug=slug)
+    app = create_app()
+    with app.app_context():
+        users = get_users_for_weekly_playlists(create_all)
+    send_request_to_spark_cluster("troi.playlists", slug=slug, users=users)
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
