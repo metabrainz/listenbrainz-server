@@ -102,7 +102,7 @@ const SimilarArtistsGraph = (props: GraphProps) => {
     
     return (
         props.data ?
-        <div style={{ height: '97.5vh', background: props.background }}>
+        <div style={{ height: '94vh', background: props.background }}>
             <ResponsiveNetwork
                 {...chartProperties}
                 nodeComponent={CustomNodeComponent}
