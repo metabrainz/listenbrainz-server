@@ -150,7 +150,7 @@
     "network-information-types": "^0.1.1",
     "postcss-less": "^6.0.0",
     "prettier": "^2.0.2",
-    "stylelint": "^14.8.5",
+    "stylelint": "^15.10.1",
     "stylelint-config-prettier": "^9.0.3",
     "stylelint-config-recommended-less": "^1.0.4",
     "stylelint-prettier": "^2.0.0",
