@@ -276,7 +276,7 @@ def get_similar_users(user_name):
     similar_users = db_user.get_similar_users(user['id'])
 
     # Constructing an id-similarity map
-    id_similarity_map = similar_users.toMap()
+    id_similarity_map = similar_users.to_map()
 
     response = []
     for user_name in id_similarity_map:
@@ -315,7 +315,7 @@ def get_similar_to_user(user_name, other_user_name):
     similar_users = db_user.get_similar_users(user['id'])
 
     # Constructing an id-similarity map
-    id_similarity_map = similar_users.toMap()
+    id_similarity_map = similar_users.to_map()
 
     try:
         return jsonify({'payload': {"user_name": other_user_name, "similarity": id_similarity_map[other_user_name]}})

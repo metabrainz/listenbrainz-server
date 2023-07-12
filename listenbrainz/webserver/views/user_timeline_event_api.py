@@ -441,7 +441,7 @@ def user_feed_listens_similar(user_name: str):
         listen_events = get_all_listen_events(users_list.similar_users, min_ts, max_ts, count)
 
     # Constructing an id-similarity map
-    id_similarity_map = users_list.toMap()
+    id_similarity_map = users_list.to_map()
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
