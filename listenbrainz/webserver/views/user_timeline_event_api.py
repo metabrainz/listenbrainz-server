@@ -432,18 +432,21 @@ def user_feed_listens_similar(user_name: str):
 
     # Here, list is in descending order as we want similar_users with 
     # highest similarity to be processed first and lowest at last.    
-    users_list, user_similarity_map = db_user.get_similar_users_as_list(user['id'])
+    users_list = db_user.get_similar_users(user_id=user['id'], sorted=True)
 
     # Get all listen events
     if len(users_list) == 0:
         listen_events = []
     else:
-        listen_events = get_all_listen_events(users_list, min_ts, max_ts, count)
+        listen_events = get_all_listen_events(users_list.similar_users, min_ts, max_ts, count)
+
+    # Constructing an id-similarity map
+    id_similarity_map = users_list.toMap()
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
         listen_events[index].event_type = event.event_type.value
-        listen_events[index].similarity = user_similarity_map[listen_events[index].user_name]
+        listen_events[index].similarity = id_similarity_map[listen_events[index].user_name]
 
     return jsonify({'payload': {
         'count': len(listen_events),
