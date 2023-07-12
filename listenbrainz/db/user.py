@@ -598,7 +598,7 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
         similar_users = get_similar_users(searcher_id) if searcher_id else None
 
         # Constructing an id-similarity map
-        id_similarity_map = similar_users.toMap()
+        id_similarity_map = similar_users.to_map()
 
         search_results = []
         if similar_users:

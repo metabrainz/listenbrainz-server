@@ -5,6 +5,6 @@ class SimilarUsers(BaseModel):
     user_id: NonNegativeInt
     similar_users: List[dict]
 
-    def toMap(self) -> dict:
+    def to_map(self) -> dict:
         ''' Returns a map of musicbrainz_id and similarity.'''
         return {user['musicbrainz_id']: user['similarity'] for user in self.similar_users}
