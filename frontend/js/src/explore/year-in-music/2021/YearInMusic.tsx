@@ -4,6 +4,7 @@ import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
+import { toast } from "react-toastify";
 import {
   get,
   has,
@@ -22,10 +23,7 @@ import GlobalAppContext, {
 } from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
 
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../../../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
 import { getPageProps } from "../../../utils/utils";
 import { getEntityLink } from "../../../stats/utils";
@@ -39,6 +37,7 @@ import {
 } from "../../../playlists/utils";
 import FollowButton from "../../../follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -86,7 +85,7 @@ export type YearInMusicProps = {
       artist_credit_names: string[];
     }>;
   };
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type YearInMusicState = {
   followingList: Array<string>;
@@ -186,8 +185,13 @@ export default class YearInMusic extends React.Component<
 
       this.setState({ followingList: following });
     } catch (err) {
-      const { newAlert } = this.props;
-      newAlert("danger", "Error while fetching followers", err.toString());
+      toast.error(
+        <ToastMsg
+          title="Error while fetching the users you follow"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-following-error" }
+      );
     }
   };
 
@@ -221,7 +225,7 @@ export default class YearInMusic extends React.Component<
   };
 
   render() {
-    const { user, newAlert, yearInMusicData } = this.props;
+    const { user, yearInMusicData } = this.props;
     const { APIService, currentUser } = this.context;
     const { activeCoverflowImage } = this.state;
     const listens: BaseListenFormat[] = [];
@@ -627,7 +631,6 @@ export default class YearInMusic extends React.Component<
                         listen={listenHere}
                         showTimestamp={false}
                         showUsername={false}
-                        newAlert={newAlert}
                       />
                     );
                   })}
@@ -680,7 +683,6 @@ export default class YearInMusic extends React.Component<
                       listenDetails={details}
                       showTimestamp={false}
                       showUsername={false}
-                      newAlert={newAlert}
                     />
                   );
                 })}
@@ -877,7 +879,6 @@ export default class YearInMusic extends React.Component<
                         listen={listenHere}
                         showTimestamp={false}
                         showUsername={false}
-                        newAlert={newAlert}
                       />
                     );
                   })
@@ -944,7 +945,6 @@ export default class YearInMusic extends React.Component<
                                   compact
                                   showTimestamp={false}
                                   showUsername={false}
-                                  newAlert={newAlert}
                                 />
                               );
                             }
@@ -979,12 +979,7 @@ export default class YearInMusic extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    optionalAlerts,
-  } = getPageProps();
+  const { domContainer, reactProps, globalAppContext } = getPageProps();
   const { user, data: yearInMusicData } = reactProps;
 
   const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
@@ -997,7 +992,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <YearInMusicWithAlertNotifications
             user={user}
             yearInMusicData={yearInMusicData}
-            initialAlerts={optionalAlerts}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

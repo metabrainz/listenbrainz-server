@@ -5,16 +5,14 @@ import * as React from "react";
 import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import NiceModal from "@ebay/nice-modal-react";
+import { toast } from "react-toastify";
 import ColorWheel from "./ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../utils/GlobalAppContext";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
@@ -22,10 +20,11 @@ import { getPageProps } from "../../utils/utils";
 import ListenCard from "../../listens/ListenCard";
 import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
+import { ToastMsg } from "../../notifications/Notifications";
 
 export type ColorPlayProps = {
   user: ListenBrainzUser;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type ColorPlayState = {
   colorReleases: Array<ColorReleaseItem>;
@@ -52,7 +51,6 @@ export default class ColorPlay extends React.Component<
   }
 
   onColorChanged = async (rgbString: string) => {
-    const { newAlert } = this.props;
     const { APIService } = this.context;
     const hex = tinycolor(rgbString).toHex(); // returns hex value without leading '#'
     try {
@@ -67,10 +65,12 @@ export default class ColorPlay extends React.Component<
         gridBackground: lighterColor.toRgbString(),
       });
     } catch (err) {
-      newAlert(
-        "danger",
-        "",
-        err.message ? err.message.toString() : err.toString()
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={err.message ? err.message.toString() : err.toString()}
+        />,
+        { toastId: "error" }
       );
     }
   };
@@ -95,7 +95,7 @@ export default class ColorPlay extends React.Component<
   };
 
   render() {
-    const { user, newAlert } = this.props;
+    const { user } = this.props;
     const {
       loading,
       colorReleases,
@@ -218,7 +218,6 @@ export default class ColorPlay extends React.Component<
                           currentFeedback={0}
                           showTimestamp={false}
                           showUsername={false}
-                          newAlert={newAlert}
                         />
                       );
                     }
@@ -240,12 +239,7 @@ export default class ColorPlay extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    optionalAlerts,
-  } = getPageProps();
+  const { domContainer, reactProps, globalAppContext } = getPageProps();
 
   const { user } = reactProps;
 
@@ -256,10 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <ColorPlayWithAlertNotifications
-            user={user}
-            initialAlerts={optionalAlerts}
-          />
+          <ColorPlayWithAlertNotifications user={user} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

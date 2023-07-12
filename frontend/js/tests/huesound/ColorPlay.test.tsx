@@ -18,7 +18,6 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 // typescript doesn't recognise string literal values
 const props = {
   ...colorPlayProps,
-  newAlert: () => {},
 };
 
 // Create a new instance of GlobalAppContext

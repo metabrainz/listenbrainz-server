@@ -50,7 +50,6 @@ const props: ListensProps = {
   listens,
   oldestListenTs,
   user,
-  newAlert: jest.fn(),
 };
 
 fetchMock.mockIf(
@@ -118,7 +117,6 @@ describe("ListensControls", () => {
   describe("loadFeedback", () => {
     const feedbackProps: ListensProps = {
       ...recentListensPropsThreeListens,
-      newAlert: jest.fn(),
     };
 
     it("updates the recordingFeedbackMap state", async () => {

@@ -4,7 +4,7 @@ import MediaQuery from "react-responsive";
 import { faEllipsisV, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
+import { toast } from "react-toastify";
 import {
   pinnedRecordingToListen,
   getArtistName,
@@ -13,6 +13,7 @@ import {
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PinnedRecordingCardProps = {
   pinnedRecording: PinnedRecording;
@@ -25,11 +26,6 @@ export type PinnedRecordingCardProps = {
   ) => void;
   isCurrentUser: Boolean;
   removePinFromPinsList: (pin: PinnedRecording) => void;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 export type PinnedRecordingCardState = {
@@ -70,19 +66,20 @@ export default class PinnedRecordingCard extends React.Component<
   };
 
   handleError = (error: string | Error, title?: string): void => {
-    const { newAlert } = this.props;
     if (!error) {
       return;
     }
-    newAlert(
-      "danger",
-      title || "Error",
-      typeof error === "object" ? error.message : error
+    toast.error(
+      <ToastMsg
+        title={title || "Error"}
+        message={typeof error === "object" ? error.message : error}
+      />,
+      { toastId: "pin-error" }
     );
   };
 
   unpinRecording = async () => {
-    const { pinnedRecording, isCurrentUser, newAlert } = this.props;
+    const { pinnedRecording, isCurrentUser } = this.props;
     const { APIService, currentUser } = this.context;
 
     if (isCurrentUser && currentUser?.auth_token) {
@@ -90,12 +87,14 @@ export default class PinnedRecordingCard extends React.Component<
         const status = await APIService.unpinRecording(currentUser.auth_token);
         if (status === 200) {
           this.setState({ currentlyPinned: false });
-          newAlert(
-            "success",
-            `You unpinned a track.`,
-            `${getArtistName(pinnedRecording)} - ${getTrackName(
-              pinnedRecording
-            )}`
+          toast.success(
+            <ToastMsg
+              title="You unpinned a track."
+              message={`${getArtistName(pinnedRecording)} - ${getTrackName(
+                pinnedRecording
+              )}`}
+            />,
+            { toastId: "unpin-success" }
           );
         }
       } catch (error) {
@@ -132,7 +131,6 @@ export default class PinnedRecordingCard extends React.Component<
   render() {
     const {
       pinnedRecording,
-      newAlert,
       currentFeedback,
       updateFeedbackCallback,
     } = this.props;
@@ -186,7 +184,6 @@ export default class PinnedRecordingCard extends React.Component<
         updateFeedbackCallback={updateFeedbackCallback}
         showTimestamp
         showUsername={false}
-        newAlert={newAlert}
         additionalMenuItems={additionalMenuItems}
         additionalContent={blurb}
         customThumbnail={thumbnail}

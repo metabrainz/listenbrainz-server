@@ -7,10 +7,7 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -24,7 +21,7 @@ export type UserTasteProps = {
   pins: PinnedRecording[];
   totalPinsCount: number;
   user: ListenBrainzUser;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export default class UserTaste extends React.Component<UserTasteProps> {
   static contextType = GlobalAppContext;
@@ -43,7 +40,6 @@ export default class UserTaste extends React.Component<UserTasteProps> {
     const {
       feedback,
       user,
-      newAlert,
       totalFeedbackCount,
       pins,
       totalPinsCount,
@@ -67,18 +63,12 @@ export default class UserTaste extends React.Component<UserTasteProps> {
           <div className="col-md-7">
             <UserFeedback
               feedback={feedback}
-              newAlert={newAlert}
               totalCount={totalFeedbackCount}
               user={user}
             />
           </div>
           <div className="col-md-5">
-            <UserPins
-              user={user}
-              newAlert={newAlert}
-              pins={pins}
-              totalCount={totalPinsCount}
-            />
+            <UserPins user={user} pins={pins} totalCount={totalPinsCount} />
           </div>
         </div>
         <BrainzPlayer
@@ -98,7 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -119,7 +108,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <UserTasteWithAlertNotifications
-            initialAlerts={optionalAlerts}
             user={user}
             feedback={feedback}
             totalFeedbackCount={feedback_count}

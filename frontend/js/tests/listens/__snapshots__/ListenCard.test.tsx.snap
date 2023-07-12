@@ -23,7 +23,6 @@ exports[`ListenCard renders correctly 1`] = `
       "user_name": "test",
     }
   }
-  newAlert={[Function]}
   showTimestamp={true}
   showUsername={true}
   updateFeedbackCallback={[Function]}
@@ -436,7 +435,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
       "user_name": "test",
     }
   }
-  newAlert={[Function]}
   showTimestamp={true}
   showUsername={true}
   updateFeedbackCallback={[Function]}
@@ -605,7 +603,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   "user_name": "test",
                 }
               }
-              newAlert={[Function]}
               updateFeedbackCallback={[Function]}
             >
               <FontAwesomeIcon
@@ -1366,7 +1363,6 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
       "user_name": "test",
     }
   }
-  newAlert={[Function]}
   showTimestamp={true}
   showUsername={true}
   updateFeedbackCallback={[Function]}
