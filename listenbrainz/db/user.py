@@ -437,9 +437,9 @@ def get_users_in_order(user_ids):
         return [row for row in r.mappings() if row["musicbrainz_id"] is not None]
 
 
-def get_similar_users(user_id: int, sorted: bool = False) -> Optional[SimilarUsers]:    #Tuple[List[dict], dict]:
+def get_similar_users(user_id: int, sorted: bool = False) -> Optional[SimilarUsers]:
     """ Given a user_id, fetch the similar users for that given user.
-        Returns a list in `result.similar_users` ordered by "similarity" in descending order:
+        Returns a list in `result.similar_users` ordered by "similarity" in descending order iff `sorted = True`, else unordered:
 
         ```
         [   
@@ -458,7 +458,7 @@ def get_similar_users(user_id: int, sorted: bool = False) -> Optional[SimilarUse
             
         :param user_id: ID of the user.
         :type user_id: ``int``
-        :param sorted: If the resulting list should be sorted in descending order or not.
+        :param sorted: If the resulting list should be sorted in descending order or not. Defaults to False.
         :type sorted: ``bool``
     """
 
