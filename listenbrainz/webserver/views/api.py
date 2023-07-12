@@ -274,11 +274,15 @@ def get_similar_users(user_name):
         raise APINotFound("User %s not found" % user_name)
 
     similar_users = db_user.get_similar_users(user['id'])
+
+    # Constructing an id-similarity map
+    id_similarity_map = similar_users.toMap()
+
     response = []
-    for user_name in similar_users.similar_users:
+    for user_name in id_similarity_map:
         response.append({
             'user_name': user_name,
-            'similarity': similar_users.similar_users[user_name]
+            'similarity': id_similarity_map[user_name]
         })
     return jsonify({'payload': sorted(response, key=itemgetter('similarity'), reverse=True)})
 
@@ -309,8 +313,12 @@ def get_similar_to_user(user_name, other_user_name):
         raise APINotFound("User %s not found" % user_name)
 
     similar_users = db_user.get_similar_users(user['id'])
+
+    # Constructing an id-similarity map
+    id_similarity_map = similar_users.toMap()
+
     try:
-        return jsonify({'payload': {"user_name": other_user_name, "similarity": similar_users.similar_users[other_user_name]}})
+        return jsonify({'payload': {"user_name": other_user_name, "similarity": id_similarity_map[other_user_name]}})
     except (KeyError, AttributeError):
         raise APINotFound("Similar-to user not found")
 

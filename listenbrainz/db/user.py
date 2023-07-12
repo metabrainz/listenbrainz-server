@@ -437,28 +437,11 @@ def get_users_in_order(user_ids):
         return [row for row in r.mappings() if row["musicbrainz_id"] is not None]
 
 
-def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
+def get_similar_users(user_id: int, sorted: bool = False) -> Optional[SimilarUsers]:    #Tuple[List[dict], dict]:
     """ Given a user_id, fetch the similar users for that given user.
-        Returns a dict { "user_x" : .453, "user_y": .123 } """
+        Returns a list in `result.similar_users` ordered by "similarity" in descending order:
 
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT musicbrainz_id AS user_name
-                 , value->0 AS similarity -- first element of array is local similarity, second is global_similarity
-              FROM recommendation.similar_user r 
-              JOIN jsonb_each(r.similar_users) j
-                ON TRUE
-              JOIN "user" u
-                ON j.key::int = u.id 
-             WHERE user_id = :user_id
-        """), {"user_id": user_id})
-        users = {row.user_name: row.similarity for row in result.fetchall()}
-        return SimilarUsers(user_id=user_id, similar_users=users)
-
-
-def get_similar_users_as_list(user_id: int) -> Tuple[List[dict], dict]:
-    """ Given a user_id, fetch the similar users for that given user.
-        Returns a list order by "similarity" in descending order:
+        ```
         [   
             { 
                 "musicbrainz_id" : "user_x",
@@ -471,12 +454,21 @@ def get_similar_users_as_list(user_id: int) -> Tuple[List[dict], dict]:
                 "similarity": 0.22 
             }
         ]
-        And a dict { "user_x" : .453, "user_y": .123 }
-
+        ```
+            
+        :param user_id: ID of the user.
+        :type user_id: ``int``
+        :param sorted: If the resulting list should be sorted in descending order or not.
+        :type sorted: ``bool``
     """
 
+    if sorted:
+        sort_query = """ ORDER BY similarity DESC """
+    else:
+        sort_query = """ """
+
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
+        result = connection.execute(sqlalchemy.text(f"""
             SELECT musicbrainz_id
                  , id
                  , value->0 AS similarity -- first element of array is local similarity, second is global_similarity
@@ -486,13 +478,11 @@ def get_similar_users_as_list(user_id: int) -> Tuple[List[dict], dict]:
               JOIN "user" u
                 ON j.key::int = u.id 
              WHERE user_id = :user_id
-             ORDER BY similarity DESC
+             {sort_query}
         """), {
             "user_id": user_id
         })
-        user_list = result.mappings().all()
-        user_map = {row.musicbrainz_id: row.similarity for row in result.fetchall()}
-        return user_list, user_map
+        return SimilarUsers(user_id=user_id, similar_users=result.mappings().all())
 
 
 def get_users_by_id(user_ids: List[int]):
@@ -604,12 +594,16 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
         rows = search_query(search_term,limit,connection)
         if not rows:
             return []
+        
         similar_users = get_similar_users(searcher_id) if searcher_id else None
+
+        # Constructing an id-similarity map
+        id_similarity_map = similar_users.toMap()
 
         search_results = []
         if similar_users:
             for row in rows:
-                similarity = similar_users.similar_users.get(row.musicbrainz_id, None)
+                similarity = id_similarity_map.get(row.musicbrainz_id, None)
                 search_results.append((row.musicbrainz_id, row.query_similarity, similarity))
         else:
             search_results = [(row.musicbrainz_id, row.query_similarity, None) for row in rows]

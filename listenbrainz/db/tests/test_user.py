@@ -176,11 +176,17 @@ class UserTestCase(DatabaseTestCase):
 
         import_user_similarities(similar_users)
 
-        self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
-                             db_user.get_similar_users(user_id_21).similar_users)
-        self.assertDictEqual({"twenty_one": 0.4},
+        self.assertListEqual([
+                {"id": user_id_23, "musicbrainz_id": "twenty_three", "similarity": 0.7},
+                {"id": user_id_22, "musicbrainz_id": "twenty_two", "similarity": 0.4}
+            ],
+            db_user.get_similar_users(user_id_21, sorted=True).similar_users
+        )
+        
+        self.assertListEqual([{"id": user_id_21, "musicbrainz_id": "twenty_one", "similarity": 0.4}],
                              db_user.get_similar_users(user_id_22).similar_users)
-        self.assertDictEqual({"twenty_one": 0.7},
+        
+        self.assertListEqual([{"id": user_id_21, "musicbrainz_id": "twenty_one", "similarity": 0.7}],
                              db_user.get_similar_users(user_id_23).similar_users)
 
     def test_get_user_by_id(self):
