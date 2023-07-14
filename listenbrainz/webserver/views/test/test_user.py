@@ -42,9 +42,10 @@ class UserViewsTestCase(IntegrationTestCase):
         super().tearDown()
 
     def test_redirects_logged_out(self):
+        my_listens_url = url_for("redirect.redirect_listens")
         # Not logged in
-        response = self.client.get(url_for("redirect.redirect_listens"))
-        self.assertRedirects(response, "/login/?next=%2Fmy%2Flistens%2F")
+        response = self.client.get(my_listens_url)
+        self.assertRedirects(response, url_for("login.index", next=my_listens_url))
 
     def test_redirects(self):
         """Test the /my/[something]/ endponts which redirect to the /user/ namespace"""
