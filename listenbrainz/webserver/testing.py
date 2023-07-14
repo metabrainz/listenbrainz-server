@@ -117,11 +117,13 @@ class ServerTestCase(unittest.TestCase):
             valid_status_codes = (301, 302, 303, 305, 307, 308)
 
         valid_status_code_str = ', '.join(str(code) for code in valid_status_codes)
-        not_redirect = "HTTP Status %s expected but got %d" % (valid_status_code_str, response.status_code)
+        not_redirect = f"HTTP Status {valid_status_code_str} expected but got {response.status_code}"
 
         self.assertIn(response.status_code, valid_status_codes, message or not_redirect)
-        location_mismatch = "Expected redirect location %s but got %s" % (response.location, location)
-        self.assertTrue(response.location.endswith(location), message or location_mismatch)
+
+        response_location = parse.unquote(response.location)
+        location_mismatch = f"Expected redirect location {location} but got {response_location}"
+        self.assertTrue(response_location.endswith(location), message or location_mismatch)
 
     def assertStatus(self, response, status_code, message=None):
         message = message or 'HTTP Status %s expected but got %s' \
