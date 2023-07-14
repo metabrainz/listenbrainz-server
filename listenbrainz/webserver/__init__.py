@@ -159,6 +159,7 @@ def create_web_app(debug=None):
 
     app.context_processor(lambda: dict(
         get_static_path=static_manager.get_static_path,
+        global_props=get_global_props()
     ))
 
     _register_blueprints(app)
@@ -249,49 +250,39 @@ def create_app_rtfd():
     return app
 
 
-def _register_blueprint_with_context(app, blueprint, **kwargs):
-    """Add some global props to a blueprint context and then register it with the app.
-    This should only be used for blueprints which render html."""
-    @blueprint.context_processor
-    def inject_context_processor():
-        return {"global_props": get_global_props()}
-
-    app.register_blueprint(blueprint, **kwargs)
-
-
 def _register_blueprints(app):
     from listenbrainz.webserver.views.index import index_bp
-    _register_blueprint_with_context(app, index_bp)
+    app.register_blueprint(index_bp)
 
     from listenbrainz.webserver.views.login import login_bp
-    _register_blueprint_with_context(app, login_bp, url_prefix='/login')
+    app.register_blueprint(login_bp, url_prefix='/login')
 
     from listenbrainz.webserver.views.player import player_bp
-    _register_blueprint_with_context(app, player_bp, url_prefix='/player')
+    app.register_blueprint(player_bp, url_prefix='/player')
 
     from listenbrainz.webserver.views.metadata_viewer import metadata_viewer_bp
-    _register_blueprint_with_context(app, metadata_viewer_bp, url_prefix='/listening-now')
+    app.register_blueprint(metadata_viewer_bp, url_prefix='/listening-now')
 
     from listenbrainz.webserver.views.playlist import playlist_bp
-    _register_blueprint_with_context(app, playlist_bp, url_prefix='/playlist')
+    app.register_blueprint(playlist_bp, url_prefix='/playlist')
 
     from listenbrainz.webserver.views.profile import profile_bp
-    _register_blueprint_with_context(app, profile_bp, url_prefix='/profile')
+    app.register_blueprint(profile_bp, url_prefix='/profile')
 
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
-    _register_blueprint_with_context(app, recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
+    app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
 
     from listenbrainz.webserver.views.user import redirect_bp
     app.register_blueprint(redirect_bp, url_prefix='/my')
 
     from listenbrainz.webserver.views.user import user_bp
-    _register_blueprint_with_context(app, user_bp, url_prefix='/user')
+    app.register_blueprint(user_bp, url_prefix='/user')
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
     app.register_blueprint(api_bp_compat)
 
     from listenbrainz.webserver.views.explore import explore_bp
-    _register_blueprint_with_context(app, explore_bp, url_prefix='/explore')
+    app.register_blueprint(explore_bp, url_prefix='/explore')
 
     from listenbrainz.webserver.views.api import api_bp
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
@@ -342,7 +333,7 @@ def _register_blueprints(app):
     app.register_blueprint(explore_api_bp, url_prefix=API_PREFIX+'/explore')
 
     from listenbrainz.webserver.views.art import art_bp
-    _register_blueprint_with_context(app, art_bp, url_prefix='/art')
+    app.register_blueprint(art_bp, url_prefix='/art')
 
     from listenbrainz.webserver.views.art_api import art_api_bp
-    _register_blueprint_with_context(app, art_api_bp, url_prefix=API_PREFIX+'/art')
+    app.register_blueprint(art_api_bp, url_prefix=API_PREFIX+'/art')
