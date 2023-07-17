@@ -437,7 +437,7 @@ def get_users_in_order(user_ids):
         return [row for row in r.mappings() if row["musicbrainz_id"] is not None]
 
 
-def get_similar_users(user_id: int, sorted: bool = False) -> Optional[SimilarUsers]:
+def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
     """ Given a user_id, fetch the similar users for that given user.
         Returns a list in `result.similar_users` ordered by "similarity" in descending order iff `sorted = True`, else unordered:
 
@@ -458,17 +458,10 @@ def get_similar_users(user_id: int, sorted: bool = False) -> Optional[SimilarUse
             
         :param user_id: ID of the user.
         :type user_id: ``int``
-        :param sorted: If the resulting list should be sorted in descending order or not. Defaults to False.
-        :type sorted: ``bool``
     """
 
-    if sorted:
-        sort_query = """ ORDER BY similarity DESC """
-    else:
-        sort_query = """ """
-
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(f"""
+        result = connection.execute(sqlalchemy.text("""
             SELECT musicbrainz_id
                  , id
                  , value->0 AS similarity -- first element of array is local similarity, second is global_similarity
@@ -478,7 +471,7 @@ def get_similar_users(user_id: int, sorted: bool = False) -> Optional[SimilarUse
               JOIN "user" u
                 ON j.key::int = u.id 
              WHERE user_id = :user_id
-             {sort_query}
+             ORDER BY similarity DESC
         """), {
             "user_id": user_id
         })

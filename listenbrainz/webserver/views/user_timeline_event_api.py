@@ -431,8 +431,8 @@ def user_feed_listens_similar(user_name: str):
     min_ts, max_ts, count = _validate_get_endpoint_params()
 
     # Here, list is in descending order as we want similar_users with 
-    # highest similarity to be processed first and lowest at last.    
-    users_list = db_user.get_similar_users(user_id=user['id'], sorted=True)
+    # highest similarity to be processed first and lowest at last.
+    users_list = db_user.get_similar_users(user_id=user['id'])
 
     # Get all listen events
     if len(users_list) == 0:
