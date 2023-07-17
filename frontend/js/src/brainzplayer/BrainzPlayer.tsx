@@ -14,7 +14,7 @@ import {
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import BrainzPlayerUI from "./BrainzPlayerUI";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
@@ -887,16 +887,6 @@ export default class BrainzPlayer extends React.Component<
             handleSuccess={this.handleSuccess}
           />
         </BrainzPlayerUI>
-        <ToastContainer
-          position="bottom-right"
-          autoClose={8000}
-          hideProgressBar
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnHover
-          theme="light"
-        />
       </div>
     );
   }

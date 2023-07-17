@@ -2,7 +2,7 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
-
+import { toast } from "react-toastify";
 import {
   faBell,
   faBullhorn,
@@ -28,10 +28,7 @@ import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import * as _ from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
@@ -51,6 +48,7 @@ import {
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
+import { ToastMsg } from "../notifications/Notifications";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -67,7 +65,7 @@ export enum EventType {
 
 export type UserFeedPageProps = {
   events: TimelineEvent[];
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type UserFeedPageState = {
   nextEventTs?: number;
@@ -239,7 +237,6 @@ export default class UserFeedPage extends React.Component<
     maxTs?: number,
     successCallback?: () => void
   ) => {
-    const { newAlert } = this.props;
     const { earliestEventTs } = this.state;
     const { APIService, currentUser } = this.context;
     this.setState({ loading: true });
@@ -252,17 +249,21 @@ export default class UserFeedPage extends React.Component<
         maxTs
       );
     } catch (error) {
-      newAlert(
-        "warning",
-        "Could not load timeline events",
-        <>
-          Something went wrong when we tried to load your events, please try
-          again or contact us if the problem persists.
-          <br />
-          <strong>
-            {error.name}: {error.message}
-          </strong>
-        </>
+      toast.warn(
+        <ToastMsg
+          title="Could not load timeline events"
+          message={
+            <div>
+              Something went wrong when we tried to load your events, please try
+              again or contact us if the problem persists.
+              <br />
+              <strong>
+                {error.name}: {error.message}
+              </strong>
+            </div>
+          }
+        />,
+        { toastId: "timeline-load-error" }
       );
       this.setState({ loading: false });
       return;
@@ -314,7 +315,7 @@ export default class UserFeedPage extends React.Component<
   /** User feedback mechanism (love/hate button) */
   getFeedback = async () => {
     const { currentUser, APIService } = this.context;
-    const { events, newAlert } = this.props;
+    const { events } = this.props;
     const recording_msids: string[] = [];
     const recording_mbids: string[] = [];
 
@@ -343,13 +344,13 @@ export default class UserFeedPage extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
+        toast.error(
+          <ToastMsg
+            title="We could not load love/hate feedback"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "load-feedback-error" }
+        );
       }
     }
     return [];
@@ -422,7 +423,7 @@ export default class UserFeedPage extends React.Component<
 
   deleteFeedEvent = async (event: TimelineEvent) => {
     const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
+
     const { events } = this.state;
     if (
       event.event_type === EventType.RECORDING_RECOMMENDATION ||
@@ -436,7 +437,9 @@ export default class UserFeedPage extends React.Component<
           event.id!
         );
         if (status === 200) {
-          newAlert("success", "", <>Successfully deleted!</>);
+          toast.success(<ToastMsg title="Successfully deleted!" message="" />, {
+            toastId: "deleted",
+          });
           const new_events = _reject(events, (element) => {
             // Making sure the event that is getting deleted is either a recommendation or notification
             // Since, recommendation and notification are in same db, and might have same id as a pin
@@ -450,17 +453,21 @@ export default class UserFeedPage extends React.Component<
           this.setState({ events: new_events });
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Could not delete event",
-          <>
-            Something went wrong when we tried to delete your event, please try
-            again or contact us if the problem persists.
-            <br />
-            <strong>
-              {error.name}: {error.message}
-            </strong>
-          </>
+        toast.error(
+          <ToastMsg
+            title="Could not delete event"
+            message={
+              <>
+                Something went wrong when we tried to delete your event, please
+                try again or contact us if the problem persists.
+                <br />
+                <strong>
+                  {error.name}: {error.message}
+                </strong>
+              </>
+            }
+          />,
+          { toastId: "delete-error" }
         );
       }
     } else if (event.event_type === EventType.RECORDING_PIN) {
@@ -470,7 +477,9 @@ export default class UserFeedPage extends React.Component<
           event.id as number
         );
         if (status === 200) {
-          newAlert("success", "", <>Successfully deleted!</>);
+          toast.success(<ToastMsg title="Successfully deleted!" message="" />, {
+            toastId: "deleted",
+          });
           const new_events = _reject(events, (element) => {
             return (
               element?.id === event.id &&
@@ -480,17 +489,21 @@ export default class UserFeedPage extends React.Component<
           this.setState({ events: new_events });
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Could not delete event",
-          <>
-            Something went wrong when we tried to delete your event, please try
-            again or contact us if the problem persists.
-            <br />
-            <strong>
-              {error.name}: {error.message}
-            </strong>
-          </>
+        toast.error(
+          <ToastMsg
+            title="Could not delete event"
+            message={
+              <>
+                Something went wrong when we tried to delete your event, please
+                try again or contact us if the problem persists.
+                <br />
+                <strong>
+                  {error.name}: {error.message}
+                </strong>
+              </>
+            }
+          />,
+          { toastId: "delete-error" }
         );
       }
     }
@@ -498,7 +511,7 @@ export default class UserFeedPage extends React.Component<
 
   hideFeedEvent = async (event: TimelineEvent) => {
     const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
+
     const { events } = this.state;
 
     try {
@@ -523,13 +536,16 @@ export default class UserFeedPage extends React.Component<
         this.setState({ events: new_events });
       }
     } catch (error) {
-      newAlert("danger", error.toString(), <>Could not hide event</>);
+      toast.error(
+        <ToastMsg title="Could not hide event" message={error.toString()} />,
+        { toastId: "hide-error" }
+      );
     }
   };
 
   unhideFeedEvent = async (event: TimelineEvent) => {
     const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
+
     const { events } = this.state;
 
     try {
@@ -554,7 +570,10 @@ export default class UserFeedPage extends React.Component<
         this.setState({ events: new_events });
       }
     } catch (error) {
-      newAlert("danger", "", <>Could not unhide event</>);
+      toast.error(
+        <ToastMsg title="Could not unhide event" message={error.toString()} />,
+        { toastId: "unhide-error" }
+      );
     }
   };
 
@@ -612,7 +631,7 @@ export default class UserFeedPage extends React.Component<
     if (UserFeedPage.isEventListenable(event) && !event.hidden) {
       const { metadata, event_type } = event;
       const { currentUser } = this.context;
-      const { newAlert } = this.props;
+
       let listen: Listen;
       let additionalContent: string | JSX.Element;
       if (event_type === EventType.REVIEW) {
@@ -656,7 +675,6 @@ export default class UserFeedPage extends React.Component<
             showTimestamp={false}
             listen={listen}
             additionalContent={additionalContent}
-            newAlert={newAlert}
             additionalMenuItems={additionalMenuItems}
           />
         </div>
@@ -740,7 +758,7 @@ export default class UserFeedPage extends React.Component<
 
   render() {
     const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
+
     const {
       events,
       previousEventTs,
@@ -883,7 +901,7 @@ export default class UserFeedPage extends React.Component<
               </ul>
             </div>
             <div className="col-md-offset-1 col-md-4">
-              <UserSocialNetwork user={currentUser} newAlert={newAlert} />
+              <UserSocialNetwork user={currentUser} />
             </div>
           </div>
           <BrainzPlayer
@@ -904,7 +922,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -925,10 +942,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <UserFeedPageWithAlertNotifications
-            initialAlerts={optionalAlerts}
-            events={events}
-          />
+          <UserFeedPageWithAlertNotifications events={events} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
