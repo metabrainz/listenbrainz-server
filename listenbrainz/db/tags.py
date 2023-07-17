@@ -1,10 +1,72 @@
-from collections import defaultdict
+import time
 
 from psycopg2.extras import execute_values
-from psycopg2.sql import Literal, SQL
+from psycopg2.sql import Literal, SQL, Identifier
 from sqlalchemy import text
 
 from listenbrainz.db import timescale
+
+
+def start_table():
+    """ Create the table to store tags dataset.
+
+    When we start receiving the tags data, we create a temporary table to store the data. Once
+    the dataset has been received completely, we switch the temporary table with the production tables.
+    We do not use something like INSERT ON CONFLICT DO NOTHING to avoid mixups the last runs' results
+    (like tags being deleted since then).
+    """
+    table = Identifier("tags", "tags_tmp")
+    conn = timescale.engine.raw_connection()
+    try:
+        with conn.cursor() as curs:
+            query = SQL("DROP TABLE IF EXISTS {table}").format(table=table)
+            curs.execute(query)
+
+            query = SQL("""
+                CREATE TABLE {table} (
+                    tag                     TEXT NOT NULL,
+                    recording_mbid          UUID NOT NULL,
+                    tag_count               INTEGER NOT NULL,
+                    percent                 DOUBLE PRECISION NOT NULL,
+                    source                  tag_source_type_enum NOT NULL
+                );
+            """).format(table=table)
+            curs.execute(query)
+
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def end_table():
+    """ Switch the temporary production table in production. """
+    incoming_table = Identifier("tags", "tags_tmp")
+    # add a random suffix to the index name to avoid issues while renaming
+    suffix = int(time.time())
+
+    conn = timescale.engine.raw_connection()
+    try:
+        with conn.cursor() as curs:
+            query = SQL("""
+                CREATE INDEX tags_tag_percent_idx_{suffix} ON {table} (tag, percent)
+                     INCLUDE (source, recording_mbid, tag_count)
+             """).format(table=incoming_table, suffix=Literal(suffix))
+            curs.execute(query)
+
+            # rotate tables
+            query = SQL("""
+                ALTER TABLE {prod_table} RENAME TO {outgoing_table}
+             """).format(prod_table=Identifier("tags", "tags"), outgoing_table=Identifier("tags_old"))
+            curs.execute(query)
+            query = SQL("""
+                ALTER TABLE {incoming_table} RENAME TO {prod_table}
+             """).format(incoming_table=Identifier("tags", "tags_tmp"), prod_table=Identifier("tags", "tags"))
+            curs.execute(query)
+            query = SQL("""DROP TABLE {old_table}""").format(old_table=Identifier("tags", "tags_old"))
+            curs.execute(query)
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def insert(source, recordings):

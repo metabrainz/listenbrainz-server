@@ -74,4 +74,6 @@ CREATE UNIQUE INDEX similar_artist_credit_mbids_reverse_uniq_idx ON similarity.a
 
 CREATE INDEX mbid_manual_mapping_top_idx ON mbid_manual_mapping_top (recording_msid) INCLUDE (recording_mbid);
 
+CREATE INDEX tags_tag_percent_idx ON tags.tags (tag, percent) INCLUDE (source, recording_mbid, tag_count);
+
 COMMIT;
