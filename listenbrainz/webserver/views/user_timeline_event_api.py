@@ -435,7 +435,7 @@ def user_feed_listens_similar(user_name: str):
     users_list = db_user.get_similar_users(user_id=user['id'])
 
     # Get all listen events
-    if len(users_list) == 0:
+    if len(users_list.similar_users) == 0:
         listen_events = []
     else:
         listen_events = get_all_listen_events(users_list.similar_users, min_ts, max_ts, count)
