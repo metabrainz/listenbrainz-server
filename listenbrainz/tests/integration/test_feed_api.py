@@ -67,11 +67,11 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.similar_user_data[similar_user['id']] = (similarity, global_similarity)
             curs.execute(f"""
                     INSERT INTO recommendation.similar_user (user_id, similar_users)
-                    VALUES ({similar_to_user}, {json.dumps(self.similar_user_data)})
+                    VALUES ({similar_to_user}, '{json.dumps(self.similar_user_data)}')
                         ON CONFLICT (user_id)
                         DO UPDATE 
-                       SET similar_users = {json.dumps(self.similar_user_data)}
-                     WHERE user_id = {similar_to_user}
+                       SET similar_users = '{json.dumps(self.similar_user_data)}'
+                     WHERE EXCLUDED.user_id = {similar_to_user}
                     """
             )
         conn.commit()
@@ -92,9 +92,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.main_user = db_user.get_or_create(100, 'param')
         self.following_user_1 = self.create_and_follow_user(self.main_user['id'], 102, 'following_1')
         self.following_user_2 = self.create_and_follow_user(self.main_user['id'], 103, 'following_2')
-        self.similar_user_data = dict()
-        self.similar_user_1 = self.create_similar_user(self.main_user['id'], 104, 0.1, 0.1, 'similar_1')
-        self.similar_user_2 = self.create_similar_user(self.main_user['id'], 105, 0.2, 0.2, 'similar_2')
 
     # TODO: Remove this test when user_feed_listens_following enpoint is active.
     def test_it_sends_listens_for_users_that_are_being_followed(self):
@@ -154,18 +151,22 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('valid_single.json'), 'r') as f:
             payload = json.load(f)
 
+        self.similar_user_data = dict()
+        similar_user_1 = self.create_similar_user(self.main_user['id'], 104, 0.1, 0.1, 'similar_1')
+        similar_user_2 = self.create_similar_user(self.main_user['id'], 105, 0.2, 0.2, 'similar_2')
+
         ts = int(time.time())
         # Send 3 listens for the following_user_1
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts - i
-            response = self.send_data(payload, user=self.similar_user_1)
+            response = self.send_data(payload, user=similar_user_1)
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
         # Send 3 listens with lower timestamps for similar_user_2
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts - 10 - i
-            response = self.send_data(payload, user=self.similar_user_2)
+            response = self.send_data(payload, user=similar_user_2)
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
@@ -174,13 +175,13 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
         payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
-        response = self.send_data(payload, user=self.similar_user_1)
+        response = self.send_data(payload, user=similar_user_1)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
         # Sending a listen with time difference slightly greater than DEFAULT_LISTEN_EVENT_WINDOW_NEW
         payload['payload'][0]['listened_at'] = ts - listenWindowMillisec - 1000
-        response = self.send_data(payload, user=self.similar_user_2)
+        response = self.send_data(payload, user=similar_user_2)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
