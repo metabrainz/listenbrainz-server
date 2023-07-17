@@ -219,4 +219,12 @@ CREATE TABLE similarity.artist_credit_mbids (
     score INT NOT NULL
 );
 
+CREATE TABLE tags.tags (
+    tag                     TEXT NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    tag_count               INTEGER NOT NULL,
+    percent                 DOUBLE PRECISION NOT NULL,
+    source                  tag_source_type_enum NOT NULL
+);
+
 COMMIT;

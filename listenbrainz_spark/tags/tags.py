@@ -32,7 +32,6 @@ def create_messages(recordings_table, popularity_table, source):
           GROUP BY recording_mbid
     """
     results = run_query(query).toLocalIterator()
-
     for result in chunked(results, RECORDINGS_PER_MESSAGE):
         data = [tag.asDict(recursive=True) for tag in result]
         yield {
@@ -44,6 +43,8 @@ def create_messages(recordings_table, popularity_table, source):
 
 def main():
     # """ Generate the tags dataset using recording, artist and release group tags """
+    yield {"type": "tags_dataset_start"}
     yield from create_messages(RECORDING_RECORDING_TAG_DATAFRAME, MLHD_RECORDING_POPULARITY_DATAFRAME, "recording")
     yield from create_messages(RECORDING_ARTIST_TAG_DATAFRAME, MLHD_RECORDING_POPULARITY_DATAFRAME, "artist")
     yield from create_messages(RECORDING_RELEASE_GROUP_TAG_DATAFRAME, MLHD_RECORDING_POPULARITY_DATAFRAME, "release-group")
+    yield {"type": "tags_dataset_end"}

@@ -467,5 +467,13 @@ def handle_troi_playlists_end(message):
     batch_process_playlists_end(message["slug"])
 
 
+def handle_tags_dataset_start(message):
+    tags.start_table()
+
+
 def handle_tags_dataset(message):
     tags.insert(message["source"], message["data"])
+
+
+def handle_tags_dataset_end(message):
+    tags.end_table()

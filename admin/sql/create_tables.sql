@@ -291,13 +291,3 @@ CREATE TABLE recommendation.do_not_recommend (
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
 COMMIT;
-
-CREATE TYPE tag_source_type_enum AS ENUM ('recording', 'artist', 'release-group');
-
-CREATE TABLE tags.tags (
-    tag                     TEXT NOT NULL,
-    recording_mbid          UUID NOT NULL,
-    tag_count               INTEGER NOT NULL,
-    percent                 DOUBLE PRECISION NOT NULL,
-    source                  tag_source_type_enum NOT NULL
-);
