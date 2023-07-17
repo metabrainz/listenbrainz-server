@@ -18,11 +18,15 @@ exports[`NamePill renders correctly 1`] = `
           "icon": Array [
             512,
             512,
-            Array [],
+            Array [
+              61532,
+              "times-circle",
+              "xmark-circle",
+            ],
             "f057",
-            "M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3 0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3 0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3 0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17L312 256l65.6 65.1z",
+            "M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z",
           ],
-          "iconName": "times-circle",
+          "iconName": "circle-xmark",
           "prefix": "fas",
         }
       }
@@ -37,40 +41,53 @@ exports[`NamePill renders correctly 1`] = `
         type="button"
       >
         <FontAwesomeIcon
+          beat={false}
+          beatFade={false}
           border={false}
+          bounce={false}
           className=""
+          fade={false}
           fixedWidth={false}
-          flip={null}
+          flip={false}
           icon={
             Object {
               "icon": Array [
                 512,
                 512,
-                Array [],
+                Array [
+                  61532,
+                  "times-circle",
+                  "xmark-circle",
+                ],
                 "f057",
-                "M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3 0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3 0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3 0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17L312 256l65.6 65.1z",
+                "M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z",
               ],
-              "iconName": "times-circle",
+              "iconName": "circle-xmark",
               "prefix": "fas",
             }
           }
           inverse={false}
           listItem={false}
           mask={null}
+          maskId={null}
           pull={null}
           pulse={false}
           rotation={null}
+          shake={false}
           size={null}
           spin={false}
+          spinPulse={false}
+          spinReverse={false}
           swapOpacity={false}
           symbol={false}
           title=""
+          titleId={null}
           transform={null}
         >
           <svg
             aria-hidden="true"
-            className="svg-inline--fa fa-times-circle fa-w-16 "
-            data-icon="times-circle"
+            className="svg-inline--fa fa-circle-xmark "
+            data-icon="circle-xmark"
             data-prefix="fas"
             focusable="false"
             role="img"
@@ -79,7 +96,7 @@ exports[`NamePill renders correctly 1`] = `
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3 0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3 0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3 0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17L312 256l65.6 65.1z"
+              d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"
               fill="currentColor"
               style={Object {}}
             />
