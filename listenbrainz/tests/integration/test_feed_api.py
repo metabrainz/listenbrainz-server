@@ -65,8 +65,15 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         conn = db.engine.raw_connection()
         with conn.cursor() as curs:
             self.similar_user_data[similar_user['id']] = (similarity, global_similarity)
-            curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
-                         (similar_to_user, json.dumps(self.similar_user_data)))
+            curs.execute(f"""
+                    INSERT INTO recommendation.similar_user (user_id, similar_users)
+                    VALUES ({similar_to_user}, {json.dumps(self.similar_user_data)})
+                        ON CONFLICT (user_id)
+                        DO UPDATE 
+                       SET similar_users = {json.dumps(self.similar_user_data)}
+                     WHERE user_id = {similar_to_user}
+                    """
+            )
         conn.commit()
         return similar_user
 
@@ -212,7 +219,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(ts - 10, payload['events'][3]['created'])
         self.assertEqual('similar_2', payload['events'][3]['user_name'])
         self.assertEqual(0.2, payload['events'][3]['similarity'])
-        
+
         self.assertEqual('listen', payload['events'][4]['event_type'])
         self.assertEqual(ts - 11, payload['events'][4]['created'])
         self.assertEqual('similar_2', payload['events'][4]['user_name'])
