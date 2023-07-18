@@ -21,7 +21,6 @@ const userProps: UserTopEntityProps = {
   user: {
     name: "test_user",
   },
-  newAlert: (): any => {},
 };
 
 const sitewideProps: UserTopEntityProps = {
@@ -29,7 +28,6 @@ const sitewideProps: UserTopEntityProps = {
   entity: "artist",
   apiUrl: "foobar",
   terminology: "artist",
-  newAlert: (): any => {},
 };
 
 describe.each([

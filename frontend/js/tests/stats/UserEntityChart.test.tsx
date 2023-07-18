@@ -29,13 +29,9 @@ const userProps = {
     name: "dummyUser",
   },
   apiUrl: "apiUrl",
-  newAlert: jest.fn(),
 };
 
-const sitewideProps = {
-  apiUrl: "apiUrl",
-  newAlert: jest.fn(),
-};
+const sitewideProps = {};
 
 const GlobalContextMock = {
   APIService: new APIService("base-uri"),

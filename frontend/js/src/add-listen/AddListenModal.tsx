@@ -6,23 +6,17 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { has } from "lodash";
+import { toast } from "react-toastify";
 import ListenControl from "../listens/ListenControl";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { convertDateToUnixTimestamp } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
+import { ToastMsg } from "../notifications/Notifications";
 
 enum SubmitListenType {
   "track",
   "album",
-}
-
-export interface AddListenModalProps {
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 }
 
 function getListenFromTrack(
@@ -45,7 +39,7 @@ function getListenFromTrack(
   };
 }
 
-export default NiceModal.create(({ newAlert }: AddListenModalProps) => {
+export default NiceModal.create(() => {
   const modal = useModal();
   const { APIService, currentUser } = useContext(GlobalAppContext);
   const { auth_token } = currentUser;
@@ -66,13 +60,15 @@ export default NiceModal.create(({ newAlert }: AddListenModalProps) => {
       if (!error) {
         return;
       }
-      newAlert(
-        "danger",
-        title || "Error",
-        typeof error === "object" ? error.message : error
+      toast.error(
+        <ToastMsg
+          title={title || "Error"}
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "add-listen-error" }
       );
     },
-    [newAlert]
+    []
   );
 
   const resetTrackSelection = () => {
@@ -92,10 +88,12 @@ export default NiceModal.create(({ newAlert }: AddListenModalProps) => {
             [payload]
           );
           await APIService.checkStatus(response);
-          newAlert(
-            "success",
-            "You added the listen",
-            `${selectedTrack.track_name} - ${selectedTrack.artist_name}`
+          toast.success(
+            <ToastMsg
+              title="You added the Listen"
+              message={`${selectedTrack.track_name} - ${selectedTrack.artist_name}`}
+            />,
+            { toastId: "added-listen-success" }
           );
           closeModal();
         } catch (error) {
@@ -103,10 +101,12 @@ export default NiceModal.create(({ newAlert }: AddListenModalProps) => {
         }
       }
     } else {
-      newAlert(
-        "danger",
-        "You need to be logged in to Add a Listen",
-        <a href="/login">Log in here</a>
+      toast.error(
+        <ToastMsg
+          title="You need to be logged in to Add a Listen"
+          message={<a href="/login">Log in here</a>}
+        />,
+        { toastId: "auth-error" }
       );
     }
   }, [
@@ -114,7 +114,6 @@ export default NiceModal.create(({ newAlert }: AddListenModalProps) => {
     closeModal,
     auth_token,
     handleError,
-    newAlert,
     selectedDate,
     selectedTrack,
   ]);
@@ -169,7 +168,6 @@ export default NiceModal.create(({ newAlert }: AddListenModalProps) => {
                   onSelectRecording={(newSelectedTrackMetadata) => {
                     setSelectedTrack(newSelectedTrackMetadata);
                   }}
-                  newAlert={newAlert}
                 />
                 <div className="track-info">
                   <div>
@@ -178,7 +176,6 @@ export default NiceModal.create(({ newAlert }: AddListenModalProps) => {
                         listen={listenFromSelectedTrack}
                         showTimestamp={false}
                         showUsername={false}
-                        newAlert={newAlert}
                         // eslint-disable-next-line react/jsx-no-useless-fragment
                         feedbackComponent={<></>}
                         compact

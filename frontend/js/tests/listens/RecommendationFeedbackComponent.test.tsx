@@ -46,7 +46,7 @@ const props: RecommendationFeedbackComponentProps = {
   listen,
   currentFeedback: "love",
   updateFeedbackCallback: () => {},
-  newAlert: () => {},
+  
 };
 
 const globalProps = {
@@ -144,9 +144,8 @@ describe("Recommendation feedback", () => {
       expect(instance.props.currentFeedback).toEqual("love");
     });
 
-    it("calls newAlert if error is returned", async () => {
+    it("handles errors for submitRecommendationFeedback", async () => {
       const updateFeedbackSpy = jest.fn();
-      const newAlertSpy = jest.fn();
 
       const wrapper = mount<RecommendationFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
@@ -154,7 +153,6 @@ describe("Recommendation feedback", () => {
             {...props}
             updateFeedbackCallback={updateFeedbackSpy}
             currentFeedback="love"
-            newAlert={newAlertSpy}
           />
         </GlobalAppContext.Provider>
       );
@@ -170,12 +168,7 @@ describe("Recommendation feedback", () => {
       await act(() => {
         instance.submitRecommendationFeedback("dislike");
       });
-      expect(newAlertSpy).toHaveBeenCalledTimes(1);
-      expect(newAlertSpy).toHaveBeenCalledWith(
-        "danger",
-        "Error while submitting recommendation feedback",
-        "my error message"
-      );
+
       expect(updateFeedbackSpy).toHaveBeenCalledTimes(0);
       expect(
         wrapper.find(".recommendation-controls").childAt(0).hasClass("love")

@@ -25,7 +25,7 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 const props = {
   ...pinsPageProps,
   pins: pinsPageProps.pins as Array<PinnedRecording>,
-  newAlert: () => {},
+  
 };
 
 const APIPinsPageTwo = {
