@@ -60,7 +60,7 @@ def end_table():
             curs.execute(query)
             query = SQL("""
                 ALTER TABLE {incoming_table} RENAME TO {prod_table}
-             """).format(incoming_table=Identifier("tags", "tags_tmp"), prod_table=Identifier("tags", "tags"))
+             """).format(incoming_table=Identifier("tags", "tags_tmp"), prod_table=Identifier("tags"))
             curs.execute(query)
             query = SQL("""DROP TABLE {old_table}""").format(old_table=Identifier("tags", "tags_old"))
             curs.execute(query)
