@@ -101,12 +101,13 @@ APIEventMetadata = Union[APIPersonalRecommendationEvent, APIListen, APIFollowEve
 class APITimelineEvent(BaseModel):
     id: Optional[int]
     event_type: UserTimelineEventType
-    similarity: float | None = None 
     user_name: constr(min_length=1)
     created: NonNegativeInt
     metadata: APIEventMetadata
     hidden: bool
 
+class SimilarUserTimelineEvent(APITimelineEvent):
+    similarity: float | None = None
 
 class HiddenUserTimelineEvent(BaseModel):
     id: NonNegativeInt
