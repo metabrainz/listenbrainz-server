@@ -15,7 +15,7 @@ def start_table():
     We do not use something like INSERT ON CONFLICT DO NOTHING to avoid mixups the last runs' results
     (like tags being deleted since then).
     """
-    table = Identifier("tags", "tags_tmp")
+    table = Identifier("tags", "lb_tag_radio_tmp")
     conn = timescale.engine.raw_connection()
     try:
         with conn.cursor() as curs:
@@ -40,7 +40,7 @@ def start_table():
 
 def end_table():
     """ Switch the temporary production table in production. """
-    incoming_table = Identifier("tags", "tags_tmp")
+    incoming_table = Identifier("tags", "lb_tag_radio_tmp")
     # add a random suffix to the index name to avoid issues while renaming
     suffix = int(time.time())
 
@@ -48,7 +48,7 @@ def end_table():
     try:
         with conn.cursor() as curs:
             query = SQL("""
-                CREATE INDEX tags_tag_percent_idx_{suffix} ON {table} (tag, percent)
+                CREATE INDEX tags_lb_tag_radio_percent_idx_{suffix} ON {table} (tag, percent)
                      INCLUDE (source, recording_mbid, tag_count)
              """).format(table=incoming_table, suffix=Literal(suffix))
             curs.execute(query)
@@ -56,13 +56,13 @@ def end_table():
             # rotate tables
             query = SQL("""
                 ALTER TABLE {prod_table} RENAME TO {outgoing_table}
-             """).format(prod_table=Identifier("tags", "tags"), outgoing_table=Identifier("tags_old"))
+             """).format(prod_table=Identifier("tags", "lb_tag_radio"), outgoing_table=Identifier("lb_tag_radio_old"))
             curs.execute(query)
             query = SQL("""
                 ALTER TABLE {incoming_table} RENAME TO {prod_table}
-             """).format(incoming_table=Identifier("tags", "tags_tmp"), prod_table=Identifier("tags"))
+             """).format(incoming_table=Identifier("tags", "lb_tag_radio_tmp"), prod_table=Identifier("lb_tag_radio"))
             curs.execute(query)
-            query = SQL("""DROP TABLE {old_table}""").format(old_table=Identifier("tags", "tags_old"))
+            query = SQL("""DROP TABLE {old_table}""").format(old_table=Identifier("tags", "lb_tag_radio_old"))
             curs.execute(query)
         conn.commit()
     finally:
@@ -70,12 +70,13 @@ def end_table():
 
 
 def insert(source, recordings):
+    """ Insert the given recording and their tags data for a given source """
     values = []
     for rec in recordings:
         tags = [(rec["recording_mbid"], tag["tag"], tag["tag_count"], tag["_percent"]) for tag in rec["tags"]]
         values.extend(tags)
 
-    query = "INSERT INTO tags.tags (recording_mbid, tag, tag_count, percent, source) VALUES %s"
+    query = "INSERT INTO tags.lb_tag_radio (recording_mbid, tag, tag_count, percent, source) VALUES %s"
 
     template = SQL("(%s, %s, %s, %s, {source})").format(source=Literal(source))
     conn = timescale.engine.raw_connection()
@@ -88,6 +89,7 @@ def insert(source, recordings):
 
 
 def get_once(connection, query, count_query, params, results, counts):
+    """ One pass over the lb radio tags dataset to retrieve matching recordings """
     rows = connection.execute(text(query), params)
     for row in rows:
         source = row["source"]
@@ -100,6 +102,10 @@ def get_once(connection, query, count_query, params, results, counts):
 
 
 def get(query, count_query, more_query, more_count_query, params):
+    """ Retrieve recordings and tags for the given query. First it tries to retrieve recordings matching the
+        specified criteria. If there are not enough recordings matching the given criteria, it relaxes the
+        percentage bounds and to gather and return more recordings.
+    """
     results = {"artist": [], "recording": [], "release-group": []}
     counts = {"artist": 0, "recording": 0, "release-group": 0}
 
@@ -115,6 +121,12 @@ def get(query, count_query, more_query, more_count_query, params):
 
 
 def get_partial_clauses(expanded):
+    """ The ORDER BY and WHERE clauses for the query to retrieve tags.
+
+    expanded = False: returns a query for retrieving tags that explicitly match the requested percentage criteria
+    expanded = True: returns a query for retrieving tags that do not match the requested percentage criteria but
+    are centered around it.
+    """
     if expanded:
         order_clause = """
             ORDER BY CASE 
@@ -133,6 +145,7 @@ def get_partial_clauses(expanded):
 
 
 def build_and_query(tags, expanded):
+    """ Generate the query for fetching recordings when combining tags with AND """
     order_clause, percent_clause = get_partial_clauses(expanded)
 
     params = {}
@@ -145,7 +158,7 @@ def build_and_query(tags, expanded):
             SELECT recording_mbid
                  , source
                  , percent
-              FROM tags.tags
+              FROM tags.lb_tag_radio
              WHERE tag = :{param}
                AND ({percent_clause})
         """)
@@ -177,7 +190,7 @@ def build_and_query(tags, expanded):
                         ORDER BY tag_count DESC
                    ) AS recordings
               FROM selected_recs
-              JOIN tags.tags
+              JOIN tags.lb_tag_radio
              USING (recording_mbid, source)
              WHERE tag = :tag_0
           GROUP BY source
@@ -195,6 +208,7 @@ def build_and_query(tags, expanded):
 
 
 def build_or_query(expanded=True):
+    """ Generate the query for fetching recordings when combining tags with OR """
     order_clause, percent_clause = get_partial_clauses(expanded)
 
     query = f"""
@@ -205,7 +219,7 @@ def build_or_query(expanded=True):
                  , percent
                  , source
                  , row_number() OVER (PARTITION BY source {order_clause}) AS rnum
-              FROM tags.tags
+              FROM tags.lb_tag_radio
              WHERE tag IN :tags
                AND ({percent_clause})
         )   SELECT source
@@ -228,7 +242,7 @@ def build_or_query(expanded=True):
     count_query = f"""
         SELECT source
              , count(*) AS total_count
-          FROM tags.tags
+          FROM tags.lb_tag_radio
          WHERE tag IN :tags
            AND ({percent_clause})
       GROUP BY source
@@ -238,6 +252,10 @@ def build_or_query(expanded=True):
 
 
 def get_and(tags, begin_percent, end_percent, count):
+    """ Returns count number of recordings which have been tagged with all the specified tags and fall within
+        the percent bounds (if less than count number of recordings satisfy the criteria, recordings that fall
+        outside the percent bounds may also be returned.)
+    """
     params = {"count": count, "begin_percent": begin_percent, "end_percent": end_percent}
     query, count_query, _params = build_and_query(tags, False)
     more_query, more_count_query, _ = build_and_query(tags, True)
@@ -246,7 +264,10 @@ def get_and(tags, begin_percent, end_percent, count):
 
 
 def get_or(tags, begin_percent, end_percent, count):
-    """ Retrieve the recordings for any of the given tags within the percent bounds. """
+    """ Returns count number of recordings which have been tagged with any of specified tags and fall within
+        the percent bounds (if less than count number of recordings satisfy the criteria, recordings that fall
+        outside the percent bounds may also be returned.)
+    """
     params = {"tags": tuple(tags), "begin_percent": begin_percent, "end_percent": end_percent, "count": count}
     query, count_query = build_or_query(False)
     more_query, more_count_query = build_or_query(True)

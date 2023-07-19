@@ -690,9 +690,9 @@ def get_tags_dataset():
         begin_percent = request.args.get("begin_percent")
         if begin_percent is None:
             raise APIBadRequest("begin_percent param is missing")
-        begin_percent = float(begin_percent)
+        begin_percent = float(begin_percent) / 100
         if begin_percent < 0 or begin_percent > 1:
-            raise APIBadRequest("begin_percent should be between the range: 0.0 to 1.0")
+            raise APIBadRequest("begin_percent should be between the range: 0 to 100")
     except ValueError:
         raise APIBadRequest(f"begin_percent: '{begin_percent}' is not a valid number")
 
@@ -700,9 +700,9 @@ def get_tags_dataset():
         end_percent = request.args.get("end_percent")
         if end_percent is None:
             raise APIBadRequest("end_percent param is missing")
-        end_percent = float(end_percent)
+        end_percent = float(end_percent) / 100
         if end_percent < 0 or end_percent > 1:
-            raise APIBadRequest("end_percent should be between the range: 0.0 to 1.0")
+            raise APIBadRequest("end_percent should be between the range: 0 to 100")
     except ValueError:
         raise APIBadRequest(f"end_percent: '{end_percent}' is not a valid number")
 

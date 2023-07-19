@@ -467,13 +467,13 @@ def handle_troi_playlists_end(message):
     batch_process_playlists_end(message["slug"])
 
 
-def handle_tags_dataset_start(message):
+def handle_lb_tag_radio_start(message):
     tags.start_table()
 
 
-def handle_tags_dataset(message):
+def handle_lb_tag_radio_insert(message):
     tags.insert(message["source"], message["data"])
 
 
-def handle_tags_dataset_end(message):
+def handle_lb_tag_radio_end(message):
     tags.end_table()
