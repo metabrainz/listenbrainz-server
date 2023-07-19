@@ -61,20 +61,18 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, global_similarity: float, name: str) -> dict:
         similar_user = db_user.get_or_create(mb_row_id, name)
-        # Inserting similarity.
-        conn = db.engine.raw_connection()
-        with conn.cursor() as curs:
-            self.similar_user_data[similar_user['id']] = (similarity, global_similarity)
-            curs.execute(f"""
-                    INSERT INTO recommendation.similar_user (user_id, similar_users)
-                    VALUES ({similar_to_user}, '{json.dumps(self.similar_user_data)}')
-                        ON CONFLICT (user_id)
-                        DO UPDATE 
-                       SET similar_users = '{json.dumps(self.similar_user_data)}'
-                     WHERE EXCLUDED.user_id = {similar_to_user}
-                    """
-            )
-        conn.commit()
+        self.similar_user_data[similar_user['id']] = (similarity, global_similarity)
+        with db.engine.begin() as connection:
+            connection.execute(text("""
+                INSERT INTO recommendation.similar_user (user_id, similar_users)
+                     VALUES (:similar_to_user, :similar_users)
+                ON CONFLICT (user_id)
+                  DO UPDATE
+                        SET similar_users = EXCLUDED.similar_users
+                """), {
+                "similar_to_user": similar_to_user,
+                "similar_users": json.dumps(self.similar_user_data)
+            })
         return similar_user
 
     def remove_own_follow_events(self, payload: dict) -> dict:
