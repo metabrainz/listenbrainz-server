@@ -268,23 +268,20 @@ def get_similar_users(user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-
     user = db_user.get_by_mb_id(user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
     similar_users = db_user.get_similar_users(user['id'])
-
-    # Constructing an id-similarity map
-    id_similarity_map = similar_users.to_map()
-
-    response = []
-    for user_name in id_similarity_map:
-        response.append({
-            'user_name': user_name,
-            'similarity': id_similarity_map[user_name]
-        })
-    return jsonify({'payload': sorted(response, key=itemgetter('similarity'), reverse=True)})
+    return jsonify({
+        "payload": [
+            {
+                "user_name": r["musicbrainz_id"],
+                "similarity": r["similarity"]
+            }
+            for r in similar_users
+        ]
+    })
 
 
 @api_bp.route("/user/<user_name>/similar-to/<other_user_name>", methods=['GET', 'OPTIONS'])
@@ -315,7 +312,7 @@ def get_similar_to_user(user_name, other_user_name):
     similar_users = db_user.get_similar_users(user['id'])
 
     # Constructing an id-similarity map
-    id_similarity_map = similar_users.to_map()
+    id_similarity_map = {r["musicbrainz_id"]: r["similarity"] for r in similar_users}
 
     try:
         return jsonify({'payload': {"user_name": other_user_name, "similarity": id_similarity_map[other_user_name]}})

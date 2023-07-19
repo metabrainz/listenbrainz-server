@@ -7,7 +7,6 @@ import uuid
 from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from data.model.similar_user_model import SimilarUsers
 from typing import Tuple, List
 
 
@@ -437,10 +436,10 @@ def get_users_in_order(user_ids):
         return [row for row in r.mappings() if row["musicbrainz_id"] is not None]
 
 
-def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
-    """ Given a user_id, fetch the similar users for that given user.
-        Returns a list in `result.similar_users` ordered by "similarity" in descending order iff `sorted = True`, else unordered:
+def get_similar_users(user_id: int) -> Optional[list[dict]]:
+    """ Given a user_id, fetch the similar users for that given user ordered by "similarity" score.
 
+        :code:: python
         ```
         [   
             { 
@@ -472,10 +471,8 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
                 ON j.key::int = u.id 
              WHERE user_id = :user_id
              ORDER BY similarity DESC
-        """), {
-            "user_id": user_id
-        })
-        return SimilarUsers(user_id=user_id, similar_users=result.mappings().all())
+        """), {"user_id": user_id})
+        return [dict(**row) for row in result.mappings()]
 
 
 def get_users_by_id(user_ids: List[int]):
@@ -553,7 +550,8 @@ def update_user_details(lb_id: int, musicbrainz_id: str, email: str):
             raise DatabaseException(
                 "Couldn't update user's email: %s" % str(err))
 
-def search_query(search_term:str, limit:int, connection:any):
+
+def search_query(search_term: str, limit: int, connection: any):
     result = connection.execute(sqlalchemy.text("""
             SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
               FROM "user"
@@ -591,7 +589,7 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
         similar_users = get_similar_users(searcher_id) if searcher_id else None
 
         # Constructing an id-similarity map
-        id_similarity_map = similar_users.to_map()
+        id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
 
         search_results = []
         if similar_users:
