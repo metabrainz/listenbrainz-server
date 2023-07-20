@@ -665,11 +665,29 @@ def get_service_details(user_name):
     return jsonify({'user_name': user_name, 'services': services})
 
 
-@api_bp.route("/tags/", methods=['GET', 'OPTIONS'])
+@api_bp.route("/lb-radio/tags", methods=['GET', 'OPTIONS'])
 @crossdomain
 @ratelimit()
 def get_tags_dataset():
-    """ Get the recordings with the specified tag. """
+    """ Get recordings for use in LB radio with the specified tags that match the requested criteria.
+
+    .. code-block:: json
+
+
+
+    :param tag: the MusicBrainz tag to fetch recordings for, this parameter can be specified multiple times. if more
+        than one tag is specified, the condition param should also be specified.
+    :param condition: specify AND to retrieve recordings that have all the tags, otherwise specify OR to retrieve
+        recordings that have any one of the tags.
+    :param begin_percent: percent is a measure of the recording's popularity, begin_percent denotes a preferred
+        lower bound on the popularity of recordings to be returned.
+    :param end_percent: percent is a measure of the recording's popularity, end_percent denotes a preferred
+        upper bound on the popularity of recordings to be returned.
+    :param count: number of recordings to return for the
+    :resheader Content-Type: *application/json*
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: Invalid or missing param in request, see error message for details.
+    """
     tag = request.args.getlist("tag")
     if tag is None:
         raise APIBadRequest("tag param is missing")
