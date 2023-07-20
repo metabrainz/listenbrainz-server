@@ -224,7 +224,7 @@ CREATE TABLE tags.lb_tag_radio (
     recording_mbid          UUID NOT NULL,
     tag_count               INTEGER NOT NULL,
     percent                 DOUBLE PRECISION NOT NULL,
-    source                  tag_source_type_enum NOT NULL
+    source                  lb_tag_radio_source_type_enum NOT NULL
 );
 
 COMMIT;
