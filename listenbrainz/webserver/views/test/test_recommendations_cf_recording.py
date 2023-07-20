@@ -40,8 +40,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         db_recommendations_cf_recording.insert_user_recommendation(
             self.user2["id"],
             UserRecommendationsJson(**{
-                'top_artist': data['recording_mbid'],
-                'similar_artist': []
+                'top_artist': data['recording_mbid']
             })
         )
 
@@ -49,7 +48,6 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             self.user3["id"],
             UserRecommendationsJson(**{
                 'top_artist': [],
-                'similar_artist': data['recording_mbid']
             })
         )
 
@@ -86,26 +84,6 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_user.assert_called_with("vansika")
         mock_template.assert_called_with(active_section='top_artist', user=mock_user.return_value)
 
-    def test_similar_artist_invalid_user(self):
-        response = self.client.get(url_for('recommendations_cf_recording.top_artist', user_name="invalid"))
-        self.assert404(response)
-
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_template')
-    def test_similar_artist_valid_user(self, mock_template, mock_user):
-        # Flask essentially needs render_template to generate a response
-        # this is a fake repsonse to check _get_template wa called with desired params.
-        mock_template.return_value = render_template(
-            "recommendations_cf_recording/base.html",
-            active_section='similar_artist',
-            user=self.user,
-            error_msg="test"
-        )
-        response = self.client.get(url_for('recommendations_cf_recording.similar_artist', user_name="vansika"))
-        self.assert200(response)
-        mock_user.assert_called_with("vansika")
-        mock_template.assert_called_with(active_section='similar_artist', user=mock_user.return_value)
-
     def test_get_template_missing_user_from_rec_db(self):
         user = _get_user('vansika')
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
@@ -113,24 +91,11 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
 
-        user = _get_user('vansika')
-        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/base.html')
-        self.assert_context('active_section', 'similar_artist')
-        self.assert_context('user', user)
-
     def test_get_template_missing_rec_top_artist(self):
         user = _get_user('vansika_2')
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
-        self.assert_context('user', user)
-
-    def test_get_template_missing_rec_similar_artist(self):
-        user = _get_user('vansika_1')
-        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/base.html')
-        self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
@@ -153,30 +118,6 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'top_artist')
-        self.assert_context('user', user)
-        error_msg = "An error occurred while processing your request. Check back later!"
-        self.assert_context('error_msg', error_msg)
-
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
-    def test_get_template_empty_repsonce_similar_artist(self, mock_get_recommendations, mock_get_rec):
-        user = _get_user('vansika_1')
-
-        mock_get_rec.return_value = UserRecommendationsData(**{
-            'recording_mbid': {
-                'similar_artist': [{
-                    'recording_mbid': "9f5a56f4-1f83-4681-b319-70a734d0d047",
-                    'score': 0.9
-                }]
-            },
-            'created': datetime.utcnow(),
-            'user_id': self.user["id"]
-        })
-        mock_get_recommendations.return_value = []
-
-        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/base.html')
-        self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
         error_msg = "An error occurred while processing your request. Check back later!"
         self.assert_context('error_msg', error_msg)
@@ -228,25 +169,6 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             },
             "recommendations": recommendations,
         }
-        received_props = orjson.loads(self.get_context_variable('props'))
-        self.assertEqual(expected_props, received_props)
-
-        # only assert fields that should change with 'active_section'
-        # here active_section = 'similar_artist'
-        mock_get_rec.return_value = UserRecommendationsData(**{
-            'recording_mbid': {
-                'similar_artist': [{
-                    'recording_mbid': "9f5a56f4-1f83-4681-b319-70a734d0d047",
-                    'score': 0.9
-                }]
-            },
-            'created': datetime.utcnow(),
-            'user_id': self.user["id"]
-        })
-
-        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/base.html')
-        self.assert_context('active_section', 'similar_artist')
         received_props = orjson.loads(self.get_context_variable('props'))
         self.assertEqual(expected_props, received_props)
 

@@ -17,7 +17,6 @@ recommendations_cf_recording_api_bp = Blueprint('recommendations_cf_recording_v1
 
 class RecommendationArtistType(Enum):
     top = 'top'
-    similar = 'similar'
     raw = 'raw'
 
 
@@ -56,14 +55,11 @@ def get_recommendations(user_name):
 
         .. note::
             - This endpoint is experimental and probably will change in the future.
-            - <artist_type>: 'top' or 'similar' or 'raw'
+            - <artist_type>: 'top' or 'raw'
 
-        :param artist_type: Mandatory, artist type in ['top', 'similar', 'raw']
+        :param artist_type: Mandatory, artist type in ['top', 'raw']
 
             Ex. artist_type = top will fetch recommended recording mbids that belong to top artists listened to by the user.
-
-            artist_type = similar will fetch recommended recording mbids that belong to artists similar to top artists listened to by the user.
-
             artist_type = raw will fetch recommended recording mbids based on the training data fed to the CF model.
         :type artist_type: ``str``
 
@@ -123,7 +119,7 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
         Args:
             recommendations: dict containing user recommendations.
             count (int): number of recommended recording mbids to return.
-            artist_type (str): artist type i.e 'top', 'similar' or 'raw'
+            artist_type (str): artist type i.e 'top' or 'raw'
             user_name (str): musicbrainz id of the user.
             offset (int): number of entities to skip from the beginning
 
@@ -135,9 +131,7 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
             APINoContent: if recommendations not found.
     """
     data = recommendations.recording_mbid.dict()
-    if artist_type == 'similar':
-        mbid_list = data['similar_artist']
-    elif artist_type == 'top':
+    if artist_type == 'top':
         mbid_list = data['top_artist']
     else:
         mbid_list = data['raw']

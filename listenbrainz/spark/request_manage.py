@@ -321,17 +321,15 @@ def request_model(rank, itr, lmbda, alpha, use_transformed_listencounts):
 @cli.command(name='request_candidate_sets')
 @click.option("--days", type=int, required=False, help="Request recommendations to be generated on history of given number of days")
 @click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
-@click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
 @click.option("--html", is_flag=True, default=False, help='Enable/disable HTML file generation')
 @click.option("--user-name", "users", callback=parse_list, default=[], multiple=True,
               help="Generate candidate set for given users. Generate for all active users by default.")
-def request_candidate_sets(days, top, similar, users, html):
+def request_candidate_sets(days, top, users, html):
     """ Send the cluster a request to generate candidate sets.
     """
     params = {
         "recommendation_generation_window": days,
         "top_artist_limit": top,
-        "similar_artist_limit": similar,
         "users": users,
         "html_flag": html
     }
@@ -340,7 +338,6 @@ def request_candidate_sets(days, top, similar, users, html):
 
 @cli.command(name='request_recommendations')
 @click.option("--top", type=int, default=1000, help="Generate given number of top artist recommendations")
-@click.option("--similar", type=int, default=1000, help="Generate given number of similar artist recommendations")
 @click.option("--raw", type=int, default=1000, help="Generate given number of raw recommendations")
 @click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
               help="Generate recommendations for given users. Generate recommendations for all users by default.")
@@ -349,7 +346,6 @@ def request_recommendations(top, similar, raw, users):
     """
     params = {
         'recommendation_top_artist_limit': top,
-        'recommendation_similar_artist_limit': similar,
         'recommendation_raw_limit': raw,
         'users': users
     }

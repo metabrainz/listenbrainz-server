@@ -36,17 +36,6 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         utils.save_parquet(df, dest_path)
         logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
 
-    def upload_artist_relation(self, archive: str):
-        """ Decompress archive and upload artist relation to HDFS.
-
-            Args:
-                archive: artist relation tar file to upload.
-        """
-        with tarfile.open(name=archive, mode='r:bz2') as tar:
-            with tempfile.TemporaryDirectory() as tmp_dump_dir:
-                self.upload_archive(tmp_dump_dir, tar, path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema,
-                                    self.process_json, overwrite=True)
-
     def upload_release_json_dump(self, archive: str):
         """ Decompress archive and upload artist relation to HDFS.
 
