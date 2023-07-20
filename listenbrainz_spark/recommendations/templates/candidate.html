@@ -33,23 +33,6 @@
                 </tr>
                 {% endfor -%}
             </table>
-        <p>Similar Artist</p>
-            <table>
-                <tr>
-                    <th>Top artist name</th>
-                    <th>Top artist credit id</th>
-                    <th>Similar artist name</th>
-                    <th>Similar artist credit id</th>
-                </tr>
-                {% for i in data['similar_artist'] -%}
-                <tr>
-                    <td>{{ i[0] }}</td>
-                    <td>{{ i[1] }}</td>
-                    <td>{{ i[2] }}</td>
-                    <td>{{ i[3] }}</td>
-                </tr>
-                {% endfor -%}
-            </table>
         <p>Top Artist Candidate Set</p>
             <table>
                 <tr>
@@ -75,31 +58,6 @@
                 </tr>
                 {% endfor -%}
             </table>
-        <p>Similar Candidate Set</p>
-		    <table>
-    			<tr>
-    				<th>Similar artist credit id</th>
-                    <th>Similar artist name</th>
-                    <th>MB artist credit id</th>
-                    <th>MB artist credit mbids</th>
-                    <th>MB recording mbid</th>
-                    <th>MSB artist credit name matchable</th>
-                    <th>MSB recording name matchable</th>
-                    <th>Recording id</th>
-    			</tr>
-    			{% for i in data['similar_artist_candidate_set'] -%}
-    			<tr>
-    				<td>{{ i[0] }}</td>
-    				<td>{{ i[1] }}</td>
-    				<td>{{ i[2] }}</td>
-                    <td>{{ i[3] }}</td>
-                    <td>{{ i[4] }}</td>
-                    <td>{{ i[5] }}</td>
-                    <td>{{ i[6] }}</td>
-                    <td>{{ i[7] }}</td>
-    			</tr>
-    			{% endfor -%}
-		    </table>
 	{% endfor -%}
 </body>
 </html>

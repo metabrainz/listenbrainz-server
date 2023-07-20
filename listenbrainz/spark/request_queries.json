@@ -101,7 +101,6 @@
     "params": [
       "recommendation_generation_window",
       "top_artist_limit",
-      "similar_artist_limit",
       "users",
       "html_flag"
     ]
@@ -111,7 +110,6 @@
     "description": "Generate recommendations for all active ListenBrainz users.",
     "params": [
       "recommendation_top_artist_limit",
-      "recommendation_similar_artist_limit",
       "recommendation_raw_limit",
       "users"
     ]

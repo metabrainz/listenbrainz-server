@@ -6,12 +6,6 @@ LISTENBRAINZ_NEW_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz-new')
 # path to save incremental dumps
 INCREMENTAL_DUMPS_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "incremental.parquet")
 
-# Directory containing similar artist relation.
-# (This is a temporary path till incremental dumps for similar artists are prepared)
-SIMILAR_ARTIST_DIR = '/similar_artists'
-# Absolute path to similar artist relation.
-SIMILAR_ARTIST_DATAFRAME_PATH = SIMILAR_ARTIST_DIR + \
-    '/' + 'artist_credit_artist_credit_relations.parquet'
 # Directory containing RDD checkpoints to break lineage while using iterative algorithms.
 CHECKPOINT_DIR = os.path.join('/', 'checkpoint')
 
@@ -51,9 +45,6 @@ RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME = RECOMMENDATION_REC
 RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR,
                                                                  'top_artist',
                                                                  'top_artist.parquet')
-RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR,
-                                                                     'similar_artist',
-                                                                     'similar_artist.parquet')
 # Absolute path to model metadata.
 RECOMMENDATION_RECORDING_MODEL_METADATA = RECOMMENDATION_RECORDING_MODEL_DIR + \
     '/' + 'model_metadata_new.parquet'

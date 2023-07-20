@@ -58,26 +58,6 @@ class CandidateSetsTestClass(SparkNewTestCase):
         )
         self.assertEqual(top_artist_candidate_set_df_html.count(), 2)
 
-    @pytest.mark.skip
-    def test_get_similar_artist_candidate_set_df(self):
-        similar_artist_df = listenbrainz_spark.session.createDataFrame([
-            Row(similar_artist_credit_id=2, similar_artist_name='martinkemp', user_id=1),
-            Row(similar_artist_credit_id=2, similar_artist_name='martinkemp', user_id=4),
-        ])
-
-        similar_artist_candidate_set_df, similar_artist_candidate_set_df_html = candidate_sets.get_similar_artist_candidate_set(
-            similar_artist_df, self.recordings_df, self.users_df, self.mapped_listens_subset
-        )
-
-        self.assertCountEqual(['recording_id', 'spark_user_id', 'user_id'], similar_artist_candidate_set_df.columns)
-        self.assertEqual(similar_artist_candidate_set_df.count(), 2)
-
-        self.assertCountEqual(
-            ['similar_artist_credit_id', 'artist_credit_id', 'recording_mbid', 'recording_id', 'user_id', 'spark_user_id'],
-            similar_artist_candidate_set_df_html.columns
-        )
-        self.assertEqual(similar_artist_candidate_set_df_html.count(), 2)
-
     def test_filter_last_x_days_recordings(self):
         top_artist_limit = 1
         top_artist_df = candidate_sets.get_top_artists(self.mapped_listens_df, top_artist_limit, [])

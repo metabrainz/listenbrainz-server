@@ -7,8 +7,6 @@ recommender. An RDD of `user`, `product` and `rating` is returned from the recom
 a dataframe by filtering top X (an int supplied as an argument to the script) recommendations for all users sorted on
 prediction and fields renamed as `spark_user_id`, `recording_id` and `score`.
 This dataframe is joined with recordings_df on recording_id to get the recording mbids which are then sent over the queue.
-
-The same process is done for similar artist candidate set.
 """
 
 import logging
@@ -202,15 +200,13 @@ def get_user_name_and_user_id(all_users_df, users):
     return users_df
 
 
-def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artist_recs_df,
-                    raw_recs_df, active_user_count, total_time):
+def create_messages(model_id, model_html_file, top_artist_recs_df, raw_recs_df, active_user_count, total_time):
     """ Create messages to send the data to the webserver via RabbitMQ.
 
         Args:
             model_id: the id of the model
             model_html_file: the html report file name for the model
             top_artist_recs_df (dataframe): Top artist recommendations.
-            similar_artist_recs_df (dataframe): Similar artist recommendations.
             raw_recs_df (dataframe): Raw recommendations.
             active_user_count (int): Number of users active in the last week.
             total_time (float): Time taken in exceuting the whole script.
@@ -220,7 +216,6 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
     """
     user_rec = defaultdict(lambda: {
         "top_artist": [],
-        "similar_artist": [],
         "raw": []
     })
 
@@ -230,13 +225,6 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
         row_dict = row.asDict(recursive=True)
         user_rec[row_dict["user_id"]]["top_artist"] = row_dict["recs"]
         top_artist_rec_user_count += 1
-
-    similar_artist_rec_itr = similar_artist_recs_df.toLocalIterator()
-    similar_artist_rec_user_count = 0
-    for row in similar_artist_rec_itr:
-        row_dict = row.asDict(recursive=True)
-        user_rec[row_dict["user_id"]]["similar_artist"] = row_dict["recs"]
-        similar_artist_rec_user_count += 1
 
     raw_rec_itr = raw_recs_df.toLocalIterator()
     raw_rec_user_count = 0
@@ -251,7 +239,6 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': data['top_artist'],
-                'similar_artist': data['similar_artist'],
                 'raw': data['raw'],
                 'model_id': model_id,
                 'model_url': f"http://michael.metabrainz.org/{model_html_file}"
@@ -263,7 +250,6 @@ def create_messages(model_id, model_html_file, top_artist_recs_df, similar_artis
         'type': 'cf_recommendations_recording_mail',
         'active_user_count': active_user_count,
         'top_artist_user_count': top_artist_rec_user_count,
-        'similar_artist_user_count': similar_artist_rec_user_count,
         'raw_rec_user_count': raw_rec_user_count,
         'total_time': '{:.2f}'.format(total_time / 3600)
     }
@@ -326,8 +312,7 @@ def get_user_count(df):
     return df.select('user_id').distinct().count()
 
 
-def main(recommendation_top_artist_limit=None, recommendation_similar_artist_limit=None,
-         recommendation_raw_limit=None, users=None):
+def main(recommendation_top_artist_limit=None, recommendation_raw_limit=None, users=None):
 
     try:
         listenbrainz_spark.init_spark_session('Recommendations')
@@ -339,7 +324,6 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         recordings_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDINGS_DATAFRAME)
         all_users_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)
         top_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
-        similar_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
 
         recordings_df.createOrReplaceTempView("recording")
         utils.read_files_from_HDFS(path.RECORDING_DISCOVERY).createOrReplaceTempView("recording_discovery")
@@ -382,12 +366,6 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         recommendation_top_artist_limit,
         users
     )
-    similar_artist_recs_df = get_recommendations_for_candidate_set(
-        model,
-        similar_artist_candidate_set_df,
-        recommendation_similar_artist_limit,
-        users
-    )
     raw_recs_df = get_raw_recommendations(model, recommendation_raw_limit, users_df)
     logger.info('Recommendations generated!')
     logger.info('Took {:.2f}sec to generate recommendations for all active users'.format(time.monotonic() - ts))
@@ -398,8 +376,7 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     total_time = time.monotonic() - ts_initial
     logger.info('Total time: {:.2f}sec'.format(total_time))
 
-    result = create_messages(model_id, model_html_file, top_artist_recs_df, similar_artist_recs_df,
-                             raw_recs_df, active_user_count, total_time)
+    result = create_messages(model_id, model_html_file, top_artist_recs_df, raw_recs_df, active_user_count, total_time)
 
     users_df.unpersist()
 

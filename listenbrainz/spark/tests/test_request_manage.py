@@ -158,7 +158,6 @@ class RequestManageTestCase(unittest.TestCase):
             'params': {
                 'recommendation_generation_window': 7,
                 'top_artist_limit': 10,
-                'similar_artist_limit': 10,
                 "users": ['vansika'],
                 "html_flag": True
             }
@@ -172,7 +171,6 @@ class RequestManageTestCase(unittest.TestCase):
             'query': 'cf.recommendations.recording.recommendations',
             'params': {
                 'recommendation_top_artist_limit': 7,
-                'recommendation_similar_artist_limit': 7,
                 'recommendation_raw_limit': 7,
                 'users': ['vansika']
             }

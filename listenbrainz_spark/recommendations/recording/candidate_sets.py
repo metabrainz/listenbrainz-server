@@ -9,10 +9,7 @@ The top_artist_df is joined with recordings_df to get the dataframe of recording
 recordings listened to by the users in the last 7 days are filtered so that the recommendations don't contain
 recordings that the user has listened to in the last week. The resultant dataframe is called the top_artists_candidate_set_df.
 
-Artists similar to top artists are fetched from the artist_relations_df and the similar_artist_candidate_set_df is generated
-in a manner similar to the generation of the top artist candidate set.
-
-The top artist and similar artist candidate set dataframes are saved to HDFS. For HDFS path of dataframes refer to listenbrainz_spark/path.py
+The top artist candidate set dataframe is saved to HDFS. For HDFS path of dataframe, refer to listenbrainz_spark/path.py
 
 Note: users and recordings that are in candidate set but not in the training set will be discarded by the recommender.
 """
@@ -22,23 +19,19 @@ import logging
 import time
 from datetime import datetime
 from collections import defaultdict
-from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
 from listenbrainz_spark import stats, utils, path
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
-                                           ViewNotRegisteredException,
                                            PathNotFoundException,
                                            FileNotFetchedException,
                                            TopArtistNotFetchedException,
-                                           SimilarArtistNotFetchedException,
                                            FileNotSavedException)
 
 import pyspark.sql.functions as func
 from pyspark.sql.window import Window
 from pyspark.sql.functions import col, row_number
-from pyspark.sql.types import StringType, ArrayType
 
 
 logger = logging.getLogger(__name__)
@@ -72,32 +65,6 @@ logger = logging.getLogger(__name__)
 #       'spark_user_id'
 #   ]
 #
-# similar_artist_df:
-#   [
-#       'similar_artist_credit_id',
-#       'similar_artist_name'
-#       'user_id'
-#   ]
-#
-# similar_artist_candidate_set_df:
-#   [
-#       'spark_user_id',
-#       'recording_id'
-#   ]
-#
-# similar_artist_candidate_set_df_html:
-#   [
-#       'similar_artist_credit_id',
-#       'similar_artist_name',
-#       'mb_artist_credit_id',
-#       'mb_artist_credit_mbids',
-#       'mb_recording_mbid',
-#       'msb_artist_credit_name_matchable',
-#       'msb_recording_name_matchable',
-#       'recording_id',
-#       'user_id',
-#       'spark_user_id'
-#   ]
 
 
 def get_dates_to_generate_candidate_sets(mapped_listens_df, recommendation_generation_window):
@@ -198,96 +165,12 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     return top_artist_df
 
 
-def filter_top_artists_from_similar_artists(similar_artist_df, top_artist_df):
-    """ Filter artists from similar artist dataframe for a user who have already made it to
-        top artist dataframe.
-
-        Args:
-            similar_artist_df: Similar artist dataframe.
-            top_artist_df: Top artist dataframe.
-
-        Returns:
-            res_df: Similar artist dataframe that does not contain top artists.
-    """
-
-    df = top_artist_df.select(col('top_artist_credit_id').alias('artist_credit_id'),
-                              col('user_id').alias('user'))
-
-    condition = [
-        similar_artist_df.similar_artist_credit_id == df.artist_credit_id,
-        similar_artist_df.user_id == df.user
-    ]
-
-    res_df = similar_artist_df.join(df, condition, 'left') \
-                              .select('top_artist_credit_id',
-                                      'similar_artist_credit_id',
-                                      'user_id') \
-                              .where(col('artist_credit_id').isNull() & col('user').isNull())
-
-    return res_df
-
-
-def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit):
-    """ Get artists similar to top artists.
-
-        Args:
-            top_artist_df: Dataframe containing top artists listened to by users
-            artist_relation_df: Dataframe containing artists and similar artists.
-                                For columns refer to artist_relation_schema in listenbrainz_spark/schema.py.
-            similar_artist_limit (int): number of similar artist to calculate
-
-        Returns:
-            similar_artist_df (dataframe): Top Z artists similar to top artists where
-                                           Z = SIMILAR_ARTISTS_LIMIT.
-    """
-    condition = [top_artist_df.top_artist_credit_id == artist_relation_df.id_0]
-
-    df1 = top_artist_df.join(artist_relation_df, condition, 'inner') \
-                       .select(col('id_0').alias('top_artist_credit_id'),
-                               col('id_1').alias('similar_artist_credit_id'),
-                               'score',
-                               'user_id')
-
-    condition = [top_artist_df.top_artist_credit_id == artist_relation_df.id_1]
-
-    df2 = top_artist_df.join(artist_relation_df, condition, 'inner') \
-                       .select(col('id_1').alias('top_artist_credit_id'),
-                               col('id_0').alias('similar_artist_credit_id'),
-                               'score',
-                               'user_id')
-
-    df = df1.union(df2)
-
-    window = Window.partitionBy('top_artist_credit_id', 'user_id')\
-                   .orderBy(col('score').desc())
-
-    similar_artist_df_html = df.withColumn('rank', row_number().over(window)) \
-                               .where(col('rank') <= similar_artist_limit)\
-                               .select('top_artist_credit_id',
-                                       'similar_artist_credit_id',
-                                       'user_id')
-
-    similar_artist_df_html = filter_top_artists_from_similar_artists(similar_artist_df_html, top_artist_df)
-
-    # Two or more artists can have same similar artist(s) leading to non-unique recordings
-    # therefore we have filtered the distinct similar artists.
-    similar_artist_df = similar_artist_df_html.select('similar_artist_credit_id',
-                                                      'user_id') \
-                                              .distinct()
-
-    if _is_empty_dataframe(similar_artist_df):
-        logger.error('Similar artists not generated.', exc_info=True)
-        raise SimilarArtistNotFetchedException('Artists missing from artist relation')
-
-    return similar_artist_df, similar_artist_df_html
-
-
 def filter_last_x_days_recordings(candidate_set_df, mapped_listens_subset):
     """ Filter recordings from candidate set that the user has listened in the last X
         days where X = RECOMMENDATION_GENERATION_WINDOW.
 
         Args:
-            candidate_set_df: top/similar artist candidate set.
+            candidate_set_df: top artist candidate set.
             mapped_listens_subset: dataframe containing user listening history of last X days.
 
         Returns:
@@ -347,50 +230,12 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, mapped_
     return top_artist_candidate_set_df, top_artist_candidate_set_df_html
 
 
-def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df, mapped_listens_subset):
-    """ Get recording ids that belong to similar artists.
-
-        Args:
-            similar_artist_df: Dataframe containing artists similar to top artists.
-            recordings_df: Dataframe containing distinct recordings and corresponding
-                           mbids and names.
-            users_df: Dataframe containing user names and user ids.
-            mapped_listens_subset: dataframe containing user listening history of last X days .
-
-        Returns:
-            similar_artist_candidate_set_df (dataframe): recording ids that belong to similar artists
-                                                         corresponding to user ids.
-            similar_artist_candidate_set_df_html (dataframe): similar artist info for html file
-    """
-    condition = [
-        similar_artist_df.similar_artist_credit_id == recordings_df.artist_credit_id
-    ]
-
-    df = similar_artist_df.join(recordings_df, condition, 'inner')
-
-    similar_artist_candidate_set_df_html = df.join(users_df, 'user_id', 'inner') \
-                  .select('similar_artist_credit_id',
-                          'artist_credit_id',
-                          'recording_mbid',
-                          'recording_id',
-                          'user_id',
-                          'spark_user_id')
-
-    # similar_artist_candidate_set_df_html = filter_last_x_days_recordings(joined_df, mapped_listens_subset)
-
-    similar_artist_candidate_set_df = similar_artist_candidate_set_df_html.select('recording_id', 'spark_user_id', 'user_id')
-
-    return similar_artist_candidate_set_df, similar_artist_candidate_set_df_html
-
-
-def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df):
+def save_candidate_sets(top_artist_candidate_set_df):
     """ Save candidate sets to HDFS.
 
         Args:
             top_artist_candidate_set_df (dataframe): recording ids that belong to top artists
                                                      corresponding to user ids.
-            similar_artist_candidate_set_df (dataframe): recording ids that belong to similar artists
-                                                         corresponding to user ids.
     """
     try:
         utils.save_parquet(top_artist_candidate_set_df, path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
@@ -398,33 +243,22 @@ def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_se
         logger.error(str(err), exc_info=True)
         raise
 
-    try:
-        utils.save_parquet(similar_artist_candidate_set_df, path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
-    except FileNotSavedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
 
-
-def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
-                            top_artist_df, similar_artist_df_html):
+def get_candidate_html_data(top_artist_candidate_set_df_html, top_artist_df):
 
     """ Get artists and recordings associated with users for HTML. The function is invoked
         when candidate set HTML is to be generated.
 
         Args:
-            similar_artist_candidate_set_df_html (dataframe): similar artists and related info.
             top_artist_candidate_set_df_html (dataframe): top artists and related info.
             top_artist_df (dataframe) : top artists listened to by users.
-            similar_artist_df_html (dataframe): similar artists and corresponding top artists
 
         Returns:
             user_data: Dictionary can be depicted as:
                 {
                     'user 1' : {
                         'top_artist': [],
-                        'top_similar_artist': [],
                         'top_artist_candidate_set': [],
-                        'top_similar_artist_candidate_set': []
                     }
                     .
                     .
@@ -442,13 +276,6 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
         )
         user_data[row.user_id]['top_artist'].append(data)
 
-    for row in similar_artist_df_html.collect():
-        data = (
-            row.top_artist_credit_id,
-            row.similar_artist_credit_id
-        )
-        user_data[row.user_id]['similar_artist'].append(data)
-
     for row in top_artist_candidate_set_df_html.collect():
         data = (
             row.top_artist_credit_id,
@@ -458,15 +285,6 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
         )
         user_data[row.user_id]['top_artist_candidate_set'].append(data)
 
-    for row in similar_artist_candidate_set_df_html.collect():
-        data = (
-            row.similar_artist_credit_id,
-            row.artist_credit_id,
-            row.recording_mbid,
-            row.recording_id
-        )
-        user_data[row.user_id]['similar_artist_candidate_set'].append(data)
-
     return user_data
 
 
@@ -474,7 +292,7 @@ def save_candidate_html(user_data, total_time, from_date, to_date):
     """ Save user data to an HTML file.
 
         Args:
-            user_data (dict): Top and similar artists associated to users.
+            user_data (dict): Top artists associated to users.
             total_time (str): time taken to generate candidate_sets
     """
     date = datetime.utcnow().strftime('%Y-%m-%d-%H:%M')
@@ -488,8 +306,7 @@ def save_candidate_html(user_data, total_time, from_date, to_date):
     save_html(candidate_html, context, 'candidate.html')
 
 
-def main(recommendation_generation_window=None, top_artist_limit=None, similar_artist_limit=None,
-         users=None, html_flag=False):
+def main(recommendation_generation_window=None, top_artist_limit=None, users=None, html_flag=False):
 
     time_initial = time.monotonic()
     try:
@@ -502,7 +319,6 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         mapped_listens_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MAPPED_LISTENS)
         recordings_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDINGS_DATAFRAME)
         users_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)
-        artist_relation_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_DATAFRAME_PATH)
     except PathNotFoundException as err:
         logger.error(str(err), exc_info=True)
         raise
@@ -522,28 +338,18 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     top_artist_df = get_top_artists(mapped_listens_df, top_artist_limit, users)
 
     logger.info('Preparing top artists candidate set...')
-    top_artist_candidate_set_df, top_artist_candidate_set_df_html = get_top_artist_candidate_set(top_artist_df, recordings_df,
-                                                                                                 users_df, mapped_listens_df)
-
-    logger.info('Fetching similar artists...')
-    similar_artist_df, similar_artist_df_html = get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
-
-    logger.info('Preparing similar artists candidate set...')
-    similar_artist_candidate_set_df, similar_artist_candidate_set_df_html = get_similar_artist_candidate_set(
-                                                                                similar_artist_df,
-                                                                                recordings_df,
-                                                                                users_df,
-                                                                                mapped_listens_df)
+    top_artist_candidate_set_df, top_artist_candidate_set_df_html = get_top_artist_candidate_set(
+        top_artist_df, recordings_df, users_df, mapped_listens_df
+    )
 
     logger.info('Saving candidate sets...')
-    save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df)
+    save_candidate_sets(top_artist_candidate_set_df)
     logger.info('Done!')
 
     # time taken to generate candidate_sets
     total_time = '{:.2f}'.format((time.monotonic() - time_initial) / 60)
     if html_flag:
-        user_data = get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
-                                            top_artist_df, similar_artist_df_html)
+        user_data = get_candidate_html_data(top_artist_candidate_set_df_html, top_artist_df)
 
         logger.info('Saving HTML...')
         save_candidate_html(user_data, total_time, from_date, to_date)

@@ -1,19 +1,16 @@
 import logging
 import uuid
-from unittest.mock import patch, call, MagicMock
+from unittest.mock import patch, MagicMock
 
+from pyspark.sql import Row
 from pyspark.sql.types import StructType
 
 import listenbrainz_spark
-from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
-from listenbrainz_spark.recommendations.recording import recommend
 from listenbrainz_spark import schema, utils, path
 from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
                                            EmptyDataframeExcpetion)
-
-from pyspark.sql import Row
-from pyspark.sql.functions import col
-
+from listenbrainz_spark.recommendations.recording import recommend
+from listenbrainz_spark.recommendations.recording.tests import RecommendationsTestCase
 # for test data/dataframes refer to listenbrainzspark/tests/__init__.py
 from listenbrainz_spark.schema import recommendation_schema
 
@@ -202,36 +199,23 @@ class RecommendTestClass(RecommendationsTestCase):
         users = [3]
 
         top_artist_candidate_set_df = self.get_top_artist_rec_df()
-        similar_artist_candidate_set_df = self.get_similar_artist_rec_df()
 
         recommendation_top_artist_limit = 2
-        recommendation_similar_artist_limit = 1
 
         def side_effect(df, users):
             if len(df.subtract(top_artist_candidate_set_df).collect()) == 0:
                 return 'top_artist_rdd'
-
-            if len(df.subtract(similar_artist_candidate_set_df).collect()) == 0:
-                return 'similar_artist_rdd'
 
         mock_candidate_set.side_effect = side_effect
 
         recommend.get_recommendations_for_candidate_set(
             model, top_artist_candidate_set_df, recommendation_top_artist_limit, users
         )
-        recommend.get_recommendations_for_candidate_set(
-            model, similar_artist_candidate_set_df, recommendation_similar_artist_limit, users
+        mock_candidate_set.assertCalled(top_artist_candidate_set_df, users)
+
+        mock_recs.assertCalled(
+            mock_candidate_set(top_artist_candidate_set_df, users), model, recommendation_top_artist_limit
         )
-
-        mock_candidate_set.assert_has_calls([
-            call(top_artist_candidate_set_df, users),
-            call(similar_artist_candidate_set_df, users)
-        ])
-
-        mock_recs.assert_has_calls([
-            call(mock_candidate_set(top_artist_candidate_set_df, users), model, recommendation_top_artist_limit),
-            call(mock_candidate_set(similar_artist_candidate_set_df, users), model, recommendation_similar_artist_limit)
-        ])
 
     def get_top_artist_rec_df(self):
         return listenbrainz_spark.session.createDataFrame([
@@ -256,29 +240,6 @@ class RecommendTestClass(RecommendationsTestCase):
             ]),
         ], schema=recommendation_schema)
 
-    def get_similar_artist_rec_df(self):
-        return listenbrainz_spark.session.createDataFrame([
-            Row(user_id=4, recs=[
-                Row(
-                    latest_listened_at=None,
-                    recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                    score=1.0,
-                ),
-                Row(
-                    latest_listened_at="2019-10-12T09:43:57.000Z",
-                    recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                    score=-3.0,
-                )
-            ]),
-            Row(user_id=1, recs=[
-                Row(
-                    latest_listened_at=None,
-                    recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                    score=0.0,
-                )
-            ])
-        ], schema=recommendation_schema)
-
     def get_raw_rec_df(self):
         return listenbrainz_spark.session.createDataFrame([
             Row(user_id=4, recs=[
@@ -301,15 +262,13 @@ class RecommendTestClass(RecommendationsTestCase):
         model_id = "foobar"
         model_html_file = "foobar.html"
         top_artist_rec_df = self.get_top_artist_rec_df()
-        similar_artist_rec_df = self.get_similar_artist_rec_df()
         raw_rec_df = self.get_raw_rec_df()
         active_user_count = 10
         top_artist_rec_user_count = 2
-        similar_artist_rec_user_count = 2
         raw_rec_user_count = 2
         total_time = 3600
 
-        data = recommend.create_messages(model_id, model_html_file, top_artist_rec_df, similar_artist_rec_df,
+        data = recommend.create_messages(model_id, model_html_file, top_artist_rec_df,
                                          raw_rec_df, active_user_count, total_time)
 
         self.assertEqual(next(data), {
@@ -328,7 +287,6 @@ class RecommendTestClass(RecommendationsTestCase):
                         'latest_listened_at': None
                     }
                 ],
-                'similar_artist': [],
                 'raw': [
                     {
                         'latest_listened_at': '2019-10-12T09:43:57.000Z',
@@ -352,13 +310,6 @@ class RecommendTestClass(RecommendationsTestCase):
                         'latest_listened_at': "2020-11-14T06:21:02.000Z"
                     }
                 ],
-                'similar_artist': [
-                    {
-                        'recording_mbid': "7acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 0.0,
-                        'latest_listened_at': None
-                    }
-                ],
                 'raw': [],
                 'model_id': 'foobar',
                 'model_url': 'http://michael.metabrainz.org/foobar.html'
@@ -370,18 +321,6 @@ class RecommendTestClass(RecommendationsTestCase):
             'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': [],
-                'similar_artist': [
-                    {
-                        'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': 1.0,
-                        'latest_listened_at': None
-                    },
-                    {
-                        'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
-                        'score': -3.0,
-                        'latest_listened_at': "2019-10-12T09:43:57.000Z"
-                    }
-                ],
                 'raw': [
                     {
                         'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
@@ -398,7 +337,6 @@ class RecommendTestClass(RecommendationsTestCase):
             'type': 'cf_recommendations_recording_mail',
             'active_user_count': active_user_count,
             'top_artist_user_count': top_artist_rec_user_count,
-            'similar_artist_user_count': similar_artist_rec_user_count,
             'raw_rec_user_count': raw_rec_user_count,
             'total_time': '1.00'
         })

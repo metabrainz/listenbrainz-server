@@ -36,16 +36,6 @@ def top_artist(user_name: str):
     return template
 
 
-@recommendations_cf_recording_bp.route("/<user_name>/similar_artist/")
-def similar_artist(user_name: str):
-    """ Show similar artist user recommendations """
-    user = _get_user(user_name)
-
-    template = _get_template(active_section='similar_artist', user=user)
-
-    return template
-
-
 @recommendations_cf_recording_bp.route("/<user_name>/raw/")
 def raw(user_name: str):
     """ Show raw track recommendations """
@@ -60,7 +50,7 @@ def _get_template(active_section, user):
     """ Get template to render based on active section.
 
         Args:
-            active_section (str): Type of recommendation playlist to render i.e top_artist, similar_artist
+            active_section (str): Type of recommendation playlist to render i.e top_artist.
             user: Database user object.
 
         Returns:
@@ -70,8 +60,6 @@ def _get_template(active_section, user):
     data = db_recommendations_cf_recording.get_user_recommendation(user.id)
     if active_section == 'top_artist':
         tracks_type = "Top Artist"
-    elif active_section == 'similar_artist':
-        tracks_type = "Similar Artist"
     else:
         tracks_type = "Raw Tracks"
 
