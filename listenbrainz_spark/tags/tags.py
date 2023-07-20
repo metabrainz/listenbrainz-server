@@ -4,7 +4,7 @@ from listenbrainz_spark.path import RECORDING_RECORDING_TAG_DATAFRAME, MLHD_RECO
     RECORDING_ARTIST_TAG_DATAFRAME, RECORDING_RELEASE_GROUP_TAG_DATAFRAME
 from listenbrainz_spark.stats import run_query
 
-RECORDINGS_PER_MESSAGE = 1000
+RECORDINGS_PER_MESSAGE = 10000
 
 
 def create_messages(recordings_table, popularity_table, source):

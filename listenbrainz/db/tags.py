@@ -55,14 +55,14 @@ def end_table():
 
             # rotate tables
             query = SQL("""
-                ALTER TABLE {prod_table} RENAME TO {outgoing_table}
+                ALTER TABLE IF EXISTS {prod_table} RENAME TO {outgoing_table}
              """).format(prod_table=Identifier("tags", "lb_tag_radio"), outgoing_table=Identifier("lb_tag_radio_old"))
             curs.execute(query)
             query = SQL("""
-                ALTER TABLE {incoming_table} RENAME TO {prod_table}
+                ALTER TABLE IF EXISTS {incoming_table} RENAME TO {prod_table}
              """).format(incoming_table=Identifier("tags", "lb_tag_radio_tmp"), prod_table=Identifier("lb_tag_radio"))
             curs.execute(query)
-            query = SQL("""DROP TABLE {old_table}""").format(old_table=Identifier("tags", "lb_tag_radio_old"))
+            query = SQL("""DROP TABLE IF EXISTS {old_table}""").format(old_table=Identifier("tags", "lb_tag_radio_old"))
             curs.execute(query)
         conn.commit()
     finally:
@@ -76,7 +76,7 @@ def insert(source, recordings):
         tags = [(rec["recording_mbid"], tag["tag"], tag["tag_count"], tag["_percent"]) for tag in rec["tags"]]
         values.extend(tags)
 
-    query = "INSERT INTO tags.lb_tag_radio (recording_mbid, tag, tag_count, percent, source) VALUES %s"
+    query = "INSERT INTO tags.lb_tag_radio_tmp (recording_mbid, tag, tag_count, percent, source) VALUES %s"
 
     template = SQL("(%s, %s, %s, %s, {source})").format(source=Literal(source))
     conn = timescale.engine.raw_connection()
