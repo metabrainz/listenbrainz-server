@@ -1,17 +1,17 @@
-import * as React from "react";
-import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { faPauseCircle } from "@fortawesome/free-regular-svg-icons";
+import { faHeart, faHeartCrack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as tinycolor from "tinycolor2";
 import { first, get, isEmpty, isNumber, isPlainObject, pick } from "lodash";
-import TagsComponent from "./TagsComponent";
+import * as React from "react";
+import * as tinycolor from "tinycolor2";
+import { millisecondsToStr } from "../playlists/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   getArtistName,
   getAverageRGBOfImage,
   getTrackName,
 } from "../utils/utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import { millisecondsToStr } from "../playlists/utils";
+import TagsComponent from "./TagsComponent";
 
 type MetadataViewerProps = {
   recordingData?: MetadataLookup;
@@ -499,7 +499,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               type="button"
             >
               <FontAwesomeIcon
-                icon={faHeartBroken}
+                icon={faHeartCrack}
                 title="Hate"
                 size="2x"
                 className={`${currentListenFeedback === -1 ? " hated" : ""}`}

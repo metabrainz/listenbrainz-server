@@ -2,27 +2,18 @@
 
 import * as React from "react";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import {
-  faHeart,
-  faHeartBroken,
-  faThumbtack,
-} from "@fortawesome/free-solid-svg-icons";
-import { clone, get, has, isNaN } from "lodash";
+import { faHeart, faHeartCrack } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { clone, get, has } from "lodash";
 import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
+import Loader from "../components/Loader";
 import Pill from "../components/Pill";
 import ListenCard from "../listens/ListenCard";
-import Loader from "../components/Loader";
-import {
-  getRecordingMBID,
-  getRecordingMSID,
-  handleNavigationClickEvent,
-} from "../utils/utils";
-import ListenControl from "../listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
+import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
@@ -356,7 +347,7 @@ export default class UserFeedback extends React.Component<
             type="secondary"
             onClick={() => this.changeSelectedFeedback(-1)}
           >
-            <FontAwesomeIcon icon={faHeartBroken as IconProp} /> Hated
+            <FontAwesomeIcon icon={faHeartCrack as IconProp} /> Hated
           </Pill>
         </div>
         {!feedback.length && (
