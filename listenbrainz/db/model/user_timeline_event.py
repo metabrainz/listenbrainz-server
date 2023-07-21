@@ -106,6 +106,8 @@ class APITimelineEvent(BaseModel):
     metadata: APIEventMetadata
     hidden: bool
 
+class SimilarUserTimelineEvent(APITimelineEvent):
+    similarity: float | None = None
 
 class HiddenUserTimelineEvent(BaseModel):
     id: NonNegativeInt

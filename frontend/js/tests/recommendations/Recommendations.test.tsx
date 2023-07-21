@@ -35,7 +35,7 @@ const props = {
   spotify: spotify as SpotifyUser,
   youtube: youtube as YoutubeUser,
   user,
-  newAlert: () => {},
+  
 };
 
 // Create a new instance of GlobalAppContext
@@ -50,7 +50,7 @@ const mountOptions: { context: GlobalAppContextT } = {
 
 const propsOne = {
   ...recommendationPropsOne,
-  newAlert: () => {},
+  
 };
 
 const feedback = {

@@ -18,6 +18,7 @@
 from sqlalchemy import text
 
 from listenbrainz import messybrainz
+from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
@@ -57,6 +58,22 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         following_user = db_user.get_or_create(mb_row_id, name)
         db_user_relationship.insert(user, following_user['id'], 'follow')
         return following_user
+
+    def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, global_similarity: float, name: str) -> dict:
+        similar_user = db_user.get_or_create(mb_row_id, name)
+        self.similar_user_data[similar_user['id']] = (similarity, global_similarity)
+        with db.engine.begin() as connection:
+            connection.execute(text("""
+                INSERT INTO recommendation.similar_user (user_id, similar_users)
+                     VALUES (:similar_to_user, :similar_users)
+                ON CONFLICT (user_id)
+                  DO UPDATE
+                        SET similar_users = EXCLUDED.similar_users
+                """), {
+                "similar_to_user": similar_to_user,
+                "similar_users": json.dumps(self.similar_user_data)
+            })
+        return similar_user
 
     def remove_own_follow_events(self, payload: dict) -> dict:
         new_events = []
@@ -128,7 +145,91 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(ts - 11, payload['events'][3]['created'])
         self.assertEqual('following_2', payload['events'][3]['user_name'])
 
-    def test_it_sends_listens_for_users_that_are_being_followed_new(self):
+    def test_it_sends_all_listens_for_users_that_are_similar(self):
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        self.similar_user_data = dict()
+        similar_user_1 = self.create_similar_user(self.main_user['id'], 104, 0.1, 0.1, 'similar_1')
+        similar_user_2 = self.create_similar_user(self.main_user['id'], 105, 0.2, 0.2, 'similar_2')
+
+        ts = int(time.time())
+        # Send 3 listens for the following_user_1
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - i
+            response = self.send_data(payload, user=similar_user_1)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        # Send 3 listens with lower timestamps for similar_user_2
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - 10 - i
+            response = self.send_data(payload, user=similar_user_2)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        from datetime import timedelta
+        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(seconds=1))
+
+        # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
+        response = self.send_data(payload, user=similar_user_1)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # Sending a listen with time difference slightly greater than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec - 1000
+        response = self.send_data(payload, user=similar_user_2)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # This sleep allows for the timescale subscriber to take its time in getting
+        # the listen submitted from redis and writing it to timescale.
+        time.sleep(2)
+
+        response = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed_listens_similar', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+        )
+        self.assert200(response)
+        payload = response.json['payload']
+
+        # should have 7 listens only. As one listen is out of seach interval, it should not be in payload.
+        self.assertEqual(7, payload['count'])
+
+        # first 3 events should have higher timestamps and user should be similar_1
+        self.assertEqual('listen', payload['events'][0]['event_type'])
+        self.assertEqual(ts, payload['events'][0]['created'])
+        self.assertEqual('similar_1', payload['events'][0]['user_name'])
+        self.assertEqual(0.1, payload['events'][0]['similarity'])
+
+        self.assertEqual('listen', payload['events'][1]['event_type'])
+        self.assertEqual(ts - 1, payload['events'][1]['created'])
+        self.assertEqual('similar_1', payload['events'][1]['user_name'])
+        self.assertEqual(0.1, payload['events'][1]['similarity'])
+
+        self.assertEqual('listen', payload['events'][2]['event_type'])
+        self.assertEqual(ts - 2, payload['events'][2]['created'])
+        self.assertEqual('similar_1', payload['events'][2]['user_name'])
+        self.assertEqual(0.1, payload['events'][2]['similarity'])
+
+        # next 3 events should have lower timestamps and user should be similar_2
+        self.assertEqual('listen', payload['events'][3]['event_type'])
+        self.assertEqual(ts - 10, payload['events'][3]['created'])
+        self.assertEqual('similar_2', payload['events'][3]['user_name'])
+        self.assertEqual(0.2, payload['events'][3]['similarity'])
+
+        self.assertEqual('listen', payload['events'][4]['event_type'])
+        self.assertEqual(ts - 11, payload['events'][4]['created'])
+        self.assertEqual('similar_2', payload['events'][4]['user_name'])
+        self.assertEqual(0.2, payload['events'][4]['similarity'])
+
+        self.assertEqual('listen', payload['events'][5]['event_type'])
+        self.assertEqual(ts - 12, payload['events'][5]['created'])
+        self.assertEqual('similar_2', payload['events'][5]['user_name'])
+        self.assertEqual(0.2, payload['events'][5]['similarity'])
+
+    def test_it_sends_all_listens_for_users_that_are_being_followed(self):
         with open(self.path_to_data_file('valid_single.json'), 'r') as f:
             payload = json.load(f)
 

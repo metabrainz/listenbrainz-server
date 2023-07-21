@@ -4,7 +4,6 @@ exports[`Sitewide Stats UserTopEntity renders corectly when range is invalid 1`]
 <UserTopEntity
   apiUrl="foobar"
   entity="artist"
-  newAlert={[Function]}
   range="invalid_range"
   terminology="artist"
 >
@@ -84,7 +83,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
 <UserTopEntity
   apiUrl="foobar"
   entity="artist"
-  newAlert={[Function]}
   range="week"
   terminology="artist"
 >
@@ -158,7 +156,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -310,7 +307,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -462,7 +458,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -614,7 +609,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -766,7 +760,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -918,7 +911,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -1070,7 +1062,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -1222,7 +1213,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -1374,7 +1364,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -1526,7 +1515,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -1678,7 +1666,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -1830,7 +1817,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -1982,7 +1968,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -2134,7 +2119,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -2286,7 +2270,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -2438,7 +2421,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -2590,7 +2572,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -2742,7 +2723,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -2894,7 +2874,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -3046,7 +3025,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -3198,7 +3176,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -3350,7 +3327,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -3502,7 +3478,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -3654,7 +3629,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -3806,7 +3780,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -3927,7 +3900,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
 <UserTopEntity
   apiUrl="foobar"
   entity="recording"
-  newAlert={[Function]}
   range="week"
   terminology="artist"
 >
@@ -3985,7 +3957,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -4156,7 +4127,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -4358,7 +4328,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -4531,7 +4500,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -4704,7 +4672,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -4877,7 +4844,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -5045,7 +5011,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -5216,7 +5181,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -5416,7 +5380,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -5618,7 +5581,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -5791,7 +5753,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -5962,7 +5923,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -6164,7 +6124,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -6338,7 +6297,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -6509,7 +6467,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -6709,7 +6666,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -6909,7 +6865,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -7109,7 +7064,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -7309,7 +7263,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -7509,7 +7462,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -7711,7 +7663,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -7877,7 +7828,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -8079,7 +8029,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -8250,7 +8199,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -8452,7 +8400,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -8610,7 +8557,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
 <UserTopEntity
   apiUrl="foobar"
   entity="release"
-  newAlert={[Function]}
   range="week"
   terminology="artist"
 >
@@ -8697,7 +8643,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -8885,7 +8830,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -9116,7 +9060,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -9314,7 +9257,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -9512,7 +9454,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -9710,7 +9651,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -9904,7 +9844,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -10102,7 +10041,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -10301,7 +10239,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -10499,7 +10436,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -10687,7 +10623,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -10908,7 +10843,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -11129,7 +11063,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -11360,7 +11293,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -11558,7 +11490,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -11746,7 +11677,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -11967,7 +11897,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -12198,7 +12127,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -12386,7 +12314,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -12607,7 +12534,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -12828,7 +12754,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -13049,7 +12974,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -13270,7 +13194,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -13491,7 +13414,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -13722,7 +13644,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -13871,7 +13792,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
 <UserTopEntity
   apiUrl="foobar"
   entity="release-group"
-  newAlert={[Function]}
   range="week"
   terminology="artist"
 >
@@ -13958,7 +13878,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -14187,7 +14106,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -14408,7 +14326,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -14639,7 +14556,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -14837,7 +14753,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -15035,7 +14950,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -15274,7 +15188,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -15472,7 +15385,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -15711,7 +15623,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -15909,7 +15820,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -16097,7 +16007,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -16330,7 +16239,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -16528,7 +16436,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -16727,7 +16634,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -16966,7 +16872,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -17164,7 +17069,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -17362,7 +17266,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -17560,7 +17463,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -17758,7 +17660,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -17956,7 +17857,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -18154,7 +18054,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -18353,7 +18252,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -18541,7 +18439,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -18762,7 +18659,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -18983,7 +18879,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -19170,7 +19065,6 @@ exports[`User Stats UserTopEntity renders corectly when range is invalid 1`] = `
 <UserTopEntity
   apiUrl="foobar"
   entity="artist"
-  newAlert={[Function]}
   range="invalid_range"
   terminology="artist"
   user={
@@ -19255,7 +19149,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
 <UserTopEntity
   apiUrl="foobar"
   entity="artist"
-  newAlert={[Function]}
   range="week"
   terminology="artist"
   user={
@@ -19334,7 +19227,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -19486,7 +19378,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -19638,7 +19529,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -19790,7 +19680,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -19942,7 +19831,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -20094,7 +19982,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -20246,7 +20133,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -20398,7 +20284,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -20550,7 +20435,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -20702,7 +20586,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -20854,7 +20737,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -21006,7 +20888,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -21158,7 +21039,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -21310,7 +21190,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -21462,7 +21341,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -21614,7 +21492,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -21766,7 +21643,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -21918,7 +21794,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -22070,7 +21945,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -22222,7 +22096,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -22374,7 +22247,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -22526,7 +22398,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -22678,7 +22549,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -22830,7 +22700,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -22982,7 +22851,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
                 />
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -23103,7 +22971,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
 <UserTopEntity
   apiUrl="foobar"
   entity="recording"
-  newAlert={[Function]}
   range="week"
   terminology="artist"
   user={
@@ -23166,7 +23033,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -23337,7 +23203,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -23539,7 +23404,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -23712,7 +23576,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -23885,7 +23748,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -24058,7 +23920,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -24226,7 +24087,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -24397,7 +24257,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -24597,7 +24456,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -24799,7 +24657,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -24972,7 +24829,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -25143,7 +24999,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -25345,7 +25200,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -25519,7 +25373,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -25690,7 +25543,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -25890,7 +25742,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -26090,7 +25941,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -26290,7 +26140,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -26490,7 +26339,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -26690,7 +26538,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -26892,7 +26739,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -27058,7 +26904,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -27260,7 +27105,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -27431,7 +27275,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -27633,7 +27476,6 @@ exports[`User Stats UserTopEntity renders correctly for recording 1`] = `
                 },
               }
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -27791,7 +27633,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
 <UserTopEntity
   apiUrl="foobar"
   entity="release"
-  newAlert={[Function]}
   range="week"
   terminology="artist"
   user={
@@ -27883,7 +27724,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -28071,7 +27911,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -28302,7 +28141,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -28500,7 +28338,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -28698,7 +28535,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -28896,7 +28732,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -29090,7 +28925,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -29288,7 +29122,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -29487,7 +29320,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -29685,7 +29517,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -29873,7 +29704,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -30094,7 +29924,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -30315,7 +30144,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -30546,7 +30374,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -30744,7 +30571,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -30932,7 +30758,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -31153,7 +30978,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -31384,7 +31208,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -31572,7 +31395,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -31793,7 +31615,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -32014,7 +31835,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -32235,7 +32055,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -32456,7 +32275,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -32677,7 +32495,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -32908,7 +32725,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -33057,7 +32873,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
 <UserTopEntity
   apiUrl="foobar"
   entity="release-group"
-  newAlert={[Function]}
   range="week"
   terminology="artist"
   user={
@@ -33149,7 +32964,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -33378,7 +33192,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -33599,7 +33412,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -33830,7 +33642,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -34028,7 +33839,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -34226,7 +34036,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -34465,7 +34274,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -34663,7 +34471,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -34902,7 +34709,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -35100,7 +34906,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -35288,7 +35093,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -35521,7 +35325,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -35719,7 +35522,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -35918,7 +35720,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -36157,7 +35958,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -36355,7 +36155,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -36553,7 +36352,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -36751,7 +36549,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -36949,7 +36746,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -37147,7 +36943,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -37345,7 +37140,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -37544,7 +37338,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -37732,7 +37525,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -37953,7 +37745,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >
@@ -38174,7 +37965,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
                 </div>
               </React.Fragment>
             }
-            newAlert={[Function]}
             showTimestamp={false}
             showUsername={false}
           >

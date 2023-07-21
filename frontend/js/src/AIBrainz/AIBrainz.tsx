@@ -2,10 +2,7 @@ import { ErrorBoundary } from "@sentry/react";
 import React, { useCallback, useContext, useState } from "react";
 import { createRoot } from "react-dom/client";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getPageProps } from "../utils/utils";
 
@@ -31,10 +28,9 @@ const totallyInnocentListen: Listen = {
   },
 };
 
-type AIBrainzComponentProps = {} & WithAlertNotificationsInjectedProps;
+type AIBrainzComponentProps = {};
 
 function AIBrainzComponent(props: AIBrainzComponentProps) {
-  const { newAlert } = props;
   const { APIService } = useContext(GlobalAppContext);
   const [submitted, setSubmitted] = useState(false);
   const [inputs, setInputs] = useState({

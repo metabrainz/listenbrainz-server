@@ -508,6 +508,12 @@ def request_troi_playlists(slug, create_all):
     send_request_to_spark_cluster("troi.playlists", slug=slug, users=users)
 
 
+@cli.command(name="request_tags")
+def request_troi_playlists():
+    """ Generate the tags dataset with percent rank """
+    send_request_to_spark_cluster("tags.default")
+
+
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
 # rather combine multiple commands related to a task so that they are always invoked in the correct order.
 

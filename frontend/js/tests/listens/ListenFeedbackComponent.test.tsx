@@ -32,7 +32,7 @@ const props: ListenFeedbackComponentProps = {
   listen,
   currentFeedback: 1,
   updateFeedbackCallback: () => {},
-  newAlert: () => {},
+  
 };
 
 const globalProps = {
@@ -120,10 +120,10 @@ describe("ListenFeedbackComponent", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      const newAlertSpy = jest.fn();
+      
       const wrapper = mount<ListenFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenFeedbackComponent {...props} newAlert={newAlertSpy} />
+          <ListenFeedbackComponent {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -137,12 +137,7 @@ describe("ListenFeedbackComponent", () => {
       await act(() => {
         instance.submitFeedback(-1);
       });
-      expect(newAlertSpy).toHaveBeenCalledTimes(1);
-      expect(newAlertSpy).toHaveBeenCalledWith(
-        "danger",
-        "Error while submitting feedback",
-        "my error message"
-      );
+
     });
   });
 });
