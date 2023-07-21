@@ -21,9 +21,6 @@ RECOMMENDATION_RECORDING_DATAFRAME_DIR = os.path.join(
 # Directory containing model metadata and the real models to be used for generating `recording` recommendations.
 RECOMMENDATION_RECORDING_MODEL_DIR = os.path.join(
     RECOMMENDATION_RECORDING_PARENT_DIR, 'model')
-# Directory containing candidate sets to be used for generating recommendations.
-RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR = os.path.join(
-    RECOMMENDATION_RECORDING_PARENT_DIR, 'candidate_set')
 # Directory to save best models for `recording` recommendations.
 RECOMMENDATION_RECORDING_DATA_DIR = os.path.join(
     RECOMMENDATION_RECORDING_MODEL_DIR, 'data')
@@ -41,10 +38,6 @@ RECOMMENDATION_RECORDINGS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + \
 # Absolute path to processed data/listens ready to be trained for `recording` recommendations.
 RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + \
     '/' + 'transformed_listencounts_df.parquet'
-# Absolute path to candidate sets used in `recording` recommendations.
-RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR,
-                                                                 'top_artist',
-                                                                 'top_artist.parquet')
 # Absolute path to model metadata.
 RECOMMENDATION_RECORDING_MODEL_METADATA = RECOMMENDATION_RECORDING_MODEL_DIR + \
     '/' + 'model_metadata_new.parquet'
