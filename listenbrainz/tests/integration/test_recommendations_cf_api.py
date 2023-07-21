@@ -27,12 +27,12 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
 
         db_recommendations_cf_recording.insert_user_recommendation(
             self.user['id'],
-            UserRecommendationsJson(top_artist=recordings)
+            UserRecommendationsJson(raw=recordings)
         )
 
         db_recommendations_cf_recording.insert_user_recommendation(
             self.user2['id'],
-            UserRecommendationsJson(top_artist=[])
+            UserRecommendationsJson(raw=[])
         )
 
         # get recommendations
@@ -48,15 +48,6 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations', user_name='invalid_user'))
         self.assert404(response)
 
-    def test_artist_type(self):
-        response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']))
-        self.assert400(response)
-
-        response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']), query_string={'artist_type': 'invalid_type'})
-        self.assert400(response)
-
     def test_inactive_user(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
                                            user_name=self.user3['musicbrainz_id']), query_string={'artist_type': 'top'})
@@ -69,7 +60,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
 
     def test_recommendations_without_count(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']), query_string={'artist_type': 'top'})
+                                           user_name=self.user['musicbrainz_id']))
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -82,23 +73,20 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         received_offset = data['offset']
         self.assertEqual(received_offset, 0)
 
-        received_type = data['type']
-        self.assertEqual(received_type, 'top')
-
         recieved_entity = data['entity']
         self.assertEqual(recieved_entity, 'recording')
 
         received_total_count = data['total_mbid_count']
-        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['top_artist'])
+        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['raw'])
         self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
         expected_ts = int(self.user_recommendations.created.timestamp())
         self.assertEqual(received_ts, expected_ts)
 
-        received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = self.user_recommendations.recording_mbid.dict()['top_artist'][:25]
-        self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
+        received_raw_recommendations = data['mbids']
+        expected_raw_recommendations = self.user_recommendations.recording_mbid.dict()['raw'][:25]
+        self.assertEqual(expected_raw_recommendations, received_raw_recommendations)
 
     def test_recommendations_with_count(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
@@ -116,23 +104,20 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         received_offset = data['offset']
         self.assertEqual(received_offset, 0)
 
-        received_type = data['type']
-        self.assertEqual(received_type, 'top')
-
         recieved_entity = data['entity']
         self.assertEqual(recieved_entity, 'recording')
 
         received_total_count = data['total_mbid_count']
-        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['top_artist'])
+        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['raw'])
         self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
         expected_ts = int(self.user_recommendations.created.timestamp())
         self.assertEqual(received_ts, expected_ts)
 
-        received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = self.user_recommendations.recording_mbid.dict()['top_artist'][:10]
-        self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
+        received_raw_recommendations = data['mbids']
+        expected_raw_recommendations = self.user_recommendations.recording_mbid.dict()['raw'][:10]
+        self.assertEqual(expected_raw_recommendations, received_raw_recommendations)
 
     def test_recommendations_too_many(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
@@ -150,23 +135,20 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         received_offset = data['offset']
         self.assertEqual(received_offset, 100)
 
-        received_type = data['type']
-        self.assertEqual(received_type, 'top')
-
         recieved_entity = data['entity']
         self.assertEqual(recieved_entity, 'recording')
 
         received_total_count = data['total_mbid_count']
-        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['top_artist'])
+        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['raw'])
         self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
         expected_ts = int(self.user_recommendations.created.timestamp())
         self.assertEqual(received_ts, expected_ts)
 
-        received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = self.user_recommendations.recording_mbid.dict()['top_artist'][100:1100]
-        self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
+        received_raw_recommendations = data['mbids']
+        expected_raw_recommendations = self.user_recommendations.recording_mbid.dict()['raw'][100:1100]
+        self.assertEqual(expected_raw_recommendations, received_raw_recommendations)
 
     def test_recommendations_with_offset(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
@@ -185,20 +167,17 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         received_offset = data['offset']
         self.assertEqual(received_offset, 10)
 
-        received_type = data['type']
-        self.assertEqual(received_type, 'top')
-
         recieved_entity = data['entity']
         self.assertEqual(recieved_entity, 'recording')
 
         received_total_count = data['total_mbid_count']
-        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['top_artist'])
+        expected_total_count = len(self.user_recommendations.recording_mbid.dict()['raw'])
         self.assertEqual(received_total_count, expected_total_count)
 
         received_ts = data['last_updated']
         expected_ts = int(self.user_recommendations.created.timestamp())
         self.assertEqual(received_ts, expected_ts)
 
-        received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = self.user_recommendations.recording_mbid.dict()['top_artist'][10:35]
-        self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
+        received_raw_recommendations = data['mbids']
+        expected_raw_recommendations = self.user_recommendations.recording_mbid.dict()['raw'][10:35]
+        self.assertEqual(expected_raw_recommendations, received_raw_recommendations)
