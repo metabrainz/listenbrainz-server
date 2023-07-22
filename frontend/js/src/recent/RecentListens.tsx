@@ -4,14 +4,11 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { get } from "lodash";
-
+import { toast } from "react-toastify";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -25,12 +22,13 @@ import {
 } from "../utils/utils";
 
 import Card from "../components/Card";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
   globalListenCount: number;
   globalUserCount: string;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface RecentListensState {
   listens: Array<Listen>;
@@ -60,7 +58,6 @@ export default class RecentListens extends React.Component<
   }
 
   getFeedback = async () => {
-    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
     const recording_msids: string[] = [];
@@ -85,13 +82,15 @@ export default class RecentListens extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
+        toast.error(
+          <ToastMsg
+            title="We could not load love/hate feedback"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "load-feedback-error" }
+        );
       }
     }
     return [];
@@ -161,7 +160,7 @@ export default class RecentListens extends React.Component<
 
   render() {
     const { listens } = this.state;
-    const { newAlert, globalListenCount, globalUserCount } = this.props;
+    const { globalListenCount, globalUserCount } = this.props;
     const { APIService, currentUser } = this.context;
 
     return (
@@ -200,7 +199,6 @@ export default class RecentListens extends React.Component<
                       showUsername
                       updateFeedbackCallback={this.updateFeedback}
                       listen={listen}
-                      newAlert={newAlert}
                       currentFeedback={this.getFeedbackForListen(listen)}
                     />
                   );
@@ -226,7 +224,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
   if (sentry_dsn) {
@@ -249,7 +246,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <RecentListensWithAlertNotifications
-            initialAlerts={optionalAlerts}
             listens={listens}
             globalListenCount={globalListenCount}
             globalUserCount={globalUserCount}

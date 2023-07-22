@@ -9,10 +9,7 @@ import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import Bar from "./Bar";
 import Loader from "../components/Loader";
@@ -29,7 +26,7 @@ import ListenCard from "../listens/ListenCard";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type UserEntityChartState = {
   data: UserEntityData;
@@ -476,7 +473,7 @@ export default class UserEntityChart extends React.Component<
       terminology,
     } = this.state;
     const { APIService } = this.context;
-    const { newAlert } = this.props;
+
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
 
@@ -600,7 +597,6 @@ export default class UserEntityChart extends React.Component<
                             showTimestamp={false}
                             showUsername={false}
                             currentFeedback={0}
-                            newAlert={newAlert}
                           />
                         );
                       })}
@@ -689,7 +685,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -711,10 +706,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <UserEntityChartWithAlertNotifications
-            initialAlerts={optionalAlerts}
-            user={user}
-          />
+          <UserEntityChartWithAlertNotifications user={user} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

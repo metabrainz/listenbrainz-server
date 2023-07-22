@@ -56,7 +56,7 @@ const props = {
   userPinnedRecording,
   globalListenCount,
   globalUserCount,
-  newAlert: () => {},
+  
 };
 
 // Create a new instance of GlobalAppContext
@@ -71,7 +71,7 @@ const mountOptions: { context: GlobalAppContextT } = {
 
 const propsOneListen = {
   ...recentListensPropsOneListen,
-  newAlert: () => {},
+  
 };
 
 fetchMock.mockIf(

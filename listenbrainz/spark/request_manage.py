@@ -318,29 +318,8 @@ def request_model(rank, itr, lmbda, alpha, use_transformed_listencounts):
     send_request_to_spark_cluster('cf.recommendations.recording.train_model', **params)
 
 
-@cli.command(name='request_candidate_sets')
-@click.option("--days", type=int, required=False, help="Request recommendations to be generated on history of given number of days")
-@click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
-@click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
-@click.option("--html", is_flag=True, default=False, help='Enable/disable HTML file generation')
-@click.option("--user-name", "users", callback=parse_list, default=[], multiple=True,
-              help="Generate candidate set for given users. Generate for all active users by default.")
-def request_candidate_sets(days, top, similar, users, html):
-    """ Send the cluster a request to generate candidate sets.
-    """
-    params = {
-        "recommendation_generation_window": days,
-        "top_artist_limit": top,
-        "similar_artist_limit": similar,
-        "users": users,
-        "html_flag": html
-    }
-    send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', **params)
-
-
 @cli.command(name='request_recommendations')
 @click.option("--top", type=int, default=1000, help="Generate given number of top artist recommendations")
-@click.option("--similar", type=int, default=1000, help="Generate given number of similar artist recommendations")
 @click.option("--raw", type=int, default=1000, help="Generate given number of raw recommendations")
 @click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
               help="Generate recommendations for given users. Generate recommendations for all users by default.")
@@ -349,7 +328,6 @@ def request_recommendations(top, similar, raw, users):
     """
     params = {
         'recommendation_top_artist_limit': top,
-        'recommendation_similar_artist_limit': similar,
         'recommendation_raw_limit': raw,
         'users': users
     }
@@ -508,6 +486,12 @@ def request_troi_playlists(slug, create_all):
     send_request_to_spark_cluster("troi.playlists", slug=slug, users=users)
 
 
+@cli.command(name="request_tags")
+def request_troi_playlists():
+    """ Generate the tags dataset with percent rank """
+    send_request_to_spark_cluster("tags.default")
+
+
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
 # rather combine multiple commands related to a task so that they are always invoked in the correct order.
 
@@ -544,7 +528,6 @@ def cron_request_similar_users(ctx):
 def cron_request_recommendations(ctx):
     ctx.invoke(request_dataframes)
     ctx.invoke(request_model)
-    ctx.invoke(request_candidate_sets)
     ctx.invoke(request_recording_discovery)
     ctx.invoke(request_recommendations)
 

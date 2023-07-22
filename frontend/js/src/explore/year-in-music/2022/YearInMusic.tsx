@@ -5,6 +5,7 @@ import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import Tooltip from "react-tooltip";
+import { toast } from "react-toastify";
 import {
   get,
   isEmpty,
@@ -30,10 +31,7 @@ import GlobalAppContext, {
 } from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
 
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../../../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
 import {
   generateAlbumArtThumbnailLink,
@@ -47,6 +45,7 @@ import UserListModalEntry from "../../../follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../../stats/Choropleth";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -100,7 +99,7 @@ export type YearInMusicProps = {
       artists: Array<UserArtistMapArtist>;
     }>;
   };
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type YearInMusicState = {
   followingList: Array<string>;
@@ -191,8 +190,13 @@ export default class YearInMusic extends React.Component<
 
       this.setState({ followingList: following });
     } catch (err) {
-      const { newAlert } = this.props;
-      newAlert("danger", "Error while fetching followers", err.toString());
+      toast.error(
+        <ToastMsg
+          title="Error while fetching the users you follow"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-following-error" }
+      );
     }
   };
 
@@ -226,7 +230,6 @@ export default class YearInMusic extends React.Component<
   };
 
   sharePage = () => {
-    const { newAlert } = this.props;
     const dataToShare: ShareData = {
       title: "My 2022 in music",
       url: window.location.toString(),
@@ -234,7 +237,10 @@ export default class YearInMusic extends React.Component<
     // Use the Share API to share the image
     if (navigator.canShare && navigator.canShare(dataToShare)) {
       navigator.share(dataToShare).catch((error) => {
-        newAlert("danger", "Error sharing image", error.toString());
+        toast.error(
+          <ToastMsg title="Error sharing image" message={error.toString()} />,
+          { toastId: "sharing-image-error" }
+        );
       });
     }
   };
@@ -249,7 +255,7 @@ export default class YearInMusic extends React.Component<
       return undefined;
     }
     const { APIService } = this.context;
-    const { newAlert, user } = this.props;
+    const { user } = this.props;
     return (
       <div className="card content-card mb-10" id={`${coverArtKey}`}>
         <div className="center-p">
@@ -299,7 +305,6 @@ export default class YearInMusic extends React.Component<
                 compact
                 showTimestamp={false}
                 showUsername={false}
-                newAlert={newAlert}
               />
             );
           })}
@@ -318,7 +323,7 @@ export default class YearInMusic extends React.Component<
   };
 
   render() {
-    const { user, newAlert, yearInMusicData } = this.props;
+    const { user, yearInMusicData } = this.props;
     const { selectedMetric } = this.state;
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
@@ -664,7 +669,6 @@ export default class YearInMusic extends React.Component<
                               listen={listenHere}
                               showTimestamp={false}
                               showUsername={false}
-                              newAlert={newAlert}
                             />
                           );
                         })}
@@ -732,7 +736,6 @@ export default class YearInMusic extends React.Component<
                               listenDetails={details}
                               showTimestamp={false}
                               showUsername={false}
-                              newAlert={newAlert}
                             />
                           );
                         })}
@@ -1088,7 +1091,6 @@ export default class YearInMusic extends React.Component<
                               listen={listenHere}
                               showTimestamp={false}
                               showUsername={false}
-                              newAlert={newAlert}
                             />
                           );
                         }
@@ -1236,12 +1238,7 @@ export default class YearInMusic extends React.Component<
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    optionalAlerts,
-  } = getPageProps();
+  const { domContainer, reactProps, globalAppContext } = getPageProps();
 
   const { user, data: yearInMusicData } = reactProps;
 
@@ -1255,7 +1252,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <YearInMusicWithAlertNotifications
             user={user}
             yearInMusicData={yearInMusicData}
-            initialAlerts={optionalAlerts}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
