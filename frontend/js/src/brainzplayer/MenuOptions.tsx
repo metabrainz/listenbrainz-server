@@ -4,7 +4,7 @@ import {
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
 import {
-  faEllipsisV,
+  faEllipsisVertical,
   faExternalLinkAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -68,7 +68,7 @@ function MenuOptions(props: MenuOptionsProps) {
       tabIndex={0}
     >
       <FontAwesomeIcon
-        icon={faEllipsisV}
+        icon={faEllipsisVertical}
         title="More actions"
         aria-hidden="true"
       />

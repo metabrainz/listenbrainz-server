@@ -1,7 +1,7 @@
 from time import time
 import requests
 
-ROOT = '127.0.0.1:8100'
+ROOT = '127.0.0.1'
 
 def submit_listen(listen_type, payload, token):
     """Submits listens for the track(s) in payload.

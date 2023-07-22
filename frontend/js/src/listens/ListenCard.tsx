@@ -9,7 +9,7 @@ import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faCode,
   faCommentDots,
-  faEllipsisV,
+  faEllipsisVertical,
   faExternalLinkAlt,
   faLink,
   faMusic,
@@ -479,7 +479,7 @@ export default class ListenCard extends React.Component<
               {hideActionsMenu ? null : (
                 <>
                   <FontAwesomeIcon
-                    icon={faEllipsisV as IconProp}
+                    icon={faEllipsisVertical as IconProp}
                     title="More actions"
                     className="dropdown-toggle"
                     id="listenControlsDropdown"
