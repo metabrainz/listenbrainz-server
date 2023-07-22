@@ -1,0 +1,119 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  font-family: Sintony, sans-serif;
+  font-weight: 400;
+  font-stretch: 100%;
+}
+.search-box {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  height: 4vh;
+  padding: 0vh;
+  margin: 2vh;
+}
+.artist-input {
+  height: inherit;
+  width: 10%;
+}
+.artist-input-box{
+  display: flex;
+  flex-direction: row;
+  height: inherit;
+  width: 100%;
+}
+#artist-input-name {
+  display: flex;
+  height: 100%;
+  width: 80%;
+  border-radius: 0;
+  border: 2px solid #E0E0E0;
+  border-right: none;
+}
+#artist-input-icon {
+  vertical-align: middle;
+  background-color: #353070;
+  border: none;
+  height: inherit;
+  width: 20%;
+}
+#artist-input-icon:hover, #graph-size-input-minus:hover, #graph-size-input-plus:hover {
+  background-color: #413b89;
+  border-color: #211e45;
+  cursor: pointer;
+}
+#search-dropdown {
+  display: flex;
+  flex-direction: column;
+  max-height: 25vh;
+  overflow: scroll;
+  width: 100%;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background-color: #E0E0E0;
+  font-size: 14px;
+}
+.search-item {
+  outline: inherit;
+  border-color:rgba(27, 27, 27, 0.3);
+  cursor: pointer;
+  background-color: #ffffff;
+  z-index:1;
+  padding: 4%;
+  font-size: inherit;
+}
+.search-item:hover {
+  color: #fff;
+  background-color: #353070;
+}
+
+.graph-size-input{
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 20%;
+  
+}
+#graph-size-input-label {
+  margin-left: 20%;
+}
+#graph-size-input-number{
+  height: 100%;
+  width: 10%;
+  min-width: inherit;
+  border-radius: 0;
+  border: 2px solid #E0E0E0;
+  border-left: none;
+  border-right: none;
+  text-align: center;
+}
+#graph-size-input-minus, #graph-size-input-plus{
+  height: 100%;
+  width: fit-content;
+  padding: 0 2%;
+  background-color: #353070;
+  border: none;
+
+}
+#graph-size-input-label{
+  display: flex;
+  align-items: center;
+  padding-right: 3%;
+}
+/* Hide number input arrows */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+

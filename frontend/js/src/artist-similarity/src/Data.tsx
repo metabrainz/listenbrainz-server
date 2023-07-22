@@ -1,14 +1,14 @@
 import React, {useState, useEffect} from "react";
 import SimilarArtistsGraph from "./SimilarArtistsGraph";
-import Input from "./artist-search/SearchBox";
 import tinycolor from "tinycolor2";
+import SearchBox from "./artist-search/SearchBox";
 
 type ArtistType = {
     artist_mbid: string;
     name: string;
-    comment: string;
-    type: string;
-    gender: string;
+    comment?: string;
+    type?: string;
+    gender?: string;
     score?: number;
     reference_mbid?: string;
 }
@@ -46,7 +46,7 @@ type GraphDataType = {
 }
 
 const colorGenerator = ():  tinycolor.Instance=> {
-    var color = tinycolor("hsv(" + Math.random() * 360 + ", 100%, 70%)");
+    var color = tinycolor("hsv(" + Math.random() * 360 + ", 90%, 90%)");
     return color;
 }
 
@@ -55,9 +55,9 @@ const Data = () => {
     const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
     const BASE_URL = "https://labs.api.listenbrainz.org/similar-artists/json?algorithm=session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30&artist_mbid=";
     // Serves as the maximum distance between nodes
-    const LINK_DIST_MULTIPLIER = 150;
+    const LINK_DIST_MULTIPLIER = 250;
     // Serves as the minimum distance between nodes
-    const MIN_LINK_DIST = 100;
+    const MIN_LINK_DIST = 0;
     // Size of the main node
     const MAIN_NODE_SIZE = 150;
     // Size of the similar nodes
@@ -69,9 +69,8 @@ const Data = () => {
     const NULL_SCORE = Infinity;
 
     var color1 = colorGenerator();
-    var color2 = colorGenerator();
-
-    const [similarArtists, setSimilarArtists] = useState<Array<ArtistType>>();
+    var color2 = color1.clone().tetrad()[1];
+    const [similarArtistsList, setSimilarArtistsList] = useState<Array<ArtistType>>();
     const [mainArtist, setMainArtist] = useState<ArtistType>();
     const [similarArtistsLimit, setSimilarArtistsLimit] = useState(SIMILAR_ARTISTS_LIMIT_VALUE);
     const [colors, setColors] = useState([color1, color2]);
@@ -105,7 +104,11 @@ const Data = () => {
             // Get the similar artists from the second dataset
             const similarArtistsResponse = artistsData[1];
             if(similarArtistsResponse?.data?.length){
-                setSimilarArtists(similarArtistsResponse.data.slice(0, similarArtistsLimit));
+                setSimilarArtistsList(similarArtistsResponse.data.slice(0, similarArtistsLimit));
+            }
+            // In case no similar artists are found
+            else{
+                setSimilarArtistsList([]);
             }
         }
         setColors([tinycolor.mix(color1, color2, COLOR_MIX_WEIGHT), color2]);
@@ -117,7 +120,7 @@ const Data = () => {
     }, [artistMBID, similarArtistsLimit]);
 
     // Calculating minScore for normalization which is always the last element of the array (because it's sorted)
-    var minScore = similarArtists?.[similarArtistsLimit - 1]?.score ?? 0;
+    var minScore = similarArtistsList?.[similarArtistsLimit - 1]?.score ?? 0;
     minScore = Math.sqrt(minScore);
 
     // Transforming the data into the format required by the graph
@@ -125,10 +128,10 @@ const Data = () => {
         nodes: [],
         links: []
     };
-    // Checking if mainArtist and similarArtists are defined
-    if(mainArtist && similarArtists?.length) { 
+    // Checking if mainArtist is defined
+    if(mainArtist) {
         transformedArtists = {
-            nodes: [mainArtist, ...similarArtists].map((similarArtist: ArtistType, index: number): NodeType => {
+            nodes: [mainArtist, ...similarArtistsList!].map((similarArtist: ArtistType, index: number): NodeType => {
                 let computedScore;
                 let computedColor;
                 if(similarArtist !== mainArtist) {
@@ -147,7 +150,7 @@ const Data = () => {
                     score: similarArtist.score ?? NULL_SCORE
                 };
             }),
-            links: similarArtists.map((similarArtist: ArtistType, index: number): LinkType => {
+            links: similarArtistsList!.map((similarArtist: ArtistType, index: number): LinkType => {
                 return {
                     source: mainArtist?.name ?? "",
                     target: similarArtist.name,
@@ -161,11 +164,11 @@ const Data = () => {
     const backgroundGradient = `linear-gradient(` + backgroundColor1 + `,` + backgroundColor2 + `)`;
     return (
         <div>
-            <Input onArtistChange={setArtistMBID} onLimitChange={setSimilarArtistsLimit}/>
+            <SearchBox onArtistChange={setArtistMBID} currentArtistMbid={artistMBID} onsimilarArtistsLimitChange={setSimilarArtistsLimit} currentsimilarArtistsLimit={similarArtistsLimit}/>
             <SimilarArtistsGraph onArtistChange={setArtistMBID} data={transformedArtists} background={backgroundGradient}/>
         </div>
     );
 }
 
 export default Data;
-export type { GraphDataType, NodeType, LinkType};
+export type { GraphDataType, NodeType, LinkType, ArtistType};
