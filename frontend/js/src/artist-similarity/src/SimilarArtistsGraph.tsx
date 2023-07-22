@@ -85,13 +85,15 @@ const SimilarArtistsGraph = (props: GraphProps) => {
         data: props.data,
         height: 900,
         width: 1000,
-        repulsivity: 200,
+        repulsivity: 350,
         iterations: 120,
-        centeringStrength: 0.1,
+        centeringStrength: 0.11,
         nodeBorderWidth: 5,
         linkThickness: 2,
+        distanceMin: 20,
+        distanceMax: 550,
         nodeColor: node => node.color,
-        linkColor: { from: 'source.color'},
+        linkColor: { from: 'source.color' , modifiers: [['darker', 1]]},
         linkDistance: link => link.distance,
         nodeSize: node => node.size,
         activeNodeSize: node => node.size * 1.2,
@@ -102,7 +104,10 @@ const SimilarArtistsGraph = (props: GraphProps) => {
     
     return (
         props.data ?
-        <div style={{ height: '94vh', background: props.background }}>
+        <div 
+        className='graph-container'
+        style={{background: props.background }}
+        >
             <ResponsiveNetwork
                 {...chartProperties}
                 nodeComponent={CustomNodeComponent}
