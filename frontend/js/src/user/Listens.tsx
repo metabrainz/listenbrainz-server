@@ -921,11 +921,7 @@ export default class Listens extends React.Component<
                         if (e.key === "Enter") this.handleClickNewest();
                       }}
                       tabIndex={0}
-                      href={
-                        isNewestButtonDisabled
-                          ? undefined
-                          : window.location.pathname
-                      }
+                      href={window.location.pathname}
                     >
                       &#x21E4;
                     </a>
