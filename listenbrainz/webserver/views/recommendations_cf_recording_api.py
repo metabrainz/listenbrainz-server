@@ -1,14 +1,12 @@
 import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 
-from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
-from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
-                                                    get_non_negative_param,
-                                                    MAX_ITEMS_PER_GET)
+from listenbrainz.webserver.errors import APINotFound, APINoContent
+from listenbrainz.webserver.views.api_tools import DEFAULT_ITEMS_PER_GET, get_non_negative_param
 
 from enum import Enum
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 from listenbrainz.webserver.decorators import crossdomain
 from brainzutils.ratelimit import ratelimit
 
@@ -16,8 +14,6 @@ recommendations_cf_recording_api_bp = Blueprint('recommendations_cf_recording_v1
 
 
 class RecommendationArtistType(Enum):
-    top = 'top'
-    similar = 'similar'
     raw = 'raw'
 
 
@@ -56,16 +52,6 @@ def get_recommendations(user_name):
 
         .. note::
             - This endpoint is experimental and probably will change in the future.
-            - <artist_type>: 'top' or 'similar' or 'raw'
-
-        :param artist_type: Mandatory, artist type in ['top', 'similar', 'raw']
-
-            Ex. artist_type = top will fetch recommended recording mbids that belong to top artists listened to by the user.
-
-            artist_type = similar will fetch recommended recording mbids that belong to artists similar to top artists listened to by the user.
-
-            artist_type = raw will fetch recommended recording mbids based on the training data fed to the CF model.
-        :type artist_type: ``str``
 
         :param count: Optional, number of recording mbids to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
             Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -84,10 +70,6 @@ def get_recommendations(user_name):
     if user is None:
         raise APINotFound("Cannot find user: {}".format(user_name))
 
-    artist_type = request.args.get('artist_type')
-    if not _is_valid_artist_type(artist_type):
-        raise APIBadRequest("Invalid artist type: {}".format(artist_type))
-
     offset = get_non_negative_param('offset', default=0)
     count = get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
@@ -97,7 +79,7 @@ def get_recommendations(user_name):
         err_msg = 'No recommendations due to absence of recent listening history for user {}'.format(user_name)
         raise APINoContent(err_msg)
 
-    mbid_list, total_mbid_count = _process_recommendations(recommendations, count, artist_type, user_name, offset)
+    mbid_list, total_mbid_count = _process_recommendations(recommendations, count, user_name, offset)
 
     payload = {
         'payload': {
@@ -105,7 +87,6 @@ def get_recommendations(user_name):
             'model_url': recommendations.recording_mbid.model_url,
             'mbids': mbid_list,
             'entity': "recording",
-            'type': artist_type,
             'user_name': user_name,
             'last_updated': int(recommendations.created.timestamp()),
             'count': len(mbid_list),
@@ -117,13 +98,12 @@ def get_recommendations(user_name):
     return jsonify(payload)
 
 
-def _process_recommendations(recommendations, count, artist_type, user_name, offset):
+def _process_recommendations(recommendations, count, user_name, offset):
     """ Process recommendations based on artist type.
 
         Args:
             recommendations: dict containing user recommendations.
             count (int): number of recommended recording mbids to return.
-            artist_type (str): artist type i.e 'top', 'similar' or 'raw'
             user_name (str): musicbrainz id of the user.
             offset (int): number of entities to skip from the beginning
 
@@ -135,12 +115,7 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
             APINoContent: if recommendations not found.
     """
     data = recommendations.recording_mbid.dict()
-    if artist_type == 'similar':
-        mbid_list = data['similar_artist']
-    elif artist_type == 'top':
-        mbid_list = data['top_artist']
-    else:
-        mbid_list = data['raw']
+    mbid_list = data['raw']
 
     total_mbid_count = len(mbid_list)
 
@@ -153,12 +128,3 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
     count = min(count, 1000)
 
     return mbid_list[offset:offset+count], total_mbid_count
-
-
-def _is_valid_artist_type(artist_type):
-    """ Check if artist type is valid.
-    """
-    if artist_type is None:
-        raise APIBadRequest('Please provide artist type')
-
-    return artist_type in RecommendationArtistType.__members__

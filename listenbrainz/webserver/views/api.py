@@ -641,6 +641,29 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
+@api_bp.route("/user/<playlist_user_name>/playlists/recommendations", methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def user_recommendations(playlist_user_name):
+    """
+    Fetch recommendation playlist metadata in JSPF format without recordings for playlist_user_name.
+    This endpoint only lists playlists that are to be shown on the listenbrainz.org recommendations
+    pages.
+
+    :statuscode 200: success
+    :statuscode 404: user not found
+    :resheader Content-Type: *application/json*
+    """
+
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    playlists = db_playlist.get_recommendation_playlists_for_user(playlist_user.id)
+    return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
+
+
 @api_bp.route("/user/<user_name>/services", methods=['GET', 'OPTIONS'])
 @crossdomain
 @ratelimit()

@@ -16,6 +16,10 @@ from troi.patches.periodic_jams import WEEKLY_JAMS_DESCRIPTION, WEEKLY_EXPLORATI
 
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
+LISTENBRAINZ_USER_ID = 23944
+
+# These are the recommendation troi patches that we showcase on the recommendations page for each user
+RECOMMENDATION_PATCHES = ('daily-jams', 'weekly-jams', 'weekly-exploration', 'top-discoveries-for-year', 'top-missed-recordings-for-year')
 
 
 def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
@@ -144,6 +148,44 @@ def get_playlists_for_user(user_id: int,
         count = connection.execute(query, params).fetchone()[0]
 
     return playlists, count
+
+
+def get_recommendation_playlists_for_user(user_id: int):
+    """Get all recommendation playlists that have been created for the user
+
+    Arguments:
+        user_id: The user to find playlists for
+
+    Returns:
+        A list of playlists
+
+    """
+
+    params = {"creator_id": (LISTENBRAINZ_USER_ID, TROI_BOT_USER_ID), "created_for_id": user_id, "patches": RECOMMENDATION_PATCHES}
+    query = sqlalchemy.text(f"""
+           SELECT pl.id
+                , pl.mbid
+                , pl.name
+                , pl.description
+                , pl.creator_id
+                , pl.created
+                , pl.public
+                , pl.created
+                , pl.last_updated
+                , pl.copied_from_id
+                , pl.created_for_id
+                , pl.additional_metadata
+            FROM playlist.playlist pl
+           WHERE additional_metadata->'algorithm_metadata'->>'source_patch' IN :patches
+             AND created_for_id = :created_for_id
+             AND creator_id IN :creator_id
+        ORDER BY pl.created DESC""")
+
+    with ts.engine.connect() as connection:
+        result = connection.execute(query, params)
+        playlists = _playlist_resultset_to_model(connection, result, False)
+
+    return playlists
 
 
 def _playlist_resultset_to_model(connection, result, load_recordings):
