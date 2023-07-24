@@ -90,10 +90,11 @@ class SelectTroiPreferences extends React.Component<
 
     return (
       <>
-        <h3>Configure auto export of daily jams playlists</h3>
+        <h3>Configure auto export of generated playlists</h3>
         <p>
           If this setting is turned on, ListenBrainz will automatically export
-          your daily jams playlists to Spotify everyday.
+          your generated playlists (Weekly Jams, Weekly Exploration, ...) 
+          to Spotify everyday.
           <br />
           You can always export playlists manually regardless of whether this
           setting is turned on or off.
