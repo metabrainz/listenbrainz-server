@@ -16,10 +16,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { get, isUndefined, set, throttle } from "lodash";
 import { ReactSortable } from "react-sortablejs";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -33,11 +30,12 @@ import {
 import RecommendationPlaylistSettings from "./RecommendationPlaylistSettings";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import PlaylistItemCard from "../playlists/PlaylistItemCard";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type RecommendationsPageState = {
   playlists: JSPFPlaylist[];
@@ -433,9 +431,9 @@ export default class RecommendationsPage extends React.Component<
   };
 
   render() {
-    const { user, newAlert } = this.props;
     const { currentUser, APIService } = this.context;
     const { playlists, selectedPlaylist, loading } = this.state;
+    const { user } = this.props;
 
     const listensFromJSPFTracks =
       selectedPlaylist?.track.map(JSPFTrackToListen) ?? [];
@@ -532,7 +530,6 @@ export default class RecommendationsPage extends React.Component<
                         showUsername={false}
                         // removeTrackFromPlaylist={this.deletePlaylistItem}
                         updateFeedbackCallback={this.updateFeedback}
-                        newAlert={newAlert}
                       />
                     );
                   })}
@@ -563,7 +560,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -591,7 +587,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <RecommendationsPageWithAlertNotifications
-            initialAlerts={optionalAlerts}
             playlists={playlists}
             user={user}
           />

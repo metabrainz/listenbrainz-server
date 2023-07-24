@@ -1,10 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] = `
-<UserEntityChart
-  apiUrl="apiUrl"
-  newAlert={[MockFunction]}
->
+<UserEntityChart>
   <div
     role="main"
   >
@@ -239,7 +236,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -438,7 +434,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -637,7 +632,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -836,7 +830,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -1035,7 +1028,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -1234,7 +1226,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -1433,7 +1424,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -1632,7 +1622,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -1831,7 +1820,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -2030,7 +2018,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -2229,7 +2216,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -2428,7 +2414,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -2627,7 +2612,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -2826,7 +2810,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -3025,7 +3008,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -3224,7 +3206,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -3423,7 +3404,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -3622,7 +3602,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -3821,7 +3800,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -4020,7 +3998,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -4219,7 +4196,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -4418,7 +4394,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -4617,7 +4592,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -4816,7 +4790,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -5015,7 +4988,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -6778,27 +6750,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -6806,10 +6757,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
 `;
 
 exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`] = `
-<UserEntityChart
-  apiUrl="apiUrl"
-  newAlert={[MockFunction]}
->
+<UserEntityChart>
   <div
     role="main"
   >
@@ -7068,7 +7016,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -7491,7 +7438,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -7724,7 +7670,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -8161,7 +8106,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -8598,7 +8542,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -9035,7 +8978,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -9467,7 +9409,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -9890,7 +9831,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -10109,7 +10049,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -10342,7 +10281,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -10779,7 +10717,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -11202,7 +11139,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -11435,7 +11371,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -11873,7 +11808,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -12296,7 +12230,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -12515,7 +12448,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -12734,7 +12666,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -12953,7 +12884,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -13172,7 +13102,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -13391,7 +13320,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -13624,7 +13552,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -14042,7 +13969,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -14275,7 +14201,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -14698,7 +14623,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -14931,7 +14855,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -17187,27 +17110,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -17215,10 +17117,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
 `;
 
 exports[`Sitewide Stats UserEntityChart Page renders correctly for release groups 1`] = `
-<UserEntityChart
-  apiUrl="apiUrl"
-  newAlert={[MockFunction]}
->
+<UserEntityChart>
   <div
     role="main"
   >
@@ -17467,7 +17366,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -17682,7 +17580,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -17889,7 +17786,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -18106,7 +18002,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -18290,7 +18185,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -18474,7 +18368,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -18699,7 +18592,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -18883,7 +18775,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -19108,7 +18999,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -19292,7 +19182,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -19466,7 +19355,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -19685,7 +19573,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -19869,7 +19756,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -20054,7 +19940,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -20279,7 +20164,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -20463,7 +20347,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -20647,7 +20530,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -20831,7 +20713,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -21015,7 +20896,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -21199,7 +21079,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -21383,7 +21262,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -21568,7 +21446,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -21742,7 +21619,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -21949,7 +21825,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -22156,7 +22031,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -24182,27 +24056,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -24210,10 +24063,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
 `;
 
 exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] = `
-<UserEntityChart
-  apiUrl="apiUrl"
-  newAlert={[MockFunction]}
->
+<UserEntityChart>
   <div
     role="main"
   >
@@ -24462,7 +24312,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -24636,7 +24485,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -24853,7 +24701,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -25037,7 +24884,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -25221,7 +25067,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -25405,7 +25250,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -25585,7 +25429,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -25769,7 +25612,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -25954,7 +25796,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -26138,7 +25979,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -26312,7 +26152,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -26519,7 +26358,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -26726,7 +26564,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -26943,7 +26780,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -27127,7 +26963,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -27301,7 +27136,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -27508,7 +27342,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -27725,7 +27558,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -27899,7 +27731,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -28106,7 +27937,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -28313,7 +28143,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -28520,7 +28349,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -28727,7 +28555,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -28934,7 +28761,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -29151,7 +28977,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -31111,27 +30936,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -31139,10 +30943,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
 `;
 
 exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not calculated 1`] = `
-<UserEntityChart
-  apiUrl="apiUrl"
-  newAlert={[MockFunction]}
->
+<UserEntityChart>
   <div
     role="main"
   >
@@ -32094,27 +31895,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -32124,7 +31904,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
 exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
 <UserEntityChart
   apiUrl="apiUrl"
-  newAlert={[MockFunction]}
   user={
     Object {
       "id": 0,
@@ -32366,7 +32145,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -32565,7 +32343,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -32764,7 +32541,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -32963,7 +32739,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -33162,7 +32937,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -33361,7 +33135,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -33560,7 +33333,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -33759,7 +33531,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -33958,7 +33729,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -34157,7 +33927,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -34356,7 +34125,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -34555,7 +34323,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -34754,7 +34521,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -34953,7 +34719,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -35152,7 +34917,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -35351,7 +35115,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -35550,7 +35313,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -35749,7 +35511,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -35948,7 +35709,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -36147,7 +35907,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -36346,7 +36105,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -36545,7 +36303,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -36744,7 +36501,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -36943,7 +36699,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -37142,7 +36897,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   />
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -38905,27 +38659,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -38935,7 +38668,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
 exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
 <UserEntityChart
   apiUrl="apiUrl"
-  newAlert={[MockFunction]}
   user={
     Object {
       "id": 0,
@@ -39201,7 +38933,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -39624,7 +39355,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -39857,7 +39587,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -40294,7 +40023,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -40731,7 +40459,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -41168,7 +40895,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -41600,7 +41326,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -42023,7 +41748,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -42242,7 +41966,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -42475,7 +42198,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -42912,7 +42634,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -43335,7 +43056,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -43568,7 +43288,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -44006,7 +43725,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -44429,7 +44147,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -44648,7 +44365,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -44867,7 +44583,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -45086,7 +44801,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -45305,7 +45019,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -45524,7 +45237,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -45757,7 +45469,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -46175,7 +45886,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -46408,7 +46118,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -46831,7 +46540,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -47064,7 +46772,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -49320,27 +49027,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -49350,7 +49036,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
 exports[`User Stats UserEntityChart Page renders correctly for release groups 1`] = `
 <UserEntityChart
   apiUrl="apiUrl"
-  newAlert={[MockFunction]}
   user={
     Object {
       "id": 0,
@@ -49606,7 +49291,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -49821,7 +49505,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -50028,7 +49711,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -50245,7 +49927,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -50429,7 +50110,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -50613,7 +50293,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -50838,7 +50517,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -51022,7 +50700,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -51247,7 +50924,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -51431,7 +51107,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -51605,7 +51280,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -51824,7 +51498,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -52008,7 +51681,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -52193,7 +51865,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -52418,7 +52089,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -52602,7 +52272,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -52786,7 +52455,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -52970,7 +52638,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -53154,7 +52821,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -53338,7 +53004,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -53522,7 +53187,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -53707,7 +53371,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -53881,7 +53544,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -54088,7 +53750,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -54295,7 +53956,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -56321,27 +55981,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -56351,7 +55990,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
 exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
 <UserEntityChart
   apiUrl="apiUrl"
-  newAlert={[MockFunction]}
   user={
     Object {
       "id": 0,
@@ -56607,7 +56245,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -56781,7 +56418,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -56998,7 +56634,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -57182,7 +56817,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -57366,7 +57000,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -57550,7 +57183,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -57730,7 +57362,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -57914,7 +57545,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -58099,7 +57729,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -58283,7 +57912,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -58457,7 +58085,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -58664,7 +58291,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -58871,7 +58497,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -59088,7 +58713,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -59272,7 +58896,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -59446,7 +59069,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -59653,7 +59275,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -59870,7 +59491,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -60044,7 +59664,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -60251,7 +59870,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -60458,7 +60076,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -60665,7 +60282,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -60872,7 +60488,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -61079,7 +60694,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -61296,7 +60910,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   </div>
                 </React.Fragment>
               }
-              newAlert={[MockFunction]}
               showTimestamp={false}
               showUsername={false}
             >
@@ -63256,27 +62869,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>
@@ -63286,7 +62878,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
 exports[`User Stats UserEntityChart Page renders correctly if stats are not calculated 1`] = `
 <UserEntityChart
   apiUrl="apiUrl"
-  newAlert={[MockFunction]}
   user={
     Object {
       "id": 0,
@@ -64245,27 +63836,6 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
             </div>
           </div>
         </BrainzPlayerUI>
-        <ToastContainer
-          autoClose={8000}
-          closeButton={[Function]}
-          closeOnClick={true}
-          draggable={true}
-          draggableDirection="x"
-          draggablePercent={80}
-          hideProgressBar={true}
-          newestOnTop={true}
-          pauseOnFocusLoss={true}
-          pauseOnHover={true}
-          position="bottom-right"
-          role="alert"
-          rtl={false}
-          theme="light"
-          transition={[Function]}
-        >
-          <div
-            className="Toastify"
-          />
-        </ToastContainer>
       </div>
     </BrainzPlayer>
   </div>

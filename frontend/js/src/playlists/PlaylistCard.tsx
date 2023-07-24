@@ -9,21 +9,18 @@ import {
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { toast } from "react-toastify";
 import { sanitize } from "dompurify";
 import { getPlaylistExtension, getPlaylistId } from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PlaylistCardProps = {
   playlist: JSPFPlaylist;
   isOwner: boolean;
   onSuccessfulCopy: (playlist: JSPFPlaylist) => void;
   selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
   showOptions: boolean;
 };
 
@@ -32,7 +29,6 @@ export default function PlaylistCard({
   isOwner,
   onSuccessfulCopy,
   selectPlaylistForEdit,
-  newAlert,
   showOptions = true,
 }: PlaylistCardProps) {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
@@ -46,11 +42,24 @@ export default function PlaylistCard({
 
   const onCopyPlaylist = React.useCallback(async (): Promise<void> => {
     if (!currentUser?.auth_token) {
-      newAlert("danger", "Error", "You must be logged in for this operation");
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message="You must be logged in for this operation"
+        />,
+        { toastId: "auth-error" }
+      );
+
       return;
     }
     if (!playlistId?.length) {
-      newAlert("danger", "Error", "No playlist to copy; missing a playlist ID");
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message="No playlist to copy; missing a playlist ID"
+        />,
+        { toastId: "copy-playlist-error" }
+      );
       return;
     }
     try {
@@ -63,19 +72,28 @@ export default function PlaylistCard({
         newPlaylistId,
         currentUser.auth_token
       ).then((res) => res.json());
-      newAlert(
-        "success",
-        "Duplicated playlist",
-        <>
-          Duplicated to playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{JSPFObject.playlist.title}</a>
-        </>
+      toast.success(
+        <ToastMsg
+          title="Duplicated playlist"
+          message={
+            <>
+              Duplicated to playlist&ensp;
+              <a href={`/playlist/${newPlaylistId}`}>
+                {JSPFObject.playlist.title}
+              </a>
+            </>
+          }
+        />,
+        { toastId: "copy-playlist-success" }
       );
+
       onSuccessfulCopy(JSPFObject.playlist);
     } catch (error) {
-      newAlert("danger", "Error", error.message);
+      toast.error(<ToastMsg title="Error" message={error.message} />, {
+        toastId: "copy-playlist-error",
+      });
     }
-  }, [playlistId, currentUser, onSuccessfulCopy, newAlert]);
+  }, [playlistId, currentUser, onSuccessfulCopy]);
 
   return (
     <Card className="playlist" key={playlistId}>

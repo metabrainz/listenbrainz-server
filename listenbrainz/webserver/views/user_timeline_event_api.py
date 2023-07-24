@@ -29,7 +29,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen
-from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, UserTimelineEventType, \
+from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, SimilarUserTimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
     CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
@@ -47,6 +47,7 @@ from listenbrainz.webserver.views.api_tools import validate_auth_header, \
 MAX_LISTEN_EVENTS_PER_USER = 2  # the maximum number of listens we want to return in the feed per user
 MAX_LISTEN_EVENTS_OVERALL = 10  # the maximum number of listens we want to return in the feed overall across users
 DEFAULT_LISTEN_EVENT_WINDOW = timedelta(days=14) # to limit the search space of listen events and avoid timeouts
+DEFAULT_LISTEN_EVENT_WINDOW_NEW = timedelta(days=7) # to limit the search space of listen events and avoid timeouts
 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
@@ -76,12 +77,13 @@ def create_user_recording_recommendation_event(user_name):
     :statuscode 200: Successful query, recording has been recommended!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend recordings on the behalf of this user
+    :statuscode 403: Forbidden, you are not an approved user.
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+        raise APIForbidden("You don't have permissions to post to this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -174,8 +176,13 @@ def create_user_cb_review_event(user_name):
 
         {
             "metadata": {
-                "message": "<the message to post, required>",
-            }
+                "entity_name": "<entity name, required>",
+                "entity_id": "<entity id, required>",
+                "entity_type": "<entity type, required>",
+                "text": "<the message to post, required>",
+                "language": "<language code, required>",
+                "rating": <rating, int>,
+            },
         }
 
     :param user_name: The MusicBrainz ID of the user who is creating the review.
@@ -188,7 +195,7 @@ def create_user_cb_review_event(user_name):
     """
     user = validate_auth_header()
     if user_name != user["musicbrainz_id"]:
-        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+        raise APIForbidden("You don't have permissions to post to this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -231,8 +238,10 @@ def user_feed(user_name: str):
 
     :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
     :type user_name: ``str``
-    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned
-    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned
+    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned.
+    :type max_ts: ``int``
+    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned.
+    :type min_ts: ``int``
     :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :type count: ``int``
     :reqheader Authorization: Token <user token>
@@ -240,13 +249,14 @@ def user_feed(user_name: str):
     :statuscode 200: Successful query, you have feed events!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permission to view this user's feed.
+    :statuscode 403: Forbidden, you do not have permission to view this user's feed.
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to view this user's timeline.")
+        raise APIForbidden("You don't have permissions to view this user's timeline.")
 
     min_ts, max_ts, count = _validate_get_endpoint_params()
     if min_ts is None and max_ts is None:
@@ -254,6 +264,7 @@ def user_feed(user_name: str):
 
     users_following = db_user_relationship.get_following_for_user(user['id'])
 
+    # TODO: Remove these listen events from event list after listen events endpoint is active.
     # get all listen events
     if len(users_following) == 0:
         listen_events = []
@@ -325,7 +336,7 @@ def user_feed(user_name: str):
         key=lambda event: -event.created,
     )
 
-    # sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(all_events):
         all_events[index].event_type = event.event_type.value
 
@@ -336,6 +347,114 @@ def user_feed(user_name: str):
         'user_id': user_name,
         'events': [event.dict() for event in all_events],
     }})
+
+
+@user_timeline_event_api_bp.route('/user/<user_name>/feed/events/listens/following', methods=['OPTIONS', 'GET'])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def user_feed_listens_following(user_name: str):
+    ''' Get feed's listen events for followed users.
+
+    :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
+    :type user_name: ``str``
+    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned.
+    :type max_ts: ``int``
+    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned.
+    :type min_ts: ``int``
+    :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successful query, you have feed listen-events!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Invalid authorization. See error message for details.
+    :statuscode 403: Forbidden, you do not have permission to view this user's feed.
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    '''
+
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIForbidden("You don't have permissions to view this user's timeline.")
+    
+    min_ts, max_ts, count = _validate_get_endpoint_params()
+
+    users_following = db_user_relationship.get_following_for_user(user['id'])
+
+    # Get all listen events
+    if len(users_following) == 0:
+        listen_events = []
+    else:
+        listen_events = get_all_listen_events(users_following, min_ts, max_ts, count)
+
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
+    for index, event in enumerate(listen_events):
+        listen_events[index].event_type = event.event_type.value
+
+    return jsonify({'payload': {
+        'count': len(listen_events),
+        'user_id': user_name,
+        'events': [event.dict() for event in listen_events],
+    }})
+    
+
+@user_timeline_event_api_bp.route('/user/<user_name>/feed/events/listens/similar', methods=['OPTIONS', 'GET'])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def user_feed_listens_similar(user_name: str):
+    """ Get feed's listen events for similar users.
+
+    :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
+    :type user_name: ``str``
+    :param max_ts: If you specify a ``max_ts`` timestamp, events with timestamps less than the value will be returned.
+    :type max_ts: ``int``
+    :param min_ts: If you specify a ``min_ts`` timestamp, events with timestamps greater than the value will be returned.
+    :type min_ts: ``int``
+    :param count: Optional, number of events to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successful query, you have feed listen-events!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Invalid authorization. See error message for details.
+    :statuscode 403: Forbidden, you do not have permission to view this user's feed.
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIForbidden("You don't have permissions to view this user's timeline.")
+    
+    min_ts, max_ts, count = _validate_get_endpoint_params()
+
+    # Here, list is in descending order as we want similar_users with 
+    # highest similarity to be processed first and lowest at last.
+    similar_users = db_user.get_similar_users(user_id=user['id'])
+
+    # Get all listen events
+    if len(similar_users) == 0:
+        listen_events = []
+    else:
+        listen_events = get_all_listen_events(similar_users, min_ts, max_ts, count)
+
+    # Constructing an id-similarity map
+    id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
+
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
+    for index, event in enumerate(listen_events):
+        listen_events[index].event_type = event.event_type.value
+        listen_events[index].similarity = id_similarity_map[event.user_name]
+
+    return jsonify({
+        'payload': {
+            'count': len(listen_events),
+            'user_id': user_name,
+            'events': [event.dict() for event in listen_events]
+        }
+    })
 
 
 @user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
@@ -367,13 +486,14 @@ def delete_feed_events(user_name):
     :statuscode 200: Successful deletion
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
+    :statuscode 403: Forbidden, you do not have permission to delete from this user's feed.
     :statuscode 404: User not found
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
     '''
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to delete from this user's timeline.")
+        raise APIForbidden("You don't have permissions to delete from this user's timeline.")
 
     try:
         event = orjson.loads(request.get_data())
@@ -425,6 +545,7 @@ def hide_user_timeline_event(user_name):
     :statuscode 200: Event hidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
+    :statuscode 403: Forbidden, you don't have permissions to hide events from this user's timeline.
     :statuscode 404: User not found
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
@@ -432,7 +553,7 @@ def hide_user_timeline_event(user_name):
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to hide events from this user's timeline.")
+        raise APIForbidden("You don't have permissions to hide events from this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -480,6 +601,7 @@ def unhide_user_timeline_event(user_name):
     :statuscode 200: Event unhidden successfully
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized
+    :statuscode 403: Forbidden
     :statuscode 404: User not found
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
@@ -487,7 +609,7 @@ def unhide_user_timeline_event(user_name):
     
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to delete events from this user's timeline.")
+        raise APIForbidden("You don't have permissions to delete events from this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -527,6 +649,7 @@ def create_personal_recommendation_event(user_name):
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend
     personal recordings on the behalf of this user
+    :statuscode 403: Forbidden, you do not have permissions to recommend
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     '''
@@ -534,7 +657,7 @@ def create_personal_recommendation_event(user_name):
     user = validate_auth_header()
 
     if user_name != user['musicbrainz_id']:
-        raise APIUnauthorized("You don't have permissions to post to this user's timeline.")
+        raise APIForbidden("You don't have permissions to post to this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -604,6 +727,63 @@ def get_listen_events(
             listen_dict = listen.to_api()
             api_listen = APIListen(**listen_dict)
             events.append(APITimelineEvent(
+                event_type=UserTimelineEventType.LISTEN,
+                user_name=api_listen.user_name,
+                created=api_listen.listened_at,
+                metadata=api_listen,
+                hidden=False
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            continue
+    return events
+
+
+def get_all_listen_events(
+    users: List[Dict],
+    min_ts: int,
+    max_ts: int,
+    limit: int,
+) -> List[APITimelineEvent]:
+    """ Gets all listen events in the feed.
+    """
+    # To avoid timeouts while fetching listen events, we want to make
+    # sure that both min_ts and max_ts are defined. if only one of those
+    # is set, calculate the other from it using a default window length.
+    # if neither is set, use current time as max_ts and subtract window
+    # length to get min_ts.
+    if min_ts and max_ts:
+        temp = datetime.utcfromtimestamp(min_ts)
+        max_ts = datetime.utcfromtimestamp(max_ts)
+        if max_ts - temp < DEFAULT_LISTEN_EVENT_WINDOW_NEW:
+            min_ts = temp 
+        else:
+            # If the given interval for search is greater than :DEFAULT_LISTEN_EVENT_WINDOW_NEW:,
+            # then we must limit the search interval to :DEFAULT_LISTEN_EVENT_WINDOW_NEW:.
+            min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
+    elif min_ts:
+        min_ts = datetime.utcfromtimestamp(min_ts)
+        max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW_NEW
+    elif max_ts:
+        max_ts = datetime.utcfromtimestamp(max_ts)
+        min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
+    else:
+        max_ts = datetime.utcnow()
+        min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
+
+    listens = timescale_connection._ts.fetch_all_recent_listens_for_users(
+        users,
+        min_ts=min_ts,
+        max_ts=max_ts,
+        limit=limit
+    )
+
+    events = []
+    for listen in listens:
+        try:
+            listen_dict = listen.to_api()
+            api_listen = APIListen(**listen_dict)
+            events.append(SimilarUserTimelineEvent(
                 event_type=UserTimelineEventType.LISTEN,
                 user_name=api_listen.user_name,
                 created=api_listen.listened_at,

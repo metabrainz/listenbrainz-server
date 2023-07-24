@@ -3,11 +3,12 @@
 
 import * as React from "react";
 import { noop } from "lodash";
-import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import PlaylistCard from "./PlaylistCard";
 import { PlaylistType } from "./utils";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PlaylistsListProps = {
   playlists: JSPFPlaylist[];
@@ -18,7 +19,7 @@ export type PlaylistsListProps = {
   onCopiedPlaylist?: (playlist: JSPFPlaylist) => void;
   selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
   onPaginatePlaylists: (playlists: JSPFPlaylist[]) => void;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type PlaylistsListState = {
   playlistSelectedForOperation?: JSPFPlaylist;
@@ -48,7 +49,7 @@ export default class PlaylistsList extends React.Component<
   async componentDidUpdate(
     prevProps: React.PropsWithChildren<PlaylistsListProps>
   ): Promise<void> {
-    const { user, activeSection, newAlert } = this.props;
+    const { user, activeSection } = this.props;
     const { currentUser } = this.context;
     if (prevProps.activeSection !== activeSection) {
       await this.fetchPlaylists(0);
@@ -61,11 +62,12 @@ export default class PlaylistsList extends React.Component<
   };
 
   alertNotAuthorized = () => {
-    const { newAlert } = this.props;
-    newAlert(
-      "danger",
-      "Not allowed",
-      "You are not authorized to modify this playlist"
+    toast.error(
+      <ToastMsg
+        title="Not allowed"
+        message="You are not authorized to modify this playlist"
+      />,
+      { toastId: "auth-error" }
     );
   };
 
@@ -79,7 +81,7 @@ export default class PlaylistsList extends React.Component<
   };
 
   handleClickNext = async () => {
-    const { user, activeSection, newAlert } = this.props;
+    const { user, activeSection } = this.props;
     const { currentUser } = this.context;
     const { paginationOffset, playlistCount } = this.state;
     const newOffset = paginationOffset + this.DEFAULT_PLAYLISTS_PER_PAGE;
@@ -91,7 +93,7 @@ export default class PlaylistsList extends React.Component<
   };
 
   handleClickPrevious = async () => {
-    const { user, activeSection, newAlert } = this.props;
+    const { user, activeSection } = this.props;
     const { currentUser } = this.context;
     const { paginationOffset } = this.state;
     // No more playlists to fetch
@@ -125,7 +127,7 @@ export default class PlaylistsList extends React.Component<
 
   fetchPlaylists = async (newOffset: number = 0) => {
     const { APIService, currentUser } = this.context;
-    const { user, activeSection, newAlert } = this.props;
+    const { user, activeSection } = this.props;
     this.setState({ loading: true });
     try {
       const newPlaylists = await APIService.getUserPlaylists(
@@ -139,7 +141,13 @@ export default class PlaylistsList extends React.Component<
 
       this.handleAPIResponse(newPlaylists);
     } catch (error) {
-      newAlert("danger", "Error loading playlists", error?.message ?? error);
+      toast.error(
+        <ToastMsg
+          title="Error loading playlists"
+          message={error?.message ?? error}
+        />,
+        { toastId: "load-playlists-error" }
+      );
       this.setState({ loading: false });
     }
   };
@@ -147,7 +155,6 @@ export default class PlaylistsList extends React.Component<
   render() {
     const {
       playlists,
-      newAlert,
       selectPlaylistForEdit,
       activeSection,
       children,
@@ -173,7 +180,6 @@ export default class PlaylistsList extends React.Component<
                 playlist={playlist}
                 isOwner={isOwner}
                 onSuccessfulCopy={onCopiedPlaylist ?? noop}
-                newAlert={newAlert}
                 selectPlaylistForEdit={selectPlaylistForEdit}
                 key={playlist.identifier}
               />

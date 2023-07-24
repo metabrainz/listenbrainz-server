@@ -18,11 +18,6 @@ export type PlaylistItemCardProps = {
     score: ListenFeedBack | RecommendationFeedBack,
     recordingMbid?: string
   ) => void;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
   showTimestamp?: boolean;
   showUsername?: boolean;
 };
@@ -42,7 +37,6 @@ export default class PlaylistItemCard extends React.Component<
       track,
       canEdit,
       currentFeedback,
-      newAlert,
       updateFeedbackCallback,
       showUsername,
       showTimestamp,
@@ -80,7 +74,6 @@ export default class PlaylistItemCard extends React.Component<
         currentFeedback={currentFeedback}
         showTimestamp={showTimestamp ?? Boolean(listen.listened_at_iso)}
         showUsername={showUsername ?? Boolean(listen.user_name)}
-        newAlert={newAlert}
         beforeThumbnailContent={dragHandle}
         data-recording-mbid={track.id}
         additionalMenuItems={additionalMenuItems}

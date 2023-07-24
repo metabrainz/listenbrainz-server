@@ -164,7 +164,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
-        self.assert401(r)
+        self.assert403(r)
         data = json.loads(r.data)
         self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
 
@@ -932,7 +932,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(user_one['auth_token'])},
         )
-        self.assert401(r)
+        self.assert403(r)
         data = json.loads(r.data)
         self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
 

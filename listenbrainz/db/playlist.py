@@ -4,11 +4,15 @@ from typing import List, Optional
 
 import sqlalchemy
 import orjson
+from psycopg2.extras import execute_values
+from psycopg2.sql import SQL, Literal
+from sqlalchemy import text
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import timescale as ts
 from listenbrainz.db import user as db_user
-
+from listenbrainz.db.user import get_users_by_id
+from troi.patches.periodic_jams import WEEKLY_JAMS_DESCRIPTION, WEEKLY_EXPLORATION_DESCRIPTION
 
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055

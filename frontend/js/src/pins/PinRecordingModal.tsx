@@ -1,6 +1,7 @@
 import * as React from "react";
 import { get as _get } from "lodash";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   getArtistName,
@@ -8,14 +9,10 @@ import {
   getTrackName,
   preciseTimestamp,
 } from "../utils/utils";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PinRecordingModalProps = {
   recordingToPin: Listen;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
   onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
 };
 
@@ -31,7 +28,7 @@ export const maxBlurbContentLength = 280;
  */
 
 export default NiceModal.create(
-  ({ recordingToPin, newAlert, onSuccessfulPin }: PinRecordingModalProps) => {
+  ({ recordingToPin, onSuccessfulPin }: PinRecordingModalProps) => {
     const modal = useModal();
     const [blurbContent, setBlurbContent] = React.useState("");
 
@@ -42,13 +39,15 @@ export default NiceModal.create(
         if (!error) {
           return;
         }
-        newAlert(
-          "danger",
-          title || "Error",
-          typeof error === "object" ? error.message : error
+        toast.error(
+          <ToastMsg
+            title={title || "Error"}
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "modal-error" }
         );
       },
-      [newAlert]
+      []
     );
 
     const handleBlurbInputChange = React.useCallback(
@@ -87,16 +86,21 @@ export default NiceModal.create(
             );
             const { data } = response;
             newPin = data;
+            toast.success(
+              <ToastMsg
+                title="You pinned a track!"
+                message={`${getArtistName(recordingToPin)} - ${getTrackName(
+                  recordingToPin
+                )}`}
+              />,
+              {
+                toastId: "pin-track-success",
+              }
+            );
           } catch (error) {
             handleError(error, "Error while pinning track");
             return;
           }
-
-          newAlert(
-            "success",
-            `You pinned a track!`,
-            `${getArtistName(recordingToPin)} - ${getTrackName(recordingToPin)}`
-          );
           if (onSuccessfulPin) {
             onSuccessfulPin(newPin);
           }

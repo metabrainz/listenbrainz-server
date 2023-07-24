@@ -15,18 +15,14 @@ import {
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
+import { toast } from "react-toastify";
 import { get } from "lodash";
 import RecommendationControl from "../recommendations/RecommendationControl";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getRecordingMBID } from "../utils/utils";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type RecommendationFeedbackComponentProps = {
-  newAlert: (
-    type: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
   listen: BaseListenFormat;
   currentFeedback: RecommendationFeedBack | null;
   updateFeedbackCallback?: (
@@ -42,12 +38,7 @@ export default class RecommendationFeedbackComponent extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   submitRecommendationFeedback = async (rating: RecommendationFeedBack) => {
-    const {
-      listen,
-      updateFeedbackCallback,
-      currentFeedback,
-      newAlert,
-    } = this.props;
+    const { listen, updateFeedbackCallback, currentFeedback } = this.props;
     const { APIService, currentUser } = this.context;
 
     if (currentUser?.auth_token) {
@@ -73,10 +64,12 @@ export default class RecommendationFeedbackComponent extends React.Component<
           updateFeedbackCallback(recordingMBID, rating);
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Error while submitting recommendation feedback",
-          error?.message ?? error.toString()
+        toast.error(
+          <ToastMsg
+            title="Error while submitting recomendation feedback"
+            message={error?.message ?? error.toString()}
+          />,
+          { toastId: "submit-feedback-error" }
         );
       }
     }

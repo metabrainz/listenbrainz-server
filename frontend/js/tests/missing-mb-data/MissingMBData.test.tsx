@@ -19,7 +19,7 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const props = {
   ...missingDataProps,
-  newAlert: () => {},
+  
 };
 
 // Create a new instance of GlobalAppContext

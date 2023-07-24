@@ -454,6 +454,107 @@ class TimescaleListenStore:
                 ))
         return listens
 
+
+    def fetch_all_recent_listens_for_users(self, users, min_ts: datetime, max_ts: datetime, limit=25):
+        """ Fetch recent listens for a list of users.
+
+            users: A list containing the users for which you'd like to retrieve recent listens.
+            min_ts: Only return listens with listened_at greater this timestamp, required.
+            max_ts: Only return listens with listened_at lesser than this timestamp, required.
+            limit: Listens returned per call. Should not exceed 100. Default value is 25, optional.
+        """
+
+        user_id_map = {user["id"]: user["musicbrainz_id"] for user in users}
+
+        args = {"user_ids": tuple(user_id_map.keys()), "limit": limit}
+
+        # min_ts and max_ts must exist.
+        args["min_ts"] = min_ts
+        args["max_ts"] = max_ts
+
+        query = f"""
+              WITH intermediate AS (
+                    SELECT listened_at
+                         , created
+                         , user_id
+                         , recording_msid
+                         , data
+                      FROM listen l
+                     WHERE user_id IN :user_ids 
+                       AND listened_at > :min_ts 
+                       AND listened_at < :max_ts
+              ), selected_listens AS (
+                    SELECT l.*
+                        -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
+                         , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
+                      FROM intermediate l
+                 LEFT JOIN mbid_mapping mm
+                        ON l.recording_msid = mm.recording_msid
+                 LEFT JOIN mbid_manual_mapping user_mm
+                        ON l.recording_msid = user_mm.recording_msid
+                       AND user_mm.user_id = l.user_id 
+                 LEFT JOIN mbid_manual_mapping_top other_mm
+                        ON l.recording_msid = other_mm.recording_msid
+              )     SELECT user_id
+                         , listened_at
+                         , created
+                         , l.recording_msid::TEXT
+                         , data
+                         , l.recording_mbid
+                         , mbc.recording_data->>'name' AS recording_name
+                         , mbc.release_mbid
+                         , mbc.artist_mbids::TEXT[]
+                         , (mbc.release_data->>'caa_id')::bigint AS caa_id
+                         , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
+                         , array_agg(artist->>'name' ORDER BY position) AS ac_names
+                         , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases            
+                      FROM selected_listens l
+                 LEFT JOIN mapping.mb_metadata_cache mbc
+                        ON l.recording_mbid = mbc.recording_mbid
+         LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
+                        ON TRUE            
+                  GROUP BY user_id
+                         , listened_at
+                         , l.recording_msid
+                         , created
+                         , data
+                         , l.recording_mbid
+                         , mbc.recording_data->>'name'
+                         , mbc.release_mbid
+                         , mbc.artist_mbids
+                         , mbc.release_data->>'caa_id'
+                         , mbc.release_data->>'caa_release_mbid'
+                  ORDER BY listened_at DESC
+                    LIMIT :limit
+        """
+
+        listens = []
+        with timescale.engine.connect() as connection:
+            curs = connection.execute(sqlalchemy.text(query), args)
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+                user_name = user_id_map[result.user_id]
+                listens.append(Listen.from_timescale(
+                    listened_at=result.listened_at,
+                    user_id=result.user_id,
+                    created=result.created,
+                    recording_msid=result.recording_msid,
+                    track_metadata=result.data,
+                    recording_mbid=result.recording_mbid,
+                    recording_name=result.recording_name,
+                    release_mbid=result.release_mbid,
+                    artist_mbids=result.artist_mbids,
+                    ac_names=result.ac_names,
+                    ac_join_phrases=result.ac_join_phrases,
+                    user_name=user_name,
+                    caa_id=result.caa_id,
+                    caa_release_mbid=result.caa_release_mbid
+                ))
+
+        return listens
+
     def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):
         """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
 

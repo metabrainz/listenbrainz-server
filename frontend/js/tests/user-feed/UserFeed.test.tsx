@@ -38,7 +38,6 @@ import { waitForComponentToPaint } from "../test-utils";
 const props = {
   ...timelineProps,
   events: timelineProps.events as TimelineEvent[],
-  newAlert: jest.fn(),
 };
 
 const GlobalContextMock = {

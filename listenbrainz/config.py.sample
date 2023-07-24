@@ -161,6 +161,12 @@ CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change th
 CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
 
+# APPLE MUSIC
+APPLE_MUSIC_TEAM_ID = 'needs a non empty default value for tests, change this'
+APPLE_MUSIC_KID = 'needs a non empty default value for tests, change this'
+APPLE_MUSIC_KEY = 'needs a non empty default value for tests, change this'
+APPLE_MUSIC_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
+
 # YOUTUBE
 YOUTUBE_API_KEY = 'change me'
 
