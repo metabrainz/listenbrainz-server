@@ -68,6 +68,7 @@ export function millisecondsToStr(milliseconds: number) {
 
 export function JSPFTrackToListen(track: JSPFTrack): Listen {
   const customFields = getTrackExtension(track);
+  const recordingMBID = getRecordingMBIDFromJSPFTrack(track);
   const listen: Listen = {
     listened_at: 0,
     track_metadata: {
@@ -76,7 +77,7 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
       release_name: track.album,
       additional_info: {
         duration_ms: track.duration,
-        recording_mbid: track.id,
+        recording_mbid: recordingMBID,
         origin_url: track.location?.[0],
       },
     },
@@ -88,8 +89,8 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
     listen.track_metadata.mbid_mapping = {
       artist_mbids: [],
       artists: [],
-      recording_mbid: "",
-      release_mbid: "",
+      recording_mbid: recordingMBID,
+      release_mbid: caa_release_mbid,
       caa_id,
       caa_release_mbid,
     };
