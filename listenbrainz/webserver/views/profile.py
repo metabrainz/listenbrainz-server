@@ -311,7 +311,7 @@ def delete_listens():
     )
 
 
-def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
+def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) -> ExternalService:
     """Returns the music service for the given name and raise 404 if
     service is not found
 
@@ -324,7 +324,7 @@ def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
             return SpotifyService()
         elif service == ExternalServiceType.CRITIQUEBRAINZ:
             return CritiqueBrainzService()
-        elif service == ExternalServiceType.APPLE:
+        elif not exclude_apple and service == ExternalServiceType.APPLE:
             return AppleService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
             return MusicBrainzService()
@@ -353,12 +353,18 @@ def music_services_details():
     critiquebrainz_user = critiquebrainz_service.get_user(current_user.id)
     current_critiquebrainz_permissions = "review" if critiquebrainz_user else "disable"
 
+    apple_service = AppleService()
+    apple_user = apple_service.get_user(current_user.id)
+    current_apple_permissions = "listen" if apple_user else "disable"
+
     return render_template(
         'user/music_services.html',
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
         critiquebrainz_user=critiquebrainz_user,
         current_critiquebrainz_permissions=current_critiquebrainz_permissions,
+        apple_user=apple_user,
+        current_apple_permissions=current_apple_permissions,
         active_settings_section="connect-services"
     )
 
@@ -366,15 +372,12 @@ def music_services_details():
 @profile_bp.route('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
-    service = _get_service_or_raise_404(service_name)
+    service = _get_service_or_raise_404(service_name, exclude_apple=True)
 
-    if isinstance(service, AppleService):
-        token = service.generate_developer_token()
-    else:
-        code = request.args.get('code')
-        if not code:
-            raise BadRequest('missing code')
-        token = service.fetch_access_token(code)
+    code = request.args.get('code')
+    if not code:
+        raise BadRequest('missing code')
+    token = service.fetch_access_token(code)
 
     if service.add_new_user(current_user.id, token):
         flash.success('Successfully authenticated with %s!' % service_name.capitalize())
@@ -383,20 +386,27 @@ def music_services_callback(service_name: str):
     return redirect(url_for('profile.music_services_details'))
 
 
-@profile_bp.route('/music-services/apple/submit/', methods=["POST"])
+@profile_bp.route('/music-services/apple/get-token/')
+@api_login_required
+def get_apple_music_developer_token():
+    service = AppleService()
+    token = service.generate_developer_token()
+    return jsonify({"token": token})
+
+
+@profile_bp.route('/music-services/apple/submit-token/', methods=["POST"])
 @api_login_required
 def submit_apple_music_user_token():
     """ Submit a new music user token for a user's apple music account """
-    user = validate_auth_header()
     service = AppleService()
-    service.update_music_user_token(user["id"], request.json.get("musicUserToken"))
-    return json.dumps({"status": "ok"})
+    service.add_new_user(current_user.id, request.json)
+    return jsonify({"status": "ok"})
 
 
 @profile_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
 @api_login_required
 def refresh_service_token(service_name: str):
-    service = _get_service_or_raise_404(service_name, include_mb=True)
+    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
     user = service.get_user(current_user.id)
     if not user:
         raise APINotFound("User has not authenticated to %s" % service_name.capitalize())

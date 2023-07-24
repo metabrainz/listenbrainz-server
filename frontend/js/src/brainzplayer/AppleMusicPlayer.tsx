@@ -7,10 +7,7 @@ import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 export type AppleMusicPlayerProps = DataSourceProps & {
   appleMusicUser?: AppleMusicUser;
-  submitMusicUserToken: (
-    submitMusicUserToken: string,
-    musicUserToken: string
-  ) => Promise<void>;
+  // eslint-disable-next-line react/no-unused-prop-types
   listenBrainzToken: string;
 };
 
@@ -116,20 +113,6 @@ export default class AppleMusicPlayer
     this.disconnectAppleMusicPlayer();
   }
 
-  authorizeApplePlayer = async (): Promise<void> => {
-    const {
-      listenBrainzToken,
-      appleMusicUser,
-      submitMusicUserToken,
-    } = this.props;
-    const music_user_token = appleMusicUser?.music_user_token;
-
-    const newToken = await this.appleMusicPlayer?.authorize();
-    if (newToken && (!music_user_token || newToken !== music_user_token)) {
-      await submitMusicUserToken(listenBrainzToken, newToken);
-    }
-  };
-
   playAppleMusicId = async (
     appleMusicId: string,
     retryCount = 0
@@ -174,7 +157,6 @@ export default class AppleMusicPlayer
     );
     const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
     if (apple_music_id) {
-      await this.authorizeApplePlayer();
       await this.playAppleMusicId(apple_music_id);
     }
   };
@@ -190,7 +172,6 @@ export default class AppleMusicPlayer
     }
     const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
     if (apple_music_id) {
-      await this.authorizeApplePlayer();
       await this.playAppleMusicId(apple_music_id);
       return;
     }
@@ -203,9 +184,8 @@ export default class AppleMusicPlayer
         MusicKit.PlaybackStates.playing ||
       this.appleMusicPlayer?.playbackState === MusicKit.PlaybackStates.loading
     ) {
-      this.appleMusicPlayer.pause();
+      this.appleMusicPlayer?.pause();
     } else {
-      this.authorizeApplePlayer();
       this.appleMusicPlayer?.play();
     }
   };
@@ -301,7 +281,6 @@ export default class AppleMusicPlayer
       "nowPlayingItemDidChange",
       this._boundOnNowPlayingItemChange
     );
-    await this.authorizeApplePlayer();
   };
 
   onPlaybackStateChange = ({

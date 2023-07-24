@@ -41,11 +41,12 @@ class AppleService(ExternalService):
             user_id: A flask auth `current_user.id`
             token: A dict containing jwt encoded token and its expiry time
         """
-        access_token = token["access_token"]
+        access_token = token["developer_token"]
+        refresh_token = token["music_user_token"]
         expires_at = token["expires_at"]
         external_service_oauth.save_token(
             user_id=user_id, service=self.service, access_token=access_token,
-            refresh_token=None, token_expires_ts=expires_at, record_listens=False,
+            refresh_token=refresh_token, token_expires_ts=expires_at, record_listens=False,
             scopes=[], external_user_id=None
         )
         return True
@@ -58,14 +59,3 @@ class AppleService(ExternalService):
             user_id (int): the ListenBrainz row ID of the user
         """
         external_service_oauth.delete_token(user_id, self.service, remove_import_log=False)
-
-    def update_music_user_token(self, user_id: int, music_user_token: str):
-        """ Update the music user token for the given user. """
-        token = self.get_user(user_id)
-        external_service_oauth.update_token(
-            user_id=user_id,
-            service=ExternalServiceType.APPLE,
-            access_token=token["access_token"],
-            refresh_token=music_user_token,
-            expires_at=int(token["token_expires"].timestamp())
-        )

@@ -76,7 +76,6 @@ export default class UserTaste extends React.Component<UserTasteProps> {
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
-          submitMusicUserToken={APIService.submitMusicUserToken}
         />
       </div>
     );

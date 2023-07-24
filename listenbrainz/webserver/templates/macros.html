@@ -26,11 +26,18 @@
         {% set check = "" %}
     {% endif %}
 
+    {% if service == 'apple' %}
+        {% set onchange = "start_linking_apple_music('" + value + "');" %}
+    {% else %}
+        {% set onchange = "this.form.submit();" %}
+    {% endif %}
+
     <div class="{{ class }}">
         <input type="radio"
                id="{{ service }}_{{ value }}"
-               name="{{ service }}" value="{{ value }}"
-               onchange="this.form.submit();"
+               name="{{ service }}"
+               value="{{ value }}"
+               onchange="{{ onchange }}"
                {{ check }}
         />
         <label for="{{ service }}_{{ value }}">

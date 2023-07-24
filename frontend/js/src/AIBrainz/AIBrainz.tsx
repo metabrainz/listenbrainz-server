@@ -340,7 +340,6 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
         listenBrainzAPIBaseURI={APIService.APIBaseURI}
         refreshSpotifyToken={APIService.refreshSpotifyToken}
         refreshYoutubeToken={APIService.refreshYoutubeToken}
-        submitMusicUserToken={APIService.submitMusicUserToken}
       />
     </div>
   );

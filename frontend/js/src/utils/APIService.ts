@@ -160,21 +160,6 @@ export default class APIService {
     return result.access_token;
   };
 
-  submitMusicUserToken = async (
-    userToken: string,
-    musicUserToken: string
-  ): Promise<void> => {
-    const response = await fetch(`/profile/music-services/apple/submit/`, {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${userToken}`,
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-      body: JSON.stringify({ musicUserToken }),
-    });
-    await this.checkStatus(response);
-  };
-
   followUser = async (
     userName: string,
     userToken: string

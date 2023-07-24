@@ -81,14 +81,13 @@
                 </p>
                 <br/>
                 <div class="music-service-selection">
-                    <form action="{{ url_for('profile.music_services_disconnect', service_name='apple') }}"
-                          method="post">
-                        {{ service_permission_button("apple", current_spotify_permissions, "listen",
+                    <form action="#" id="apple-music-form">
+                        {{ service_permission_button("apple", current_apple_permissions, "listen",
                         "Play music on ListenBrainz",
                         "Discover and play songs directly on ListenBrainz. "
                         "Note: Full length track playback requires a paid Apple Music subscription") }}
 
-                        {{ service_permission_button("apple", current_spotify_permissions, "disable",
+                        {{ service_permission_button("apple", current_apple_permissions, "disable",
                         "Disable",
                         "Apple Music integration will be disabled. You won't be able to listen to music on ListenBrainz using Apple Music.") }}
                     </form>
@@ -146,4 +145,9 @@
         </div>
     </div>
 
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/music-services.js') }}"></script>
 {% endblock %}
