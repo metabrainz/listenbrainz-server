@@ -1,6 +1,7 @@
 import * as React from "react";
 import { uniq, includes, toLower } from "lodash";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import NamePill from "./NamePill";
 import {
@@ -10,14 +11,10 @@ import {
   getRecordingMSID,
 } from "../utils/utils";
 import SearchDropDown from "./SearchDropDown";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PersonalRecommendationModalProps = {
   listenToPersonallyRecommend: Listen;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 export const maxBlurbContentLength = 280;
@@ -32,10 +29,7 @@ export const maxBlurbContentLength = 280;
  */
 
 export default NiceModal.create(
-  ({
-    listenToPersonallyRecommend,
-    newAlert,
-  }: PersonalRecommendationModalProps) => {
+  ({ listenToPersonallyRecommend }: PersonalRecommendationModalProps) => {
     // Use a hook to manage the modal state
     const modal = useModal();
     const [users, setUsers] = React.useState<string[]>([]);
@@ -51,13 +45,15 @@ export default NiceModal.create(
         if (!error) {
           return;
         }
-        newAlert(
-          "danger",
-          title || "Error",
-          typeof error === "object" ? error.message : error
+        toast.error(
+          <ToastMsg
+            title={title || "Error"}
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "recommended-track-error" }
         );
       },
-      [newAlert]
+      []
     );
 
     /* On load, get the current user's followers */
@@ -136,14 +132,16 @@ export default NiceModal.create(
               metadata
             );
             if (status === 200) {
-              newAlert(
-                "success",
-                `You recommended this track to ${users.length} user${
-                  users.length > 1 ? "s" : ""
-                }`,
-                `${getArtistName(listenToPersonallyRecommend)} - ${getTrackName(
-                  listenToPersonallyRecommend
-                )}`
+              toast.success(
+                <ToastMsg
+                  title={`You recommended this track to ${users.length} user${
+                    users.length > 1 ? "s" : ""
+                  }`}
+                  message={`${getArtistName(
+                    listenToPersonallyRecommend
+                  )} - ${getTrackName(listenToPersonallyRecommend)}`}
+                />,
+                { toastId: "recommended-track-success" }
               );
               closeModal();
             }

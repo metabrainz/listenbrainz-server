@@ -105,3 +105,8 @@ ARTIST_COUNTRY_CODE_DATAFRAME = "/artist_country_code"
 RECORDING_LENGTH_DATAFRAME = "/recording_length"
 ARTIST_CREDIT_MBID_DATAFRAME = "/artist_credit_mbid"
 RECORDING_FEEDBACK_DATAFRAME = "/recording_feedback"
+RECORDING_RECORDING_TAG_DATAFRAME = "/recording_tag"
+RECORDING_ARTIST_TAG_DATAFRAME = "/artist_tag"
+RECORDING_RELEASE_GROUP_TAG_DATAFRAME = "/release_group_tag"
+
+MLHD_RECORDING_POPULARITY_DATAFRAME = "/mlhd_popularity_recording"

@@ -18,10 +18,13 @@ from listenbrainz.troi.utils import get_existing_playlist_urls, SPOTIFY_EXPORT_P
 
 
 def get_users_for_weekly_playlists(create_all):
-    """ Retrieve the users who had midnight in their timezone less than 59 minutes ago and generate
-        the weekly playlists for them.
+    """ Retrieve the users who had their midnight in their timezone less than 59 minutes ago and
+        where its monday currently and generate the weekly playlists for them.
     """
-    timezone_filter = "WHERE EXTRACT('hour' from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0"
+    timezone_filter = """
+        WHERE EXTRACT(HOUR from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0
+          AND EXTRACT(DOW from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 1
+    """
     query = """
         SELECT "user".id as user_id
              , to_char(NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT'), 'YYYY-MM-DD Dy') AS jam_date
