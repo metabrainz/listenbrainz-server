@@ -480,12 +480,21 @@ declare type JSPFObject = {
   playlist: JSPFPlaylist;
 };
 
+declare type JSPFPlaylistMetadata = {
+  external_urls?: { [key: string]: any };
+  algorithm_metadata: {
+    source_patch: string;
+  };
+  expires_at?: string; // ISO date string
+};
+
 declare type JSPFPlaylistExtension = {
-  collaborators: string[];
+  collaborators?: string[];
   public: boolean;
   created_for?: string;
   copied_from?: string; // Full ListenBrainz playlist URI
   last_modified_at?: string; // ISO date string
+  additional_metadata?: JSPFPlaylistMetadata;
 };
 
 declare type JSPFTrackExtension = {

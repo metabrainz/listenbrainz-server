@@ -83,8 +83,7 @@ def get_user_recommendation(user_id):
             }
 
             recording_mbid = {
-                'top_artist_recording': [],
-                'similar_artist_recording': []
+                'raw': []
             }
     """
     with db.engine.connect() as connection:
