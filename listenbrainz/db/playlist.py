@@ -480,7 +480,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
             # This code seems out of place for a create function, but in order to keep the deletion of
             # old collaborative playlists in the same transaction as creating new playlists, it needs to
             # to be here.
-            if playlist.creator_id == TROI_BOT_USER_ID and playlist.created_for_id is not None and \
+            if playlist.creator_id in (LISTENBRAINZ_USER_ID, TROI_BOT_USER_ID)  and playlist.created_for_id is not None and \
                     playlist.additional_metadata is not None and "algorithm_metadata" in playlist.additional_metadata\
                     and "source_patch" in playlist.additional_metadata["algorithm_metadata"]:
                 _remove_old_collaborative_playlists(
