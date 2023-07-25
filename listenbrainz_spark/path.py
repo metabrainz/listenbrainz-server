@@ -6,12 +6,6 @@ LISTENBRAINZ_NEW_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz-new')
 # path to save incremental dumps
 INCREMENTAL_DUMPS_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "incremental.parquet")
 
-# Directory containing similar artist relation.
-# (This is a temporary path till incremental dumps for similar artists are prepared)
-SIMILAR_ARTIST_DIR = '/similar_artists'
-# Absolute path to similar artist relation.
-SIMILAR_ARTIST_DATAFRAME_PATH = SIMILAR_ARTIST_DIR + \
-    '/' + 'artist_credit_artist_credit_relations.parquet'
 # Directory containing RDD checkpoints to break lineage while using iterative algorithms.
 CHECKPOINT_DIR = os.path.join('/', 'checkpoint')
 
@@ -27,9 +21,6 @@ RECOMMENDATION_RECORDING_DATAFRAME_DIR = os.path.join(
 # Directory containing model metadata and the real models to be used for generating `recording` recommendations.
 RECOMMENDATION_RECORDING_MODEL_DIR = os.path.join(
     RECOMMENDATION_RECORDING_PARENT_DIR, 'model')
-# Directory containing candidate sets to be used for generating recommendations.
-RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR = os.path.join(
-    RECOMMENDATION_RECORDING_PARENT_DIR, 'candidate_set')
 # Directory to save best models for `recording` recommendations.
 RECOMMENDATION_RECORDING_DATA_DIR = os.path.join(
     RECOMMENDATION_RECORDING_MODEL_DIR, 'data')
@@ -47,13 +38,6 @@ RECOMMENDATION_RECORDINGS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + \
 # Absolute path to processed data/listens ready to be trained for `recording` recommendations.
 RECOMMENDATION_RECORDING_TRANSFORMED_LISTENCOUNTS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + \
     '/' + 'transformed_listencounts_df.parquet'
-# Absolute path to candidate sets used in `recording` recommendations.
-RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR,
-                                                                 'top_artist',
-                                                                 'top_artist.parquet')
-RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR,
-                                                                     'similar_artist',
-                                                                     'similar_artist.parquet')
 # Absolute path to model metadata.
 RECOMMENDATION_RECORDING_MODEL_METADATA = RECOMMENDATION_RECORDING_MODEL_DIR + \
     '/' + 'model_metadata_new.parquet'
@@ -105,3 +89,8 @@ ARTIST_COUNTRY_CODE_DATAFRAME = "/artist_country_code"
 RECORDING_LENGTH_DATAFRAME = "/recording_length"
 ARTIST_CREDIT_MBID_DATAFRAME = "/artist_credit_mbid"
 RECORDING_FEEDBACK_DATAFRAME = "/recording_feedback"
+RECORDING_RECORDING_TAG_DATAFRAME = "/recording_tag"
+RECORDING_ARTIST_TAG_DATAFRAME = "/artist_tag"
+RECORDING_RELEASE_GROUP_TAG_DATAFRAME = "/release_group_tag"
+
+MLHD_RECORDING_POPULARITY_DATAFRAME = "/mlhd_popularity_recording"

@@ -7,16 +7,6 @@ declare module "debounce-async";
 // declaration typescript file doesn't exist for react-datetime-picker/dist/entry.nostyle.js so had to declare a dummy declaration.
 declare module "react-datetime-picker/dist/entry.nostyle";
 
-declare module "react-bs-notifier";
-declare type AlertType = "danger" | "warning" | "success" | "info";
-declare type Alert = {
-  id: number;
-  type: AlertType;
-  headline: string;
-  message: string | JSX.Element;
-  count?: number;
-};
-
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {
   artist_mbids?: Array<string> | null;
@@ -481,12 +471,21 @@ declare type JSPFObject = {
   playlist: JSPFPlaylist;
 };
 
+declare type JSPFPlaylistMetadata = {
+  external_urls?: { [key: string]: any };
+  algorithm_metadata: {
+    source_patch: string;
+  };
+  expires_at?: string; // ISO date string
+};
+
 declare type JSPFPlaylistExtension = {
-  collaborators: string[];
+  collaborators?: string[];
   public: boolean;
   created_for?: string;
   copied_from?: string; // Full ListenBrainz playlist URI
   last_modified_at?: string; // ISO date string
+  additional_metadata?: JSPFPlaylistMetadata;
 };
 
 declare type JSPFTrackExtension = {

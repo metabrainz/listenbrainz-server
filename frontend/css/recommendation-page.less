@@ -3,3 +3,211 @@
   &:extend(#listens);
 }
 /* stylelint-enable */
+
+.playlists-masonry-container {
+  position: relative;
+  // hide overflow behind button with gradient to indicate there's more
+  .nav-button {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 55px;
+    border: none;
+    font-size: 2em;
+    color: @light-grey;
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 300ms linear;
+    &.backward {
+      background: linear-gradient(to right, @white 10%, transparent);
+      text-align: left;
+      left: 0;
+    }
+    &.forward {
+      background: linear-gradient(to left, @white 10%, transparent);
+      right: 0;
+      text-align: right;
+    }
+  }
+  &.scroll-start .nav-button.backward,
+  &.scroll-end& .nav-button.forward {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+.playlists-masonry {
+  width: 100%;
+  display: grid;
+  grid-gap: 1em;
+  grid-auto-rows: 150px;
+  grid-auto-columns: 300px;
+  grid-auto-flow: column;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  &.dragging {
+    scroll-snap-type: none;
+  }
+
+  > * {
+    position: relative;
+    min-width: 260px;
+    padding: 1em;
+    display: flex;
+    align-items: flex-end;
+    background-size: cover;
+    background-color: #b2d4b0;
+    background-position: center;
+    border: none;
+    scroll-snap-align: start;
+    filter: unset;
+    transition: all 300ms ease-out;
+    &:hover {
+      filter: saturate(1.4);
+      .title {
+        margin-bottom: 5px;
+      }
+    }
+    &.selected {
+      border: 5px solid @blue;
+      border-radius: 3px;
+    }
+    .title {
+      font-family: Roboto, sans-serif;
+      font-weight: 900;
+      font-size: 2em;
+      line-height: 1.1em;
+      color: @blue;
+      transition: margin-bottom 300ms ease-out;
+      margin-bottom: 0px;
+      text-align: left;
+      border: none;
+      max-width: 80%;
+    }
+    .playlist-timer {
+      --timer-color: fade(white, 50%);
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: conic-gradient(
+        fade(white, 15%) var(--degrees-progress),
+        var(--timer-color) calc(360deg - var(--degrees-progress))
+      );
+      align-self: flex-start;
+      order: 3;
+      position: absolute;
+      left: calc(
+        100% - 1em - 25px
+      ); // width of parent minus padding minus width of timer
+      &.pressing {
+        animation: blink 1s ease-out alternate infinite;
+        --timer-color: fade(red, 70%);
+        background-color: fade(white, 50%);
+      }
+      @keyframes blink {
+        0% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 0.75;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+    }
+    .btn {
+      margin-left: auto;
+    }
+    // Magic background image cycler
+    /* stylelint-disable */
+    each(range(3), {
+      //We only have three backgrounds available for green (#1 is only used for weekly jams)
+      &.green:nth-of-type(3n+@{value}) {
+        @bgValue: (@value + 1);
+        background-image: url("../img/recommendations/green-@{bgValue}.svg");
+      }
+    });
+    each(range(4), {
+      &.red:nth-of-type(4n+@{value}) {
+        background-image: url("../img/recommendations/red-@{value}.svg");
+      }
+    });
+    each(range(4), {
+      &.blue:nth-of-type(4n+@{value}) {
+        background-image: url("../img/recommendations/blue-@{value}.svg");
+      }
+    });
+    /* stylelint-enable */
+
+    &:nth-child(1 of .weekly-jams) {
+      // Make first weekly-jams element bigger and placed at the start
+      min-width: 320px;
+      grid-column-start: 1;
+      grid-column-end: 3;
+      grid-row-start: 1;
+      grid-row-end: 3;
+      background-image: url("../img/recommendations/green-1.svg");
+      .title {
+        width: 5em;
+        font-size: 4em;
+      }
+      &:hover .title {
+        margin-bottom: 10px;
+      }
+      .playlist-timer {
+        width: 35px;
+        height: 35px;
+        left: calc(100% - 1em - 35px);
+      }
+    }
+    &:not(:nth-child(1 of .weekly-jams)) button {
+      aspect-ratio: 1;
+      padding: 3px 7px;
+      .button-text {
+        display: none;
+      }
+    }
+  }
+
+  @media (max-width: @screen-sm) {
+    grid-auto-columns: unset;
+  }
+}
+
+#selected-playlist {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-items: flex-end;
+  gap: 1em;
+  margin-top: 2em;
+  border-top: 1px solid @light;
+  padding-top: 2em;
+
+  .playlist-items {
+    flex: 2;
+    flex-basis: 350px;
+  }
+  .playlist-settings {
+    width: 350px;
+    flex: 1;
+    flex-basis: 300px;
+    padding: 1em;
+    overflow: hidden;
+
+    .playlist-settings-header {
+      background: @blue;
+      color: @white;
+      padding: 1em;
+      margin: -1em -1em 0;
+      .title {
+        margin-top: 0.6em;
+        font-size: 1.3em;
+        font-weight: 600;
+      }
+    }
+    .buttons {
+      padding: 0.7em 0;
+    }
+  }
+}

@@ -3,18 +3,17 @@ import { createRoot } from "react-dom/client";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import { toast } from "react-toastify";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type SelectTroiPreferencesProps = {
   exportToSpotify: boolean;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface SelectTroiPreferencesState {
   exportToSpotify: boolean;
@@ -38,14 +37,15 @@ class SelectTroiPreferences extends React.Component<
   };
 
   handleError = (error: string | Error, title?: string): void => {
-    const { newAlert } = this.props;
     if (!error) {
       return;
     }
-    newAlert(
-      "danger",
-      title || "Error",
-      typeof error === "object" ? error.message : error
+    toast.error(
+      <ToastMsg
+        title={title || "Error"}
+        message={typeof error === "object" ? error.message : error}
+      />,
+      { toastId: "playlist-error" }
     );
   };
 
@@ -55,7 +55,6 @@ class SelectTroiPreferences extends React.Component<
     const { APIService, currentUser } = this.context;
     const { auth_token } = currentUser;
     const { exportToSpotify } = this.state;
-    const { newAlert } = this.props;
 
     if (event) {
       event.preventDefault();
@@ -69,7 +68,13 @@ class SelectTroiPreferences extends React.Component<
         );
         if (status === 200) {
           this.setState({ exportToSpotify });
-          newAlert("success", "Your playlist preferences have been saved.", "");
+          toast.success(
+            <ToastMsg
+              title="Your playlist preferences have been saved."
+              message=""
+            />,
+            { toastId: "playlist-success" }
+          );
         }
       } catch (error) {
         this.handleError(
@@ -85,10 +90,11 @@ class SelectTroiPreferences extends React.Component<
 
     return (
       <>
-        <h3>Configure auto export of daily jams playlists</h3>
+        <h3>Configure auto export of generated playlists</h3>
         <p>
           If this setting is turned on, ListenBrainz will automatically export
-          your daily jams playlists to Spotify everyday.
+          your generated playlists (Weekly Jams, Weekly Exploration, ...) 
+          to Spotify everyday.
           <br />
           You can always export playlists manually regardless of whether this
           setting is turned on or off.
@@ -129,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -152,7 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <SelectTroiPreferencesWithAlertNotifications
-          initialAlerts={optionalAlerts}
           exportToSpotify={exportToSpotify}
         />
       </GlobalAppContext.Provider>

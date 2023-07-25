@@ -1,15 +1,16 @@
 import * as React from "react";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { throttle as _throttle } from "lodash";
+import { toast } from "react-toastify";
 import debounceAsync from "debounce-async";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "../listens/ListenControl";
-import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type UserSearchProps = {
   onSelectUser: (userName: string) => void;
   placeholder: string;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type UserSearchState = {
   newUser: string;
@@ -68,8 +69,9 @@ export default class UserSearch extends React.Component<
   };
 
   handleError = (error: any) => {
-    const { newAlert } = this.props;
-    newAlert("danger", "Error", error.message);
+    toast.error(<ToastMsg title="Error" message={error.message} />, {
+      toastId: "error",
+    });
   };
 
   render() {

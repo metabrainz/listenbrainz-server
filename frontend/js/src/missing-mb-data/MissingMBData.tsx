@@ -1,16 +1,14 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase,react/jsx-no-bind */
 
 import * as React from "react";
+import { toast } from "react-toastify";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { faLink, faPlus, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
@@ -24,12 +22,13 @@ import {
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import Loader from "../components/Loader";
+import { ToastMsg } from "../notifications/Notifications";
 import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
   user: ListenBrainzUser;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface MissingMBDataState {
   missingData: Array<MissingMBData>;
@@ -159,7 +158,7 @@ export default class MissingMBDataPage extends React.Component<
   };
 
   deleteListen = async (data: MissingMBData) => {
-    const { newAlert, user } = this.props;
+    const { user } = this.props;
     const { APIService, currentUser } = this.context;
     const isCurrentUser = user.name === currentUser?.name;
     if (isCurrentUser && currentUser?.auth_token) {
@@ -176,18 +175,26 @@ export default class MissingMBDataPage extends React.Component<
               data.recording_msid
             ),
           }));
-          newAlert(
-            "info",
-            "Success",
-            "This listen has not been deleted yet, but is scheduled for deletion," +
-              " which usually happens shortly after the hour."
+          toast.info(
+            <ToastMsg
+              title="Success"
+              message={
+                "This listen has not been deleted yet, but is scheduled for deletion," +
+                " which usually happens shortly after the hour."
+              }
+            />,
+            { toastId: "deleted-track" }
           );
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Error while deleting listen",
-          typeof error === "object" ? error.message : error.toString()
+        toast.error(
+          <ToastMsg
+            title="Error while deleting listen"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "deleted-track-error" }
         );
       }
     }
@@ -201,7 +208,7 @@ export default class MissingMBDataPage extends React.Component<
       loading,
       deletedListens,
     } = this.state;
-    const { user, newAlert } = this.props;
+    const { user } = this.props;
     const { APIService, currentUser } = this.context;
     const isCurrentUser = user.name === currentUser?.name;
     const missingMBDataAsListen = missingData.map((data) => {
@@ -285,7 +292,6 @@ export default class MissingMBDataPage extends React.Component<
                         action={() => {
                           NiceModal.show(MBIDMappingModal, {
                             listenToMap: listen,
-                            newAlert,
                           });
                         }}
                       />
@@ -298,7 +304,6 @@ export default class MissingMBDataPage extends React.Component<
                     key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
                     showTimestamp
                     showUsername={false}
-                    newAlert={newAlert}
                     // eslint-disable-next-line react/jsx-no-useless-fragment
                     customThumbnail={<></>}
                     // eslint-disable-next-line react/jsx-no-useless-fragment
@@ -364,7 +369,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -387,7 +391,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <MissingMBDataPageWithAlertNotification
-            initialAlerts={optionalAlerts}
             missingData={missingData}
             user={user}
           />

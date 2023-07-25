@@ -95,23 +95,11 @@
     "description": "Train data to yield a model.",
     "params": ["ranks", "lambdas", "iterations", "alphas", "use_transformed_listencounts"]
   },
-  "cf.recommendations.recording.candidate_sets": {
-    "name": "cf.recommendations.recording.candidate_sets",
-    "description": "Create candidate sets to generate recommendations",
-    "params": [
-      "recommendation_generation_window",
-      "top_artist_limit",
-      "similar_artist_limit",
-      "users",
-      "html_flag"
-    ]
-  },
   "cf.recommendations.recording.recommendations": {
     "name": "cf.recommendations.recording.recommendations",
     "description": "Generate recommendations for all active ListenBrainz users.",
     "params": [
       "recommendation_top_artist_limit",
-      "recommendation_similar_artist_limit",
       "recommendation_raw_limit",
       "users"
     ]
@@ -208,5 +196,10 @@
     "name": "troi.playlists",
     "description": "Generate troi playlists for all users",
     "params": ["slug", "users"]
+  },
+  "tags.default": {
+    "name": "tags.default",
+    "description": "Generate the tags dataset with percent rank",
+    "params": []
   }
 }

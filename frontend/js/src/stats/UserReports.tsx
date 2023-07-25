@@ -18,16 +18,13 @@ import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
 import { getPageProps } from "../utils/utils";
 import { getAllStatRanges } from "./utils";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
   apiUrl: string;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type UserReportsState = {
   range: UserStatsAPIRange;
@@ -101,7 +98,7 @@ export default class UserReports extends React.Component<
 
   render() {
     const { range, user } = this.state;
-    const { apiUrl, newAlert } = this.props;
+    const { apiUrl } = this.props;
     const { currentUser } = this.context;
 
     const ranges = getAllStatRanges();
@@ -174,7 +171,6 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="artist"
-                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -186,7 +182,6 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="album"
-                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -198,7 +193,6 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="track"
-                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -227,7 +221,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -251,7 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <UserReportsPageWithAlertNotifications
             apiUrl={globalAppContext.APIService.APIBaseURI}
             user={user}
-            initialAlerts={optionalAlerts}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

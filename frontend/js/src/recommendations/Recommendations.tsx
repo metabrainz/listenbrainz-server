@@ -7,10 +7,8 @@ import * as Sentry from "@sentry/react";
 import { get, isEqual, isInteger } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import { toast } from "react-toastify";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -27,11 +25,12 @@ import {
 } from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
   user: ListenBrainzUser;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface RecommendationsState {
   currentRecommendation?: Recommendation;
@@ -86,7 +85,7 @@ export default class Recommendations extends React.Component<
   }
 
   getFeedback = async () => {
-    const { user, newAlert } = this.props;
+    const { user } = this.props;
     const { recommendations } = this.state;
     const recordings: string[] = [];
 
@@ -104,10 +103,12 @@ export default class Recommendations extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        newAlert(
-          "danger",
-          "We could not load love/hate feedback",
-          typeof error === "object" ? error.message : error
+        toast.error(
+          <ToastMsg
+            title="We could not load love/hate feedback"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "load-feedback-error" }
         );
       }
     }
@@ -213,7 +214,7 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { user, newAlert } = this.props;
+    const { user } = this.props;
     const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(currentUser?.name) && currentUser?.name === user?.name;
@@ -241,7 +242,6 @@ export default class Recommendations extends React.Component<
                   const recordingMBID = getRecordingMBID(recommendation);
                   const recommendationFeedbackComponent = (
                     <RecommendationFeedbackComponent
-                      newAlert={newAlert}
                       updateFeedbackCallback={this.updateFeedback}
                       listen={recommendation}
                       currentFeedback={this.getFeedbackForRecordingMbid(
@@ -286,7 +286,6 @@ export default class Recommendations extends React.Component<
                       showUsername={false}
                       feedbackComponent={recommendationFeedbackComponent}
                       listen={recommendation}
-                      newAlert={newAlert}
                     />
                   );
                 })}
@@ -348,7 +347,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -370,7 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <RecommendationsWithAlertNotifications
-            initialAlerts={optionalAlerts}
             recommendations={recommendations}
             user={user}
           />

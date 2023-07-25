@@ -23,10 +23,8 @@ import * as Sentry from "@sentry/react";
 import { io, Socket } from "socket.io-client";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import { toast } from "react-toastify";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import APIServiceClass from "../utils/APIService";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
@@ -47,10 +45,11 @@ import {
 } from "./utils";
 import { getPageProps } from "../utils/utils";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface PlaylistPageState {
   playlist: JSPFPlaylist;
@@ -159,7 +158,6 @@ export default class PlaylistPage extends React.Component<
     if (!selectedTrackMetadata) {
       return;
     }
-    const { newAlert } = this.props;
     const { playlist } = this.state;
     const { currentUser } = this.context;
     if (!currentUser?.auth_token) {
@@ -177,10 +175,12 @@ export default class PlaylistPage extends React.Component<
         getPlaylistId(playlist),
         [jspfTrack]
       );
-      newAlert(
-        "success",
-        "Added track",
-        `${selectedTrackMetadata.track_name} by ${selectedTrackMetadata.artist_name}`
+      toast.success(
+        <ToastMsg
+          title="Added Track"
+          message={`${selectedTrackMetadata.track_name} by ${selectedTrackMetadata.artist_name}`}
+        />,
+        { toastId: "added-track" }
       );
       const recordingFeedbackMap = await this.loadFeedback([
         (selectedTrackMetadata.recording_mbid ??
@@ -200,7 +200,6 @@ export default class PlaylistPage extends React.Component<
   };
 
   copyPlaylist = async (): Promise<void> => {
-    const { newAlert } = this.props;
     const { currentUser } = this.context;
     const { playlist } = this.state;
     if (!currentUser?.auth_token) {
@@ -208,7 +207,9 @@ export default class PlaylistPage extends React.Component<
       return;
     }
     if (!playlist) {
-      newAlert("danger", "Error", "No playlist to copy");
+      toast.error(<ToastMsg title="Error" message="No playlist to copy" />, {
+        toastId: "copy-playlist-error",
+      });
       return;
     }
     try {
@@ -221,13 +222,19 @@ export default class PlaylistPage extends React.Component<
         newPlaylistId,
         currentUser.auth_token
       ).then((res) => res.json());
-      newAlert(
-        "success",
-        "Duplicated playlist",
-        <>
-          Duplicated to playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{JSPFObject.playlist.title}</a>
-        </>
+      toast.success(
+        <ToastMsg
+          title="Duplicated playlist"
+          message={
+            <>
+              Duplicated to playlist&ensp;
+              <a href={`/playlist/${newPlaylistId}`}>
+                {JSPFObject.playlist.title}
+              </a>
+            </>
+          }
+        />,
+        { toastId: "copy-playlist-success" }
       );
     } catch (error) {
       this.handleError(error);
@@ -235,7 +242,6 @@ export default class PlaylistPage extends React.Component<
   };
 
   deletePlaylist = async (): Promise<void> => {
-    const { newAlert } = this.props;
     const { currentUser } = this.context;
     const { playlist } = this.state;
     if (!currentUser?.auth_token) {
@@ -252,11 +258,14 @@ export default class PlaylistPage extends React.Component<
         getPlaylistId(playlist)
       );
       // redirect
-      newAlert(
-        "success",
-        "Deleted playlist",
-        `Deleted playlist ${playlist.title}`
+      toast.success(
+        <ToastMsg
+          title="Deleted playlist"
+          message={`Deleted playlist ${playlist.title}`}
+        />,
+        { toastId: "delete-playlist-success" }
       );
+
       // Wait 1.5 second before navigating to user playlists page
       await new Promise((resolve) => {
         setTimeout(resolve, 1500);
@@ -268,7 +277,6 @@ export default class PlaylistPage extends React.Component<
   };
 
   getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
-    const { newAlert } = this.props;
     const { currentUser } = this.context;
     const { playlist } = this.state;
     const { track: tracks } = playlist;
@@ -281,10 +289,12 @@ export default class PlaylistPage extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        newAlert(
-          "danger",
-          "Playback error",
-          typeof error === "object" ? error.message : error
+        toast.error(
+          <ToastMsg
+            title="Playback error"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "playback-error" }
         );
       }
     }
@@ -422,12 +432,15 @@ export default class PlaylistPage extends React.Component<
     collaborators: string[],
     id?: string
   ) => {
-    const { newAlert } = this.props;
     if (!id) {
-      newAlert(
-        "danger",
-        "Error",
-        "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={
+            "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
+          }
+        />,
+        { toastId: "edit-playlist-error" }
       );
       return;
     }
@@ -473,29 +486,42 @@ export default class PlaylistPage extends React.Component<
         playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
       });
       this.setState({ playlist: editedPlaylist }, this.emitPlaylistChanged);
-      newAlert("success", "Saved playlist", "");
+      toast.success(
+        <ToastMsg
+          title="Saved playlist"
+          message={`Saved playlist ${playlist.title}`}
+        />,
+        { toastId: "saved-playlist" }
+      );
     } catch (error) {
       this.handleError(error);
     }
   };
 
   alertMustBeLoggedIn = () => {
-    const { newAlert } = this.props;
-    newAlert("danger", "Error", "You must be logged in for this operation");
+    toast.error(
+      <ToastMsg
+        title="Error"
+        message="You must be logged in for this operation"
+      />,
+      { toastId: "auth-error" }
+    );
   };
 
   alertNotAuthorized = () => {
-    const { newAlert } = this.props;
-    newAlert(
-      "danger",
-      "Not allowed",
-      "You are not authorized to modify this playlist"
+    toast.error(
+      <ToastMsg
+        title="Not allowed"
+        message="You are not authorized to modify this playlist"
+      />,
+      { toastId: "auth-error" }
     );
   };
 
   handleError = (error: any) => {
-    const { newAlert } = this.props;
-    newAlert("danger", "Error", error.message);
+    toast.error(<ToastMsg title="Error" message={error.message} />, {
+      toastId: "error",
+    });
   };
 
   exportToSpotify = async (
@@ -503,23 +529,25 @@ export default class PlaylistPage extends React.Component<
     playlistTitle: string,
     auth_token: string
   ) => {
-    const { newAlert } = this.props;
-
     const result = await this.APIService.exportPlaylistToSpotify(
       auth_token,
       playlistId
     );
     const { external_url } = result;
-    newAlert(
-      "success",
-      "Playlist exported to Spotify",
-      <>
-        Successfully exported playlist:{" "}
-        <a href={external_url} target="_blank" rel="noopener noreferrer">
-          {playlistTitle}
-        </a>
-        Heads up: the new playlist is public on Spotify.
-      </>
+    toast.success(
+      <ToastMsg
+        title="Playlist exported to Spotify"
+        message={
+          <>
+            Successfully exported playlist:{" "}
+            <a href={external_url} target="_blank" rel="noopener noreferrer">
+              {playlistTitle}
+            </a>
+            Heads up: the new playlist is public on Spotify.
+          </>
+        }
+      />,
+      { toastId: "export-playlist" }
     );
   };
 
@@ -551,17 +579,20 @@ export default class PlaylistPage extends React.Component<
       auth_token: string
     ) => void
   ) => {
-    const { newAlert } = this.props;
     const { playlist } = this.state;
     const { currentUser } = this.context;
     if (!playlist || !currentUser.auth_token) {
       return;
     }
     if (!playlist.track.length) {
-      newAlert(
-        "warning",
-        "Empty playlist",
-        "Why don't you fill up the playlist a bit before trying to export it?"
+      toast.warn(
+        <ToastMsg
+          title="Empty playlist"
+          message={
+            "Why don't you fill up the playlist a bit before trying to export it?"
+          }
+        />,
+        { toastId: "empty-playlist" }
       );
       return;
     }
@@ -578,7 +609,7 @@ export default class PlaylistPage extends React.Component<
   render() {
     const { playlist, loading } = this.state;
     const { APIService, spotifyAuth } = this.context;
-    const { newAlert } = this.props;
+
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
     const isOwner = this.isOwner();
@@ -720,7 +751,8 @@ export default class PlaylistPage extends React.Component<
                           <a href={sanitizeUrl(`/user/${collaborator}`)}>
                             {collaborator}
                           </a>
-                          {index < customFields.collaborators.length - 1
+                          {index <
+                          (customFields?.collaborators?.length ?? 0) - 1
                             ? ", "
                             : ""}
                         </React.Fragment>
@@ -774,7 +806,7 @@ export default class PlaylistPage extends React.Component<
                   handle=".drag-handle"
                   list={tracks as (JSPFTrack & { id: string })[]}
                   onEnd={this.movePlaylistItem}
-                  setList={(newState: JSPFTrack[]) =>
+                  setList={(newState) =>
                     this.setState({
                       playlist: { ...playlist, track: newState },
                     })
@@ -791,7 +823,6 @@ export default class PlaylistPage extends React.Component<
                         )}
                         removeTrackFromPlaylist={this.deletePlaylistItem}
                         updateFeedbackCallback={this.updateFeedback}
-                        newAlert={newAlert}
                       />
                     );
                   })}
@@ -807,10 +838,7 @@ export default class PlaylistPage extends React.Component<
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
                   </span>
-                  <SearchTrackOrMBID
-                    onSelectRecording={this.addTrack}
-                    newAlert={newAlert}
-                  />
+                  <SearchTrackOrMBID onSelectRecording={this.addTrack} />
                 </Card>
               )}
             </div>
@@ -819,7 +847,6 @@ export default class PlaylistPage extends React.Component<
                 <CreateOrEditPlaylistModal
                   onSubmit={this.editPlaylist}
                   playlist={playlist}
-                  newAlert={newAlert}
                 />
                 <DeletePlaylistConfirmationModal
                   onConfirm={this.deletePlaylist}
@@ -846,7 +873,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -868,10 +894,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <PlaylistPageWithAlertNotifications
-            initialAlerts={optionalAlerts}
-            playlist={playlist}
-          />
+          <PlaylistPageWithAlertNotifications playlist={playlist} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

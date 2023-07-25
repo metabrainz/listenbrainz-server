@@ -40,7 +40,7 @@ const niceModalProps: NiceModalHocProps = {
   id: "fnord",
   defaultVisible: true,
 };
-const newAlert = jest.fn();
+
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -61,7 +61,7 @@ const submitPersonalRecommendationSpy = jest
 
 describe("PersonalRecommendationModal", () => {
   afterEach(() => {
-    newAlert.mockClear();
+    
     getFollowersSpy.mockClear();
     submitPersonalRecommendationSpy.mockClear();
   });
@@ -72,7 +72,7 @@ describe("PersonalRecommendationModal", () => {
           <PersonalRecommendationModal
             {...niceModalProps}
             listenToPersonallyRecommend={listenToPersonallyRecommend}
-            newAlert={newAlert}
+            
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
@@ -88,7 +88,7 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              newAlert={newAlert}
+              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -129,12 +129,6 @@ describe("PersonalRecommendationModal", () => {
           users: ["fnord"],
         }
       );
-      expect(newAlert).toHaveBeenCalledTimes(1);
-      expect(newAlert).toHaveBeenCalledWith(
-        "success",
-        "You recommended this track to 1 user",
-        "TWICE - Feel Special"
-      );
     });
 
     it("does nothing if userToken not set", async () => {
@@ -149,7 +143,7 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              newAlert={newAlert}
+              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -172,7 +166,7 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              newAlert={newAlert}
+              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -193,13 +187,6 @@ describe("PersonalRecommendationModal", () => {
         submitButton?.simulate("click");
       });
       await waitForComponentToPaint(wrapper);
-
-      expect(newAlert).toHaveBeenCalledTimes(1);
-      expect(newAlert).toHaveBeenCalledWith(
-        "danger",
-        "Error while recommending a track",
-        "error"
-      );
     });
   });
 
@@ -211,7 +198,7 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              newAlert={newAlert}
+              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -245,7 +232,7 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              newAlert={newAlert}
+              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>

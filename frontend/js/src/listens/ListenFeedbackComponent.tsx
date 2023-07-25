@@ -1,15 +1,12 @@
 import * as React from "react";
 import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type ListenFeedbackComponentProps = {
-  newAlert: (
-    type: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
   listen: BaseListenFormat;
   currentFeedback: ListenFeedBack;
   updateFeedbackCallback?: (
@@ -26,7 +23,7 @@ export default class ListenFeedbackComponent extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   submitFeedback = async (score: ListenFeedBack) => {
-    const { listen, updateFeedbackCallback, newAlert } = this.props;
+    const { listen, updateFeedbackCallback } = this.props;
     const { APIService, currentUser } = this.context;
     if (currentUser?.auth_token) {
       const recordingMSID = getRecordingMSID(listen);
@@ -45,10 +42,12 @@ export default class ListenFeedbackComponent extends React.Component<
           }
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Error while submitting feedback",
-          error?.message ?? error.toString()
+        toast.error(
+          <ToastMsg
+            title=" Error while submitting feedback"
+            message={error?.message ?? error.toString()}
+          />,
+          { toastId: "submit-feedback-error" }
         );
       }
     }

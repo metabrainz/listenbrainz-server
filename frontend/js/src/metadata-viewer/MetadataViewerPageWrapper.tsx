@@ -1,27 +1,24 @@
 /* eslint-disable no-console */
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-
+import { toast } from "react-toastify";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { io } from "socket.io-client";
-import { ToastContainer } from "react-toastify";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import MetadataViewer from "./MetadataViewer";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PlayingNowPageProps = {
   playingNow?: Listen;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export default function PlayingNowPage(props: PlayingNowPageProps) {
-  const { playingNow, newAlert } = props;
+  const { playingNow } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [currentListen, setCurrentListen] = React.useState(playingNow);
   const [recordingData, setRecordingData] = React.useState<MetadataLookup>();
@@ -39,10 +36,12 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
           setRecordingData(metadata);
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Could not load currently playing track",
-          error.message
+        toast.error(
+          <ToastMsg
+            title="Could not load currently playing track"
+            message={error.message}
+          />,
+          { toastId: "load-playback-error" }
         );
       }
     },
@@ -61,7 +60,9 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
         newPlayingNow.playing_now = true;
         await onNewPlayingNow(newPlayingNow);
       } catch (error) {
-        newAlert("danger", "Something went wrong", error);
+        toast.error(<ToastMsg title="Something went wrong" message={error} />, {
+          toastId: "error",
+        });
       }
     });
     return () => {
@@ -83,10 +84,12 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
               await onNewPlayingNow(propOrFetchedPlayingNow);
             }
           } catch (error) {
-            newAlert(
-              "danger",
-              "Error fetching your currently playing track",
-              error.message ?? error
+            toast.error(
+              <ToastMsg
+                title="Error fetching your currently playing track"
+                message={error.message ?? error}
+              />,
+              { toastId: "playing-now-error" }
             );
           }
         }
@@ -115,7 +118,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -150,21 +152,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnHover
-        theme="light"
-      />
       <GlobalAppContext.Provider value={globalAppContext}>
-        <PlayingNowPageWithAlertNotifications
-          initialAlerts={optionalAlerts}
-          playingNow={playing_now}
-        />
+        <PlayingNowPageWithAlertNotifications playingNow={playing_now} />
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

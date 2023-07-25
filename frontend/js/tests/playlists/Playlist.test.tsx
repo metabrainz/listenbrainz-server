@@ -26,7 +26,7 @@ const { labsApiUrl, currentUser, playlist } = playlistPageProps;
 const props = {
   labsApiUrl,
   playlist: playlist as JSPFObject,
-  newAlert: () => {},
+  
 };
 
 const GlobalContextMock: GlobalAppContextT = {
