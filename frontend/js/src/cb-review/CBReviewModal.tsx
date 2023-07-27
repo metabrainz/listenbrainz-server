@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { Rating } from "react-simple-star-rating";
 import ReactTooltip from "react-tooltip";
-
+import { toast } from "react-toastify";
 import * as iso from "@cospired/i18n-iso-languages";
 import * as eng from "@cospired/i18n-iso-languages/langs/en.json";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
@@ -22,14 +22,10 @@ import {
   getTrackName,
 } from "../utils/utils";
 import Loader from "../components/Loader";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type CBReviewModalProps = {
   listen: Listen;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 iso.registerLocale(eng); // library requires language of the language list to be initiated
@@ -42,7 +38,7 @@ const MBBaseUrl = "https://metabrainz.org"; // only used for href
 // gets all iso-639-1 languages and codes for dropdown
 const allLanguagesKeyValue = Object.entries(iso.getNames("en"));
 
-export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
+export default NiceModal.create(({ listen }: CBReviewModalProps) => {
   const modal = useModal();
 
   const closeModal = React.useCallback(() => {
@@ -91,13 +87,14 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
       if (!error) {
         return;
       }
-      newAlert(
-        "danger",
-        title || "Error",
-        typeof error === "object" ? error.message : error
+      toast.error(
+        <ToastMsg
+          title={title || "Error"}
+          message={typeof error === "object" ? error.message : error}
+        />
       );
     },
-    [newAlert]
+    []
   );
 
   const refreshCritiquebrainzToken = React.useCallback(async () => {
@@ -300,16 +297,20 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
             reviewToSubmit
           );
           if (response?.metadata?.review_id) {
-            newAlert(
-              "success",
-              "Your review was submitted to CritiqueBrainz!",
-              <a
-                href={`${CBBaseUrl}/review/${response.metadata.review_id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {`${getArtistName(listen)} - ${entityToReview.name}`}
-              </a>
+            toast.success(
+              <ToastMsg
+                title="Your review was submitted to CritiqueBrainz!"
+                message={
+                  <a
+                    href={`${CBBaseUrl}/review/${response.metadata.review_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {`${getArtistName(listen)} - ${entityToReview.name}`}
+                  </a>
+                }
+              />,
+              { toastId: "review-submit-success" }
             );
             closeModal();
           }
@@ -342,7 +343,6 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
       rating,
       setLoading,
       refreshCritiquebrainzToken,
-      newAlert,
       closeModal,
       handleError,
     ]

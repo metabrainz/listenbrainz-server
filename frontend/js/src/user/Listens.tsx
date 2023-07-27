@@ -13,11 +13,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Integrations } from "@sentry/tracing";
 import { get, isEqual } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
+import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "../add-listen/AddListenModal";
@@ -27,6 +25,7 @@ import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import ListenCountCard from "../listens/ListenCountCard";
+import { ToastMsg } from "../notifications/Notifications";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import APIServiceClass from "../utils/APIService";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -45,7 +44,7 @@ export type ListensProps = {
   oldestListenTs: number;
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface ListensState {
   lastFetchedDirection?: "older" | "newer";
@@ -111,7 +110,6 @@ export default class Listens extends React.Component<
   }
 
   componentDidMount() {
-    const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService } = this.context;
     const { playingNowListen } = this.state;
@@ -130,10 +128,12 @@ export default class Listens extends React.Component<
           this.setState({ listenCount });
         })
         .catch((error) => {
-          newAlert(
-            "danger",
-            "Sorry, we couldn't load your listens count…",
-            error?.toString()
+          toast.error(
+            <ToastMsg
+              title="Sorry, we couldn't load your listens count…"
+              message={error?.toString()}
+            />,
+            { toastId: "listen-count-error" }
           );
         });
     }
@@ -220,11 +220,12 @@ export default class Listens extends React.Component<
     try {
       json = JSON.parse(newListen);
     } catch (error) {
-      const { newAlert } = this.props;
-      newAlert(
-        "danger",
-        "Coudn't parse the new listen as JSON: ",
-        error.toString()
+      toast.error(
+        <ToastMsg
+          title="Coudn't parse the new listen as JSON: "
+          message={error?.toString()}
+        />,
+        { toastId: "parse-listen-error" }
       );
       return;
     }
@@ -247,23 +248,43 @@ export default class Listens extends React.Component<
     const playingNow = newPlayingNow;
     const { APIService } = this.context;
     try {
-      const metadata = await APIService.lookupRecordingMetadata(
+      const response = await APIService.lookupRecordingMetadata(
         playingNow.track_metadata.track_name,
         playingNow.track_metadata.artist_name,
-        false
+        true
       );
-      playingNow.track_metadata.mbid_mapping = metadata as MBIDMapping;
+      if (response) {
+        const {
+          metadata,
+          recording_mbid,
+          release_mbid,
+          artist_mbids,
+        } = response;
+        playingNow.track_metadata.mbid_mapping = {
+          recording_mbid,
+          release_mbid,
+          artist_mbids,
+          caa_id: metadata?.release?.caa_id,
+          caa_release_mbid: metadata?.release?.caa_release_mbid,
+          artists: metadata?.artist?.artists?.map((artist, index) => {
+            return {
+              artist_credit_name: artist.name,
+              join_phrase: artist.join_phrase,
+              artist_mbid: artist_mbids[index],
+            };
+          }),
+        };
+      }
 
       await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {
-      const { newAlert } = this.props;
-      if (newAlert) {
-        newAlert(
-          "danger",
-          "We could not load data for the now playing listen",
-          typeof error === "object" ? error.message : error.toString()
-        );
-      }
+      toast.error(
+        <ToastMsg
+          title="We could not load data for the now playing listen "
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "load-listen-error" }
+      );
     }
     this.setState({
       playingNowListen: playingNow,
@@ -407,7 +428,6 @@ export default class Listens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
     const recording_msids: string[] = [];
@@ -433,20 +453,21 @@ export default class Listens extends React.Component<
         );
         return data.feedback;
       } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
+        toast.error(
+          <ToastMsg
+            title="We could not load love/hate feedback"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "load-feedback-error" }
+        );
       }
     }
     return [];
   };
 
   loadFeedbackForNowPlaying = async (listen: Listen): Promise<void> => {
-    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const recordingMBID = getRecordingMBID(listen);
     if (!currentUser?.name || !recordingMBID) {
@@ -466,13 +487,13 @@ export default class Listens extends React.Component<
         this.setState({ recordingMbidFeedbackMap: newMbidFeedbackMap });
       }
     } catch (error) {
-      if (newAlert) {
-        newAlert(
-          "danger",
-          "We could not load love/hate feedback",
-          typeof error === "object" ? error.message : error
-        );
-      }
+      toast.error(
+        <ToastMsg
+          title="We could not load love/hate feedback"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "load-feedback-error" }
+      );
     }
   };
 
@@ -541,7 +562,6 @@ export default class Listens extends React.Component<
   };
 
   deleteListen = async (listen: Listen) => {
-    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -557,11 +577,15 @@ export default class Listens extends React.Component<
         );
         if (status === 200) {
           this.setState({ deletedListen: listen });
-          newAlert(
-            "info",
-            "Success",
-            "This listen has not been deleted yet, but is scheduled for deletion," +
-              " which usually happens shortly after the hour."
+          toast.info(
+            <ToastMsg
+              title="Success"
+              message={
+                "This listen has not been deleted yet, but is scheduled for deletion," +
+                "which usually happens shortly after the hour."
+              }
+            />,
+            { toastId: "delete-listen" }
           );
           // wait for the delete animation to finish
           setTimeout(() => {
@@ -569,10 +593,14 @@ export default class Listens extends React.Component<
           }, 1000);
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Error while deleting listen",
-          typeof error === "object" ? error.message : error.toString()
+        toast.error(
+          <ToastMsg
+            title="Error while deleting listen"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "delete-listen-error" }
         );
       }
     }
@@ -590,8 +618,13 @@ export default class Listens extends React.Component<
 
       this.setState({ followingList: following });
     } catch (err) {
-      const { newAlert } = this.props;
-      newAlert("danger", "Error while fetching followers", err.toString());
+      toast.error(
+        <ToastMsg
+          title="Error while fetching following"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-following-error" }
+      );
     }
   };
 
@@ -707,7 +740,7 @@ export default class Listens extends React.Component<
 
   getListenCard = (listen: Listen): JSX.Element => {
     const { deletedListen } = this.state;
-    const { newAlert } = this.props;
+
     const { currentUser } = this.context;
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -742,7 +775,6 @@ export default class Listens extends React.Component<
         listen={listen}
         currentFeedback={this.getFeedbackForListen(listen)}
         updateFeedbackCallback={this.updateFeedback}
-        newAlert={newAlert}
         className={`${listen.playing_now ? "playing-now " : ""}${
           shouldBeDeleted ? "deleted " : ""
         }`}
@@ -773,7 +805,7 @@ export default class Listens extends React.Component<
       userPinnedRecording,
       playingNowListen,
     } = this.state;
-    const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
+    const { latestListenTs, oldestListenTs, user } = this.props;
     const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
@@ -805,11 +837,10 @@ export default class Listens extends React.Component<
                 currentFeedback={userPinnedRecordingFeedback}
                 updateFeedbackCallback={this.updateFeedback}
                 removePinFromPinsList={() => {}}
-                newAlert={newAlert}
               />
             )}
             <ListenCountCard user={user} listenCount={listenCount} />
-            {user && <UserSocialNetwork user={user} newAlert={newAlert} />}
+            {user && <UserSocialNetwork user={user} />}
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
@@ -1030,7 +1061,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -1057,7 +1087,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <ListensWithAlertNotifications
-            initialAlerts={optionalAlerts}
             latestListenTs={latest_listen_ts}
             listens={listens}
             userPinnedRecording={userPinnedRecording}

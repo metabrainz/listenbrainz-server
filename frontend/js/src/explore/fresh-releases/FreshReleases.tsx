@@ -4,9 +4,10 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
-import { withAlertNotifications } from "../../notifications/AlertNotificationsHOC";
+import { toast } from "react-toastify";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-
+import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import ReleaseCard from "./ReleaseCard";
@@ -14,15 +15,7 @@ import ReleaseFilters from "./ReleaseFilters";
 import ReleaseTimeline from "./ReleaseTimeline";
 import Pill from "../../components/Pill";
 
-export type FreshReleasesProps = {
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
-};
-
-export default function FreshReleases({ newAlert }: FreshReleasesProps) {
+export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
@@ -86,10 +79,14 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
         setAllFilters(releaseTypes);
         setIsLoading(false);
       } catch (error) {
-        newAlert(
-          "danger",
-          "Couldn't fetch fresh releases",
-          typeof error === "object" ? error.message : error.toString()
+        toast.error(
+          <ToastMsg
+            title="Couldn't fetch fresh releases"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "fetch-error" }
         );
       }
     };
@@ -193,12 +190,7 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    globalAppContext,
-    sentryProps,
-    optionalAlerts,
-  } = getPageProps();
+  const { domContainer, globalAppContext, sentryProps } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
@@ -215,9 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
-        <FreshReleasesPageWithAlertNotifications
-          initialAlerts={optionalAlerts}
-        />
+        <FreshReleasesPageWithAlertNotifications />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer

@@ -44,7 +44,7 @@ const props = {
   feedback: typedFeedback,
   youtube,
   spotify,
-  newAlert: () => {},
+  
 };
 
 // Create a new instance of GlobalAppContext

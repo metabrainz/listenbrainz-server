@@ -19,11 +19,6 @@ export type UserTopEntityProps = {
   user?: ListenBrainzUser;
   apiUrl: string;
   terminology: string;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 export type UserTopEntityState = {
@@ -104,7 +99,7 @@ export default class UserTopEntity extends React.Component<
   };
 
   render() {
-    const { entity, range, user, terminology, newAlert } = this.props;
+    const { entity, range, user, terminology } = this.props;
     const { data, loading, hasError, errorMessage } = this.state;
 
     let statsUrl;
@@ -157,7 +152,6 @@ export default class UserTopEntity extends React.Component<
                       showTimestamp={false}
                       showUsername={false}
                       currentFeedback={0}
-                      newAlert={newAlert}
                       additionalActions={
                         <span className="badge badge-info">
                           {artist.listen_count}
@@ -200,7 +194,6 @@ export default class UserTopEntity extends React.Component<
                       showTimestamp={false}
                       showUsername={false}
                       currentFeedback={0}
-                      newAlert={newAlert}
                       additionalActions={
                         <span className="badge badge-info">
                           {release.listen_count}
@@ -252,7 +245,6 @@ export default class UserTopEntity extends React.Component<
                       listen={listenFromRecording}
                       showTimestamp={false}
                       showUsername={false}
-                      newAlert={newAlert}
                       additionalActions={
                         <span className="badge badge-info">{listen_count}</span>
                       }
@@ -291,7 +283,6 @@ export default class UserTopEntity extends React.Component<
                       showTimestamp={false}
                       showUsername={false}
                       currentFeedback={0}
-                      newAlert={newAlert}
                       additionalActions={
                         <span className="badge badge-info">
                           {releaseGroup.listen_count}

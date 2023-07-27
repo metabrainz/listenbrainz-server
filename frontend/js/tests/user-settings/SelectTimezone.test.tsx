@@ -30,13 +30,13 @@ const globalProps = {
 const props = {
   pg_timezones,
   user_timezone,
-  newAlert: () => {},
+  
 };
 
 describe("User settings", () => {
   describe("submitTimezonePage", () => {
     it("renders correctly", () => {
-      const extraProps = { ...props, newAlert: jest.fn() };
+      const extraProps = { ...props };
       const wrapper = mount<SelectTimezone>(
         <GlobalAppContext.Provider value={globalProps}>
           <SelectTimezone {...extraProps} />
@@ -51,7 +51,7 @@ describe("User settings", () => {
     it("calls API, and sets state + creates a new alert on success", async () => {
       const wrapper = mount<SelectTimezone>(
         <GlobalAppContext.Provider value={globalProps}>
-          <SelectTimezone {...{ ...props, newAlert: jest.fn() }} />
+          <SelectTimezone {...props} />
         </GlobalAppContext.Provider>
       );
       await waitForComponentToPaint(wrapper);
@@ -82,29 +82,6 @@ describe("User settings", () => {
 
       // test that state is updated and success alert is displayed
       expect(wrapper.state("userTimezone")).toEqual("America/Denver");
-      expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
-      expect(instance.props.newAlert).toHaveBeenCalledWith(
-        "success",
-        "Your timezone has been saved.",
-        ""
-      );
-    });
-
-    it("calls newAlert", async () => {
-      const wrapper = mount<SelectTimezone>(
-        <SelectTimezone {...{ ...props, newAlert: jest.fn() }} />
-      );
-      await waitForComponentToPaint(wrapper);
-      const instance = wrapper.instance();
-
-      instance.handleError("error");
-
-      expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
-      expect(instance.props.newAlert).toHaveBeenCalledWith(
-        "danger",
-        "Error",
-        "error"
-      );
     });
   });
 });

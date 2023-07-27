@@ -38,16 +38,16 @@ SEARCH_USER_LIMIT = 10
 @crossdomain
 @ratelimit()
 def search_user():
+    """Search a ListenBrainz-registered user.
+
+    :param search_term: Input on which search operation is to be performed.
+    """
     search_term = request.args.get("search_term")
     if search_term:
         users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT)
     else:
         users = []
-    return jsonify(
-        {
-            'users': users
-            }
-            )
+    return jsonify({'users': users})
 
 
 @api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])

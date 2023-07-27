@@ -10,13 +10,11 @@ const userProps: UserReportsProps = {
   user: {
     name: "test_user",
   },
-  apiUrl: "foobar",
-  newAlert: (): any => {},
+  apiUrl: "foobar", 
 };
 
 const sitewideProps: UserReportsProps = {
   apiUrl: "foobar",
-  newAlert: (): any => {},
 };
 
 describe.each([

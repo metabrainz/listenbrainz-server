@@ -520,6 +520,5 @@
         "access_token": "access token",
         "permission": ["streaming", "user-read-email", "user-read-private"]
     },
-    "youtube": {"api_key": "fake-api-key"},
-    "initialAlerts": []
+    "youtube": {"api_key": "fake-api-key"}
 }

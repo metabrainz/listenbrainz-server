@@ -433,7 +433,7 @@ def _validate_get_endpoint_params() -> Tuple[int, int, int]:
         if max_ts < min_ts:
             log_raise_400("max_ts should be greater than min_ts")
 
-    # Validate requetsed listen count is positive
+    # Validate requested listen count is positive
     count = min(_parse_int_arg(
         "count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
     if count < 0:
