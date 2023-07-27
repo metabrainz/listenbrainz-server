@@ -6040,6 +6040,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
           },
         ]
       }
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -6310,7 +6311,9 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -6322,9 +6325,15 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>
@@ -16400,6 +16409,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
           },
         ]
       }
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -16670,7 +16680,9 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -16682,9 +16694,15 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>
@@ -23346,6 +23364,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
           },
         ]
       }
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -23616,7 +23635,9 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -23628,9 +23649,15 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>
@@ -30226,6 +30253,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
           },
         ]
       }
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -30496,7 +30524,9 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -30508,9 +30538,15 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>
@@ -31185,6 +31221,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
     <BrainzPlayer
       listenBrainzAPIBaseURI="http://localhost/1"
       listens={Array []}
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -31455,7 +31492,9 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -31467,9 +31506,15 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>
@@ -37949,6 +37994,7 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
           },
         ]
       }
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -38219,7 +38265,9 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -38231,9 +38279,15 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>
@@ -48317,6 +48371,7 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
           },
         ]
       }
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -48587,7 +48642,9 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -48599,9 +48656,15 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>
@@ -55271,6 +55334,7 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
           },
         ]
       }
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -55541,7 +55605,9 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -55553,9 +55619,15 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>
@@ -62159,6 +62231,7 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
           },
         ]
       }
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -62429,7 +62502,9 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -62441,9 +62516,15 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>
@@ -63126,6 +63207,7 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
     <BrainzPlayer
       listenBrainzAPIBaseURI="http://localhost/1"
       listens={Array []}
+      refreshSoundcloudToken={[Function]}
       refreshSpotifyToken={[Function]}
       refreshYoutubeToken={[Function]}
     >
@@ -63396,7 +63478,9 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                   onTrackInfoChange={[Function]}
                   onTrackNotFound={[Function]}
                   playerPaused={true}
+                  refreshSoundcloudToken={[Function]}
                   show={false}
+                  soundcloudUser={Object {}}
                 >
                   <div
                     className="soundcloud hidden"
@@ -63408,9 +63492,15 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                       id="soundcloud-iframe"
                       scrolling="no"
                       src="https://w.soundcloud.com/player/?auto_play=false"
+                      style={
+                        Object {
+                          "display": "none",
+                        }
+                      }
                       title="Soundcloud player"
                       width="100%"
                     />
+                    <div />
                   </div>
                 </SoundcloudPlayer>
               </div>

@@ -188,9 +188,10 @@ export default class BrainzPlayer extends React.Component<
     ) {
       this.invalidateDataSource(this.spotifyPlayer.current);
     }
-    if (!soundcloudAuth && this.soundcloudPlayer?.current) {
-      // eslint-disable-next-line no-console
-      console.log("SoundCloud Player invalidated");
+    if (
+      !SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
+      this.soundcloudPlayer?.current
+    ) {
       this.invalidateDataSource(this.soundcloudPlayer.current);
     }
   }

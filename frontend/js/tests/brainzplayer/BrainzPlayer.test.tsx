@@ -32,6 +32,10 @@ const spotifyAccountWithPermissions = {
   >,
 };
 
+const soundcloudPermissions = {
+  access_token: "ihavenotseenthefnords",
+};
+
 const GlobalContextMock = {
   context: {
     APIBaseURI: "base-uri",
@@ -91,12 +95,15 @@ describe("BrainzPlayer", () => {
       ...props,
     };
     const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />, {
-      context: { ...GlobalContextMock.context, spotifyUser: {} },
+      context: {
+        ...GlobalContextMock.context,
+        spotifyUser: {},
+        soundcloudUser: {},
+      },
     });
     const instance = wrapper.instance();
-    expect(instance.dataSources).toHaveLength(2);
+    expect(instance.dataSources).toHaveLength(1);
     expect(instance.dataSources[0].current).toBeInstanceOf(YoutubePlayer);
-    expect(instance.dataSources[1].current).toBeInstanceOf(SoundcloudPlayer);
   });
 
   it("creates a Spotify datasource when passed a spotify user with right permissions", () => {
@@ -150,7 +157,7 @@ describe("BrainzPlayer", () => {
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    expect(instance.dataSources[1].current).toBeInstanceOf(YoutubePlayer);
+    expect(instance.dataSources[2].current).toBeInstanceOf(YoutubePlayer);
     const youtubeListen: Listen = {
       listened_at: 0,
       track_metadata: {
@@ -165,7 +172,7 @@ describe("BrainzPlayer", () => {
     await act(() => {
       instance.playListen(youtubeListen);
     });
-    expect(instance.state.currentDataSourceIndex).toEqual(1);
+    expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
 
   it("selects Spotify as source when listen has listening_from = spotify", async () => {
@@ -242,13 +249,14 @@ describe("BrainzPlayer", () => {
         value={{
           ...GlobalContextMock.context,
           spotifyAuth: spotifyAccountWithPermissions,
+          soundcloudAuth: soundcloudPermissions,
         }}
       >
         <BrainzPlayer {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    expect(instance.dataSources[2].current).toBeInstanceOf(SoundcloudPlayer);
+    expect(instance.dataSources[1].current).toBeInstanceOf(SoundcloudPlayer);
     const soundcloudListen: Listen = {
       listened_at: 42,
       track_metadata: {
@@ -264,7 +272,7 @@ describe("BrainzPlayer", () => {
     await act(() => {
       instance.playListen(soundcloudListen);
     });
-    expect(instance.state.currentDataSourceIndex).toEqual(2);
+    expect(instance.state.currentDataSourceIndex).toEqual(1);
   });
 
   describe("stopOtherBrainzPlayers", () => {
@@ -588,6 +596,7 @@ describe("BrainzPlayer", () => {
     it("tries playing the current listen with the next datasource", async () => {
       const mockProps = {
         ...props,
+        soundcloudAuth: soundcloudPermissions,
       };
       const wrapper = mount<BrainzPlayer>(
         <BrainzPlayer {...mockProps} />,
@@ -602,7 +611,7 @@ describe("BrainzPlayer", () => {
       await act(async () => {
         instance.failedToPlayTrack();
       });
-      expect(instance.playNextTrack).not.toHaveBeenCalled();
+      expect(instance.playNextTrack).toHaveBeenCalled();
       expect(instance.playListen).toHaveBeenCalledWith(listen, 1);
     });
 

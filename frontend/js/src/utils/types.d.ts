@@ -210,6 +210,19 @@ declare type SpotifyPagingObject<T> = {
 // TODO: remove this any eventually
 declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
 
+declare type SoundCloudTrack = {
+  id: number;
+  permalink_url: string;
+  artwork_url: string;
+  title: string;
+  uri: string;
+  duration: number;
+  user: {
+    id: string;
+    username: string;
+  }
+};
+
 // Expect either a string or an Error or an html Response object
 declare type BrainzPlayerError =
   | string

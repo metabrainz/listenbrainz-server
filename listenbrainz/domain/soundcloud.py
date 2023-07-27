@@ -1,5 +1,5 @@
 import requests
-from flask import current_app, url_for
+from flask import current_app
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.brainz_service import BaseBrainzService

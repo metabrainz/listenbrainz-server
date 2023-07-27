@@ -1,14 +1,14 @@
 import * as React from "react";
 import * as _ from "lodash";
-import {isFinite, isUndefined} from "lodash";
+import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
-import {Rating} from "react-simple-star-rating";
+import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
 import NamePill from "../personal-recommendations/NamePill";
-import {GlobalAppContextT} from "./GlobalAppContext";
+import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
 import { ToastMsg } from "../notifications/Notifications";
 
@@ -134,12 +134,11 @@ const searchForYoutubeTrack = async (
 };
 
 const searchForSoundcloudTrack = async (
-  soundcloudToken?: string,
+  soundcloudToken: string,
   trackName?: string,
   artistName?: string,
   releaseName?: string
 ): Promise<string | null> => {
-  if (!soundcloudToken) return null;
   let query = trackName ?? "";
   if (artistName) {
     query += ` ${artistName}`;
@@ -169,23 +168,7 @@ const searchForSoundcloudTrack = async (
   if (!response.ok) {
     throw responseBody;
   }
-  const streamUrl = responseBody?.[0]?.stream_url;
-  if (!streamUrl) {
-    return null;
-  }
-
-  const response2 = await fetch(streamUrl, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `OAuth ${soundcloudToken}`,
-    },
-  });
-  const responseBody2 = await response2.json();
-  if (!response.ok) {
-    throw responseBody;
-  }
-  return responseBody2?.http_mp3_128_url;
+  return responseBody?.[0]?.uri ?? null;
 };
 
 const getAdditionalContent = (metadata: EventMetadata): string =>

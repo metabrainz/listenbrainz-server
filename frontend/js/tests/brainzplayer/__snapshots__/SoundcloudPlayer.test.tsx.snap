@@ -13,7 +13,13 @@ exports[`SoundcloudPlayer renders 1`] = `
   onTrackInfoChange={[Function]}
   onTrackNotFound={[Function]}
   playerPaused={false}
+  refreshSoundcloudToken={[Function]}
   show={true}
+  soundcloudUser={
+    Object {
+      "access_token": "heyo-soundcloud",
+    }
+  }
 >
   <div
     className="soundcloud "
@@ -25,9 +31,15 @@ exports[`SoundcloudPlayer renders 1`] = `
       id="soundcloud-iframe"
       scrolling="no"
       src="https://w.soundcloud.com/player/?auto_play=false"
+      style={
+        Object {
+          "display": "none",
+        }
+      }
       title="Soundcloud player"
       width="100%"
     />
+    <div />
   </div>
 </SoundcloudPlayer>
 `;
