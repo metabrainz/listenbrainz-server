@@ -1,5 +1,5 @@
 import React from "react";
-import { ArtistType } from "./ArtistLookup";
+import { ArtistType } from "./artistLookup";
 import SearchItem from "./SearchItem";
 import "./SearchBox.css";
 interface SearchDropdownProps {

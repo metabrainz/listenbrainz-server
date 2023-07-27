@@ -1,4 +1,4 @@
-import { throttle } from "lodash";
+import { throttle, debounce } from "lodash";
 type ArtistType = {
     name: string;
     id: string;
@@ -13,28 +13,21 @@ type ArtistLookupResponseType = {
     artists: Array<ArtistType>;
 }
 
-const ArtistLookup = throttle(async (searchQuery: string):  Promise<Array<ArtistType>>=> {
+const ArtistLookup = throttle(async (searchQuery: string)=> {
     var resultsArray: Array<ArtistType> = [];
-    const UNDEFINED_PROPERTY = "Unknown";
     const LOOKUP_URL = `https://musicbrainz.org/ws/2/artist/?query=artist:${searchQuery}&fmt=json`;
     var data: ArtistLookupResponseType;
     // Fetches the artists from the MusicBrainz API
     try {
         const response = await fetch(LOOKUP_URL);
-        data = await response.json();   
+        data = await response.json();
+        resultsArray = data.artists;
     }
     catch(error){
         alert(error);
-        // Do we need to return something here?
-        data = {
-            created: "",
-            count: 0,
-            offset: 0,
-            artists: []
-        };
+        
     }
-    return data.artists;
+    return resultsArray;
 }, 500);
-
 export default ArtistLookup;
 export type { ArtistType, ArtistLookupResponseType };
