@@ -15,12 +15,10 @@ const SearchBox = (props: SearchBoxProps) => {
     // State to store the search results (list of artists)
     const [searchResults, setSearchResults] = React.useState<Array<ArtistType>>([]);
     const [searchQuery, setSearchQuery] = React.useState<string>("");
-    const [similarArtistsLimit, setSimilarArtistsLimit] = React.useState<number>(props.currentsimilarArtistsLimit);
     // Delay before dropdown disappears to make sure user can click on it
     const dropdownDelay = 200;
     const limitInputElemenet = useRef<HTMLInputElement>(null);
-    const limit = useRef<number>(props.currentsimilarArtistsLimit);
-
+    
     // Lookup the artist based on the query
     const getArtists = async (): Promise<void> => {
         if(searchQuery.length && searchQuery.trim() !== ""){
@@ -37,16 +35,11 @@ const SearchBox = (props: SearchBoxProps) => {
     }, [searchQuery]);
     
     // Set similarArtistsLimit based on user input
-    const handlesimilarArtistsLimitChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        let limit = event.currentTarget.valueAsNumber;
-        props.onSimilarArtistsLimitChange(similarArtistsLimit);
+    const handlesimilarArtistsLimitChange = (): void => {
+        let limit = limitInputElemenet.current?.valueAsNumber;
+        if(limit)
+            props.onSimilarArtistsLimitChange(limit);
     }
-    // Set the artist and similarArtistsLimit based on user input
-    /*useEffect(() => {
-        props.onSimilarArtistsLimitChange(similarArtistsLimit);
-        //props.onArtistChange(artistMbid);
-        setSearchQuery("");
-    }, [similarArtistsLimit, artistMbid]);*/
 
     // Hide the dropdown when the user clicks outside of it
     const toggleDropdown = () => setTimeout(() => {
@@ -55,17 +48,13 @@ const SearchBox = (props: SearchBoxProps) => {
     }, dropdownDelay);
 
     const increment = () => {
-        setSimilarArtistsLimit(similarArtistsLimit + 1); 
+        limitInputElemenet.current?.stepUp();
+        // Trigger the onChange Event for the input number manually
+        limitInputElemenet.current?.dispatchEvent(new Event('change', {bubbles: true}));
     }
     const decrement = () => {
-        //let input = document.getElementById("graph-size-input-number") as HTMLInputElement;
-        //input.stepDown();
-        // Dispatch change event to trigger onChange, so the custom buttons also trigger the event
-        //input.dispatchEvent(new Event('change', { bubbles: true }));
-        //limit.current = limit.current - 1;
-        //setSimilarArtistsLimit(limit.current);
-        setSimilarArtistsLimit(similarArtistsLimit + 1);
-        //props.onSimilarArtistsLimitChange(input.valueAsNumber);
+        limitInputElemenet.current?.stepDown();
+        limitInputElemenet.current?.dispatchEvent(new Event('change', {bubbles: true}));
     }
     return (
         <form
@@ -129,7 +118,7 @@ const SearchBox = (props: SearchBoxProps) => {
             placeholder="Graph size" 
             min="1" max="25"  
             onChange={handlesimilarArtistsLimitChange} 
-            value={similarArtistsLimit}
+            defaultValue={props.currentsimilarArtistsLimit}
             ref={limitInputElemenet}
             required
             />
