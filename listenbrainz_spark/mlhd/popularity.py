@@ -8,7 +8,7 @@ from listenbrainz_spark.stats import run_query
 STATS_PER_MESSAGE = 10000
 
 
-def generate(name, query):
+def generate_popularity_stats(name, query):
     """ Execute the given query and generate statistics. """
     df = run_query(query)
     df\
@@ -91,5 +91,5 @@ def main():
     }
 
     for name, query in queries.items():
-        for message in generate(name, query):
+        for message in generate_popularity_stats(name, query):
             yield message

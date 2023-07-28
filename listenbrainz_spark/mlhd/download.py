@@ -16,7 +16,7 @@ from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.hdfs import upload_to_HDFS, delete_dir
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import read_files_from_HDFS
+
 
 logger = logging.getLogger(__name__)
 
