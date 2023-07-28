@@ -6,6 +6,7 @@ interface SearchDropdownProps {
     searchResults: Array<ArtistType>;
     onArtistChange: (artist: string) => void;
     id: string;
+    onDropdownChange: (openDropdown: boolean) => void;
 }
 
 const SearchDropdown = (props: SearchDropdownProps) => {
@@ -19,6 +20,7 @@ const SearchDropdown = (props: SearchDropdownProps) => {
                     artist={artist} 
                     key={index} 
                     onArtistChange={props.onArtistChange}
+                    onDropdownChange={props.onDropdownChange}
                     />
                 );
             }

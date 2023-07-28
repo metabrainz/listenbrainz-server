@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import SearchDropdown from "./SearchDropdown";
 import artistLookup from "./artistLookup";
 import { ArtistType } from "./artistLookup";
@@ -15,16 +15,18 @@ const SearchBox = (props: SearchBoxProps) => {
     // State to store the search results (list of artists)
     const [searchResults, setSearchResults] = React.useState<Array<ArtistType>>([]);
     const [searchQuery, setSearchQuery] = React.useState<string>("");
-    // Delay before dropdown disappears to make sure user can click on it
-    const [similarArtistsLimit, setSimilarArtistsLimit] = React.useState<number>(props.currentsimilarArtistsLimit);
-    const dropdownDelay = 200;
-    const limitInputElemenet = useRef<HTMLInputElement>(null);
+    // State to toggle the dropdown menu for search
+    const [openDropdown, setOpenDropdown] = useState(false);
 
     // Lookup the artist based on the query
     const getArtists = async (): Promise<void> => {
         if(searchQuery.length && searchQuery.trim() !== ""){
             const results = await artistLookup(searchQuery);
             setSearchResults(results ?? []);
+            // Open the dropdown if any results exist
+            if(searchResults.length) {
+                setOpenDropdown(true);
+            }
         }
         else{
             setSearchResults([]);
@@ -35,33 +37,10 @@ const SearchBox = (props: SearchBoxProps) => {
         getArtists();
     }, [searchQuery]);
     
-    // Set similarArtistsLimit based on user input
-    /*const handlesimilarArtistsLimitChange = (): void => {
-        let limit = limitInputElemenet.current?.valueAsNumber;
-        if(limit)
-            props.onSimilarArtistsLimitChange(limit);
-    }*/
-
-    //useEffect(handlesimilarArtistsLimitChange, [similarArtistsLimit]);
-
-    // Hide the dropdown when the user clicks outside of it
-    const toggleDropdown = () => setTimeout(() => {
-        const dropdown = document.getElementById("search-dropdown");
-        dropdown?.style.display === "flex" ? dropdown.style.display = "none" : dropdown!.style.display = "flex";
-    }, dropdownDelay);
-
     const increment = () => {
-        // Increase the limit value
-        //limitInputElemenet.current?.stepUp();
-        // Trigger the onChange Event for the input number manually
-        //limitInputElemenet.current?.dispatchEvent(new Event('change', {bubbles: true}));
-        //setSimilarArtistsLimit(similarArtistsLimit + 1);
         props.onSimilarArtistsLimitChange(props.currentsimilarArtistsLimit + 1);
     }
     const decrement = () => {
-        //limitInputElemenet.current?.stepDown();
-        //limitInputElemenet.current?.dispatchEvent(new Event('change', {bubbles: true}));
-        //setSimilarArtistsLimit(similarArtistsLimit - 1);
         props.onSimilarArtistsLimitChange(props.currentsimilarArtistsLimit - 1);
     }
     return (
@@ -71,8 +50,6 @@ const SearchBox = (props: SearchBoxProps) => {
         >
             <div
             className="artist-input"
-            onFocus={toggleDropdown}
-            onBlur={toggleDropdown}
             >
                 <div
                 className="artist-input-box"
@@ -95,11 +72,14 @@ const SearchBox = (props: SearchBoxProps) => {
                         />   
                     </button>
                 </div>
-                <SearchDropdown 
-                searchResults={searchResults} 
-                onArtistChange={props.onArtistChange} 
-                id={"search-dropdown"}
-                />
+                {openDropdown && (
+                    <SearchDropdown 
+                    searchResults={searchResults} 
+                    onArtistChange={props.onArtistChange}
+                    onDropdownChange={setOpenDropdown} 
+                    id={"search-dropdown"}
+                    />)
+                }
             </div>
             <div
             className="graph-size-input"
@@ -123,11 +103,9 @@ const SearchBox = (props: SearchBoxProps) => {
             id="graph-size-input-number" 
             type="number" 
             name="similarArtistsLimit" 
-            placeholder="Graph size" 
-            min="1" max="25"  
+            placeholder="Graph size"   
             onChange={e => props.onSimilarArtistsLimitChange(e.target.valueAsNumber)} 
-            defaultValue={props.currentsimilarArtistsLimit}
-            ref={limitInputElemenet}
+            value={props.currentsimilarArtistsLimit}
             required
             />
             <span 
