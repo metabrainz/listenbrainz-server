@@ -13,7 +13,7 @@ type ArtistLookupResponseType = {
     artists: Array<ArtistType>;
 }
 
-const ArtistLookup = throttle(async (searchQuery: string)=> {
+const artistLookup = throttle(async (searchQuery: string)=> {
     var resultsArray: Array<ArtistType> = [];
     const LOOKUP_URL = `https://musicbrainz.org/ws/2/artist/?query=artist:${searchQuery}&fmt=json`;
     var data: ArtistLookupResponseType;
@@ -29,5 +29,5 @@ const ArtistLookup = throttle(async (searchQuery: string)=> {
     }
     return resultsArray;
 }, 500);
-export default ArtistLookup;
+export default artistLookup;
 export type { ArtistType, ArtistLookupResponseType };
