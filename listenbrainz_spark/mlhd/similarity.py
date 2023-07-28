@@ -10,7 +10,6 @@ DEFAULT_TRACK_LENGTH = 180
 
 
 def build_partial_sessioned_index(listen_table, metadata_table, session, max_contribution, skip_threshold):
-    # TODO: Handle case of unmatched recordings breaking sessions!
     return f"""
             WITH listens AS (
                  SELECT user_id
