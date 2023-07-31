@@ -1,14 +1,16 @@
+from enum import Enum
 from typing import Union, Optional
 from uuid import UUID
 
 import psycopg2
 import psycopg2.extras
-from datasethoster import Query, QueryOutputLine, RequestSource
+from datasethoster import Query
 from flask import current_app
 from markupsafe import Markup
 from pydantic import BaseModel, Field
+from sqlalchemy import text
 
-from listenbrainz.db import similarity
+from listenbrainz.db import similarity, timescale
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 
 
@@ -33,6 +35,21 @@ class SimilarRecordingsViewerOutputItem(BaseModel):
 SimilarRecordingsViewerOutput = Union[QueryOutputLine, SimilarRecordingsViewerOutputItem]
 
 
+class SimilarRecordingsViewerOutputItem(BaseModel):
+    artist_credit_name: Optional[str]
+    recording_name: Optional[str]
+    artist_credit_id: Optional[int]
+    artist_credit_mbids: Optional[list[UUID]]
+    recording_mbid: Optional[UUID]
+
+
+class SimilarRecordingsViewerOutputComment(BaseModel):
+    comment: str
+
+
+SimilarRecordingsViewerOutput = Union[SimilarRecordingsViewerOutputComment, SimilarRecordingsViewerOutputItem]
+
+
 class SimilarRecordingsViewerQuery(Query):
     """ Display similar recordings calculated using a given algorithm """
 
@@ -43,6 +60,19 @@ class SimilarRecordingsViewerQuery(Query):
         return "similar-recordings", "Similar Recordings Viewer"
 
     def inputs(self):
+        with timescale.engine.begin() as conn:
+            result = conn.execute(text("""
+                select distinct jsonb_object_keys(metadata) as algorithm
+                  from similarity.recording_dev
+            """))
+            choices = {r.algorithm: r.algorithm for r in result}
+
+        AlgorithmEnum = Enum("AlgorithmEnum", choices)
+
+        class SimilarRecordingsViewerInput(BaseModel):
+            recording_mbids: list[UUID]
+            algorithm: AlgorithmEnum
+
         return SimilarRecordingsViewerInput
 
     def introduction(self):
