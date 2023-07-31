@@ -6,8 +6,10 @@ export type GlobalAppContextT = {
   currentUser: ListenBrainzUser;
   spotifyAuth?: SpotifyUser;
   youtubeAuth?: YoutubeUser;
-  critiquebrainzAuth?: CritiqueBrainzUser;
+  critiquebrainzAuth?: MetaBrainzProjectUser;
+  musicbrainzAuth?: MetaBrainzProjectUser;
   userPreferences?: UserPreferences;
+  musicbrainzGenres?: string[];
 };
 
 const GlobalAppContext = createContext<GlobalAppContextT>({
@@ -16,7 +18,9 @@ const GlobalAppContext = createContext<GlobalAppContextT>({
   spotifyAuth: {},
   youtubeAuth: {},
   critiquebrainzAuth: {},
+  musicbrainzAuth: {},
   userPreferences: {},
+  musicbrainzGenres: [],
 });
 
 export default GlobalAppContext;

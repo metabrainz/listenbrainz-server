@@ -425,7 +425,8 @@ type GlobalAppProps = {
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
-  critiquebrainz?: CritiqueBrainzUser;
+  critiquebrainz?: MetaBrainzProjectUser;
+  musicbrainz?: MetaBrainzProjectUser;
   user_preferences?: UserPreferences;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
@@ -469,6 +470,7 @@ const getPageProps = (): {
       spotify,
       youtube,
       critiquebrainz,
+      musicbrainz,
       sentry_traces_sample_rate,
       sentry_dsn,
     } = globalReactProps;
@@ -493,6 +495,7 @@ const getPageProps = (): {
       spotifyAuth: spotify,
       youtubeAuth: youtube,
       critiquebrainzAuth: critiquebrainz,
+      musicbrainzAuth: musicbrainz,
       userPreferences: user_preferences,
     };
     sentryProps = {
