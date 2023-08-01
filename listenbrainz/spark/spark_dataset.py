@@ -121,7 +121,7 @@ class DatabaseDataset(SparkDataset, ABC):
         Each item in the list should be a CREATE INDEX statement with a {suffix} and {table} marker that will be later
         formatted by the caller.
         """
-        raise NotImplementedError()
+        return []
 
     @abc.abstractmethod
     def get_inserts(self, message):
