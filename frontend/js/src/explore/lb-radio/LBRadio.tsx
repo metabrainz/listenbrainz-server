@@ -62,7 +62,7 @@ function Prompt(props: PromptProps) {
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
       const promptText = formData.get("prompt")!;
-      //        onGenerate(promptText);
+      onGenerate(promptText);
     },
     [prompt, onGenerate]
   );
