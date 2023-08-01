@@ -62,7 +62,7 @@ function Prompt(props: PromptProps) {
       (event: React.FormEvent) => {
         console.log(event); 
         event.preventDefault(); 
-        const form = event.target;
+        const form = event.currentTarget;
         const formData = new FormData(form);
         const prompt = formData.get("prompt");
         onGenerate(prompt);
@@ -89,7 +89,7 @@ function Prompt(props: PromptProps) {
 }
 
 function LBRadio() {
-  const [jspfPlaylist, setJspfPlaylist] = React.useState({});
+  const [jspfPlaylist, setJspfPlaylist] = React.useState("");
   const [feedback, setFeedback] = React.useState([]);
   
   const generatePlaylistCallback = React.useCallback(
