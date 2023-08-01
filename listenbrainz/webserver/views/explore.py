@@ -69,3 +69,9 @@ def ai_brainz():
     """ Explore your love of Rick """
 
     return render_template("explore/ai-brainz.html")
+
+@explore_bp.route("/lb-radio/")
+def lb_radio():
+    """ LB Radio view """
+
+    return render_template("explore/lb-radio.html")

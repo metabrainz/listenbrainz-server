@@ -163,4 +163,4 @@ def lb_radio():
     jspf = playlist.get_jspf()
     feedback = patch.user_feedback()
 
-    return jsonify({"payload": {"jspf": jspf}, "feedback": feedback})
+    return jsonify({"payload": {"jspf": jspf, "feedback": feedback}})
