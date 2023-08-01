@@ -91,5 +91,7 @@ def main():
     }
 
     for name, query in queries.items():
+        yield {"type": f"{name}_start"}
         for message in generate_popularity_stats(name, query):
             yield message
+        yield {"type": f"{name}_end"}

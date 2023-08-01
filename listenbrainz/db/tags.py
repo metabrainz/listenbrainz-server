@@ -1,91 +1,46 @@
-import time
-
-from psycopg2.extras import execute_values
-from psycopg2.sql import Literal, SQL, Identifier
+from psycopg2.sql import Literal, SQL
 from sqlalchemy import text
 
 from listenbrainz.db import timescale
+from listenbrainz.spark.spark_dataset import DatabaseDataset
 
 
-def start_table():
-    """ Create the table to store tags dataset.
+class _TagsDataset(DatabaseDataset):
 
-    When we start receiving the tags data, we create a temporary table to store the data. Once
-    the dataset has been received completely, we switch the temporary table with the production tables.
-    We do not use something like INSERT ON CONFLICT DO NOTHING to avoid mixups the last runs' results
-    (like tags being deleted since then).
-    """
-    table = Identifier("tags", "lb_tag_radio_tmp")
-    conn = timescale.engine.raw_connection()
-    try:
-        with conn.cursor() as curs:
-            query = SQL("DROP TABLE IF EXISTS {table}").format(table=table)
-            curs.execute(query)
+    def __init__(self):
+        super().__init__("tags_dataset", "lb_tag_radio", schema="tags")
 
-            query = SQL("""
-                CREATE TABLE {table} (
+    def get_table(self):
+        return """
+            CREATE TABLE {table} (
                     tag                     TEXT NOT NULL,
                     recording_mbid          UUID NOT NULL,
                     tag_count               INTEGER NOT NULL,
                     percent                 DOUBLE PRECISION NOT NULL,
                     source                  tag_source_type_enum NOT NULL
-                );
-            """).format(table=table)
-            curs.execute(query)
+            )
+        """
 
-        conn.commit()
-    finally:
-        conn.close()
+    def get_indices(self):
+        return [
+            """CREATE INDEX tags_lb_tag_radio_percent_idx_{suffix} ON {table} (tag, percent)
+                    INCLUDE (source, recording_mbid, tag_count)
+            """
+        ]
 
+    def get_inserts(self, message):
+        query = "INSERT INTO {table} (recording_mbid, tag, tag_count, percent, source) VALUES %s"
 
-def end_table():
-    """ Switch the temporary production table in production. """
-    incoming_table = Identifier("tags", "lb_tag_radio_tmp")
-    # add a random suffix to the index name to avoid issues while renaming
-    suffix = int(time.time())
+        template = SQL("(%s, %s, %s, %s, {source})").format(source=Literal(message["source"]))
+        values = []
+        for rec in message["recordings"]:
+            tags = [(rec["recording_mbid"], tag["tag"], tag["tag_count"], tag["_percent"]) for tag in rec["tags"]]
+            values.extend(tags)
 
-    conn = timescale.engine.raw_connection()
-    try:
-        with conn.cursor() as curs:
-            query = SQL("""
-                CREATE INDEX tags_lb_tag_radio_percent_idx_{suffix} ON {table} (tag, percent)
-                     INCLUDE (source, recording_mbid, tag_count)
-             """).format(table=incoming_table, suffix=Literal(suffix))
-            curs.execute(query)
-
-            # rotate tables
-            query = SQL("""
-                ALTER TABLE IF EXISTS {prod_table} RENAME TO {outgoing_table}
-             """).format(prod_table=Identifier("tags", "lb_tag_radio"), outgoing_table=Identifier("lb_tag_radio_old"))
-            curs.execute(query)
-            query = SQL("""
-                ALTER TABLE IF EXISTS {incoming_table} RENAME TO {prod_table}
-             """).format(incoming_table=Identifier("tags", "lb_tag_radio_tmp"), prod_table=Identifier("lb_tag_radio"))
-            curs.execute(query)
-            query = SQL("""DROP TABLE IF EXISTS {old_table}""").format(old_table=Identifier("tags", "lb_tag_radio_old"))
-            curs.execute(query)
-        conn.commit()
-    finally:
-        conn.close()
+        return query, template, values
 
 
-def insert(source, recordings):
-    """ Insert the given recording and their tags data for a given source """
-    values = []
-    for rec in recordings:
-        tags = [(rec["recording_mbid"], tag["tag"], tag["tag_count"], tag["_percent"]) for tag in rec["tags"]]
-        values.extend(tags)
-
-    query = "INSERT INTO tags.lb_tag_radio_tmp (recording_mbid, tag, tag_count, percent, source) VALUES %s"
-
-    template = SQL("(%s, %s, %s, %s, {source})").format(source=Literal(source))
-    conn = timescale.engine.raw_connection()
-    try:
-        with conn.cursor() as curs:
-            execute_values(curs, query, values, template)
-        conn.commit()
-    finally:
-        conn.close()
+TagsDataset = _TagsDataset()
 
 
 def get_once(connection, query, count_query, params, results, counts):
