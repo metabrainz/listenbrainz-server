@@ -35,7 +35,7 @@ function UserFeedback(props: UserFeedbackProps) {
       <div className="feedback-header">Prompt feedback:</div>
       <ul>
         {feedback.map((item: string) => {
-          return <li>{`${item}`}</li>;
+          return <li key={`${item}`}>{`${item}`}</li>;
         })}
       </ul>
     </div>
@@ -45,13 +45,13 @@ function UserFeedback(props: UserFeedbackProps) {
 function Playlist(props: PlaylistProps) {
   const { playlist } = props;
   console.log("begin playlist ", playlist);
-  if (!playlist?.playlist?.track?.length) {
+  if (!playlist?.track?.length) {
     console.log("playist is empty");
     return null;
   }
   return (
     <div>
-      {playlist.playlist.track.map((track: JSPFTrack, index) => {
+      {playlist.track.map((track: JSPFTrack, index) => {
         return (
           <PlaylistItemCard
             key={`${track.id}-${index.toString()}`}
@@ -117,7 +117,7 @@ function Prompt(props: PromptProps) {
 }
 
 function LBRadio() {
-  const [jspfPlaylist, setJspfPlaylist] = React.useState();
+  const [jspfPlaylist, setJspfPlaylist] = React.useState<JSPFObject>();
   const [feedback, setFeedback] = React.useState([]);
 
   const { APIService } = React.useContext(GlobalAppContext);
@@ -145,7 +145,7 @@ function LBRadio() {
       <div className="col-sm-12">
         <Prompt onGenerate={generatePlaylistCallback} />
         <UserFeedback feedback={feedback} />
-        <Playlist playlist={jspfPlaylist} />
+        <Playlist playlist={jspfPlaylist?.playlist} />
       </div>
     </div>
   );
