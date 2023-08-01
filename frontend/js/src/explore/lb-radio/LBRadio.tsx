@@ -9,13 +9,14 @@ import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
+import PlaylistItemCard from "../../playlists/PlaylistItemCard";
 
 // import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 // import ListenCard from "../../listens/ListenCard";
 // import Card from "../../components/Card";
 
 type PromptProps = {
-  onGenerate: (prompt: string) => void;
+  onGenerate: (prompt: string, mode: string) => void;
 };
 
 type UserFeedbackProps = {
@@ -23,7 +24,7 @@ type UserFeedbackProps = {
 };
 
 type PlaylistProps = {
-  playlist: string;
+  playlist?: JSPFPlaylist;
 };
 
 function UserFeedback(props: UserFeedbackProps) {
@@ -33,9 +34,9 @@ function UserFeedback(props: UserFeedbackProps) {
     <div className="feedback">
       <div className="feedback-header">Prompt feedback:</div>
       <ul>
-        <li>Feedback #1</li>
-        <li>Feedback #2</li>
-        <li>Feedback #3</li>
+        {feedback.map((item: string) => {
+          return <li>{`${item}`}</li>;
+        })}
       </ul>
     </div>
   );
@@ -43,11 +44,24 @@ function UserFeedback(props: UserFeedbackProps) {
 
 function Playlist(props: PlaylistProps) {
   const { playlist } = props;
+  console.log("begin playlist ", playlist);
+  if (!playlist?.playlist?.track?.length) {
+    console.log("playist is empty");
+    return null;
+  }
   return (
     <div>
-      <div>Playlist item #1</div>
-      <div>Playlist item #2</div>
-      <div>Playlist item #3</div>
+      {playlist.playlist.track.map((track: JSPFTrack, index) => {
+        return (
+          <PlaylistItemCard
+            key={`${track.id}-${index.toString()}`}
+            canEdit={false}
+            track={track}
+            currentFeedback={0}
+            updateFeedbackCallback={() => {}}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -55,14 +69,15 @@ function Playlist(props: PlaylistProps) {
 function Prompt(props: PromptProps) {
   const { onGenerate } = props;
   const [prompt, setPrompt] = useState<string>();
+  const [mode, setMode] = useState<string>();
 
   const callbackFunction = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
-      console.log(event);
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
-      const promptText = formData.get("prompt")!;
-      onGenerate(promptText);
+      const promptText = formData.get("prompt");
+      const modeText = formData.get("mode");
+      onGenerate((promptText as any) as string, (modeText as any) as string);
     },
     [prompt, onGenerate]
   );
@@ -72,39 +87,25 @@ function Prompt(props: PromptProps) {
       <div>
         <h3>ListenBrainz Radio playlist generator</h3>
       </div>
-      <form className="form form-inline" onSubmit={callbackFunction}>
-        <input
-          type="text"
-          className="prompt-text form-control form-control-lg"
-          id="prompt-input"
-          placeholder="Enter prompt..."
-        />
-        <div className="dropdown">
-          <button
-            className="btn btn-lg btn-secondary dropdown-toggle"
-            type="button"
-            id="mode-dropdown"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-          >
-            Mode
-          </button>
-          <div className="dropdown-menu" aria-labelledby="mode-dropdown">
-            <a className="dropdown-item" href="#">
-              Easy
-            </a>
-            <a className="dropdown-item" href="#">
-              Medium
-            </a>
-            <a className="dropdown-item" href="#">
-              Hard
-            </a>
-          </div>
+      <form onSubmit={callbackFunction}>
+        <div className="input-group input-group-flex" id="prompt-input">
+          <input
+            type="text"
+            className="form-control form-control-lg"
+            name="prompt"
+            placeholder="Enter prompt..."
+          />
+          <select className="form-control" name="mode">
+            <option>easy</option>
+            <option>medium</option>
+            <option>hard</option>
+          </select>
+          <span className="input-group-btn">
+            <button type="submit" className="btn btn-primary">
+              Generate
+            </button>
+          </span>
         </div>
-        <button type="submit" className="btn btn-lg btn-primary">
-          Generate
-        </button>
       </form>
       <div className="">
         <a href="https://troi.readthedocs.io/en/lb-radio/lb_radio.html">
@@ -116,21 +117,21 @@ function Prompt(props: PromptProps) {
 }
 
 function LBRadio() {
-  const [jspfPlaylist, setJspfPlaylist] = React.useState("");
+  const [jspfPlaylist, setJspfPlaylist] = React.useState();
   const [feedback, setFeedback] = React.useState([]);
 
+  const { APIService } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
-    async (prompt: string) => {
-      console.log("hi mom! ", prompt);
+    async (prompt: string, mode: string) => {
       try {
         const request = await fetch(
-          `https://api-test.listenbrainz.org/1/explore/lb-radio?prompt=${prompt}&mode=easy`
+          `${APIService.APIBaseURI}/explore/lb-radio?prompt=${prompt}&mode=${mode}`
         );
         if (request.ok) {
-          const payload = await request.json();
-          console.log(payload.feedback);
-          setJspfPlaylist(payload.jspf);
-          setFeedback(payload.feedback);
+          const body = await request.json();
+          console.log(body.payload.jspf);
+          setJspfPlaylist(body.payload.jspf);
+          setFeedback(body.payload.feedback);
         }
       } catch (error) {
         console.log(error);

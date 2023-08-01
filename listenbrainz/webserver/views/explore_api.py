@@ -158,7 +158,7 @@ def lb_radio():
     try:
         playlist = generate_playlist(patch, args={"mode": mode, "prompt": prompt})
     except RuntimeError as err:
-        raise APIInternalServerError(f"LB Radio generation failed: {err}")
+        raise APIBadRequest(f"LB Radio generation failed: {err}")
 
     jspf = playlist.get_jspf()
     feedback = patch.user_feedback()
