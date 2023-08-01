@@ -3,6 +3,7 @@
 import { createRoot } from "react-dom/client";
 import * as React from "react";
 import NiceModal from "@ebay/nice-modal-react";
+import { useState } from "react";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -13,7 +14,19 @@ import { getPageProps } from "../../utils/utils";
 //import ListenCard from "../../listens/ListenCard";
 //import Card from "../../components/Card";
 
-function UserFeedback(props) {
+type PromptProps ={
+    onGenerate: (prompt:string) => void;
+};
+
+type UserFeedbackProps = {
+    feedback: string[];
+};
+
+type PlaylistProps = {
+    playlist: string;
+};
+
+function UserFeedback(props: UserFeedbackProps) {
     const { feedback } = props;
 
     return (
@@ -30,7 +43,7 @@ function UserFeedback(props) {
     );
 }
 
-function Playlist(props) {
+function Playlist(props: PlaylistProps) {
     const { playlist } = props;
     return (
       <div>
@@ -41,19 +54,19 @@ function Playlist(props) {
     );
 }
 
-function Prompt(props) {
+function Prompt(props: PromptProps) {
     const { onGenerate } = props;
+    const [prompt, setPrompt] = useState<string>();
    
-    const callbackFunction = React.useCallback((event: React.FormEvent) => {
-      console.log(event); 
-      event.preventDefault(); 
-      
-      const form = event.target;
-      const formData = new FormData(form);
-      const prompt = formData.get("prompt");
-      
-      onGenerate(prompt);
-    }, [ onGenerate ]);
+    const callbackFunction = React.useCallback(
+      (event: React.FormEvent) => {
+        console.log(event); 
+        event.preventDefault(); 
+        const form = event.target;
+        const formData = new FormData(form);
+        const prompt = formData.get("prompt");
+        onGenerate(prompt);
+    }, [ prompt, onGenerate ]);
  
     return (
         <div className="prompt">
@@ -80,7 +93,7 @@ function LBRadio() {
   const [feedback, setFeedback] = React.useState([]);
   
   const generatePlaylistCallback = React.useCallback(
-        async (prompt) => { 
+        async (prompt:string) => { 
           console.log("hi mom! ",prompt)
           try {
             const request = await fetch(`https://api-test.listenbrainz.org/1/explore/lb-radio?prompt=${prompt}&mode=easy`);
