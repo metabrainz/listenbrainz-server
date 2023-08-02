@@ -33,7 +33,7 @@ class _TagsDataset(DatabaseDataset):
 
         template = SQL("(%s, %s, %s, %s, {source})").format(source=Literal(message["source"]))
         values = []
-        for rec in message["recordings"]:
+        for rec in message["data"]:
             tags = [(rec["recording_mbid"], tag["tag"], tag["tag_count"], tag["_percent"]) for tag in rec["tags"]]
             values.extend(tags)
 

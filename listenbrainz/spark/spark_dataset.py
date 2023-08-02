@@ -100,7 +100,7 @@ class DatabaseDataset(SparkDataset, ABC):
         if suffix is None:
             table_name = self.base_table_name
         else:
-            table_name = f"{self.base_table_name}_tmp"
+            table_name = f"{self.base_table_name}_{suffix}"
 
         if self.schema is None or exclude_schema:
             return Identifier(table_name)
@@ -192,8 +192,10 @@ class DatabaseDataset(SparkDataset, ABC):
     def handle_insert(self, message):
         query, template, values = self.get_inserts(message)
         tmp_table = self._get_table_name("tmp")
-        query = SQL(query).format(tmp_table)
-        template = SQL(template)
+        query = SQL(query).format(table=tmp_table)
+
+        if isinstance(template, str):
+            template = SQL(template)
 
         conn = timescale.engine.raw_connection()
         try:
