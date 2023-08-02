@@ -61,13 +61,25 @@
 }
 
 #prompt-input {
-    select { flex: 1; };
-    input { flex: 4; };
-    span { flex: 0; };
+  select { flex: 1; };
+  input { flex: 4; };
+  span { flex: 0; };
+  @media (min-width: 600px) {
+    width: 100%;
+  }
+  @media (min-width: 900px) {
+    width: 80%;
+  }
 }
 
 #mode-dropdown {
-  margin-right: 25px;
+  margin: 0 15px 0 15px;
+  @media (min-width: 600px) {
+    width: 20%;
+  }
+  @media (min-width: 900px) {
+    width: 30%;
+  }
 }
 
 #form-control {
@@ -80,6 +92,6 @@
 }
 
 .feedback {
-    color: #777;
-    margin-top: 20px;
+    color: #444;
+    margin: 20px 0 30px 0;
 }

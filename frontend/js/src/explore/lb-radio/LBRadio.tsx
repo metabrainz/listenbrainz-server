@@ -11,10 +11,6 @@ import GlobalAppContext, {
 import { getPageProps } from "../../utils/utils";
 import PlaylistItemCard from "../../playlists/PlaylistItemCard";
 
-// import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
-// import ListenCard from "../../listens/ListenCard";
-// import Card from "../../components/Card";
-
 type PromptProps = {
   onGenerate: (prompt: string, mode: string) => void;
 };
@@ -30,9 +26,13 @@ type PlaylistProps = {
 function UserFeedback(props: UserFeedbackProps) {
   const { feedback } = props;
 
+  if (feedback.length == 0) {
+    return <div className="feedback" />;
+  }
+
   return (
     <div className="feedback">
-      <div className="feedback-header">Prompt feedback:</div>
+      <div className="feedback-header">Query feedback:</div>
       <ul>
         {feedback.map((item: string) => {
           return <li key={`${item}`}>{`${item}`}</li>;
@@ -95,7 +95,7 @@ function Prompt(props: PromptProps) {
             name="prompt"
             placeholder="Enter prompt..."
           />
-          <select className="form-control" name="mode">
+          <select className="form-control" id="mode-dropdown" name="mode">
             <option>easy</option>
             <option>medium</option>
             <option>hard</option>
