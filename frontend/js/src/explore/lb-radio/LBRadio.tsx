@@ -10,6 +10,7 @@ import GlobalAppContext, {
 } from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
 import PlaylistItemCard from "../../playlists/PlaylistItemCard";
+import Loader from "../../components/Loader";
 
 type PromptProps = {
   onGenerate: (prompt: string, mode: string) => void;
@@ -26,7 +27,7 @@ type PlaylistProps = {
 function UserFeedback(props: UserFeedbackProps) {
   const { feedback } = props;
 
-  if (feedback.length == 0) {
+  if (feedback.length === 0) {
     return <div className="feedback" />;
   }
 
@@ -68,18 +69,25 @@ function Playlist(props: PlaylistProps) {
 
 function Prompt(props: PromptProps) {
   const { onGenerate } = props;
-  const [prompt, setPrompt] = useState<string>();
+  const [prompt, setPrompt] = useState<string>("");
   const [mode, setMode] = useState<string>();
 
   const callbackFunction = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
-      const promptText = formData.get("prompt");
       const modeText = formData.get("mode");
-      onGenerate((promptText as any) as string, (modeText as any) as string);
+      onGenerate(prompt, (modeText as any) as string);
     },
     [prompt, onGenerate]
+  );
+
+  const onInputChangeCallback = React.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const text = event.target.value;
+      setPrompt(text);
+    },
+    []
   );
 
   return (
@@ -94,6 +102,7 @@ function Prompt(props: PromptProps) {
             className="form-control form-control-lg"
             name="prompt"
             placeholder="Enter prompt..."
+            onChange={onInputChangeCallback}
           />
           <select className="form-control" id="mode-dropdown" name="mode">
             <option>easy</option>
@@ -101,7 +110,11 @@ function Prompt(props: PromptProps) {
             <option>hard</option>
           </select>
           <span className="input-group-btn">
-            <button type="submit" className="btn btn-primary">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={prompt?.length <= 3}
+            >
               Generate
             </button>
           </span>
@@ -119,10 +132,12 @@ function Prompt(props: PromptProps) {
 function LBRadio() {
   const [jspfPlaylist, setJspfPlaylist] = React.useState<JSPFObject>();
   const [feedback, setFeedback] = React.useState([]);
+  const [isLoading, setLoading] = React.useState(false);
 
   const { APIService } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
     async (prompt: string, mode: string) => {
+      setLoading(true);
       try {
         const request = await fetch(
           `${APIService.APIBaseURI}/explore/lb-radio?prompt=${prompt}&mode=${mode}`
@@ -136,6 +151,7 @@ function LBRadio() {
       } catch (error) {
         console.log(error);
       }
+      setLoading(false);
     },
     [setJspfPlaylist, setFeedback]
   );
@@ -144,8 +160,10 @@ function LBRadio() {
     <div className="row">
       <div className="col-sm-12">
         <Prompt onGenerate={generatePlaylistCallback} />
-        <UserFeedback feedback={feedback} />
-        <Playlist playlist={jspfPlaylist?.playlist} />
+        <Loader isLoading={isLoading} loaderText="Generating playlist…">
+          <UserFeedback feedback={feedback} />
+          <Playlist playlist={jspfPlaylist?.playlist} />
+        </Loader>
       </div>
     </div>
   );
