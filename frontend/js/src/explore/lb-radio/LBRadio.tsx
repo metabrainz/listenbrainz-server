@@ -71,15 +71,17 @@ function Prompt(props: PromptProps) {
   const { onGenerate } = props;
   const [prompt, setPrompt] = useState<string>("");
   const [mode, setMode] = useState<string>();
+  const [hideExamples, setHideExamples] = React.useState(false);
 
   const callbackFunction = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
       const modeText = formData.get("mode");
+      setHideExamples(true);
       onGenerate(prompt, (modeText as any) as string);
     },
-    [prompt, onGenerate]
+    [prompt, onGenerate, hideExamples]
   );
 
   const onInputChangeCallback = React.useCallback(
@@ -93,7 +95,17 @@ function Prompt(props: PromptProps) {
   return (
     <div className="prompt">
       <div>
-        <h3>ListenBrainz Radio playlist generator</h3>
+        <h3>
+          ListenBrainz Radio playlist generator
+          <small>
+            <a
+              id="doc-link"
+              href="https://troi.readthedocs.io/en/add-user-stats-entity/lb_radio.html"
+            >
+              How do I write a query?
+            </a>
+          </small>
+        </h3>
       </div>
       <form onSubmit={callbackFunction}>
         <div className="input-group input-group-flex" id="prompt-input">
@@ -120,11 +132,19 @@ function Prompt(props: PromptProps) {
           </span>
         </div>
       </form>
-      <div className="">
-        <a href="https://troi.readthedocs.io/en/lb-radio/lb_radio.html">
-          documentation
-        </a>
-      </div>
+      {hideExamples === false && (
+        <div id="examples">
+          Examples:
+          <a href="/explore/lb-radio?prompt=artist:(radiohead)&mode=easy">
+            artist:(radiohead)
+          </a>
+          <a href="/explore/lb-radio?prompt=tag:(trip hop)&mode=easy">
+            tag:(trip hop)
+          </a>
+          <a href="/explore/lb-radio?prompt=tag:#metal&mode=easy">#metal</a>
+          <a href="/explore/lb-radio?prompt=tag:user:rob&mode=easy">user:rob</a>
+        </div>
+      )}
     </div>
   );
 }
