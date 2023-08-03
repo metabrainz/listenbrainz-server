@@ -23,6 +23,7 @@ type UserFeedbackProps = {
 
 type PlaylistProps = {
   playlist?: JSPFPlaylist;
+  title: string;
 };
 
 function UserFeedback(props: UserFeedbackProps) {
@@ -45,23 +46,37 @@ function UserFeedback(props: UserFeedbackProps) {
 }
 
 function Playlist(props: PlaylistProps) {
-  const { playlist } = props;
+  const { playlist, title } = props;
   if (!playlist?.track?.length) {
     return null;
   }
   return (
     <div>
-      {playlist.track.map((track: JSPFTrack, index) => {
-        return (
-          <PlaylistItemCard
-            key={`${track.id}-${index.toString()}`}
-            canEdit={false}
-            track={track}
-            currentFeedback={0}
-            updateFeedbackCallback={() => {}}
-          />
-        );
-      })}
+      <div id="playlist-title">
+        <select
+          className="dropdown pull-right"
+          id="options-dropdown"
+          name="options"
+        >
+          <option>Save</option>
+          <option>Export to Spotify</option>
+          <option>Download JSPF file</option>
+        </select>
+        <div id="title">{title}</div>
+      </div>
+      <div>
+        {playlist.track.map((track: JSPFTrack, index) => {
+          return (
+            <PlaylistItemCard
+              key={`${track.id}-${index.toString()}`}
+              canEdit={false}
+              track={track}
+              currentFeedback={0}
+              updateFeedbackCallback={() => {}}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -158,6 +173,7 @@ function LBRadio() {
   const [feedback, setFeedback] = React.useState([]);
   const [isLoading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
 
   const { APIService } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
@@ -172,6 +188,7 @@ function LBRadio() {
           const body = await request.json();
           setJspfPlaylist(body.payload.jspf);
           setFeedback(body.payload.feedback);
+          setTitle(body.payload.jspf.playlist.annotation);
         } else {
           const msg = await request.json();
           setErrorMessage(msg.error);
@@ -193,7 +210,7 @@ function LBRadio() {
         />
         <Loader isLoading={isLoading} loaderText="Generating playlist…">
           <UserFeedback feedback={feedback} />
-          <Playlist playlist={jspfPlaylist?.playlist} />
+          <Playlist playlist={jspfPlaylist?.playlist} title={title} />
         </Loader>
       </div>
     </div>
