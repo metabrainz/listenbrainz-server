@@ -33,7 +33,7 @@ function UserFeedback(props: UserFeedbackProps) {
   }
 
   return (
-    <div className="feedback">
+    <div id="feedback" className="alert alert-info">
       <div className="feedback-header">Query feedback:</div>
       <ul>
         {feedback.map((item: string) => {
