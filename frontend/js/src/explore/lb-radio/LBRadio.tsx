@@ -252,7 +252,7 @@ function LBRadio() {
           onGenerate={generatePlaylistCallback}
           errorMessage={errorMessage}
         />
-        <Loader isLoading={isLoading} loaderText="Generating playlist…">
+        <Loader isLoading={isLoading} loaderText="Generating playlist…" className="playlist-loader">
           <UserFeedback feedback={feedback} />
           <Playlist playlist={jspfPlaylist?.playlist} title={title} />
         </Loader>
