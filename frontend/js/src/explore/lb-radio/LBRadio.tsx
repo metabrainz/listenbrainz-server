@@ -14,6 +14,7 @@ import Loader from "../../components/Loader";
 
 type PromptProps = {
   onGenerate: (prompt: string, mode: string) => void;
+  errorMessage: string;
 };
 
 type UserFeedbackProps = {
@@ -45,9 +46,7 @@ function UserFeedback(props: UserFeedbackProps) {
 
 function Playlist(props: PlaylistProps) {
   const { playlist } = props;
-  console.log("begin playlist ", playlist);
   if (!playlist?.track?.length) {
-    console.log("playist is empty");
     return null;
   }
   return (
@@ -68,7 +67,7 @@ function Playlist(props: PlaylistProps) {
 }
 
 function Prompt(props: PromptProps) {
-  const { onGenerate } = props;
+  const { onGenerate, errorMessage } = props;
   const [prompt, setPrompt] = useState<string>("");
   const [mode, setMode] = useState<string>();
   const [hideExamples, setHideExamples] = React.useState(false);
@@ -145,6 +144,11 @@ function Prompt(props: PromptProps) {
           <a href="/explore/lb-radio?prompt=tag:user:rob&mode=easy">user:rob</a>
         </div>
       )}
+      {errorMessage.length > 0 && (
+        <div id="error-message" className="alert alert-danger">
+          {errorMessage}
+        </div>
+      )}
     </div>
   );
 }
@@ -153,10 +157,12 @@ function LBRadio() {
   const [jspfPlaylist, setJspfPlaylist] = React.useState<JSPFObject>();
   const [feedback, setFeedback] = React.useState([]);
   const [isLoading, setLoading] = React.useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const { APIService } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
     async (prompt: string, mode: string) => {
+      setErrorMessage("");
       setLoading(true);
       try {
         const request = await fetch(
@@ -164,12 +170,14 @@ function LBRadio() {
         );
         if (request.ok) {
           const body = await request.json();
-          console.log(body.payload.jspf);
           setJspfPlaylist(body.payload.jspf);
           setFeedback(body.payload.feedback);
+        } else {
+          const msg = await request.json();
+          setErrorMessage(msg.error);
         }
       } catch (error) {
-        console.log(error);
+        setErrorMessage(error);
       }
       setLoading(false);
     },
@@ -179,7 +187,10 @@ function LBRadio() {
   return (
     <div className="row">
       <div className="col-sm-12">
-        <Prompt onGenerate={generatePlaylistCallback} />
+        <Prompt
+          onGenerate={generatePlaylistCallback}
+          errorMessage={errorMessage}
+        />
         <Loader isLoading={isLoading} loaderText="Generating playlist…">
           <UserFeedback feedback={feedback} />
           <Playlist playlist={jspfPlaylist?.playlist} />
