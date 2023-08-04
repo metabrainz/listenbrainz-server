@@ -14,6 +14,8 @@ import { getPageProps } from "../../utils/utils";
 import PlaylistItemCard from "../../playlists/PlaylistItemCard";
 import Loader from "../../components/Loader";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import { JSPFTrackToListen } from "../../playlists/utils";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 
 type LBRadioProps = {
   userArg: string;
@@ -261,24 +263,32 @@ function LBRadio(props: LBRadioProps) {
   );
 
   return (
-    <div className="row">
-      <div className="col-sm-12">
-        <Prompt
-          onGenerate={generatePlaylistCallback}
-          errorMessage={errorMessage}
-          initPrompt={promptArg}
-          initMode={modeArg}
-        />
-        <Loader
-          isLoading={isLoading}
-          loaderText="Generating playlist…"
-          className="playlist-loader"
-        >
-          <UserFeedback feedback={feedback} />
-          <Playlist playlist={jspfPlaylist?.playlist} title={title} />
-        </Loader>
+    <>
+      <div className="row">
+        <div className="col-sm-12">
+          <Prompt
+            onGenerate={generatePlaylistCallback}
+            errorMessage={errorMessage}
+            initPrompt={promptArg}
+            initMode={modeArg}
+          />
+          <Loader
+            isLoading={isLoading}
+            loaderText="Generating playlist…"
+            className="playlist-loader"
+          >
+            <UserFeedback feedback={feedback} />
+            <Playlist playlist={jspfPlaylist?.playlist} title={title} />
+          </Loader>
+        </div>
       </div>
-    </div>
+      <BrainzPlayer
+        listens={jspfPlaylist?.playlist.track.map(JSPFTrackToListen) ?? []}
+        listenBrainzAPIBaseURI={APIService.APIBaseURI}
+        refreshSpotifyToken={APIService.refreshSpotifyToken}
+        refreshYoutubeToken={APIService.refreshYoutubeToken}
+      />
+    </>
   );
 }
 
