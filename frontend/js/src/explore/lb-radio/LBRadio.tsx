@@ -22,9 +22,17 @@ import { getPageProps } from "../../utils/utils";
 import PlaylistItemCard from "../../playlists/PlaylistItemCard";
 import Loader from "../../components/Loader";
 
+type LBRadioProps = {
+  userArg: string;
+  modeArg: string;
+  promptArg: string;
+};
+
 type PromptProps = {
   onGenerate: (prompt: string, mode: string) => void;
   errorMessage: string;
+  initMode: string;
+  initPrompt: string;
 };
 
 type UserFeedbackProps = {
@@ -126,9 +134,9 @@ function Playlist(props: PlaylistProps) {
 }
 
 function Prompt(props: PromptProps) {
-  const { onGenerate, errorMessage } = props;
-  const [prompt, setPrompt] = useState<string>("");
-  const [mode, setMode] = useState<string>();
+  const { onGenerate, errorMessage, initMode, initPrompt } = props;
+  const [prompt, setPrompt] = useState<string>(initPrompt);
+  const [mode, setMode] = useState<string>(initMode);
   const [hideExamples, setHideExamples] = React.useState(false);
 
   const callbackFunction = React.useCallback(
@@ -171,13 +179,19 @@ function Prompt(props: PromptProps) {
             type="text"
             className="form-control form-control-lg"
             name="prompt"
+            value={prompt}
             placeholder="Enter prompt..."
             onChange={onInputChangeCallback}
           />
-          <select className="form-control" id="mode-dropdown" name="mode">
-            <option>easy</option>
-            <option>medium</option>
-            <option>hard</option>
+          <select
+            className="form-control"
+            id="mode-dropdown"
+            name="mode"
+            defaultValue={mode}
+          >
+            <option value="easy">easy</option>
+            <option value="medium">medium</option>
+            <option value="hard">hard</option>
           </select>
           <span className="input-group-btn">
             <button
@@ -212,7 +226,8 @@ function Prompt(props: PromptProps) {
   );
 }
 
-function LBRadio() {
+function LBRadio(props: LBRadioProps) {
+  const { userArg, modeArg, promptArg } = props;
   const [jspfPlaylist, setJspfPlaylist] = React.useState<JSPFObject>();
   const [feedback, setFeedback] = React.useState([]);
   const [isLoading, setLoading] = React.useState(false);
@@ -251,8 +266,14 @@ function LBRadio() {
         <Prompt
           onGenerate={generatePlaylistCallback}
           errorMessage={errorMessage}
+          initPrompt={promptArg}
+          initMode={modeArg}
         />
-        <Loader isLoading={isLoading} loaderText="Generating playlist…" className="playlist-loader">
+        <Loader
+          isLoading={isLoading}
+          loaderText="Generating playlist…"
+          className="playlist-loader"
+        >
           <UserFeedback feedback={feedback} />
           <Playlist playlist={jspfPlaylist?.playlist} title={title} />
         </Loader>
@@ -264,14 +285,13 @@ function LBRadio() {
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalAppContext } = getPageProps();
 
-  //  const { user } = reactProps;
-
+  const { user, mode, prompt } = reactProps;
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <LBRadio />
+          <LBRadio userArg={user} modeArg={mode} promptArg={prompt} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
