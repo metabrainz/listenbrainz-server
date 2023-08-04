@@ -139,7 +139,7 @@ function Prompt(props: PromptProps) {
   const [mode, setMode] = useState<string>(initMode);
   const [hideExamples, setHideExamples] = React.useState(false);
 
-  const callbackFunction = React.useCallback(
+  const generateCallbackFunction = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
@@ -158,6 +158,13 @@ function Prompt(props: PromptProps) {
     []
   );
 
+  React.useEffect(() => {
+    if (prompt.length > 0) {
+      setHideExamples(true);
+      onGenerate(initPrompt, initMode);
+    }
+  }, []);
+
   return (
     <div className="prompt">
       <div>
@@ -173,7 +180,7 @@ function Prompt(props: PromptProps) {
           </small>
         </h3>
       </div>
-      <form onSubmit={callbackFunction}>
+      <form onSubmit={generateCallbackFunction}>
         <div className="input-group input-group-flex" id="prompt-input">
           <input
             type="text"
@@ -213,8 +220,8 @@ function Prompt(props: PromptProps) {
           <a href="/explore/lb-radio?prompt=tag:(trip hop)&mode=easy">
             tag:(trip hop)
           </a>
-          <a href="/explore/lb-radio?prompt=tag:#metal&mode=easy">#metal</a>
-          <a href="/explore/lb-radio?prompt=tag:user:rob&mode=easy">user:rob</a>
+          <a href="/explore/lb-radio?prompt=%23metal&mode=easy">#metal</a>
+          <a href="/explore/lb-radio?prompt=user:rob&mode=easy">user:rob</a>
         </div>
       )}
       {errorMessage.length > 0 && (
