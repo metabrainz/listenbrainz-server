@@ -470,11 +470,7 @@ export default class ListenCard extends React.Component<
             <div className="listen-controls">
               {isLoggedIn &&
                 (feedbackComponent ?? (
-                  <ListenFeedbackComponent
-                    listen={listen}
-                    currentFeedback={currentFeedback as ListenFeedBack}
-                    updateFeedbackCallback={updateFeedbackCallback}
-                  />
+                  <ListenFeedbackComponent listen={listen} />
                 ))}
               {hideActionsMenu ? null : (
                 <>
