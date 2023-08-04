@@ -11,6 +11,7 @@ import {
   faThumbtack,
   faPencilAlt,
   faLink,
+  faImage,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSoundcloud,
@@ -406,10 +407,7 @@ export default class ListenCard extends React.Component<
           className="listen-thumbnail"
         >
           <div className="cover-art-fallback">
-            <img
-              src={ListenCard.coverartPlaceholder}
-              alt="Open in MusicBrainz"
-            />
+            <FontAwesomeIcon icon={faImage} />
           </div>
         </a>
       );
