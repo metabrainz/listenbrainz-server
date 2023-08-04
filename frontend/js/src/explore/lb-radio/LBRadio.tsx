@@ -6,21 +6,14 @@ import NiceModal from "@ebay/nice-modal-react";
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import {
-  faCog,
-  faFileExport,
-  faPen,
-  faPlusCircle,
-  faTrashAlt,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCog, faFileExport } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import ErrorBoundary from "../../utils/ErrorBoundary";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../utils/GlobalAppContext";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
 import PlaylistItemCard from "../../playlists/PlaylistItemCard";
 import Loader from "../../components/Loader";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
 type LBRadioProps = {
   userArg: string;
@@ -294,11 +287,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const { user, mode, prompt } = reactProps;
   const renderRoot = createRoot(domContainer!);
+  const LBRadioWithAlertNotifications = withAlertNotifications(LBRadio);
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <LBRadio userArg={user} modeArg={mode} promptArg={prompt} />
+          <LBRadioWithAlertNotifications
+            userArg={user}
+            modeArg={mode}
+            promptArg={prompt}
+          />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
