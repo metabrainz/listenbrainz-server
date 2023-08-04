@@ -6,9 +6,11 @@ import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import APIServiceClass from "../utils/APIService";
 
-const recordingFeedbackMap = new Map<string, ListenFeedBack>();
+const recordingMBIDFeedbackMap = new Map<string, ListenFeedBack>();
+const recordingMSIDFeedbackMap = new Map<string, ListenFeedBack>();
 
-let queueSingleton: string[] = [];
+let mbidQueue: string[] = [];
+const msidQueue: string[] = [];
 let userName = "";
 let savedAPIService: APIServiceClass;
 const DEBOUNCE_MS = 150;
@@ -17,21 +19,26 @@ async function fetchFeedback() {
   if (!userName) {
     throw new SyntaxError("Username missing");
   }
-  const recordingMBIDs = [...queueSingleton].filter((string) => string?.length);
+  const recordingMBIDs = [...mbidQueue].filter((string) => string?.length);
+  const recordingMSIDs = [...msidQueue].filter((string) => string?.length);
 
-  if (recordingMBIDs?.length) {
+  if (recordingMBIDs?.length || recordingMSIDs?.length) {
     try {
       const data = await savedAPIService.getFeedbackForUserForRecordings(
         userName,
-        recordingMBIDs
+        recordingMBIDs,
+        recordingMSIDs
       );
       data.feedback?.forEach((fb: FeedbackResponse) => {
         if (fb.recording_mbid) {
-          recordingFeedbackMap.set(fb.recording_mbid, fb.score);
+          recordingMBIDFeedbackMap.set(fb.recording_mbid, fb.score);
+        }
+        if (fb.recording_msid) {
+          recordingMSIDFeedbackMap.set(fb.recording_msid, fb.score);
         }
       });
       // empty the queue
-      queueSingleton = [];
+      mbidQueue = [];
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -49,19 +56,39 @@ const throttledFetchFeedback = throttleAsync(fetchFeedback, DEBOUNCE_MS);
 
 const createFetchQueue = () => {
   return {
-    async write(MBID: string): Promise<ListenFeedBack | undefined> {
-      queueSingleton.push(MBID);
+    async write(
+      MBID?: string,
+      MSID?: string
+    ): Promise<ListenFeedBack | undefined> {
+      if (MBID) {
+        mbidQueue.push(MBID);
+      }
+      if (MSID) {
+        msidQueue.push(MSID);
+      }
       try {
         await throttledFetchFeedback();
       } catch (error) {
         console.error(error);
       }
-      return recordingFeedbackMap.get(MBID);
+      if (MBID) {
+        const mbidFeedback = recordingMBIDFeedbackMap.get(MBID);
+        if (!isUndefined(mbidFeedback)) {
+          return mbidFeedback;
+        }
+      }
+      if (MSID) {
+        return recordingMSIDFeedbackMap.get(MSID);
+      }
+      return undefined;
     },
   };
 };
 
-export default function useFeedbackMap(recordingMBID: string) {
+export default function useFeedbackMap(
+  recordingMBID?: string,
+  recordingMSID?: string
+) {
   const { APIService, currentUser } = useContext(GlobalAppContext);
   const [feedbackValue, setFeedbackValue] = useState<ListenFeedBack>(0);
   userName = currentUser?.name;
@@ -71,29 +98,39 @@ export default function useFeedbackMap(recordingMBID: string) {
     const feedbackFetchQueue = createFetchQueue();
     // on load, add this MBID to the list and fetch feedback (throttled)
     feedbackFetchQueue
-      .write(recordingMBID)
+      .write(recordingMBID, recordingMSID)
       .catch(console.error)
       .finally(() => {
-        const feedback = recordingFeedbackMap.get(recordingMBID);
-        if (!isUndefined(feedback)) {
-          setFeedbackValue(feedback);
+        if (recordingMBID) {
+          const mbidFeedback = recordingMBIDFeedbackMap.get(recordingMBID);
+          if (!isUndefined(mbidFeedback)) {
+            setFeedbackValue(mbidFeedback);
+          }
+        } else if (recordingMSID) {
+          const msidFeedback = recordingMSIDFeedbackMap.get(recordingMSID);
+          if (!isUndefined(msidFeedback)) {
+            setFeedbackValue(msidFeedback);
+          }
         }
       });
-  }, [recordingMBID]);
+  }, [recordingMBID, recordingMSID]);
 
   const submitFeedback = async (score: ListenFeedBack) => {
     if (currentUser?.auth_token) {
-      // const recordingMSID = getRecordingMSID(listen);
-
       try {
         const status = await APIService.submitFeedback(
           currentUser.auth_token,
           score,
-          undefined,
+          recordingMSID,
           recordingMBID
         );
         if (status === 200) {
-          recordingFeedbackMap.set(recordingMBID, score);
+          if (recordingMBID) {
+            recordingMBIDFeedbackMap.set(recordingMBID, score);
+          }
+          if (recordingMSID) {
+            recordingMSIDFeedbackMap.set(recordingMSID, score);
+          }
           setFeedbackValue(score);
         }
       } catch (error) {

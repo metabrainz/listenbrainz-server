@@ -14,10 +14,11 @@ export default function ListenFeedbackComponent(
   const { listen } = props;
   const recordingMBID = getRecordingMBID(listen);
   const recordingMSID = getRecordingMSID(listen);
-  const { value: currentFeedback, update } = useFeedbackMap(
-    recordingMBID ?? ""
-  );
 
+  const { value: currentFeedback, update } = useFeedbackMap(
+    recordingMBID,
+    recordingMSID
+  );
   if (!recordingMSID && !recordingMBID) {
     return null;
   }
