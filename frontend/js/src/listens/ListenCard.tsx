@@ -56,15 +56,8 @@ import { ToastMsg } from "../notifications/Notifications";
 export type ListenCardProps = {
   listen: Listen;
   className?: string;
-  currentFeedback?: ListenFeedBack | RecommendationFeedBack | null;
   showTimestamp: boolean;
   showUsername: boolean;
-  // Only used when not passing a custom feedbackComponent
-  updateFeedbackCallback?: (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
-  ) => void;
   // This show under the first line of listen details. It's meant for reviews, etc.
   additionalContent?: string | JSX.Element;
   // Displays left of the cover art thumbnail. For special items like reorder/grab icon
@@ -253,8 +246,6 @@ export default class ListenCard extends React.Component<
       compact,
       feedbackComponent,
       additionalMenuItems,
-      currentFeedback,
-      updateFeedbackCallback,
       additionalActions,
       listen: listenFromProps,
       ...otherProps
