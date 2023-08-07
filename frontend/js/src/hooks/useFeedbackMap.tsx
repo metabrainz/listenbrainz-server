@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { isUndefined } from "lodash";
-import throttleAsync from "@jcoreio/async-throttle";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import APIServiceClass from "../utils/APIService";
+
+const throttleAsync = require("@jcoreio/async-throttle");
 
 const recordingMBIDFeedbackMap = new Map<string, ListenFeedBack>();
 const recordingMSIDFeedbackMap = new Map<string, ListenFeedBack>();
