@@ -39,11 +39,8 @@ const listen: Listen = {
 
 const props: ListenCardProps = {
   listen,
-  currentFeedback: 1,
   showTimestamp: true,
   showUsername: true,
-  updateFeedbackCallback: () => {},
-  
 };
 
 const globalProps = {
@@ -193,7 +190,7 @@ describe("ListenCard", () => {
     it("calls API, and creates a new alert on success", async () => {
       const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard { ...props } />
+          <ListenCard {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -271,11 +268,10 @@ describe("ListenCard", () => {
   });
   describe("pinRecordingModal", () => {
     it("renders the PinRecordingModal component with the correct props", async () => {
-      
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
-            <ListenCard {...props}  />
+            <ListenCard {...props} />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
@@ -293,17 +289,15 @@ describe("ListenCard", () => {
         wrapper.find(PinRecordingModal).first().childAt(0).props()
       ).toEqual({
         recordingToPin: props.listen,
-       
       });
     });
   });
   describe("CBReviewModal", () => {
     it("renders the CBReviewModal component with the correct props", async () => {
-  
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
-            <ListenCard {...props}  />
+            <ListenCard {...props} />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );

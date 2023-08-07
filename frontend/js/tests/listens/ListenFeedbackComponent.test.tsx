@@ -30,9 +30,6 @@ const listen: Listen = {
 
 const props: ListenFeedbackComponentProps = {
   listen,
-  currentFeedback: 1,
-  updateFeedbackCallback: () => {},
-  
 };
 
 const globalProps = {
@@ -120,7 +117,6 @@ describe("ListenFeedbackComponent", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      
       const wrapper = mount<ListenFeedbackComponent>(
         <GlobalAppContext.Provider value={globalProps}>
           <ListenFeedbackComponent {...props} />
@@ -137,7 +133,6 @@ describe("ListenFeedbackComponent", () => {
       await act(() => {
         instance.submitFeedback(-1);
       });
-
     });
   });
 });
