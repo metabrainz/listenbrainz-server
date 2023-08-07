@@ -9,6 +9,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCog, faFileExport } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import { toast } from "react-toastify";
+import { saveAs } from "file-saver";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
@@ -44,6 +45,7 @@ type PlaylistProps = {
   onSavePlaylist: () => void;
   enableOptions: boolean;
   onSaveToSpotify: () => void;
+  onExportJSPF: () => void;
 };
 
 function UserFeedback(props: UserFeedbackProps) {
@@ -72,6 +74,7 @@ function Playlist(props: PlaylistProps) {
     onSavePlaylist,
     enableOptions,
     onSaveToSpotify,
+    onExportJSPF,
   } = props;
   const { spotifyAuth } = React.useContext(GlobalAppContext);
   const showSpotifyExportButton = spotifyAuth?.permission?.includes(
@@ -123,7 +126,12 @@ function Playlist(props: PlaylistProps) {
               )}
               <li role="separator" className="divider" />
               <li>
-                <a id="exportPlaylistToJSPF" role="button" href="#">
+                <a
+                  onClick={onExportJSPF}
+                  id="exportPlaylistToJSPF"
+                  role="button"
+                  href="#"
+                >
                   <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as
                   JSPF
                 </a>
@@ -394,6 +402,13 @@ function LBRadio(props: LBRadioProps) {
     }
   }, [jspfPlaylist]);
 
+  const onExportJSPF = React.useCallback(async () => {
+    const jspf = new Blob([JSON.stringify(jspfPlaylist)], {
+      type: "application/json;charset=utf-8",
+    });
+    saveAs(jspf, `${title}.jspf`);
+  }, [jspfPlaylist, title]);
+
   return (
     <>
       <div className="row">
@@ -416,6 +431,7 @@ function LBRadio(props: LBRadioProps) {
               onSavePlaylist={onSavePlaylist}
               enableOptions={enableOptions}
               onSaveToSpotify={onSaveToSpotify}
+              onExportJSPF={onExportJSPF}
             />
           </Loader>
         </div>
