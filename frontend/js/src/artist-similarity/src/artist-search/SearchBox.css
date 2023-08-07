@@ -1,19 +1,13 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-size: 16px;
-  font-family: Sintony, sans-serif;
-  font-weight: 400;
-  font-stretch: 100%;
-}
 .search-box {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
   height: 4vh;
-  padding: 0vh;
   margin: 2vh;
+  font-size: 14px;
+  font-family: Sintony, sans-serif;
+  font-weight: 400;
+  font-stretch: 100%;
 }
 .artist-input {
   height: inherit;
@@ -31,7 +25,6 @@
   width: 80%;
   border-radius: 0;
   border: 2px solid #E0E0E0;
-  border-right: none;
 }
 #artist-input-icon {
   vertical-align: middle;
@@ -116,4 +109,3 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
-

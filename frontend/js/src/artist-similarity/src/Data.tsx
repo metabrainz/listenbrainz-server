@@ -2,6 +2,7 @@ import React, {useState, useEffect} from "react";
 import SimilarArtistsGraph from "./SimilarArtistsGraph";
 import tinycolor from "tinycolor2";
 import SearchBox from "./artist-search/SearchBox";
+import Panel from "./artist-panel/Panel";
 
 type ArtistType = {
     artist_mbid: string;
@@ -161,11 +162,12 @@ const Data = () => {
     }
     const backgroundColor1 = colors[0].clone().setAlpha(BACKGROUND_ALPHA).toRgbString();
     const backgroundColor2 = colors[1].clone().setAlpha(BACKGROUND_ALPHA).toRgbString();
-    const backgroundGradient = `linear-gradient(` + backgroundColor1 + `,` + backgroundColor2 + `)`;
+    const backgroundGradient = `linear-gradient(` + Math.random() * 360 + `deg ,` + backgroundColor1 + `,` + backgroundColor2 + `)`;
     return (
         <div>
             <SearchBox onArtistChange={setArtistMBID} onSimilarArtistsLimitChange={setSimilarArtistsLimit} currentsimilarArtistsLimit={similarArtistsLimit}/>
             <SimilarArtistsGraph onArtistChange={setArtistMBID} data={transformedArtists} background={backgroundGradient}/>
+            <Panel artist={mainArtist!} />
         </div>
     );
 }

@@ -1,0 +1,58 @@
+.artist-panel {
+    display: flex;
+    flex-flow: column;
+    position: absolute;
+    top: 10%;
+    right: 10%;
+    width: 250px;
+    height: 800px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+.artist-panel > div {
+    padding: 5px 10px;
+}
+.artist-header {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #353070;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    color: white;
+    font-family: 'Roboto', sans-serif;
+}
+.artist-info{
+    max-height: 30%;
+}
+.artist-info > .wiki {
+    padding-top: 0.75em;
+    padding-bottom: 0.75em;
+    max-height: 70%;
+    overflow: hidden;
+    mask-image: linear-gradient(180deg, #000 60%, transparent);
+    -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
+}
+
+.artist-info > .mb-link {
+    text-align: end;
+}
+
+#mb-link-button {
+    font-size: 14px;
+    background-color: #353070;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    padding: 5px;
+}
+
+.artist-top-album {
+    flex-grow: 3;
+}
+
+.artist-top-track {
+    flex-grow: 3;
+}

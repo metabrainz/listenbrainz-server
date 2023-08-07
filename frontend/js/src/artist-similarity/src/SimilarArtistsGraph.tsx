@@ -83,8 +83,9 @@ const SimilarArtistsGraph = (props: GraphProps) => {
 
     const chartProperties: NetworkSvgProps<NodeType, LinkType> = {
         data: props.data,
-        height: 900,
-        width: 1000,
+        height: window.innerHeight * 0.9,
+        width: window.innerWidth * 0.9,
+        margin: { top: 0, right: window.innerWidth / 5, bottom: 0, left: 0 },
         repulsivity: 350,
         iterations: 120,
         centeringStrength: 0.11,
