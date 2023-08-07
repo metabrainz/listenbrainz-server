@@ -10,13 +10,18 @@ import { faCog, faFileExport } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import { toast } from "react-toastify";
 import { saveAs } from "file-saver";
+import { get, set } from "lodash";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
 import PlaylistItemCard from "../../playlists/PlaylistItemCard";
 import Loader from "../../components/Loader";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
-import { JSPFTrackToListen } from "../../playlists/utils";
+import {
+  JSPFTrackToListen,
+  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
+  getRecordingMBIDFromJSPFTrack,
+} from "../../playlists/utils";
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 
@@ -261,7 +266,7 @@ function Prompt(props: PromptProps) {
 function LBRadio(props: LBRadioProps) {
   const { userArg, modeArg, promptArg, authToken, enableOptions } = props;
   const [jspfPlaylist, setJspfPlaylist] = React.useState<JSPFObject>();
-  const [feedback, setFeedback] = React.useState([]);
+  const [feedback, setFeedback] = React.useState<string[]>([]);
   const [isLoading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [title, setTitle] = useState<string>("");
@@ -276,13 +281,51 @@ function LBRadio(props: LBRadioProps) {
           `${APIService.APIBaseURI}/explore/lb-radio?prompt=${prompt}&mode=${mode}`
         );
         if (request.ok) {
-          const body = await request.json();
-          setJspfPlaylist(body.payload.jspf);
-          setFeedback(body.payload.feedback);
-          setTitle(body.payload.jspf.playlist.annotation);
+          const body: {
+            payload: { jspf: JSPFObject; feedback: string[] };
+          } = await request.json();
+          const { payload } = body;
+          const { playlist } = payload?.jspf as JSPFObject;
+          if (playlist?.track?.length) {
+            // Augment track with metadata fetched from LB server, mainly so we can have cover art
+            try {
+              const recordingMetadataMap = await APIService.getRecordingMetadata(
+                playlist.track.map(getRecordingMBIDFromJSPFTrack)
+              );
+              if (recordingMetadataMap) {
+                playlist?.track.forEach((track) => {
+                  const mbid = getRecordingMBIDFromJSPFTrack(track);
+                  if (recordingMetadataMap[mbid]) {
+                    const additionalMetadata = get(
+                      track,
+                      `extension.[${MUSICBRAINZ_JSPF_TRACK_EXTENSION}].additional_metadata`,
+                      {}
+                    );
+                    additionalMetadata.caa_id =
+                      recordingMetadataMap[mbid].release?.caa_id;
+                    additionalMetadata.caa_release_mbid =
+                      recordingMetadataMap[mbid].release?.caa_release_mbid;
+
+                    set(
+                      track,
+                      `extension.[${MUSICBRAINZ_JSPF_TRACK_EXTENSION}].additional_metadata`,
+                      additionalMetadata
+                    );
+                  }
+                });
+              }
+            } catch (error) {
+              // Don't do anything about this error, it's just metadata augmentation
+              // eslint-disable-next-line no-console
+              console.error(error);
+            }
+          }
+          setJspfPlaylist(payload.jspf);
+          setFeedback(payload.feedback);
+          setTitle(payload.jspf?.playlist?.annotation ?? "");
         } else {
           const msg = await request.json();
-          setErrorMessage(msg.error);
+          setErrorMessage(msg?.error);
         }
       } catch (error) {
         setErrorMessage(error);
