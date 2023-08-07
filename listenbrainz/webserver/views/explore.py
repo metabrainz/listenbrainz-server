@@ -1,8 +1,7 @@
 from flask import Blueprint, render_template, current_app, request
 from flask_login import current_user
 import orjson
-from werkzeug.exceptions import NotFound
-from listenbrainz.webserver.errors import APIBadRequest
+from werkzeug.exceptions import NotFound, BadRequest
 
 from listenbrainz.db.similar_users import get_top_similar_users
 
@@ -81,19 +80,25 @@ def lb_radio():
            prompt: string, the prompt for playlist generation.
     """
 
-    mode = request.args.get("mode", None)
-    if mode is not None and mode not in ("easy", "medium", "hard"):
-        raise APIBadRequest("mode parameter is required and must be one of 'easy', 'medium' or 'hard'")
+    mode = request.args.get("mode", "")
+    if mode != "" and mode not in ("easy", "medium", "hard"):
+        raise BadRequest("mode parameter is required and must be one of 'easy', 'medium' or 'hard'")
 
-    prompt = request.args.get("prompt", None)
-    if prompt is not None and prompt == "":
-        raise APIBadRequest("prompt parameter is required and must be non-zero length.")
+    prompt = request.args.get("prompt", "")
+    if prompt != "" and prompt == "":
+        raise BadRequest("prompt parameter is required and must be non-zero length.")
 
-    user = current_user.musicbrainz_id
+    if current_user.is_authenticated:
+        user = current_user.musicbrainz_id
+        token = current_user.auth_token
+    else:
+        user = ""
+        token = ""
     props = {
         "mode": mode,
         "prompt": prompt,
-        "user": user
+        "user": user,
+        "token": token
     }
 
     return render_template("explore/lb-radio.html", props=orjson.dumps(props).decode("utf-8"))

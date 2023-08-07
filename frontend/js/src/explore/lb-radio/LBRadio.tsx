@@ -21,6 +21,8 @@ type LBRadioProps = {
   userArg: string;
   modeArg: string;
   promptArg: string;
+  authToken: string;
+  enableOptions: boolean;
 };
 
 type PromptProps = {
@@ -37,6 +39,8 @@ type UserFeedbackProps = {
 type PlaylistProps = {
   playlist?: JSPFPlaylist;
   title: string;
+  onSavePlaylist: () => void;
+  enableOptions: boolean;
 };
 
 function UserFeedback(props: UserFeedbackProps) {
@@ -59,7 +63,7 @@ function UserFeedback(props: UserFeedbackProps) {
 }
 
 function Playlist(props: PlaylistProps) {
-  const { playlist, title } = props;
+  const { playlist, title, onSavePlaylist, enableOptions } = props;
   // TODO: Work out how to connect this
   const showSpotifyExportButton = true;
   if (!playlist?.track?.length) {
@@ -68,47 +72,49 @@ function Playlist(props: PlaylistProps) {
   return (
     <div>
       <div id="playlist-title">
-        <span className="dropdown pull-right">
-          <button
-            className="btn btn-info dropdown-toggle"
-            type="button"
-            id="options-dropdown"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="true"
-          >
-            <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
-            &nbsp;Options
-          </button>
-          <ul
-            className="dropdown-menu dropdown-menu-right"
-            aria-labelledby="options-dropdown"
-          >
-            <li>
-              <a role="button" href="#">
-                Save
-              </a>
-            </li>
-            {showSpotifyExportButton && (
-              <>
-                <li role="separator" className="divider" />
-                <li>
-                  <a id="exportPlaylistToSpotify" role="button" href="#">
-                    <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to
-                    Spotify
-                  </a>
-                </li>
-              </>
-            )}
-            <li role="separator" className="divider" />
-            <li>
-              <a id="exportPlaylistToJSPF" role="button" href="#">
-                <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as
-                JSPF
-              </a>
-            </li>
-          </ul>
-        </span>
+        {enableOptions && (
+          <span className="dropdown pull-right">
+            <button
+              className="btn btn-info dropdown-toggle"
+              type="button"
+              id="options-dropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="true"
+            >
+              <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
+              &nbsp;Options
+            </button>
+            <ul
+              className="dropdown-menu dropdown-menu-right"
+              aria-labelledby="options-dropdown"
+            >
+              <li>
+                <a onClick={onSavePlaylist} role="button" href="#">
+                  Save
+                </a>
+              </li>
+              {showSpotifyExportButton && (
+                <>
+                  <li role="separator" className="divider" />
+                  <li>
+                    <a id="exportPlaylistToSpotify" role="button" href="#">
+                      <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to
+                      Spotify
+                    </a>
+                  </li>
+                </>
+              )}
+              <li role="separator" className="divider" />
+              <li>
+                <a id="exportPlaylistToJSPF" role="button" href="#">
+                  <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as
+                  JSPF
+                </a>
+              </li>
+            </ul>
+          </span>
+        )}
         <div id="title">{title}</div>
       </div>
       <div>
@@ -216,7 +222,7 @@ function Prompt(props: PromptProps) {
             tag:(trip hop)
           </a>
           <a href="/explore/lb-radio?prompt=%23metal&mode=easy">#metal</a>
-          <a href="/explore/lb-radio?prompt=user:rob&mode=easy">user:rob</a>
+          <a href="/explore/lb-radio?prompt=stats:rob&mode=easy">stats:rob</a>
         </div>
       )}
       {errorMessage.length > 0 && (
@@ -229,7 +235,7 @@ function Prompt(props: PromptProps) {
 }
 
 function LBRadio(props: LBRadioProps) {
-  const { userArg, modeArg, promptArg } = props;
+  const { userArg, modeArg, promptArg, authToken, enableOptions } = props;
   const [jspfPlaylist, setJspfPlaylist] = React.useState<JSPFObject>();
   const [feedback, setFeedback] = React.useState([]);
   const [isLoading, setLoading] = React.useState(false);
@@ -262,6 +268,33 @@ function LBRadio(props: LBRadioProps) {
     [setJspfPlaylist, setFeedback]
   );
 
+  const onSavePlaylist = React.useCallback(async () => {
+    const args = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${authToken}`,
+      },
+      body: JSON.stringify(jspfPlaylist),
+    };
+    try {
+      const request = await fetch(
+        `${APIService.APIBaseURI}/playlist/create`,
+        args
+      );
+      if (request.ok) {
+        const body = await request.json();
+        console.log(body);
+        console.log(request);
+      } else {
+        const msg = await request.json();
+        console.log(msg);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
   return (
     <>
       <div className="row">
@@ -278,7 +311,12 @@ function LBRadio(props: LBRadioProps) {
             className="playlist-loader"
           >
             <UserFeedback feedback={feedback} />
-            <Playlist playlist={jspfPlaylist?.playlist} title={title} />
+            <Playlist
+              playlist={jspfPlaylist?.playlist}
+              title={title}
+              onSavePlaylist={onSavePlaylist}
+              enableOptions={enableOptions}
+            />
           </Loader>
         </div>
       </div>
@@ -295,9 +333,11 @@ function LBRadio(props: LBRadioProps) {
 document.addEventListener("DOMContentLoaded", () => {
   const { domContainer, reactProps, globalAppContext } = getPageProps();
 
-  const { user, mode, prompt } = reactProps;
+  const { user, mode, prompt, token } = reactProps;
   const renderRoot = createRoot(domContainer!);
   const LBRadioWithAlertNotifications = withAlertNotifications(LBRadio);
+
+  const enableOptions = token !== "";
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
@@ -306,6 +346,8 @@ document.addEventListener("DOMContentLoaded", () => {
             userArg={user}
             modeArg={mode}
             promptArg={prompt}
+            authToken={token}
+            enableOptions={enableOptions}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

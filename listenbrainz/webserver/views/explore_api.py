@@ -156,7 +156,7 @@ def lb_radio():
 
     patch = LBRadioPatch()
     try:
-        playlist = generate_playlist(patch, args={"mode": mode, "prompt": prompt})
+        playlist = generate_playlist(patch, args={"mode": mode, "prompt": prompt, "quiet": True})
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
 
