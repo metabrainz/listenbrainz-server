@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCog, faFileExport } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { toast } from "react-toastify";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
@@ -16,6 +17,7 @@ import Loader from "../../components/Loader";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import { JSPFTrackToListen } from "../../playlists/utils";
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import { ToastMsg } from "../../notifications/Notifications";
 
 type LBRadioProps = {
   userArg: string;
@@ -269,6 +271,7 @@ function LBRadio(props: LBRadioProps) {
   );
 
   const onSavePlaylist = React.useCallback(async () => {
+    // TODO: Move the guts of this to APIService
     const args = {
       method: "POST",
       headers: {
@@ -283,17 +286,41 @@ function LBRadio(props: LBRadioProps) {
         args
       );
       if (request.ok) {
-        const body = await request.json();
-        console.log(body);
-        console.log(request);
+        const { playlist_mbid } = await request.json();
+        toast.success(
+          <ToastMsg
+            title="Saved playlist"
+            message={
+              <>
+                Playlist saved to &ensp;
+                <a href={`/playlist/${playlist_mbid}`}>
+                  {jspfPlaylist?.playlist.title}
+                </a>
+              </>
+            }
+          />,
+          { toastId: "saved-playlist" }
+        );
       } else {
-        const msg = await request.json();
-        console.log(msg);
+        const { error } = await request.json();
+        toast.error(
+          <ToastMsg
+            title="Error"
+            message={`Failed to save playlist: ${error}.`}
+          />,
+          { toastId: "saved-playlist-error" }
+        );
       }
     } catch (error) {
-      console.log(error);
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={`Failed to save playlist: ${error}.`}
+        />,
+        { toastId: "saved-playlist-error" }
+      );
     }
-  }, []);
+  }, [jspfPlaylist]);
 
   return (
     <>
