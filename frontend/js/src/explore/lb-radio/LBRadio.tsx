@@ -43,6 +43,7 @@ type PlaylistProps = {
   title: string;
   onSavePlaylist: () => void;
   enableOptions: boolean;
+  onSaveToSpotify: () => void;
 };
 
 function UserFeedback(props: UserFeedbackProps) {
@@ -65,9 +66,17 @@ function UserFeedback(props: UserFeedbackProps) {
 }
 
 function Playlist(props: PlaylistProps) {
-  const { playlist, title, onSavePlaylist, enableOptions } = props;
-  // TODO: Work out how to connect this
-  const showSpotifyExportButton = true;
+  const {
+    playlist,
+    title,
+    onSavePlaylist,
+    enableOptions,
+    onSaveToSpotify,
+  } = props;
+  const { spotifyAuth } = React.useContext(GlobalAppContext);
+  const showSpotifyExportButton = spotifyAuth?.permission?.includes(
+    "playlist-modify-public"
+  );
   if (!playlist?.track?.length) {
     return null;
   }
@@ -100,7 +109,12 @@ function Playlist(props: PlaylistProps) {
                 <>
                   <li role="separator" className="divider" />
                   <li>
-                    <a id="exportPlaylistToSpotify" role="button" href="#">
+                    <a
+                      onClick={onSaveToSpotify}
+                      id="exportPlaylistToSpotify"
+                      role="button"
+                      href="#"
+                    >
                       <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to
                       Spotify
                     </a>
@@ -322,6 +336,64 @@ function LBRadio(props: LBRadioProps) {
     }
   }, [jspfPlaylist]);
 
+  const onSaveToSpotify = React.useCallback(async () => {
+    // TODO: Move the guts of this to APIService
+    const args = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${authToken}`,
+      },
+      body: JSON.stringify(jspfPlaylist),
+    };
+    const playlistTitle = jspfPlaylist?.playlist.title;
+    try {
+      const request = await fetch(
+        `${APIService.APIBaseURI}/playlist/export-jspf/spotify`,
+        args
+      );
+      if (request.ok) {
+        const { external_url } = await request.json();
+        toast.success(
+          <ToastMsg
+            title="Saved playlist"
+            message={
+              <>
+                Successfully exported playlist:{" "}
+                <a
+                  href={external_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {playlistTitle}
+                </a>
+                Heads up: the new playlist is public on Spotify.
+              </>
+            }
+          />,
+          { toastId: "saved-playlist" }
+        );
+      } else {
+        const { error } = await request.json();
+        toast.error(
+          <ToastMsg
+            title="Error"
+            message={`Failed to save playlist to Spotify: ${error}.`}
+          />,
+          { toastId: "saved-playlist-error" }
+        );
+      }
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={`Failed to save playlist to Spotify: ${error}.`}
+        />,
+        { toastId: "saved-playlist-error" }
+      );
+    }
+  }, [jspfPlaylist]);
+
   return (
     <>
       <div className="row">
@@ -343,6 +415,7 @@ function LBRadio(props: LBRadioProps) {
               title={title}
               onSavePlaylist={onSavePlaylist}
               enableOptions={enableOptions}
+              onSaveToSpotify={onSaveToSpotify}
             />
           </Loader>
         </div>
