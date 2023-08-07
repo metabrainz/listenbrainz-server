@@ -61,6 +61,16 @@ const createFetchQueue = () => {
       MBID?: string,
       MSID?: string
     ): Promise<ListenFeedBack | undefined> {
+      if (!MBID && !MSID) {
+        return undefined;
+      }
+      // If value is in feedback map, return early;
+      if (MBID && recordingMBIDFeedbackMap.has(MBID)) {
+        return recordingMBIDFeedbackMap.get(MBID);
+      }
+      if (MSID && recordingMSIDFeedbackMap.has(MSID)) {
+        return recordingMSIDFeedbackMap.get(MSID);
+      }
       if (MBID) {
         mbidQueue.push(MBID);
       }
