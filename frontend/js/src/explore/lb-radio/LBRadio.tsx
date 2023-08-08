@@ -6,7 +6,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { saveAs } from "file-saver";
-import { get, set } from "lodash";
+import { merge } from "lodash";
 import Prompt from "./Prompt";
 import { UserFeedback, Playlist } from "./Playlist";
 import ErrorBoundary from "../../utils/ErrorBoundary";
@@ -63,21 +63,22 @@ function LBRadio(props: LBRadioProps) {
                 playlist?.track.forEach((track) => {
                   const mbid = getRecordingMBIDFromJSPFTrack(track);
                   if (recordingMetadataMap[mbid]) {
-                    const additionalMetadata = get(
-                      track,
-                      `extension.["${MUSICBRAINZ_JSPF_TRACK_EXTENSION}"].additional_metadata`,
-                      {}
-                    );
-                    additionalMetadata.caa_id =
-                      recordingMetadataMap[mbid].release?.caa_id;
-                    additionalMetadata.caa_release_mbid =
-                      recordingMetadataMap[mbid].release?.caa_release_mbid;
-
-                    set(
-                      track,
-                      `extension.["${MUSICBRAINZ_JSPF_TRACK_EXTENSION}"].additional_metadata`,
-                      additionalMetadata
-                    );
+                    // This object MUST follow the JSPFTrack type.
+                    // We don't set the correct ype here because we have an incomplete object
+                    const newTrackObject = {
+                      extension: {
+                        [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
+                          additional_metadata: {
+                            caa_id: recordingMetadataMap[mbid].release?.caa_id,
+                            caa_release_mbid:
+                              recordingMetadataMap[mbid].release
+                                ?.caa_release_mbid,
+                          },
+                        },
+                      },
+                    };
+                    // Merge the existing track and our extra metadata object
+                    merge(track, newTrackObject);
                   }
                 });
               }
