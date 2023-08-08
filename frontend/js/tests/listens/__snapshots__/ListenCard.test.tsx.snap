@@ -2,7 +2,6 @@
 
 exports[`ListenCard renders correctly 1`] = `
 <ListenCard
-  currentFeedback={1}
   listen={
     Object {
       "listened_at": 0,
@@ -25,7 +24,6 @@ exports[`ListenCard renders correctly 1`] = `
   }
   showTimestamp={true}
   showUsername={true}
-  updateFeedbackCallback={[Function]}
 >
   <ForwardRef
     className="listen-card   "
@@ -415,7 +413,6 @@ exports[`ListenCard renders correctly 1`] = `
 
 exports[`ListenCard renders correctly for playing_now listen 1`] = `
 <ListenCard
-  currentFeedback={1}
   listen={
     Object {
       "listened_at": 0,
@@ -437,7 +434,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   }
   showTimestamp={true}
   showUsername={true}
-  updateFeedbackCallback={[Function]}
 >
   <ForwardRef
     className="listen-card   "
@@ -583,7 +579,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
             className="listen-controls"
           >
             <ListenFeedbackComponent
-              currentFeedback={1}
               listen={
                 Object {
                   "listened_at": 0,
@@ -603,11 +598,10 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   "user_name": "test",
                 }
               }
-              updateFeedbackCallback={[Function]}
             >
               <FontAwesomeIcon
                 border={false}
-                className=" loved"
+                className=""
                 fixedWidth={false}
                 flip={null}
                 icon={
@@ -639,7 +633,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               >
                 <svg
                   aria-labelledby="svg-inline--fa-title-000000000000"
-                  className="svg-inline--fa fa-heart fa-w-16  loved"
+                  className="svg-inline--fa fa-heart fa-w-16 "
                   data-icon="heart"
                   data-prefix="fas"
                   onClick={[Function]}
@@ -1342,7 +1336,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
 
 exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
 <ListenCard
-  currentFeedback={1}
   listen={
     Object {
       "listened_at": 0,
@@ -1365,7 +1358,6 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
   }
   showTimestamp={true}
   showUsername={true}
-  updateFeedbackCallback={[Function]}
 >
   <ForwardRef
     className="listen-card   "
