@@ -180,7 +180,7 @@ function Prompt(props: PromptProps) {
       setHideExamples(true);
       onGenerate(prompt, (modeText as any) as string);
     },
-    [prompt, onGenerate, hideExamples]
+    [prompt, onGenerate]
   );
 
   const onInputChangeCallback = React.useCallback(
@@ -196,7 +196,7 @@ function Prompt(props: PromptProps) {
       setHideExamples(true);
       onGenerate(initPrompt, initMode);
     }
-  }, []);
+  }, [initMode, initPrompt, onGenerate, prompt.length]);
 
   return (
     <div className="prompt">
@@ -343,7 +343,7 @@ function LBRadio(props: LBRadioProps) {
       }
       setLoading(false);
     },
-    [setJspfPlaylist, setFeedback]
+    [setJspfPlaylist, setFeedback, APIService]
   );
 
   const onSavePlaylist = React.useCallback(async () => {
@@ -396,7 +396,7 @@ function LBRadio(props: LBRadioProps) {
         { toastId: "saved-playlist-error" }
       );
     }
-  }, [jspfPlaylist]);
+  }, [jspfPlaylist, APIService.APIBaseURI, authToken]);
 
   const onSaveToSpotify = React.useCallback(async () => {
     // TODO: Move the guts of this to APIService
@@ -454,7 +454,7 @@ function LBRadio(props: LBRadioProps) {
         { toastId: "saved-playlist-error" }
       );
     }
-  }, [jspfPlaylist]);
+  }, [jspfPlaylist, APIService.APIBaseURI, authToken]);
 
   const onExportJSPF = React.useCallback(async () => {
     const jspf = new Blob([JSON.stringify(jspfPlaylist)], {

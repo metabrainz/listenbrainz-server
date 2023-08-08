@@ -1226,7 +1226,7 @@ export default class APIService {
     }
     const url = new URL(`${this.APIBaseURI}/metadata/recording/`);
 
-    url.searchParams.append("recording_mbids", recordingMBIDs.join(" "));
+    url.searchParams.append("recording_mbids", recordingMBIDs.join(","));
 
     if (metadata) {
       url.searchParams.append("inc", "artist tag release");
