@@ -15,7 +15,7 @@ export default function ListenFeedbackComponent(
   const recordingMBID = getRecordingMBID(listen);
   const recordingMSID = getRecordingMSID(listen);
 
-  const { value: currentFeedback, update } = useFeedbackMap(
+  const { feedbackValue: currentFeedback, update } = useFeedbackMap(
     recordingMBID,
     recordingMSID
   );
