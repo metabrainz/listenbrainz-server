@@ -176,7 +176,7 @@ function Prompt(props: PromptProps) {
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       setHideExamples(true);
-      onGenerate(prompt, (mode as any) as string);
+      onGenerate(prompt, mode);
     },
     [prompt, onGenerate, mode]
   );
@@ -194,7 +194,7 @@ function Prompt(props: PromptProps) {
       const text = event.target.value;
       setMode(text);
     },
-    [mode]
+    []
   );
 
   React.useEffect(() => {
@@ -233,7 +233,7 @@ function Prompt(props: PromptProps) {
             className="form-control"
             id="mode-dropdown"
             name="mode"
-            defaultValue={mode}
+            value={mode}
             onChange={onModeSelectChange}
           >
             <option value="easy">easy</option>
