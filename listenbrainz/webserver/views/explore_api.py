@@ -160,7 +160,7 @@ def lb_radio():
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
 
-    jspf = playlist.get_jspf()
+    jspf = playlist.get_jspf() if playlist is not None else {"playlist": { "tracks": [] } }
     feedback = patch.user_feedback()
 
     return jsonify({"payload": {"jspf": jspf, "feedback": feedback}})

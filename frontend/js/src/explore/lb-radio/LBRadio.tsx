@@ -256,7 +256,7 @@ function Prompt(props: PromptProps) {
           </div>
           <div id="made-with-postgres">
             <img
-              src="/static/img/explore/made-with-postgres.png"
+              src="/static/img/made-with-postgres.png"
               alt="Made with Postgres, not AI!"
             />
           </div>
@@ -488,7 +488,7 @@ function LBRadio(props: LBRadioProps) {
         </div>
       </div>
       <BrainzPlayer
-        listens={jspfPlaylist?.playlist.track.map(JSPFTrackToListen) ?? []}
+        listens={jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen) ?? []}
         listenBrainzAPIBaseURI={APIService.APIBaseURI}
         refreshSpotifyToken={APIService.refreshSpotifyToken}
         refreshYoutubeToken={APIService.refreshYoutubeToken}
