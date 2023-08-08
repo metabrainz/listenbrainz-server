@@ -1,29 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
-import { createRoot } from "react-dom/client";
 import * as React from "react";
-import NiceModal from "@ebay/nice-modal-react";
 import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faCog, faFileExport } from "@fortawesome/free-solid-svg-icons";
-import { faSpotify } from "@fortawesome/free-brands-svg-icons";
-import { toast } from "react-toastify";
-import { saveAs } from "file-saver";
-import { get, set } from "lodash";
-import ErrorBoundary from "../../utils/ErrorBoundary";
-import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getPageProps } from "../../utils/utils";
-import PlaylistItemCard from "../../playlists/PlaylistItemCard";
-import Loader from "../../components/Loader";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
-import {
-  JSPFTrackToListen,
-  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
-  getRecordingMBIDFromJSPFTrack,
-} from "../../playlists/utils";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
-import { ToastMsg } from "../../notifications/Notifications";
 
 type PromptProps = {
   onGenerate: (prompt: string, mode: string) => void;
