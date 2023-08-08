@@ -86,6 +86,9 @@ function Playlist(props: PlaylistProps) {
     "playlist-modify-public"
   );
   if (!playlist?.track?.length) {
+    if (playlist !== undefined) {
+      return <div id="title">No playlist was generated.</div>;
+    }
     return null;
   }
   return (
