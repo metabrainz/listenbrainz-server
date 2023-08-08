@@ -175,12 +175,10 @@ function Prompt(props: PromptProps) {
   const generateCallbackFunction = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      const formData = new FormData(event.currentTarget);
-      const modeText = formData.get("mode");
       setHideExamples(true);
-      onGenerate(prompt, (modeText as any) as string);
+      onGenerate(prompt, (mode as any) as string);
     },
-    [prompt, onGenerate]
+    [prompt, onGenerate, mode]
   );
 
   const onInputChangeCallback = React.useCallback(
@@ -189,6 +187,14 @@ function Prompt(props: PromptProps) {
       setPrompt(text);
     },
     []
+  );
+
+  const onModeSelectChange = React.useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const text = event.target.value;
+      setMode(text);
+    },
+    [mode]
   );
 
   React.useEffect(() => {
@@ -228,6 +234,7 @@ function Prompt(props: PromptProps) {
             id="mode-dropdown"
             name="mode"
             defaultValue={mode}
+            onChange={onModeSelectChange}
           >
             <option value="easy">easy</option>
             <option value="medium">medium</option>
