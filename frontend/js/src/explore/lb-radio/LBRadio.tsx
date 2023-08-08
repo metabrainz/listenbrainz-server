@@ -256,7 +256,7 @@ function Prompt(props: PromptProps) {
           </div>
           <div id="made-with-postgres">
             <img
-              src="/static/img/made-with-postgres.png"
+              src="/static/img/explore/made-with-postgres.png"
               alt="Made with Postgres, not AI!"
             />
           </div>
