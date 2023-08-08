@@ -167,7 +167,7 @@ const Data = () => {
         <div>
             <SearchBox onArtistChange={setArtistMBID} onSimilarArtistsLimitChange={setSimilarArtistsLimit} currentsimilarArtistsLimit={similarArtistsLimit}/>
             <SimilarArtistsGraph onArtistChange={setArtistMBID} data={transformedArtists} background={backgroundGradient}/>
-            <Panel artist={mainArtist!} />
+            {mainArtist && <Panel artist={mainArtist}/>}
         </div>
     );
 }
