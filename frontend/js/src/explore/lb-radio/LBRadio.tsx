@@ -242,16 +242,24 @@ function Prompt(props: PromptProps) {
         </div>
       </form>
       {hideExamples === false && (
-        <div id="examples">
-          Examples:
-          <a href="/explore/lb-radio?prompt=artist:(radiohead)&mode=easy">
-            artist:(radiohead)
-          </a>
-          <a href="/explore/lb-radio?prompt=tag:(trip hop)&mode=easy">
-            tag:(trip hop)
-          </a>
-          <a href="/explore/lb-radio?prompt=%23metal&mode=easy">#metal</a>
-          <a href="/explore/lb-radio?prompt=stats:rob&mode=easy">stats:rob</a>
+        <div>
+          <div id="examples">
+            Examples:
+            <a href="/explore/lb-radio?prompt=artist:(radiohead)&mode=easy">
+              artist:(radiohead)
+            </a>
+            <a href="/explore/lb-radio?prompt=tag:(trip hop)&mode=easy">
+              tag:(trip hop)
+            </a>
+            <a href="/explore/lb-radio?prompt=%23metal&mode=easy">#metal</a>
+            <a href="/explore/lb-radio?prompt=stats:rob&mode=easy">stats:rob</a>
+          </div>
+          <div id="made-with-postgres">
+            <img
+              src="/static/img/explore/made-with-postgres.png"
+              alt="Made with Postgres, not AI!"
+            />
+          </div>
         </div>
       )}
       {errorMessage.length > 0 && (
