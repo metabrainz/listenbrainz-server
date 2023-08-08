@@ -42,11 +42,11 @@ function Prompt(props: PromptProps) {
   );
 
   React.useEffect(() => {
-    if (prompt.length > 0) {
+    if (initPrompt.length > 0) {
       setHideExamples(true);
       onGenerate(initPrompt, initMode);
     }
-  }, [initMode, initPrompt, onGenerate, prompt.length]);
+  }, [initMode, initPrompt, onGenerate]);
 
   return (
     <div className="prompt">
