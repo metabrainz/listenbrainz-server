@@ -45,7 +45,9 @@ function LBRadio(props: LBRadioProps) {
       setLoading(true);
       try {
         const request = await fetch(
-          `${APIService.APIBaseURI}/explore/lb-radio?prompt=${prompt}&mode=${mode}`
+          `${
+            APIService.APIBaseURI
+          }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`
         );
         if (request.ok) {
           const body: {
