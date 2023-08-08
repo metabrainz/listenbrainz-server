@@ -15,6 +15,7 @@ import * as userFeedbackProps from "../__mocks__/userFeedbackProps.json";
 import * as userFeedbackAPIResponse from "../__mocks__/userFeedbackAPIResponse.json";
 import ListenCard from "../../src/listens/ListenCard";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
 
@@ -53,6 +54,10 @@ const mountOptions: { context: GlobalAppContextT } = {
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
     currentUser: { auth_token: "lalala", name: "pikachu" },
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 const mountOptionsWithoutUser: { context: GlobalAppContextT } = {

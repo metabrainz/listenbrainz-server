@@ -11,6 +11,7 @@ import GlobalAppContext from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -35,6 +36,10 @@ const GlobalContextMock = {
       name: "Gulab Jamun",
       auth_token: "IHaveSeenTheFnords",
     },
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 

@@ -16,6 +16,7 @@ import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPl
 
 import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -59,6 +60,10 @@ const mountOptions: { context: GlobalAppContextT } = {
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
     currentUser: { id: 1, name: "iliekcomputers", auth_token: "fnord" },
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIServiceClass("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 

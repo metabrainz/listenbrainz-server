@@ -19,8 +19,11 @@ import RecommendationFeedbackComponent, {
 } from "../../src/listens/RecommendationFeedbackComponent";
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import RecommendationControl from "../../src/recommendations/RecommendationControl";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -46,14 +49,17 @@ const props: RecommendationFeedbackComponentProps = {
   listen,
   currentFeedback: "love",
   updateFeedbackCallback: () => {},
-  
 };
 
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
   currentUser: { auth_token: "baz", name: "test" },
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIServiceClass("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 describe("Recommendation feedback", () => {

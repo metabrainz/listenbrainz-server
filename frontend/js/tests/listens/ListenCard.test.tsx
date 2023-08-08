@@ -10,10 +10,13 @@ import ListenCard, {
 } from "../../src/listens/ListenCard";
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import { waitForComponentToPaint } from "../test-utils";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -43,11 +46,15 @@ const props: ListenCardProps = {
   showUsername: true,
 };
 
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
   currentUser: { auth_token: "baz", name: "test" },
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIServiceClass(""),
+    { name: "Fnord" }
+  ),
 };
 
 describe("ListenCard", () => {

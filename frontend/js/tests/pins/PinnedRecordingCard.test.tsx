@@ -8,8 +8,11 @@ import PinnedRecordingCard, {
 } from "../../src/pins/PinnedRecordingCard";
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -22,11 +25,15 @@ const user = {
   auth_token: "auth_token",
 };
 
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
   currentUser: user,
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIServiceClass("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 const pinnedRecording: PinnedRecording = {
@@ -49,7 +56,7 @@ const expiredPinnedRecording: PinnedRecording = {
 const props: PinnedRecordingCardProps = {
   pinnedRecording,
   isCurrentUser: true,
-  
+
   removePinFromPinsList: () => {},
 };
 
@@ -90,12 +97,11 @@ describe("PinnedRecordingCard", () => {
     });
   });
 
-
   describe("unpinRecording", () => {
     it("calls API, updates currentlyPinned in state", async () => {
       const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard { ...props } />
+          <PinnedRecordingCard {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -115,7 +121,6 @@ describe("PinnedRecordingCard", () => {
       expect(spy).toHaveBeenCalledWith("auth_token");
 
       expect(wrapper.state("currentlyPinned")).toBeFalsy();
-
     });
 
     it("does nothing if isCurrentUser is false", async () => {

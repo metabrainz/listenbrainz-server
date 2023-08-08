@@ -26,6 +26,7 @@ import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const user = {
   id: 1,
@@ -42,6 +43,10 @@ const globalContext: GlobalAppContextT = {
   youtubeAuth: {},
   spotifyAuth: {},
   currentUser: loggedInUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 describe("<FollowButton />", () => {
