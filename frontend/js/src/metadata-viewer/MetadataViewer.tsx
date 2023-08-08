@@ -3,11 +3,12 @@ import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
 import { faPauseCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as tinycolor from "tinycolor2";
-import { first, get, isEmpty, isNumber, isPlainObject, pick } from "lodash";
-import TagsComponent from "./TagsComponent";
+import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
+import TagsComponent from "../tags/TagsComponent";
 import {
   getArtistName,
   getAverageRGBOfImage,
+  getRecordingMBID,
   getTrackName,
 } from "../utils/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -23,6 +24,10 @@ const supportLinkTypes = [
   "official homepage",
   "purchase for download",
   "purchase for mail-order",
+  "social network",
+  "patronage",
+  "crowdfunding",
+  "blog",
 ];
 
 function OpenInMusicBrainzButton(props: {
@@ -54,9 +59,36 @@ function OpenInMusicBrainzButton(props: {
   );
 }
 
+function getNowPlayingRecordingMBID(
+  recordingData?: MetadataLookup,
+  playingNow?: Listen
+) {
+  if (!recordingData && !playingNow) {
+    return undefined;
+  }
+  return (
+    recordingData?.recording_mbid ?? getRecordingMBID(playingNow as Listen)
+  );
+}
+
+function filterAndSortTags(tags?: EntityTag[]): EntityTag[] | undefined {
+  return tags
+    ?.filter((tag) => {
+      return tag.genre_mbid;
+    })
+    .sort((a, b) => {
+      if (a.genre_mbid && !b.genre_mbid) {
+        return 1;
+      }
+      return b.count - a.count;
+    });
+}
+
 export default function MetadataViewer(props: MetadataViewerProps) {
   const { recordingData, playingNow } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { getFeedbackForUserForRecordings, submitFeedback } = APIService;
+  const { auth_token, name: username } = currentUser;
 
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const [expandedAccordion, setExpandedAccordion] = React.useState(1);
@@ -72,29 +104,30 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       const averageColor = getAverageRGBOfImage(albumArtRef?.current);
       setAlbumArtColor(averageColor);
     };
-    if (albumArtRef?.current) {
-      albumArtRef.current.addEventListener("load", setAverageColor);
+    const currentAlbumArtRef = albumArtRef.current;
+    if (currentAlbumArtRef) {
+      currentAlbumArtRef.addEventListener("load", setAverageColor);
     }
     return () => {
-      if (albumArtRef?.current) {
-        albumArtRef.current.removeEventListener("load", setAverageColor);
+      if (currentAlbumArtRef) {
+        currentAlbumArtRef.removeEventListener("load", setAverageColor);
       }
     };
-  }, [albumArtRef?.current, setAlbumArtColor]);
+  }, [setAlbumArtColor]);
 
   React.useEffect(() => {
     const getFeedbackPromise = async () => {
-      const recordingMBID =
-        recordingData?.recording_mbid ||
-        get(playingNow, "track_metadata.additional_info.recording_mbid");
+      const recordingMBID = getNowPlayingRecordingMBID(
+        recordingData,
+        playingNow
+      );
       if (!recordingMBID) {
         return;
       }
       try {
-        const feedbackObject = await APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          [recordingMBID]
-        );
+        const feedbackObject = await getFeedbackForUserForRecordings(username, [
+          recordingMBID,
+        ]);
         if (feedbackObject?.feedback?.length) {
           const feedback: any = first(feedbackObject.feedback);
           setCurrentListenFeedback(feedback.score);
@@ -109,25 +142,21 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       }
     };
     getFeedbackPromise();
-  }, [recordingData, playingNow]);
+  }, [recordingData, playingNow, getFeedbackForUserForRecordings, username]);
 
-  const submitFeedback = React.useCallback(
+  const submitFeedbackCallback = React.useCallback(
     async (score: ListenFeedBack) => {
-      if (currentUser?.auth_token) {
-        const recordingMBID =
-          recordingData?.recording_mbid ||
-          get(playingNow, "track_metadata.additional_info.recording_mbid");
+      if (auth_token) {
+        const recordingMBID = getNowPlayingRecordingMBID(
+          recordingData,
+          playingNow
+        );
         if (!recordingMBID) {
           return;
         }
         try {
           setCurrentListenFeedback(score);
-          await APIService.submitFeedback(
-            currentUser.auth_token,
-            score,
-            undefined,
-            recordingMBID
-          );
+          await submitFeedback(auth_token, score, undefined, recordingMBID);
         } catch (error) {
           // Revert the feedback UI in case of failure
           setCurrentListenFeedback(0);
@@ -136,7 +165,13 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         }
       }
     },
-    [recordingData, playingNow, setCurrentListenFeedback]
+    [
+      recordingData,
+      playingNow,
+      setCurrentListenFeedback,
+      submitFeedback,
+      auth_token,
+    ]
   );
 
   const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
@@ -153,12 +188,13 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   // Default to empty object
   const { metadata } = recordingData ?? {};
-
+  const recordingMBID = getNowPlayingRecordingMBID(recordingData, playingNow);
   const artistMBID = first(recordingData?.artist_mbids);
   const userSubmittedReleaseMBID =
     playingNow?.track_metadata?.additional_info?.release_mbid;
   const CAAReleaseMBID = metadata?.release?.caa_release_mbid;
   const CAAID = metadata?.release?.caa_id;
+
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
 
   // try fetching cover art using user submitted release mbid first
@@ -195,6 +231,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const artistName =
     (recordingData?.artist_credit_name ?? fallbackArtistName) ||
     "No artist to show";
+  const releaseName = metadata?.release?.name ?? recordingData?.release_name;
+
   const duration =
     metadata?.recording?.length ??
     playingNow?.track_metadata?.additional_info?.duration_ms;
@@ -270,6 +308,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <h4 className="panel-title">
               <div className="recordingheader">
                 <div className="name strong">{trackName}</div>
+                &nbsp;<small>Track</small>
                 <div className="date">
                   {isNumber(duration) && millisecondsToStr(duration)}
                 </div>
@@ -286,7 +325,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingOne"
           >
             <div className="panel-body">
-              <TagsComponent tags={metadata?.tag?.recording} />
+              <TagsComponent
+                key={recordingMBID}
+                tags={filterAndSortTags(metadata?.tag?.recording)}
+                entityType="recording"
+                entityMBID={recordingMBID}
+              />
               {/* <div className="ratings content-box" /> */}
               {Boolean(flattenedRecRels?.length) && (
                 <div className="white content-box">
@@ -319,25 +363,15 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 </div>
               )}
               <div className="flex flex-wrap">
-                {lyricsLink?.lyrics && (
-                  <a
-                    href={lyricsLink.lyrics}
-                    className="btn btn-outline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Lyrics
-                  </a>
-                )}
                 <OpenInMusicBrainzButton
                   entityType="recording"
-                  entityMBID={recordingData?.recording_mbid}
+                  entityMBID={recordingMBID}
                 />
               </div>
             </div>
           </div>
         </div>
-        {Boolean(metadata?.release || recordingData?.release_name) && (
+        {Boolean(releaseName) && (
           <div
             className={`panel panel-default ${
               expandedAccordion === 2 ? "expanded" : ""
@@ -356,9 +390,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             >
               <h4 className="panel-title">
                 <div className="releaseheader">
-                  <div className="name strong">
-                    {recordingData?.release_name}
-                  </div>
+                  <div className="name strong">{releaseName}</div>
+                  &nbsp;<small>Album</small>
                   <div className="date">{metadata?.release?.year}</div>
                   <div className="caret" />
                 </div>
@@ -373,7 +406,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               aria-labelledby="headingTwo"
             >
               <div className="panel-body">
-                <TagsComponent tags={metadata?.tag?.release_group} />
+                <TagsComponent
+                  key={releaseName}
+                  tags={filterAndSortTags(metadata?.tag?.release_group)}
+                  entityType="release-group"
+                  entityMBID={metadata?.release?.release_group_mbid}
+                />
                 <OpenInMusicBrainzButton
                   entityType="release"
                   entityMBID={releaseMBID}
@@ -401,6 +439,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <h4 className="panel-title">
               <div className="artistheader">
                 <div className="name strong">{artistName}</div>
+                &nbsp;<small>Artist</small>
                 <div className="date">{artist?.begin_year}</div>
                 <div className="caret" />
               </div>
@@ -415,7 +454,12 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             aria-labelledby="headingThree"
           >
             <div className="panel-body">
-              <TagsComponent tags={metadata?.tag?.artist} />
+              <TagsComponent
+                key={artistName}
+                tags={filterAndSortTags(metadata?.tag?.artist)}
+                entityType="artist"
+                entityMBID={artistMBID}
+              />
               {/* <div className="ratings content-box" /> */}
               {(artist?.begin_year || artist?.area) && (
                 <div>
@@ -424,10 +468,22 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   {artist?.area && ` in ${artist.area}`}
                 </div>
               )}
-              <OpenInMusicBrainzButton
-                entityType="artist"
-                entityMBID={artistMBID}
-              />
+              <div className="flex flex-wrap">
+                {lyricsLink?.lyrics && (
+                  <a
+                    href={lyricsLink.lyrics}
+                    className="btn btn-outline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Lyrics
+                  </a>
+                )}
+                <OpenInMusicBrainzButton
+                  entityType="artist"
+                  entityMBID={artistMBID}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -452,8 +508,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             >
               <a
                 href={
-                  recordingData?.recording_mbid
-                    ? `${musicBrainzURLRoot}recording/${recordingData?.recording_mbid}`
+                  recordingMBID
+                    ? `${musicBrainzURLRoot}recording/${recordingMBID}`
                     : undefined
                 }
                 target="_blank"
@@ -480,7 +536,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <button
               className="btn-transparent"
               onClick={() =>
-                submitFeedback(currentListenFeedback === 1 ? 0 : 1)
+                submitFeedbackCallback(currentListenFeedback === 1 ? 0 : 1)
               }
               type="button"
             >
@@ -494,7 +550,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <button
               className="btn-transparent"
               onClick={() =>
-                submitFeedback(currentListenFeedback === -1 ? 0 : -1)
+                submitFeedbackCallback(currentListenFeedback === -1 ? 0 : -1)
               }
               type="button"
             >
