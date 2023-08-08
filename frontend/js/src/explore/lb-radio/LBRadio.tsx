@@ -309,7 +309,7 @@ function LBRadio(props: LBRadioProps) {
                   if (recordingMetadataMap[mbid]) {
                     const additionalMetadata = get(
                       track,
-                      `extension.[${MUSICBRAINZ_JSPF_TRACK_EXTENSION}].additional_metadata`,
+                      `extension.["${MUSICBRAINZ_JSPF_TRACK_EXTENSION}"].additional_metadata`,
                       {}
                     );
                     additionalMetadata.caa_id =
@@ -319,7 +319,7 @@ function LBRadio(props: LBRadioProps) {
 
                     set(
                       track,
-                      `extension.[${MUSICBRAINZ_JSPF_TRACK_EXTENSION}].additional_metadata`,
+                      `extension.["${MUSICBRAINZ_JSPF_TRACK_EXTENSION}"].additional_metadata`,
                       additionalMetadata
                     );
                   }
