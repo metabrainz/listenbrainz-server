@@ -66,6 +66,7 @@ function LBRadio(props: LBRadioProps) {
                     // This object MUST follow the JSPFTrack type.
                     // We don't set the correct ype here because we have an incomplete object
                     const newTrackObject = {
+                      duration: recordingMetadataMap[mbid].recording?.length,
                       extension: {
                         [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
                           additional_metadata: {
