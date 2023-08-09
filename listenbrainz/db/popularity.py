@@ -2,7 +2,8 @@ from listenbrainz.spark.spark_dataset import DatabaseDataset
 
 
 class PopularityDataset(DatabaseDataset):
-    """ Dataset class for top artists, recordings and releases from MLHD data """
+    """ Dataset class for artists, recordings and releases with popularity info (listen count and unique listener count)
+     from MLHD data """
 
     def __init__(self, entity):
         super().__init__(f"mlhd_popularity_{entity}", entity, "popularity")
@@ -25,7 +26,8 @@ class PopularityDataset(DatabaseDataset):
 
 
 class PopularityTopDataset(DatabaseDataset):
-    """ Dataset class for top recordings and releases per artist from MLHD data """
+    """ Dataset class for all recordings and releases with popularity info (total listen count and unique listener
+     count) for each artist in MLHD data. """
     def __init__(self, entity):
         super().__init__(f"mlhd_popularity_top_{entity}", f"top_{entity}", "popularity")
         self.entity = entity
