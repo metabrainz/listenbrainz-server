@@ -17,7 +17,7 @@ type PromptProps = {
 function Prompt(props: PromptProps) {
   const { onGenerate, errorMessage, initMode, initPrompt } = props;
   const [prompt, setPrompt] = useState<string>(initPrompt);
-  const [mode, setMode] = useState<Modes>(initMode ?? Modes.easy);
+  const [mode, setMode] = useState<Modes>(initMode || Modes.easy);
   const [hideExamples, setHideExamples] = React.useState(false);
 
   const generateCallbackFunction = React.useCallback(
