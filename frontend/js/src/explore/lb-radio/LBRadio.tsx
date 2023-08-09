@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { saveAs } from "file-saver";
 import { merge } from "lodash";
 import Prompt from "./Prompt";
-import { UserFeedback, Playlist } from "./Playlist";
+import { LBRadioFeedback, Playlist } from "./Playlist";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
@@ -23,22 +23,19 @@ import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 
 type LBRadioProps = {
-  userArg: string;
   modeArg: string;
   promptArg: string;
-  authToken: string;
-  enableOptions: boolean;
 };
 
 function LBRadio(props: LBRadioProps) {
-  const { userArg, modeArg, promptArg, authToken, enableOptions } = props;
+  const { modeArg, promptArg } = props;
   const [jspfPlaylist, setJspfPlaylist] = React.useState<JSPFObject>();
   const [feedback, setFeedback] = React.useState<string[]>([]);
   const [isLoading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [title, setTitle] = useState<string>("");
 
-  const { APIService } = React.useContext(GlobalAppContext);
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
     async (prompt: string, mode: string) => {
       setErrorMessage("");
@@ -112,7 +109,7 @@ function LBRadio(props: LBRadioProps) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Token ${authToken}`,
+        Authorization: `Token ${currentUser.auth_token}`,
       },
       body: JSON.stringify(jspfPlaylist),
     };
@@ -156,7 +153,7 @@ function LBRadio(props: LBRadioProps) {
         { toastId: "saved-playlist-error" }
       );
     }
-  }, [jspfPlaylist, APIService.APIBaseURI, authToken]);
+  }, [jspfPlaylist, APIService.APIBaseURI]);
 
   const onSaveToSpotify = React.useCallback(async () => {
     // TODO: Move the guts of this to APIService
@@ -164,7 +161,7 @@ function LBRadio(props: LBRadioProps) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Token ${authToken}`,
+        Authorization: `Token ${currentUser.auth_token}`,
       },
       body: JSON.stringify(jspfPlaylist),
     };
@@ -214,7 +211,7 @@ function LBRadio(props: LBRadioProps) {
         { toastId: "saved-playlist-error" }
       );
     }
-  }, [jspfPlaylist, APIService.APIBaseURI, authToken]);
+  }, [jspfPlaylist, APIService.APIBaseURI]);
 
   const onExportJSPF = React.useCallback(async () => {
     const jspf = new Blob([JSON.stringify(jspfPlaylist)], {
@@ -238,12 +235,11 @@ function LBRadio(props: LBRadioProps) {
             loaderText="Generating playlist…"
             className="playlist-loader"
           >
-            <UserFeedback feedback={feedback} />
+            <LBRadioFeedback feedback={feedback} />
             <Playlist
               playlist={jspfPlaylist?.playlist}
               title={title}
               onSavePlaylist={onSavePlaylist}
-              enableOptions={enableOptions}
               onSaveToSpotify={onSaveToSpotify}
               onExportJSPF={onExportJSPF}
             />
@@ -267,18 +263,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderRoot = createRoot(domContainer!);
   const LBRadioWithAlertNotifications = withAlertNotifications(LBRadio);
 
-  const enableOptions = token !== "";
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <LBRadioWithAlertNotifications
-            userArg={user}
-            modeArg={mode}
-            promptArg={prompt}
-            authToken={token}
-            enableOptions={enableOptions}
-          />
+          <LBRadioWithAlertNotifications modeArg={mode} promptArg={prompt} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
