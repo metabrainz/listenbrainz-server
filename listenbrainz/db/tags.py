@@ -6,6 +6,7 @@ from listenbrainz.spark.spark_dataset import DatabaseDataset
 
 
 class _TagsDataset(DatabaseDataset):
+    """ Dataset for recording/release-group/artist tags used for LB Tag radio. """
 
     def __init__(self):
         super().__init__("tags_dataset", "lb_tag_radio", schema="tags")

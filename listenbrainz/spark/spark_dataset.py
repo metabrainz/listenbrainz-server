@@ -11,23 +11,39 @@ from listenbrainz.db import couchdb, timescale
 
 
 class SparkDataset(ABC):
+    """ A base class to make it easy to consume bulk datasets that follow the guidelines outlined below.
+
+    Various spark datasets are too big to fit in one message. To allow for pre-processing and post-processing
+    of the dataset and to demarcate it from the rest of the messages, we define some common guidelines.
+
+    1. Spark Request Consumer sends a start message when it starts generating data. The handle_start method is called
+        on the receipt of this message to allow for pre-processsing, setting up tables etc.
+    2. Spark Request Consumer sends multiple messages that contain the actual data of the dataset. The handle_insert
+        method is called for each data message.
+    3. Spark Request Consumer sends an end message when all the generated data has been sent. The handle_end method
+        is called for the end message. Do post-processing here and no more data messages can arrive after this message.
+    """
 
     def __init__(self, name):
         self.name = name
 
     @abc.abstractmethod
     def handle_start(self, message):
+        """ Handler invoked by spark reader when the start message for this dataset arrives """
         pass
 
     @abc.abstractmethod
     def handle_insert(self, message):
+        """ Handler invoked by spark reader when the data messages for this dataset arrives """
         pass
 
     @abc.abstractmethod
     def handle_end(self, message):
+        """ Handler invoked by spark reader when the end message for this dataset arrives """
         pass
 
     def get_handlers(self):
+        """ Various handlers registered with the spark reader for processing of this dataset's messages """
         return {
             f"{self.name}_start": self.handle_start,
             self.name: self.handle_insert,
@@ -36,11 +52,14 @@ class SparkDataset(ABC):
 
 
 class _CouchDbDataset(SparkDataset):
+    """ Base class for bulk datasets stored in couchdb. """
 
     def __init__(self):
         super().__init__(name="couchdb_data")
 
     def handle_start(self, message):
+        """ CouchDB dataset start messages contain a database field, the name of which is used to create a new
+         database. """
         match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
         if not match:
             return
@@ -52,9 +71,11 @@ class _CouchDbDataset(SparkDataset):
             current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
     def handle_insert(self, message):
+        """ Handling of inserting data in couchdb databases is very varied for each case so its handled separately. """
         raise NotImplementedError()
 
     def handle_end(self, message):
+        """ Delete outdated databases of the same type. """
         # database names are of the format, prefix_YYYYMMDD. calculate and pass the prefix to the
         # method to delete all database of the type except the latest one.
         match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
