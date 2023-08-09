@@ -103,6 +103,14 @@ function ExplorePage() {
         <h3>Beta</h3>
         <hr />
       </div>
+      <div className="row">
+        <ExploreCard
+          name="ListenBrainz Radio"
+          desc="Instant custom playlists"
+          img_name="lb-radio-beta.jpg"
+          url="/explore/lb-radio"
+        />
+      </div>
     </>
   );
 }
