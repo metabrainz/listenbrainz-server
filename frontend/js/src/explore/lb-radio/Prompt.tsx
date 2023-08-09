@@ -3,17 +3,23 @@
 import * as React from "react";
 import { useState } from "react";
 
+export enum Modes {
+  "easy",
+  "medium",
+  "hard",
+}
+
 type PromptProps = {
-  onGenerate: (prompt: string, mode: string) => void;
+  onGenerate: (prompt: string, mode: Modes) => void;
   errorMessage: string;
-  initMode: string;
+  initMode: Modes;
   initPrompt: string;
 };
 
 function Prompt(props: PromptProps) {
   const { onGenerate, errorMessage, initMode, initPrompt } = props;
   const [prompt, setPrompt] = useState<string>(initPrompt);
-  const [mode, setMode] = useState<string>(initMode);
+  const [mode, setMode] = useState<Modes>(initMode ?? Modes.easy);
   const [hideExamples, setHideExamples] = React.useState(false);
 
   const generateCallbackFunction = React.useCallback(
@@ -36,7 +42,9 @@ function Prompt(props: PromptProps) {
   const onModeSelectChange = React.useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const text = event.target.value;
-      setMode(text);
+      // casting as Mode type here should be fine
+      // since we generated the options programatically from the enum
+      setMode((text as unknown) as Modes);
     },
     []
   );
@@ -80,9 +88,9 @@ function Prompt(props: PromptProps) {
             value={mode}
             onChange={onModeSelectChange}
           >
-            <option value="easy">easy</option>
-            <option value="medium">medium</option>
-            <option value="hard">hard</option>
+            {Object.values(Modes).map((modeName) => {
+              return <option value={modeName}>{modeName}</option>;
+            })}
           </select>
           <span className="input-group-btn">
             <button

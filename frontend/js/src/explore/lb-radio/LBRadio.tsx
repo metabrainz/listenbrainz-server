@@ -7,7 +7,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { saveAs } from "file-saver";
 import { merge } from "lodash";
-import Prompt from "./Prompt";
+import Prompt, { Modes } from "./Prompt";
 import { LBRadioFeedback, Playlist } from "./Playlist";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -23,7 +23,7 @@ import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 
 type LBRadioProps = {
-  modeArg: string;
+  modeArg: Modes;
   promptArg: string;
 };
 
@@ -37,7 +37,7 @@ function LBRadio(props: LBRadioProps) {
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
-    async (prompt: string, mode: string) => {
+    async (prompt: string, mode: Modes) => {
       setErrorMessage("");
       setLoading(true);
       try {
@@ -153,7 +153,7 @@ function LBRadio(props: LBRadioProps) {
         { toastId: "saved-playlist-error" }
       );
     }
-  }, [jspfPlaylist, APIService.APIBaseURI]);
+  }, [currentUser.auth_token, jspfPlaylist, APIService.APIBaseURI]);
 
   const onSaveToSpotify = React.useCallback(async () => {
     // TODO: Move the guts of this to APIService
@@ -211,7 +211,7 @@ function LBRadio(props: LBRadioProps) {
         { toastId: "saved-playlist-error" }
       );
     }
-  }, [jspfPlaylist, APIService.APIBaseURI]);
+  }, [currentUser.auth_token, jspfPlaylist, APIService.APIBaseURI]);
 
   const onExportJSPF = React.useCallback(async () => {
     const jspf = new Blob([JSON.stringify(jspfPlaylist)], {
