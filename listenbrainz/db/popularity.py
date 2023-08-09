@@ -1,3 +1,6 @@
+from sqlalchemy import text
+
+from listenbrainz.db import timescale
 from listenbrainz.spark.spark_dataset import DatabaseDataset
 
 
@@ -57,3 +60,22 @@ ArtistPopularityDataset = PopularityDataset("artist")
 ReleasePopularityDataset = PopularityDataset("release")
 TopRecordingPopularityDataset = PopularityTopDataset("recording")
 TopReleasePopularityDataset = PopularityTopDataset("release")
+
+
+def get_top_entity_for_artist(entity, artist_mbid):
+    """ Get the top recordings or releases for a given artist mbid """
+    if entity == "recording":
+        entity_mbid = "recording_mbid"
+    else:
+        entity_mbid = "release_mbid"
+    query = """
+        SELECT """ + entity_mbid + """
+             , total_listen_count
+             , total_user_count
+          FROM popularity.top_recording
+         WHERE artist_mbid = :artist_mbid
+      ORDER BY total_listen_count DESC
+    """
+    with timescale.engine.begin() as connection:
+        results = connection.execute(text(query), {"artist_mbid": artist_mbid})
+        return results.mappings().all()
