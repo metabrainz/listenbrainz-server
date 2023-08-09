@@ -15,6 +15,7 @@ type LBRadioFeedbackProps = {
 type PlaylistProps = {
   playlist?: JSPFPlaylist;
   title: string;
+  desc: string;
   onSavePlaylist: () => void;
   onSaveToSpotify: () => void;
   onExportJSPF: () => void;
@@ -43,6 +44,7 @@ export function Playlist(props: PlaylistProps) {
   const {
     playlist,
     title,
+    desc,
     onSavePlaylist,
     onSaveToSpotify,
     onExportJSPF,
@@ -115,6 +117,7 @@ export function Playlist(props: PlaylistProps) {
           </span>
         )}
         <div id="title">{title}</div>
+        <div id="description">{desc}</div>
       </div>
       <div>
         {playlist.track.map((track: JSPFTrack, index) => {
