@@ -8,7 +8,7 @@ import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import PlaylistItemCard from "../../playlists/PlaylistItemCard";
 
-type UserFeedbackProps = {
+type LBRadioFeedbackProps = {
   feedback: string[];
 };
 
@@ -17,12 +17,11 @@ type PlaylistProps = {
   title: string;
   desc: string;
   onSavePlaylist: () => void;
-  enableOptions: boolean;
   onSaveToSpotify: () => void;
   onExportJSPF: () => void;
 };
 
-export function UserFeedback(props: UserFeedbackProps) {
+export function LBRadioFeedback(props: LBRadioFeedbackProps) {
   const { feedback } = props;
 
   if (feedback.length === 0) {
@@ -47,11 +46,11 @@ export function Playlist(props: PlaylistProps) {
     title,
     desc,
     onSavePlaylist,
-    enableOptions,
     onSaveToSpotify,
     onExportJSPF,
   } = props;
-  const { spotifyAuth } = React.useContext(GlobalAppContext);
+  const { spotifyAuth, currentUser } = React.useContext(GlobalAppContext);
+  const enableOptions = Boolean(currentUser?.auth_token);
   const showSpotifyExportButton = spotifyAuth?.permission?.includes(
     "playlist-modify-public"
   );
