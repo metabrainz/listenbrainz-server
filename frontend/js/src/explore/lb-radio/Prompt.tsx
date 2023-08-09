@@ -1,7 +1,5 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-
-import * as React from "react";
-import { useState } from "react";
+import { isString } from "lodash";
+import React, { useState } from "react";
 
 export enum Modes {
   "easy",
@@ -88,9 +86,11 @@ function Prompt(props: PromptProps) {
             value={mode}
             onChange={onModeSelectChange}
           >
-            {Object.values(Modes).map((modeName) => {
-              return <option value={modeName}>{modeName}</option>;
-            })}
+            {Object.values(Modes)
+              .filter(isString)
+              .map((modeName) => {
+                return <option value={modeName}>{modeName}</option>;
+              })}
           </select>
           <span className="input-group-btn">
             <button
