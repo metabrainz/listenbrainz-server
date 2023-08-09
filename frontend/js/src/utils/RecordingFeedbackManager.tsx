@@ -1,8 +1,5 @@
 import { isUndefined } from "lodash";
-import { toast } from "react-toastify";
-import React from "react";
 import APIServiceClass from "./APIService";
-import { ToastMsg } from "../notifications/Notifications";
 // Gotta import this one with require instead of import…from
 const throttleAsync = require("@jcoreio/async-throttle");
 
@@ -71,35 +68,25 @@ export default class RecordingFeedbackManager {
     );
 
     if (recordingMBIDs?.length || recordingMSIDs?.length) {
-      try {
-        const data = await this.APIService.getFeedbackForUserForRecordings(
-          this.currentUser.name,
-          recordingMBIDs,
-          recordingMSIDs
-        );
-        data.feedback?.forEach((fb: FeedbackResponse) => {
-          if (fb.recording_mbid) {
-            this.recordingMBIDFeedbackMap.set(fb.recording_mbid, fb.score);
-            this.updateSubscribed(fb.recording_mbid, fb.score);
-          }
-          if (fb.recording_msid) {
-            this.recordingMSIDFeedbackMap.set(fb.recording_msid, fb.score);
-            this.updateSubscribed(fb.recording_msid, fb.score);
-          }
-        });
-        // empty the queues
-        this.mbidFetchQueue.length = 0;
-        this.msidFetchQueue.length = 0;
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="Error fetching love/hate feedback"
-            message={typeof error === "object" ? error.message : error}
-          />,
-          { toastId: "feedback-error" }
-        );
-        // TODO: add retry mechanism ?
-      }
+      const data = await this.APIService.getFeedbackForUserForRecordings(
+        this.currentUser.name,
+        recordingMBIDs,
+        recordingMSIDs
+      );
+      data.feedback?.forEach((fb: FeedbackResponse) => {
+        if (fb.recording_mbid) {
+          this.recordingMBIDFeedbackMap.set(fb.recording_mbid, fb.score);
+          this.updateSubscribed(fb.recording_mbid, fb.score);
+        }
+        if (fb.recording_msid) {
+          this.recordingMSIDFeedbackMap.set(fb.recording_msid, fb.score);
+          this.updateSubscribed(fb.recording_msid, fb.score);
+        }
+      });
+      // empty the queues
+      this.mbidFetchQueue.length = 0;
+      this.msidFetchQueue.length = 0;
+      // TODO: add retry mechanism ?
     }
   };
 
@@ -123,11 +110,7 @@ export default class RecordingFeedbackManager {
     if (MSID) {
       this.msidFetchQueue.push(MSID);
     }
-    try {
-      await this.throttledFetchFeedback();
-    } catch (error) {
-      console.error(error);
-    }
+    await this.throttledFetchFeedback();
     if (MBID) {
       const mbidFeedback = this.recordingMBIDFeedbackMap.get(MBID);
       if (!isUndefined(mbidFeedback)) {
@@ -146,31 +129,21 @@ export default class RecordingFeedbackManager {
     recordingMSID?: string
   ) => {
     if (this.currentUser?.auth_token) {
-      try {
-        const status = await this.APIService.submitFeedback(
-          this.currentUser.auth_token,
-          score,
-          recordingMSID,
-          recordingMBID
-        );
-        if (status === 200) {
-          if (recordingMBID) {
-            this.recordingMBIDFeedbackMap.set(recordingMBID, score);
-            this.updateSubscribed(recordingMBID, score);
-          }
-          if (recordingMSID) {
-            this.recordingMSIDFeedbackMap.set(recordingMSID, score);
-            this.updateSubscribed(recordingMSID, score);
-          }
+      const status = await this.APIService.submitFeedback(
+        this.currentUser.auth_token,
+        score,
+        recordingMSID,
+        recordingMBID
+      );
+      if (status === 200) {
+        if (recordingMBID) {
+          this.recordingMBIDFeedbackMap.set(recordingMBID, score);
+          this.updateSubscribed(recordingMBID, score);
         }
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title=" Error while submitting feedback"
-            message={error?.message ?? error.toString()}
-          />,
-          { toastId: "submit-feedback-error" }
-        );
+        if (recordingMSID) {
+          this.recordingMSIDFeedbackMap.set(recordingMSID, score);
+          this.updateSubscribed(recordingMSID, score);
+        }
       }
     }
   };

@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import { isUndefined } from "lodash";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import { ToastMsg } from "../notifications/Notifications";
 
 export default function useFeedbackMap(
   recordingMBID?: string,
@@ -31,7 +33,15 @@ export default function useFeedbackMap(
           setFeedbackValue(value);
         }
       })
-      .catch(console.error);
+      .catch((error) => {
+        toast.error(
+          <ToastMsg
+            title="Error fetching love/hate feedback"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "feedback-error" }
+        );
+      });
     if (recordingMBID) {
       subscribe(recordingMBID, setFeedbackValue);
     } else if (recordingMSID) {
@@ -57,7 +67,17 @@ export default function useFeedbackMap(
   const feedbackMap = {
     feedbackValue,
     update: async (newFeedbackValue: ListenFeedBack) => {
-      await submitFeedback(newFeedbackValue, recordingMBID, recordingMSID);
+      try {
+        await submitFeedback(newFeedbackValue, recordingMBID, recordingMSID);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title=" Error while submitting feedback"
+            message={error?.message ?? error.toString()}
+          />,
+          { toastId: "submit-feedback-error" }
+        );
+      }
     },
   };
 
