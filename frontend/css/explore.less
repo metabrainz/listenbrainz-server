@@ -59,3 +59,99 @@
     color: @blue;
   }
 }
+
+#prompt-input {
+  select {
+    flex: 1;
+  }
+  input {
+    flex: 4;
+  }
+  span {
+    flex: 0;
+  }
+  @media (min-width: 600px) {
+    width: 100%;
+  }
+  @media (min-width: 900px) {
+    width: 80%;
+  }
+}
+
+#mode-dropdown {
+  margin: 0 15px 0 15px;
+  @media (min-width: 600px) {
+    width: 20%;
+  }
+  @media (min-width: 900px) {
+    width: 30%;
+  }
+}
+
+.playlist-loader {
+  margin-top: 100px;
+}
+
+#playlist-title {
+  width: 100%;
+  margin: 5px 0 15px 0;
+}
+
+#title {
+    font-size: 15pt;
+    font-weight: bold;
+    margin-top: 25px;
+}
+
+#desc {
+    font-size: 13pt;
+    color: #444;
+    margin-top: 10px;
+}
+
+#doc-link {
+  margin-left: 25px;
+}
+
+#form-control {
+  flex: 1;
+}
+
+#examples {
+  color: #444;
+  margin-top: 8px;
+}
+
+#examples > a {
+  margin: 0 5px 0 5px;
+}
+
+#feedback {
+  margin-top: 20px;
+}
+
+#error-message {
+  margin-top: 15px;
+}
+
+#made-with-postgres {
+  margin-top: 75px;
+  text-align: center;
+  width: 100%;
+}
+
+#made-with-postgres > img {
+  width: 200px;
+}
+
+.explore-page-divider {
+  display: flex;
+  align-items: baseline;
+  > *:first-child {
+    margin-right: 0.6em;
+    flex: 0;
+  }
+  hr {
+    width: 100%;
+  }
+}
