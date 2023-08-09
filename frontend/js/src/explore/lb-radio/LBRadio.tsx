@@ -37,6 +37,7 @@ function LBRadio(props: LBRadioProps) {
   const [isLoading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+  const [desc, setDesc] = useState<string>("");
 
   const { APIService } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
@@ -91,7 +92,8 @@ function LBRadio(props: LBRadioProps) {
           }
           setJspfPlaylist(payload.jspf);
           setFeedback(payload.feedback);
-          setTitle(payload.jspf?.playlist?.annotation ?? "");
+          setDesc(payload.jspf?.playlist?.annotation ?? "");
+          setTitle(payload.jspf?.playlist?.title ?? "");
         } else {
           const msg = await request.json();
           setErrorMessage(msg?.error);
@@ -240,6 +242,7 @@ function LBRadio(props: LBRadioProps) {
             <Playlist
               playlist={jspfPlaylist?.playlist}
               title={title}
+              desc={desc}
               onSavePlaylist={onSavePlaylist}
               enableOptions={enableOptions}
               onSaveToSpotify={onSaveToSpotify}

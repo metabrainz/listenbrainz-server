@@ -15,6 +15,7 @@ type UserFeedbackProps = {
 type PlaylistProps = {
   playlist?: JSPFPlaylist;
   title: string;
+  desc: string;
   onSavePlaylist: () => void;
   enableOptions: boolean;
   onSaveToSpotify: () => void;
@@ -44,6 +45,7 @@ export function Playlist(props: PlaylistProps) {
   const {
     playlist,
     title,
+    desc,
     onSavePlaylist,
     enableOptions,
     onSaveToSpotify,
@@ -116,6 +118,7 @@ export function Playlist(props: PlaylistProps) {
           </span>
         )}
         <div id="title">{title}</div>
+        <div id="description">{desc}</div>
       </div>
       <div>
         {playlist.track.map((track: JSPFTrack, index) => {
