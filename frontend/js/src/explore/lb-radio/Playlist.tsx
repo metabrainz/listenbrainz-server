@@ -14,8 +14,6 @@ type LBRadioFeedbackProps = {
 
 type PlaylistProps = {
   playlist?: JSPFPlaylist;
-  title: string;
-  desc: string;
   onSavePlaylist: () => void;
   onSaveToSpotify: () => void;
   onExportJSPF: () => void;
@@ -41,14 +39,7 @@ export function LBRadioFeedback(props: LBRadioFeedbackProps) {
 }
 
 export function Playlist(props: PlaylistProps) {
-  const {
-    playlist,
-    title,
-    desc,
-    onSavePlaylist,
-    onSaveToSpotify,
-    onExportJSPF,
-  } = props;
+  const { playlist, onSavePlaylist, onSaveToSpotify, onExportJSPF } = props;
   const { spotifyAuth, currentUser } = React.useContext(GlobalAppContext);
   const enableOptions = Boolean(currentUser?.auth_token);
   const showSpotifyExportButton = spotifyAuth?.permission?.includes(
@@ -116,8 +107,8 @@ export function Playlist(props: PlaylistProps) {
             </ul>
           </span>
         )}
-        <div id="title">{title}</div>
-        <div id="description">{desc}</div>
+        <div id="title">{playlist?.title}</div>
+        <div id="description">{playlist?.annotation}</div>
       </div>
       <div>
         {playlist.track.map((track: JSPFTrack, index) => {

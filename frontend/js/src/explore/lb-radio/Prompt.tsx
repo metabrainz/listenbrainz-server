@@ -62,7 +62,7 @@ function Prompt(props: PromptProps) {
           <small>
             <a
               id="doc-link"
-              href="https://troi.readthedocs.io/en/add-user-stats-entity/lb_radio.html"
+              href="https://troi.readthedocs.io/en/latest/lb_radio.html"
             >
               How do I write a query?
             </a>
