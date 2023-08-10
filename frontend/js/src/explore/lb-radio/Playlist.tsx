@@ -126,8 +126,6 @@ export function Playlist(props: PlaylistProps) {
               key={`${track.id}-${index.toString()}`}
               canEdit={false}
               track={track}
-              currentFeedback={0}
-              updateFeedbackCallback={() => {}}
             />
           );
         })}
