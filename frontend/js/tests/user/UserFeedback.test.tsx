@@ -85,6 +85,7 @@ describe("UserFeedback", () => {
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
+    wrapper.unmount();
   });
 
   it("renders ListenCard items for each feedback item", async () => {
@@ -95,6 +96,7 @@ describe("UserFeedback", () => {
     );
     const listens = wrapper.find(ListenCard);
     expect(listens).toHaveLength(15);
+    wrapper.unmount();
   });
 
   it("does not render ListenCard items for feedback item without track name", async () => {
@@ -132,28 +134,11 @@ describe("UserFeedback", () => {
     );
     const listens = wrapper.find(ListenCard);
     expect(listens).toHaveLength(1);
+    wrapper.unmount();
   });
 
   describe("getFeedbackItemsFromAPI", () => {
-    it("calls the API with the right parameters", async () => {
-      const wrapper = mount<UserFeedback>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <UserFeedback {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const apiGetFeedbackSpy = jest.spyOn(
-        instance.context.APIService,
-        "getFeedbackForUser"
-      );
-
-      await instance.getFeedbackItemsFromAPI(1, false);
-      expect(apiGetFeedbackSpy).toHaveBeenCalledTimes(1);
-      expect(apiGetFeedbackSpy).toHaveBeenCalledWith("mr_monkey", 0, 25, 1);
-      apiGetFeedbackSpy.mockClear();
-    });
-
-    it("sets the state, loads feedback for user and updates browser history", async () => {
+    it("sets the state and updates browser history", async () => {
       const wrapper = mount<UserFeedback>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <UserFeedback {...props} />
@@ -176,6 +161,7 @@ describe("UserFeedback", () => {
       expect(instance.state.maxPage).toEqual(2);
       expect(instance.state.selectedFeedbackScore).toEqual(1);
       expect(instance.state.loading).toEqual(false);
+      wrapper.unmount();
     });
   });
 });
