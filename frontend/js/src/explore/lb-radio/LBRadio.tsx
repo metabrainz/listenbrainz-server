@@ -33,8 +33,6 @@ function LBRadio(props: LBRadioProps) {
   const [feedback, setFeedback] = React.useState<string[]>([]);
   const [isLoading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [title, setTitle] = useState<string>("");
-  const [desc, setDesc] = useState<string>("");
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
@@ -86,16 +84,18 @@ function LBRadio(props: LBRadioProps) {
             } catch (error) {
               // Don't do anything about this error, it's just metadata augmentation
               // eslint-disable-next-line no-console
-              console.error(error);
+              setErrorMessage(error);
+              setJspfPlaylist(undefined);
+              setFeedback([]);
             }
           }
           setJspfPlaylist(payload.jspf);
           setFeedback(payload.feedback);
-          setDesc(payload.jspf?.playlist?.annotation ?? "");
-          setTitle(payload.jspf?.playlist?.title ?? "");
         } else {
           const msg = await request.json();
           setErrorMessage(msg?.error);
+          setJspfPlaylist(undefined);
+          setFeedback([]);
         }
       } catch (error) {
         setErrorMessage(error);
@@ -219,8 +219,8 @@ function LBRadio(props: LBRadioProps) {
     const jspf = new Blob([JSON.stringify(jspfPlaylist)], {
       type: "application/json;charset=utf-8",
     });
-    saveAs(jspf, `${title}.jspf`);
-  }, [jspfPlaylist, title]);
+    saveAs(jspf, `${jspfPlaylist?.playlist.title}.jspf`);
+  }, [jspfPlaylist]);
 
   return (
     <>
@@ -240,8 +240,6 @@ function LBRadio(props: LBRadioProps) {
             <LBRadioFeedback feedback={feedback} />
             <Playlist
               playlist={jspfPlaylist?.playlist}
-              title={title}
-              desc={desc}
               onSavePlaylist={onSavePlaylist}
               onSaveToSpotify={onSaveToSpotify}
               onExportJSPF={onExportJSPF}
