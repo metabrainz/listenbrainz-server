@@ -61,30 +61,21 @@
 }
 
 #prompt-input {
+  gap: 1.2em;
+  max-width: 850px;
   select {
     flex: 1;
+    min-width: 130px;
   }
   input {
     flex: 4;
+    min-width: 200px;
   }
   span {
     flex: 0;
   }
-  @media (min-width: 600px) {
-    width: 100%;
-  }
-  @media (min-width: 900px) {
-    width: 80%;
-  }
-}
-
-#mode-dropdown {
-  margin: 0 15px 0 15px;
-  @media (min-width: 600px) {
-    width: 20%;
-  }
-  @media (min-width: 900px) {
-    width: 30%;
+  .btn {
+    border-radius: 0;;
   }
 }
 
