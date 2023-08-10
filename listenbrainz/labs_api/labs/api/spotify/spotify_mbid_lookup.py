@@ -73,7 +73,7 @@ class SpotifyIdFromMBIDQuery(Query):
             redirected_mbid = redirect_index.get(mbid, mbid)
             canonical_mbid = canonical_index.get(redirected_mbid, redirected_mbid)
 
-            mbid_metadata = metadata[canonical_mbid]
+            mbid_metadata = metadata.get(canonical_mbid, {})
             # regardless of whether we redirected the mbid, add the original mbid in the response returned to user
             mbid_metadata["recording_mbid"] = mbid
             ordered_metadata.append(mbid_metadata)
