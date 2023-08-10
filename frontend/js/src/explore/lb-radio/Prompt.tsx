@@ -70,10 +70,13 @@ function Prompt(props: PromptProps) {
         </h3>
       </div>
       <form onSubmit={generateCallbackFunction}>
-        <div className="input-group input-group-flex" id="prompt-input">
+        <div
+          className="input-group input-group-flex input-group-lg"
+          id="prompt-input"
+        >
           <input
             type="text"
-            className="form-control form-control-lg"
+            className="form-control"
             name="prompt"
             value={prompt}
             placeholder="Enter prompt..."
@@ -92,10 +95,10 @@ function Prompt(props: PromptProps) {
                 return <option value={modeName}>{modeName}</option>;
               })}
           </select>
-          <span className="input-group-btn">
+          <span className="input-group-btn input-group-lg">
             <button
               type="submit"
-              className="btn btn-primary"
+              className="form-control"
               disabled={prompt?.length <= 3}
             >
               Generate
