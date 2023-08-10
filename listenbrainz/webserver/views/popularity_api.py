@@ -1,9 +1,11 @@
 import psycopg2
+from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, current_app
 from psycopg2.extras import DictCursor
 
 from listenbrainz.db import popularity
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
@@ -11,6 +13,8 @@ popularity_api_bp = Blueprint('popularity_api_v1', __name__)
 
 
 @popularity_api_bp.get("/top-recordings-for-artist")
+@crossdomain
+@ratelimit()
 def top_recordings():
     """ Get the top recordings by listen count for a given artist. The response is of the following format:
 
