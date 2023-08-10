@@ -96,7 +96,7 @@ function Prompt(props: PromptProps) {
           <span className="input-group-btn input-group-lg">
             <button
               type="submit"
-              className="form-control"
+              className="btn btn-primary"
               disabled={prompt?.length <= 3}
             >
               Generate
