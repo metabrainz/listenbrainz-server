@@ -86,6 +86,7 @@ function LBRadio(props: LBRadioProps) {
               // eslint-disable-next-line no-console
               setErrorMessage(error);
               setJspfPlaylist(undefined);
+              setFeedback([]);
             }
           }
           setJspfPlaylist(payload.jspf);
@@ -94,6 +95,7 @@ function LBRadio(props: LBRadioProps) {
           const msg = await request.json();
           setErrorMessage(msg?.error);
           setJspfPlaylist(undefined);
+          setFeedback([]);
         }
       } catch (error) {
         setErrorMessage(error);
