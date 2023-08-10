@@ -2,9 +2,9 @@ import { isString } from "lodash";
 import React, { useState } from "react";
 
 export enum Modes {
-  "easy",
-  "medium",
-  "hard",
+  "easy" = "easy",
+  "medium" = "medium",
+  "hard" = "hard",
 }
 
 type PromptProps = {
@@ -42,7 +42,7 @@ function Prompt(props: PromptProps) {
       const text = event.target.value;
       // casting as Mode type here should be fine
       // since we generated the options programatically from the enum
-      setMode((text as unknown) as Modes);
+      setMode(text as Modes);
     },
     []
   );
@@ -89,11 +89,9 @@ function Prompt(props: PromptProps) {
             value={mode}
             onChange={onModeSelectChange}
           >
-            {Object.values(Modes)
-              .filter(isString)
-              .map((modeName) => {
-                return <option value={modeName}>{modeName}</option>;
-              })}
+            {Object.values(Modes).map((modeName) => {
+              return <option value={modeName}>{modeName}</option>;
+            })}
           </select>
           <span className="input-group-btn input-group-lg">
             <button
