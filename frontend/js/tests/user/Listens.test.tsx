@@ -50,7 +50,7 @@ const props = {
   profileUrl,
   user,
   userPinnedRecording,
-  newAlert: () => {},
+  
 };
 
 // Create a new instance of GlobalAppContext
@@ -65,7 +65,7 @@ const mountOptions: { context: GlobalAppContextT } = {
 
 const propsOneListen = {
   ...recentListensPropsOneListen,
-  newAlert: () => {},
+  
 };
 
 fetchMock.mockIf(
@@ -269,7 +269,6 @@ describe("Listens page", () => {
           {...(JSON.parse(
             JSON.stringify(recentListensPropsTooManyListens)
           ) as ListensProps)}
-          newAlert={jest.fn()}
         />,
         mountOptions
       );
@@ -348,7 +347,6 @@ describe("Listens page", () => {
             {...(JSON.parse(
               JSON.stringify(recentListensPropsPlayingNow)
             ) as ListensProps)}
-            newAlert={jest.fn()}
           />
         </GlobalAppContext.Provider>
       );
@@ -377,10 +375,10 @@ describe("Listens page", () => {
 
   describe("deleteListen", () => {
     it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
-      const newAlertMock = jest.fn();
+      
       const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...props} newAlert={newAlertMock} />
+          <Listens {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -410,12 +408,7 @@ describe("Listens page", () => {
       expect(removeListenCallbackSpy).toHaveBeenCalledWith(listenToDelete);
       expect(instance.state.deletedListen).toEqual(listenToDelete);
       expect(instance.state.listens).not.toContainEqual(listenToDelete);
-      expect(newAlertMock).toHaveBeenCalledWith(
-        "info",
-        "Success",
-        "This listen has not been deleted yet, but is scheduled for deletion," +
-          " which usually happens shortly after the hour."
-      );
+      
     });
 
     it("does nothing if isCurrentUser is false", async () => {
@@ -521,11 +514,11 @@ describe("Listens page", () => {
       expect(instance.state.listens).toContainEqual(listenToDelete);
     });
 
-    it("calls newAlert if error is returned", async () => {
-      const newAlertMock = jest.fn();
+    it("handles error for delete listen", async () => {
+      
       const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...props} newAlert={newAlertMock} />
+          <Listens {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -543,11 +536,6 @@ describe("Listens page", () => {
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(newAlertMock).toHaveBeenCalledWith(
-        "danger",
-        "Error while deleting listen",
-        "my error message"
-      );
     });
   });
 

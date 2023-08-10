@@ -37,8 +37,6 @@ class UserRecommendationsRecord(BaseModel):
 class UserRecommendationsJson(BaseModel):
     """ Model for the JSON stored in recommendation.cf_recording tables's recording_mbid column
     """
-    top_artist: Optional[List[UserRecommendationsRecord]]
-    similar_artist: Optional[List[UserRecommendationsRecord]]
     raw: Optional[List[UserRecommendationsRecord]]
     model_id: Optional[str]
     model_url: Optional[str]

@@ -50,7 +50,6 @@ const props: ListensProps = {
   listens,
   oldestListenTs,
   user,
-  newAlert: jest.fn(),
 };
 
 fetchMock.mockIf(
@@ -84,8 +83,8 @@ describe("ListensControls", () => {
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(
         "Gulab Jamun",
-        "983e5620-829d-46dd-89a8-760d87076287,",
-        ""
+        [],
+        ["983e5620-829d-46dd-89a8-760d87076287"]
       );
       expect(result).toEqual(getFeedbackByMsidResponse.feedback);
     });
@@ -118,7 +117,6 @@ describe("ListensControls", () => {
   describe("loadFeedback", () => {
     const feedbackProps: ListensProps = {
       ...recentListensPropsThreeListens,
-      newAlert: jest.fn(),
     };
 
     it("updates the recordingFeedbackMap state", async () => {

@@ -1,31 +1,29 @@
 BEGIN;
 
 CREATE TABLE listen (
-        listened_at     BIGINT                   NOT NULL,
-        track_name      TEXT                     NOT NULL,
-        user_name       TEXT                     NOT NULL,
-        user_id         INTEGER                  NOT NULL,
-        created         TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-        data            JSONB                    NOT NULL
+    listened_at     TIMESTAMP WITH TIME ZONE NOT NULL,
+    created         TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    user_id         INTEGER                  NOT NULL,
+    recording_msid  UUID                     NOT NULL,
+    data            JSONB                    NOT NULL
 );
 
 CREATE TABLE listen_delete_metadata (
     id                  SERIAL                      NOT NULL,
     user_id             INTEGER                     NOT NULL,
-    listened_at         BIGINT                      NOT NULL,
+    listened_at         TIMESTAMP WITH TIME ZONE    NOT NULL,
     recording_msid      UUID                        NOT NULL
 );
 
 CREATE TABLE listen_user_metadata (
     user_id             INTEGER                     NOT NULL,
     count               BIGINT                      NOT NULL, -- count of listens the user has earlier than `created`
-    min_listened_at     BIGINT, -- minimum listened_at timestamp seen for the user in listens till `created`
-    max_listened_at     BIGINT, -- maximum listened_at timestamp seen for the user in listens till `created`
+    min_listened_at     TIMESTAMP WITH TIME ZONE, -- minimum listened_at timestamp seen for the user in listens till `created`
+    max_listened_at     TIMESTAMP WITH TIME ZONE, -- maximum listened_at timestamp seen for the user in listens till `created`
     created             TIMESTAMP WITH TIME ZONE    NOT NULL  -- the created timestamp when data for this user was updated last
 );
 
--- 86400 seconds * 5 = 432000 seconds = 5 days
-SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => 432000);
+SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => INTERVAL '30 days');
 
 -- Playlists
 
@@ -196,16 +194,69 @@ CREATE TABLE background_worker_state (
 COMMENT ON TABLE background_worker_state IS 'This table is used to store miscellaneous data by various background processes or the ListenBrainz webserver. Use it when storing the data is redis is not reliable enough.';
 
 
-CREATE TABLE similarity.recording (
+CREATE TABLE similarity.recording_dev (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     metadata JSONB NOT NULL
 );
 
-CREATE TABLE similarity.artist_credit_mbids (
+CREATE TABLE similarity.recording (
+    mbid0 UUID NOT NULL,
+    mbid1 UUID NOT NULL,
+    score INT NOT NULL
+);
+
+CREATE TABLE similarity.artist_credit_mbids_dev (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     metadata JSONB NOT NULL
+);
+
+
+CREATE TABLE similarity.artist_credit_mbids (
+    mbid0 UUID NOT NULL,
+    mbid1 UUID NOT NULL,
+    score INT NOT NULL
+);
+
+CREATE TABLE tags.lb_tag_radio (
+    tag                     TEXT NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    tag_count               INTEGER NOT NULL,
+    percent                 DOUBLE PRECISION NOT NULL,
+    source                  lb_tag_radio_source_type_enum NOT NULL
+);
+
+CREATE TABLE popularity.recording (
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.artist (
+    artist_mbid             UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.release (
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.top_recording (
+    artist_mbid             UUID NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.top_release (
+    artist_mbid             UUID NOT NULL,
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
 );
 
 COMMIT;

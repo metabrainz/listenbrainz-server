@@ -3,19 +3,18 @@ import { createRoot } from "react-dom/client";
 
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import { toast } from "react-toastify";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type SelectTimezoneProps = {
   pg_timezones: Array<string[]>;
   user_timezone: string;
-} & WithAlertNotificationsInjectedProps;
+};
 export interface SelectTimezoneState {
   selectZone: string;
   userTimezone: string;
@@ -42,14 +41,15 @@ export default class SelectTimezone extends React.Component<
   };
 
   handleError = (error: string | Error, title?: string): void => {
-    const { newAlert } = this.props;
     if (!error) {
       return;
     }
-    newAlert(
-      "danger",
-      title || "Error",
-      typeof error === "object" ? error.message : error
+    toast.error(
+      <ToastMsg
+        title={title || "Error"}
+        message={typeof error === "object" ? error.message : error}
+      />,
+      { toastId: "timezone-success" }
     );
   };
 
@@ -59,7 +59,6 @@ export default class SelectTimezone extends React.Component<
     const { APIService, currentUser } = this.context;
     const { auth_token } = currentUser;
     const { selectZone } = this.state;
-    const { newAlert } = this.props;
 
     if (event) {
       event.preventDefault();
@@ -75,7 +74,10 @@ export default class SelectTimezone extends React.Component<
           this.setState({
             userTimezone: selectZone,
           });
-          newAlert("success", "Your timezone has been saved.", "");
+          toast.success(
+            <ToastMsg title="Your timezone has been saved." message="" />,
+            { toastId: "timezone-success" }
+          );
         }
       } catch (error) {
         this.handleError(
@@ -143,7 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -165,7 +166,6 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <SelectTimezoneWithAlertNotifications
-          initialAlerts={optionalAlerts}
           pg_timezones={pg_timezones}
           user_timezone={user_timezone}
         />

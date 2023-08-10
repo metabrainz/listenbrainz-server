@@ -43,7 +43,7 @@ const props: ListenCardProps = {
   showTimestamp: true,
   showUsername: true,
   updateFeedbackCallback: () => {},
-  newAlert: () => {},
+  
 };
 
 const globalProps = {
@@ -189,30 +189,11 @@ describe("ListenCard", () => {
     expect(durationElement.text()).toEqual("2:22");
   });
 
-  describe("handleError", () => {
-    it("calls newAlert", async () => {
-      const wrapper = mount<ListenCard>(
-        <ListenCard {...{ ...props, newAlert: jest.fn() }} />
-      );
-      const instance = wrapper.instance();
-      await act(() => {
-        instance.handleError("error");
-      });
-
-      expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
-      expect(instance.props.newAlert).toHaveBeenCalledWith(
-        "danger",
-        "Error",
-        "error"
-      );
-    });
-  });
-
   describe("recommendTrackToFollowers", () => {
     it("calls API, and creates a new alert on success", async () => {
       const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...{ ...props, newAlert: jest.fn() }} />
+          <ListenCard { ...props } />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -229,15 +210,11 @@ describe("ListenCard", () => {
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("test", "baz", {
-        artist_name: instance.props.listen.track_metadata.artist_name,
-        track_name: instance.props.listen.track_metadata.track_name,
         recording_msid:
           instance.props.listen.track_metadata.additional_info?.recording_msid,
         recording_mbid:
           instance.props.listen.track_metadata.additional_info?.recording_mbid,
       });
-
-      expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
@@ -294,11 +271,11 @@ describe("ListenCard", () => {
   });
   describe("pinRecordingModal", () => {
     it("renders the PinRecordingModal component with the correct props", async () => {
-      const newAlert = jest.fn();
+      
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
-            <ListenCard {...props} newAlert={newAlert} />
+            <ListenCard {...props}  />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
@@ -316,17 +293,17 @@ describe("ListenCard", () => {
         wrapper.find(PinRecordingModal).first().childAt(0).props()
       ).toEqual({
         recordingToPin: props.listen,
-        newAlert,
+       
       });
     });
   });
   describe("CBReviewModal", () => {
     it("renders the CBReviewModal component with the correct props", async () => {
-      const newAlert = jest.fn();
+  
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
-            <ListenCard {...props} newAlert={newAlert} />
+            <ListenCard {...props}  />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
@@ -343,7 +320,6 @@ describe("ListenCard", () => {
       // recentListens renders CBReviewModal with listens[0] as listen by default
       expect(wrapper.find(CBReviewModal).first().childAt(0).props()).toEqual({
         listen: props.listen,
-        newAlert,
       });
     });
   });

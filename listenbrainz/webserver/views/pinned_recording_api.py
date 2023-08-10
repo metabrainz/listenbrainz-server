@@ -296,7 +296,7 @@ def get_current_pin_for_user(user_name):
                 "recording_mbid": null,
                 "recording_msid": "fd7d9162-a284-4a10-906c-faae4f1e166b"
                 "track_metadata": {
-                "artist_name": "Rick Astley",
+                    "artist_name": "Rick Astley",
                     "track_name": "Never Gonna Give You Up"
                 }
             },

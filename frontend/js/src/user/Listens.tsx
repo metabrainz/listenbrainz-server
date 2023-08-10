@@ -1,43 +1,46 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import * as React from "react";
-import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
-
-import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as React from "react";
+import { createRoot } from "react-dom/client";
+import { toast } from "react-toastify";
+import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import { io, Socket } from "socket.io-client";
-import { get, isEqual } from "lodash";
-import { Integrations } from "@sentry/tracing";
-import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
-import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext from "../utils/GlobalAppContext";
 import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+  faCompactDisc,
+  faPlusCircle,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Integrations } from "@sentry/tracing";
+import { get, isEqual } from "lodash";
+import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
+import { Socket, io } from "socket.io-client";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import ListenCard from "../listens/ListenCard";
-import Loader from "../components/Loader";
 import AddListenModal from "../add-listen/AddListenModal";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import Loader from "../components/Loader";
+import FollowButton from "../follow/FollowButton";
+import UserSocialNetwork from "../follow/UserSocialNetwork";
+import ListenCard from "../listens/ListenCard";
+import ListenControl from "../listens/ListenControl";
+import ListenCountCard from "../listens/ListenCountCard";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
+import APIServiceClass from "../utils/APIService";
+import ErrorBoundary from "../utils/ErrorBoundary";
 import {
   formatWSMessageToListen,
-  getPageProps,
   getListenablePin,
+  getPageProps,
   getRecordingMBID,
-  getTrackName,
   getRecordingMSID,
+  getTrackName,
 } from "../utils/utils";
-import ListenControl from "../listens/ListenControl";
-import UserSocialNetwork from "../follow/UserSocialNetwork";
-import ListenCountCard from "../listens/ListenCountCard";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -45,7 +48,7 @@ export type ListensProps = {
   oldestListenTs: number;
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface ListensState {
   lastFetchedDirection?: "older" | "newer";
@@ -63,6 +66,7 @@ export interface ListensState {
   deletedListen: Listen | null;
   userPinnedRecording?: PinnedRecording;
   playingNowListen?: Listen;
+  followingList: Array<string>;
 }
 
 export default class Listens extends React.Component<
@@ -99,13 +103,13 @@ export default class Listens extends React.Component<
       deletedListen: null,
       userPinnedRecording: props.userPinnedRecording,
       playingNowListen,
+      followingList: [],
     };
 
     this.listensTable = React.createRef();
   }
 
-  componentDidMount(): void {
-    const { newAlert } = this.props;
+  componentDidMount() {
     // Get API instance from React context provided for in top-level component
     const { APIService } = this.context;
     const { playingNowListen } = this.state;
@@ -124,16 +128,19 @@ export default class Listens extends React.Component<
           this.setState({ listenCount });
         })
         .catch((error) => {
-          newAlert(
-            "danger",
-            "Sorry, we couldn't load your listens count…",
-            error?.toString()
+          toast.error(
+            <ToastMsg
+              title="Sorry, we couldn't load your listens count…"
+              message={error?.toString()}
+            />,
+            { toastId: "listen-count-error" }
           );
         });
     }
     if (playingNowListen) {
       this.receiveNewPlayingNow(playingNowListen);
     }
+    this.getFollowing();
     this.loadFeedback();
   }
 
@@ -213,11 +220,12 @@ export default class Listens extends React.Component<
     try {
       json = JSON.parse(newListen);
     } catch (error) {
-      const { newAlert } = this.props;
-      newAlert(
-        "danger",
-        "Coudn't parse the new listen as JSON: ",
-        error.toString()
+      toast.error(
+        <ToastMsg
+          title="Coudn't parse the new listen as JSON: "
+          message={error?.toString()}
+        />,
+        { toastId: "parse-listen-error" }
       );
       return;
     }
@@ -240,23 +248,43 @@ export default class Listens extends React.Component<
     const playingNow = newPlayingNow;
     const { APIService } = this.context;
     try {
-      const metadata = await APIService.lookupRecordingMetadata(
+      const response = await APIService.lookupRecordingMetadata(
         playingNow.track_metadata.track_name,
         playingNow.track_metadata.artist_name,
-        false
+        true
       );
-      playingNow.track_metadata.mbid_mapping = metadata as MBIDMapping;
+      if (response) {
+        const {
+          metadata,
+          recording_mbid,
+          release_mbid,
+          artist_mbids,
+        } = response;
+        playingNow.track_metadata.mbid_mapping = {
+          recording_mbid,
+          release_mbid,
+          artist_mbids,
+          caa_id: metadata?.release?.caa_id,
+          caa_release_mbid: metadata?.release?.caa_release_mbid,
+          artists: metadata?.artist?.artists?.map((artist, index) => {
+            return {
+              artist_credit_name: artist.name,
+              join_phrase: artist.join_phrase,
+              artist_mbid: artist_mbids[index],
+            };
+          }),
+        };
+      }
 
       await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {
-      const { newAlert } = this.props;
-      if (newAlert) {
-        newAlert(
-          "danger",
-          "We could not load data for the now playing listen",
-          typeof error === "object" ? error.message : error
-        );
-      }
+      toast.error(
+        <ToastMsg
+          title="We could not load data for the now playing listen "
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "load-listen-error" }
+      );
     }
     this.setState({
       playingNowListen: playingNow,
@@ -396,57 +424,56 @@ export default class Listens extends React.Component<
   };
 
   getFeedback = async () => {
-    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const { listens } = this.state;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (listens && listens.length && currentUser?.name) {
       listens.forEach((listen) => {
         const recordingMsid = getRecordingMSID(listen);
         if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
+          recording_msids.push(recordingMsid);
         }
         const recordingMBID = getRecordingMBID(listen);
         if (recordingMBID) {
-          recording_mbids += `${recordingMBID},`;
+          recording_mbids.push(recordingMBID);
         }
       });
 
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
+        toast.error(
+          <ToastMsg
+            title="We could not load love/hate feedback"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "load-feedback-error" }
+        );
       }
     }
     return [];
   };
 
   loadFeedbackForNowPlaying = async (listen: Listen): Promise<void> => {
-    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const recordingMBID = getRecordingMBID(listen);
-
     if (!currentUser?.name || !recordingMBID) {
       return;
     }
     try {
       const data = await APIService.getFeedbackForUserForRecordings(
         currentUser.name,
-        "",
-        recordingMBID
+        [recordingMBID],
+        []
       );
       if (data.feedback.length) {
         const { recordingMbidFeedbackMap } = this.state;
@@ -456,13 +483,13 @@ export default class Listens extends React.Component<
         this.setState({ recordingMbidFeedbackMap: newMbidFeedbackMap });
       }
     } catch (error) {
-      if (newAlert) {
-        newAlert(
-          "danger",
-          "We could not load love/hate feedback",
-          typeof error === "object" ? error.message : error
-        );
-      }
+      toast.error(
+        <ToastMsg
+          title="We could not load love/hate feedback"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "load-feedback-error" }
+      );
     }
   };
 
@@ -531,7 +558,6 @@ export default class Listens extends React.Component<
   };
 
   deleteListen = async (listen: Listen) => {
-    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -547,11 +573,15 @@ export default class Listens extends React.Component<
         );
         if (status === 200) {
           this.setState({ deletedListen: listen });
-          newAlert(
-            "info",
-            "Success",
-            "This listen has not been deleted yet, but is scheduled for deletion," +
-              " which usually happens shortly after the hour."
+          toast.info(
+            <ToastMsg
+              title="Success"
+              message={
+                "This listen has not been deleted yet, but is scheduled for deletion," +
+                "which usually happens shortly after the hour."
+              }
+            />,
+            { toastId: "delete-listen" }
           );
           // wait for the delete animation to finish
           setTimeout(() => {
@@ -559,13 +589,68 @@ export default class Listens extends React.Component<
           }, 1000);
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Error while deleting listen",
-          typeof error === "object" ? error.message : error.toString()
+        toast.error(
+          <ToastMsg
+            title="Error while deleting listen"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "delete-listen-error" }
         );
       }
     }
+  };
+
+  getFollowing = async () => {
+    const { APIService, currentUser } = this.context;
+    const { getFollowingForUser } = APIService;
+    if (!currentUser?.name) {
+      return;
+    }
+    try {
+      const response = await getFollowingForUser(currentUser.name);
+      const { following } = response;
+
+      this.setState({ followingList: following });
+    } catch (err) {
+      toast.error(
+        <ToastMsg
+          title="Error while fetching following"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-following-error" }
+      );
+    }
+  };
+
+  updateFollowingList = (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => {
+    const { followingList } = this.state;
+    const newFollowingList = [...followingList];
+    const index = newFollowingList.findIndex(
+      (following) => following === user.name
+    );
+    if (action === "follow" && index === -1) {
+      newFollowingList.push(user.name);
+    }
+    if (action === "unfollow" && index !== -1) {
+      newFollowingList.splice(index, 1);
+    }
+    this.setState({ followingList: newFollowingList });
+  };
+
+  loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
+    const { currentUser } = this.context;
+    const { followingList } = this.state;
+
+    if (_.isNil(currentUser) || _.isEmpty(currentUser)) {
+      return false;
+    }
+
+    return followingList.includes(user.name);
   };
 
   removeListenFromListenList = (listen: Listen) => {
@@ -651,7 +736,7 @@ export default class Listens extends React.Component<
 
   getListenCard = (listen: Listen): JSX.Element => {
     const { deletedListen } = this.state;
-    const { newAlert } = this.props;
+
     const { currentUser } = this.context;
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -686,7 +771,6 @@ export default class Listens extends React.Component<
         listen={listen}
         currentFeedback={this.getFeedbackForListen(listen)}
         updateFeedbackCallback={this.updateFeedback}
-        newAlert={newAlert}
         className={`${listen.playing_now ? "playing-now " : ""}${
           shouldBeDeleted ? "deleted " : ""
         }`}
@@ -716,7 +800,7 @@ export default class Listens extends React.Component<
       userPinnedRecording,
       playingNowListen,
     } = this.state;
-    const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
+    const { latestListenTs, oldestListenTs, user } = this.props;
     const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
@@ -738,23 +822,79 @@ export default class Listens extends React.Component<
     const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
       <div role="main">
-        <div className="listen-header">
-          {listens.length === 0 ? <div id="spacer" /> : <h3>Recent listens</h3>}
-          {isCurrentUsersPage && (
-            <button
-              type="button"
-              className="btn btn-primary add-listen-btn"
-              onClick={() => {
-                NiceModal.show(AddListenModal, {
-                  newAlert,
-                });
-              }}
-              data-Toggle="modal"
-              data-Target="#AddListenModal"
+        <div className="row">
+          <div className="col-md-8 listen-header">
+            {listens.length === 0 ? (
+              <div id="spacer" />
+            ) : (
+              <h3>Recent listens</h3>
+            )}
+            {isCurrentUsersPage && (
+              <div className="dropdow add-listen-btn">
+                <button
+                  className="btn btn-info dropdown-toggle"
+                  type="button"
+                  id="addListensDropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                >
+                  <FontAwesomeIcon icon={faPlusCircle} title="Add listens" />
+                  &nbsp;Add listens&nbsp;
+                  <span className="caret" />
+                </button>
+                <ul
+                  className="dropdown-menu dropdown-menu-right"
+                  aria-labelledby="addListensDropdown"
+                >
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show(AddListenModal);
+                      }}
+                      data-toggle="modal"
+                      data-target="#AddListenModal"
+                    >
+                      Manual addition
+                    </button>
+                  </li>
+                  <li>
+                    <a href="/profile/music-services/details/">
+                      Connect music services
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/profile/import/">Import your listens</a>
+                  </li>
+                  <li>
+                    <a href="/add-data/">Submit from music players</a>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+          <div className="col-md-4" style={{ marginTop: "1em" }}>
+            {!isCurrentUsersPage && (
+              <FollowButton
+                type="icon-only"
+                user={user}
+                loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
+                updateFollowingList={this.updateFollowingList}
+              />
+            )}
+            <a
+              href={`https://musicbrainz.org/user/${user.name}`}
+              className="btn lb-follow-button" // for same style as follow button next to it
+              target="_blank"
+              rel="noreferrer"
             >
-              Add listen
-            </button>
-          )}
+              <img
+                src="/static/img/musicbrainz-16.svg"
+                alt="MusicBrainz Logo"
+              />{" "}
+              MusicBrainz
+            </a>
+          </div>
         </div>
 
         <div className="row">
@@ -767,11 +907,10 @@ export default class Listens extends React.Component<
                 currentFeedback={userPinnedRecordingFeedback}
                 updateFeedbackCallback={this.updateFeedback}
                 removePinFromPinsList={() => {}}
-                newAlert={newAlert}
               />
             )}
             <ListenCountCard user={user} listenCount={listenCount} />
-            {user && <UserSocialNetwork user={user} newAlert={newAlert} />}
+            {user && <UserSocialNetwork user={user} />}
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
@@ -931,7 +1070,6 @@ export default class Listens extends React.Component<
         </div>
         <BrainzPlayer
           listens={allListenables}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
@@ -947,7 +1085,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -974,7 +1111,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <ListensWithAlertNotifications
-            initialAlerts={optionalAlerts}
             latestListenTs={latest_listen_ts}
             listens={listens}
             userPinnedRecording={userPinnedRecording}

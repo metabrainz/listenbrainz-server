@@ -5,7 +5,6 @@ exports[`BrainzPlayerUI renders 1`] = `
   artistName="The xx"
   durationMs={10000}
   listenBrainzAPIBaseURI="api.example.com"
-  newAlert={[Function]}
   playNextTrack={[Function]}
   playPreviousTrack={[Function]}
   playerPaused={true}

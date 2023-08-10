@@ -1,18 +1,14 @@
 import { isEmpty, isNil } from "lodash";
 import * as React from "react";
+import { toast } from "react-toastify";
 import Card from "../components/Card";
-
 import GlobalAppContext from "../utils/GlobalAppContext";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type UserSocialNetworkProps = {
   user: ListenBrainzUser;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 export type UserSocialNetworkState = {
@@ -63,8 +59,13 @@ export default class UserSocialNetwork extends React.Component<
         similarUsersList,
       });
     } catch (err) {
-      const { newAlert } = this.props;
-      newAlert("danger", "Error while fetching followers", err.toString());
+      toast.error(
+        <ToastMsg
+          title=" Error while fetching similar users"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-similar-error" }
+      );
     }
   };
 
@@ -78,8 +79,13 @@ export default class UserSocialNetwork extends React.Component<
 
       this.setState({ followerList: followers });
     } catch (err) {
-      const { newAlert } = this.props;
-      newAlert("danger", "Error while fetching followers", err.toString());
+      toast.error(
+        <ToastMsg
+          title="Error while fetching followers"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-followers-error" }
+      );
     }
   };
 
@@ -93,8 +99,13 @@ export default class UserSocialNetwork extends React.Component<
 
       this.setState({ followingList: following });
     } catch (err) {
-      const { newAlert } = this.props;
-      newAlert("danger", "Error while fetching followers", err.toString());
+      toast.error(
+        <ToastMsg
+          title={`Error while fetching ${user?.name}'s following`}
+          message={err.toString()}
+        />,
+        { toastId: "fetch-following-error" }
+      );
     }
   };
 
@@ -110,8 +121,13 @@ export default class UserSocialNetwork extends React.Component<
 
       this.setState({ currentUserFollowingList: following });
     } catch (err) {
-      const { newAlert } = this.props;
-      newAlert("danger", "Error while fetching followers", err.toString());
+      toast.error(
+        <ToastMsg
+          title="Error while fetching the users you follow"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-following-error" }
+      );
     }
   };
 

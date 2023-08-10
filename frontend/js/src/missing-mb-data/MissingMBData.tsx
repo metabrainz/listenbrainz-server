@@ -1,35 +1,38 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase,react/jsx-no-bind */
 
 import * as React from "react";
+import { toast } from "react-toastify";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import { faLink, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faLink, faPlus, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import { getArtistName, getPageProps, getTrackName } from "../utils/utils";
+import {
+  getArtistName,
+  getPageProps,
+  getRecordingMSID,
+  getTrackName,
+} from "../utils/utils";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import Loader from "../components/Loader";
+import { ToastMsg } from "../notifications/Notifications";
 import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
   user: ListenBrainzUser;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface MissingMBDataState {
   missingData: Array<MissingMBData>;
-
+  deletedListens: Array<string>; // array of recording_msid of deleted items
   currPage?: number;
   totalPages: number;
   loading: boolean;
@@ -43,7 +46,6 @@ export default class MissingMBDataPage extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
   private expectedDataPerPage = 25;
   private MissingMBDataTable = React.createRef<HTMLTableElement>();
-  private APIService!: APIServiceClass;
 
   constructor(props: MissingMBDataProps) {
     super(props);
@@ -54,6 +56,7 @@ export default class MissingMBDataPage extends React.Component<
         ? Math.ceil(props.missingData.length / this.expectedDataPerPage)
         : 0,
       loading: false,
+      deletedListens: [],
     };
 
     this.MissingMBDataTable = React.createRef();
@@ -61,8 +64,6 @@ export default class MissingMBDataPage extends React.Component<
 
   componentDidMount(): void {
     const { currPage } = this.state;
-    const { APIService } = this.context;
-    this.APIService = APIService;
     window.history.replaceState(null, "", `?page=${currPage}`);
   }
 
@@ -156,10 +157,60 @@ export default class MissingMBDataPage extends React.Component<
     form.remove();
   };
 
-  render() {
-    const { missingData, currPage, totalPages, loading } = this.state;
-    const { user, newAlert } = this.props;
+  deleteListen = async (data: MissingMBData) => {
+    const { user } = this.props;
     const { APIService, currentUser } = this.context;
+    const isCurrentUser = user.name === currentUser?.name;
+    if (isCurrentUser && currentUser?.auth_token) {
+      const listenedAt = new Date(data.listened_at).getTime() / 1000;
+      try {
+        const status = await APIService.deleteListen(
+          currentUser.auth_token,
+          data.recording_msid,
+          listenedAt
+        );
+        if (status === 200) {
+          this.setState((prevState) => ({
+            deletedListens: prevState.deletedListens.concat(
+              data.recording_msid
+            ),
+          }));
+          toast.info(
+            <ToastMsg
+              title="Success"
+              message={
+                "This listen has not been deleted yet, but is scheduled for deletion," +
+                " which usually happens shortly after the hour."
+              }
+            />,
+            { toastId: "deleted-track" }
+          );
+        }
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="Error while deleting listen"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "deleted-track-error" }
+        );
+      }
+    }
+  };
+
+  render() {
+    const {
+      missingData,
+      currPage,
+      totalPages,
+      loading,
+      deletedListens,
+    } = this.state;
+    const { user } = this.props;
+    const { APIService, currentUser } = this.context;
+    const isCurrentUser = user.name === currentUser?.name;
     const missingMBDataAsListen = missingData.map((data) => {
       return {
         listened_at: new Date(data.listened_at).getTime() / 1000,
@@ -190,8 +241,17 @@ export default class MissingMBDataPage extends React.Component<
                 <Loader isLoading={loading} />
               </div>
               {missingData.map((data, index) => {
+                if (
+                  deletedListens.find(
+                    (deletedMSID) => deletedMSID === data.recording_msid
+                  )
+                ) {
+                  // If the item was deleted, don't show it to the user
+                  return null;
+                }
                 let additionalActions;
                 const listen = missingMBDataAsListen[index];
+                const additionalMenuItems = [];
                 if (currentUser?.auth_token) {
                   // Commenting this out for now because currently it leads to new eager users creating
                   // a bunch of standalone recordings, and possible duplicates
@@ -206,6 +266,22 @@ export default class MissingMBDataPage extends React.Component<
                     />
                   ); */
 
+                  const recordingMSID = getRecordingMSID(listen);
+                  const canDelete =
+                    isCurrentUser &&
+                    Boolean(listen.listened_at) &&
+                    Boolean(recordingMSID);
+
+                  if (canDelete) {
+                    additionalMenuItems.push(
+                      <ListenControl
+                        text="Delete Listen"
+                        icon={faTrashAlt}
+                        action={this.deleteListen.bind(this, data)}
+                      />
+                    );
+                  }
+
                   if (listen?.track_metadata?.additional_info?.recording_msid) {
                     const linkWithMB = (
                       <ListenControl
@@ -216,11 +292,8 @@ export default class MissingMBDataPage extends React.Component<
                         action={() => {
                           NiceModal.show(MBIDMappingModal, {
                             listenToMap: listen,
-                            newAlert,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#MapToMusicBrainzRecordingModal"
                       />
                     );
                     additionalActions = linkWithMB;
@@ -231,14 +304,13 @@ export default class MissingMBDataPage extends React.Component<
                     key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
                     showTimestamp
                     showUsername={false}
-                    newAlert={newAlert}
                     // eslint-disable-next-line react/jsx-no-useless-fragment
                     customThumbnail={<></>}
                     // eslint-disable-next-line react/jsx-no-useless-fragment
                     feedbackComponent={<></>}
                     listen={missingMBDataAsListen[index]}
+                    additionalMenuItems={additionalMenuItems}
                     additionalActions={additionalActions}
-                    compact
                   />
                 );
               })}
@@ -282,7 +354,6 @@ export default class MissingMBDataPage extends React.Component<
         </div>
         <BrainzPlayer
           listens={missingMBDataAsListen}
-          newAlert={newAlert}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
@@ -298,7 +369,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -321,7 +391,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <MissingMBDataPageWithAlertNotification
-            initialAlerts={optionalAlerts}
             missingData={missingData}
             user={user}
           />

@@ -63,11 +63,8 @@ const apiRefreshSpy = jest
   .spyOn(testAPIService, "refreshAccessToken")
   .mockResolvedValue("this is new token");
 
-const newAlert = jest.fn();
-
 const props: CBReviewModalProps = {
   listen,
-  newAlert,
 };
 
 const niceModalProps: NiceModalHocProps = {
@@ -137,17 +134,6 @@ describe("CBReviewModal", () => {
       rating: undefined,
       text: "This review text is more than 25 characters...",
     });
-    expect(newAlert).toHaveBeenCalledWith(
-      "success",
-      "Your review was submitted to CritiqueBrainz!",
-      <a
-        href="https://critiquebrainz.org/review/new-review-id-that-API-returns"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Britney Spears - Criminal
-      </a>
-    );
   });
 
   describe("getGroupMBIDFromRelease", () => {

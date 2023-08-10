@@ -37,7 +37,10 @@ module.exports = {
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-  transformIgnorePatterns: ["<rootDir>/node_modules/"],
+  // Re-include d3 packages
+  transformIgnorePatterns: [
+    "<rootDir>/node_modules/(?!(d3-color|d3-scale-chromatic))",
+  ],
 
   // Indicates whether each individual test should be reported during the run
   verbose: true,

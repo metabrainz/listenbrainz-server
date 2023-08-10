@@ -10,8 +10,8 @@ import {
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
 import { clone, get, has, isNaN } from "lodash";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
 
 import Pill from "../components/Pill";
 import ListenCard from "../listens/ListenCard";
@@ -22,12 +22,13 @@ import {
   handleNavigationClickEvent,
 } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
   totalCount: number;
   user: ListenBrainzUser;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface UserFeedbackState {
   feedback: Array<FeedbackResponseWithTrackMetadata>;
@@ -110,7 +111,7 @@ export default class UserFeedback extends React.Component<
     page: number,
     replaceFeebackArray: boolean = false
   ) => {
-    const { newAlert, user } = this.props;
+    const { user } = this.props;
     const { APIService } = this.context;
     const { selectedFeedbackScore, feedback } = this.state;
     this.setState({ loading: true });
@@ -150,17 +151,22 @@ export default class UserFeedback extends React.Component<
         this.loadFeedback
       );
     } catch (error) {
-      newAlert(
-        "warning",
-        "We could not load love/hate feedback",
-        <>
-          Something went wrong when we tried to load your loved/hated
-          recordings, please try again or contact us if the problem persists.
-          <br />
-          <strong>
-            {error.name}: {error.message}
-          </strong>
-        </>
+      toast.warn(
+        <ToastMsg
+          title="We could not load love/hate feedback"
+          message={
+            <>
+              Something went wrong when we tried to load your loved/hated
+              recordings, please try again or contact us if the problem
+              persists.
+              <br />
+              <strong>
+                {error.name}: {error.message}
+              </strong>
+            </>
+          }
+        />,
+        { toastId: "load-feedback-error" }
       );
       this.setState({ loading: false });
     }
@@ -168,49 +174,47 @@ export default class UserFeedback extends React.Component<
 
   getFeedback = async () => {
     const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
+
     const {
       feedback,
       recordingMsidFeedbackMap,
       recordingMbidFeedbackMap,
     } = this.state;
 
-    let recording_msids = "";
-    let recording_mbids = "";
+    let recording_msids: string[] = [];
+    let recording_mbids: string[] = [];
     if (feedback?.length && currentUser?.name) {
       recording_msids = feedback
         .map((item) => item.recording_msid)
         // Only request non-undefined and non-empty string
         .filter(Boolean)
         // Only request feedback we don't already have
-        .filter((msid) => !has(recordingMsidFeedbackMap, msid))
-        .join(",");
+        .filter((msid) => !has(recordingMsidFeedbackMap, msid)) as string[];
       recording_mbids = feedback
         .map((item) => item.recording_mbid)
         // Only request non-undefined and non-empty string
         .filter(Boolean)
         // Only request feedback we don't already have
         // @ts-ignore
-        .filter((mbid) => !has(recordingMbidFeedbackMap, mbid))
-        .join(",");
-      if (!recording_msids && !recording_mbids) {
+        .filter((mbid) => !has(recordingMbidFeedbackMap, mbid)) as string[];
+      if (!recording_msids.length && !recording_mbids.length) {
         return [];
       }
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "warning",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
+        toast.warn(
+          <ToastMsg
+            title="We could not load love/hate feedback"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "load-feedback-error" }
+        );
       }
     }
     return [];
@@ -326,7 +330,7 @@ export default class UserFeedback extends React.Component<
       page,
       selectedFeedbackScore,
     } = this.state;
-    const { user, newAlert } = this.props;
+    const { user } = this.props;
     const { APIService, currentUser } = this.context;
     const { noMoreFeedback } = this.state;
     const listensFromFeedback: BaseListenFormat[] = feedback
@@ -387,7 +391,6 @@ export default class UserFeedback extends React.Component<
                     listen={listen}
                     currentFeedback={this.getFeedbackForListen(listen)}
                     updateFeedbackCallback={this.updateFeedback}
-                    newAlert={newAlert}
                   />
                 );
               })}

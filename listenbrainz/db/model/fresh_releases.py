@@ -26,6 +26,7 @@ class ReleaseGroupSecondaryType(Enum):
     MIXTAPESTREET = "Mixtape/Street"
     DEMO = "Demo"
     AUDIO = "Audio drama"
+    FIELD = "Field recording"
 
 
 class FreshRelease(BaseModel):
@@ -67,7 +68,7 @@ class FreshRelease(BaseModel):
     def to_dict(self):
         """Convert this model to a dict for easy jsonification"""
 
-        release = dict(self)
+        release = self.dict()
         release["release_date"] = release["release_date"].strftime("%Y-%m-%d")
         if release["release_group_primary_type"] is None:
             del release["release_group_primary_type"]

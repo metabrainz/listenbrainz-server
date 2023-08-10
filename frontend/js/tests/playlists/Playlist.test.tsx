@@ -19,12 +19,14 @@ import { waitForComponentToPaint } from "../test-utils";
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
+jest.mock("../../src/utils/SearchTrackOrMBID");
+
 const { labsApiUrl, currentUser, playlist } = playlistPageProps;
 
 const props = {
   labsApiUrl,
   playlist: playlist as JSPFObject,
-  newAlert: () => {},
+  
 };
 
 const GlobalContextMock: GlobalAppContextT = {
@@ -82,53 +84,6 @@ describe("PlaylistPage", () => {
       },
     });
     expect(wrapper.find("#exportPlaylistToSpotify")).toHaveLength(1);
-  });
-
-  it("does not clear the add-a-track input on blur", async () => {
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
-      wrappingComponent: GlobalAppContext.Provider,
-      wrappingComponentProps: {
-        value: GlobalContextMock,
-      },
-    });
-    const instance = wrapper.instance();
-    let searchInput = wrapper.find(AsyncSelect);
-
-    expect(instance.state.searchInputValue).toEqual("");
-    // @ts-ignore
-    expect(searchInput.props().inputValue).toEqual("");
-
-    await act(() => {
-      searchInput.simulate("focus");
-      instance.handleInputChange("mysearch", { action: "input-change" });
-    });
-
-    expect(instance.state.searchInputValue).toEqual("mysearch");
-    await waitForComponentToPaint(wrapper);
-    searchInput = wrapper.find(AsyncSelect);
-    expect(searchInput.props().inputValue).toEqual("mysearch");
-
-    // simulate ReactSelect input blur event
-    await act(() => {
-      searchInput.simulate("blur");
-      instance.handleInputChange("", { action: "input-blur" });
-    });
-
-    await waitForComponentToPaint(wrapper);
-    searchInput = wrapper.find(AsyncSelect);
-    expect(instance.state.searchInputValue).toEqual("mysearch");
-    expect(searchInput.props().inputValue).toEqual("mysearch");
-
-    // simulate ReactSelect menu close event (blur)
-    await act(() => {
-      instance.handleInputChange("", { action: "menu-close" });
-    });
-
-    await waitForComponentToPaint(wrapper);
-    searchInput = wrapper.find(AsyncSelect);
-    expect(instance.state.searchInputValue).toEqual("mysearch");
-
-    expect(searchInput.props().inputValue).toEqual("mysearch");
   });
 
   it("filters out playlist owner from collaborators", async () => {

@@ -87,9 +87,11 @@ def combined_without_album_detuned(item) -> str:
 def lookup_using_metadata(params: list[dict]):
     """ Given a list of dicts each having artist name, release name and track name, attempt to find spotify track
     id for each. """
-    metadata = {}
+    all_metadata, metadata = {}, {}
     for idx, item in enumerate(params):
-        metadata[idx] = item
+        all_metadata[idx] = item
+        if "artist_name" in item and "track_name" in item:
+            metadata[idx] = item
 
     # first attempt matching on artist, track and release followed by trying various detunings for unmatched recordings
     _, remaining_items = perform_lookup(LookupType.ALL, metadata, combined_all)
@@ -98,8 +100,9 @@ def lookup_using_metadata(params: list[dict]):
     _, remaining_items = perform_lookup(LookupType.WITHOUT_ALBUM, remaining_items, combined_without_album_detuned)
 
     # to the still unmatched recordings, add null value so that each item has in the response has spotify_track_id key
-    for item in remaining_items.values():
-        item["spotify_track_ids"] = []
+    for item in all_metadata.values():
+        if "spotify_track_ids" not in item:
+            item["spotify_track_ids"] = []
 
-    return list(metadata.values())
+    return list(all_metadata.values())
 

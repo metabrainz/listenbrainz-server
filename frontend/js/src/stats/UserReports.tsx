@@ -4,7 +4,11 @@ import * as React from "react";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import { faGlobe, faUser } from "@fortawesome/free-solid-svg-icons";
+import {
+  faGlobe,
+  faInfoCircle,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Pill from "../components/Pill";
@@ -14,19 +18,17 @@ import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
 import { getPageProps } from "../utils/utils";
 import { getAllStatRanges } from "./utils";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
   apiUrl: string;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type UserReportsState = {
   range: UserStatsAPIRange;
+  user?: ListenBrainzUser;
 };
 
 export default class UserReports extends React.Component<
@@ -41,6 +43,7 @@ export default class UserReports extends React.Component<
 
     this.state = {
       range: "" as UserStatsAPIRange,
+      user: props.user,
     };
   }
 
@@ -58,6 +61,14 @@ export default class UserReports extends React.Component<
 
   componentWillUnmount() {
     window.removeEventListener("popstate", this.syncStateWithURL);
+  }
+
+  setUser(userName?: string) {
+    if (userName) {
+      this.setState({ user: { name: userName } });
+    } else {
+      this.setState({ user: undefined });
+    }
   }
 
   changeRange = (newRange: UserStatsAPIRange): void => {
@@ -86,24 +97,18 @@ export default class UserReports extends React.Component<
   };
 
   render() {
-    const { range } = this.state;
-    const { apiUrl, user, newAlert } = this.props;
+    const { range, user } = this.state;
+    const { apiUrl } = this.props;
     const { currentUser } = this.context;
 
     const ranges = getAllStatRanges();
-    let userStatsUrl: string | undefined;
-    if (user?.name) {
-      userStatsUrl = `${window.location.origin}/user/${user.name}/stats/?range=${range}`;
-    } else if (currentUser?.name) {
-      userStatsUrl = `${window.location.origin}/user/${currentUser.name}/stats/?range=${range}`;
-    }
-
-    const globalStatsUrl = `${window.location.origin}/statistics/?range=${range}`;
+    const userOrLoggedInUser: string | undefined =
+      user?.name ?? currentUser?.name;
 
     return (
       <div>
-        <div className="row mt-15 flex flex-wrap">
-          <div style={{ flex: "initial" }}>
+        <div className="tertiary-nav dragscroll">
+          <div>
             {Array.from(ranges, ([stat_type, stat_name]) => {
               return (
                 <Pill
@@ -116,24 +121,41 @@ export default class UserReports extends React.Component<
               );
             })}
           </div>
-          <div style={{ flex: "initial", marginLeft: "auto" }}>
-            {Boolean(userStatsUrl) && (
-              <a
-                href={userStatsUrl}
+          <div>
+            {Boolean(userOrLoggedInUser) && (
+              <button
+                type="button"
+                onClick={() => {
+                  this.setUser(user?.name ?? currentUser?.name);
+                }}
                 className={`pill secondary ${user ? "active" : ""}`}
               >
                 <FontAwesomeIcon icon={faUser} />{" "}
                 {user?.name ?? currentUser?.name}
-              </a>
+              </button>
             )}
-            <a
-              href={globalStatsUrl}
+            <button
+              type="button"
+              onClick={() => {
+                this.setUser();
+              }}
               className={`pill secondary ${!user ? "active" : ""}`}
             >
               <FontAwesomeIcon icon={faGlobe} /> Global
-            </a>
+            </button>
           </div>
         </div>
+        <small>
+          <FontAwesomeIcon icon={faInfoCircle} />
+          &nbsp;
+          <a
+            href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            How often are my stats updated?
+          </a>
+        </small>
         <section id="listening-activity">
           <ErrorBoundary>
             <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
@@ -149,7 +171,6 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="artist"
-                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -157,11 +178,10 @@ export default class UserReports extends React.Component<
               <ErrorBoundary>
                 <UserTopEntity
                   range={range}
-                  entity="release"
+                  entity="release-group"
                   apiUrl={apiUrl}
                   user={user}
                   terminology="album"
-                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -173,7 +193,6 @@ export default class UserReports extends React.Component<
                   apiUrl={apiUrl}
                   user={user}
                   terminology="track"
-                  newAlert={newAlert}
                 />
               </ErrorBoundary>
             </div>
@@ -202,7 +221,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -226,7 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <UserReportsPageWithAlertNotifications
             apiUrl={globalAppContext.APIService.APIBaseURI}
             user={user}
-            initialAlerts={optionalAlerts}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

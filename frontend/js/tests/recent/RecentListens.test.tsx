@@ -41,6 +41,8 @@ const {
   youtube,
   user,
   userPinnedRecording,
+  globalListenCount,
+  globalUserCount,
 } = recentListensProps;
 
 const props = {
@@ -52,7 +54,9 @@ const props = {
   profileUrl,
   user,
   userPinnedRecording,
-  newAlert: () => {},
+  globalListenCount,
+  globalUserCount,
+  
 };
 
 // Create a new instance of GlobalAppContext
@@ -67,7 +71,7 @@ const mountOptions: { context: GlobalAppContextT } = {
 
 const propsOneListen = {
   ...recentListensPropsOneListen,
-  newAlert: () => {},
+  
 };
 
 fetchMock.mockIf(

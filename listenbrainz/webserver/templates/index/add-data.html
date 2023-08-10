@@ -1,6 +1,6 @@
-{%- extends 'base.html' -%}
+{%- extends 'user/settings.html' -%}
 {%- block title -%}Adding Data - ListenBrainz{%- endblock -%}
-{%- block content -%}
+{%- block settings_content -%}
   <h2 class="page-title">Adding your data to Listenbrainz</h2>
   {# Listen submission information #}
   <h3>Submitting Listens</h3>
@@ -21,13 +21,15 @@
   
   <h4>Standalone programs/streaming servers</h4>
   <ul>
-    <li><em><a href="https://docs.funkwhale.audio/users/builtinplugins.html#listenbrainz-plugin">Funkwhale</a></em>, a decentralized music sharing and listening platform with built-in support for ListenBrainz</li>
-    <li><em><a href="https://jellyfin.org/">Jellyfin</a></em>, a free software media streaming system: <a href="https://github.com/lyarenei/jellyfin-plugin-listenbrainz"><code>jellyfin-plugin-listenbrainz</code></a></li>
     <li><em><a href="https://github.com/InputUsername/rescrobbled">Rescrobbled</a></em>, a universal Linux scrobbler for MPRIS enabled players</li>
     <li><em><a href="https://github.com/mariusor/mpris-scrobbler">mpris-scrobbler</a></em>, a minimalistic unix scrobbler for MPRIS enabled players</li>
+    <li><em><a href="https://github.com/FoxxMD/multi-scrobbler">Multi-scrobbler</a></em>, a powerful javascript server application for all platforms, with support for many sources.</li>
+    <li><em><a href="https://www.smashbits.nl/smashtunes/">SmashTunes</a></em>, a Mac menu bar utility for displaying the current track. Submits Apple Music and Spotify listens.</li>
+    <li><em><a href="https://github.com/golgote/applescript-listenbrainz">applescript-listenbrainz</a></em>, an applescript service to submit Apple Music listens</li>
     <li><em><a href="https://github.com/simonxciv/eavesdrop.fm">Eavesdrop.FM</a></em>, submits Plex music listening data to ListenBrainz</li>
     <li><em><a href="https://github.com/vvdleun/audiostreamerscrobbler">AudioStreamerScrobbler</a></em>, submit listens from hardware audiostreamers (Bluesound/BluOS, MusicCast, HEOS)</li>
-    <li><em><a href="https://github.com/golgote/applescript-listenbrainz">applescript-listenbrainz</a></em>, an applescript service to submit Apple Music listens</li>
+    <li><em><a href="https://docs.funkwhale.audio/users/builtinplugins.html#listenbrainz-plugin">Funkwhale</a></em>, a decentralized music sharing and listening platform with built-in support for ListenBrainz</li>
+    <li><em><a href="https://jellyfin.org/">Jellyfin</a></em>, a free software media streaming system: <a href="https://github.com/lyarenei/jellyfin-plugin-listenbrainz"><code>jellyfin-plugin-listenbrainz</code></a></li>
   </ul>
   
   <h4>Browser extensions</h4>
@@ -38,6 +40,7 @@
   
   <h4>Mobile devices</h4>
   <ul>
+    <li><em><a href="https://play.google.com/store/apps/details?id=org.listenbrainz.android">The official ListenBrainz app</a></em> for Android devices</li>
     <li><em><a href="https://github.com/tgwizard/sls">Simple Last.fm Scrobbler</a></em>, for Android devices</li>
     <li><em><a href="https://play.google.com/store/apps/details?id=com.arn.scrobble">Pano Scrobbler</a></em>, a scrobbling application for Android Devices</li>
   </ul>

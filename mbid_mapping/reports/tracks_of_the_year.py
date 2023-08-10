@@ -83,7 +83,7 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, start_ts, end_ts):
                             , count(*) AS listen_count
                          FROM listen l
                          JOIN mbid_mapping m
-                           ON data->'track_metadata'->'additional_info'->>'recording_msid' = m.recording_msid::TEXT
+                           ON l.recording_msid = m.recording_msid
                          JOIN mbid_mapping_metadata md
                            ON m.recording_mbid = md.recording_mbid
                         WHERE listened_at >= %s

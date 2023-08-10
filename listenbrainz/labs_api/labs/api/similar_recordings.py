@@ -63,7 +63,7 @@ class SimilarRecordingsViewerQuery(Query):
             results = [{"type": "markup", "data": Markup("<p><b>Reference recording</b></p>")}]
             results.append(references)
 
-            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "recording", recording_mbids, algorithm, count)
+            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "recording_dev", recording_mbids, algorithm, count)
             if len(similar_mbids) == 0:
                 results.append({
                     "type": "markup",

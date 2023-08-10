@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import orjson
@@ -11,7 +13,7 @@ from listenbrainz.db import listens_importer
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, \
-    get_playlists_collaborated_on
+    get_playlists_collaborated_on, get_recommendation_playlists_for_user
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db import year_in_music as db_year_in_music
@@ -94,11 +96,13 @@ def profile(user_name):
 
     args = {}
     if max_ts:
-        args['to_ts'] = max_ts
-    else:
-        args['from_ts'] = min_ts
+        args['to_ts'] = datetime.utcfromtimestamp(max_ts)
+    elif min_ts:
+        args['from_ts'] =  datetime.utcfromtimestamp(min_ts)
     data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
+    min_ts_per_user = int(min_ts_per_user.timestamp())
+    max_ts_per_user = int(max_ts_per_user.timestamp())
 
     listens = []
     for listen in data:
@@ -112,8 +116,7 @@ def profile(user_name):
 
     already_reported_user = False
     if current_user.is_authenticated:
-        already_reported_user = db_user.is_user_reported(
-            current_user.id, user.id)
+        already_reported_user = db_user.is_user_reported(current_user.id, user.id)
 
     pin = get_current_pin_for_user(user_id=user.id)
     if pin:
@@ -276,15 +279,14 @@ def recommendation_playlists(user_name: str):
     }
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_created_for_user(
-        user.id, False, count, offset)
+    user_playlists = get_recommendation_playlists_for_user(
+        user.id)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
 
     props = {
         "playlists": playlists,
         "user": user_data,
-        "playlist_count": playlist_count,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
@@ -450,4 +452,4 @@ def missing_mb_data(user_name: str):
         }
     }
 
-    return render_template("user/missing_data.html", user=user, props=orjson.dumps(props).decode("utf-8"))
+    return render_template("user/missing_data.html", user=user, props=orjson.dumps(props).decode("utf-8"), active_settings_section="missing-musicbrainz-data")

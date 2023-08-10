@@ -3,15 +3,9 @@
 exports[`Sitewide Stats UserReports renders without crashing 1`] = `
 <div>
   <div
-    className="row mt-15 flex flex-wrap"
+    className="tertiary-nav dragscroll"
   >
-    <div
-      style={
-        Object {
-          "flex": "initial",
-        }
-      }
-    >
+    <div>
       <Pill
         active={false}
         onClick={[Function]}
@@ -62,17 +56,11 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
         All time
       </Pill>
     </div>
-    <div
-      style={
-        Object {
-          "flex": "initial",
-          "marginLeft": "auto",
-        }
-      }
-    >
-      <a
+    <div>
+      <button
         className="pill secondary active"
-        href="http://localhost/statistics/?range=week"
+        onClick={[Function]}
+        type="button"
       >
         <FontAwesomeIcon
           border={false}
@@ -106,9 +94,50 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
           transform={null}
         />
          Global
-      </a>
+      </button>
     </div>
   </div>
+  <small>
+    <FontAwesomeIcon
+      border={false}
+      className=""
+      fixedWidth={false}
+      flip={null}
+      icon={
+        Object {
+          "icon": Array [
+            512,
+            512,
+            Array [],
+            "f05a",
+            "M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z",
+          ],
+          "iconName": "info-circle",
+          "prefix": "fas",
+        }
+      }
+      inverse={false}
+      listItem={false}
+      mask={null}
+      pull={null}
+      pulse={false}
+      rotation={null}
+      size={null}
+      spin={false}
+      swapOpacity={false}
+      symbol={false}
+      title=""
+      transform={null}
+    />
+     
+    <a
+      href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      How often are my stats updated?
+    </a>
+  </small>
   <section
     id="listening-activity"
   >
@@ -132,7 +161,6 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="artist"
-            newAlert={[Function]}
             range="week"
             terminology="artist"
           />
@@ -144,8 +172,7 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
         <ErrorBoundary>
           <UserTopEntity
             apiUrl="foobar"
-            entity="release"
-            newAlert={[Function]}
+            entity="release-group"
             range="week"
             terminology="album"
           />
@@ -158,7 +185,6 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="recording"
-            newAlert={[Function]}
             range="week"
             terminology="track"
           />
@@ -182,15 +208,9 @@ exports[`Sitewide Stats UserReports renders without crashing 1`] = `
 exports[`User Stats UserReports renders without crashing 1`] = `
 <div>
   <div
-    className="row mt-15 flex flex-wrap"
+    className="tertiary-nav dragscroll"
   >
-    <div
-      style={
-        Object {
-          "flex": "initial",
-        }
-      }
-    >
+    <div>
       <Pill
         active={false}
         onClick={[Function]}
@@ -241,17 +261,11 @@ exports[`User Stats UserReports renders without crashing 1`] = `
         All time
       </Pill>
     </div>
-    <div
-      style={
-        Object {
-          "flex": "initial",
-          "marginLeft": "auto",
-        }
-      }
-    >
-      <a
+    <div>
+      <button
         className="pill secondary active"
-        href="http://localhost/user/test_user/stats/?range=week"
+        onClick={[Function]}
+        type="button"
       >
         <FontAwesomeIcon
           border={false}
@@ -286,10 +300,11 @@ exports[`User Stats UserReports renders without crashing 1`] = `
         />
          
         test_user
-      </a>
-      <a
+      </button>
+      <button
         className="pill secondary "
-        href="http://localhost/statistics/?range=week"
+        onClick={[Function]}
+        type="button"
       >
         <FontAwesomeIcon
           border={false}
@@ -323,9 +338,50 @@ exports[`User Stats UserReports renders without crashing 1`] = `
           transform={null}
         />
          Global
-      </a>
+      </button>
     </div>
   </div>
+  <small>
+    <FontAwesomeIcon
+      border={false}
+      className=""
+      fixedWidth={false}
+      flip={null}
+      icon={
+        Object {
+          "icon": Array [
+            512,
+            512,
+            Array [],
+            "f05a",
+            "M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z",
+          ],
+          "iconName": "info-circle",
+          "prefix": "fas",
+        }
+      }
+      inverse={false}
+      listItem={false}
+      mask={null}
+      pull={null}
+      pulse={false}
+      rotation={null}
+      size={null}
+      spin={false}
+      swapOpacity={false}
+      symbol={false}
+      title=""
+      transform={null}
+    />
+     
+    <a
+      href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      How often are my stats updated?
+    </a>
+  </small>
   <section
     id="listening-activity"
   >
@@ -354,7 +410,6 @@ exports[`User Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="artist"
-            newAlert={[Function]}
             range="week"
             terminology="artist"
             user={
@@ -371,8 +426,7 @@ exports[`User Stats UserReports renders without crashing 1`] = `
         <ErrorBoundary>
           <UserTopEntity
             apiUrl="foobar"
-            entity="release"
-            newAlert={[Function]}
+            entity="release-group"
             range="week"
             terminology="album"
             user={
@@ -390,7 +444,6 @@ exports[`User Stats UserReports renders without crashing 1`] = `
           <UserTopEntity
             apiUrl="foobar"
             entity="recording"
-            newAlert={[Function]}
             range="week"
             terminology="track"
             user={

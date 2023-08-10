@@ -5,9 +5,8 @@ import * as React from "react";
 
 import * as _ from "lodash";
 
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { WithAlertNotificationsInjectedProps } from "../notifications/AlertNotificationsHOC";
-
 import Loader from "../components/Loader";
 import PinnedRecordingCard from "./PinnedRecordingCard";
 import {
@@ -15,13 +14,14 @@ import {
   getRecordingMBID,
   getRecordingMSID,
 } from "../utils/utils";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type UserPinsProps = {
   user: ListenBrainzUser;
   pins: PinnedRecording[];
   totalCount: number;
   profileUrl?: string;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type UserPinsState = {
   pins: PinnedRecording[];
@@ -71,7 +71,7 @@ export default class UserPins extends React.Component<
   };
 
   getPinsFromAPI = async (page: number, replacePinsArray: boolean = false) => {
-    const { newAlert, user } = this.props;
+    const { user } = this.props;
     const { APIService } = this.context;
     const { pins } = this.state;
     this.setState({ loading: true });
@@ -106,55 +106,61 @@ export default class UserPins extends React.Component<
         this.loadFeedback
       );
     } catch (error) {
-      newAlert(
-        "warning",
-        "Could not load pin history",
-        <>
-          Something went wrong when we tried to load your pinned recordings,
-          please try again or contact us if the problem persists.
-          <br />
-          <strong>
-            {error.name}: {error.message}
-          </strong>
-        </>
+      toast.warn(
+        <ToastMsg
+          title="Could not load pin history"
+          message={
+            <>
+              Something went wrong when we tried to load your pinned recordings,
+              please try again or contact us if the problem persists.
+              <br />
+              <strong>
+                {error.name}: {error.message}
+              </strong>
+            </>
+          }
+        />,
+        { toastId: "load-pins-error" }
       );
       this.setState({ loading: false });
     }
   };
 
   getFeedback = async () => {
-    const { pins, newAlert } = this.props;
+    const { pins } = this.props;
     const { APIService, currentUser } = this.context;
-    let recording_msids = "";
-    let recording_mbids = "";
+    const recording_msids: string[] = [];
+    const recording_mbids: string[] = [];
 
     if (pins && currentUser?.name) {
       pins.forEach((item) => {
         if (item.recording_msid) {
-          recording_msids += `${item.recording_msid},`;
+          recording_msids.push(item.recording_msid);
         }
         if (item.recording_mbid) {
-          recording_mbids += `${item.recording_mbid},`;
+          recording_mbids.push(item.recording_mbid);
         }
       });
-      if (!recording_msids && !recording_mbids) {
+      if (!recording_msids.length && !recording_mbids.length) {
         return [];
       }
       try {
         const data = await APIService.getFeedbackForUserForRecordings(
           currentUser.name,
-          recording_msids,
-          recording_mbids
+          recording_mbids,
+          recording_msids
         );
         return data.feedback;
       } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
+        toast.warn(
+          <ToastMsg
+            title="We could not load love/hate feedback"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "load-feedback-error" }
+        );
       }
     }
     return [];
@@ -233,7 +239,7 @@ export default class UserPins extends React.Component<
   };
 
   render() {
-    const { user, profileUrl, newAlert } = this.props;
+    const { user, profileUrl } = this.props;
     const { pins, loading, noMorePins } = this.state;
     const { currentUser } = this.context;
 
@@ -286,7 +292,6 @@ export default class UserPins extends React.Component<
                     pinnedRecording={pin}
                     isCurrentUser={currentUser?.name === user?.name}
                     removePinFromPinsList={this.removePinFromPinsList}
-                    newAlert={newAlert}
                     currentFeedback={this.getFeedbackForListen(
                       pinsAsListens[index]
                     )}

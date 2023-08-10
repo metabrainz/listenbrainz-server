@@ -44,7 +44,7 @@ const props = {
   feedback: typedFeedback,
   youtube,
   spotify,
-  newAlert: () => {},
+  
 };
 
 // Create a new instance of GlobalAppContext
@@ -131,14 +131,8 @@ describe("UserFeedback", () => {
     expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
     expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
       "pikachu",
-      props.feedback
-        .map((item) => item.recording_msid)
-        .filter(Boolean)
-        .join(","),
-      props.feedback
-        .map((item) => item.recording_mbid)
-        .filter(Boolean)
-        .join(",")
+      props.feedback.map((item) => item.recording_mbid).filter(Boolean),
+      props.feedback.map((item) => item.recording_msid).filter(Boolean)
     );
 
     expect(instance.state.recordingMsidFeedbackMap).toEqual({

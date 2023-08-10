@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+from sqlalchemy import text
 
+from listenbrainz import messybrainz
+from listenbrainz import db
+from listenbrainz.db import timescale
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from flask import url_for, current_app
@@ -26,14 +30,50 @@ import listenbrainz.db.user_timeline_event as db_user_timeline_event
 import time
 import json
 import uuid
+from listenbrainz.webserver.views.user_timeline_event_api import DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
 
 class FeedAPITestCase(ListenAPIIntegrationTestCase):
+
+    def insert_metadata(self):
+        with timescale.engine.begin() as connection:
+            query = """
+                INSERT INTO mapping.mb_metadata_cache
+                           (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                    VALUES ('34c208ee-2de7-4d38-b47e-907074866dd3'
+                          , '{4a779683-5404-4b90-a0d7-242495158265}'::UUID[]
+                          , '1390f1b7-7851-48ae-983d-eb8a48f78048'
+                          , '{"name": "52 Bars", "rels": [], "length": 214024}'
+                          , '{"name": "Karan Aujla", "artists": [{"area": "Punjab", "name": "Karan Aujla", "rels": {"wikidata": "https://www.wikidata.org/wiki/Q58008320", "social network": "https://www.instagram.com/karanaujla_official/"}, "type": "Person", "gender": "Male", "begin_year": 1997, "join_phrase": ""}], "artist_credit_id": 2892477}'
+                          , '{"artist": [], "recording": [], "release_group": []}'
+                          , '{"mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "name": "Four You", "year": 2023, "caa_id": 34792503592, "caa_release_mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "album_artist_name": "Karan Aujla", "release_group_mbid": "eb8734c9-127d-495e-b908-9194cdbac45d"}'
+                          , 'f'
+                           )
+            """
+            connection.execute(text(query))
+            msid = messybrainz.submit_recording(connection, "Strangers", "Portishead", "Dummy", None, 291160)
+            return msid
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:
         following_user = db_user.get_or_create(mb_row_id, name)
         db_user_relationship.insert(user, following_user['id'], 'follow')
         return following_user
+
+    def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, global_similarity: float, name: str) -> dict:
+        similar_user = db_user.get_or_create(mb_row_id, name)
+        self.similar_user_data[similar_user['id']] = (similarity, global_similarity)
+        with db.engine.begin() as connection:
+            connection.execute(text("""
+                INSERT INTO recommendation.similar_user (user_id, similar_users)
+                     VALUES (:similar_to_user, :similar_users)
+                ON CONFLICT (user_id)
+                  DO UPDATE
+                        SET similar_users = EXCLUDED.similar_users
+                """), {
+                "similar_to_user": similar_to_user,
+                "similar_users": json.dumps(self.similar_user_data)
+            })
+        return similar_user
 
     def remove_own_follow_events(self, payload: dict) -> dict:
         new_events = []
@@ -51,6 +91,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.following_user_1 = self.create_and_follow_user(self.main_user['id'], 102, 'following_1')
         self.following_user_2 = self.create_and_follow_user(self.main_user['id'], 103, 'following_2')
 
+    # TODO: Remove this test when user_feed_listens_following enpoint is active.
     def test_it_sends_listens_for_users_that_are_being_followed(self):
         with open(self.path_to_data_file('valid_single.json'), 'r') as f:
             payload = json.load(f)
@@ -72,7 +113,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # This sleep allows for the timescale subscriber to take its time in getting
         # the listen submitted from redis and writing it to timescale.
-        time.sleep(1)
+        time.sleep(2)
 
         response = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
@@ -103,6 +144,164 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('listen', payload['events'][3]['event_type'])
         self.assertEqual(ts - 11, payload['events'][3]['created'])
         self.assertEqual('following_2', payload['events'][3]['user_name'])
+
+    def test_it_sends_all_listens_for_users_that_are_similar(self):
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        self.similar_user_data = dict()
+        similar_user_1 = self.create_similar_user(self.main_user['id'], 104, 0.1, 0.1, 'similar_1')
+        similar_user_2 = self.create_similar_user(self.main_user['id'], 105, 0.2, 0.2, 'similar_2')
+
+        ts = int(time.time())
+        # Send 3 listens for the following_user_1
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - i
+            response = self.send_data(payload, user=similar_user_1)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        # Send 3 listens with lower timestamps for similar_user_2
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - 10 - i
+            response = self.send_data(payload, user=similar_user_2)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        from datetime import timedelta
+        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(seconds=1))
+
+        # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
+        response = self.send_data(payload, user=similar_user_1)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # Sending a listen with time difference slightly greater than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec - 1000
+        response = self.send_data(payload, user=similar_user_2)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # This sleep allows for the timescale subscriber to take its time in getting
+        # the listen submitted from redis and writing it to timescale.
+        time.sleep(2)
+
+        response = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed_listens_similar', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+        )
+        self.assert200(response)
+        payload = response.json['payload']
+
+        # should have 7 listens only. As one listen is out of seach interval, it should not be in payload.
+        self.assertEqual(7, payload['count'])
+
+        # first 3 events should have higher timestamps and user should be similar_1
+        self.assertEqual('listen', payload['events'][0]['event_type'])
+        self.assertEqual(ts, payload['events'][0]['created'])
+        self.assertEqual('similar_1', payload['events'][0]['user_name'])
+        self.assertEqual(0.1, payload['events'][0]['similarity'])
+
+        self.assertEqual('listen', payload['events'][1]['event_type'])
+        self.assertEqual(ts - 1, payload['events'][1]['created'])
+        self.assertEqual('similar_1', payload['events'][1]['user_name'])
+        self.assertEqual(0.1, payload['events'][1]['similarity'])
+
+        self.assertEqual('listen', payload['events'][2]['event_type'])
+        self.assertEqual(ts - 2, payload['events'][2]['created'])
+        self.assertEqual('similar_1', payload['events'][2]['user_name'])
+        self.assertEqual(0.1, payload['events'][2]['similarity'])
+
+        # next 3 events should have lower timestamps and user should be similar_2
+        self.assertEqual('listen', payload['events'][3]['event_type'])
+        self.assertEqual(ts - 10, payload['events'][3]['created'])
+        self.assertEqual('similar_2', payload['events'][3]['user_name'])
+        self.assertEqual(0.2, payload['events'][3]['similarity'])
+
+        self.assertEqual('listen', payload['events'][4]['event_type'])
+        self.assertEqual(ts - 11, payload['events'][4]['created'])
+        self.assertEqual('similar_2', payload['events'][4]['user_name'])
+        self.assertEqual(0.2, payload['events'][4]['similarity'])
+
+        self.assertEqual('listen', payload['events'][5]['event_type'])
+        self.assertEqual(ts - 12, payload['events'][5]['created'])
+        self.assertEqual('similar_2', payload['events'][5]['user_name'])
+        self.assertEqual(0.2, payload['events'][5]['similarity'])
+
+    def test_it_sends_all_listens_for_users_that_are_being_followed(self):
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        ts = int(time.time())
+        # Send 3 listens for the following_user_1
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - i
+            response = self.send_data(payload, user=self.following_user_1)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        # Send 3 listens with lower timestamps for following_user_2
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts - 10 - i
+            response = self.send_data(payload, user=self.following_user_2)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        from datetime import timedelta
+        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(seconds=1))
+
+        # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
+        response = self.send_data(payload, user=self.following_user_1)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # Sending a listen with time difference slightly greater than DEFAULT_LISTEN_EVENT_WINDOW_NEW
+        payload['payload'][0]['listened_at'] = ts - listenWindowMillisec - 1000
+        response = self.send_data(payload, user=self.following_user_1)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # This sleep allows for the timescale subscriber to take its time in getting
+        # the listen submitted from redis and writing it to timescale.
+        time.sleep(2)
+
+        response = self.client.get(
+            url_for('user_timeline_event_api_bp.user_feed_listens_following', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+        )
+        self.assert200(response)
+        payload = response.json['payload']
+
+        # the payload contains events for the users we've followed, but we don't care about those
+        # for now, so let's remove them for this test.
+        payload = self.remove_own_follow_events(payload)
+
+        # should have 7 listens only. As one listen is out of seach interval, it should not be in payload.
+        self.assertEqual(7, payload['count'])
+
+        # first 3 events should have higher timestamps and user should be following_1
+        self.assertEqual('listen', payload['events'][0]['event_type'])
+        self.assertEqual(ts, payload['events'][0]['created'])
+        self.assertEqual('following_1', payload['events'][0]['user_name'])
+        self.assertEqual('listen', payload['events'][1]['event_type'])
+        self.assertEqual(ts - 1, payload['events'][1]['created'])
+        self.assertEqual('following_1', payload['events'][1]['user_name'])
+        self.assertEqual('listen', payload['events'][2]['event_type'])
+        self.assertEqual(ts - 2, payload['events'][2]['created'])
+        self.assertEqual('following_1', payload['events'][2]['user_name'])
+
+        # next 3 events should have lower timestamps and user should be following_2
+        self.assertEqual('listen', payload['events'][3]['event_type'])
+        self.assertEqual(ts - 10, payload['events'][3]['created'])
+        self.assertEqual('following_2', payload['events'][3]['user_name'])
+        self.assertEqual('listen', payload['events'][4]['event_type'])
+        self.assertEqual(ts - 11, payload['events'][4]['created'])
+        self.assertEqual('following_2', payload['events'][4]['user_name'])
+        self.assertEqual('listen', payload['events'][5]['event_type'])
+        self.assertEqual(ts - 12, payload['events'][5]['created'])
+        self.assertEqual('following_2', payload['events'][5]['user_name'])
 
     def test_it_raises_unauthorized_for_a_different_user(self):
         r = self.client.get('/1/user/someotheruser/feed/events')
@@ -214,34 +413,29 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('follow', r.json['payload']['events'][1]['event_type'])
         self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][1]['user_name'])
         self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][1]['metadata']['user_name_0'])
-        self.assertEqual(self.following_user_2['musicbrainz_id'], r.json['payload']['events'][1]['metadata']['user_name_1'])
+        self.assertEqual(self.following_user_2['musicbrainz_id'],
+                         r.json['payload']['events'][1]['metadata']['user_name_1'])
         self.assertEqual('follow', r.json['payload']['events'][1]['metadata']['relationship_type'])
 
         self.assertEqual('follow', r.json['payload']['events'][2]['event_type'])
         self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][2]['user_name'])
         self.assertEqual(self.main_user['musicbrainz_id'], r.json['payload']['events'][2]['metadata']['user_name_0'])
-        self.assertEqual(self.following_user_1['musicbrainz_id'], r.json['payload']['events'][2]['metadata']['user_name_1'])
+        self.assertEqual(self.following_user_1['musicbrainz_id'],
+                         r.json['payload']['events'][2]['metadata']['user_name_1'])
         self.assertEqual('follow', r.json['payload']['events'][2]['metadata']['relationship_type'])
 
     def test_it_returns_recording_recommendation_events(self):
+        msid = self.insert_metadata()
         # create a recording recommendation ourselves
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.main_user['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="Lose yourself to dance",
-                artist_name="Daft Punk",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_msid=msid)
         )
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.following_user_1['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="Sunflower",
-                artist_name="Swae Lee & Post Malone",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_mbid="34c208ee-2de7-4d38-b47e-907074866dd3")
         )
 
         # this should show up in the events
@@ -259,13 +453,33 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(2, payload['count'])
         self.assertEqual('recording_recommendation', payload['events'][0]['event_type'])
         self.assertEqual('following_1', payload['events'][0]['user_name'])
-        self.assertEqual('Sunflower', payload['events'][0]['metadata']['track_metadata']['track_name'])
-        self.assertEqual('Swae Lee & Post Malone', payload['events'][0]['metadata']['track_metadata']['artist_name'])
+        self.assertEqual({
+            'additional_info': None,
+            'artist_name': 'Karan Aujla',
+            'mbid_mapping': {
+                'artist_mbids': ['4a779683-5404-4b90-a0d7-242495158265'],
+                'artists': [
+                    {
+                        'artist_credit_name': 'Karan Aujla',
+                        'artist_mbid': '4a779683-5404-4b90-a0d7-242495158265',
+                        'join_phrase': ''
+                    }
+                ],
+                'caa_id': 34792503592,
+                'caa_release_mbid': '1390f1b7-7851-48ae-983d-eb8a48f78048',
+                'recording_mbid': '34c208ee-2de7-4d38-b47e-907074866dd3',
+                'release_mbid': '1390f1b7-7851-48ae-983d-eb8a48f78048'
+            },
+            'release_name': 'Four You',
+            'track_name': '52 Bars'
+        }, payload['events'][0]['metadata']['track_metadata'])
 
         self.assertEqual('recording_recommendation', payload['events'][1]['event_type'])
         self.assertEqual(self.main_user['musicbrainz_id'], payload['events'][1]['user_name'])
-        self.assertEqual('Lose yourself to dance', payload['events'][1]['metadata']['track_metadata']['track_name'])
-        self.assertEqual('Daft Punk', payload['events'][1]['metadata']['track_metadata']['artist_name'])
+        self.assertEqual('Portishead', payload['events'][1]['metadata']['track_metadata']['artist_name'])
+        self.assertEqual('Strangers', payload['events'][1]['metadata']['track_metadata']['track_name'])
+        self.assertEqual('Dummy', payload['events'][1]['metadata']['track_metadata']['release_name'])
+        self.assertEqual(msid, payload['events'][1]['metadata']['track_metadata']['additional_info']['recording_msid'])
 
     def test_it_returns_empty_list_if_user_does_not_follow_anyone(self):
         new_user = db_user.get_or_create(111, 'totally_new_user_with_no_friends')
@@ -292,15 +506,12 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
 
         time.sleep(1)  # sleep a bit to avoid ordering conflicts, cannot mock this time as it comes from postgres
+        self.insert_metadata()
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
             user_id=self.following_user_1['id'],
-            metadata=RecordingRecommendationMetadata(
-                track_name="Sunflower",
-                artist_name="Swae Lee & Post Malone",
-                recording_msid=str(uuid.uuid4()),
-            )
+            metadata=RecordingRecommendationMetadata(recording_mbid="34c208ee-2de7-4d38-b47e-907074866dd3")
         )
 
         time.sleep(1)

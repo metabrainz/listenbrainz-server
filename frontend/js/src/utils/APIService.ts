@@ -1,4 +1,5 @@
-import { isNil, isUndefined, omit } from "lodash";
+import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
+import { TagActionType } from "../tags/TagComponent";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -146,6 +147,10 @@ export default class APIService {
 
   refreshCritiquebrainzToken = async (): Promise<string> => {
     return this.refreshAccessToken("critiquebrainz");
+  };
+
+  refreshMusicbrainzToken = async (): Promise<string> => {
+    return this.refreshAccessToken("musicbrainz");
   };
 
   refreshAccessToken = async (service: string): Promise<string> => {
@@ -551,6 +556,43 @@ export default class APIService {
     return response.status;
   };
 
+  /**
+   * Import feedback data from thir party services
+   * @param  {string} userToken
+   * @param  {string} userName
+   * @param  {ImportService} service
+   */
+  importFeedback = async (
+    userToken: string,
+    userName: string,
+    service: ImportService
+  ): Promise<{
+    inserted: number;
+    invalid_mbid: number;
+    mbid_not_found: number;
+    missing_mbid: number;
+    total: number;
+  }> => {
+    const url = `${this.APIBaseURI}/feedback/import`;
+    if (!userName || !userToken || !service) {
+      throw new Error("Missing user name, token or external service name");
+    }
+    const body = {
+      user_name: userName,
+      service,
+    };
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(body),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   getFeedbackForUser = async (
     userName: string,
     offset: number = 0,
@@ -581,28 +623,26 @@ export default class APIService {
 
   getFeedbackForUserForRecordings = async (
     userName: string,
-    recording_msids: string,
-    recording_mbids: string
+    recording_mbids: string[],
+    recording_msids?: string[]
   ) => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
-
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_msids=${recording_msids}&recording_mbids=${recording_mbids}`;
-    const response = await fetch(url);
-    await this.checkStatus(response);
-    return response.json();
-  };
-
-  getFeedbackForUserForMBIDs = async (
-    userName: string,
-    recording_mbids: string // Comma-separated list of MBIDs
-  ) => {
-    if (!userName) {
-      throw new SyntaxError("Username missing");
+    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings`;
+    const requestBody: FeedbackForUserForRecordingsRequestBody = {
+      recording_mbids,
+    };
+    if (recording_msids?.length) {
+      requestBody.recording_msids = recording_msids;
     }
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recording_mbids=${recording_mbids}`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(requestBody),
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -722,7 +762,7 @@ export default class APIService {
       headers,
     });
     await this.checkStatus(response);
-    return response.json();
+    return response;
   };
 
   addPlaylistItems = async (
@@ -1045,21 +1085,29 @@ export default class APIService {
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"
-  ): Promise<any> => {
+  ): Promise<MusicBrainzRecording> => {
     const url = `${this.MBBaseURI}/recording/${recordingMBID}?fmt=json&inc=${inc}`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
   };
 
-  lookupMBRelease = async (releaseMBID: string): Promise<any> => {
+  lookupMBRelease = async (
+    releaseMBID: string
+  ): Promise<MusicBrainzReleaseWithReleaseGroup> => {
     const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
   };
 
-  lookupMBReleaseFromTrack = async (trackMBID: string): Promise<any> => {
+  lookupMBReleaseFromTrack = async (
+    trackMBID: string
+  ): Promise<{
+    "release-offset": number;
+    "release-count": number;
+    releases: MusicBrainzReleaseWithMedia[];
+  }> => {
     const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
@@ -1174,6 +1222,26 @@ export default class APIService {
     return response.json();
   };
 
+  getRecordingMetadata = async (
+    recordingMBIDs: string[],
+    metadata: boolean = true
+  ): Promise<{ [mbid: string]: ListenMetadata } | null> => {
+    if (!recordingMBIDs?.length) {
+      return null;
+    }
+    const url = new URL(`${this.APIBaseURI}/metadata/recording/`);
+
+    url.searchParams.append("recording_mbids", recordingMBIDs.join(","));
+
+    if (metadata) {
+      url.searchParams.append("inc", "artist tag release");
+    }
+
+    const response = await fetch(url.toString());
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   resetUserTimezone = async (
     userToken: string,
     zonename: string
@@ -1244,6 +1312,22 @@ export default class APIService {
     return response.json();
   };
 
+  exportPlaylistToXSPF = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<Blob> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/xspf`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/xspf+xml;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.blob();
+  };
+
   fetchSitewideFreshReleases = async (
     days?: number,
     release_date?: string
@@ -1274,5 +1358,91 @@ export default class APIService {
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
+  };
+  /** MusicBrainz */
+
+  submitTagToMusicBrainz = async (
+    entityType: string,
+    entityMBID: string,
+    tagName: string,
+    action: TagActionType,
+    musicBrainzAuthToken: string,
+    retries: number = 2
+  ): Promise<boolean> => {
+    const formattedEntityName = kebabCase(entityType);
+    // encode reserved characters
+    const safeTagName = tagName
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+    try {
+      const parser = new DOMParser();
+      const xmlDocument = parser.parseFromString(
+        `
+        <metadata xmlns="http://musicbrainz.org/ns/mmd-2.0#">
+          <${formattedEntityName}-list>
+              <${formattedEntityName} id="${entityMBID}">
+                  <user-tag-list>
+                      <user-tag vote="${lowerCase(
+                        action
+                      )}"><name>${safeTagName}</name></user-tag>
+                  </user-tag-list>
+              </${formattedEntityName}>
+          </${formattedEntityName}-list>
+        </metadata>
+      `,
+        "application/xml"
+      );
+
+      // Check if the XML parsing threw an error; if so the first element will be a <parseerror>
+      const isInvalid =
+        xmlDocument.documentElement?.childNodes?.[0]?.nodeName ===
+        "parsererror";
+      if (isInvalid) {
+        // Get the error text content from the <parseerror> element
+        const errorText =
+          xmlDocument.documentElement.childNodes[0].childNodes?.[1]
+            ?.textContent;
+        throw SyntaxError(`Invalid XML: ${errorText}`);
+      }
+
+      const url = `${this.MBBaseURI}/tag?client=listenbrainz-listening-now`;
+      const serializer = new XMLSerializer();
+      const body = serializer.serializeToString(xmlDocument);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          Authorization: `Bearer ${musicBrainzAuthToken}`,
+        },
+        body,
+      });
+      if (response.ok) {
+        return true;
+      }
+      if (retries > 0) {
+        let token = musicBrainzAuthToken;
+        if (response.status === 401) {
+          // Token is probably expired, refresh it before trying again
+          // Currently the error messgae and status is the same for wrong credentials
+          // and expired token, so we can't know exactly what the issue is. See MBS-13068
+          token = await this.refreshMusicbrainzToken();
+        }
+        return this.submitTagToMusicBrainz(
+          entityType,
+          entityMBID,
+          tagName,
+          action,
+          token,
+          retries - 1
+        );
+      }
+      return false;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 }

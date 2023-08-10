@@ -1,18 +1,14 @@
 {% extends 'user/base.html' %}
 {%- block title -%}
+  Created for
   {% if current_user.musicbrainz_id == user.musicbrainz_id %}
-  Your 
+  you
   {% else %}
-  {{ user.musicbrainz_id }}'s&nbsp;
+  {{ user.musicbrainz_id }}
   {%- endif -%}
-   Recommendations - ListenBrainz
+   - ListenBrainz
 {%- endblock-%}
 
-{% block profile_content %}
-
-    <div id="react-container"></div>
-
-{% endblock %}
 
 {% block scripts %}
   {{ super() }}

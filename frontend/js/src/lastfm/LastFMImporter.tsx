@@ -5,7 +5,9 @@ import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Integrations } from "@sentry/tracing";
-import { FormEvent } from "react";
+import { capitalize } from "lodash";
+import { ToastContainer, toast } from "react-toastify";
+import { faHeart } from "@fortawesome/free-regular-svg-icons";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
@@ -314,9 +316,8 @@ export default class LastFmImporter extends React.Component<
   };
 
   handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    const { lastfmUsername } = this.state;
-    this.toggleModal();
     event.preventDefault();
+    this.toggleModal();
     this.startImport();
   };
 
@@ -343,6 +344,41 @@ export default class LastFmImporter extends React.Component<
         } as Listen;
       });
     await this.APIService.submitListens(this.userToken, "import", listens);
+  };
+
+  importFeedback = async () => {
+    const { lastfmUsername, service } = this.state;
+    if (!lastfmUsername || service !== "lastfm") {
+      return;
+    }
+    const { importFeedback } = this.APIService;
+    try {
+      const response = await importFeedback(
+        this.userToken,
+        lastfmUsername,
+        service
+      );
+      const { inserted, total } = response;
+      toast.success(
+        <div>
+          Succesfully imported {inserted} out of {total} tracks feedback from{" "}
+          {capitalize(service)}
+          <br />
+          <a href="/my/taste">Click here to see your newly loved tracks</a>
+        </div>
+      );
+    } catch (error) {
+      toast.error(
+        <div>
+          We were unable to import your loved tracks from {capitalize(service)},
+          please try again later.
+          <br />
+          If the problem persists please{" "}
+          <a href="mailto:support@metabrainz.org">contact us</a>.
+          <pre>{error.toString()}</pre>
+        </div>
+      );
+    }
   };
 
   handleSpotifyImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -644,8 +680,18 @@ export default class LastFmImporter extends React.Component<
             type="submit"
             disabled={!lastfmUsername}
           >
-            Import Now!
+            Import listens
           </button>
+          {service === "lastfm" && (
+            <button
+              className="btn btn-success"
+              type="button"
+              disabled={!lastfmUsername}
+              onClick={this.importFeedback}
+            >
+              <FontAwesomeIcon icon={faHeart as IconProp} /> Import loved tracks
+            </button>
+          )}
         </form>
         {show && (
           <LastFMImporterModal onClose={this.toggleModal} disable={!canClose}>
@@ -707,14 +753,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
-    <LastFmImporter
-      user={user}
-      profileUrl={profile_url}
-      apiUrl={globalAppContext.APIService.APIBaseURI}
-      lastfmApiKey={lastfm_api_key}
-      lastfmApiUrl={lastfm_api_url}
-      librefmApiKey={librefm_api_key}
-      librefmApiUrl={librefm_api_url}
-    />
+    <>
+      <ToastContainer
+        position="bottom-right"
+        autoClose={8000}
+        hideProgressBar
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnHover
+        theme="light"
+      />
+      <LastFmImporter
+        user={user}
+        profileUrl={profile_url}
+        apiUrl={globalAppContext.APIService.APIBaseURI}
+        lastfmApiKey={lastfm_api_key}
+        lastfmApiUrl={lastfm_api_url}
+        librefmApiKey={librefm_api_key}
+        librefmApiUrl={librefm_api_url}
+      />
+    </>
   );
 });

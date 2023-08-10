@@ -240,8 +240,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(result[0].score, self.sample_feedback_with_metadata[0]["score"])
         self.assertEqual(result[0].track_metadata["artist_name"], "Portishead")
         self.assertEqual(result[0].track_metadata["track_name"], "Strangers")
-        self.assertEqual(result[0].track_metadata["additional_info"]["recording_mbid"], "2f3d422f-8890-41a1-9762-fbe16f107c31")
-        self.assertEqual(result[0].track_metadata["additional_info"]["release_mbid"], "76df3287-6cda-33eb-8e9a-044b5e15ffdd")
+        self.assertEqual(result[0].track_metadata["mbid_mapping"]["recording_mbid"], "2f3d422f-8890-41a1-9762-fbe16f107c31")
+        self.assertEqual(result[0].track_metadata["mbid_mapping"]["release_mbid"], "76df3287-6cda-33eb-8e9a-044b5e15ffdd")
 
     def test_get_feedback_count_for_user(self):
         count = self.insert_test_data(self.user["id"])

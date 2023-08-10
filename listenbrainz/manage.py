@@ -8,16 +8,17 @@ import sqlalchemy
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.db import timescale as ts, do_not_recommend
-from listenbrainz.listenstore import timescale_fill_userid
+from listenbrainz.listenstore import timescale_fill_userid, timescale_listens_migrate
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
     delete_listens as ts_delete_listens, \
     delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data, \
     refresh_top_manual_mappings as ts_refresh_top_manual_mappings
+from listenbrainz.domain import spotify_fill_user_id
 from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
 from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
-from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
+from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
 
 
@@ -162,10 +163,6 @@ def init_ts_db(force, create_db):
         print('TS: Creating views...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
 
-        print('TS: Creating Functions...')
-        ts.run_sql_script(os.path.join(
-            TIMESCALE_SQL_DIR, 'create_functions.sql'))
-
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
 
@@ -283,6 +280,24 @@ def listen_add_userid():
     app = create_app()
     with app.app_context():
         timescale_fill_userid.fill_userid()
+
+
+@cli.command()
+def spotify_add_userid():
+    """
+        Fill in the spotify user id using the connected user's oauth token.
+    """
+    app = create_app()
+    with app.app_context():
+        spotify_fill_user_id.main()
+
+
+@cli.command()
+def listen_migrate():
+    """ Migrate the listens table to new schema. """
+    app = create_app()
+    with app.app_context():
+        timescale_listens_migrate.migrate_listens()
 
 
 @cli.command()

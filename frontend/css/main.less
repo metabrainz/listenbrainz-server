@@ -24,22 +24,21 @@
 @import "DateTimePicker.less";
 @import "TimePicker.less";
 @import "explore.less";
+@import "search-track.less";
+@import "stats.less";
+@import "new-navbar.less";
+@import "tags.less";
 
 @icon-font-path: "/static/fonts/";
 
 @pager-border-radius: @border-radius-base;
-// Height of the BrainzPlayer component (fixed at the bottom of the page)
-@brainzplayer-height: 60px;
+
+@import (inline) "react-toastify/dist/ReactToastify.css";
 
 @import (inline, css) "highlight.js/styles/github.css";
 pre code.hljs {
   max-height: 50vh;
   overflow-y: scroll;
-}
-
-body {
-  // Leave some space for BrainzPlayer
-  padding-bottom: @brainzplayer-height;
 }
 
 .table {
@@ -104,6 +103,8 @@ body {
   color: #000000;
   padding-bottom: 10px;
   margin-top: 2rem;
+  margin-left: ceil((@grid-gutter-width / -2));
+  margin-right: floor((@grid-gutter-width / -2));
   border-top-width: 2px;
   border-top-style: solid;
   border-top-color: #ddd;
@@ -331,4 +332,27 @@ body {
 .badge-info {
   color: @white;
   background-color: @blue;
+}
+
+// Fix button height inside an input group
+.input-group:not(.input-group-lg):not(.input-group-sm)
+  > .input-group-btn
+  > .btn {
+  line-height: 2em;
+}
+
+.btn-icon {
+  padding: 0.5em;
+  font-size: 1.5em;
+  width: 2em;
+  height: 2em;
+  line-height: 1em;
+  border-radius: 5px;
+  & + .btn-icon {
+    margin-left: 0.4em;
+  }
+}
+
+.btn-rounded {
+  border-radius: 3em;
 }

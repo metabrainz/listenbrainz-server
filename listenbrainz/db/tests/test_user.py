@@ -3,14 +3,9 @@ import json
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
-import listenbrainz.db.stats as db_stats
 import sqlalchemy
-import time
-import orjson
 
-from data.model.common_stat import StatRange
 from data.model.external_service import ExternalServiceType
-from data.model.user_entity import EntityRecord
 from listenbrainz import db
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
@@ -181,12 +176,22 @@ class UserTestCase(DatabaseTestCase):
 
         import_user_similarities(similar_users)
 
-        self.assertDictEqual({"twenty_two": 0.4, "twenty_three": 0.7},
-                             db_user.get_similar_users(user_id_21).similar_users)
-        self.assertDictEqual({"twenty_one": 0.4},
-                             db_user.get_similar_users(user_id_22).similar_users)
-        self.assertDictEqual({"twenty_one": 0.7},
-                             db_user.get_similar_users(user_id_23).similar_users)
+        self.assertListEqual([
+                {"id": user_id_23, "musicbrainz_id": "twenty_three", "similarity": 0.7},
+                {"id": user_id_22, "musicbrainz_id": "twenty_two", "similarity": 0.4}
+            ],
+            db_user.get_similar_users(user_id_21)
+        )
+        
+        self.assertListEqual(
+            [{"id": user_id_21, "musicbrainz_id": "twenty_one", "similarity": 0.4}],
+            db_user.get_similar_users(user_id_22)
+        )
+        
+        self.assertListEqual(
+            [{"id": user_id_21, "musicbrainz_id": "twenty_one", "similarity": 0.7}],
+            db_user.get_similar_users(user_id_23)
+        )
 
     def test_get_user_by_id(self):
         user_id_24 = db_user.create(24, "twenty_four")

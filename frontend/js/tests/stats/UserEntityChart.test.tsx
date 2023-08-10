@@ -14,6 +14,8 @@ import * as userReleasesResponse from "../__mocks__/userReleases.json";
 import * as userReleasesProcessDataOutput from "../__mocks__/userReleasesProcessData.json";
 import * as userRecordingsResponse from "../__mocks__/userRecordings.json";
 import * as userRecordingsProcessDataOutput from "../__mocks__/userRecordingsProcessData.json";
+import * as userReleaseGroupsResponse from "../__mocks__/userReleaseGroups.json";
+import * as userReleaseGroupsProcessDataOutput from "../__mocks__/userReleaseGroupsProcessData.json";
 import { waitForComponentToPaint } from "../test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
@@ -27,13 +29,9 @@ const userProps = {
     name: "dummyUser",
   },
   apiUrl: "apiUrl",
-  newAlert: jest.fn(),
 };
 
-const sitewideProps = {
-  apiUrl: "apiUrl",
-  newAlert: jest.fn(),
-};
+const sitewideProps = {};
 
 const GlobalContextMock = {
   APIService: new APIService("base-uri"),
@@ -89,6 +87,29 @@ describe.each([
       await act(() => {
         wrapper.setState({
           data: userReleasesProcessDataOutput as UserEntityData,
+          startDate: new Date(0),
+          endDate: new Date(10),
+          maxListens: 26,
+        });
+      });
+      await waitForComponentToPaint(wrapper);
+
+      expect(wrapper).toMatchSnapshot();
+      wrapper.unmount();
+    });
+
+    it("renders correctly for release groups", async () => {
+      // We don't need to call componentDidMount during "mount" because we are
+      // passing the data manually, so mock the implementation once.
+      jest
+        .spyOn(UserEntityChart.prototype, "componentDidMount")
+        .mockImplementationOnce((): any => {});
+
+      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
+
+      await act(() => {
+        wrapper.setState({
+          data: userReleaseGroupsProcessDataOutput as UserEntityData,
           startDate: new Date(0),
           endDate: new Date(10),
           maxListens: 26,
@@ -444,6 +465,38 @@ describe.each([
       wrapper.unmount();
     });
 
+    it("gets data correctly for release group", async () => {
+      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+        context: GlobalContextMock,
+      });
+      const instance = wrapper.instance();
+
+      const spy = jest.spyOn(instance.context.APIService, "getUserEntity");
+      spy.mockImplementation((): any => {
+        return Promise.resolve(userReleaseGroupsResponse);
+      });
+      await act(async () => {
+        const {
+          maxListens,
+          totalPages,
+          entityCount,
+          startDate,
+          endDate,
+        } = await instance.getInitData("all_time", "release-group");
+
+        expect(maxListens).toEqual(15);
+        expect(totalPages).toEqual(3);
+        expect(entityCount).toEqual(51);
+        expect(startDate).toEqual(
+          new Date(userReleaseGroupsResponse.payload.from_ts * 1000)
+        );
+        expect(endDate).toEqual(
+          new Date(userReleaseGroupsResponse.payload.to_ts * 1000)
+        );
+      });
+      wrapper.unmount();
+    });
+
     it("gets data correctly for recording", async () => {
       const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
         context: GlobalContextMock,
@@ -537,6 +590,24 @@ describe.each([
           1
         );
         expect(data).toEqual(userReleasesProcessDataOutput);
+      });
+      wrapper.unmount();
+    });
+
+    it("processes data correctly for top release groups", () => {
+      const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />, {
+        context: GlobalContextMock,
+      });
+      const instance = wrapper.instance();
+      act(() => {
+        wrapper.setState({ entity: "release-group" });
+      });
+      act(() => {
+        const data = instance.processData(
+          userReleaseGroupsResponse as UserReleaseGroupsResponse,
+          1
+        );
+        expect(data).toEqual(userReleaseGroupsProcessDataOutput);
       });
       wrapper.unmount();
     });

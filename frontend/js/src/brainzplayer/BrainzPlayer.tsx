@@ -14,6 +14,7 @@ import {
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { toast } from "react-toastify";
 import BrainzPlayerUI from "./BrainzPlayerUI";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SpotifyPlayer from "./SpotifyPlayer";
@@ -26,6 +27,7 @@ import {
   overwriteMediaSession,
   updateMediaSession,
   updateWindowTitle,
+  ToastMsg,
 } from "../notifications/Notifications";
 import { getArtistName, getTrackName } from "../utils/utils";
 
@@ -56,9 +58,9 @@ export type DataSourceProps = {
   ) => void;
   onTrackEnd: () => void;
   onTrackNotFound: () => void;
-  handleError: (error: BrainzPlayerError, title?: string) => void;
-  handleWarning: (message: string | JSX.Element, title?: string) => void;
-  handleSuccess: (message: string | JSX.Element, title?: string) => void;
+  handleError: (error: BrainzPlayerError, title: string) => void;
+  handleWarning: (message: string | JSX.Element, title: string) => void;
+  handleSuccess: (message: string | JSX.Element, title: string) => void;
   onInvalidateDataSource: (
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
@@ -67,11 +69,6 @@ export type DataSourceProps = {
 
 export type BrainzPlayerProps = {
   listens: Array<Listen | JSPFTrack>;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
   refreshSpotifyToken: () => Promise<string>;
   refreshYoutubeToken: () => Promise<string>;
   listenBrainzAPIBaseURI: string;
@@ -222,6 +219,9 @@ export default class BrainzPlayer extends React.Component<
       case "play-listen":
         this.playListen(payload);
         break;
+      case "force-play":
+        this.togglePlay();
+        break;
       default:
       // do nothing
     }
@@ -317,35 +317,36 @@ export default class BrainzPlayer extends React.Component<
     this.playListen(nextListen);
   };
 
-  handleError = (error: BrainzPlayerError, title?: string): void => {
-    const { newAlert } = this.props;
+  handleError = (error: BrainzPlayerError, title: string): void => {
     if (!error) {
       return;
     }
-    newAlert(
-      "danger",
-      title || "Playback error",
-      _isString(error)
-        ? error
-        : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${
-            error.message || error.statusText
-          }`
-    );
+    const message = _isString(error)
+      ? error
+      : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${
+          error.message || error.statusText
+        }`;
+    toast.error(<ToastMsg title={title} message={message} />, {
+      toastId: title,
+    });
   };
 
-  handleWarning = (message: string | JSX.Element, title?: string): void => {
-    const { newAlert } = this.props;
-    newAlert("warning", title || "Playback error", message);
+  handleWarning = (message: string | JSX.Element, title: string): void => {
+    toast.warn(<ToastMsg title={title} message={message} />, {
+      toastId: title,
+    });
   };
 
-  handleSuccess = (message: string | JSX.Element, title?: string): void => {
-    const { newAlert } = this.props;
-    newAlert("success", title || "Success", message);
+  handleSuccess = (message: string | JSX.Element, title: string): void => {
+    toast.success(<ToastMsg title={title} message={message} />, {
+      toastId: title,
+    });
   };
 
-  handleInfoMessage = (message: string | JSX.Element, title?: string): void => {
-    const { newAlert } = this.props;
-    newAlert("info", title || "", message);
+  handleInfoMessage = (message: string | JSX.Element, title: string): void => {
+    toast.info(<ToastMsg title={title} message={message} />, {
+      toastId: title,
+    });
   };
 
   invalidateDataSource = (
@@ -436,7 +437,7 @@ export default class BrainzPlayer extends React.Component<
       }
       await dataSource.togglePlay();
     } catch (error) {
-      this.handleError(error);
+      this.handleError(error, "Could not play");
     }
   };
 
@@ -599,7 +600,10 @@ export default class BrainzPlayer extends React.Component<
             {album && ` — ${album}`}
           </>
         );
-        this.handleInfoMessage(message);
+        this.handleInfoMessage(
+          message,
+          `Playing ${title}${artist && ` — ${artist}`}`
+        );
       }
     });
 
@@ -794,7 +798,6 @@ export default class BrainzPlayer extends React.Component<
       refreshSpotifyToken,
       refreshYoutubeToken,
       listenBrainzAPIBaseURI,
-      newAlert,
     } = this.props;
     const { youtubeAuth, spotifyAuth } = this.context;
 
@@ -821,7 +824,6 @@ export default class BrainzPlayer extends React.Component<
           currentDataSourceName={
             this.dataSources[currentDataSourceIndex]?.current?.name
           }
-          newAlert={newAlert}
         >
           <SpotifyPlayer
             show={

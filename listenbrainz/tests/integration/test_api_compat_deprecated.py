@@ -21,6 +21,7 @@
 
 import logging
 import time
+from datetime import datetime
 
 from flask import url_for
 from werkzeug.exceptions import BadRequest
@@ -140,7 +141,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         time.sleep(1)
         recalculate_all_user_data()
-        to_ts = int(time.time())
+        to_ts = datetime.utcnow()
         listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 

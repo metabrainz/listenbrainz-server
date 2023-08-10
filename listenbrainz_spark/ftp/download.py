@@ -3,7 +3,6 @@ import re
 import tempfile
 import time
 import logging
-from typing import List
 
 from listenbrainz_spark import config
 from listenbrainz_spark.ftp import ListenBrainzFTPDownloader, DumpType, ListensDump

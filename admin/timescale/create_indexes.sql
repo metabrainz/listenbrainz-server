@@ -2,10 +2,9 @@ BEGIN;
 
 CREATE INDEX listened_at_user_id_ndx_listen ON listen (listened_at DESC, user_id);
 CREATE INDEX created_ndx_listen ON listen (created);
+CREATE UNIQUE INDEX listened_at_user_id_recording_msid_ndx_listen ON listen (listened_at DESC, user_id, recording_msid);
 
-CREATE UNIQUE INDEX listened_at_track_name_user_id_ndx_listen ON listen (listened_at DESC, track_name, user_id);
-
-CREATE INDEX recording_msid_ndx_listen on listen ((data->'track_metadata'->'additional_info'->>'recording_msid'));
+CREATE INDEX recording_msid_ndx_listen on listen (recording_msid);
 
 CREATE UNIQUE INDEX user_id_ndx_listen_user_metadata ON listen_user_metadata (user_id);
 
@@ -58,14 +57,38 @@ CREATE UNIQUE INDEX spotify_cache_track_spotify_id_idx ON spotify_cache.track (s
 CREATE INDEX spotify_cache_rel_album_artist_track_id_idx ON spotify_cache.rel_album_artist (album_id);
 CREATE INDEX spotify_cache_rel_track_artist_track_id_idx ON spotify_cache.rel_track_artist (track_id);
 
+CREATE UNIQUE INDEX similar_recordings_dev_uniq_idx ON similarity.recording_dev (mbid0, mbid1);
+CREATE UNIQUE INDEX similar_recordings_dev_reverse_uniq_idx ON similarity.recording_dev (mbid1, mbid0);
+CREATE INDEX similar_recordings_algorithm_dev_idx ON similarity.recording_dev USING gin (metadata);
+
+CREATE UNIQUE INDEX similar_artist_credit_mbids_dev_uniq_idx ON similarity.artist_credit_mbids_dev (mbid0, mbid1);
+CREATE UNIQUE INDEX similar_artist_credit_mbids_dev_reverse_uniq_idx ON similarity.artist_credit_mbids_dev (mbid1, mbid0);
+CREATE INDEX similar_artist_credit_mbids_algorithm_dev_idx ON similarity.artist_credit_mbids_dev USING gin (metadata);
+
+-- NOTE: If the indexes for the recording_prod/artist_credit_mbids_prod table changes, update the code in listenbrainz/db/similarity.py !
 CREATE UNIQUE INDEX similar_recordings_uniq_idx ON similarity.recording (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_recordings_reverse_uniq_idx ON similarity.recording (mbid1, mbid0);
-CREATE INDEX similar_recordings_algorithm_idx ON similarity.recording USING gin (metadata);
 
-CREATE UNIQUE INDEX similar_artists_uniq_idx ON similarity.artist_credit_mbids (mbid0, mbid1);
+CREATE UNIQUE INDEX similar_artist_credit_mbids_uniq_idx ON similarity.artist_credit_mbids (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_artist_credit_mbids_reverse_uniq_idx ON similarity.artist_credit_mbids (mbid1, mbid0);
-CREATE INDEX similar_artist_credit_mbids_algorithm_idx ON similarity.artist_credit_mbids USING gin (metadata);
 
 CREATE INDEX mbid_manual_mapping_top_idx ON mbid_manual_mapping_top (recording_msid) INCLUDE (recording_mbid);
+
+CREATE INDEX popularity_recording_listen_count_idx ON popularity.recording (total_listen_count) INCLUDE (recording_mbid);
+CREATE INDEX popularity_recording_user_count_idx ON popularity.recording (total_user_count) INCLUDE (recording_mbid);
+
+CREATE INDEX popularity_artist_listen_count_idx ON popularity.artist (total_listen_count) INCLUDE (artist_mbid);
+CREATE INDEX popularity_artist_user_count_idx ON popularity.artist (total_user_count) INCLUDE (artist_mbid);
+
+CREATE INDEX popularity_release_listen_count_idx ON popularity.release (total_listen_count) INCLUDE (release_mbid);
+CREATE INDEX popularity_release_user_count_idx ON popularity.release (total_user_count) INCLUDE (release_mbid);
+
+CREATE INDEX popularity_top_recording_artist_mbid_listen_count_idx ON popularity.top_recording (artist_mbid, total_listen_count) INCLUDE (recording_mbid);
+CREATE INDEX popularity_top_recording_artist_mbid_user_count_idx ON popularity.top_recording (artist_mbid, total_user_count) INCLUDE (recording_mbid);
+
+CREATE INDEX popularity_top_release_artist_mbid_listen_count_idx ON popularity.top_release (artist_mbid, total_listen_count) INCLUDE (release_mbid);
+CREATE INDEX popularity_top_release_artist_mbid_user_count_idx ON popularity.top_release (artist_mbid, total_user_count) INCLUDE (release_mbid);
+
+CREATE INDEX tags_lb_tag_radio_percent_idx ON tags.lb_tag_radio (tag, percent) INCLUDE (source, recording_mbid, tag_count);
 
 COMMIT;

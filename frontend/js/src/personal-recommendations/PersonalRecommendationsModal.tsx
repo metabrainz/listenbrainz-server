@@ -1,6 +1,7 @@
 import * as React from "react";
 import { uniq, includes, toLower } from "lodash";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import NamePill from "./NamePill";
 import {
@@ -10,14 +11,10 @@ import {
   getRecordingMSID,
 } from "../utils/utils";
 import SearchDropDown from "./SearchDropDown";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PersonalRecommendationModalProps = {
   listenToPersonallyRecommend: Listen;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 export const maxBlurbContentLength = 280;
@@ -32,10 +29,7 @@ export const maxBlurbContentLength = 280;
  */
 
 export default NiceModal.create(
-  ({
-    listenToPersonallyRecommend,
-    newAlert,
-  }: PersonalRecommendationModalProps) => {
+  ({ listenToPersonallyRecommend }: PersonalRecommendationModalProps) => {
     // Use a hook to manage the modal state
     const modal = useModal();
     const [users, setUsers] = React.useState<string[]>([]);
@@ -51,13 +45,15 @@ export default NiceModal.create(
         if (!error) {
           return;
         }
-        newAlert(
-          "danger",
-          title || "Error",
-          typeof error === "object" ? error.message : error
+        toast.error(
+          <ToastMsg
+            title={title || "Error"}
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "recommended-track-error" }
         );
       },
-      [newAlert]
+      []
     );
 
     /* On load, get the current user's followers */
@@ -115,15 +111,20 @@ export default NiceModal.create(
         event.preventDefault();
         if (currentUser?.auth_token) {
           const metadata: UserTrackPersonalRecommendationMetadata = {
-            artist_name: getArtistName(listenToPersonallyRecommend),
-            track_name: getTrackName(listenToPersonallyRecommend),
-            release_name: listenToPersonallyRecommend!.track_metadata
-              .release_name,
-            recording_mbid: getRecordingMBID(listenToPersonallyRecommend),
-            recording_msid: getRecordingMSID(listenToPersonallyRecommend),
             users,
             blurb_content: blurbContent,
           };
+
+          const recording_mbid = getRecordingMBID(listenToPersonallyRecommend);
+          if (recording_mbid) {
+            metadata.recording_mbid = recording_mbid;
+          }
+
+          const recording_msid = getRecordingMSID(listenToPersonallyRecommend);
+          if (recording_msid) {
+            metadata.recording_msid = recording_msid;
+          }
+
           try {
             const status = await APIService.submitPersonalRecommendation(
               currentUser.auth_token,
@@ -131,12 +132,16 @@ export default NiceModal.create(
               metadata
             );
             if (status === 200) {
-              newAlert(
-                "success",
-                `You recommended this track to ${users.length} user${
-                  users.length > 1 ? "s" : ""
-                }`,
-                `${metadata.artist_name} - ${metadata.track_name}`
+              toast.success(
+                <ToastMsg
+                  title={`You recommended this track to ${users.length} user${
+                    users.length > 1 ? "s" : ""
+                  }`}
+                  message={`${getArtistName(
+                    listenToPersonallyRecommend
+                  )} - ${getTrackName(listenToPersonallyRecommend)}`}
+                />,
+                { toastId: "recommended-track-success" }
               );
               closeModal();
             }

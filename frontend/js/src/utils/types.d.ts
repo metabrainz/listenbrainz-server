@@ -7,16 +7,6 @@ declare module "debounce-async";
 // declaration typescript file doesn't exist for react-datetime-picker/dist/entry.nostyle.js so had to declare a dummy declaration.
 declare module "react-datetime-picker/dist/entry.nostyle";
 
-declare module "react-bs-notifier";
-declare type AlertType = "danger" | "warning" | "success" | "info";
-declare type Alert = {
-  id: number;
-  type: AlertType;
-  headline: string;
-  message: string | JSX.Element;
-  count?: number;
-};
-
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {
   artist_mbids?: Array<string> | null;
@@ -52,12 +42,15 @@ declare type MBIDMappingArtist = {
 };
 
 declare type MBIDMapping = {
+  recording_name?: string;
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
   artists?: Array<MBIDMappingArtist>;
   caa_id?: number;
   caa_release_mbid?: string;
+  release_group_mbid?: string;
+  release_group_name?: string;
 };
 
 declare type BaseListenFormat = {
@@ -123,7 +116,7 @@ declare type YoutubeUser = {
   api_key?: string;
 };
 
-declare type CritiqueBrainzUser = {
+declare type MetaBrainzProjectUser = {
   access_token?: string;
 };
 
@@ -313,10 +306,33 @@ declare type UserRecordingsResponse = {
   };
 };
 
+declare type UserReleaseGroupsResponse = {
+  payload: {
+    release_groups: Array<{
+      artist_mbids?: Array<string>;
+      artist_name: string;
+      release_group_mbid?: string;
+      release_group_name: string;
+      listen_count: number;
+      caa_id?: number;
+      caa_release_mbid?: string;
+    }>;
+    count: number;
+    last_updated: number;
+    offset: number;
+    range: UserStatsAPIRange;
+    total_release_group_count: number;
+    user_id: string;
+    from_ts: number;
+    to_ts: number;
+  };
+};
+
 declare type UserEntityResponse =
   | UserArtistsResponse
   | UserReleasesResponse
-  | UserRecordingsResponse;
+  | UserRecordingsResponse
+  | UserReleaseGroupsResponse;
 
 declare type UserStatsAPIRange =
   | "all_time"
@@ -336,6 +352,8 @@ declare type UserEntityDatum = {
   artistMBID?: Array<string>;
   release?: string;
   releaseMBID?: string;
+  releaseGroup?: string;
+  releaseGroupMBID?: string;
   idx: number;
   count: number;
   caaID?: number;
@@ -477,12 +495,21 @@ declare type JSPFObject = {
   playlist: JSPFPlaylist;
 };
 
+declare type JSPFPlaylistMetadata = {
+  external_urls?: { [key: string]: any };
+  algorithm_metadata: {
+    source_patch: string;
+  };
+  expires_at?: string; // ISO date string
+};
+
 declare type JSPFPlaylistExtension = {
-  collaborators: string[];
+  collaborators?: string[];
   public: boolean;
   created_for?: string;
   copied_from?: string; // Full ListenBrainz playlist URI
   last_modified_at?: string; // ISO date string
+  additional_metadata?: JSPFPlaylistMetadata;
 };
 
 declare type JSPFTrackExtension = {
@@ -550,9 +577,6 @@ declare type PinnedRecording = {
 
 /** For recommending a track from the front-end */
 declare type UserTrackRecommendationMetadata = {
-  artist_name: string;
-  track_name: string;
-  release_name?: string;
   recording_mbid?: string;
   recording_msid?: string;
 };
@@ -561,6 +585,7 @@ declare type UserTrackRecommendationMetadata = {
 declare type UserTrackPersonalRecommendationMetadata = UserTrackRecommendationMetadata & {
   blurb_content: string;
   users: Array<string>;
+  track_metadata?: TrackMetadata;
 };
 
 declare type PinEventMetadata = Listen & {
@@ -705,4 +730,13 @@ type UserFreshReleasesResponse = {
 
 declare type SearchUser = {
   user_name: string;
+};
+
+declare type UserPreferences = {
+  saveData?: boolean;
+};
+
+declare type FeedbackForUserForRecordingsRequestBody = {
+  recording_mbids: string[];
+  recording_msids?: string[];
 };
