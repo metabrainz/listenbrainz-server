@@ -78,6 +78,7 @@ export default class Listens extends React.Component<
   private socket!: Socket;
 
   private expectedListensPerPage = 25;
+  private maxWebsocketListens = 25;
 
   constructor(props: ListensProps) {
     super(props);
@@ -229,12 +230,13 @@ export default class Listens extends React.Component<
     if (listen) {
       this.setState((prevState) => {
         const { webSocketListens } = prevState;
-        // Crop listens array to 100 max
-        while (webSocketListens.length >= 100) {
-          webSocketListens.pop();
-        }
-        webSocketListens.push(listen);
-        return { webSocketListens };
+        // Crop listens array to 25 max
+        return {
+          webSocketListens: [
+            listen,
+            ...webSocketListens.slice(0, this.maxWebsocketListens - 1),
+          ],
+        };
       });
     }
   };
