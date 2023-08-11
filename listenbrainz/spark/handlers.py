@@ -27,42 +27,6 @@ TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
 
 
-def handle_couchdb_data_start(message):
-    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
-    if not match:
-        return
-    try:
-        couchdb.create_database(match[1] + "_" + match[2] + "_" + match[3])
-        if match[1] == "artists":
-            couchdb.create_database("artistmap" + "_" + match[2] + "_" + match[3])
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-
-
-def handle_couchdb_data_end(message):
-    # database names are of the format, prefix_YYYYMMDD. calculate and pass the prefix to the
-    # method to delete all database of the type except the latest one.
-    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
-    # if the database name does not match pattern, abort to avoid deleting any data inadvertently
-    if not match:
-        return
-    try:
-        _, retained = couchdb.delete_database(match[1] + "_" + match[2])
-        if retained:
-            current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
-                                    f" _LOCK file existed")
-
-        # when new artist stats received, also invalidate old artist map stats
-        if match[1] == "artists":
-            _, retained = couchdb.delete_database("artistmap" + "_" + match[2])
-            if retained:
-                current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
-                                        f" _LOCK file existed")
-
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-
-
 def _handle_stats(message, stats_type, key):
     try:
         with start_transaction(op="insert", name=f'insert {stats_type} - {message["stats_range"]} stats'):
@@ -331,13 +295,10 @@ def cf_recording_recommendations_complete(data):
 
     active_user_count = data['active_user_count']
     total_time = data['total_time']
-    top_artist_user_count = data['top_artist_user_count']
-    similar_artist_user_count = data['similar_artist_user_count']
     send_mail(
         subject='Recommendations have been generated and pushed to the queue.',
         text=render_template('emails/cf_recording_recommendation_notification.txt',
-                             active_user_count=active_user_count, total_time=total_time,
-                             top_artist_user_count=top_artist_user_count, similar_artist_user_count=similar_artist_user_count),
+                             active_user_count=active_user_count, total_time=total_time),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -429,34 +390,12 @@ def handle_yim_tracks_of_the_year_end(message):
     yim_patch_runner(message["year"])
 
 
-def handle_similar_recordings_start(message):
-    similarity.start_prod_table("recording", message["algorithm"])
-
-
-def handle_similar_recordings_end(message):
-    similarity.end_prod_table("recording", message["algorithm"])
-
-
 def handle_similar_recordings(message):
-    if message.get("is_production_dataset"):
-        similarity.insert_prod_table("recording", message["data"], message["algorithm"])
-    else:
-        similarity.insert("recording", message["data"], message["algorithm"])
-
-
-def handle_similar_artists_start(message):
-    similarity.start_prod_table("artist_credit_mbids", message["algorithm"])
-
-
-def handle_similar_artists_end(message):
-    similarity.end_prod_table("artist_credit_mbids", message["algorithm"])
+    similarity.insert("recording", message["data"], message["algorithm"])
 
 
 def handle_similar_artists(message):
-    if message.get("is_production_dataset"):
-        similarity.insert_prod_table("artist_credit_mbids", message["data"], message["algorithm"])
-    else:
-        similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
+    similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
 
 
 def handle_troi_playlists(message):

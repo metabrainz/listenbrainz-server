@@ -68,6 +68,7 @@ export function millisecondsToStr(milliseconds: number) {
 
 export function JSPFTrackToListen(track: JSPFTrack): Listen {
   const customFields = getTrackExtension(track);
+  const recordingMBID = getRecordingMBIDFromJSPFTrack(track);
   const listen: Listen = {
     listened_at: 0,
     track_metadata: {
@@ -76,7 +77,7 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
       release_name: track.album,
       additional_info: {
         duration_ms: track.duration,
-        recording_mbid: track.id,
+        recording_mbid: recordingMBID,
         origin_url: track.location?.[0],
       },
     },
@@ -84,16 +85,17 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
   };
   const caa_id = customFields?.additional_metadata?.caa_id;
   const caa_release_mbid = customFields?.additional_metadata?.caa_release_mbid;
-  if (caa_id && caa_release_mbid) {
-    listen.track_metadata.mbid_mapping = {
-      artist_mbids: [],
-      artists: [],
-      recording_mbid: "",
-      release_mbid: "",
-      caa_id,
-      caa_release_mbid,
-    };
-  }
+
+  listen.track_metadata.mbid_mapping = {
+    artist_mbids:
+      customFields?.artist_identifiers.map(getArtistMBIDFromURI) ?? [],
+    artists: [],
+    recording_mbid: recordingMBID,
+    release_mbid: caa_release_mbid,
+    caa_id,
+    caa_release_mbid,
+  };
+
   if (customFields?.added_at) {
     listen.listened_at_iso = customFields.added_at;
   }

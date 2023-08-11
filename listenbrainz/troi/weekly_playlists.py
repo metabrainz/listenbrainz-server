@@ -12,16 +12,21 @@ from troi.tools.spotify_lookup import submit_to_spotify
 
 from listenbrainz import db
 from listenbrainz.db import timescale
-from listenbrainz.db.playlist import TROI_BOT_USER_ID
+from listenbrainz.db.playlist import LISTENBRAINZ_USER_ID
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.troi.utils import get_existing_playlist_urls, SPOTIFY_EXPORT_PREFERENCE
 
+PERIODIC_PLAYLIST_LIFESPAN = 2
+
 
 def get_users_for_weekly_playlists(create_all):
-    """ Retrieve the users who had midnight in their timezone less than 59 minutes ago and generate
-        the weekly playlists for them.
+    """ Retrieve the users who had their midnight in their timezone less than 59 minutes ago and
+        where its monday currently and generate the weekly playlists for them.
     """
-    timezone_filter = "WHERE EXTRACT('hour' from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0"
+    timezone_filter = """
+        WHERE EXTRACT(HOUR from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 0
+          AND EXTRACT(DOW from NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT')) = 1
+    """
     query = """
         SELECT "user".id as user_id
              , to_char(NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT'), 'YYYY-MM-DD Dy') AS jam_date
@@ -53,10 +58,7 @@ def get_user_details(slug, user_ids):
     with db.engine.connect() as conn:
         results = conn.execute(text(query), {"user_ids": user_ids, "export_preference": SPOTIFY_EXPORT_PREFERENCE})
         for r in results:
-            details[r.user_id] = {
-                "username": r.musicbrainz_id,
-                "export_to_spotify": r.export_to_spotify
-            }
+            details[r.user_id] = {"username": r.musicbrainz_id, "export_to_spotify": r.export_to_spotify}
 
             if r.export_to_spotify:
                 users_for_urls.append(r.user_id)
@@ -86,7 +88,9 @@ def export_to_spotify(slug, description, playlists):
 
             recordings = [Recording(mbid=mbid) for mbid in playlist["recordings"]]
             playlist_element = Playlist(name=playlist["name"], description=description, recordings=recordings)
-            playlist_url, _ = submit_to_spotify(sp, playlist_element, user["external_user_id"],
+            playlist_url, _ = submit_to_spotify(sp,
+                                                playlist_element,
+                                                user["external_user_id"],
                                                 existing_url=playlist["existing_url"])
             playlist["additional_metadata"].update({"external_urls": {"spotify": playlist_url}})
         except Exception:
@@ -96,10 +100,8 @@ def export_to_spotify(slug, description, playlists):
 def insert_recordings(cursor, playlist_id: str, recordings: list):
     """ Insert given recordings for the given playlist id in the database """
     query = "INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id) VALUES %s"
-    template = SQL("({playlist_id}, %s, %s, {added_by_id})").format(
-        playlist_id=Literal(playlist_id),
-        added_by_id=Literal(TROI_BOT_USER_ID)
-    )
+    template = SQL("({playlist_id}, %s, %s, {added_by_id})").format(playlist_id=Literal(playlist_id),
+                                                                    added_by_id=Literal(LISTENBRAINZ_USER_ID))
     values = list(enumerate(recordings))
     execute_values(cursor, query, values, template)
 
@@ -111,10 +113,10 @@ def insert_playlists(cursor, playlists, description: str):
              VALUES %s
           RETURNING created_for_id, id
     """
-    template = SQL("""({creator_id}, %s, {description}, 't', %s, %s)""").format(
-        creator_id=Literal(TROI_BOT_USER_ID),
-        description=Literal(description)
-    )
+    template = SQL("""({creator_id}, %s, {description}, 't', %s, %s)""").format(creator_id=Literal(LISTENBRAINZ_USER_ID),
+                                                                                description=Literal(description))
+    for p in playlists:
+        p["additional_metadata"]["expires_at"] = (datetime.utcnow() + timedelta(weeks=PERIODIC_PLAYLIST_LIFESPAN)).isoformat()
     values = [(p["name"], p["user_id"], json.dumps(p["additional_metadata"])) for p in playlists]
     results = execute_values(cursor, query, values, template, fetch=True)
     return {r[0]: r[1] for r in results}
@@ -192,4 +194,4 @@ def batch_process_playlists_end(slug):
                     AND ap.position > 2
     """
     with timescale.engine.begin() as connection:
-        connection.execute(text(query), {"creator_id": TROI_BOT_USER_ID, "source_patch": slug})
+        connection.execute(text(query), {"creator_id": LISTENBRAINZ_USER_ID, "source_patch": slug})

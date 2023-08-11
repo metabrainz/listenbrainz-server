@@ -199,7 +199,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
             className="col-xs-6"
           >
             <ListenCard
-              currentFeedback={0}
               key="2"
               listen={
                 Object {
@@ -421,7 +420,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="3"
               listen={
                 Object {
@@ -643,7 +641,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="4"
               listen={
                 Object {
@@ -865,7 +862,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="5"
               listen={
                 Object {
@@ -1087,7 +1083,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="6"
               listen={
                 Object {
@@ -1309,7 +1304,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="7"
               listen={
                 Object {
@@ -1531,7 +1525,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="8"
               listen={
                 Object {
@@ -1753,7 +1746,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="9"
               listen={
                 Object {
@@ -1975,7 +1967,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="10"
               listen={
                 Object {
@@ -2197,7 +2188,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="11"
               listen={
                 Object {
@@ -2419,7 +2409,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="12"
               listen={
                 Object {
@@ -2641,7 +2630,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="13"
               listen={
                 Object {
@@ -2863,7 +2851,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="14"
               listen={
                 Object {
@@ -3085,7 +3072,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="15"
               listen={
                 Object {
@@ -3307,7 +3293,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="16"
               listen={
                 Object {
@@ -3529,7 +3514,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="17"
               listen={
                 Object {
@@ -3751,7 +3735,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="18"
               listen={
                 Object {
@@ -3973,7 +3956,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="19"
               listen={
                 Object {
@@ -4195,7 +4177,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="20"
               listen={
                 Object {
@@ -4417,7 +4398,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="21"
               listen={
                 Object {
@@ -4639,7 +4619,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="22"
               listen={
                 Object {
@@ -4861,7 +4840,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="23"
               listen={
                 Object {
@@ -5083,7 +5061,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="24"
               listen={
                 Object {
@@ -5305,7 +5282,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="25"
               listen={
                 Object {
@@ -5527,7 +5503,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="26"
               listen={
                 Object {
@@ -7657,7 +7632,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
             className="col-xs-6"
           >
             <ListenCard
-              currentFeedback={0}
               key="2"
               listen={
                 Object {
@@ -8138,7 +8112,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="3"
               listen={
                 Object {
@@ -8380,7 +8353,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="4"
               listen={
                 Object {
@@ -8861,7 +8833,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="5"
               listen={
                 Object {
@@ -9342,7 +9313,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="6"
               listen={
                 Object {
@@ -9823,7 +9793,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="7"
               listen={
                 Object {
@@ -10299,7 +10268,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="8"
               listen={
                 Object {
@@ -10780,7 +10748,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="9"
               listen={
                 Object {
@@ -11022,7 +10989,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="10"
               listen={
                 Object {
@@ -11264,7 +11230,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="11"
               listen={
                 Object {
@@ -11745,7 +11710,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="12"
               listen={
                 Object {
@@ -12226,7 +12190,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="13"
               listen={
                 Object {
@@ -12468,7 +12431,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="14"
               listen={
                 Object {
@@ -12949,7 +12911,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="15"
               listen={
                 Object {
@@ -13431,7 +13392,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="16"
               listen={
                 Object {
@@ -13673,7 +13633,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="17"
               listen={
                 Object {
@@ -13915,7 +13874,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="18"
               listen={
                 Object {
@@ -14157,7 +14115,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="19"
               listen={
                 Object {
@@ -14399,7 +14356,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="20"
               listen={
                 Object {
@@ -14641,7 +14597,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="21"
               listen={
                 Object {
@@ -14883,7 +14838,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="22"
               listen={
                 Object {
@@ -15359,7 +15313,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="23"
               listen={
                 Object {
@@ -15601,7 +15554,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="24"
               listen={
                 Object {
@@ -16082,7 +16034,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="25"
               listen={
                 Object {
@@ -16324,7 +16275,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="26"
               listen={
                 Object {
@@ -18992,7 +18942,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
             className="col-xs-6"
           >
             <ListenCard
-              currentFeedback={0}
               key="2"
               listen={
                 Object {
@@ -19240,7 +19189,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="3"
               listen={
                 Object {
@@ -19470,7 +19418,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="4"
               listen={
                 Object {
@@ -19700,7 +19647,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="5"
               listen={
                 Object {
@@ -19895,7 +19841,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="6"
               listen={
                 Object {
@@ -20090,7 +20035,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="7"
               listen={
                 Object {
@@ -20338,7 +20282,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="8"
               listen={
                 Object {
@@ -20533,7 +20476,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="9"
               listen={
                 Object {
@@ -20781,7 +20723,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="10"
               listen={
                 Object {
@@ -20976,7 +20917,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="11"
               listen={
                 Object {
@@ -21171,7 +21111,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="12"
               listen={
                 Object {
@@ -21401,7 +21340,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="13"
               listen={
                 Object {
@@ -21598,7 +21536,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="14"
               listen={
                 Object {
@@ -21793,7 +21730,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="15"
               listen={
                 Object {
@@ -22042,7 +21978,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="16"
               listen={
                 Object {
@@ -22237,7 +22172,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="17"
               listen={
                 Object {
@@ -22432,7 +22366,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="18"
               listen={
                 Object {
@@ -22627,7 +22560,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="19"
               listen={
                 Object {
@@ -22822,7 +22754,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="20"
               listen={
                 Object {
@@ -23017,7 +22948,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="21"
               listen={
                 Object {
@@ -23212,7 +23142,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="22"
               listen={
                 Object {
@@ -23407,7 +23336,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="23"
               listen={
                 Object {
@@ -23603,7 +23531,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="24"
               listen={
                 Object {
@@ -23833,7 +23760,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="25"
               listen={
                 Object {
@@ -24063,7 +23989,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="26"
               listen={
                 Object {
@@ -26460,7 +26385,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
             className="col-xs-6"
           >
             <ListenCard
-              currentFeedback={0}
               key="2"
               listen={
                 Object {
@@ -26655,7 +26579,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="3"
               listen={
                 Object {
@@ -26885,7 +26808,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="4"
               listen={
                 Object {
@@ -27080,7 +27002,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="5"
               listen={
                 Object {
@@ -27275,7 +27196,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="6"
               listen={
                 Object {
@@ -27470,7 +27390,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="7"
               listen={
                 Object {
@@ -27660,7 +27579,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="8"
               listen={
                 Object {
@@ -27856,7 +27774,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="9"
               listen={
                 Object {
@@ -28051,7 +27968,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="10"
               listen={
                 Object {
@@ -28247,7 +28163,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="11"
               listen={
                 Object {
@@ -28442,7 +28357,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="12"
               listen={
                 Object {
@@ -28672,7 +28586,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="13"
               listen={
                 Object {
@@ -28902,7 +28815,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="14"
               listen={
                 Object {
@@ -29132,7 +29044,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="15"
               listen={
                 Object {
@@ -29327,7 +29238,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="16"
               listen={
                 Object {
@@ -29522,7 +29432,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="17"
               listen={
                 Object {
@@ -29752,7 +29661,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="18"
               listen={
                 Object {
@@ -29982,7 +29890,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="19"
               listen={
                 Object {
@@ -30177,7 +30084,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="20"
               listen={
                 Object {
@@ -30407,7 +30313,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="21"
               listen={
                 Object {
@@ -30637,7 +30542,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="22"
               listen={
                 Object {
@@ -30867,7 +30771,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="23"
               listen={
                 Object {
@@ -31097,7 +31000,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="24"
               listen={
                 Object {
@@ -31327,7 +31229,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="25"
               listen={
                 Object {
@@ -31557,7 +31458,6 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="26"
               listen={
                 Object {
@@ -34966,7 +34866,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
             className="col-xs-6"
           >
             <ListenCard
-              currentFeedback={0}
               key="2"
               listen={
                 Object {
@@ -35188,7 +35087,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="3"
               listen={
                 Object {
@@ -35410,7 +35308,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="4"
               listen={
                 Object {
@@ -35632,7 +35529,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="5"
               listen={
                 Object {
@@ -35854,7 +35750,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="6"
               listen={
                 Object {
@@ -36076,7 +35971,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="7"
               listen={
                 Object {
@@ -36298,7 +36192,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="8"
               listen={
                 Object {
@@ -36520,7 +36413,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="9"
               listen={
                 Object {
@@ -36742,7 +36634,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="10"
               listen={
                 Object {
@@ -36964,7 +36855,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="11"
               listen={
                 Object {
@@ -37186,7 +37076,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="12"
               listen={
                 Object {
@@ -37408,7 +37297,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="13"
               listen={
                 Object {
@@ -37630,7 +37518,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="14"
               listen={
                 Object {
@@ -37852,7 +37739,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="15"
               listen={
                 Object {
@@ -38074,7 +37960,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="16"
               listen={
                 Object {
@@ -38296,7 +38181,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="17"
               listen={
                 Object {
@@ -38518,7 +38402,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="18"
               listen={
                 Object {
@@ -38740,7 +38623,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="19"
               listen={
                 Object {
@@ -38962,7 +38844,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="20"
               listen={
                 Object {
@@ -39184,7 +39065,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="21"
               listen={
                 Object {
@@ -39406,7 +39286,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="22"
               listen={
                 Object {
@@ -39628,7 +39507,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="23"
               listen={
                 Object {
@@ -39850,7 +39728,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="24"
               listen={
                 Object {
@@ -40072,7 +39949,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="25"
               listen={
                 Object {
@@ -40294,7 +40170,6 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="26"
               listen={
                 Object {
@@ -42432,7 +42307,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
             className="col-xs-6"
           >
             <ListenCard
-              currentFeedback={0}
               key="2"
               listen={
                 Object {
@@ -42913,7 +42787,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="3"
               listen={
                 Object {
@@ -43155,7 +43028,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="4"
               listen={
                 Object {
@@ -43636,7 +43508,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="5"
               listen={
                 Object {
@@ -44117,7 +43988,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="6"
               listen={
                 Object {
@@ -44598,7 +44468,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="7"
               listen={
                 Object {
@@ -45074,7 +44943,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="8"
               listen={
                 Object {
@@ -45555,7 +45423,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="9"
               listen={
                 Object {
@@ -45797,7 +45664,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="10"
               listen={
                 Object {
@@ -46039,7 +45905,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="11"
               listen={
                 Object {
@@ -46520,7 +46385,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="12"
               listen={
                 Object {
@@ -47001,7 +46865,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="13"
               listen={
                 Object {
@@ -47243,7 +47106,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="14"
               listen={
                 Object {
@@ -47724,7 +47586,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="15"
               listen={
                 Object {
@@ -48206,7 +48067,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="16"
               listen={
                 Object {
@@ -48448,7 +48308,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="17"
               listen={
                 Object {
@@ -48690,7 +48549,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="18"
               listen={
                 Object {
@@ -48932,7 +48790,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="19"
               listen={
                 Object {
@@ -49174,7 +49031,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="20"
               listen={
                 Object {
@@ -49416,7 +49272,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="21"
               listen={
                 Object {
@@ -49658,7 +49513,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="22"
               listen={
                 Object {
@@ -50134,7 +49988,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="23"
               listen={
                 Object {
@@ -50376,7 +50229,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="24"
               listen={
                 Object {
@@ -50857,7 +50709,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="25"
               listen={
                 Object {
@@ -51099,7 +50950,6 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="26"
               listen={
                 Object {
@@ -53775,7 +53625,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
             className="col-xs-6"
           >
             <ListenCard
-              currentFeedback={0}
               key="2"
               listen={
                 Object {
@@ -54023,7 +53872,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="3"
               listen={
                 Object {
@@ -54253,7 +54101,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="4"
               listen={
                 Object {
@@ -54483,7 +54330,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="5"
               listen={
                 Object {
@@ -54678,7 +54524,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="6"
               listen={
                 Object {
@@ -54873,7 +54718,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="7"
               listen={
                 Object {
@@ -55121,7 +54965,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="8"
               listen={
                 Object {
@@ -55316,7 +55159,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="9"
               listen={
                 Object {
@@ -55564,7 +55406,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="10"
               listen={
                 Object {
@@ -55759,7 +55600,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="11"
               listen={
                 Object {
@@ -55954,7 +55794,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="12"
               listen={
                 Object {
@@ -56184,7 +56023,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="13"
               listen={
                 Object {
@@ -56381,7 +56219,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="14"
               listen={
                 Object {
@@ -56576,7 +56413,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="15"
               listen={
                 Object {
@@ -56825,7 +56661,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="16"
               listen={
                 Object {
@@ -57020,7 +56855,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="17"
               listen={
                 Object {
@@ -57215,7 +57049,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="18"
               listen={
                 Object {
@@ -57410,7 +57243,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="19"
               listen={
                 Object {
@@ -57605,7 +57437,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="20"
               listen={
                 Object {
@@ -57800,7 +57631,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="21"
               listen={
                 Object {
@@ -57995,7 +57825,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="22"
               listen={
                 Object {
@@ -58190,7 +58019,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="23"
               listen={
                 Object {
@@ -58386,7 +58214,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="24"
               listen={
                 Object {
@@ -58616,7 +58443,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="25"
               listen={
                 Object {
@@ -58846,7 +58672,6 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="26"
               listen={
                 Object {
@@ -61251,7 +61076,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
             className="col-xs-6"
           >
             <ListenCard
-              currentFeedback={0}
               key="2"
               listen={
                 Object {
@@ -61446,7 +61270,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="3"
               listen={
                 Object {
@@ -61676,7 +61499,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="4"
               listen={
                 Object {
@@ -61871,7 +61693,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="5"
               listen={
                 Object {
@@ -62066,7 +61887,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="6"
               listen={
                 Object {
@@ -62261,7 +62081,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="7"
               listen={
                 Object {
@@ -62451,7 +62270,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="8"
               listen={
                 Object {
@@ -62647,7 +62465,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="9"
               listen={
                 Object {
@@ -62842,7 +62659,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="10"
               listen={
                 Object {
@@ -63038,7 +62854,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="11"
               listen={
                 Object {
@@ -63233,7 +63048,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="12"
               listen={
                 Object {
@@ -63463,7 +63277,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="13"
               listen={
                 Object {
@@ -63693,7 +63506,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="14"
               listen={
                 Object {
@@ -63923,7 +63735,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="15"
               listen={
                 Object {
@@ -64118,7 +63929,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="16"
               listen={
                 Object {
@@ -64313,7 +64123,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="17"
               listen={
                 Object {
@@ -64543,7 +64352,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="18"
               listen={
                 Object {
@@ -64773,7 +64581,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="19"
               listen={
                 Object {
@@ -64968,7 +64775,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="20"
               listen={
                 Object {
@@ -65198,7 +65004,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="21"
               listen={
                 Object {
@@ -65428,7 +65233,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="22"
               listen={
                 Object {
@@ -65658,7 +65462,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="23"
               listen={
                 Object {
@@ -65888,7 +65691,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="24"
               listen={
                 Object {
@@ -66118,7 +65920,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="25"
               listen={
                 Object {
@@ -66348,7 +66149,6 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
               </ForwardRef>
             </ListenCard>
             <ListenCard
-              currentFeedback={0}
               key="26"
               listen={
                 Object {

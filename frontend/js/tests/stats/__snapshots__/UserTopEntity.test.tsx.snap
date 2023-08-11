@@ -128,7 +128,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -291,7 +290,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -454,7 +452,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -617,7 +614,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -780,7 +776,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -943,7 +938,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -1106,7 +1100,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -1269,7 +1262,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -1432,7 +1424,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -1595,7 +1586,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -1758,7 +1748,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -1921,7 +1910,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -2084,7 +2072,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -2247,7 +2234,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -2410,7 +2396,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -2573,7 +2558,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -2736,7 +2720,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -2899,7 +2882,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -3062,7 +3044,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -3225,7 +3206,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -3388,7 +3368,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -3551,7 +3530,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -3714,7 +3692,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -3877,7 +3854,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -4040,7 +4016,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -9346,7 +9321,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="7ddac155-91e2-4eb7-b08a-4fc584fd60f9"
             listen={
@@ -9555,7 +9529,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -9799,7 +9772,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="3a29d02a-d29a-40f8-86f8-c9dab6eba7ac"
             listen={
@@ -10008,7 +9980,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="32c388ff-5123-4430-8ba7-62657eea41f8"
             listen={
@@ -10217,7 +10188,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="e9fa9c7a-ad24-4c9c-bfb2-69dfc17bbcb8"
             listen={
@@ -10426,7 +10396,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="f132db0b-3aaa-41a0-a4b6-4ae395ec213d"
             listen={
@@ -10630,7 +10599,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="4f1f8e13-656a-46bf-900e-18b28f3b3991"
             listen={
@@ -10840,7 +10808,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="4152d958-d0d1-4464-ae7a-8fe6cc359473"
             listen={
@@ -11049,7 +11016,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="3d4390e7-4f90-437e-8297-9c78ce910431"
             listen={
@@ -11259,7 +11225,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="9fef1281-c8ac-466e-ab39-d81b9781a55f"
             listen={
@@ -11468,7 +11433,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -11712,7 +11676,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -11956,7 +11919,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -12200,7 +12162,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="9aa17de3-9496-421c-a97a-1cba83969815"
             listen={
@@ -12409,7 +12370,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="ab960442-661b-40f6-9c09-0f89f92e52a1"
             listen={
@@ -12618,7 +12578,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -12862,7 +12821,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -13106,7 +13064,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="69bf700c-b549-4153-b42c-b76e59f111ed"
             listen={
@@ -13315,7 +13272,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -13559,7 +13515,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -13803,7 +13758,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -14047,7 +14001,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -14291,7 +14244,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -14535,7 +14487,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -14779,7 +14730,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="7fff2a44-6f46-41c4-ae96-effd3b8f06be"
             listen={
@@ -15025,7 +14975,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="f6804962-d5a3-4099-899c-95c360938502"
             listen={
@@ -15287,7 +15236,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -15531,7 +15479,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -15775,7 +15722,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="2dbd0eff-17ce-34da-83f1-c707a199bc1e"
             listen={
@@ -15984,7 +15930,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="087b3a7d-d532-44d9-b37a-84427677ddcd"
             listen={
@@ -16193,7 +16138,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="3d66159a-5805-4219-b827-814226a5279e"
             listen={
@@ -16455,7 +16399,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="e4174758-d333-4a8e-a31f-dd0edd51518e"
             listen={
@@ -16664,7 +16607,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="b7365a6f-fdd7-4f18-8520-8ece5fc1179f"
             listen={
@@ -16926,7 +16868,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="555f06a8-5d9b-4ec1-9d73-a5a529ab3010"
             listen={
@@ -17135,7 +17076,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="1f25d940-89e2-4813-a86f-955b0e99c391"
             listen={
@@ -17344,7 +17284,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -17588,7 +17527,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="eb20f028-6f59-4a64-95f1-1bc56b87dd5c"
             listen={
@@ -17799,7 +17737,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="966d9b30-3937-4aeb-848c-db6b5c9a74ed"
             listen={
@@ -18008,7 +17945,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="111857eb-16f1-4489-8091-1740dfa3d635"
             listen={
@@ -18271,7 +18207,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="a348ba2f-f8b3-4686-b928-e63d8d94d543"
             listen={
@@ -18480,7 +18415,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="e05f9927-e24b-41c5-928d-d0e008a12444"
             listen={
@@ -18689,7 +18623,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="082c6aff-a7cc-36e0-a960-35a578ecd937"
             listen={
@@ -18898,7 +18831,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="1ce1ed6e-ee15-4891-8bf8-00921b5873ad"
             listen={
@@ -19107,7 +19039,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="1507bca6-9459-3aa3-9d07-36a7063b3ba7"
             listen={
@@ -19316,7 +19247,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="deae6fc2-a675-4f35-9565-d2aaea4872c7"
             listen={
@@ -19525,7 +19455,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="454dd3a6-3f05-47fa-a284-c27de9fc75f9"
             listen={
@@ -19734,7 +19663,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="e98fb052-a99e-4275-99d5-0e9a9a45f5f1"
             listen={
@@ -19944,7 +19872,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -20188,7 +20115,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -20432,7 +20358,6 @@ exports[`Sitewide Stats UserTopEntity renders correctly for release group 1`] = 
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -20818,7 +20743,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -20981,7 +20905,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -21144,7 +21067,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -21307,7 +21229,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -21470,7 +21391,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -21633,7 +21553,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -21796,7 +21715,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -21959,7 +21877,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -22122,7 +22039,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -22285,7 +22201,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -22448,7 +22363,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -22611,7 +22525,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -22774,7 +22687,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -22937,7 +22849,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -23100,7 +23011,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -23263,7 +23173,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -23426,7 +23335,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -23589,7 +23497,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -23752,7 +23659,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -23915,7 +23821,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -24078,7 +23983,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -24241,7 +24145,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -24404,7 +24307,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -24567,7 +24469,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -24730,7 +24631,6 @@ exports[`User Stats UserTopEntity renders correctly for artist 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             customThumbnail={<React.Fragment />}
             feedbackComponent={<React.Fragment />}
             key="null"
@@ -30046,7 +29946,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="7ddac155-91e2-4eb7-b08a-4fc584fd60f9"
             listen={
@@ -30255,7 +30154,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -30499,7 +30397,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="3a29d02a-d29a-40f8-86f8-c9dab6eba7ac"
             listen={
@@ -30708,7 +30605,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="32c388ff-5123-4430-8ba7-62657eea41f8"
             listen={
@@ -30917,7 +30813,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="e9fa9c7a-ad24-4c9c-bfb2-69dfc17bbcb8"
             listen={
@@ -31126,7 +31021,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="f132db0b-3aaa-41a0-a4b6-4ae395ec213d"
             listen={
@@ -31330,7 +31224,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="4f1f8e13-656a-46bf-900e-18b28f3b3991"
             listen={
@@ -31540,7 +31433,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="4152d958-d0d1-4464-ae7a-8fe6cc359473"
             listen={
@@ -31749,7 +31641,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="3d4390e7-4f90-437e-8297-9c78ce910431"
             listen={
@@ -31959,7 +31850,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="9fef1281-c8ac-466e-ab39-d81b9781a55f"
             listen={
@@ -32168,7 +32058,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -32412,7 +32301,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -32656,7 +32544,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -32900,7 +32787,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="9aa17de3-9496-421c-a97a-1cba83969815"
             listen={
@@ -33109,7 +32995,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="ab960442-661b-40f6-9c09-0f89f92e52a1"
             listen={
@@ -33318,7 +33203,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -33562,7 +33446,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -33806,7 +33689,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="69bf700c-b549-4153-b42c-b76e59f111ed"
             listen={
@@ -34015,7 +33897,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -34259,7 +34140,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -34503,7 +34383,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -34747,7 +34626,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -34991,7 +34869,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -35235,7 +35112,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -35479,7 +35355,6 @@ exports[`User Stats UserTopEntity renders correctly for release 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="7fff2a44-6f46-41c4-ae96-effd3b8f06be"
             listen={
@@ -35730,7 +35605,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="f6804962-d5a3-4099-899c-95c360938502"
             listen={
@@ -35992,7 +35866,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -36236,7 +36109,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -36480,7 +36352,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="2dbd0eff-17ce-34da-83f1-c707a199bc1e"
             listen={
@@ -36689,7 +36560,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="087b3a7d-d532-44d9-b37a-84427677ddcd"
             listen={
@@ -36898,7 +36768,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="3d66159a-5805-4219-b827-814226a5279e"
             listen={
@@ -37160,7 +37029,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="e4174758-d333-4a8e-a31f-dd0edd51518e"
             listen={
@@ -37369,7 +37237,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="b7365a6f-fdd7-4f18-8520-8ece5fc1179f"
             listen={
@@ -37631,7 +37498,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="555f06a8-5d9b-4ec1-9d73-a5a529ab3010"
             listen={
@@ -37840,7 +37706,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="1f25d940-89e2-4813-a86f-955b0e99c391"
             listen={
@@ -38049,7 +37914,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -38293,7 +38157,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="eb20f028-6f59-4a64-95f1-1bc56b87dd5c"
             listen={
@@ -38504,7 +38367,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="966d9b30-3937-4aeb-848c-db6b5c9a74ed"
             listen={
@@ -38713,7 +38575,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="111857eb-16f1-4489-8091-1740dfa3d635"
             listen={
@@ -38976,7 +38837,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="a348ba2f-f8b3-4686-b928-e63d8d94d543"
             listen={
@@ -39185,7 +39045,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="e05f9927-e24b-41c5-928d-d0e008a12444"
             listen={
@@ -39394,7 +39253,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="082c6aff-a7cc-36e0-a960-35a578ecd937"
             listen={
@@ -39603,7 +39461,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="1ce1ed6e-ee15-4891-8bf8-00921b5873ad"
             listen={
@@ -39812,7 +39669,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="1507bca6-9459-3aa3-9d07-36a7063b3ba7"
             listen={
@@ -40021,7 +39877,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="deae6fc2-a675-4f35-9565-d2aaea4872c7"
             listen={
@@ -40230,7 +40085,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="454dd3a6-3f05-47fa-a284-c27de9fc75f9"
             listen={
@@ -40439,7 +40293,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="e98fb052-a99e-4275-99d5-0e9a9a45f5f1"
             listen={
@@ -40649,7 +40502,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -40893,7 +40745,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={
@@ -41137,7 +40988,6 @@ exports[`User Stats UserTopEntity renders correctly for release group 1`] = `
               </span>
             }
             compact={true}
-            currentFeedback={0}
             feedbackComponent={<React.Fragment />}
             key="null"
             listen={

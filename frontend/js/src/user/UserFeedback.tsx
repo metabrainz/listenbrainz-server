@@ -5,13 +5,11 @@ import * as React from "react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeart, faHeartCrack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { clone, get, has } from "lodash";
 import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
-
-import Loader from "../components/Loader";
 import Pill from "../components/Pill";
 import ListenCard from "../listens/ListenCard";
+import Loader from "../components/Loader";
 import { ToastMsg } from "../notifications/Notifications";
 import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
 
@@ -27,8 +25,6 @@ export interface UserFeedbackState {
   noMoreFeedback: boolean;
   page: number;
   maxPage: number;
-  recordingMsidFeedbackMap: RecordingFeedbackMap;
-  recordingMbidFeedbackMap: RecordingFeedbackMap;
   selectedFeedbackScore: ListenFeedBack;
 }
 
@@ -58,35 +54,9 @@ export default class UserFeedback extends React.Component<
       page: 1,
       feedback: feedback?.slice(0, this.DEFAULT_ITEMS_PER_PAGE) || [],
       loading: false,
-      recordingMsidFeedbackMap: {},
-      recordingMbidFeedbackMap: {},
       selectedFeedbackScore: feedback?.[0]?.score ?? 1,
       noMoreFeedback: maxPage <= 1,
     };
-  }
-
-  componentDidMount(): void {
-    const { currentUser } = this.context;
-    const { user, feedback } = this.props;
-
-    if (currentUser?.name === user.name && feedback?.length) {
-      // Logged in user is looking at their own feedback, we can build
-      // the recordingMsidFeedbackMap from feedback which already contains the feedback score for each item
-      const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
-      const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
-
-      feedback.forEach((item) => {
-        if (item.recording_msid) {
-          recordingMsidFeedbackMap[item.recording_msid] = item.score;
-        }
-        if (item.recording_mbid) {
-          recordingMbidFeedbackMap[item.recording_mbid] = item.score;
-        }
-      });
-      this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
-    } else {
-      this.loadFeedback();
-    }
   }
 
   handleLoadMore = async (event?: React.MouseEvent) => {
@@ -129,18 +99,15 @@ export default class UserFeedback extends React.Component<
 
       const totalCount = parseInt(feedbackResponse.total_count, 10);
       const newMaxPage = Math.ceil(totalCount / this.DEFAULT_ITEMS_PER_PAGE);
-      this.setState(
-        {
-          loading: false,
-          page,
-          maxPage: newMaxPage,
-          noMoreFeedback: page >= newMaxPage,
-          feedback: replaceFeebackArray
-            ? feedbackResponse.feedback
-            : feedback.concat(feedbackResponse.feedback),
-        },
-        this.loadFeedback
-      );
+      this.setState({
+        loading: false,
+        page,
+        maxPage: newMaxPage,
+        noMoreFeedback: page >= newMaxPage,
+        feedback: replaceFeebackArray
+          ? feedbackResponse.feedback
+          : feedback.concat(feedbackResponse.feedback),
+      });
     } catch (error) {
       toast.warn(
         <ToastMsg
@@ -163,154 +130,11 @@ export default class UserFeedback extends React.Component<
     }
   };
 
-  getFeedback = async () => {
-    const { currentUser, APIService } = this.context;
-
-    const {
-      feedback,
-      recordingMsidFeedbackMap,
-      recordingMbidFeedbackMap,
-    } = this.state;
-
-    let recording_msids: string[] = [];
-    let recording_mbids: string[] = [];
-    if (feedback?.length && currentUser?.name) {
-      recording_msids = feedback
-        .map((item) => item.recording_msid)
-        // Only request non-undefined and non-empty string
-        .filter(Boolean)
-        // Only request feedback we don't already have
-        .filter((msid) => !has(recordingMsidFeedbackMap, msid)) as string[];
-      recording_mbids = feedback
-        .map((item) => item.recording_mbid)
-        // Only request non-undefined and non-empty string
-        .filter(Boolean)
-        // Only request feedback we don't already have
-        // @ts-ignore
-        .filter((mbid) => !has(recordingMbidFeedbackMap, mbid)) as string[];
-      if (!recording_msids.length && !recording_mbids.length) {
-        return [];
-      }
-      try {
-        const data = await APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recording_mbids,
-          recording_msids
-        );
-        return data.feedback;
-      } catch (error) {
-        toast.warn(
-          <ToastMsg
-            title="We could not load love/hate feedback"
-            message={typeof error === "object" ? error.message : error}
-          />,
-          { toastId: "load-feedback-error" }
-        );
-      }
-    }
-    return [];
-  };
-
   changeSelectedFeedback = (newFeedbackLevel: ListenFeedBack) => {
     this.setState(
       { selectedFeedbackScore: newFeedbackLevel },
       this.getFeedbackItemsFromAPI.bind(this, 1, true)
     );
-  };
-
-  loadFeedback = async () => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-    const feedback = await this.getFeedback();
-    if (!feedback?.length) {
-      return;
-    }
-    const newRecordingMsidFeedbackMap: RecordingFeedbackMap = {
-      ...recordingMsidFeedbackMap,
-    };
-    const newRecordingMbidFeedbackMap: RecordingFeedbackMap = {
-      ...recordingMbidFeedbackMap,
-    };
-    feedback.forEach((fb: FeedbackResponse) => {
-      if (fb.recording_msid) {
-        newRecordingMsidFeedbackMap[fb.recording_msid] = fb.score;
-      }
-      if (fb.recording_mbid) {
-        newRecordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
-      }
-    });
-    this.setState({
-      recordingMsidFeedbackMap: newRecordingMsidFeedbackMap,
-      recordingMbidFeedbackMap: newRecordingMbidFeedbackMap,
-    });
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMsid?: string
-  ) => {
-    const {
-      recordingMsidFeedbackMap,
-      recordingMbidFeedbackMap,
-      feedback,
-    } = this.state;
-    const { currentUser } = this.context;
-    const { user } = this.props;
-
-    const newFeedbackMsidMap = {
-      ...recordingMsidFeedbackMap,
-    };
-    const newFeedbackMbidMap = {
-      ...recordingMbidFeedbackMap,
-    };
-    if (recordingMsid) {
-      newFeedbackMsidMap[recordingMsid] = score as ListenFeedBack;
-    }
-    if (recordingMbid) {
-      newFeedbackMbidMap[recordingMbid] = score as ListenFeedBack;
-    }
-
-    if (currentUser?.name && currentUser.name === user?.name) {
-      const index = feedback.findIndex(
-        (feedbackItem) =>
-          feedbackItem.recording_msid === recordingMsid ||
-          feedbackItem.recording_mbid === recordingMbid
-      );
-      const newFeedbackArray = clone(feedback);
-      newFeedbackArray.splice(index, 1);
-      this.setState({
-        recordingMsidFeedbackMap: newFeedbackMsidMap,
-        recordingMbidFeedbackMap: newFeedbackMbidMap,
-        feedback: newFeedbackArray,
-      });
-    } else {
-      this.setState({
-        recordingMsidFeedbackMap: newFeedbackMsidMap,
-        recordingMbidFeedbackMap: newFeedbackMbidMap,
-      });
-    }
-  };
-
-  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    // first check whether the mbid has any feedback available
-    // if yes and the feedback is not zero, return it. if the
-    // feedback is zero or not the mbid is absent from the map,
-    // look for the feedback using the msid.
-
-    const recordingMbid = getRecordingMBID(listen);
-    const mbidFeedback = recordingMbid
-      ? get(recordingMbidFeedbackMap, recordingMbid, 0)
-      : 0;
-
-    if (mbidFeedback) {
-      return mbidFeedback;
-    }
-
-    const recordingMsid = getRecordingMSID(listen);
-
-    return recordingMsid ? get(recordingMsidFeedbackMap, recordingMsid, 0) : 0;
   };
 
   render() {
@@ -380,8 +204,6 @@ export default class UserFeedback extends React.Component<
                     showTimestamp
                     key={`${listen.listened_at}-${recording_msid}-${recording_mbid}`}
                     listen={listen}
-                    currentFeedback={this.getFeedbackForListen(listen)}
-                    updateFeedbackCallback={this.updateFeedback}
                   />
                 );
               })}

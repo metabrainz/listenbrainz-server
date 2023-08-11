@@ -19,7 +19,10 @@ module.exports = {
   // The paths to modules that run some code to configure or set up the testing environment before each test
   setupFiles: ["<rootDir>/enzyme.config.ts", "jest-canvas-mock"],
 
-  setupFilesAfterEnv: ["jest-location-mock"],
+  setupFilesAfterEnv: [
+    "jest-location-mock",
+    "<rootDir>/frontend/js/tests/jest-setup.js",
+  ],
 
   // The test environment that will be used for testing
   testEnvironment: "jsdom",
