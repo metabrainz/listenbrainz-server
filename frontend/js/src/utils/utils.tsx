@@ -11,6 +11,7 @@ import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
 import { ToastMsg } from "../notifications/Notifications";
+import RecordingFeedbackManager from "./RecordingFeedbackManager";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
@@ -538,6 +539,10 @@ const getPageProps = (): {
       critiquebrainzAuth: critiquebrainz,
       musicbrainzAuth: musicbrainz,
       userPreferences: user_preferences,
+      recordingFeedbackManager: new RecordingFeedbackManager(
+        apiService,
+        current_user
+      ),
     };
     sentryProps = {
       sentry_dsn,

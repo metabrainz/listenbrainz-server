@@ -53,7 +53,6 @@ export type PlaylistPageProps = {
 
 export interface PlaylistPageState {
   playlist: JSPFPlaylist;
-  recordingFeedbackMap: RecordingFeedbackMap;
   loading: boolean;
 }
 
@@ -94,7 +93,6 @@ export default class PlaylistPage extends React.Component<
     );
     this.state = {
       playlist: props.playlist?.playlist || {},
-      recordingFeedbackMap: {},
       loading: false,
     };
   }
@@ -103,8 +101,6 @@ export default class PlaylistPage extends React.Component<
     const { APIService } = this.context;
     this.APIService = APIService;
     this.connectWebsockets();
-    const recordingFeedbackMap = await this.loadFeedback();
-    this.setState({ recordingFeedbackMap });
   }
 
   componentWillUnmount(): void {
@@ -182,15 +178,10 @@ export default class PlaylistPage extends React.Component<
         />,
         { toastId: "added-track" }
       );
-      const recordingFeedbackMap = await this.loadFeedback([
-        (selectedTrackMetadata.recording_mbid ??
-          selectedTrackMetadata.additional_info?.recording_mbid) as string,
-      ]);
       jspfTrack.id = selectedTrackMetadata.recording_mbid;
       this.setState(
         {
           playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
-          recordingFeedbackMap,
         },
         this.emitPlaylistChanged
       );
@@ -274,63 +265,6 @@ export default class PlaylistPage extends React.Component<
     } catch (error) {
       this.handleError(error);
     }
-  };
-
-  getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    const { track: tracks } = playlist;
-    if (currentUser && tracks) {
-      const recordings = mbids ?? tracks.map(getRecordingMBIDFromJSPFTrack);
-      try {
-        const data = await this.APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recordings
-        );
-        return data.feedback;
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="Playback error"
-            message={typeof error === "object" ? error.message : error}
-          />,
-          { toastId: "playback-error" }
-        );
-      }
-    }
-    return [];
-  };
-
-  loadFeedback = async (mbids?: string[]): Promise<RecordingFeedbackMap> => {
-    const { recordingFeedbackMap } = this.state;
-    const feedback = await this.getFeedback(mbids);
-    const newRecordingFeedbackMap: RecordingFeedbackMap = {
-      ...recordingFeedbackMap,
-    };
-    feedback.forEach((fb: FeedbackResponse) => {
-      if (fb.recording_mbid) {
-        newRecordingFeedbackMap[fb.recording_mbid] = fb.score;
-      }
-    });
-    return newRecordingFeedbackMap;
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack
-  ) => {
-    if (recordingMbid) {
-      const { recordingFeedbackMap } = this.state;
-      recordingFeedbackMap[recordingMbid] = score as ListenFeedBack;
-      this.setState({ recordingFeedbackMap });
-    }
-  };
-
-  getFeedbackForRecordingMbid = (
-    recordingMbid?: string | null
-  ): ListenFeedBack => {
-    const { recordingFeedbackMap } = this.state;
-    return recordingMbid ? get(recordingFeedbackMap, recordingMbid, 0) : 0;
   };
 
   isOwner = (): boolean => {
@@ -818,11 +752,7 @@ export default class PlaylistPage extends React.Component<
                         key={`${track.id}-${index.toString()}`}
                         canEdit={hasRightToEdit}
                         track={track}
-                        currentFeedback={this.getFeedbackForRecordingMbid(
-                          track.id
-                        )}
                         removeTrackFromPlaylist={this.deletePlaylistItem}
-                        updateFeedbackCallback={this.updateFeedback}
                       />
                     );
                   })}

@@ -7,26 +7,32 @@ exports[`RecommendationControl renders correctly 1`] = `
   icon={
     Object {
       "icon": Array [
-        496,
         512,
-        Array [],
+        512,
+        Array [
+          128528,
+          "meh",
+        ],
         "f11a",
-        "M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm8 144H160c-13.2 0-24 10.8-24 24s10.8 24 24 24h176c13.2 0 24-10.8 24-24s-10.8-24-24-24z",
+        "M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM256 0a256 256 0 1 0 0 512A256 256 0 1 0 256 0zM176.4 240a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm192-32a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM184 328c-13.3 0-24 10.7-24 24s10.7 24 24 24H328c13.3 0 24-10.7 24-24s-10.7-24-24-24H184z",
       ],
-      "iconName": "meh",
+      "iconName": "face-meh",
       "prefix": "far",
     }
   }
   iconHover={
     Object {
       "icon": Array [
-        496,
         512,
-        Array [],
+        512,
+        Array [
+          128528,
+          "meh",
+        ],
         "f11a",
-        "M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm-80 168c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm176 192H152c-21.2 0-21.2-32 0-32h192c21.2 0 21.2 32 0 32zm-16-128c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z",
+        "M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM176.4 176a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm128 32a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM160 336H352c8.8 0 16 7.2 16 16s-7.2 16-16 16H160c-8.8 0-16-7.2-16-16s7.2-16 16-16z",
       ],
-      "iconName": "meh",
+      "iconName": "face-meh",
       "prefix": "fas",
     }
   }
@@ -44,49 +50,61 @@ exports[`RecommendationControl renders correctly 1`] = `
       className="on"
     >
       <FontAwesomeIcon
+        beat={false}
+        beatFade={false}
         border={false}
+        bounce={false}
         className=""
+        fade={false}
         fixedWidth={false}
-        flip={null}
+        flip={false}
         icon={
           Object {
             "icon": Array [
-              496,
               512,
-              Array [],
+              512,
+              Array [
+                128528,
+                "meh",
+              ],
               "f11a",
-              "M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm-80 168c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm176 192H152c-21.2 0-21.2-32 0-32h192c21.2 0 21.2 32 0 32zm-16-128c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z",
+              "M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM176.4 176a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm128 32a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM160 336H352c8.8 0 16 7.2 16 16s-7.2 16-16 16H160c-8.8 0-16-7.2-16-16s7.2-16 16-16z",
             ],
-            "iconName": "meh",
+            "iconName": "face-meh",
             "prefix": "fas",
           }
         }
         inverse={false}
         listItem={false}
         mask={null}
+        maskId={null}
         pull={null}
         pulse={false}
         rotation={null}
+        shake={false}
         size={null}
         spin={false}
+        spinPulse={false}
+        spinReverse={false}
         swapOpacity={false}
         symbol={false}
         title=""
+        titleId={null}
         transform={null}
       >
         <svg
           aria-hidden="true"
-          className="svg-inline--fa fa-meh fa-w-16 "
-          data-icon="meh"
+          className="svg-inline--fa fa-face-meh "
+          data-icon="face-meh"
           data-prefix="fas"
           focusable="false"
           role="img"
           style={Object {}}
-          viewBox="0 0 496 512"
+          viewBox="0 0 512 512"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm-80 168c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm176 192H152c-21.2 0-21.2-32 0-32h192c21.2 0 21.2 32 0 32zm-16-128c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z"
+            d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM176.4 176a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm128 32a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM160 336H352c8.8 0 16 7.2 16 16s-7.2 16-16 16H160c-8.8 0-16-7.2-16-16s7.2-16 16-16z"
             fill="currentColor"
             style={Object {}}
           />
@@ -97,49 +115,61 @@ exports[`RecommendationControl renders correctly 1`] = `
       className="off"
     >
       <FontAwesomeIcon
+        beat={false}
+        beatFade={false}
         border={false}
+        bounce={false}
         className=""
+        fade={false}
         fixedWidth={false}
-        flip={null}
+        flip={false}
         icon={
           Object {
             "icon": Array [
-              496,
               512,
-              Array [],
+              512,
+              Array [
+                128528,
+                "meh",
+              ],
               "f11a",
-              "M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm8 144H160c-13.2 0-24 10.8-24 24s10.8 24 24 24h176c13.2 0 24-10.8 24-24s-10.8-24-24-24z",
+              "M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM256 0a256 256 0 1 0 0 512A256 256 0 1 0 256 0zM176.4 240a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm192-32a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM184 328c-13.3 0-24 10.7-24 24s10.7 24 24 24H328c13.3 0 24-10.7 24-24s-10.7-24-24-24H184z",
             ],
-            "iconName": "meh",
+            "iconName": "face-meh",
             "prefix": "far",
           }
         }
         inverse={false}
         listItem={false}
         mask={null}
+        maskId={null}
         pull={null}
         pulse={false}
         rotation={null}
+        shake={false}
         size={null}
         spin={false}
+        spinPulse={false}
+        spinReverse={false}
         swapOpacity={false}
         symbol={false}
         title=""
+        titleId={null}
         transform={null}
       >
         <svg
           aria-hidden="true"
-          className="svg-inline--fa fa-meh fa-w-16 "
-          data-icon="meh"
+          className="svg-inline--fa fa-face-meh "
+          data-icon="face-meh"
           data-prefix="far"
           focusable="false"
           role="img"
           style={Object {}}
-          viewBox="0 0 496 512"
+          viewBox="0 0 512 512"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 448c-110.3 0-200-89.7-200-200S137.7 56 248 56s200 89.7 200 200-89.7 200-200 200zm-80-216c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm160-64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm8 144H160c-13.2 0-24 10.8-24 24s10.8 24 24 24h176c13.2 0 24-10.8 24-24s-10.8-24-24-24z"
+            d="M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM256 0a256 256 0 1 0 0 512A256 256 0 1 0 256 0zM176.4 240a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm192-32a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM184 328c-13.3 0-24 10.7-24 24s10.7 24 24 24H328c13.3 0 24-10.7 24-24s-10.7-24-24-24H184z"
             fill="currentColor"
             style={Object {}}
           />

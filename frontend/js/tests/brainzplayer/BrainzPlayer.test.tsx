@@ -1,17 +1,20 @@
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
-import fetchMock from "jest-fetch-mock";
+
 import { act } from "react-dom/test-utils";
+import fetchMock from "jest-fetch-mock";
+import { mount } from "enzyme";
 import BrainzPlayer, {
-  BrainzPlayerProps,
-  BrainzPlayerState,
   DataSourceType,
 } from "../../src/brainzplayer/BrainzPlayer";
-import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
-import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
-import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
+
 import APIService from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
+import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
+import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -36,9 +39,8 @@ const soundcloudPermissions = {
   access_token: "ihavenotseenthefnords",
 };
 
-const GlobalContextMock = {
+const GlobalContextMock: { context: GlobalAppContextT } = {
   context: {
-    APIBaseURI: "base-uri",
     APIService: new APIService("base-uri"),
     spotifyAuth: {
       access_token: "heyo",
@@ -54,6 +56,10 @@ const GlobalContextMock = {
       api_key: "fake-api-key",
     },
     currentUser: { name: "" },
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 

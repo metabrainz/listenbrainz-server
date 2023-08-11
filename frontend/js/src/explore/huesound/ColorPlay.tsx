@@ -215,7 +215,6 @@ export default class ColorPlay extends React.Component<
                       return (
                         <ListenCard
                           listen={recording}
-                          currentFeedback={0}
                           showTimestamp={false}
                           showUsername={false}
                         />

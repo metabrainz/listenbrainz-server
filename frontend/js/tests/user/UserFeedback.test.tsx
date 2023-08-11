@@ -15,6 +15,7 @@ import * as userFeedbackProps from "../__mocks__/userFeedbackProps.json";
 import * as userFeedbackAPIResponse from "../__mocks__/userFeedbackAPIResponse.json";
 import ListenCard from "../../src/listens/ListenCard";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const { totalCount, user, feedback, youtube, spotify } = userFeedbackProps;
 
@@ -44,7 +45,6 @@ const props = {
   feedback: typedFeedback,
   youtube,
   spotify,
-  
 };
 
 // Create a new instance of GlobalAppContext
@@ -54,6 +54,10 @@ const mountOptions: { context: GlobalAppContextT } = {
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
     currentUser: { auth_token: "lalala", name: "pikachu" },
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 const mountOptionsWithoutUser: { context: GlobalAppContextT } = {
@@ -81,85 +85,7 @@ describe("UserFeedback", () => {
     );
     expect(wrapper.html()).toMatchSnapshot();
     fakeDateNow.mockRestore();
-  });
-
-  it("loads user feedback from props if logged-in user on their profile", async () => {
-    const wrapper = mount<UserFeedback>(
-      <GlobalAppContext.Provider
-        value={{
-          ...mountOptions.context,
-          // Same user as in page props
-          currentUser: {
-            name: "mr_monkey",
-            id: 1,
-            auth_token: "IHaveSeenTheFnords",
-          },
-        }}
-      >
-        <UserFeedback {...props} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
-    await waitForComponentToPaint(wrapper);
-
-    // We don't call loadFeedback because we already have the feedback scores in props
-    expect(loadFeedbackSpy).not.toHaveBeenCalled();
-    expect(instance.state.recordingMsidFeedbackMap).toEqual(
-      initialRecordingFeedbackMap
-    );
-  });
-
-  it("loads user feedback from API for logged-in user", async () => {
-    const wrapper = mount<UserFeedback>(
-      <GlobalAppContext.Provider value={mountOptions.context}>
-        <UserFeedback {...props} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-    const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
-    const apiGetFeedbackSpy = jest
-      .spyOn(instance.context.APIService, "getFeedbackForUserForRecordings")
-      .mockResolvedValueOnce({
-        feedback: [
-          { recording_msid: "some-uuid", score: 1 },
-          { recording_msid: "some-other-uuid", score: -1 },
-        ],
-      });
-    instance.componentDidMount();
-    await waitForComponentToPaint(wrapper);
-    expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
-    expect(apiGetFeedbackSpy).toHaveBeenCalledWith(
-      "pikachu",
-      props.feedback.map((item) => item.recording_mbid).filter(Boolean),
-      props.feedback.map((item) => item.recording_msid).filter(Boolean)
-    );
-
-    expect(instance.state.recordingMsidFeedbackMap).toEqual({
-      "some-uuid": 1,
-      "some-other-uuid": -1,
-    });
-  });
-
-  it("loadFeedback does not do anything if no user is logged in", async () => {
-    const wrapper = mount<UserFeedback>(
-      <GlobalAppContext.Provider value={mountOptionsWithoutUser.context}>
-        <UserFeedback {...props} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-    await waitForComponentToPaint(wrapper);
-    const getFeedbackSpy = jest.spyOn(instance, "getFeedback");
-    const apiGetFeedbackSpy = jest.spyOn(
-      instance.context.APIService,
-      "getFeedbackForUserForRecordings"
-    );
-    expect(instance.context.currentUser).toEqual({});
-    instance.loadFeedback();
-    await waitForComponentToPaint(wrapper);
-    expect(getFeedbackSpy).toHaveBeenCalledTimes(1);
-
-    expect(apiGetFeedbackSpy).not.toHaveBeenCalled();
+    wrapper.unmount();
   });
 
   it("renders ListenCard items for each feedback item", async () => {
@@ -170,6 +96,7 @@ describe("UserFeedback", () => {
     );
     const listens = wrapper.find(ListenCard);
     expect(listens).toHaveLength(15);
+    wrapper.unmount();
   });
 
   it("does not render ListenCard items for feedback item without track name", async () => {
@@ -207,163 +134,17 @@ describe("UserFeedback", () => {
     );
     const listens = wrapper.find(ListenCard);
     expect(listens).toHaveLength(1);
+    wrapper.unmount();
   });
 
-  it("shows feedback on the ListenCards according to recordingFeedbackMap", async () => {
-    const wrapper = mount<UserFeedback>(
-      <GlobalAppContext.Provider value={mountOptions.context}>
-        <UserFeedback {...props} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-    await act(() => {
-      instance.setState({
-        recordingMsidFeedbackMap: {
-          "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
-          "edfa0bb9-a58c-406c-9f7c-f16741443f9c": 0,
-          "20059ffb-1615-4712-8235-a12840fb156e": -1,
-        },
-      });
-    });
-    await waitForComponentToPaint(wrapper);
-    const listens = wrapper.find(ListenCard);
-    // Score = 1 (loved) for first item
-    const firstListenCard = listens.at(0).find(".listen-controls").first();
-    expect(
-      firstListenCard
-        .find("[title='Love']")
-        .first()
-        .find(FontAwesomeIcon)
-        .first()
-        .hasClass("loved")
-    ).toBeTruthy();
-    // Score = 0 (neutral) for second item
-    const secondListenCard = listens.at(1).find(".listen-controls").first();
-    expect(
-      secondListenCard
-        .find("[title='Love']")
-        .first()
-        .find(FontAwesomeIcon)
-        .first()
-        .hasClass("loved")
-    ).toBeFalsy();
-    expect(
-      secondListenCard
-        .find("[title='Hate']")
-        .first()
-        .find(FontAwesomeIcon)
-        .first()
-        .hasClass("hated")
-    ).toBeFalsy();
-    // Score = -1 (hated) for third item
-    const thirdListenCard = listens.at(2).find(".listen-controls").first();
-    expect(
-      thirdListenCard
-        .find("[title='Hate']")
-        .first()
-        .find(FontAwesomeIcon)
-        .first()
-        .hasClass("hated")
-    ).toBeTruthy();
-    // No score (neutral) for fourth item
-    const fourthListenCard = listens.at(3).find(".listen-controls").first();
-    expect(
-      fourthListenCard
-        .find("[title='Love']")
-        .first()
-        .find(FontAwesomeIcon)
-        .first()
-        .hasClass("loved")
-    ).toBeFalsy();
-    expect(
-      fourthListenCard
-        .find("[title='Hate']")
-        .first()
-        .find(FontAwesomeIcon)
-        .first()
-        .hasClass("hated")
-    ).toBeFalsy();
-  });
-  it("updates recordingFeedbackMap when clicking on a feedback button", async () => {
-    const wrapper = mount<UserFeedback>(
-      <GlobalAppContext.Provider value={mountOptions.context}>
-        <UserFeedback {...props} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper.instance();
-    const listens = wrapper.find(ListenCard);
-    const APIsubmitFeedbackSpy = jest
-      .spyOn(instance.context.APIService, "submitFeedback")
-      .mockResolvedValue(200);
-    const updateFeedbackSpy = jest.spyOn(instance, "updateFeedback");
-
-    await act(() => {
-      instance.setState({
-        recordingMsidFeedbackMap: {
-          ...instance.state.recordingMsidFeedbackMap,
-          "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
-        },
-      });
-    });
-
-    expect(instance.state.recordingMsidFeedbackMap).toEqual({
-      "8aa379ad-852e-4794-9c01-64959f5d0b17": 0,
-    });
-    const firstListenCard = listens.first();
-
-    const loveButton = firstListenCard
-      .find(".listen-controls")
-      .first()
-      .find("[title='Love']")
-      .first();
-
-    // simulate clicking on "love" button
-    loveButton.simulate("click");
-    await waitForComponentToPaint(wrapper);
-
-    expect(APIsubmitFeedbackSpy).toHaveBeenCalledWith(
-      "lalala",
-      1,
-      "8aa379ad-852e-4794-9c01-64959f5d0b17",
-      "9812475d-c800-4f29-8a9a-4ac4af4b4dfd"
-    );
-    expect(updateFeedbackSpy).toHaveBeenCalledWith(
-      "9812475d-c800-4f29-8a9a-4ac4af4b4dfd",
-      1,
-      "8aa379ad-852e-4794-9c01-64959f5d0b17"
-    );
-
-    expect(instance.state.recordingMsidFeedbackMap).toEqual({
-      "8aa379ad-852e-4794-9c01-64959f5d0b17": 1,
-    });
-  });
   describe("getFeedbackItemsFromAPI", () => {
-    it("calls the API with the right parameters", async () => {
+    it("sets the state and updates browser history", async () => {
       const wrapper = mount<UserFeedback>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <UserFeedback {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
-      const apiGetFeedbackSpy = jest.spyOn(
-        instance.context.APIService,
-        "getFeedbackForUser"
-      );
-
-      await instance.getFeedbackItemsFromAPI(1, false);
-      expect(apiGetFeedbackSpy).toHaveBeenCalledTimes(1);
-      expect(apiGetFeedbackSpy).toHaveBeenCalledWith("mr_monkey", 0, 25, 1);
-      apiGetFeedbackSpy.mockClear();
-    });
-
-    it("sets the state, loads feedback for user and updates browser history", async () => {
-      const wrapper = mount<UserFeedback>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <UserFeedback {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
       await waitForComponentToPaint(wrapper);
 
       // Initially set to 1 page (15 listens), after API response should be 2 pages
@@ -380,8 +161,7 @@ describe("UserFeedback", () => {
       expect(instance.state.maxPage).toEqual(2);
       expect(instance.state.selectedFeedbackScore).toEqual(1);
       expect(instance.state.loading).toEqual(false);
-
-      expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
+      wrapper.unmount();
     });
   });
 });

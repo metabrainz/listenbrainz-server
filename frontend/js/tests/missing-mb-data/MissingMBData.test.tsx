@@ -11,6 +11,7 @@ import GlobalAppContext, {
 } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // // Mocking Math.random() fixes this
@@ -19,7 +20,6 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const props = {
   ...missingDataProps,
-  
 };
 
 // Create a new instance of GlobalAppContext
@@ -29,6 +29,10 @@ const mountOptions: { context: GlobalAppContextT } = {
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
     currentUser: user,
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 

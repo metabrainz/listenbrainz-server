@@ -4,7 +4,9 @@ import { act } from "react-dom/test-utils";
 import NiceModal, { NiceModalHocProps } from "@ebay/nice-modal-react";
 import { merge } from "lodash";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 
 import * as lookupMBRelease from "../__mocks__/lookupMBRelease.json";
 import * as lookupMBReleaseFromTrack from "../__mocks__/lookupMBReleaseFromTrack.json";
@@ -13,6 +15,7 @@ import CBReviewModal, {
   CBReviewModalProps,
 } from "../../src/cb-review/CBReviewModal";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const listen: Listen = {
   track_metadata: {
@@ -31,7 +34,7 @@ const listen: Listen = {
 };
 
 const testAPIService = new APIServiceClass("");
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService: testAPIService,
   currentUser: {
     id: 1,
@@ -43,6 +46,9 @@ const globalProps = {
   critiquebrainzAuth: {
     access_token: "BL9f6rv8OXyR0qLucXoftqAhMarEcfhUXpZ8lXII",
   },
+  recordingFeedbackManager: new RecordingFeedbackManager(testAPIService, {
+    name: "Fnord",
+  }),
 };
 const submitReviewToCBSpy = jest
   .spyOn(testAPIService, "submitReviewToCB")

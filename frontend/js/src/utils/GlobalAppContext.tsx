@@ -1,5 +1,6 @@
 import { createContext, createRef } from "react";
 import APIService from "./APIService";
+import RecordingFeedbackManager from "./RecordingFeedbackManager";
 
 export type GlobalAppContextT = {
   APIService: APIService;
@@ -11,10 +12,12 @@ export type GlobalAppContextT = {
   musicbrainzAuth?: MetaBrainzProjectUser;
   userPreferences?: UserPreferences;
   musicbrainzGenres?: string[];
+  recordingFeedbackManager: RecordingFeedbackManager;
 };
+const apiService = new APIService(`${window.location.origin}/1`);
 
 const GlobalAppContext = createContext<GlobalAppContextT>({
-  APIService: new APIService(`${window.location.origin}/1`),
+  APIService: apiService,
   currentUser: {} as ListenBrainzUser,
   spotifyAuth: {},
   youtubeAuth: {},
@@ -23,6 +26,7 @@ const GlobalAppContext = createContext<GlobalAppContextT>({
   musicbrainzAuth: {},
   userPreferences: {},
   musicbrainzGenres: [],
+  recordingFeedbackManager: new RecordingFeedbackManager(apiService),
 });
 
 export default GlobalAppContext;
