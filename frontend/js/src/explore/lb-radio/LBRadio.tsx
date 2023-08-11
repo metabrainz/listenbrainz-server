@@ -252,6 +252,7 @@ function LBRadio(props: LBRadioProps) {
         listenBrainzAPIBaseURI={APIService.APIBaseURI}
         refreshSpotifyToken={APIService.refreshSpotifyToken}
         refreshYoutubeToken={APIService.refreshYoutubeToken}
+        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
       />
     </>
   );

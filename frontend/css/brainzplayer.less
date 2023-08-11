@@ -46,7 +46,8 @@
       flex: 0;
       margin-right: 1em;
       // Show big preview of the cover art when hovering over it
-      &:hover > *:not(.hidden):not(.no-album-art):not(.youtube-wrapper):not(.soundcloud) {
+      &:hover
+        > *:not(.hidden):not(.no-album-art):not(.youtube-wrapper):not(.soundcloud) {
         // 80% of screen width max, capped at the width in pixel of big-cover-art-size
         height: min(80vw, @big-cover-art-size);
         width: min(80vw, @big-cover-art-size);
