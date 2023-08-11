@@ -96,11 +96,8 @@ describe("BrainzPlayer", () => {
     expect(wrapper.html()).toMatchSnapshot();
   });
 
-  it("creates Youtube and SoundCloud datasources by default", () => {
-    const mockProps = {
-      ...props,
-    };
-    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />, {
+  it("creates Youtube datasource by default", () => {
+    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...props} />, {
       context: {
         ...GlobalContextMock.context,
         spotifyUser: {},
@@ -496,12 +493,8 @@ describe("BrainzPlayer", () => {
   });
   describe("seekToPositionMs", () => {
     it("invalidates the datasource if it doesn't exist", async () => {
-      const mockProps = {
-        ...props,
-        spotifyUser: {},
-      };
       const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...mockProps} />,
+        <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
@@ -600,24 +593,28 @@ describe("BrainzPlayer", () => {
     });
 
     it("tries playing the current listen with the next datasource", async () => {
-      const mockProps = {
-        ...props,
-        soundcloudAuth: soundcloudPermissions,
-      };
       const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...mockProps} />,
-        GlobalContextMock
+        <GlobalAppContext.Provider
+          value={{
+            ...GlobalContextMock.context,
+            spotifyAuth: spotifyAccountWithPermissions,
+            soundcloudAuth: soundcloudPermissions,
+          }}
+        >
+          <BrainzPlayer {...props} />
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
       await act(async () => {
         wrapper.setState({ isActivated: true, currentListen: listen });
       });
+      expect(instance.dataSources.length).toBeGreaterThan(1);
       instance.playNextTrack = jest.fn();
       instance.playListen = jest.fn();
       await act(async () => {
         instance.failedToPlayTrack();
       });
-      expect(instance.playNextTrack).toHaveBeenCalled();
+      expect(instance.playNextTrack).not.toHaveBeenCalled();
       expect(instance.playListen).toHaveBeenCalledWith(listen, 1);
     });
 
