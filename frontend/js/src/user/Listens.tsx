@@ -906,9 +906,7 @@ export default class Listens extends React.Component<
                   className="btn btn-primary add-listen-btn"
                   style={{}}
                   onClick={() => {
-                    NiceModal.show(AddListenModal, {
-                      newAlert,
-                    });
+                    NiceModal.show(AddListenModal);
                   }}
                   data-Toggle="modal"
                   data-Target="#AddListenModal"
