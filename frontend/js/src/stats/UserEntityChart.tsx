@@ -596,7 +596,6 @@ export default class UserEntityChart extends React.Component<
                             listen={listen}
                             showTimestamp={false}
                             showUsername={false}
-                            currentFeedback={0}
                           />
                         );
                       })}

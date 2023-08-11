@@ -11,7 +11,10 @@ import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
 import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
 import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
 import APIService from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -31,9 +34,8 @@ const spotifyAccountWithPermissions = {
   >,
 };
 
-const GlobalContextMock = {
+const GlobalContextMock: { context: GlobalAppContextT } = {
   context: {
-    APIBaseURI: "base-uri",
     APIService: new APIService("base-uri"),
     spotifyAuth: {
       access_token: "heyo",
@@ -46,6 +48,10 @@ const GlobalContextMock = {
       api_key: "fake-api-key",
     },
     currentUser: { name: "" },
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 

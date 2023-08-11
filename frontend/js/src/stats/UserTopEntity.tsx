@@ -151,7 +151,6 @@ export default class UserTopEntity extends React.Component<
                       listen={userChartEntityToListen(interchangeFormat)}
                       showTimestamp={false}
                       showUsername={false}
-                      currentFeedback={0}
                       additionalActions={
                         <span className="badge badge-info">
                           {artist.listen_count}
@@ -193,7 +192,6 @@ export default class UserTopEntity extends React.Component<
                       listen={userChartEntityToListen(interchangeFormat)}
                       showTimestamp={false}
                       showUsername={false}
-                      currentFeedback={0}
                       additionalActions={
                         <span className="badge badge-info">
                           {release.listen_count}
@@ -282,7 +280,6 @@ export default class UserTopEntity extends React.Component<
                       listen={userChartEntityToListen(interchangeFormat)}
                       showTimestamp={false}
                       showUsername={false}
-                      currentFeedback={0}
                       additionalActions={
                         <span className="badge badge-info">
                           {releaseGroup.listen_count}

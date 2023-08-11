@@ -10,10 +10,13 @@ import ListenCard, {
 } from "../../src/listens/ListenCard";
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import { waitForComponentToPaint } from "../test-utils";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -39,18 +42,19 @@ const listen: Listen = {
 
 const props: ListenCardProps = {
   listen,
-  currentFeedback: 1,
   showTimestamp: true,
   showUsername: true,
-  updateFeedbackCallback: () => {},
-  
 };
 
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
   currentUser: { auth_token: "baz", name: "test" },
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIServiceClass(""),
+    { name: "Fnord" }
+  ),
 };
 
 describe("ListenCard", () => {
@@ -193,7 +197,7 @@ describe("ListenCard", () => {
     it("calls API, and creates a new alert on success", async () => {
       const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard { ...props } />
+          <ListenCard {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -271,11 +275,10 @@ describe("ListenCard", () => {
   });
   describe("pinRecordingModal", () => {
     it("renders the PinRecordingModal component with the correct props", async () => {
-      
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
-            <ListenCard {...props}  />
+            <ListenCard {...props} />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
@@ -293,17 +296,15 @@ describe("ListenCard", () => {
         wrapper.find(PinRecordingModal).first().childAt(0).props()
       ).toEqual({
         recordingToPin: props.listen,
-       
       });
     });
   });
   describe("CBReviewModal", () => {
     it("renders the CBReviewModal component with the correct props", async () => {
-  
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
-            <ListenCard {...props}  />
+            <ListenCard {...props} />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );

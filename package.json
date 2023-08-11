@@ -42,6 +42,7 @@
     "@fortawesome/free-regular-svg-icons": "^5.13.0",
     "@fortawesome/free-solid-svg-icons": "^5.13.0",
     "@fortawesome/react-fontawesome": "^0.1.9",
+    "@jcoreio/async-throttle": "^1.6.0",
     "@nivo/bar": "^0.81.0",
     "@nivo/calendar": "^0.81.0",
     "@nivo/core": "^0.81.0",

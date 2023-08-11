@@ -7,8 +7,11 @@ import PersonalRecommendationModal, {
   maxBlurbContentLength,
 } from "../../src/personal-recommendations/PersonalRecommendationsModal";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const listenToPersonallyRecommend: Listen = {
   listened_at: 1605927742,
@@ -29,18 +32,20 @@ const user = {
   auth_token: "auth_token",
 };
 const testAPIService = new APIServiceClass("");
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService: testAPIService,
   currentUser: user,
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(testAPIService, {
+    name: "Fnord",
+  }),
 };
 
 const niceModalProps: NiceModalHocProps = {
   id: "fnord",
   defaultVisible: true,
 };
-
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -61,7 +66,6 @@ const submitPersonalRecommendationSpy = jest
 
 describe("PersonalRecommendationModal", () => {
   afterEach(() => {
-    
     getFollowersSpy.mockClear();
     submitPersonalRecommendationSpy.mockClear();
   });
@@ -72,7 +76,6 @@ describe("PersonalRecommendationModal", () => {
           <PersonalRecommendationModal
             {...niceModalProps}
             listenToPersonallyRecommend={listenToPersonallyRecommend}
-            
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
@@ -88,7 +91,6 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -143,7 +145,6 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -166,7 +167,6 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -198,7 +198,6 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -232,7 +231,6 @@ describe("PersonalRecommendationModal", () => {
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>

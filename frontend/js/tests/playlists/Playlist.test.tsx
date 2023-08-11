@@ -14,6 +14,7 @@ import GlobalAppContext, {
 import APIService from "../../src/utils/APIService";
 import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "../../src/playlists/utils";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -26,7 +27,6 @@ const { labsApiUrl, currentUser, playlist } = playlistPageProps;
 const props = {
   labsApiUrl,
   playlist: playlist as JSPFObject,
-  
 };
 
 const GlobalContextMock: GlobalAppContextT = {
@@ -39,6 +39,10 @@ const GlobalContextMock: GlobalAppContextT = {
     permission: ["streaming"] as Array<SpotifyPermission>,
   },
   currentUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 describe("PlaylistPage", () => {
