@@ -1,28 +1,27 @@
-import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
-import {
-  faAngry,
-  faFrown,
-  faSmileBeam,
-  faGrinStars,
-} from "@fortawesome/free-solid-svg-icons";
 import {
   faAngry as faAngryRegular,
   faFrown as faFrownRegular,
-  faSmileBeam as faSmileBeamRegular,
   faGrinStars as faGrinStarsRegular,
+  faSmileBeam as faSmileBeamRegular,
 } from "@fortawesome/free-regular-svg-icons";
+import {
+  faAngry,
+  faFrown,
+  faGrinStars,
+  faSmileBeam,
+} from "@fortawesome/free-solid-svg-icons";
+import { mount } from "enzyme";
+import * as React from "react";
 
 import { act } from "react-dom/test-utils";
 import RecommendationFeedbackComponent, {
   RecommendationFeedbackComponentProps,
 } from "../../src/listens/RecommendationFeedbackComponent";
-import * as utils from "../../src/utils/utils";
+import RecommendationControl from "../../src/recommendations/RecommendationControl";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
-import RecommendationControl from "../../src/recommendations/RecommendationControl";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -185,7 +184,7 @@ describe("Recommendation feedback", () => {
           .childAt(0)
           .childAt(0)
           .prop("icon").iconName
-      ).toEqual("grin-stars");
+      ).toEqual("face-grin-stars");
       expect(
         wrapper.find(".recommendation-controls").childAt(0).childAt(2).text()
       ).toEqual("Love");
@@ -212,7 +211,7 @@ describe("Recommendation feedback", () => {
         .childAt(0)
         .childAt(0)
         .prop("icon").iconName
-    ).toEqual("angry");
+    ).toEqual("face-angry");
     expect(
       wrapper.find(".recommendation-controls").childAt(0).childAt(2).text()
     ).toEqual("Hate");
@@ -253,7 +252,7 @@ describe("Recommendation feedback", () => {
         .childAt(0)
         .childAt(0)
         .prop("icon").iconName
-    ).toEqual("frown");
+    ).toEqual("face-frown");
     expect(
       wrapper.find(".recommendation-controls").childAt(0).childAt(2).text()
     ).toEqual("Dislike");
@@ -292,7 +291,7 @@ describe("Recommendation feedback", () => {
         .childAt(0)
         .childAt(0)
         .prop("icon").iconName
-    ).toEqual("smile-beam");
+    ).toEqual("face-smile-beam");
     expect(
       wrapper.find(".recommendation-controls").childAt(0).childAt(2).text()
     ).toEqual("Like");
@@ -331,7 +330,7 @@ describe("Recommendation feedback", () => {
         .childAt(0)
         .childAt(0)
         .prop("icon").iconName
-    ).toEqual("grin-stars");
+    ).toEqual("face-grin-stars");
     expect(
       wrapper.find(".recommendation-controls").childAt(0).childAt(2).text()
     ).toEqual("Love");

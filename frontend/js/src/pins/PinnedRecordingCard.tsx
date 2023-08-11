@@ -3,15 +3,15 @@ import { faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
+import ListenCard from "../listens/ListenCard";
+import ListenControl from "../listens/ListenControl";
+import { ToastMsg } from "../notifications/Notifications";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
-  pinnedRecordingToListen,
   getArtistName,
   getTrackName,
+  pinnedRecordingToListen,
 } from "../utils/utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import ListenControl from "../listens/ListenControl";
-import ListenCard from "../listens/ListenCard";
-import { ToastMsg } from "../notifications/Notifications";
 
 export type PinnedRecordingCardProps = {
   pinnedRecording: PinnedRecording;

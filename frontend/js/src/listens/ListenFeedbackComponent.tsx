@@ -1,7 +1,9 @@
 import * as React from "react";
-import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
+
+import { faHeart, faHeartCrack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
+
 import useFeedbackMap from "../hooks/useFeedbackMap";
 
 export type ListenFeedbackComponentProps = {
@@ -31,7 +33,7 @@ export default function ListenFeedbackComponent(
         className={`${currentFeedback === 1 ? " loved" : ""}`}
       />
       <FontAwesomeIcon
-        icon={faHeartBroken}
+        icon={faHeartCrack}
         title="Hate"
         onClick={() => update(currentFeedback === -1 ? 0 : -1)}
         className={`${currentFeedback === -1 ? " hated" : ""}`}
