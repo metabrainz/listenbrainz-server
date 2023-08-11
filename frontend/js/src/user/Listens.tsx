@@ -73,12 +73,11 @@ export default class Listens extends React.Component<
 
   private APIService!: APIServiceClass;
   private listensTable = React.createRef<HTMLTableElement>();
-  private webSocketListensTable = React.createRef<HTMLTableElement>();
 
   private socket!: Socket;
 
   private expectedListensPerPage = 25;
-  private maxWebsocketListens = 25;
+  private maxWebsocketListens = 7;
 
   constructor(props: ListensProps) {
     super(props);
@@ -103,7 +102,6 @@ export default class Listens extends React.Component<
     };
 
     this.listensTable = React.createRef();
-    this.webSocketListensTable = React.createRef();
   }
 
   componentDidMount() {
@@ -230,11 +228,11 @@ export default class Listens extends React.Component<
     if (listen) {
       this.setState((prevState) => {
         const { webSocketListens } = prevState;
-        // Crop listens array to 25 max
+        // Crop listens array to a max length
         return {
           webSocketListens: [
             listen,
-            ...webSocketListens.slice(0, this.maxWebsocketListens - 1),
+            ..._.take(webSocketListens, this.maxWebsocketListens - 1),
           ],
         };
       });
@@ -722,31 +720,24 @@ export default class Listens extends React.Component<
               </div>
             )}
             {webSocketListens.length > 0 && (
-              <>
-                <div className="listen-header">
-                  <h3>Listens since the page is opened</h3>
+              <div className="webSocket-box">
+                <h4>New listens since you arrived</h4>
+                <div id="webSocketListens">
+                  {webSocketListens.map((listen) => this.getListenCard(listen))}
                 </div>
-                <div className="webSocket-box">
-                  <div id="webSocketListens" ref={this.webSocketListensTable}>
-                    {webSocketListens.map((listen) =>
-                      this.getListenCard(listen)
-                    )}
-                  </div>
-                  <p className="read-more">
-                    <a
-                      role="button"
-                      href="#"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") this.handleClickNewest();
-                      }}
-                      onClick={this.handleClickNewest}
-                      className="button"
-                    >
-                      See all your listens
-                    </a>
-                  </p>
+                <div className="read-more">
+                  <button
+                    type="button"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickNewest();
+                    }}
+                    onClick={this.handleClickNewest}
+                    className="btn btn-outline"
+                  >
+                    See more fresh listens
+                  </button>
                 </div>
-              </>
+              </div>
             )}
             <div className="listen-header">
               {listens.length === 0 ? (

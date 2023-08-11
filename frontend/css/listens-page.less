@@ -182,23 +182,20 @@
 }
 
 .webSocket-box {
-  max-height: 298px;
+  max-height: 420px;
   position: relative;
   overflow: hidden;
+  border-bottom-style: inset;
+  .read-more {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding: 100px 0 20px;
+    background-image: linear-gradient(to bottom,transparent,#fff 80%);
+  }
 }
 
-.webSocket-box .read-more {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  text-align: center;
-  margin: 0;
-  padding: 30px 0;
-
-  /* "transparent" only works here because == rgba(0,0,0,0) */
-  background-image: linear-gradient(to bottom, transparent, white);
-}
 
 .card {
   background: white;

@@ -222,7 +222,7 @@ describe("Listens page", () => {
       listened_at: 1586580524,
       listened_at_iso: "2020-04-10T10:12:04Z",
     };
-    it("crops the websocket listens array if length is more than or equal to 25", async () => {
+    it("crops the websocket listens array to a maximum of 7", async () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
@@ -234,18 +234,6 @@ describe("Listens page", () => {
         />,
         mountOptions
       );
-      const instance = wrapper.instance();
-
-      await act(() => {
-        instance.receiveNewListen(JSON.stringify(mockListen));
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(wrapper.state("webSocketListens").length).toBeLessThanOrEqual(25);
-
-      /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-       * so that it doesn't get passed as a reference.
-       */
       await act(() => {
         wrapper.setState({
           webSocketListens: JSON.parse(
@@ -253,12 +241,14 @@ describe("Listens page", () => {
           ),
         });
       });
+
+      const instance = wrapper.instance();
       await act(() => {
         instance.receiveNewListen(JSON.stringify(mockListen));
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("webSocketListens").length).toBeLessThanOrEqual(25);
+      expect(wrapper.state("webSocketListens")).toHaveLength(7);
     });
 
     it("inserts the received listen in separate state", async () => {
