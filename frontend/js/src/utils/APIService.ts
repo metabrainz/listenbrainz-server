@@ -1,4 +1,5 @@
-import { isNil, isUndefined, omit } from "lodash";
+import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
+import { TagActionType } from "../tags/TagComponent";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -146,6 +147,10 @@ export default class APIService {
 
   refreshCritiquebrainzToken = async (): Promise<string> => {
     return this.refreshAccessToken("critiquebrainz");
+  };
+
+  refreshMusicbrainzToken = async (): Promise<string> => {
+    return this.refreshAccessToken("musicbrainz");
   };
 
   refreshAccessToken = async (service: string): Promise<string> => {
@@ -1226,7 +1231,7 @@ export default class APIService {
     }
     const url = new URL(`${this.APIBaseURI}/metadata/recording/`);
 
-    url.searchParams.append("recording_mbids", recordingMBIDs.join(" "));
+    url.searchParams.append("recording_mbids", recordingMBIDs.join(","));
 
     if (metadata) {
       url.searchParams.append("inc", "artist tag release");
@@ -1353,5 +1358,91 @@ export default class APIService {
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
+  };
+  /** MusicBrainz */
+
+  submitTagToMusicBrainz = async (
+    entityType: string,
+    entityMBID: string,
+    tagName: string,
+    action: TagActionType,
+    musicBrainzAuthToken: string,
+    retries: number = 2
+  ): Promise<boolean> => {
+    const formattedEntityName = kebabCase(entityType);
+    // encode reserved characters
+    const safeTagName = tagName
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+    try {
+      const parser = new DOMParser();
+      const xmlDocument = parser.parseFromString(
+        `
+        <metadata xmlns="http://musicbrainz.org/ns/mmd-2.0#">
+          <${formattedEntityName}-list>
+              <${formattedEntityName} id="${entityMBID}">
+                  <user-tag-list>
+                      <user-tag vote="${lowerCase(
+                        action
+                      )}"><name>${safeTagName}</name></user-tag>
+                  </user-tag-list>
+              </${formattedEntityName}>
+          </${formattedEntityName}-list>
+        </metadata>
+      `,
+        "application/xml"
+      );
+
+      // Check if the XML parsing threw an error; if so the first element will be a <parseerror>
+      const isInvalid =
+        xmlDocument.documentElement?.childNodes?.[0]?.nodeName ===
+        "parsererror";
+      if (isInvalid) {
+        // Get the error text content from the <parseerror> element
+        const errorText =
+          xmlDocument.documentElement.childNodes[0].childNodes?.[1]
+            ?.textContent;
+        throw SyntaxError(`Invalid XML: ${errorText}`);
+      }
+
+      const url = `${this.MBBaseURI}/tag?client=listenbrainz-listening-now`;
+      const serializer = new XMLSerializer();
+      const body = serializer.serializeToString(xmlDocument);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          Authorization: `Bearer ${musicBrainzAuthToken}`,
+        },
+        body,
+      });
+      if (response.ok) {
+        return true;
+      }
+      if (retries > 0) {
+        let token = musicBrainzAuthToken;
+        if (response.status === 401) {
+          // Token is probably expired, refresh it before trying again
+          // Currently the error messgae and status is the same for wrong credentials
+          // and expired token, so we can't know exactly what the issue is. See MBS-13068
+          token = await this.refreshMusicbrainzToken();
+        }
+        return this.submitTagToMusicBrainz(
+          entityType,
+          entityMBID,
+          tagName,
+          action,
+          token,
+          retries - 1
+        );
+      }
+      return false;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 }

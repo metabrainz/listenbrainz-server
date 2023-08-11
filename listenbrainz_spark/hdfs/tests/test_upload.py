@@ -61,19 +61,3 @@ class HDFSDataUploaderTestCase(SparkNewTestCase):
         listens = self.get_all_test_listens()
         # incremental-dump-1 has 9 listens and incremental-dump-2 has 8
         self.assertEqual(listens.count(), 17)
-
-    @patch('listenbrainz_spark.hdfs.upload.tempfile.TemporaryDirectory')
-    @patch('listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.upload_archive')
-    @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.process_json')
-    @patch('listenbrainz_spark.hdfs.upload.tarfile')
-    def test_upload_artist_relation(self, mock_tarfile, mock_json, mock_archive, mock_tmp):
-        faketar = Mock(name='fakefile.tar')
-        fakedir = Mock(name="faketempdir")
-        mock_tmp.return_value.__enter__.return_value = fakedir
-
-        ListenbrainzDataUploader().upload_artist_relation(faketar)
-
-        mock_tarfile.open.assert_called_once_with(name=faketar, mode='r:bz2')
-        mock_archive.assert_called_once_with(fakedir, mock_tarfile.open().__enter__(),
-                                             path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema,
-                                             mock_json, overwrite=True)

@@ -54,8 +54,6 @@ export interface ListensState {
   loading: boolean;
   nextListenTs?: number;
   previousListenTs?: number;
-  recordingMsidFeedbackMap: RecordingFeedbackMap;
-  recordingMbidFeedbackMap: RecordingFeedbackMap;
   dateTimePickerValue: Date;
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
@@ -94,8 +92,6 @@ export default class Listens extends React.Component<
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
-      recordingMsidFeedbackMap: {},
-      recordingMbidFeedbackMap: {},
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
         : new Date(Date.now()),
@@ -141,7 +137,6 @@ export default class Listens extends React.Component<
       this.receiveNewPlayingNow(playingNowListen);
     }
     this.getFollowing();
-    this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -275,8 +270,6 @@ export default class Listens extends React.Component<
           }),
         };
       }
-
-      await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -425,140 +418,6 @@ export default class Listens extends React.Component<
       default:
         break;
     }
-  };
-
-  getFeedback = async () => {
-    const { APIService, currentUser } = this.context;
-    const { listens } = this.state;
-    const recording_msids: string[] = [];
-    const recording_mbids: string[] = [];
-
-    if (listens && listens.length && currentUser?.name) {
-      listens.forEach((listen) => {
-        const recordingMsid = getRecordingMSID(listen);
-        if (recordingMsid) {
-          recording_msids.push(recordingMsid);
-        }
-        const recordingMBID = getRecordingMBID(listen);
-        if (recordingMBID) {
-          recording_mbids.push(recordingMBID);
-        }
-      });
-
-      try {
-        const data = await APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recording_mbids,
-          recording_msids
-        );
-        return data.feedback;
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="We could not load love/hate feedback"
-            message={
-              typeof error === "object" ? error.message : error.toString()
-            }
-          />,
-          { toastId: "load-feedback-error" }
-        );
-      }
-    }
-    return [];
-  };
-
-  loadFeedbackForNowPlaying = async (listen: Listen): Promise<void> => {
-    const { APIService, currentUser } = this.context;
-    const recordingMBID = getRecordingMBID(listen);
-    if (!currentUser?.name || !recordingMBID) {
-      return;
-    }
-    try {
-      const data = await APIService.getFeedbackForUserForRecordings(
-        currentUser.name,
-        [recordingMBID],
-        []
-      );
-      if (data.feedback.length) {
-        const { recordingMbidFeedbackMap } = this.state;
-        const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
-        const item = data.feedback[0];
-        newMbidFeedbackMap[item.recording_mbid] = item.score;
-        this.setState({ recordingMbidFeedbackMap: newMbidFeedbackMap });
-      }
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="We could not load love/hate feedback"
-          message={typeof error === "object" ? error.message : error.toString()}
-        />,
-        { toastId: "load-feedback-error" }
-      );
-    }
-  };
-
-  loadFeedback = async () => {
-    const feedback = await this.getFeedback();
-    if (!feedback) {
-      return;
-    }
-    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
-    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
-    feedback.forEach((fb: FeedbackResponse) => {
-      if (fb.recording_msid) {
-        recordingMsidFeedbackMap[fb.recording_msid] = fb.score;
-      }
-      if (fb.recording_mbid) {
-        recordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
-      }
-    });
-    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMsid?: string
-  ) => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
-    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
-
-    if (recordingMsid) {
-      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
-    }
-    if (recordingMbid) {
-      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
-    }
-    this.setState({
-      recordingMsidFeedbackMap: newMsidFeedbackMap,
-      recordingMbidFeedbackMap: newMbidFeedbackMap,
-    });
-  };
-
-  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    // first check whether the mbid has any feedback available
-    // if yes and the feedback is not zero, return it. if the
-    // feedback is zero or not the mbid is absent from the map,
-    // look for the feedback using the msid.
-
-    const recordingMbid = getRecordingMBID(listen);
-    const mbidFeedback = recordingMbid
-      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
-      : 0;
-
-    if (mbidFeedback) {
-      return mbidFeedback;
-    }
-
-    const recordingMsid = getRecordingMSID(listen);
-
-    return recordingMsid
-      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
-      : 0;
   };
 
   deleteListen = async (listen: Listen) => {
@@ -773,8 +632,6 @@ export default class Listens extends React.Component<
         showTimestamp
         showUsername={false}
         listen={listen}
-        currentFeedback={this.getFeedbackForListen(listen)}
-        updateFeedbackCallback={this.updateFeedback}
         className={`${listen.playing_now ? "playing-now " : ""}${
           shouldBeDeleted ? "deleted " : ""
         }`}
@@ -787,7 +644,6 @@ export default class Listens extends React.Component<
     this.setState({ loading: false });
     // Scroll to the top of the listens list
     this.updatePaginationVariables();
-    this.loadFeedback();
     if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -809,11 +665,9 @@ export default class Listens extends React.Component<
     const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
-    let userPinnedRecordingFeedback: ListenFeedBack = 0;
     if (userPinnedRecording) {
       const listenablePin = getListenablePin(userPinnedRecording);
       allListenables = [listenablePin, ...listens];
-      userPinnedRecordingFeedback = this.getFeedbackForListen(listenablePin);
     }
 
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
@@ -834,8 +688,6 @@ export default class Listens extends React.Component<
               <PinnedRecordingCard
                 pinnedRecording={userPinnedRecording}
                 isCurrentUser={isCurrentUsersPage}
-                currentFeedback={userPinnedRecordingFeedback}
-                updateFeedbackCallback={this.updateFeedback}
                 removePinFromPinsList={() => {}}
               />
             )}

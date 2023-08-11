@@ -23,7 +23,8 @@ from listenbrainz.spark.handlers import (
     notify_artist_relation_import,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
-    cf_recording_recommendations_complete, handle_couchdb_data_start)
+    cf_recording_recommendations_complete)
+from listenbrainz.spark.spark_dataset import CouchDbDataset
 from listenbrainz.webserver import create_app
 
 
@@ -72,7 +73,7 @@ class HandlersTestCase(DatabaseTestCase):
             ],
             'database': 'artists_all_time_20220718'
         }
-        handle_couchdb_data_start({"database": "artists_all_time_20220718"})
+        CouchDbDataset.handle_start({"database": "artists_all_time_20220718"})
         handle_user_entity(data)
 
         received = db_stats.get(self.user1['id'], 'artists', 'all_time', EntityRecord)
@@ -158,7 +159,7 @@ class HandlersTestCase(DatabaseTestCase):
             ],
             'database': 'listening_activity_all_time_20220718'
         }
-        handle_couchdb_data_start({"database": "listening_activity_all_time_20220718"})
+        CouchDbDataset.handle_start({"database": "listening_activity_all_time_20220718"})
         handle_user_listening_activity(data)
 
         received = db_stats.get(self.user1['id'], 'listening_activity', 'all_time', ListeningActivityRecord)
@@ -240,7 +241,7 @@ class HandlersTestCase(DatabaseTestCase):
             ],
             'database': 'daily_activity_all_time_20220718'
         }
-        handle_couchdb_data_start({"database": "daily_activity_all_time_20220718"})
+        CouchDbDataset.handle_start({"database": "daily_activity_all_time_20220718"})
         handle_user_daily_activity(data)
 
         received = db_stats.get(self.user1['id'], 'daily_activity', 'all_time', DailyActivityRecord)
@@ -300,7 +301,7 @@ class HandlersTestCase(DatabaseTestCase):
             ],
             'count': 1
         }
-        handle_couchdb_data_start({"database": "artists_all_time_20220818"})
+        CouchDbDataset.handle_start({"database": "artists_all_time_20220818"})
         handle_sitewide_entity(data)
         stats = db_stats.get(
             db_stats.SITEWIDE_STATS_USER_ID,

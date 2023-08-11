@@ -26,7 +26,7 @@
       <li {{ 'class=active' if active_section=='stats' }}><a href="{{ url_for('user.stats', user_name=user.musicbrainz_id) if user else url_for('index.stats') }}">Stats</a></li>
       <li class="{{ 'active' if active_section=='taste' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.taste', user_name=user.musicbrainz_id) if user else '#' }}">Taste</a></li>
       <li class="{{ 'active' if active_section=='playlists' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.playlists', user_name=user.musicbrainz_id) if user else '#' }}">Playlists</a></li>
-      <li class="{{ 'active' if active_section=='recommendations' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) if user else '#'}}">Recommendations</a></li>
+      <li class="{{ 'active' if active_section=='recommendations' }} {{ 'disabled' if not user }}"><a href="{{ url_for('user.recommendation_playlists', user_name=user.musicbrainz_id) if user else '#'}}">Created for you</a></li>
     </ul>
   </div>
 

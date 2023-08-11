@@ -7,8 +7,6 @@
     <ul class="nav nav-tabs" role="tablist">
       <li class="username"><div>{{ user.musicbrainz_id }}</div></li>
       <li {{ 'class=active' if active_section=='info' }}><a href="{{ url_for('recommendations_cf_recording.info', user_name=user.musicbrainz_id) }}">Tracks you might like</a></li>
-      <li {{ 'class=active' if active_section=='top_artist' }}><a href="{{ url_for('recommendations_cf_recording.top_artist', user_name=user.musicbrainz_id) }}">Top Artist</a></li>
-      <li {{ 'class=active' if active_section=='similar_artist' }}><a href="{{ url_for('recommendations_cf_recording.similar_artist', user_name=user.musicbrainz_id) }}">Similar Artist</a></li>
       <li {{ 'class=active' if active_section=='raw' }}><a href="{{ url_for('recommendations_cf_recording.raw', user_name=user.musicbrainz_id) }}">Raw Recommendations</a></li>
     </ul>
   </div>
@@ -17,7 +15,7 @@
     {% block recs_content %}
         {% if not error_msg %}
         <div style="margin-top:20px">
-            <p>Your {{ tracks_type }} playlist was last updated on <b>{{ last_updated }}</b>.</p>
+            <p>Your raw tracks playlist was last updated on <b>{{ last_updated }}</b>.</p>
         </div>
         {% endif %}
         {% if error_msg %}

@@ -2,13 +2,16 @@ import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 import { act } from "react-dom/test-utils";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 
 import SelectTimezone, {
   SelectTimezoneProps,
   SelectTimezoneState,
 } from "../../src/user-settings/SelectTimezone";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const user_timezone = "America/New_York";
 const pg_timezones: Array<[string, string]> = [
@@ -16,7 +19,7 @@ const pg_timezones: Array<[string, string]> = [
   ["America/Adak", "-9:00:00 GMT"],
 ];
 
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
   currentUser: {
     id: 1,
@@ -25,12 +28,15 @@ const globalProps = {
   },
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIServiceClass("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 const props = {
   pg_timezones,
   user_timezone,
-  
 };
 
 describe("User settings", () => {

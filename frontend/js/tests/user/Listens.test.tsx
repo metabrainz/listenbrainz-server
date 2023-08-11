@@ -16,6 +16,7 @@ import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPl
 
 import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -59,6 +60,10 @@ const mountOptions: { context: GlobalAppContextT } = {
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
     currentUser: { id: 1, name: "iliekcomputers", auth_token: "fnord" },
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIServiceClass("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 
@@ -122,47 +127,6 @@ describe("Listens page", () => {
 
       expect(spy).toHaveBeenCalledWith(user.name);
       expect(wrapper.state("listenCount")).toEqual(42);
-    });
-
-    it("calls loadFeedback if user is logged in", () => {
-      const wrapper = mount<Listens>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...propsOneListen} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      instance.loadFeedback = jest.fn();
-
-      act(() => {
-        instance.componentDidMount();
-      });
-
-      expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not fetch user feedback if user is not logged in"', () => {
-      const wrapper = mount<Listens>(
-        <GlobalAppContext.Provider
-          value={{
-            ...mountOptions.context,
-            currentUser: {} as ListenBrainzUser,
-          }}
-        >
-          <Listens {...propsOneListen} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
-      const APIFeedbackSpy = jest.spyOn(
-        instance.context.APIService,
-        "getFeedbackForUserForRecordings"
-      );
-      act(() => {
-        instance.componentDidMount();
-      });
-
-      expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
-      expect(APIFeedbackSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -669,7 +633,6 @@ describe("Listens page", () => {
           .mockImplementation(() => Promise.resolve(expectedListensArray));
         // eslint-disable-next-line dot-notation
         instance["APIService"].getListensForUser = spy;
-        instance.getFeedback = jest.fn();
 
         await act(() => {
           instance.handleClickOlder();

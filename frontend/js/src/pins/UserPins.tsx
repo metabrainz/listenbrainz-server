@@ -29,8 +29,6 @@ export type UserPinsState = {
   maxPage: number;
   loading: boolean;
   noMorePins: boolean;
-  recordingMsidFeedbackMap: RecordingFeedbackMap;
-  recordingMbidFeedbackMap: RecordingFeedbackMap;
 };
 
 export default class UserPins extends React.Component<
@@ -52,13 +50,7 @@ export default class UserPins extends React.Component<
       pins: props.pins || [],
       loading: false,
       noMorePins: maxPage <= 1,
-      recordingMsidFeedbackMap: {},
-      recordingMbidFeedbackMap: {},
     };
-  }
-
-  componentDidMount() {
-    this.loadFeedback();
   }
 
   handleLoadMore = async (event?: React.MouseEvent) => {
@@ -93,18 +85,15 @@ export default class UserPins extends React.Component<
 
       const totalCount = parseInt(newPins.total_count, 10);
       const newMaxPage = Math.ceil(totalCount / this.DEFAULT_PINS_PER_PAGE);
-      this.setState(
-        {
-          loading: false,
-          page,
-          maxPage: newMaxPage,
-          pins: replacePinsArray
-            ? newPins.pinned_recordings
-            : pins.concat(newPins.pinned_recordings),
-          noMorePins: page >= newMaxPage,
-        },
-        this.loadFeedback
-      );
+      this.setState({
+        loading: false,
+        page,
+        maxPage: newMaxPage,
+        pins: replacePinsArray
+          ? newPins.pinned_recordings
+          : pins.concat(newPins.pinned_recordings),
+        noMorePins: page >= newMaxPage,
+      });
     } catch (error) {
       toast.warn(
         <ToastMsg
@@ -124,110 +113,6 @@ export default class UserPins extends React.Component<
       );
       this.setState({ loading: false });
     }
-  };
-
-  getFeedback = async () => {
-    const { pins } = this.props;
-    const { APIService, currentUser } = this.context;
-    const recording_msids: string[] = [];
-    const recording_mbids: string[] = [];
-
-    if (pins && currentUser?.name) {
-      pins.forEach((item) => {
-        if (item.recording_msid) {
-          recording_msids.push(item.recording_msid);
-        }
-        if (item.recording_mbid) {
-          recording_mbids.push(item.recording_mbid);
-        }
-      });
-      if (!recording_msids.length && !recording_mbids.length) {
-        return [];
-      }
-      try {
-        const data = await APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recording_mbids,
-          recording_msids
-        );
-        return data.feedback;
-      } catch (error) {
-        toast.warn(
-          <ToastMsg
-            title="We could not load love/hate feedback"
-            message={
-              typeof error === "object" ? error.message : error.toString()
-            }
-          />,
-          { toastId: "load-feedback-error" }
-        );
-      }
-    }
-    return [];
-  };
-
-  loadFeedback = async () => {
-    const feedback = await this.getFeedback();
-    if (!feedback) {
-      return;
-    }
-    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
-    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
-    feedback.forEach((fb: FeedbackResponse) => {
-      if (fb.recording_msid) {
-        recordingMsidFeedbackMap[fb.recording_msid] = fb.score;
-      }
-      if (fb.recording_mbid) {
-        recordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
-      }
-    });
-    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMsid?: string
-  ) => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
-    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
-
-    if (recordingMsid) {
-      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
-    }
-    if (recordingMbid) {
-      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
-    }
-    this.setState({
-      recordingMsidFeedbackMap: newMsidFeedbackMap,
-      recordingMbidFeedbackMap: newMbidFeedbackMap,
-    });
-  };
-
-  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    // first check whether the mbid has any feedback available
-    // if yes and the feedback is not zero, return it. if the
-    // feedback is zero or not the mbid is absent from the map,
-    // look for the feedback using the msid.
-
-    const recordingMbid = getRecordingMBID(listen);
-    const mbidFeedback = recordingMbid
-      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
-      : 0;
-
-    if (mbidFeedback) {
-      return mbidFeedback;
-    }
-
-    const recordingMsid = getRecordingMSID(listen);
-
-    return recordingMsid
-      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
-      : 0;
   };
 
   removePinFromPinsList = (pin: PinnedRecording) => {
@@ -292,10 +177,6 @@ export default class UserPins extends React.Component<
                     pinnedRecording={pin}
                     isCurrentUser={currentUser?.name === user?.name}
                     removePinFromPinsList={this.removePinFromPinsList}
-                    currentFeedback={this.getFeedbackForListen(
-                      pinsAsListens[index]
-                    )}
-                    updateFeedbackCallback={this.updateFeedback}
                   />
                 );
               })}

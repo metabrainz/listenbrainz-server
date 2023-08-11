@@ -552,6 +552,7 @@ class TimescaleListenStore:
                     caa_id=result.caa_id,
                     caa_release_mbid=result.caa_release_mbid
                 ))
+
         return listens
 
     def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):

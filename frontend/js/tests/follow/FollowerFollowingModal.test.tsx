@@ -26,6 +26,7 @@ import APIService from "../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const props = {
   user: { name: "foobar" },
@@ -40,6 +41,10 @@ const globalContext: GlobalAppContextT = {
   youtubeAuth: {},
   spotifyAuth: {},
   currentUser: {} as ListenBrainzUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 describe("<FollowerFollowingModal />", () => {

@@ -11,7 +11,7 @@ const json = require("highlight.js/lib/languages/json");
 hljs.registerLanguage("json", json);
 
 export type ListenPayloadModalProps = {
-  listen: Listen;
+  listen: Listen | JSPFPlaylist;
 };
 
 /** A note about this modal:

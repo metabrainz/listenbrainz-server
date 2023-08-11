@@ -90,6 +90,9 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
         current_app.logger.error(
             f"{e}. Occurred while processing {stats_range} {stats_type} for user_id: {user_id}"
             f" and data: {orjson.dumps(data, option=orjson.OPT_INDENT_2).decode('utf-8')}", exc_info=True)
+    except Exception as e:
+        current_app.logger.error(f"Error connecting to CouchDB: {e}")
+
     return None
 
 
@@ -129,6 +132,8 @@ def get_entity_listener(entity, entity_id, stats_range) -> Optional[dict]:
         current_app.logger.error(
             f"{e}. Occurred while processing {stats_range} {entity} for mbid: {entity_id}"
             f" and data: {orjson.dumps(doc, option=orjson.OPT_INDENT_2).decode('utf-8')}", exc_info=True)
+    except Exception as e:
+        current_app.logger.error(f"Error connecting to CouchDB: {e}")
     return None
 
 def insert_artist_map(user_id: int, stats_range: str, from_ts: int, to_ts: int, data: list[UserArtistMapRecord]):
