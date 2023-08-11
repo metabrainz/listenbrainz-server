@@ -366,7 +366,7 @@ export default class Listens extends React.Component<
     const { user, latestListenTs } = this.props;
     const { listens, webSocketListens } = this.state;
     if (
-      listens?.[0]?.listened_at >= latestListenTs &&
+      listens?.[0]?.listened_at >= latestListenTs ||
       webSocketListens?.[0]?.listened_at < latestListenTs
     ) {
       return;

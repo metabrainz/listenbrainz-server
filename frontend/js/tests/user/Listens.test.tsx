@@ -50,7 +50,6 @@ const props = {
   profileUrl,
   user,
   userPinnedRecording,
-  
 };
 
 // Create a new instance of GlobalAppContext
@@ -65,7 +64,6 @@ const mountOptions: { context: GlobalAppContextT } = {
 
 const propsOneListen = {
   ...recentListensPropsOneListen,
-  
 };
 
 fetchMock.mockIf(
@@ -279,14 +277,14 @@ describe("Listens page", () => {
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
+      expect(wrapper.state("webSocketListens").length).toBeLessThanOrEqual(100);
 
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
       await act(() => {
         wrapper.setState({
-          listens: JSON.parse(
+          webSocketListens: JSON.parse(
             JSON.stringify(recentListensPropsTooManyListens.listens)
           ),
         });
@@ -296,10 +294,10 @@ describe("Listens page", () => {
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
+      expect(wrapper.state("webSocketListens").length).toBeLessThanOrEqual(100);
     });
 
-    it("inserts the received listen for other modes", async () => {
+    it("inserts the received listen in separate state", async () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
@@ -308,17 +306,15 @@ describe("Listens page", () => {
         mountOptions
       );
       const instance = wrapper.instance();
-      const result: Array<Listen> = Array.from(
-        recentListensPropsOneListen.listens
-      );
-      result.unshift(mockListen);
       await act(() => {
         instance.receiveNewListen(JSON.stringify(mockListen));
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("listens")).toHaveLength(result.length);
-      expect(wrapper.state("listens")).toEqual(result);
+      expect(wrapper.state("listens")).toHaveLength(1);
+      expect(wrapper.state("listens")).toEqual(propsOneListen.listens);
+      expect(wrapper.state("webSocketListens")).toHaveLength(1);
+      expect(wrapper.state("webSocketListens")).toEqual([mockListen]);
     });
   });
 
@@ -375,7 +371,6 @@ describe("Listens page", () => {
 
   describe("deleteListen", () => {
     it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
-      
       const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Listens {...props} />
@@ -408,7 +403,6 @@ describe("Listens page", () => {
       expect(removeListenCallbackSpy).toHaveBeenCalledWith(listenToDelete);
       expect(instance.state.deletedListen).toEqual(listenToDelete);
       expect(instance.state.listens).not.toContainEqual(listenToDelete);
-      
     });
 
     it("does nothing if isCurrentUser is false", async () => {
@@ -515,7 +509,6 @@ describe("Listens page", () => {
     });
 
     it("handles error for delete listen", async () => {
-      
       const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
           <Listens {...props} />
@@ -535,7 +528,6 @@ describe("Listens page", () => {
         await instance.deleteListen(listenToDelete);
       });
       await waitForComponentToPaint(wrapper);
-
     });
   });
 
