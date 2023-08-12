@@ -2,19 +2,19 @@
     display: flex;
     flex-flow: column;
     position: absolute;
-    top: 10%;
+    bottom: 1%;
     right: 10%;
     width: 250px;
-    height: 800px;
+    height: 90%;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 .artist-panel > div {
-    padding: 5px 10px;
+    padding: 0.25em 0.75em;
 }
 .artist-header {
-    flex-grow: 1;
+    height: 15%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -25,12 +25,12 @@
     font-family: 'Roboto', sans-serif;
 }
 .artist-info{
-    max-height: 30%;
+    height: 25%;
 }
 .artist-info > .wiki {
-    padding-top: 0.75em;
-    padding-bottom: 0.75em;
-    max-height: 70%;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    height: 70%;
     overflow: hidden;
     mask-image: linear-gradient(180deg, #000 60%, transparent);
     -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
@@ -38,6 +38,7 @@
 
 .artist-info > .mb-link {
     text-align: end;
+    padding: 0.5em 0;
 }
 
 #mb-link-button {
@@ -46,13 +47,56 @@
     border: none;
     border-radius: 4px;
     color: white;
-    padding: 5px;
+    padding: 0.5em;
+    text-decoration: none;
 }
 
-.artist-top-album {
-    flex-grow: 3;
+.artist-top-album, .artist-top-track {
+    height: 30%;
 }
+.artist-top-album > h3, .artist-top-track > h3 {
+    font-size: 1rem;
+    overflow: hidden;
+    padding-bottom: 0.5em;
+  }
+  
+.artist-top-album > h3:after, .artist-top-track > h3:after {
+    content: "";
+    display: inline-block;
+    height: 0.5em;
+    vertical-align: bottom;
+    width: 100%;
+    margin-right: -100%;
+    margin-left: 10px;
+    border-top: 1px solid black;
+  }
 
 .artist-top-track {
-    flex-grow: 3;
+    
+}
+
+.release-card-container {
+    text-align: center;
+}
+
+.release-coverart {
+    width: 90%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    object-fit: contain;
+}
+.release-name {
+    padding-left: 5%;
+    text-align: left;
+    
+}
+.release-name > a {
+    color: #353070;
+    text-decoration: inherit;
+    display: block;
+    width: 90%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }

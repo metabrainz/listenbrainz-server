@@ -4,18 +4,32 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import { ArtistType } from "../Data";
 import infoLookup from "./infoLookup";
-import parse from 'html-react-parser';
+import ReleaseCard from "./ReleaseCard";
 interface PanelProps {
     artist: ArtistType;
 }
 
 type ArtistInfoType = {
-    name: string;
-    type: string;
+    name?: string;
+    type?: string;
     born: string;
     area: string;
-    wikiData: string;
+    wiki: string;
     mbLink: string;
+    topAlbum?: RecordingType | null,
+    topTrack: RecordingType | null
+}
+
+// Type for both top track and album i.e. a MB recording.
+type RecordingType = {
+    release_mbid: string;
+    // Release name in case of an album
+    release_name: string;
+    // Recording name in case of a track
+    recording_mbid?:string;
+    recording_name?: string;
+    caa_id: number;
+    caa_release_mbid: string;
 }
 const Panel = (props: PanelProps) => {
     const [artistInfo, setArtistInfo] = useState<ArtistInfoType | null>(null);
@@ -23,14 +37,10 @@ const Panel = (props: PanelProps) => {
         const getArtistInfo = async () => {
             let artistApiInfo = await infoLookup(props.artist.artist_mbid);
             const MB_URL = `https://musicbrainz.org/artist/${props.artist.artist_mbid}`;
-            let newArtistInfo: ArtistInfoType = {
-                name: props.artist.name,
-                type: props.artist.type ?? "Unknown",
-                born: artistApiInfo[1],
-                area: artistApiInfo[2],
-                wikiData: artistApiInfo[0],
-                mbLink: MB_URL
-            };
+            let newArtistInfo = artistApiInfo;
+            // Adding name & type properties to artist info.
+            newArtistInfo.name = props.artist.name;
+            newArtistInfo.type = props.artist.type;
             setArtistInfo(newArtistInfo);
         }
         getArtistInfo();
@@ -60,7 +70,7 @@ const Panel = (props: PanelProps) => {
                 <div
                 className="wiki"
                 >
-                    {artistInfo.wikiData}
+                    {artistInfo.wiki}
                 </div>
                 <div
                 className="mb-link"
@@ -70,27 +80,45 @@ const Panel = (props: PanelProps) => {
                 href={artistInfo.mbLink}
                 target="_blank"
                 >
-                    More
+                    <strong>More </strong>
                     <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
                 </a>
                 </div>
             </div>
-            <div
-            className="artist-top-album"
-            >
-                <hr />
-                Cover Art 
-                <br />
-                Album Name
-            </div>
-            <div
-            className="artist-top-track"
-            >
-                <hr />
-                Cover Art
-                <br />
-                Track Name
-            </div>
+            { artistInfo.topTrack &&
+                <div
+                className="artist-top-album"
+                >
+                    <h3>Top Album</h3>
+                    {/** 
+                    * Needs to be replaced with top album when endpoint is available.
+                    */}
+                    { artistInfo.topTrack && 
+                        <ReleaseCard 
+                        releaseMBID={artistInfo.topTrack.release_mbid}
+                        releaseName={artistInfo.topTrack.release_name}
+                        caaID={artistInfo.topTrack.caa_id}
+                        caaReleaseMBID={artistInfo.topTrack.caa_release_mbid}
+                        /> 
+                    }
+                </div>
+            }
+            { artistInfo.topTrack &&
+                <div
+                className="artist-top-track"
+                >
+                    <h3>Top Track</h3>
+                    { artistInfo.topTrack && 
+                        <ReleaseCard 
+                        releaseMBID={artistInfo.topTrack.release_mbid}
+                        releaseName={artistInfo.topTrack.recording_name ?? "Unknown"}
+                        caaID={artistInfo.topTrack.caa_id}
+                        caaReleaseMBID={artistInfo.topTrack.caa_release_mbid}
+                        recordingMBID={artistInfo.topTrack.recording_mbid}
+                        /> 
+                    }
+                </div>
+            }
         </div>
         :
         <>
@@ -99,4 +127,4 @@ const Panel = (props: PanelProps) => {
 }
 
 export default Panel;
-export type { ArtistInfoType };
+export type { ArtistInfoType, RecordingType };
