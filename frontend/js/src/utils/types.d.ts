@@ -92,6 +92,10 @@ declare type YoutubeUser = {
   api_key?: string;
 };
 
+declare type SoundCloudUser = {
+  access_token?: string;
+};
+
 declare type MetaBrainzProjectUser = {
   access_token?: string;
 };
@@ -205,6 +209,19 @@ declare type SpotifyPagingObject<T> = {
 // Adding an any here for now.
 // TODO: remove this any eventually
 declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
+
+declare type SoundCloudTrack = {
+  id: number;
+  permalink_url: string;
+  artwork_url: string;
+  title: string;
+  uri: string;
+  duration: number;
+  user: {
+    id: string;
+    username: string;
+  }
+};
 
 // Expect either a string or an Error or an html Response object
 declare type BrainzPlayerError =

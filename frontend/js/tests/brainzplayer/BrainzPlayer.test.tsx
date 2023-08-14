@@ -1,20 +1,20 @@
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
-import fetchMock from "jest-fetch-mock";
+
 import { act } from "react-dom/test-utils";
+import fetchMock from "jest-fetch-mock";
+import { mount } from "enzyme";
 import BrainzPlayer, {
-  BrainzPlayerProps,
-  BrainzPlayerState,
   DataSourceType,
 } from "../../src/brainzplayer/BrainzPlayer";
-import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
-import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
-import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
-import APIService from "../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
+
+import APIService from "../../src/utils/APIService";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
+import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
+import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -26,12 +26,17 @@ const props = {
   listenBrainzAPIBaseURI: "base-uri",
   refreshSpotifyToken: jest.fn(),
   refreshYoutubeToken: jest.fn(),
+  refreshSoundcloudToken: jest.fn(),
 };
 const spotifyAccountWithPermissions = {
   access_token: "haveyouseenthefnords",
   permission: ["streaming", "user-read-email", "user-read-private"] as Array<
     SpotifyPermission
   >,
+};
+
+const soundcloudPermissions = {
+  access_token: "ihavenotseenthefnords",
 };
 
 const GlobalContextMock: { context: GlobalAppContextT } = {
@@ -43,6 +48,9 @@ const GlobalContextMock: { context: GlobalAppContextT } = {
         "user-read-currently-playing",
         "user-read-recently-played",
       ] as Array<SpotifyPermission>,
+    },
+    soundcloudAuth: {
+      access_token: "heyo-soundcloud",
     },
     youtubeAuth: {
       api_key: "fake-api-key",
@@ -88,17 +96,17 @@ describe("BrainzPlayer", () => {
     expect(wrapper.html()).toMatchSnapshot();
   });
 
-  it("creates Youtube and SoundCloud datasources by default", () => {
-    const mockProps = {
-      ...props,
-    };
-    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />, {
-      context: { ...GlobalContextMock.context, spotifyUser: {} },
+  it("creates Youtube datasource by default", () => {
+    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...props} />, {
+      context: {
+        ...GlobalContextMock.context,
+        spotifyUser: {},
+        soundcloudUser: {},
+      },
     });
     const instance = wrapper.instance();
-    expect(instance.dataSources).toHaveLength(2);
+    expect(instance.dataSources).toHaveLength(1);
     expect(instance.dataSources[0].current).toBeInstanceOf(YoutubePlayer);
-    expect(instance.dataSources[1].current).toBeInstanceOf(SoundcloudPlayer);
   });
 
   it("creates a Spotify datasource when passed a spotify user with right permissions", () => {
@@ -152,7 +160,7 @@ describe("BrainzPlayer", () => {
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    expect(instance.dataSources[1].current).toBeInstanceOf(YoutubePlayer);
+    expect(instance.dataSources[2].current).toBeInstanceOf(YoutubePlayer);
     const youtubeListen: Listen = {
       listened_at: 0,
       track_metadata: {
@@ -167,7 +175,7 @@ describe("BrainzPlayer", () => {
     await act(() => {
       instance.playListen(youtubeListen);
     });
-    expect(instance.state.currentDataSourceIndex).toEqual(1);
+    expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
 
   it("selects Spotify as source when listen has listening_from = spotify", async () => {
@@ -244,13 +252,14 @@ describe("BrainzPlayer", () => {
         value={{
           ...GlobalContextMock.context,
           spotifyAuth: spotifyAccountWithPermissions,
+          soundcloudAuth: soundcloudPermissions,
         }}
       >
         <BrainzPlayer {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-    expect(instance.dataSources[2].current).toBeInstanceOf(SoundcloudPlayer);
+    expect(instance.dataSources[1].current).toBeInstanceOf(SoundcloudPlayer);
     const soundcloudListen: Listen = {
       listened_at: 42,
       track_metadata: {
@@ -266,7 +275,7 @@ describe("BrainzPlayer", () => {
     await act(() => {
       instance.playListen(soundcloudListen);
     });
-    expect(instance.state.currentDataSourceIndex).toEqual(2);
+    expect(instance.state.currentDataSourceIndex).toEqual(1);
   });
 
   describe("stopOtherBrainzPlayers", () => {
@@ -484,12 +493,8 @@ describe("BrainzPlayer", () => {
   });
   describe("seekToPositionMs", () => {
     it("invalidates the datasource if it doesn't exist", async () => {
-      const mockProps = {
-        ...props,
-        spotifyUser: {},
-      };
       const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...mockProps} />,
+        <BrainzPlayer {...props} />,
         GlobalContextMock
       );
       const instance = wrapper.instance();
@@ -588,17 +593,22 @@ describe("BrainzPlayer", () => {
     });
 
     it("tries playing the current listen with the next datasource", async () => {
-      const mockProps = {
-        ...props,
-      };
       const wrapper = mount<BrainzPlayer>(
-        <BrainzPlayer {...mockProps} />,
-        GlobalContextMock
+        <GlobalAppContext.Provider
+          value={{
+            ...GlobalContextMock.context,
+            spotifyAuth: spotifyAccountWithPermissions,
+            soundcloudAuth: soundcloudPermissions,
+          }}
+        >
+          <BrainzPlayer {...props} />
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
       await act(async () => {
         wrapper.setState({ isActivated: true, currentListen: listen });
       });
+      expect(instance.dataSources.length).toBeGreaterThan(1);
       instance.playNextTrack = jest.fn();
       instance.playListen = jest.fn();
       await act(async () => {
