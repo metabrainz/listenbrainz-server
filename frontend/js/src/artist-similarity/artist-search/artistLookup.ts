@@ -1,5 +1,3 @@
-import { throttle, debounce } from "lodash";
-
 type ArtistType = {
   name: string;
   id: string;

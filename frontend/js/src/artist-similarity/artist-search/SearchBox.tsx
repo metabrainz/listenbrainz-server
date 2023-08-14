@@ -1,16 +1,11 @@
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   faMagnifyingGlass,
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { debounce, throttle } from "lodash";
+import { throttle } from "lodash";
 import SearchDropdown from "./SearchDropdown";
 import artistLookup, { ArtistType } from "./artistLookup";
 
@@ -20,7 +15,11 @@ interface SearchBoxProps {
   onArtistChange: (artist_mbid: string) => void;
 }
 
-function SearchBox(props: SearchBoxProps) {
+function SearchBox({
+  currentsimilarArtistsLimit,
+  onSimilarArtistsLimitChange,
+  onArtistChange,
+}: SearchBoxProps) {
   // State to store the search results (list of artists)
   const [searchResults, setSearchResults] = React.useState<Array<ArtistType>>(
     []
@@ -84,7 +83,7 @@ function SearchBox(props: SearchBoxProps) {
   useEffect(() => {
     // Update the getArtists reference when searchQuery gets updated.
     getArtistsRef.current = getArtists;
-  }, [searchQuery]);
+  }, [getArtists, searchQuery]);
 
   // Create a throttled function using the current reference of getArtists
   const throttledGetArtists = useMemo(() => {
@@ -104,10 +103,10 @@ function SearchBox(props: SearchBoxProps) {
   };
 
   const increment = () => {
-    props.onSimilarArtistsLimitChange(props.currentsimilarArtistsLimit + 1);
+    onSimilarArtistsLimitChange(currentsimilarArtistsLimit + 1);
   };
   const decrement = () => {
-    props.onSimilarArtistsLimitChange(props.currentsimilarArtistsLimit - 1);
+    onSimilarArtistsLimitChange(currentsimilarArtistsLimit - 1);
   };
   return (
     <form className="search-box" autoComplete="off">
@@ -128,7 +127,7 @@ function SearchBox(props: SearchBoxProps) {
         {openDropdown && (
           <SearchDropdown
             searchResults={searchResults}
-            onArtistChange={props.onArtistChange}
+            onArtistChange={onArtistChange}
             onDropdownChange={setOpenDropdown}
             id="search-dropdown"
           />
@@ -144,10 +143,8 @@ function SearchBox(props: SearchBoxProps) {
           type="number"
           name="similarArtistsLimit"
           placeholder="Graph size"
-          onChange={(e) =>
-            props.onSimilarArtistsLimitChange(e.target.valueAsNumber)
-          }
-          value={props.currentsimilarArtistsLimit}
+          onChange={(e) => onSimilarArtistsLimitChange(e.target.valueAsNumber)}
+          value={currentsimilarArtistsLimit}
           required
         />
         <span id="graph-size-input-warning" className="validity" />

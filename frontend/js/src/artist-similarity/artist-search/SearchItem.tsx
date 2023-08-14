@@ -8,14 +8,19 @@ interface SearchItemProps {
   onDropdownChange: (openDropdown: boolean) => void;
 }
 
-function SearchItem(props: SearchItemProps) {
+function SearchItem({
+  artist,
+  key,
+  onArtistChange,
+  onDropdownChange,
+}: SearchItemProps) {
   const handleClick = () => {
-    props.onArtistChange(props.artist.id);
-    props.onDropdownChange(false);
+    onArtistChange(artist.id);
+    onDropdownChange(false);
   };
   return (
-    <div className="search-item" key={props.key} onClick={handleClick}>
-      {props.artist.name} - {props.artist.country ?? "Unknown"}
+    <div className="search-item" key={key} onClick={handleClick}>
+      {artist.name} - {artist.country ?? "Unknown"}
     </div>
   );
 }

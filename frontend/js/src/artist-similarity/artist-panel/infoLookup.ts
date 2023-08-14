@@ -23,33 +23,6 @@ type BirthAreaResponseType = {
 
 type RecordingResponseType = Array<RecordingType>;
 
-const InfoLookup = async (artistMBID: string): Promise<ArtistInfoType> => {
-  const ARTIST_URL = `https://musicbrainz.org/artist/${artistMBID}`;
-  const WIKI_URL = `${ARTIST_URL}/wikipedia-extract`;
-  const BIRTH_AREA_URL = `https://musicbrainz.org/ws/2/artist/${artistMBID}?fmt=json`;
-  const RECORDING_URL = `https://test-api.listenbrainz.org/1/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
-  let artistInfo: ArtistInfoType;
-  try {
-    const [wikiData, birthAreaData, topTrackData] = await Promise.all([
-      wikiLookup(WIKI_URL),
-      birthAreaLookup(BIRTH_AREA_URL),
-      topTrackLookup(RECORDING_URL),
-    ]);
-    // Merge the info in the artistInfo array
-    artistInfo = {
-      born: birthAreaData.born,
-      area: birthAreaData.area,
-      wiki: wikiData,
-      mbLink: ARTIST_URL,
-      topTrack: topTrackData,
-    };
-  } catch (error) {
-    alert("Error fetching artist info:");
-    throw error;
-  }
-  return artistInfo;
-};
-
 // Lookup birth and area for the artist
 const birthAreaLookup = async (
   BIRTH_AREA_URL: string
@@ -63,13 +36,11 @@ const birthAreaLookup = async (
   };
   // Check life span and begin are not null
   if (data["life-span"] && data["life-span"].begin) {
-    const birthData = data["life-span"].begin;
-    birthAreaData.born = birthData;
+    birthAreaData.born = data["life-span"].begin;
   }
   // Check area and area name are not null
   if (data.area && data.area.name) {
-    const areaData = data.area.name;
-    birthAreaData.area = areaData;
+    birthAreaData.area = data.area.name;
   }
   return birthAreaData;
 };
@@ -101,13 +72,39 @@ const topTrackLookup = async (
 ): Promise<RecordingType | null> => {
   const response = await fetch(RECORDING_URL);
   const data: RecordingResponseType = await response.json();
-  // Default to null
-  let topTrackData: RecordingType | null = null;
   if (data.length) {
     // Selecting top track
-    topTrackData = data[0];
+    return data[0];
   }
-  return topTrackData;
+  // Default to null
+  return null;
+};
+
+const InfoLookup = async (artistMBID: string): Promise<ArtistInfoType> => {
+  const ARTIST_URL = `https://musicbrainz.org/artist/${artistMBID}`;
+  const WIKI_URL = `${ARTIST_URL}/wikipedia-extract`;
+  const BIRTH_AREA_URL = `https://musicbrainz.org/ws/2/artist/${artistMBID}?fmt=json`;
+  const RECORDING_URL = `https://test-api.listenbrainz.org/1/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
+  let artistInfo: ArtistInfoType;
+  try {
+    const [wikiData, birthAreaData, topTrackData] = await Promise.all([
+      wikiLookup(WIKI_URL),
+      birthAreaLookup(BIRTH_AREA_URL),
+      topTrackLookup(RECORDING_URL),
+    ]);
+    // Merge the info in the artistInfo array
+    artistInfo = {
+      born: birthAreaData.born,
+      area: birthAreaData.area,
+      wiki: wikiData,
+      mbLink: ARTIST_URL,
+      topTrack: topTrackData,
+    };
+  } catch (error) {
+    alert("Error fetching artist info:");
+    throw error;
+  }
+  return artistInfo;
 };
 
 export default InfoLookup;

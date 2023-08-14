@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import tinycolor from "tinycolor2";
 import SimilarArtistsGraph from "./SimilarArtistsGraph";
 import SearchBox from "./artist-search/SearchBox";
@@ -47,8 +47,7 @@ type GraphDataType = {
 };
 
 const colorGenerator = (): tinycolor.Instance => {
-  const color = tinycolor(`hsv(${Math.random() * 360}, 90%, 90%)`);
-  return color;
+  return tinycolor(`hsv(${Math.random() * 360}, 90%, 90%)`);
 };
 
 function Data() {
@@ -84,17 +83,6 @@ function Data() {
 
   const scoreList: Array<number> = [];
 
-  const fetchData = async (ARTIST_MBID: string): Promise<void> => {
-    try {
-      const response = await fetch(BASE_URL + ARTIST_MBID);
-      const data = await response.json();
-      processData(data);
-    } catch (error) {
-      // Error message goes here.
-      alert("Something went wrong while loading information, please try again");
-    }
-  };
-
   const processData = (dataResponse: ApiResponseType): void => {
     // Type guard for dataset response
     const isDatasetResponse = (
@@ -122,10 +110,21 @@ function Data() {
     setColors([tinycolor.mix(color1, color2, COLOR_MIX_WEIGHT), color2]);
   };
 
+  const fetchData = async (artist_mbid: string): Promise<void> => {
+    try {
+      const response = await fetch(BASE_URL + artist_mbid);
+      const data = await response.json();
+      processData(data);
+    } catch (error) {
+      // Error message goes here.
+      alert("Something went wrong while loading information, please try again");
+    }
+  };
+
   // Update the graph when either artistMBID or similarArtistsLimit changes
   useEffect(() => {
     fetchData(artistMBID);
-  }, [artistMBID, similarArtistsLimit]);
+  }, [artistMBID, fetchData, similarArtistsLimit]);
 
   // Calculating minScore for normalization which is always the last element of the array (because it's sorted)
   let minScore = similarArtistsList?.[similarArtistsLimit - 1]?.score ?? 0;
@@ -153,7 +152,8 @@ function Data() {
             );
             scoreList.push(computedScore);
           } else {
-            computedColor = colors[0];
+            let remaining;
+            [computedColor, ...remaining] = colors;
           }
           return {
             id: similarArtist.name,

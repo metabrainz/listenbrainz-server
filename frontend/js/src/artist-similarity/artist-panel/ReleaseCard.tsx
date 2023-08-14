@@ -1,10 +1,7 @@
 import * as React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { formatReleaseDate } from "./utils";
-import {
-  generateAlbumArtThumbnailLink,
-  getAlbumArtFromReleaseMBID,
-} from "./utils/utils";
+import {generateAlbumArtThumbnailLink, getAlbumArtFromReleaseMBID} from "../../utils/utils";
 
 type ReleaseCardProps = {
   releaseDate?: string;
@@ -32,14 +29,14 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     confidence,
     caaID,
     caaReleaseMBID,
-    recordingMBID
+    recordingMBID,
   } = props;
 
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
 
   let LB_PLAYER_URL = `https://listenbrainz.org/player/release/${releaseMBID}`;
-  if(recordingMBID) {
+  if (recordingMBID) {
     LB_PLAYER_URL = `https://listenbrainz.org/player/?recording_mbids=${recordingMBID}`;
   }
 
@@ -90,12 +87,10 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
   return (
     <div className="release-card-container">
-      { releaseDate && <div className="release-date">{formatReleaseDate(releaseDate)}</div>}
-      <a
-        href={LB_PLAYER_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      {releaseDate && (
+        <div className="release-date">{formatReleaseDate(releaseDate)}</div>
+      )}
+      <a href={LB_PLAYER_URL} target="_blank" rel="noopener noreferrer">
         <LazyLoadImage
           className="release-coverart"
           src={coverartSrc}
@@ -105,30 +100,27 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       </a>
       <div className="name-type-container">
         <div className="release-name" title={releaseName}>
-          <a
-            href={LB_PLAYER_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href={LB_PLAYER_URL} target="_blank" rel="noopener noreferrer">
             {releaseName}
           </a>
         </div>
-        { releaseTypePrimary && 
-            <div className="release-type-chip" title={releaseTypeTooltip()!}>
-                {releaseTypeSecondary || releaseTypePrimary || RELEASE_TYPE_UNKNOWN}
-            </div>
-        }
+        {releaseTypePrimary && (
+          <div className="release-type-chip" title={releaseTypeTooltip()!}>
+            {releaseTypeSecondary || releaseTypePrimary || RELEASE_TYPE_UNKNOWN}
+          </div>
+        )}
       </div>
-      { (artistCreditName && artistMBIDs) &&
+      {artistCreditName && artistMBIDs && (
         <div className="release-artist" title={artistCreditName}>
-        <a
-          href={`https://musicbrainz.org/artist/${artistMBIDs[0]}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {artistCreditName}
-        </a>
-      </div>}
+          <a
+            href={`https://musicbrainz.org/artist/${artistMBIDs[0]}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {artistCreditName}
+          </a>
+        </div>
+      )}
     </div>
   );
 }

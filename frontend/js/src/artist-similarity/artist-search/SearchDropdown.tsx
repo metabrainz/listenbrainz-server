@@ -9,16 +9,21 @@ interface SearchDropdownProps {
   onDropdownChange: (openDropdown: boolean) => void;
 }
 
-function SearchDropdown(props: SearchDropdownProps) {
+function SearchDropdown({
+  searchResults,
+  onDropdownChange,
+  onArtistChange,
+  id,
+}: SearchDropdownProps) {
   return (
-    <div id={props.id}>
-      {props.searchResults.map((artist, index) => {
+    <div id={id}>
+      {searchResults.map((artist, index) => {
         return (
           <SearchItem
             artist={artist}
             key={index}
-            onArtistChange={props.onArtistChange}
-            onDropdownChange={props.onDropdownChange}
+            onArtistChange={onArtistChange}
+            onDropdownChange={onDropdownChange}
           />
         );
       })}
