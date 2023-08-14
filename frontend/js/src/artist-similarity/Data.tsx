@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import tinycolor from "tinycolor2";
 import SimilarArtistsGraph from "./SimilarArtistsGraph";
 import SearchBox from "./artist-search/SearchBox";
@@ -69,8 +69,8 @@ function Data() {
   // Score in case it is undefined (as in case of main artist)
   const NULL_SCORE = Infinity;
 
-  const color1 = colorGenerator();
-  const color2 = color1.clone().tetrad()[1];
+  const [color1, setColor1] = useState(colorGenerator());
+  const [color2, setColor2] = useState(color1.clone().tetrad()[1]);
   const [similarArtistsList, setSimilarArtistsList] = useState<
     Array<ArtistType>
   >([]);
@@ -83,43 +83,51 @@ function Data() {
 
   const scoreList: Array<number> = [];
 
-  const processData = (dataResponse: ApiResponseType): void => {
-    // Type guard for dataset response
-    const isDatasetResponse = (
-      response: MarkupResponseType | DatasetResponseType
-    ): response is DatasetResponseType => {
-      return response.type === "dataset";
-    };
-    // Get the datasets out of the API response
-    const artistsData = dataResponse.filter(isDatasetResponse);
-    if (artistsData.length) {
-      // Get the main artist from the first dataset
-      setMainArtist(artistsData[0].data[0]);
-      // Get the similar artists from the second dataset
-      const similarArtistsResponse = artistsData[1];
-      if (similarArtistsResponse?.data?.length) {
-        setSimilarArtistsList(
-          similarArtistsResponse.data.slice(0, similarArtistsLimit)
+  const processData = useCallback(
+    (dataResponse: ApiResponseType): void => {
+      // Type guard for dataset response
+      const isDatasetResponse = (
+        response: MarkupResponseType | DatasetResponseType
+      ): response is DatasetResponseType => {
+        return response.type === "dataset";
+      };
+      // Get the datasets out of the API response
+      const artistsData = dataResponse.filter(isDatasetResponse);
+      if (artistsData.length) {
+        // Get the main artist from the first dataset
+        setMainArtist(artistsData[0].data[0]);
+        // Get the similar artists from the second dataset
+        const similarArtistsResponse = artistsData[1];
+        if (similarArtistsResponse?.data?.length) {
+          setSimilarArtistsList(
+            similarArtistsResponse.data.slice(0, similarArtistsLimit)
+          );
+        }
+        // In case no similar artists are found
+        else {
+          setSimilarArtistsList([]);
+        }
+      }
+      setColors([tinycolor.mix(color1, color2, COLOR_MIX_WEIGHT), color2]);
+    },
+    [color1, color2, similarArtistsLimit]
+  );
+
+  const fetchData = useCallback(
+    async (artist_mbid: string): Promise<void> => {
+      try {
+        const response = await fetch(BASE_URL + artist_mbid);
+        const data = await response.json();
+        processData(data);
+      } catch (error) {
+        // Error message goes here.
+        alert(
+          "Something went wrong while loading information, please try again"
         );
       }
-      // In case no similar artists are found
-      else {
-        setSimilarArtistsList([]);
-      }
-    }
-    setColors([tinycolor.mix(color1, color2, COLOR_MIX_WEIGHT), color2]);
-  };
-
-  const fetchData = async (artist_mbid: string): Promise<void> => {
-    try {
-      const response = await fetch(BASE_URL + artist_mbid);
-      const data = await response.json();
-      processData(data);
-    } catch (error) {
-      // Error message goes here.
-      alert("Something went wrong while loading information, please try again");
-    }
-  };
+    },
+    [processData]
+  );
 
   // Update the graph when either artistMBID or similarArtistsLimit changes
   useEffect(() => {

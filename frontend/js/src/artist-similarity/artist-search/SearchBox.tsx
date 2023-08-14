@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   faMagnifyingGlass,
   faMinus,
@@ -71,13 +77,13 @@ function SearchBox({
    *  The solution works as expected but I feel like it might be a bit hard to understand what's going on.
    */
 
-  const getArtists = async () => {
+  const getArtists = useCallback(async () => {
     if (searchQuery.length && searchQuery.trim().length) {
       const results = await artistLookup(searchQuery);
       setSearchResults(results);
       setOpenDropdown(true);
     }
-  };
+  }, [searchQuery]);
   const getArtistsRef = useRef(getArtists);
 
   useEffect(() => {
@@ -134,7 +140,9 @@ function SearchBox({
         )}
       </div>
       <div className="graph-size-input">
-        <label id="graph-size-input-label">Web size:</label>
+        <label htmlFor="graph-size-input-number" id="graph-size-input-label">
+          Web size:
+        </label>
         <button id="graph-size-input-minus" type="button" onClick={decrement}>
           <FontAwesomeIcon icon={faMinus} color="white" />
         </button>

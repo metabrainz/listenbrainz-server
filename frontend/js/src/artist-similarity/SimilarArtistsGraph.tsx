@@ -132,7 +132,10 @@ function SimilarArtistsGraph({ data, onArtistChange, background }: GraphProps) {
   };
 
   return data ? (
-    <div className="artist-similarity-graph-container" style={{ background }}>
+    <div
+      className="artist-similarity-graph-container"
+      style={{ background, height: "800px" }}
+    >
       <ResponsiveNetwork
         {...chartProperties}
         nodeComponent={CustomNodeComponent}

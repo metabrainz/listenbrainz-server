@@ -3,7 +3,7 @@ import { ArtistType } from "./artistLookup";
 
 interface SearchItemProps {
   artist: ArtistType;
-  key: number;
+  key: string;
   onArtistChange: (artist: string) => void;
   onDropdownChange: (openDropdown: boolean) => void;
 }
@@ -19,6 +19,7 @@ function SearchItem({
     onDropdownChange(false);
   };
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions
     <div className="search-item" key={key} onClick={handleClick}>
       {artist.name} - {artist.country ?? "Unknown"}
     </div>
