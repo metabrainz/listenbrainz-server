@@ -33,7 +33,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
     def outputs(self):
         return ArtistCountryFromArtistMBIDOutput
 
-    def fetch(self, params: list[ArtistCountryFromArtistMBIDInput], count=-1, offset=-1) -> list[ArtistCountryFromArtistMBIDOutput]:
+    def fetch(self, params: list[ArtistCountryFromArtistMBIDInput], source, count=-1, offset=-1) -> list[ArtistCountryFromArtistMBIDOutput]:
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 

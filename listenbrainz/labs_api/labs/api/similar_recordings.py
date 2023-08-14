@@ -13,7 +13,7 @@ from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 
 
 class SimilarRecordingsViewerInput(BaseModel):
-    recording_mbids: list[UUID]
+    recording_mbid: UUID
     algorithm: str
 
 
@@ -69,8 +69,8 @@ class SimilarRecordingsViewerQuery(Query):
 
         return [SimilarRecordingsViewerOutputItem(**item) for item in metadata]
 
-    def fetch(self, params, offset=-1, count=-1):
-        recording_mbids = params[0].recording_mbids
+    def fetch(self, params, source, offset=-1, count=-1):
+        recording_mbids = [params[0].recording_mbid]
         algorithm = params[0].algorithm
         count = count if count > 0 else 100
 

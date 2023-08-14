@@ -13,7 +13,7 @@ class ArtistCreditIdFromArtistMBIDInput(BaseModel):
 
 class ArtistCreditIdFromArtistMBIDOutput(BaseModel):
     artist_mbid: UUID
-    artist_credit_id: int
+    artist_credit_id: list[int]
 
 
 class ArtistCreditIdFromArtistMBIDQuery(Query):
@@ -30,7 +30,7 @@ class ArtistCreditIdFromArtistMBIDQuery(Query):
     def outputs(self):
         return ArtistCreditIdFromArtistMBIDOutput
 
-    def fetch(self, params, count=-1, offset=-1):
+    def fetch(self, params, source, count=-1, offset=-1):
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 

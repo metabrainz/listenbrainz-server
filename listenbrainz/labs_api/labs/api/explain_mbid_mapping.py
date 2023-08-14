@@ -52,7 +52,7 @@ class ExplainMBIDMappingQuery(Query):
     def outputs(self):
         return ExplainMBIDMappingOutput
 
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params, source, offset=-1, count=-1):
         """ Call the MBIDMapper and carry out this mapping search """
         hit = self.mapper.search(params[0].artist_credit_name, params[0].recording_name, params[0].release_name)
         results = [ExplainMBIDMappingOutputItem(log_lines=line) for line in self.mapper.read_log()]
