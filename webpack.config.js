@@ -104,6 +104,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/explore/fresh-releases/FreshReleases.tsx"
       ),
+      artistSimilarity: path.resolve(
+        jsDir,
+        "src/artist-similarity/ArtistSimilarity.tsx"
+      ),
       selectTimezone: path.resolve(
         jsDir,
         "src/user-settings/SelectTimezone.tsx"

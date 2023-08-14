@@ -51,6 +51,17 @@ def fresh_releases():
         props=orjson.dumps({}).decode("utf-8")
     )
 
+
+@explore_bp.route("/artist-similarity/")
+def artist_similarity():
+    """ Explore fresh releases """
+
+    return render_template(
+        "explore/artist-similarity.html",
+        props=orjson.dumps({}).decode("utf-8")
+    )
+
+
 @explore_bp.route("/cover-art-collage/")
 @explore_bp.route("/cover-art-collage/<int:year>/")
 def cover_art_collage(year: int = 2022):
