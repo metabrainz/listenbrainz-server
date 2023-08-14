@@ -6924,6 +6924,22 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for artists 1`] =
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
@@ -18243,6 +18259,22 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for recording 1`]
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
@@ -25695,6 +25727,22 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for release group
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
@@ -33105,6 +33153,22 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly for releases 1`] 
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
@@ -34186,6 +34250,22 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
@@ -41636,6 +41716,22 @@ exports[`User Stats UserEntityChart Page renders correctly for artists 1`] = `
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
@@ -52963,6 +53059,22 @@ exports[`User Stats UserEntityChart Page renders correctly for recording 1`] = `
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
@@ -60423,6 +60535,22 @@ exports[`User Stats UserEntityChart Page renders correctly for release groups 1`
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
@@ -67841,6 +67969,22 @@ exports[`User Stats UserEntityChart Page renders correctly for releases 1`] = `
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
@@ -68930,6 +69074,22 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                     <div />
                   </div>
                 </SoundcloudPlayer>
+                <AppleMusicPlayer
+                  appleMusicUser={Object {}}
+                  handleError={[Function]}
+                  handleSuccess={[Function]}
+                  handleWarning={[Function]}
+                  listenBrainzToken=""
+                  onDurationChange={[Function]}
+                  onInvalidateDataSource={[Function]}
+                  onPlayerPausedChange={[Function]}
+                  onProgressChange={[Function]}
+                  onTrackEnd={[Function]}
+                  onTrackInfoChange={[Function]}
+                  onTrackNotFound={[Function]}
+                  playerPaused={true}
+                  show={false}
+                />
               </div>
               <div
                 className=""
