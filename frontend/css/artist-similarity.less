@@ -22,7 +22,7 @@
   height: inherit;
   width: 10%;
 }
-.artist-input-box{
+.artist-input-box {
   display: flex;
   flex-direction: row;
   height: inherit;
@@ -33,7 +33,7 @@
   height: 100%;
   width: 80%;
   border-radius: 0;
-  border: 2px solid #E0E0E0;
+  border: 2px solid #e0e0e0;
 }
 #artist-input-icon {
   vertical-align: middle;
@@ -42,7 +42,9 @@
   height: inherit;
   width: 20%;
 }
-#artist-input-icon:hover, #graph-size-input-minus:hover, #graph-size-input-plus:hover {
+#artist-input-icon:hover,
+#graph-size-input-minus:hover,
+#graph-size-input-plus:hover {
   background-color: #413b89;
   border-color: #211e45;
   cursor: pointer;
@@ -56,15 +58,15 @@
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
   border: 1px solid #ccc;
   border: 1px solid rgba(0, 0, 0, 0.15);
-  background-color: #E0E0E0;
+  background-color: #e0e0e0;
   font-size: 14px;
 }
 .search-item {
   outline: inherit;
-  border-color:rgba(27, 27, 27, 0.3);
+  border-color: rgba(27, 27, 27, 0.3);
   cursor: pointer;
   background-color: #ffffff;
-  z-index:1;
+  z-index: 1;
   padding: 4%;
   font-size: inherit;
 }
@@ -73,35 +75,34 @@
   background-color: #353070;
 }
 
-.graph-size-input{
+.graph-size-input {
   display: flex;
   flex-direction: row;
   height: 100%;
   width: 20%;
-
 }
 #graph-size-input-label {
   margin-left: 20%;
 }
-#graph-size-input-number{
+#graph-size-input-number {
   height: 100%;
   width: 10%;
   min-width: inherit;
   border-radius: 0;
-  border: 2px solid #E0E0E0;
+  border: 2px solid #e0e0e0;
   border-left: none;
   border-right: none;
   text-align: center;
 }
-#graph-size-input-minus, #graph-size-input-plus{
+#graph-size-input-minus,
+#graph-size-input-plus {
   height: 100%;
   width: fit-content;
   padding: 0 2%;
   background-color: #353070;
   border: none;
-
 }
-#graph-size-input-label{
+#graph-size-input-label {
   display: flex;
   align-items: center;
   padding-right: 3%;
@@ -115,109 +116,110 @@ input::-webkit-inner-spin-button {
 }
 
 /* Firefox */
-input[type=number] {
+input[type="number"] {
   -moz-appearance: textfield;
 }
 
 .artist-panel {
-    display: flex;
-    flex-flow: column;
-    position: absolute;
-    bottom: 1%;
-    right: 10%;
-    width: 250px;
-    height: 90%;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-flow: column;
+  position: absolute;
+  bottom: 1%;
+  right: 10%;
+  width: 250px;
+  height: 90%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 .artist-panel > div {
-    padding: 0.25em 0.75em;
+  padding: 0.25em 0.75em;
 }
 .artist-header {
-    height: 15%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background-color: #353070;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    color: white;
-    font-family: 'Roboto', sans-serif;
+  height: 15%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #353070;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  color: white;
+  font-family: "Roboto", sans-serif;
 }
-.artist-info{
-    height: 25%;
+.artist-info {
+  height: 25%;
 }
 .artist-info > .wiki {
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-    height: 70%;
-    overflow: hidden;
-    mask-image: linear-gradient(180deg, #000 60%, transparent);
-    -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  height: 70%;
+  overflow: hidden;
+  mask-image: linear-gradient(180deg, #000 60%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
 }
 
 .artist-info > .mb-link {
-    text-align: end;
-    padding: 0.5em 0;
+  text-align: end;
+  padding: 0.5em 0;
 }
 
 #mb-link-button {
-    font-size: 14px;
-    background-color: #353070;
-    border: none;
-    border-radius: 4px;
-    color: white;
-    padding: 0.5em;
-    text-decoration: none;
+  font-size: 14px;
+  background-color: #353070;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  padding: 0.5em;
+  text-decoration: none;
 }
 
-.artist-top-album, .artist-top-track {
-    height: 30%;
+.artist-top-album,
+.artist-top-track {
+  height: 30%;
 }
-.artist-top-album > h3, .artist-top-track > h3 {
-    font-size: 1rem;
-    overflow: hidden;
-    padding-bottom: 0.5em;
-  }
+.artist-top-album > h3,
+.artist-top-track > h3 {
+  font-size: 1rem;
+  overflow: hidden;
+  padding-bottom: 0.5em;
+}
 
-.artist-top-album > h3:after, .artist-top-track > h3:after {
-    content: "";
-    display: inline-block;
-    height: 0.5em;
-    vertical-align: bottom;
-    width: 100%;
-    margin-right: -100%;
-    margin-left: 10px;
-    border-top: 1px solid black;
-  }
+.artist-top-album > h3:after,
+.artist-top-track > h3:after {
+  content: "";
+  display: inline-block;
+  height: 0.5em;
+  vertical-align: bottom;
+  width: 100%;
+  margin-right: -100%;
+  margin-left: 10px;
+  border-top: 1px solid black;
+}
 
 .artist-top-track {
-
 }
 
 .release-card-container {
-    text-align: center;
+  text-align: center;
 }
 
 .release-coverart {
-    width: 90%;
-    height: auto;
-    aspect-ratio: 1 / 1;
-    border-radius: 8px;
-    object-fit: contain;
+  width: 90%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  object-fit: contain;
 }
 .release-name {
-    padding-left: 5%;
-    text-align: left;
-
+  padding-left: 5%;
+  text-align: left;
 }
 .release-name > a {
-    color: #353070;
-    text-decoration: inherit;
-    display: block;
-    width: 90%;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
+  color: #353070;
+  text-decoration: inherit;
+  display: block;
+  width: 90%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }

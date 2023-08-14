@@ -4,6 +4,7 @@ import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import { ArtistType } from "../Data";
 import infoLookup from "./infoLookup";
 import ReleaseCard from "./ReleaseCard";
+
 interface PanelProps {
     artist: ArtistType;
 }
@@ -30,13 +31,13 @@ type RecordingType = {
     caa_id: number;
     caa_release_mbid: string;
 }
-const Panel = (props: PanelProps) => {
+function Panel(props: PanelProps) {
     const [artistInfo, setArtistInfo] = useState<ArtistInfoType | null>(null);
     useEffect(() => {
         const getArtistInfo = async () => {
-            let artistApiInfo = await infoLookup(props.artist.artist_mbid);
+            const artistApiInfo = await infoLookup(props.artist.artist_mbid);
             const MB_URL = `https://musicbrainz.org/artist/${props.artist.artist_mbid}`;
-            let newArtistInfo = artistApiInfo;
+            const newArtistInfo = artistApiInfo;
             // Adding name & type properties to artist info.
             newArtistInfo.name = props.artist.name;
             newArtistInfo.type = props.artist.type;
@@ -77,7 +78,7 @@ const Panel = (props: PanelProps) => {
                 <a
                 id="mb-link-button"
                 href={artistInfo.mbLink}
-                target="_blank"
+                target="_blank" rel="noreferrer"
                 >
                     <strong>More </strong>
                     <FontAwesomeIcon icon={faArrowUpRightFromSquare} />

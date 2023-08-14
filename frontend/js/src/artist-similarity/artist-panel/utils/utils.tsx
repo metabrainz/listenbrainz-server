@@ -12,7 +12,7 @@ import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
 */
 import APIServiceClass from "./APIService";
-//import { ToastMsg } from "../notifications/Notifications";
+// import { ToastMsg } from "../notifications/Notifications";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
@@ -162,7 +162,7 @@ const getArtistMBIDs = (listen: Listen): string[] | undefined => {
   return undefined;
 };
 
-/*const getRecordingMSID = (listen: Listen): string =>
+/* const getRecordingMSID = (listen: Listen): string =>
   _.get(listen, "track_metadata.additional_info.recording_msid");
 */
 const getRecordingMBID = (listen: Listen): string | undefined =>
@@ -432,7 +432,7 @@ type GlobalAppProps = {
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 
-/*const getPageProps = (): {
+/* const getPageProps = (): {
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
   sentryProps: SentryProps;
@@ -665,7 +665,7 @@ const getAlbumArtFromListenMetadata = async (
   /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
-  /*const userSubmittedReleaseMBID =
+  /* const userSubmittedReleaseMBID =
     listen.track_metadata?.additional_info?.release_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
@@ -857,22 +857,22 @@ export {
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
   convertDateToUnixTimestamp,
-  //getPageProps,
+  // getPageProps,
   searchForYoutubeTrack,
   getListenablePin,
   countWords,
   handleNavigationClickEvent,
-  //getRecordingMSID,
+  // getRecordingMSID,
   getRecordingMBID,
   getReleaseMBID,
   getReleaseGroupMBID,
   getArtistMBIDs,
   getArtistName,
   getTrackName,
-  //getTrackDurationInMs,
+  // getTrackDurationInMs,
   pinnedRecordingToListen,
   getAlbumArtFromReleaseMBID,
-  //getAlbumArtFromListenMetadata,
+  // getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,
   getAdditionalContent,
   generateAlbumArtThumbnailLink,
