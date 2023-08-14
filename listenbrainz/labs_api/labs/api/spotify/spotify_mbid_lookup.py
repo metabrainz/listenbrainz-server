@@ -56,7 +56,7 @@ class SpotifyIdFromMBIDQuery(Query):
 
         return metadata
 
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params, source, offset=-1, count=-1):
         mbids = [p.recording_mbid for p in params]
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, conn.cursor() as curs:

@@ -41,7 +41,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                 '[artist_credit_mbids]', 'canonical_recording_mbid', 'original_recording_mbid',
                 'release_name', 'release_mbid']
 
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params, source, offset=-1, count=-1):
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 

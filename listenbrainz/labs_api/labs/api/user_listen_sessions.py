@@ -63,11 +63,11 @@ class UserListensSessionQuery(Query):
     def outputs(self):
         return UserListensSessionOutput
 
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params, source, offset=-1, count=-1):
         user_name = params[0].user_name
         from_ts = params[0].from_ts
         to_ts = params[0].to_ts
-        threshold = params[0].ts
+        threshold = params[0].threshold
 
         if to_ts - from_ts >= MAX_TIME_RANGE:
             to_ts = from_ts + MAX_TIME_RANGE
