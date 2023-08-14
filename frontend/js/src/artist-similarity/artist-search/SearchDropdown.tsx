@@ -21,7 +21,7 @@ function SearchDropdown({
         return (
           <SearchItem
             artist={artist}
-            key={index}
+            key={artist.id}
             onArtistChange={onArtistChange}
             onDropdownChange={onDropdownChange}
           />
