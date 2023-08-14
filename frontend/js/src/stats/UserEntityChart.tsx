@@ -596,7 +596,6 @@ export default class UserEntityChart extends React.Component<
                             listen={listen}
                             showTimestamp={false}
                             showUsername={false}
-                            currentFeedback={0}
                           />
                         );
                       })}
@@ -673,6 +672,7 @@ export default class UserEntityChart extends React.Component<
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
+          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
         />
       </div>
     );

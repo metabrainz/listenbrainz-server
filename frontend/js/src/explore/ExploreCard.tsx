@@ -44,60 +44,74 @@ function ExploreCard(props: ExploreCardProps) {
 function ExplorePage() {
   const { currentUser } = useContext(GlobalAppContext);
   return (
-    <div className="row">
-      <div>
-        <ExploreCard
-          name="Fresh Releases"
-          desc="Discover"
-          img_name="fresh-releases.jpg"
-          url="/explore/fresh-releases"
-        />
-      </div>
-      <div>
-        <ExploreCard
-          name="Hue Sound"
-          desc="Discover"
-          img_name="huesound.jpg"
-          url="/explore/huesound"
-        />
-      </div>
-      <div>
-        <ExploreCard
-          name="Cover Art Collage"
-          desc="Discover"
-          img_name="cover-art-collage.jpg"
-          url="/explore/cover-art-collage"
-        />
-      </div>
-      <div>
-        <ExploreCard
-          name="Top Similar Users"
-          desc="Social"
-          img_name="similar-users.jpg"
-          url="/explore/similar-users"
-        />
-      </div>
-      {currentUser?.name && (
+    <>
+      <div className="row">
         <div>
           <ExploreCard
-            name="Your Year in Music 2022"
-            desc="Review"
-            img_name="year-in-music-2022.jpg"
-            url={`/user/${currentUser.name}/year-in-music/2022`}
+            name="Fresh Releases"
+            desc="Discover"
+            img_name="fresh-releases.jpg"
+            url="/explore/fresh-releases"
           />
         </div>
-      )}
-      {currentUser?.name && (
         <div>
           <ExploreCard
-            name="Your Year in Music 2021"
-            desc="Review"
-            img_name="year-in-music-2021.jpg"
-            url={`/user/${currentUser.name}/year-in-music/2021`}
+            name="Hue Sound"
+            desc="Discover"
+            img_name="huesound.jpg"
+            url="/explore/huesound"
           />
         </div>
-      )}
-    </div>
+        <div>
+          <ExploreCard
+            name="Cover Art Collage"
+            desc="Discover"
+            img_name="cover-art-collage.jpg"
+            url="/explore/cover-art-collage"
+          />
+        </div>
+        <div>
+          <ExploreCard
+            name="Top Similar Users"
+            desc="Social"
+            img_name="similar-users.jpg"
+            url="/explore/similar-users"
+          />
+        </div>
+        {currentUser?.name && (
+          <div>
+            <ExploreCard
+              name="Your Year in Music 2022"
+              desc="Review"
+              img_name="year-in-music-2022.jpg"
+              url={`/user/${currentUser.name}/year-in-music/2022`}
+            />
+          </div>
+        )}
+        {currentUser?.name && (
+          <div>
+            <ExploreCard
+              name="Your Year in Music 2021"
+              desc="Review"
+              img_name="year-in-music-2021.jpg"
+              url={`/user/${currentUser.name}/year-in-music/2021`}
+            />
+          </div>
+        )}
+      </div>
+      <div className="explore-page-divider">
+        <h3>Beta</h3>
+        <hr />
+      </div>
+      <div className="row">
+        <ExploreCard
+          name="ListenBrainz Radio"
+          desc="Instant custom playlists"
+          img_name="lb-radio-beta.jpg"
+          url="/explore/lb-radio"
+        />
+      </div>
+    </>
   );
 }
 

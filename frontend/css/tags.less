@@ -1,0 +1,82 @@
+@tagBorderRadius: 6px;
+.tag {
+  flex: none;
+  color: currentcolor;
+  height: 2.4rem;
+  background-color: rgb(236, 235, 228);
+  border-radius: @tagBorderRadius;
+  &.upvoted {
+    color: @btn-success-color;
+    background-color: lighten(@btn-success-bg, 40%);
+  }
+  &.downvoted {
+    color: @btn-danger-color;
+    background-color: lighten(@btn-danger-bg, 40%);
+  }
+  > * {
+    height: 100%;
+    display: inline-block;
+    padding: 3px 7px;
+    vertical-align: middle;
+    &:first-child {
+      border-top-left-radius: @tagBorderRadius;
+      border-bottom-left-radius: @tagBorderRadius;
+    }
+    &:last-child {
+      border-top-right-radius: @tagBorderRadius;
+      border-bottom-right-radius: @tagBorderRadius;
+    }
+  }
+  .tag-vote-button {
+    border-left: 1px dashed #f7f7f7;
+    opacity: 0;
+    width: 0px;
+    transition-duration: 0.3s;
+    transition-property: padding, width, opacity;
+    transition-timing-function: cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    // Cancelling some .btn styling; we want the .btn class applied
+    // for interactivity reasons, but not all the CSS styling
+    margin: 0;
+    padding: 3px 0;
+    &.upvote:hover,
+    &.upvote.selected {
+      color: @btn-success-color;
+      background-color: lighten(@btn-success-bg, 30%);
+    }
+    &.downvote:hover,
+    &.downvote.selected,
+    &.withdraw:hover {
+      color: @btn-danger-color;
+      background-color: lighten(@btn-danger-bg, 30%);
+    }
+  }
+  &:hover > .tag-vote-button {
+    width: 2em;
+    opacity: 1;
+  }
+  &:not(:hover) > :first-child {
+    border-radius: @tagBorderRadius;
+  }
+  & + .tag {
+    margin-left: 0.3em;
+  }
+  @media (hover: none),
+    (hover: on-demand),
+    (-moz-touch-enabled: 1),
+    (pointer: coarse) {
+    /* on touch devices, make tags bigger so they are easier to interact with */
+    height: 3.3rem;
+    font-size: 1.9rem;
+    &:hover > .tag-vote-button {
+      width: 3em;
+    }
+    > a {
+      pointer-events: none;
+    }
+    &:hover > a,
+    &:focus > a,
+    &:focus-within > a {
+      pointer-events: initial;
+    }
+  }
+}

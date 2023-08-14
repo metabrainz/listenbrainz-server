@@ -37,3 +37,7 @@ class ExploreViewsTestCase(IntegrationTestCase):
         resp = self.client.get(url_for('explore_api_v1.get_fresh_releases', release_date="2022-01-01", days=5))
         self.assert200(resp)
         mock_fresh.assert_called_with(datetime.date(year=2022, month=1, day=1), 5)
+
+    def test_lb_radio(self):
+        resp = self.client.get(url_for('explore.lb_radio'))
+        self.assert200(resp)
