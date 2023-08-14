@@ -1,29 +1,20 @@
 import * as React from "react";
-import { isEqual, isNil } from "lodash";
-import MediaQuery from "react-responsive";
-import { faEllipsisV, faThumbtack } from "@fortawesome/free-solid-svg-icons";
+import { faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
+import ListenCard from "../listens/ListenCard";
+import ListenControl from "../listens/ListenControl";
+import { ToastMsg } from "../notifications/Notifications";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
-  pinnedRecordingToListen,
   getArtistName,
   getTrackName,
+  pinnedRecordingToListen,
 } from "../utils/utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import ListenControl from "../listens/ListenControl";
-import ListenCard from "../listens/ListenCard";
-import { ToastMsg } from "../notifications/Notifications";
 
 export type PinnedRecordingCardProps = {
   pinnedRecording: PinnedRecording;
-  currentFeedback?: ListenFeedBack | null;
-  // Only used when not passing a custom feedbackComponent
-  updateFeedbackCallback?: (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
-  ) => void;
   isCurrentUser: Boolean;
   removePinFromPinsList: (pin: PinnedRecording) => void;
 };
@@ -129,11 +120,7 @@ export default class PinnedRecordingCard extends React.Component<
   };
 
   render() {
-    const {
-      pinnedRecording,
-      currentFeedback,
-      updateFeedbackCallback,
-    } = this.props;
+    const { pinnedRecording } = this.props;
     const { currentlyPinned, isDeleted } = this.state;
 
     const thumbnail = currentlyPinned ? (
@@ -180,8 +167,6 @@ export default class PinnedRecordingCard extends React.Component<
       <ListenCard
         className={cssClasses.join(" ")}
         listen={pinnedRecordingToListen(pinnedRecording)}
-        currentFeedback={currentFeedback}
-        updateFeedbackCallback={updateFeedbackCallback}
         showTimestamp
         showUsername={false}
         additionalMenuItems={additionalMenuItems}

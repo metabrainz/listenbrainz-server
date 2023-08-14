@@ -133,6 +133,41 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
+                <h3 class="panel-title">SoundCloud</h3>
+            </div>
+            <div class="panel-body">
+                <p>
+                    Connect to your SoundCloud account to play music on ListenBrainz.
+                </p>
+                <br/>
+                <div class="music-service-selection">
+                    <form action="{{ url_for('profile.music_services_disconnect', service_name='soundcloud') }}"
+                          method="post">
+                        {{
+                                service_permission_button(
+                                  "soundcloud",
+                                  current_soundcloud_permissions,
+                                  "listen",
+                                  "Play music on ListenBrainz",
+                                  "Connect to your SoundCloud account to play music using SoundCloud on ListenBrainz."
+                                )
+                        }}
+                        {{
+                                service_permission_button(
+                                  "soundcloud",
+                                  current_soundcloud_permissions,
+                                  "disable",
+                                  "Disable",
+                                  "You will not be able to listen to music on ListenBrainz using SoundCloud."
+                                )
+                        }}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
                 <h3 class="panel-title">Youtube</h3>
             </div>
             <div class="panel-body">

@@ -5,6 +5,39 @@ from psycopg2.extras import execute_values, DictCursor
 from psycopg2.sql import SQL, Literal, Identifier
 
 from listenbrainz.db import timescale
+from listenbrainz.spark.spark_dataset import DatabaseDataset
+
+
+class SimilarityDataset(DatabaseDataset):
+
+    def __init__(self, entity):
+        super().__init__(f"similarity_{entity}", entity, "similarity")
+        self.entity = entity
+
+    def get_table(self):
+        return "CREATE TABLE {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, score INT NOT NULL)"
+
+    def get_indices(self):
+        return [
+            f"CREATE UNIQUE INDEX similar_{self.entity}s_uniq_idx_{{suffix}} ON {{table}} (mbid0, mbid1)",
+            f"CREATE UNIQUE INDEX similar_{self.entity}s_reverse_uniq_idx_{{suffix}} ON {{table}} (mbid1, mbid0)"
+        ]
+
+    def get_inserts(self, message):
+        query = "INSERT INTO {table} (mbid0, mbid1, score) VALUES %s"
+        values = [(x["mbid0"], x["mbid1"], x["score"]) for x in message["data"]]
+        return query, None, values
+
+    def run_post_processing(self, cursor, message):
+        query = SQL("COMMENT ON TABLE {table} IS {comment}").format(
+            table=self._get_table_name(),
+            comment=Literal(f"This dataset is created using the algorithm {message['algorithm']}")
+        )
+        cursor.execute(query)
+
+
+SimilarRecordingsDataset = SimilarityDataset("recording")
+SimilarArtistsDataset = SimilarityDataset("artist")
 
 
 def insert(table, data, algorithm):
@@ -71,98 +104,3 @@ def get(curs, table, mbids, algorithm, count):
         score_index[similar_mbid] = row["score"]
         mbids.append(similar_mbid)
     return mbids, score_index, similar_mbid_index
-
-
-def start_prod_table(name, algorithm):
-    """ Create the production table to store recording similarity data.
-
-    When we start receiving the production table, we create a temporary table to store the data. Once
-    the dataset has been received completely, we switch the temporary table with the production tables.
-    We do not store the production dataset in the development tables because production dataset is generated
-    daily, and we do not want leftovers from earlier runs to mixup the latst runs' results.
-
-    Args:
-        name: 'recording' or 'artist' dataset
-        algorithm: the algorithm used to create the dataset
-    """
-    table = Identifier("similarity", f"{name}_tmp")
-    conn = timescale.engine.raw_connection()
-    try:
-        with conn.cursor() as curs:
-            query = SQL("""
-                DROP TABLE IF EXISTS {table}
-            """).format(table=table)
-            curs.execute(query)
-
-            query = SQL("""
-                CREATE TABLE {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, score INT NOT NULL)
-            """).format(table=table)
-            curs.execute(query)
-
-        conn.commit()
-    finally:
-        conn.close()
-
-
-def insert_prod_table(name, data, algorithm):
-    """ Insert similar recordings for the production dataset. """
-    table = Identifier("similarity", f"{name}_tmp")
-    query = SQL("INSERT INTO {table} (mbid0, mbid1, score) VALUES %s").format(table=table)
-    values = [(x["mbid0"], x["mbid1"], x["score"]) for x in data]
-
-    conn = timescale.engine.raw_connection()
-    try:
-        with conn.cursor() as curs:
-            execute_values(curs, query, values)
-        conn.commit()
-    finally:
-        conn.close()
-
-
-def end_prod_table(name, algorithm):
-    """ Switch the temporary production table in production.
-
-    Args:
-        name: 'recording' or 'artist' dataset
-        algorithm: the algorithm used to create the dataset
-    """
-    incoming_table = Identifier("similarity", f"{name}_tmp")
-
-    # add a random suffix to the index name to avoid issues while renaming
-    suffix = int(time.time())
-
-    conn = timescale.engine.raw_connection()
-    try:
-        with conn.cursor() as curs:
-            query = SQL("""
-                CREATE UNIQUE INDEX similar_recordings_uniq_idx_{suffix} ON {table} (mbid0, mbid1)
-             """).format(table=incoming_table, suffix=Literal(suffix))
-            curs.execute(query)
-
-            query = SQL("""
-                CREATE UNIQUE INDEX similar_recordings_reverse_uniq_idx_{suffix} ON {table} (mbid1, mbid0)
-             """).format(table=incoming_table, suffix=Literal(suffix))
-            curs.execute(query)
-
-            # rotate tables
-            query = SQL("""
-                ALTER TABLE {prod_table} RENAME TO {outgoing_table}
-             """).format(prod_table=Identifier("similarity", name), outgoing_table=Identifier(f"{name}_old"))
-            curs.execute(query)
-            query = SQL("""
-                ALTER TABLE {incoming_table} RENAME TO {prod_table}
-             """).format(incoming_table=incoming_table, prod_table=Identifier(name))
-            curs.execute(query)
-            query = SQL("""DROP TABLE {old_table}""").format(old_table=Identifier("similarity", f"{name}_old"))
-            curs.execute(query)
-
-            query = SQL("COMMENT ON TABLE {table} IS {comment}").format(
-                table=Identifier("similarity", name),
-                comment=Literal(f"This dataset is created using the algorithm {algorithm}")
-            )
-            curs.execute(query)
-
-        conn.commit()
-    finally:
-        conn.close()
-

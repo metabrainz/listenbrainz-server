@@ -75,6 +75,7 @@ export type BrainzPlayerProps = {
   listens: Array<Listen | JSPFTrack>;
   refreshSpotifyToken: () => Promise<string>;
   refreshYoutubeToken: () => Promise<string>;
+  refreshSoundcloudToken: () => Promise<string>;
   listenBrainzAPIBaseURI: string;
 };
 
@@ -156,14 +157,14 @@ export default class BrainzPlayer extends React.Component<
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
     this.dataSources.push(this.spotifyPlayer);
 
-    this.youtubePlayer = React.createRef<YoutubePlayer>();
-    this.dataSources.push(this.youtubePlayer);
-
     this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
     this.dataSources.push(this.soundcloudPlayer);
 
     this.appleMusicPlayer = React.createRef<AppleMusicPlayer>();
     this.dataSources.push(this.appleMusicPlayer);
+
+    this.youtubePlayer = React.createRef<YoutubePlayer>();
+    this.dataSources.push(this.youtubePlayer);
 
     this.state = {
       currentDataSourceIndex: 0,
@@ -191,12 +192,18 @@ export default class BrainzPlayer extends React.Component<
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
     window.addEventListener("beforeunload", this.alertBeforeClosingPage);
     // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
-    const { spotifyAuth, appleAuth } = this.context;
+    const { spotifyAuth, soundcloudAuth, appleAuth } = this.context;
     if (
       !SpotifyPlayer.hasPermissions(spotifyAuth) &&
       this.spotifyPlayer?.current
     ) {
       this.invalidateDataSource(this.spotifyPlayer.current);
+    }
+    if (
+      !SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
+      this.soundcloudPlayer?.current
+    ) {
+      this.invalidateDataSource(this.soundcloudPlayer.current);
     }
     if (
       !AppleMusicPlayer.hasPermissions(appleAuth) &&
@@ -814,9 +821,16 @@ export default class BrainzPlayer extends React.Component<
     const {
       refreshSpotifyToken,
       refreshYoutubeToken,
+      refreshSoundcloudToken,
       listenBrainzAPIBaseURI,
     } = this.props;
-    const { youtubeAuth, spotifyAuth, appleAuth, currentUser } = this.context;
+    const {
+      youtubeAuth,
+      spotifyAuth,
+      soundcloudAuth,
+      appleAuth,
+      currentUser,
+    } = this.context;
 
     return (
       <div>
@@ -892,6 +906,8 @@ export default class BrainzPlayer extends React.Component<
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.soundcloudPlayer}
+            soundcloudUser={soundcloudAuth}
+            refreshSoundcloudToken={refreshSoundcloudToken}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}

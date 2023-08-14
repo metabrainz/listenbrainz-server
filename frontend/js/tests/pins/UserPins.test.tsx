@@ -15,6 +15,7 @@ import UserPins, {
   UserPinsState,
 } from "../../src/pins/UserPins";
 import PinnedRecordingCard from "../../src/pins/PinnedRecordingCard";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -25,7 +26,6 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 const props = {
   ...pinsPageProps,
   pins: pinsPageProps.pins as Array<PinnedRecording>,
-  
 };
 
 const APIPinsPageTwo = {
@@ -56,6 +56,10 @@ const mountOptions: { context: GlobalAppContextT } = {
     youtubeAuth: pinsPageProps.youtube as YoutubeUser,
     spotifyAuth: pinsPageProps.spotify as SpotifyUser,
     currentUser: pinsPageProps.user,
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 

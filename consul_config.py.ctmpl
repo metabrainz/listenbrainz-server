@@ -247,6 +247,11 @@ CRITIQUEBRAINZ_CLIENT_ID = '''{{template "KEY" "critiquebrainz/client_id"}}'''
 CRITIQUEBRAINZ_CLIENT_SECRET = '''{{template "KEY" "critiquebrainz/client_secret"}}'''
 CRITIQUEBRAINZ_REDIRECT_URI = '''{{template "KEY" "critiquebrainz/redirect_uri"}}'''
 
+# SOUNDCLOUD
+SOUNDCLOUD_CLIENT_ID = '''{{template "KEY" "soundcloud/client_id"}}'''
+SOUNDCLOUD_CLIENT_SECRET = '''{{template "KEY" "soundcloud/client_secret"}}'''
+SOUNDCLOUD_REDIRECT_URI = '''{{template "KEY" "soundcloud/redirect_uri"}}'''
+
 # YOUTUBE
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
 

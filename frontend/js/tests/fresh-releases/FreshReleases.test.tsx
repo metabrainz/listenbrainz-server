@@ -15,6 +15,7 @@ import ReleaseTimeline from "../../src/explore/fresh-releases/ReleaseTimeline";
 import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
 import * as userData from "../__mocks__/freshReleasesUserData.json";
 import * as sitewideFilters from "../__mocks__/freshReleasesSitewideFilters.json";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const freshReleasesProps = {
   user: {
@@ -40,6 +41,10 @@ const mountOptions: { context: GlobalAppContextT } = {
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
     currentUser: user,
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 

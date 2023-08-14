@@ -170,6 +170,33 @@
   }
 }
 
+#listens {
+  @media (min-width: @screen-phone) {
+    padding: 0 10px;
+  }
+}
+#webSocketListens {
+  @media (min-width: @screen-phone) {
+    padding: 0 10px;
+  }
+}
+
+.webSocket-box {
+  max-height: 420px;
+  min-height: 150px;
+  position: relative;
+  overflow: hidden;
+  border-bottom-style: inset;
+  .read-more {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding: 100px 0 20px;
+    background-image: linear-gradient(to bottom, transparent, #fff 80%);
+  }
+}
+
 .card {
   background: white;
   border: 1px solid rgb(238, 238, 238);
@@ -378,8 +405,8 @@
       }
 
       .fa-heart,
-      .fa-heart-broken,
-      .fa-ellipsis-v {
+      .fa-heart-crack,
+      .fa-ellipsis-vertical {
         stroke-width: 40px;
         font-size: 18px;
         margin: 0% 7%;
@@ -387,12 +414,12 @@
       }
 
       .fa-heart,
-      .fa-heart-broken {
+      .fa-heart-crack {
         color: transparent;
         stroke: #8d8d8d;
       }
 
-      .fa-ellipsis-v {
+      .fa-ellipsis-vertical {
         color: #8d8d8d;
         stroke: #ffffff;
 
@@ -412,7 +439,7 @@
         }
       }
 
-      .fa-heart-broken {
+      .fa-heart-crack {
         &:hover {
           stroke: @hate;
         }
@@ -676,4 +703,21 @@
 
 .listen-header {
   display: flex;
+  justify-content: space-between;
+  h3 {
+    display: flex;
+    flex-direction: column;
+    flex: 0.61;
+  }
+}
+
+@media (max-width: 992px) {
+  .listen-header {
+    display: flex;
+    h3 {
+      display: flex;
+      flex-direction: column;
+      flex: 0.99;
+    }
+  }
 }

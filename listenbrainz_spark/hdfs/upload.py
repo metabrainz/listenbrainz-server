@@ -4,6 +4,7 @@ import time
 import tarfile
 import tempfile
 import logging
+from typing import List
 
 from listenbrainz_spark import schema, path, utils
 from listenbrainz_spark.hdfs.utils import create_dir
@@ -72,7 +73,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         """
         # upload parquet file to temporary path so that we can
         # read it in spark in next step
-        hdfs_path = self.upload_archive_to_temp(archive)
+        hdfs_path = self.upload_archive_to_temp(archive, ".parquet")
 
         # read the parquet file from the temporary path and append
         # it to incremental.parquet for permanent storage
@@ -92,7 +93,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             Args:
                   archive: path to parquet listens dump to be uploaded
         """
-        src_path = self.upload_archive_to_temp(archive)
+        src_path = self.upload_archive_to_temp(archive, ".parquet")
         dest_path = path.LISTENBRAINZ_NEW_DATA_DIRECTORY
         # Delete existing dumps if any
         if path_exists(dest_path):
@@ -111,11 +112,29 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         rename(src_path, dest_path)
         utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
-    def upload_archive_to_temp(self, archive: str) -> str:
+    def upload_mlhd_dump_chunk(self, archive: str):
+        """ Upload MLHD+ dump to HDFS """
+        dest_path = path.MLHD_PLUS_RAW_DATA_DIRECTORY
+
+        # Check if parent directory exists, if not create a directory
+        dest_path_parent = str(Path(dest_path).parent)
+        if not path_exists(dest_path_parent):
+            create_dir(dest_path_parent)
+
+        src_path = self.upload_archive_to_temp(archive, ".txt.zst")
+        archive_dest_path = os.path.join(dest_path, str(Path(archive).name))
+
+        logger.info(f"Moving the processed files from {src_path} to {archive_dest_path}")
+        t0 = time.monotonic()
+        rename(src_path, archive_dest_path)
+        logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
+
+    def upload_archive_to_temp(self, archive: str, extension: str) -> str:
         """ Upload parquet files in archive to a temporary hdfs directory
 
             Args:
                 archive: the archive to be uploaded
+                extension: the file extension members to upload
             Returns:
                 path of the temp dir where archive has been uploaded
             Notes:
@@ -131,7 +150,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 delete_dir(HDFS_TEMP_DIR, recursive=True)
 
             logger.info("Uploading listens to temporary directory in HDFS...")
-            self.extract_and_upload_archive(archive, local_temp_dir, HDFS_TEMP_DIR)
+            self.extract_and_upload_archive(archive, local_temp_dir, HDFS_TEMP_DIR, extension)
 
         # dump is uploaded to HDFS_TEMP_DIR/archive_name
         archive_name = Path(archive).stem

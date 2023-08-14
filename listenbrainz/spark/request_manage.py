@@ -364,12 +364,41 @@ def request_import_musicbrainz_release_dump():
     send_request_to_spark_cluster('import.musicbrainz_release_dump')
 
 
+@cli.command(name='request_import_mlhd_dump')
+def request_import_mlhd_dump():
+    """ Send the spark cluster a request to import musicbrainz release dump. """
+    send_request_to_spark_cluster("import.dump.mlhd")
+
+
 @cli.command(name='request_similar_users')
 @click.option("--max-num-users", type=int, default=25, help="The maxiumum number of similar users to return for any given user.")
 def request_similar_users(max_num_users):
     """ Send the cluster a request to generate similar users.
     """
     send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
+
+
+@cli.command(name="request_similar_recordings_mlhd")
+@click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
+                                          " session.", required=True)
+@click.option("--contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
+                                               " score of a recording pair.", required=True)
+@click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the"
+                                            " simlarity index.", required=True)
+@click.option("--limit", type=int, help="The maximum number of similar recordings to generate per recording"
+                                        " (the limit is instructive. upto 2x recordings may be returned than"
+                                        " the limit).", required=True)
+@click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
+def request_similar_recordings(session, contribution, threshold, limit, skip):
+    """ Send the cluster a request to generate similar recordings index. """
+    send_request_to_spark_cluster(
+        "similarity.recording.mlhd",
+        session=session,
+        contribution=contribution,
+        threshold=threshold,
+        limit=limit,
+        skip=skip
+    )
 
 
 @cli.command(name="request_similar_recordings")
@@ -384,8 +413,9 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
-                                                 " affects how the resulting dataset is stored in LB.", required=True)
+@click.option("--production", is_flag=True, default=False,
+              help="whether the dataset is being created as a production dataset. affects"
+                   " how the resulting dataset is stored in LB.", required=True)
 def request_similar_recordings(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
@@ -412,8 +442,9 @@ def request_similar_recordings(days, session, contribution, threshold, limit, sk
                                         " (the limit is instructive. upto 2x artists may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
-                                                 " affects how the resulting dataset is stored in LB.", required=True)
+@click.option("--production", is_flag=True, default=False,
+              help="whether the dataset is being created as a production dataset. affects how the resulting"
+                   " dataset is stored in LB.", required=True)
 def request_similar_artists(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar artists index. """
     send_request_to_spark_cluster(
@@ -426,6 +457,12 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip,
         skip=skip,
         is_production_dataset=production
     )
+
+
+@cli.command(name='request_mlhd_popularity')
+def request_mlhd_popularity():
+    """ Request mlhd popularity data. """
+    send_request_to_spark_cluster("mlhd.popularity.all")
 
 
 @cli.command(name="request_yim_similar_users")

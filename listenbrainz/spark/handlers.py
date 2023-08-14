@@ -15,7 +15,7 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import year_in_music, couchdb, tags
+from listenbrainz.db import year_in_music, couchdb
 from listenbrainz.db.fresh_releases import insert_fresh_releases
 from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
@@ -25,42 +25,6 @@ from listenbrainz.troi.year_in_music import yim_patch_runner
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
-
-
-def handle_couchdb_data_start(message):
-    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
-    if not match:
-        return
-    try:
-        couchdb.create_database(match[1] + "_" + match[2] + "_" + match[3])
-        if match[1] == "artists":
-            couchdb.create_database("artistmap" + "_" + match[2] + "_" + match[3])
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-
-
-def handle_couchdb_data_end(message):
-    # database names are of the format, prefix_YYYYMMDD. calculate and pass the prefix to the
-    # method to delete all database of the type except the latest one.
-    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
-    # if the database name does not match pattern, abort to avoid deleting any data inadvertently
-    if not match:
-        return
-    try:
-        _, retained = couchdb.delete_database(match[1] + "_" + match[2])
-        if retained:
-            current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
-                                    f" _LOCK file existed")
-
-        # when new artist stats received, also invalidate old artist map stats
-        if match[1] == "artists":
-            _, retained = couchdb.delete_database("artistmap" + "_" + match[2])
-            if retained:
-                current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
-                                        f" _LOCK file existed")
-
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
 def _handle_stats(message, stats_type, key):
@@ -426,34 +390,12 @@ def handle_yim_tracks_of_the_year_end(message):
     yim_patch_runner(message["year"])
 
 
-def handle_similar_recordings_start(message):
-    similarity.start_prod_table("recording", message["algorithm"])
-
-
-def handle_similar_recordings_end(message):
-    similarity.end_prod_table("recording", message["algorithm"])
-
-
 def handle_similar_recordings(message):
-    if message.get("is_production_dataset"):
-        similarity.insert_prod_table("recording", message["data"], message["algorithm"])
-    else:
-        similarity.insert("recording", message["data"], message["algorithm"])
-
-
-def handle_similar_artists_start(message):
-    similarity.start_prod_table("artist_credit_mbids", message["algorithm"])
-
-
-def handle_similar_artists_end(message):
-    similarity.end_prod_table("artist_credit_mbids", message["algorithm"])
+    similarity.insert("recording", message["data"], message["algorithm"])
 
 
 def handle_similar_artists(message):
-    if message.get("is_production_dataset"):
-        similarity.insert_prod_table("artist_credit_mbids", message["data"], message["algorithm"])
-    else:
-        similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
+    similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
 
 
 def handle_troi_playlists(message):
@@ -462,15 +404,3 @@ def handle_troi_playlists(message):
 
 def handle_troi_playlists_end(message):
     batch_process_playlists_end(message["slug"])
-
-
-def handle_lb_tag_radio_start(message):
-    tags.start_table()
-
-
-def handle_lb_tag_radio_insert(message):
-    tags.insert(message["source"], message["data"])
-
-
-def handle_lb_tag_radio_end(message):
-    tags.end_table()

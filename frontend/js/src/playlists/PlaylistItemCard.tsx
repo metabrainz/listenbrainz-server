@@ -10,14 +10,8 @@ import ListenControl from "../listens/ListenControl";
 
 export type PlaylistItemCardProps = {
   track: JSPFTrack;
-  currentFeedback: ListenFeedBack;
   canEdit: Boolean;
   removeTrackFromPlaylist?: (track: JSPFTrack) => void;
-  updateFeedbackCallback: (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
-  ) => void;
   showTimestamp?: boolean;
   showUsername?: boolean;
 };
@@ -36,8 +30,6 @@ export default class PlaylistItemCard extends React.Component<
     const {
       track,
       canEdit,
-      currentFeedback,
-      updateFeedbackCallback,
       showUsername,
       showTimestamp,
       removeTrackFromPlaylist,
@@ -71,13 +63,11 @@ export default class PlaylistItemCard extends React.Component<
       <ListenCard
         className="playlist-item-card"
         listen={listen}
-        currentFeedback={currentFeedback}
         showTimestamp={showTimestamp ?? Boolean(listen.listened_at_iso)}
         showUsername={showUsername ?? Boolean(listen.user_name)}
         beforeThumbnailContent={dragHandle}
         data-recording-mbid={track.id}
         additionalMenuItems={additionalMenuItems}
-        updateFeedbackCallback={updateFeedbackCallback}
       />
     );
   }
