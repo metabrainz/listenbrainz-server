@@ -4,31 +4,28 @@ import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { toast } from "react-toastify";
+
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import {
-  faCompactDisc,
-  faPlusCircle,
-  faTrashAlt,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Integrations } from "@sentry/tracing";
 import { get, isEqual } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
+import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
-import GlobalAppContext from "../utils/GlobalAppContext";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "../add-listen/AddListenModal";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
-import FollowButton from "../follow/FollowButton";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import ListenCountCard from "../listens/ListenCountCard";
+import { ToastMsg } from "../notifications/Notifications";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import APIServiceClass from "../utils/APIService";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -40,7 +37,6 @@ import {
   getRecordingMSID,
   getTrackName,
 } from "../utils/utils";
-import { ToastMsg } from "../notifications/Notifications";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -53,6 +49,7 @@ export type ListensProps = {
 export interface ListensState {
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
+  webSocketListens: Array<Listen>;
   listenCount?: number;
   loading: boolean;
   nextListenTs?: number;
@@ -80,6 +77,7 @@ export default class Listens extends React.Component<
   private socket!: Socket;
 
   private expectedListensPerPage = 25;
+  private maxWebsocketListens = 7;
 
   constructor(props: ListensProps) {
     super(props);
@@ -89,6 +87,7 @@ export default class Listens extends React.Component<
       : undefined;
     this.state = {
       listens: props.listens || [],
+      webSocketListens: [],
       lastFetchedDirection: "older",
       loading: false,
       nextListenTs,
@@ -228,13 +227,14 @@ export default class Listens extends React.Component<
 
     if (listen) {
       this.setState((prevState) => {
-        const { listens } = prevState;
-        // Crop listens array to 100 max
-        while (listens.length >= 100) {
-          listens.pop();
-        }
-        listens.unshift(listen);
-        return { listens };
+        const { webSocketListens } = prevState;
+        // Crop listens array to a max length
+        return {
+          webSocketListens: [
+            listen,
+            ..._.take(webSocketListens, this.maxWebsocketListens - 1),
+          ],
+        };
       });
     }
   };
@@ -357,8 +357,11 @@ export default class Listens extends React.Component<
       event.preventDefault();
     }
     const { user, latestListenTs } = this.props;
-    const { listens } = this.state;
-    if (listens?.[0]?.listened_at >= latestListenTs) {
+    const { listens, webSocketListens } = this.state;
+    if (
+      listens?.[0]?.listened_at >= latestListenTs &&
+      !webSocketListens?.length
+    ) {
       return;
     }
     this.setState({ loading: true });
@@ -366,6 +369,7 @@ export default class Listens extends React.Component<
     this.setState(
       {
         listens: newListens,
+        webSocketListens: [],
         lastFetchedDirection: "newer",
       },
       this.afterListensFetch
@@ -648,6 +652,7 @@ export default class Listens extends React.Component<
   render() {
     const {
       listens,
+      webSocketListens,
       listenCount,
       loading,
       nextListenTs,
@@ -676,81 +681,6 @@ export default class Listens extends React.Component<
     const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
       <div role="main">
-        <div className="row">
-          <div className="col-md-8 listen-header">
-            {listens.length === 0 ? (
-              <div id="spacer" />
-            ) : (
-              <h3>Recent listens</h3>
-            )}
-            {isCurrentUsersPage && (
-              <div className="dropdow add-listen-btn">
-                <button
-                  className="btn btn-info dropdown-toggle"
-                  type="button"
-                  id="addListensDropdown"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                >
-                  <FontAwesomeIcon icon={faPlusCircle} title="Add listens" />
-                  &nbsp;Add listens&nbsp;
-                  <span className="caret" />
-                </button>
-                <ul
-                  className="dropdown-menu dropdown-menu-right"
-                  aria-labelledby="addListensDropdown"
-                >
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show(AddListenModal);
-                      }}
-                      data-toggle="modal"
-                      data-target="#AddListenModal"
-                    >
-                      Manual addition
-                    </button>
-                  </li>
-                  <li>
-                    <a href="/profile/music-services/details/">
-                      Connect music services
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/profile/import/">Import your listens</a>
-                  </li>
-                  <li>
-                    <a href="/add-data/">Submit from music players</a>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-          <div className="col-md-4" style={{ marginTop: "1em" }}>
-            {!isCurrentUsersPage && (
-              <FollowButton
-                type="icon-only"
-                user={user}
-                loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
-                updateFollowingList={this.updateFollowingList}
-              />
-            )}
-            <a
-              href={`https://musicbrainz.org/user/${user.name}`}
-              className="btn lb-follow-button" // for same style as follow button next to it
-              target="_blank"
-              rel="noreferrer"
-            >
-              <img
-                src="/static/img/musicbrainz-16.svg"
-                alt="MusicBrainz Logo"
-              />{" "}
-              MusicBrainz
-            </a>
-          </div>
-        </div>
-
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             {playingNowListen && this.getListenCard(playingNowListen)}
@@ -789,6 +719,47 @@ export default class Listens extends React.Component<
                 )}
               </div>
             )}
+            {webSocketListens.length > 0 && (
+              <div className="webSocket-box">
+                <h4>New listens since you arrived</h4>
+                <div id="webSocketListens">
+                  {webSocketListens.map((listen) => this.getListenCard(listen))}
+                </div>
+                <div className="read-more">
+                  <button
+                    type="button"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickNewest();
+                    }}
+                    onClick={this.handleClickNewest}
+                    className="btn btn-outline"
+                  >
+                    See more fresh listens
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="listen-header">
+              {listens.length === 0 ? (
+                <div id="spacer" />
+              ) : (
+                <h3>Recent listens</h3>
+              )}
+              {isCurrentUsersPage && (
+                <button
+                  type="button"
+                  className="btn btn-primary add-listen-btn"
+                  style={{}}
+                  onClick={() => {
+                    NiceModal.show(AddListenModal);
+                  }}
+                  data-Toggle="modal"
+                  data-Target="#AddListenModal"
+                >
+                  Add listen
+                </button>
+              )}
+            </div>
             {listens.length > 0 && (
               <div>
                 <div
@@ -824,11 +795,7 @@ export default class Listens extends React.Component<
                         if (e.key === "Enter") this.handleClickNewest();
                       }}
                       tabIndex={0}
-                      href={
-                        isNewestButtonDisabled
-                          ? undefined
-                          : window.location.pathname
-                      }
+                      href={window.location.pathname}
                     >
                       &#x21E4;
                     </a>

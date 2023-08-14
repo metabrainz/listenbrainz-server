@@ -222,7 +222,7 @@ describe("Listens page", () => {
       listened_at: 1586580524,
       listened_at_iso: "2020-04-10T10:12:04Z",
     };
-    it("crops the listens array if length is more than or equal to 100", async () => {
+    it("crops the websocket listens array to a maximum of 7", async () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
@@ -234,34 +234,24 @@ describe("Listens page", () => {
         />,
         mountOptions
       );
-      const instance = wrapper.instance();
-
-      await act(() => {
-        instance.receiveNewListen(JSON.stringify(mockListen));
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
-
-      /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-       * so that it doesn't get passed as a reference.
-       */
       await act(() => {
         wrapper.setState({
-          listens: JSON.parse(
+          webSocketListens: JSON.parse(
             JSON.stringify(recentListensPropsTooManyListens.listens)
           ),
         });
       });
+
+      const instance = wrapper.instance();
       await act(() => {
         instance.receiveNewListen(JSON.stringify(mockListen));
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
+      expect(wrapper.state("webSocketListens")).toHaveLength(7);
     });
 
-    it("inserts the received listen for other modes", async () => {
+    it("inserts the received listen in separate state", async () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
@@ -270,17 +260,15 @@ describe("Listens page", () => {
         mountOptions
       );
       const instance = wrapper.instance();
-      const result: Array<Listen> = Array.from(
-        recentListensPropsOneListen.listens
-      );
-      result.unshift(mockListen);
       await act(() => {
         instance.receiveNewListen(JSON.stringify(mockListen));
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("listens")).toHaveLength(result.length);
-      expect(wrapper.state("listens")).toEqual(result);
+      expect(wrapper.state("listens")).toHaveLength(1);
+      expect(wrapper.state("listens")).toEqual(propsOneListen.listens);
+      expect(wrapper.state("webSocketListens")).toHaveLength(1);
+      expect(wrapper.state("webSocketListens")).toEqual([mockListen]);
     });
   });
 
