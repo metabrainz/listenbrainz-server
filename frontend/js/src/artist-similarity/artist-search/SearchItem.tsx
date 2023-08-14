@@ -1,6 +1,6 @@
 import React from "react";
 import { ArtistType } from "./artistLookup";
-import "./SearchBox.css";
+
 interface SearchItemProps {
     artist: ArtistType;
     key: number;

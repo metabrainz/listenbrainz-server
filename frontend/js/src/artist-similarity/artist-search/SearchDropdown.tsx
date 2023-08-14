@@ -1,7 +1,7 @@
 import React from "react";
 import { ArtistType } from "./artistLookup";
 import SearchItem from "./SearchItem";
-import "./SearchBox.css";
+
 interface SearchDropdownProps {
     searchResults: Array<ArtistType>;
     onArtistChange: (artist: string) => void;

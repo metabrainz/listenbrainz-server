@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import "./Panel.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import { ArtistType } from "../Data";

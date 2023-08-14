@@ -106,7 +106,7 @@ const SimilarArtistsGraph = (props: GraphProps) => {
     return (
         props.data ?
         <div 
-        className='graph-container'
+        className='artist-similarity-graph-container'
         style={{background: props.background }}
         >
             <ResponsiveNetwork

@@ -164,7 +164,7 @@ const Data = () => {
     const backgroundColor2 = colors[1].clone().setAlpha(BACKGROUND_ALPHA).toRgbString();
     const backgroundGradient = `linear-gradient(` + Math.random() * 360 + `deg ,` + backgroundColor1 + `,` + backgroundColor2 + `)`;
     return (
-        <div>
+        <div className="artist-similarity-main-container">
             <SearchBox onArtistChange={setArtistMBID} onSimilarArtistsLimitChange={setSimilarArtistsLimit} currentsimilarArtistsLimit={similarArtistsLimit}/>
             <SimilarArtistsGraph onArtistChange={setArtistMBID} data={transformedArtists} background={backgroundGradient}/>
             {mainArtist && <Panel artist={mainArtist}/>}

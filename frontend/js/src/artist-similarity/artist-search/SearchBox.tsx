@@ -4,7 +4,6 @@ import artistLookup from "./artistLookup";
 import { ArtistType } from "./artistLookup";
 import { faMagnifyingGlass, faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import "./SearchBox.css";
 import { debounce, throttle } from "lodash";
 interface SearchBoxProps {
     currentsimilarArtistsLimit: number;
