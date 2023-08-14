@@ -27,6 +27,6 @@ class SpotifyIdFromMetadataQuery(Query):
     def outputs(self):
         return SpotifyIdFromMBIDOutput
 
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params, source, offset=-1, count=-1):
         data = [p.dict() for p in params]
         return lookup_using_metadata(data)

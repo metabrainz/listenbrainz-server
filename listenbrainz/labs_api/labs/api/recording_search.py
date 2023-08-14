@@ -61,7 +61,7 @@ class RecordingSearchQuery(Query):
     def outputs(self):
         return RecordingSearchOutput
 
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params, source, offset=-1, count=-1):
         search_parameters = {
             'q': prepare_query(params[0].query),
             'query_by': "combined",
@@ -80,4 +80,4 @@ class RecordingSearchQuery(Query):
                            'recording_name': hit['document']['recording_name'],
                            'recording_mbid': hit['document']['recording_mbid']})
 
-        return output
+        return [RecordingSearchOutput(**row) for row in output]

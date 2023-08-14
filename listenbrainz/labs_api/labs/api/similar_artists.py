@@ -14,7 +14,7 @@ from listenbrainz.labs_api.labs.api.similar_recordings import SimilarRecordingsV
 
 
 class SimilarArtistsViewerInput(BaseModel):
-    artist_mbids: list[UUID]
+    artist_mbids: UUID
     algorithm: str
 
 
@@ -99,9 +99,9 @@ class SimilarArtistsViewerQuery(Query):
 
         return [SimilarArtistsViewerOutputItem(**item) for item in metadata]
 
-    def fetch(self, params, offset=-1, count=-1):
-        artist_mbids = params[0]["artist_mbid"].strip().split(",")
-        algorithm = params[0]["algorithm"].strip()
+    def fetch(self, params, source, offset=-1, count=-1):
+        artist_mbids = [params[0].artist_mbid]
+        algorithm = params[0].algorithm.strip()
         count = count if count > 0 else 100
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \

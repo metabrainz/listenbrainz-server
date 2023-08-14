@@ -52,7 +52,7 @@ class RecordingLookupBaseQuery(Query, ABC):
     def get_table_name(self) -> str:
         pass
 
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params, source, offset=-1, count=-1):
         lookup_strings = []
         string_index = {}
         for i, param in enumerate(params):
@@ -85,10 +85,11 @@ class RecordingLookupBaseQuery(Query, ABC):
 
                     data = dict(data)
                     index = string_index[data["combined_lookup"]]
-                    data["recording_arg"] = params[index]["[recording_name]"]
-                    data["artist_credit_arg"] = params[index]["[artist_credit_name]"]
-                    if params[index].get("[release_name]") is not None:
-                        data["release_name_arg"] = params[index]["[release_name]"]
+                    param = params[index].dict()
+                    data["recording_arg"] = param["recording_name"]
+                    data["artist_credit_arg"] = param["artist_credit_name"]
+                    if param.get("release_name") is not None:
+                        data["release_name_arg"] = param.get("release_name")
                     data["index"] = index
                     results.append(data)
 

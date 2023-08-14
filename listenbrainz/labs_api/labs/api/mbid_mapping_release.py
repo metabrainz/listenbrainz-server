@@ -24,7 +24,7 @@ class MBIDMappingReleaseQuery(BaseMBIDMappingQuery):
         return """Given the name of an artist, a release and the name of a recording (track)
                   this query will attempt to find a suitable match in MusicBrainz."""
 
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params, source, offset=-1, count=-1):
         """ Call the MBIDMapper and carry out this mapping search """
 
         args = []

@@ -8,6 +8,8 @@ from unidecode import unidecode
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Identifier
 
+from listenbrainz.labs_api.labs.api.spotify import SpotifyIdFromMBIDOutput
+
 
 class LookupType(Enum):
     ALL = "combined_lookup_all"
@@ -101,5 +103,5 @@ def lookup_using_metadata(params: list[dict]):
     for item in remaining_items.values():
         item["spotify_track_ids"] = []
 
-    return list(metadata.values())
+    return [SpotifyIdFromMBIDOutput(**row) for row in metadata.values()]
 
