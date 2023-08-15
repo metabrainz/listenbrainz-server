@@ -47,10 +47,10 @@ def get_popularity_query(entity, mlhd_table, listens_table):
               FROM {listens_table}
           GROUP BY {entity_mbid}
         )   SELECT {entity_mbid}
-                 , m.listen_count + l.listen_count AS total_listen_count
-                 , m.user_count + l.user_count AS total_user_count
+                 , COALESCE(m.listen_count, 0) + COALESCE(l.listen_count, 0) AS total_listen_count
+                 , COALESCE(m.user_count, 0) + COALESCE(l.user_count, 0) AS total_user_count
               FROM mlhd_table m
-              JOIN listens_table l
+         FULL JOIN listens_table l
              USING ({entity_mbid})
     """
 
@@ -86,10 +86,10 @@ def get_popularity_per_artist_query(entity, mlhd_table, listens_table):
               FROM exploded_listen_data
           GROUP BY {select_clause}
         )   SELECT {select_clause}
-                 , m.listen_count + l.listen_count AS total_listen_count
-                 , m.user_count + l.user_count AS total_user_count
+                 , COALESCE(m.listen_count, 0) + COALESCE(l.listen_count, 0) AS total_listen_count
+                 , COALESCE(m.user_count, 0) + COALESCE(l.user_count, 0) AS total_user_count
               FROM mlhd_table m
-              JOIN listens_table l
+         FULL JOIN listens_table l
              USING ({select_clause})
     """
 
