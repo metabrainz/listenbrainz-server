@@ -588,11 +588,11 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
         
         similar_users = get_similar_users(searcher_id) if searcher_id else None
 
-        # Constructing an id-similarity map
-        id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
-
         search_results = []
+
         if similar_users:
+            # Constructing an id-similarity map
+            id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
             for row in rows:
                 similarity = id_similarity_map.get(row.musicbrainz_id, None)
                 search_results.append((row.musicbrainz_id, row.query_similarity, similarity))
