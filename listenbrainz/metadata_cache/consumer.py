@@ -15,7 +15,6 @@ class ServiceMetadataCache(ConsumerMixin):
         self.app = app
         self.handler = handler
         self.crawler = None
-        self.service = None
 
         self.connection = None
         self.service_channel = None
@@ -52,13 +51,13 @@ class ServiceMetadataCache(ConsumerMixin):
     def process_listens(self, message: Message):
         listens = json.loads(message.body)
         for listen in listens:
-            self.service.add_from_listen(listen)
+            self.crawler.add_from_listen(listen)
         message.ack()
 
     def process_seeder(self, message: Message):
         body = json.loads(message.body)
         for album_id in body["album_ids"]:
-            self.service.add_from_seeder(album_id)
+            self.crawler.add_from_seeder(album_id)
         message.ack()
 
     def init_rabbitmq_connection(self):
@@ -76,13 +75,13 @@ class ServiceMetadataCache(ConsumerMixin):
             try:
                 self.app.logger.info("Starting queue stuffer...")
                 self.crawler = Crawler(self.app, self.handler)
-                self.service.start()
+                self.crawler.start()
 
                 self.app.logger.info("Starting Spotify Metadata Cache ...")
                 self.init_rabbitmq_connection()
                 self.run()
             except KeyboardInterrupt:
-                self.service.terminate()
+                self.crawler.terminate()
                 self.app.logger.error("Keyboard interrupt!")
                 break
             except Exception:
@@ -91,4 +90,4 @@ class ServiceMetadataCache(ConsumerMixin):
         # the while True loop above makes this line unreachable but adding it anyway
         # so that we remember that every started thread should also be joined.
         # (you may also want to read the commit message for the commit that added this)
-        self.service.terminate()
+        self.crawler.terminate()
