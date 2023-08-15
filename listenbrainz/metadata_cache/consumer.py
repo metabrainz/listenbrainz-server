@@ -51,13 +51,16 @@ class ServiceMetadataCache(ConsumerMixin):
     def process_listens(self, message: Message):
         listens = json.loads(message.body)
         for listen in listens:
-            self.crawler.add_from_listen(listen)
+            items = self.handler.get_items_from_listen(listen)
+            for item in items:
+                self.crawler.put(item)
         message.ack()
 
     def process_seeder(self, message: Message):
         body = json.loads(message.body)
-        for album_id in body["album_ids"]:
-            self.crawler.add_from_seeder(album_id)
+        items = self.handler.get_items_from_seeder(body)
+        for item in items:
+            self.crawler.put(item)
         message.ack()
 
     def init_rabbitmq_connection(self):
