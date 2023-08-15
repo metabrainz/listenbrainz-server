@@ -46,6 +46,7 @@ def get_popularity_query(entity, mlhd_table, listens_table):
                  , count(*) AS listen_count
                  , count(distinct user_id) AS user_count
               FROM intermediate
+             WHERE {entity_mbid} IS NOT NULL
           GROUP BY {entity_mbid}
     """
 
@@ -55,10 +56,12 @@ def get_popularity_per_artist_query(entity, mlhd_table, listens_table):
     if entity == "artist":
         select_clause = "artist_mbid"
         explode_clause = "explode(artist_credit_mbids) AS artist_mbid"
+        where_clause = "artist_mbid IS NOT NULL"
     else:
         entity_mbid = f"{entity}_mbid"
         select_clause = f"artist_mbid, {entity_mbid}"
         explode_clause = f"explode(artist_credit_mbids) AS artist_mbid, {entity_mbid}"
+        where_clause = f"artist_mbid IS NOT NULL AND {entity_mbid} IS NOT NULL"
     return f"""
         WITH intermediate AS (
             SELECT {explode_clause}
@@ -72,6 +75,7 @@ def get_popularity_per_artist_query(entity, mlhd_table, listens_table):
                  , count(*) AS total_listen_count
                  , count(distinct user_id) AS total_user_count
               FROM intermediate
+             WHERE {where_clause}
           GROUP BY {select_clause}
     """
 
