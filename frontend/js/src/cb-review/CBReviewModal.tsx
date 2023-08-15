@@ -514,7 +514,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
         </div>
 
         <div className="checkbox">
-          <label>
+          <label htmlFor="#acceptLicense">
             <input
               id="acceptLicense"
               type="checkbox"

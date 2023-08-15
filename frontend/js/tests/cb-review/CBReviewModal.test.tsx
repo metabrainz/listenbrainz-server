@@ -1,21 +1,18 @@
 import * as React from "react";
-import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
-import { act } from "react-dom/test-utils";
-import NiceModal, { NiceModalHocProps } from "@ebay/nice-modal-react";
+import NiceModal from "@ebay/nice-modal-react";
+import userEvent from "@testing-library/user-event";
 import { merge } from "lodash";
-import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../src/utils/GlobalAppContext";
-
 import * as lookupMBRelease from "../__mocks__/lookupMBRelease.json";
 import * as lookupMBReleaseFromTrack from "../__mocks__/lookupMBReleaseFromTrack.json";
 
 import CBReviewModal, {
   CBReviewModalProps,
 } from "../../src/cb-review/CBReviewModal";
-import { waitForComponentToPaint } from "../test-utils";
-import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import { act, render, screen } from "../test-utils/rtl-test-utils";
+
+import APIService from "../../src/utils/APIService";
+
+jest.unmock("react-toastify");
 
 const listen: Listen = {
   track_metadata: {
@@ -33,23 +30,11 @@ const listen: Listen = {
   listened_at_iso: "2021-08-10T22:25:57Z",
 };
 
-const testAPIService = new APIServiceClass("");
-const globalProps: GlobalAppContextT = {
-  APIService: testAPIService,
-  currentUser: {
-    id: 1,
-    name: "jdaok",
-    auth_token: "auth_token",
-  },
-  spotifyAuth: {},
-  youtubeAuth: {},
-  critiquebrainzAuth: {
-    access_token: "BL9f6rv8OXyR0qLucXoftqAhMarEcfhUXpZ8lXII",
-  },
-  recordingFeedbackManager: new RecordingFeedbackManager(testAPIService, {
-    name: "Fnord",
-  }),
+const props: CBReviewModalProps = {
+  listen,
 };
+
+const testAPIService = new APIService("FOO");
 const submitReviewToCBSpy = jest
   .spyOn(testAPIService, "submitReviewToCB")
   .mockResolvedValue({
@@ -69,70 +54,87 @@ const apiRefreshSpy = jest
   .spyOn(testAPIService, "refreshAccessToken")
   .mockResolvedValue("this is new token");
 
-const props: CBReviewModalProps = {
-  listen,
-};
-
-const niceModalProps: NiceModalHocProps = {
-  id: "fnord",
-  defaultVisible: true,
-};
-
 describe("CBReviewModal", () => {
+  const user = userEvent.setup();
+  userEvent.setup();
+
   afterEach(() => {
     jest.clearAllMocks();
   });
-  it("renders the modal correctly", async () => {
-    const wrapper = mount(
-      <GlobalAppContext.Provider value={globalProps}>
-        <NiceModal.Provider>
-          <CBReviewModal {...niceModalProps} {...props} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    );
 
-    expect(wrapper.html()).toMatchSnapshot();
+  it("renders the modal correctly", async () => {
+    render(<NiceModal.Provider />);
+    await act(async () => {
+      NiceModal.show(CBReviewModal, { ...props });
+    });
+    expect(screen.getByRole("dialog")).toBeVisible();
+  });
+
+  it("requires the user to be logged in, showing a message otherwise", async () => {
+    render(<NiceModal.Provider />, { critiquebrainzAuth: {} });
+    await act(async () => {
+      NiceModal.show(CBReviewModal, { ...props });
+    });
+
+    expect(
+      screen.getByText(/connect to your critiquebrainz account/i)
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /connect to critiquebrainz/i })
+    ).toBeVisible();
+  });
+  it("prevents submission if license was not accepted", async () => {
+    const { getByRole } = render(<NiceModal.Provider />);
+    await act(async () => {
+      NiceModal.show(CBReviewModal, { ...props });
+    });
+    const textInput = getByRole("textbox");
+    const checkbox = getByRole("checkbox");
+    await user.type(
+      textInput,
+      "This review text is more than 25 characters..."
+    );
+    // Make sure the validation message is not visible and we have sufficient length
+    const textTooShortMessage = screen.queryByText(
+      /your review needs to be longer than/i
+    );
+    expect(textTooShortMessage).toBeNull();
+
+    expect(checkbox).not.toBeChecked();
+    const submitButton = getByRole("button", { name: /submit review/i });
+    expect(submitButton).toBeDisabled();
+    // Try to click anyway
+    await user.click(submitButton);
+
+    expect(submitReviewToCBSpy).not.toHaveBeenCalled();
   });
 
   it("submits the review and displays a success alert", async () => {
-    const wrapper = mount(
-      <GlobalAppContext.Provider value={globalProps}>
-        <NiceModal.Provider>
-          <CBReviewModal {...niceModalProps} {...props} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    );
-
-    await waitForComponentToPaint(wrapper);
-    await act(() => {
-      const textInputArea = wrapper.find("#review-text").first();
-      const checkbox = wrapper.find("#acceptLicense").first();
-      // simulate writing in the textInput area
-      textInputArea.simulate("change", {
-        target: { value: "This review text is more than 25 characters..." },
-      });
-      // simulate checking the accept license box
-      checkbox.simulate("change", {
-        target: { checked: true, type: "checkbox" },
-      });
+    const { getByRole } = render(<NiceModal.Provider />, {
+      APIService: testAPIService,
     });
-    await waitForComponentToPaint(wrapper);
-    const textInputArea = wrapper.find("#review-text").first();
-    const checkbox = wrapper.find("#acceptLicense").first();
+    await act(async () => {
+      NiceModal.show(CBReviewModal, { ...props });
+    });
 
-    expect(textInputArea.props().value).toEqual(
+    const textInput = getByRole("textbox");
+    const checkbox = getByRole("checkbox");
+    await user.type(
+      textInput,
       "This review text is more than 25 characters..."
     );
-    expect(checkbox.props().checked).toEqual(true);
-    const submitButton = wrapper.find("#submitReviewButton").first();
-    expect(submitButton.props().disabled).toEqual(false);
+    await user.click(checkbox);
 
-    await act(() => {
-      // Simulate submiting the form
-      wrapper.find("form").first().simulate("submit");
-    });
-    await waitForComponentToPaint(wrapper);
-    expect(submitReviewToCBSpy).toHaveBeenCalledWith("jdaok", "auth_token", {
+    expect(getByRole("textbox")).toHaveTextContent(
+      "This review text is more than 25 characters..."
+    );
+    expect(checkbox).toBeChecked();
+
+    const submitButton = getByRole("button", { name: /submit review/i });
+    expect(submitButton).toBeEnabled();
+    await user.click(submitButton);
+
+    expect(submitReviewToCBSpy).toHaveBeenCalledWith("FNORD", "never_gonna", {
       entity_name: "Criminal",
       entity_id: "2bf47421-2344-4255-a525-e7d7f54de742",
       entity_type: "recording",
@@ -140,243 +142,181 @@ describe("CBReviewModal", () => {
       rating: undefined,
       text: "This review text is more than 25 characters...",
     });
+
+    // expect a success toast message
+    await screen.findByText("Your review was submitted to CritiqueBrainz!");
   });
 
-  describe("getGroupMBIDFromRelease", () => {
-    it("calls API and returns the correct release group MBID", async () => {
-      const releaseMBID = "40ef0ae1-5626-43eb-838f-1b34187519bf";
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <CBReviewModal
-              {...niceModalProps}
-              {...props}
-              listen={merge({}, listen, {
-                track_metadata: {
-                  additional_info: {
-                    release_group_mbid: null,
-                    release_mbid: releaseMBID,
-                  },
-                },
-              })}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-      await waitForComponentToPaint(wrapper);
-
-      expect(lookupMBReleaseSpy).toHaveBeenCalledTimes(1);
-      expect(lookupMBReleaseSpy).toHaveBeenCalledWith(releaseMBID);
-
-      /** Can't get this to work ! Enzyme doesn't really support the useEffect hooks and
-       * does not re-render the component after the entityToReview state gets updated
-       */
-      // const realeaseGroupMBID = "9ecc1aea-289d-4d03-b476-6bbcd1e749d7";
-      // const selectRGButton = wrapper.find(
-      //   "button[name='select-release-group']"
-      // );
-      // expect(selectRGButton).toHaveLength(1);
-      // expect(selectRGButton.key()).toEqual(realeaseGroupMBID);
+  it("catches API call errors and displays it on screen", async () => {
+    submitReviewToCBSpy.mockRejectedValueOnce({
+      message: "Computer says no!",
     });
+
+    const { getByRole, findByText } = render(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
+    await act(async () => {
+      NiceModal.show(CBReviewModal, { ...props });
+    });
+
+    const checkbox = getByRole("checkbox");
+    const textInput = getByRole("textbox");
+    const submitButton = getByRole("button", { name: /submit review/i });
+
+    /** We shouldn't need a call to `act` here, but for some reason
+     * the test doesn't pass if I don't wrap these user interactions in it.
+     * Perhaps some concurrency reasons?
+     * In any case, this results in the following warning in the console:
+     * `Warning: The current testing environment is not configured to support act(...)`
+     */
+    await act(async () => {
+      await user.click(checkbox);
+      await user.type(
+        textInput,
+        "This review text is more than 25 characters..."
+      );
+      await user.click(submitButton);
+    });
+
+    expect(submitReviewToCBSpy).toHaveBeenCalled();
+    // expect error toast with title "Your review was submitted to CritiqueBrainz"
+    await findByText("Error while submitting review to CritiqueBrainz");
   });
 
-  describe("getRecordingMBIDFromTrack", () => {
-    it("calls API and returns the correct recording MBID", async () => {
-      const mbid = "0255f1ea-3199-49b4-8b5c-bdcc3716ebc9";
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <CBReviewModal
-              {...niceModalProps}
-              {...props}
-              listen={merge({}, listen, {
-                track_metadata: {
-                  additional_info: {
-                    track_mbid: mbid,
-                    recording_mbid: null,
-                  },
-                },
-              })}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-      await waitForComponentToPaint(wrapper);
-
-      expect(lookupMBReleaseFromTrackSpy).toHaveBeenCalledTimes(1);
-      expect(lookupMBReleaseFromTrackSpy).toHaveBeenCalledWith(mbid);
-      /** Can't get this to work ! Enzyme doesn't really support the useEffect hooks and
-       * does not re-render the component after the entityToReview state gets updated
-       */
-      // const selectRecordingButton = wrapper.find(
-      //   "button[name='select-recording']"
-      // );
-      // expect(selectRecordingButton).toHaveLength(1);
-      // expect(selectRecordingButton.key()).toEqual(mbid);
+  it("shows a message if text content is too short and prevents submission", async () => {
+    const { getByRole } = render(<NiceModal.Provider />, {
+      APIService: testAPIService,
     });
+    await act(async () => {
+      NiceModal.show(CBReviewModal, { ...props });
+    });
+    const checkbox = getByRole("checkbox");
+    const textInput = getByRole("textbox");
+    const submitButton = getByRole("button", { name: /submit review/i });
+    await user.click(checkbox);
+    await user.type(textInput, "Too short!");
+    // Submit button should be disabled
+    expect(submitButton).toBeDisabled();
+    // Try to click anyway
+    await user.click(submitButton);
+
+    expect(submitReviewToCBSpy).not.toHaveBeenCalled();
+    // expect a visible validation message
+    await screen.findByText(/your review needs to be longer than/i);
   });
 
-  describe("submitReviewToCB", () => {
-    it("can't submit if user hasn't authenticated with CritiqueBrainz", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider
-          value={{
-            ...globalProps,
-            critiquebrainzAuth: {}, // not authenticated
-          }}
-        >
-          <NiceModal.Provider>
-            <CBReviewModal {...niceModalProps} {...props} />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-
-      expect(wrapper.find("#review-text")).toHaveLength(0);
-      expect(wrapper.find("#acceptLicense")).toHaveLength(0);
-      expect(wrapper.find("form")).toHaveLength(1);
-
-      await waitForComponentToPaint(wrapper);
-
-      await act(() => {
-        // Simulate submiting the form
-        wrapper.find("form").first().simulate("submit");
+  it("prevents submission if there is no entity to review", async () => {
+    const { queryByRole } = render(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
+    await act(async () => {
+      NiceModal.show(CBReviewModal, {
+        listen: {
+          listened_at: 0,
+          track_metadata: { artist_name: "Bob", track_name: "FNORD" },
+        },
       });
-      expect(submitReviewToCBSpy).not.toHaveBeenCalled();
+    });
+    const checkbox = queryByRole("checkbox");
+    const textInput = queryByRole("textbox");
+    const submitButton = queryByRole("button", { name: /submit review/i });
+
+    expect(textInput).toBeNull();
+    expect(checkbox).toBeNull();
+    expect(submitButton).toBeNull();
+
+    // Make sure the validation message is not visible and we have sufficient length
+    const textTooShortMessage = screen.queryByText(
+      /your review needs to be longer than/i
+    );
+    expect(textTooShortMessage).toBeNull();
+
+    // expect a visible validation message
+    await screen.findByText(/We could not link/i);
+  });
+
+  it("getGroupMBIDFromRelease calls API and returns the correct release group MBID", async () => {
+    const releaseMBID = "40ef0ae1-5626-43eb-838f-1b34187519bf";
+    const { getByRole } = render(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
+    await act(async () => {
+      NiceModal.show(CBReviewModal, {
+        listen: merge({}, listen, {
+          track_metadata: {
+            additional_info: {
+              release_group_mbid: null,
+              release_mbid: releaseMBID,
+            },
+          },
+        }),
+      });
     });
 
-    it("does nothing if license was not accepted", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <CBReviewModal {...niceModalProps} {...props} />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
+    expect(lookupMBReleaseSpy).toHaveBeenCalledTimes(1);
+    expect(lookupMBReleaseSpy).toHaveBeenCalledWith(releaseMBID);
 
-      await act(() => {
-        const textInputArea = wrapper.find("#review-text").first();
-        // simulate writing in the textInput area
-        textInputArea.simulate("change", {
-          target: { value: "This review text is more than 25 characters..." },
-        });
+    const RGSelectButton = getByRole("button", {
+      name: "The Essential Britney Spears (release group)",
+    });
+    expect(RGSelectButton).toBeVisible();
+  });
+  it("getRecordingMBIDFromTrack calls API and returns the correct recording MBID", async () => {
+    const mbid = "0255f1ea-3199-49b4-8b5c-bdcc3716ebc9";
+    const { getAllByRole } = render(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
+    await act(async () => {
+      NiceModal.show(CBReviewModal, {
+        listen: merge({}, listen, {
+          track_metadata: {
+            additional_info: {
+              track_mbid: mbid,
+              recording_mbid: null,
+            },
+          },
+        }),
       });
-      await waitForComponentToPaint(wrapper);
-      const checkbox = wrapper.find("#acceptLicense").first();
-      expect(checkbox.props().checked).toEqual(false);
-      const submitButton = wrapper.find("button[type='submit']").first();
-      expect(submitButton.props().disabled).toEqual(true);
-
-      await act(() => {
-        // Simulate submiting the form
-        wrapper.find("form").first().simulate("submit");
-      });
-
-      expect(submitReviewToCBSpy).not.toHaveBeenCalled();
     });
 
-    it("does nothing if entityToReview is null", async () => {
-      // Listen empty of data won't be able to find an entity to review
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <CBReviewModal
-              {...niceModalProps}
-              {...props}
-              listen={{
-                listened_at: 0,
-                track_metadata: { artist_name: "Bob", track_name: "FNORD" },
-              }}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
+    expect(lookupMBReleaseFromTrackSpy).toHaveBeenCalledTimes(1);
+    expect(lookupMBReleaseFromTrackSpy).toHaveBeenCalledWith(mbid);
 
-      await waitForComponentToPaint(wrapper);
-      expect(wrapper.find("button[type='submit']")).toHaveLength(0);
-      expect(wrapper.find("#no-entity")).toHaveLength(1);
-      expect(wrapper.find("#no-entity").first().text()).toContain(
-        "We could not link FNORD by Bob to any recording, artist, or release group on MusicBrainz."
-      );
-      wrapper.find("form").simulate("submit");
+    const selectRecordingButton = getAllByRole("button", {
+      name: "Criminal (recording)",
+    });
+    expect(selectRecordingButton).toHaveLength(2);
+  });
+  it("retries once if API throws invalid token error", async () => {
+    submitReviewToCBSpy.mockRejectedValueOnce({ message: "invalid_token" });
 
-      expect(submitReviewToCBSpy).not.toHaveBeenCalled();
+    const { getByRole } = render(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
+    await act(async () => {
+      NiceModal.show(CBReviewModal, { ...props });
     });
 
-    it("shows an alert message and doesn't submit if textContent is too short", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <CBReviewModal {...niceModalProps} {...props} />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-      await waitForComponentToPaint(wrapper);
-      await act(() => {
-        const textInputArea = wrapper.find("#review-text").first();
-        const checkbox = wrapper.find("#acceptLicense").first();
-        // simulate writing in the textInput area
-        textInputArea.simulate("change", {
-          target: { value: "Too short" },
-        });
-        // simulate checking the accept license box
-        checkbox.simulate("change", {
-          target: { checked: true, type: "checkbox" },
-        });
-      });
-      await waitForComponentToPaint(wrapper);
+    const textInput = getByRole("textbox");
+    const checkbox = getByRole("checkbox");
+    await user.click(checkbox);
+    expect(checkbox).toBeChecked();
+    await user.type(
+      textInput,
+      "This review text is more than 25 characters..."
+    );
+    const submitButton = getByRole("button", { name: /submit review/i });
+    expect(submitButton).toBeEnabled();
 
-      const submitButton = wrapper.find("button[type='submit']").first();
-      expect(submitButton.props().disabled).toEqual(true);
+    await user.click(submitButton);
 
-      // alert shown
-      const alert = wrapper.find("#text-too-short-alert");
-      expect(alert).toHaveLength(1);
-      expect(alert.text()).toEqual(
-        "Your review needs to be longer than 25 characters."
-      );
-      await act(() => {
-        // Simulate submiting the form
-        wrapper.find("form").first().simulate("submit");
-      });
+    expect(apiRefreshSpy).toHaveBeenCalledTimes(1); // a new token is requested once
+    expect(apiRefreshSpy).toHaveBeenCalledWith("critiquebrainz");
 
-      expect(submitReviewToCBSpy).not.toHaveBeenCalled();
-    });
+    // new token was received, and the submission retried
+    expect(submitReviewToCBSpy).toHaveBeenCalledTimes(2);
 
-    it("retries once if API throws invalid token error", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <CBReviewModal {...niceModalProps} {...props} />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-
-      await act(() => {
-        const textInputArea = wrapper.find("#review-text").first();
-        const checkbox = wrapper.find("#acceptLicense").first();
-        // simulate writing in the textInput area
-        textInputArea.simulate("change", {
-          target: { value: "This review text is more than 25 characters..." },
-        });
-        // simulate checking the accept license box
-        checkbox.simulate("change", {
-          target: { checked: true, type: "checkbox" },
-        });
-      });
-      await waitForComponentToPaint(wrapper);
-      // mock api submit throwing invalid token error
-      submitReviewToCBSpy.mockRejectedValueOnce({ message: "invalid_token" });
-
-      await act(() => {
-        // Simulate submiting the form
-        wrapper.find("form").first().simulate("submit");
-      });
-      await waitForComponentToPaint(wrapper);
-      expect(apiRefreshSpy).toHaveBeenCalledTimes(1); // a new token is requested once
-      expect(apiRefreshSpy).toHaveBeenCalledWith("critiquebrainz");
-
-      // new token was received, and the submission retried
-      expect(submitReviewToCBSpy).toHaveBeenCalledTimes(2);
-    });
+    // expect a success toast message
+    await screen.findByText("Your review was submitted to CritiqueBrainz!");
   });
 });
