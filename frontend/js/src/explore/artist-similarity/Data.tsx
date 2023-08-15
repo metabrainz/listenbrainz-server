@@ -30,6 +30,7 @@ type ApiResponseType = Array<MarkupResponseType | DatasetResponseType>;
 type NodeType = {
   id: string;
   artist_mbid: string;
+  artist_name: string;
   size: number;
   color: string;
   score: number;
@@ -164,8 +165,15 @@ function Data() {
             [computedColor, ...remaining] = colors;
           }
           return {
-            id: similarArtist.name,
+            //  ID is formed using similarArtist_MBID.mainArtist_MBID to make it unique everytime
+            //  ID will be the key for the node.
+            //  In case of mainArtist node only the mainArtist_MBID is used to avoid duplication and avoid key conflicts with link component
+            id:
+              similarArtist === mainArtist
+                ? mainArtist.artist_mbid
+                : `${similarArtist.artist_mbid}.${mainArtist.artist_mbid}`,
             artist_mbid: similarArtist.artist_mbid,
+            artist_name: similarArtist.name,
             size:
               similarArtist.artist_mbid === mainArtist?.artist_mbid
                 ? MAIN_NODE_SIZE
@@ -178,8 +186,11 @@ function Data() {
       links: similarArtistsList.map(
         (similarArtist: ArtistType, index: number): LinkType => {
           return {
-            source: mainArtist?.name ?? "",
-            target: similarArtist.name,
+            source: mainArtist.artist_mbid,
+            target:
+              similarArtist === mainArtist
+                ? mainArtist.artist_mbid
+                : `${similarArtist.artist_mbid}.${mainArtist.artist_mbid}`,
             distance: scoreList[index] * LINK_DIST_MULTIPLIER + MIN_LINK_DIST,
           };
         }

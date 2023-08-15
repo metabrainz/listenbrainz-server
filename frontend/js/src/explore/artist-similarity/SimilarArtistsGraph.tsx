@@ -6,6 +6,7 @@ import {
   NetworkSvgProps,
 } from "@nivo/network";
 import { animated, to } from "@react-spring/web";
+import { shallow } from "enzyme";
 import type { NodeType, LinkType, GraphDataType } from "./Data";
 
 interface GraphProps {
@@ -63,7 +64,7 @@ function CustomNodeComponent({
         {// SVG text does not allow for easy multi line text
         // So, we split the text into words and render each word as a separate tspan element in a different line
         // We use ellipsis if word length exceeds MAX_WORD_LENGTH or if number of words(each in a separate line) exceed MAX_LINES
-        node.id.split(" ").map((word, index) =>
+        node.data.artist_name.split(" ").map((word, index) =>
           index < MAX_LINES ? (
             <animated.tspan
               x={0}
@@ -101,7 +102,7 @@ function CustomNodeTooltipComponent({ node }: NodeTooltipProps<NodeType>) {
         borderRadius: "3px",
       }}
     >
-      <strong>{node.id}</strong>
+      <strong>{node.data.artist_name}</strong>
       <br />
       {node.data.score !== Infinity && <>Score: {node.data.score}</>}
     </div>
@@ -129,6 +130,7 @@ function SimilarArtistsGraph({ data, onArtistChange, background }: GraphProps) {
     inactiveNodeSize: (node) => node.size / 1.2,
     isInteractive: true,
     onClick: (node) => onArtistChange(node.data.artist_mbid),
+    motionConfig: "default",
   };
 
   return data ? (
