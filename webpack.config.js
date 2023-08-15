@@ -106,7 +106,7 @@ module.exports = function (env, argv) {
       ),
       artistSimilarity: path.resolve(
         jsDir,
-        "src/artist-similarity/ArtistSimilarity.tsx"
+        "src/explore/artist-similarity/ArtistSimilarity.tsx"
       ),
       selectTimezone: path.resolve(
         jsDir,

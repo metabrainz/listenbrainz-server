@@ -4,9 +4,9 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { ErrorBoundary } from "@sentry/react";
 import Data from "./Data";
-import { getPageProps } from "../utils/utils";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { getPageProps } from "../../utils/utils";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 function ArtistSimilarity() {
   return <Data />;

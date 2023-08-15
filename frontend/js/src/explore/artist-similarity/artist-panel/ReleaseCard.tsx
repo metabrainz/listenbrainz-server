@@ -4,7 +4,7 @@ import { formatReleaseDate } from "./utils";
 import {
   generateAlbumArtThumbnailLink,
   getAlbumArtFromReleaseMBID,
-} from "../../utils/utils";
+} from "../../../utils/utils";
 
 type ReleaseCardProps = {
   releaseDate?: string;
