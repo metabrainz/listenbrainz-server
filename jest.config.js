@@ -21,11 +21,11 @@ module.exports = {
 
   setupFilesAfterEnv: [
     "jest-location-mock",
-    "<rootDir>/frontend/js/tests/jest-setup.js",
+    "<rootDir>/frontend/js/tests/jest-setup.ts",
   ],
 
   // The test environment that will be used for testing
-  testEnvironment: "jsdom",
+  testEnvironment: "jest-environment-jsdom",
 
   // The glob patterns Jest uses to detect test files
   testMatch: ["**/?(*.)+(spec|test).(ts|js)?(x)"],
@@ -51,7 +51,7 @@ module.exports = {
   verbose: true,
 
   snapshotSerializers: ["enzyme-to-json/serializer"],
-  
+
   snapshotFormat: {
     escapeString: true,
     printBasicPrototype: true,
