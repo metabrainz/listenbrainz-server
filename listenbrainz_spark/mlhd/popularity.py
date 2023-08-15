@@ -34,24 +34,19 @@ def get_popularity_query(entity, mlhd_table, listens_table):
     """ Get the query to generate popularity stats using both MLHD+ and listens data """
     entity_mbid = f"{entity}_mbid"
     return f"""
-        WITH mlhd_table AS (
+        WITH intermediate AS (
             SELECT {entity_mbid}
-                 , count(*) AS listen_count
-                 , count(distinct user_id) AS user_count
+                 , user_id
               FROM {mlhd_table}
-          GROUP BY {entity_mbid}
-        ), listens_table AS (
+             UNION ALL
             SELECT {entity_mbid}
+                 , user_id
+              FROM {listens_table}
+        )   SELECT {entity_mbid}
                  , count(*) AS listen_count
                  , count(distinct user_id) AS user_count
-              FROM {listens_table}
+              FROM intermediate
           GROUP BY {entity_mbid}
-        )   SELECT {entity_mbid}
-                 , COALESCE(m.listen_count, 0) + COALESCE(l.listen_count, 0) AS total_listen_count
-                 , COALESCE(m.user_count, 0) + COALESCE(l.user_count, 0) AS total_user_count
-              FROM mlhd_table m
-         FULL JOIN listens_table l
-             USING ({entity_mbid})
     """
 
 
@@ -65,32 +60,19 @@ def get_popularity_per_artist_query(entity, mlhd_table, listens_table):
         select_clause = f"artist_mbid, {entity_mbid}"
         explode_clause = f"explode(artist_credit_mbids) AS artist_mbid, {entity_mbid}"
     return f"""
-        WITH exploded_mlhd_data AS (
+        WITH intermediate AS (
             SELECT {explode_clause}
                  , user_id
               FROM {mlhd_table}
-        ), mlhd_table AS (
-            SELECT {select_clause}
-                 , count(*) AS listen_count
-                 , count(distinct user_id) AS user_count
-              FROM exploded_mlhd_data
-          GROUP BY {select_clause}
-        ), exploded_listen_data AS (
+             UNION ALL
             SELECT {explode_clause}
                  , user_id
               FROM {listens_table}
-        ), listens_table AS (
-            SELECT {select_clause}
-                 , count(*) AS listen_count
-                 , count(distinct user_id) AS user_count
-              FROM exploded_listen_data
-          GROUP BY {select_clause}
         )   SELECT {select_clause}
-                 , COALESCE(m.listen_count, 0) + COALESCE(l.listen_count, 0) AS total_listen_count
-                 , COALESCE(m.user_count, 0) + COALESCE(l.user_count, 0) AS total_user_count
-              FROM mlhd_table m
-         FULL JOIN listens_table l
-             USING ({select_clause})
+                 , count(*) AS total_listen_count
+                 , count(distinct user_id) AS total_user_count
+              FROM intermediate
+          GROUP BY {select_clause}
     """
 
 
@@ -102,10 +84,10 @@ def main():
     mlhd_table = f"parquet.`{MLHD_PLUS_DATA_DIRECTORY}`"
 
     queries = {
+        "mlhd_popularity_top_recording": get_popularity_per_artist_query("recording", mlhd_table, listens_table),
         "mlhd_popularity_recording": get_popularity_query("recording", mlhd_table, listens_table),
         "mlhd_popularity_release": get_popularity_query("release", mlhd_table, listens_table),
         "mlhd_popularity_artist": get_popularity_per_artist_query("artist", mlhd_table, listens_table),
-        "mlhd_popularity_top_recording": get_popularity_per_artist_query("recording", mlhd_table, listens_table),
         "mlhd_popularity_top_release": get_popularity_per_artist_query("release", mlhd_table, listens_table)
     }
 
