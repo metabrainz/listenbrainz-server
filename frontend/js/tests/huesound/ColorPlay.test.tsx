@@ -9,6 +9,7 @@ import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 import * as colorPlayProps from "../__mocks__/colorPlayProps.json";
 import ColorPlay from "../../src/explore/huesound/ColorPlay";
 import ColorWheel from "../../src/explore/huesound/ColorWheel";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -18,7 +19,6 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 // typescript doesn't recognise string literal values
 const props = {
   ...colorPlayProps,
-  newAlert: () => {},
 };
 
 // Create a new instance of GlobalAppContext
@@ -28,6 +28,10 @@ const mountOptions: { context: GlobalAppContextT } = {
     youtubeAuth: colorPlayProps.youtube as YoutubeUser,
     spotifyAuth: colorPlayProps.spotify as SpotifyUser,
     currentUser: colorPlayProps.user,
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 

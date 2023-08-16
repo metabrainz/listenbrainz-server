@@ -27,6 +27,7 @@
 @import "search-track.less";
 @import "stats.less";
 @import "new-navbar.less";
+@import "tags.less";
 
 @icon-font-path: "/static/fonts/";
 
@@ -334,6 +335,24 @@ pre code.hljs {
 }
 
 // Fix button height inside an input group
-.input-group > .input-group-btn > .btn {
+.input-group:not(.input-group-lg):not(.input-group-sm)
+  > .input-group-btn
+  > .btn {
   line-height: 2em;
+}
+
+.btn-icon {
+  padding: 0.5em;
+  font-size: 1.5em;
+  width: 2em;
+  height: 2em;
+  line-height: 1em;
+  border-radius: 5px;
+  & + .btn-icon {
+    margin-left: 0.4em;
+  }
+}
+
+.btn-rounded {
+  border-radius: 3em;
 }

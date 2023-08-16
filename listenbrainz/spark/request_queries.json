@@ -69,6 +69,11 @@
     "description": "Import incremental dump with the specified ID into the spark cluster",
     "params": ["dump_id"]
   },
+  "import.dump.mlhd": {
+    "name": "import.dump.mlhd",
+    "description": "Import MLHD+ dump into the spark cluster",
+    "params": []
+  },
   "import.pg_metadata_tables": {
     "name": "import.pg_metadata_tables",
     "description": "Send the cluster a request to import metadata table from MB db postgres",
@@ -95,23 +100,11 @@
     "description": "Train data to yield a model.",
     "params": ["ranks", "lambdas", "iterations", "alphas", "use_transformed_listencounts"]
   },
-  "cf.recommendations.recording.candidate_sets": {
-    "name": "cf.recommendations.recording.candidate_sets",
-    "description": "Create candidate sets to generate recommendations",
-    "params": [
-      "recommendation_generation_window",
-      "top_artist_limit",
-      "similar_artist_limit",
-      "users",
-      "html_flag"
-    ]
-  },
   "cf.recommendations.recording.recommendations": {
     "name": "cf.recommendations.recording.recommendations",
     "description": "Generate recommendations for all active ListenBrainz users.",
     "params": [
       "recommendation_top_artist_limit",
-      "recommendation_similar_artist_limit",
       "recommendation_raw_limit",
       "users"
     ]
@@ -136,6 +129,17 @@
     "description": "Generate similar user correlation",
     "params": [
       "max_num_users"
+    ]
+  },
+  "similarity.recording.mlhd": {
+    "name": "similarity.recording.mlhd",
+    "description": "Generate recording similarity from MLHD",
+    "params": [
+      "session",
+      "contribution",
+      "threshold",
+      "limit",
+      "skip"
     ]
   },
   "similarity.recording": {
@@ -208,5 +212,15 @@
     "name": "troi.playlists",
     "description": "Generate troi playlists for all users",
     "params": ["slug", "users"]
+  },
+  "tags.default": {
+    "name": "tags.default",
+    "description": "Generate the tags dataset with percent rank",
+    "params": []
+  },
+  "mlhd.popularity.all": {
+    "name": "mlhd.popularity.all",
+    "description": "Calculate all popularity data from mlhd.",
+    "params": []
   }
 }

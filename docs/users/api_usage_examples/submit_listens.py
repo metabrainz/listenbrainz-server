@@ -41,14 +41,6 @@ if __name__ == "__main__":
             # An example track.
             "listened_at": int(time()),
             "track_metadata": {
-                "additional_info": {
-                    "release_mbid": "bf9e91ea-8029-4a04-a26a-224e00a83266",
-                    "artist_mbids": [
-                        "db92a151-1ac2-438b-bc43-b82e149ddd50"
-                    ],
-                    "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
-                    "tags": ["you", "just", "got", "semi", "rick", "rolled"]
-                },
                 "artist_name": "Rick Astley",
                 "track_name": "Never Gonna Give You Up",
                 "release_name": "Whenever you need somebody"

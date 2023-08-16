@@ -4,11 +4,15 @@ Jinja2 == 2.11.3
 MarkupSafe==2.0.1
 itsdangerous==2.0.1
 kombu==5.1.0
-python-dateutil==2.8.0
+python-dateutil==2.8.2
 numpy==1.24.1
 pydantic == 1.8.2
 sentry-sdk == 1.14.0
 unidecode == 1.2.0
 more-itertools==8.8.0
 pycountry==22.3.5
+pycurl==7.45.2
 urllib3==1.26.16
+pandas==1.5.3
+zstandard==0.21.0
+pyarrow==11.0.0

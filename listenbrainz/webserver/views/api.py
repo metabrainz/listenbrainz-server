@@ -12,7 +12,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_external_service_oauth
 import listenbrainz.webserver.redis_connection as redis_connection
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db import listens_importer
+from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from listenbrainz.webserver import timescale_connection
@@ -268,19 +268,20 @@ def get_similar_users(user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-
     user = db_user.get_by_mb_id(user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
     similar_users = db_user.get_similar_users(user['id'])
-    response = []
-    for user_name in similar_users.similar_users:
-        response.append({
-            'user_name': user_name,
-            'similarity': similar_users.similar_users[user_name]
-        })
-    return jsonify({'payload': sorted(response, key=itemgetter('similarity'), reverse=True)})
+    return jsonify({
+        "payload": [
+            {
+                "user_name": r["musicbrainz_id"],
+                "similarity": r["similarity"]
+            }
+            for r in similar_users
+        ]
+    })
 
 
 @api_bp.route("/user/<user_name>/similar-to/<other_user_name>", methods=['GET', 'OPTIONS'])
@@ -309,8 +310,12 @@ def get_similar_to_user(user_name, other_user_name):
         raise APINotFound("User %s not found" % user_name)
 
     similar_users = db_user.get_similar_users(user['id'])
+
+    # Constructing an id-similarity map
+    id_similarity_map = {r["musicbrainz_id"]: r["similarity"] for r in similar_users}
+
     try:
-        return jsonify({'payload': {"user_name": other_user_name, "similarity": similar_users.similar_users[other_user_name]}})
+        return jsonify({'payload': {"user_name": other_user_name, "similarity": id_similarity_map[other_user_name]}})
     except (KeyError, AttributeError):
         raise APINotFound("Similar-to user not found")
 
@@ -636,6 +641,29 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
+@api_bp.route("/user/<playlist_user_name>/playlists/recommendations", methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def user_recommendations(playlist_user_name):
+    """
+    Fetch recommendation playlist metadata in JSPF format without recordings for playlist_user_name.
+    This endpoint only lists playlists that are to be shown on the listenbrainz.org recommendations
+    pages.
+
+    :statuscode 200: success
+    :statuscode 404: user not found
+    :resheader Content-Type: *application/json*
+    """
+
+    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    playlists = db_playlist.get_recommendation_playlists_for_user(playlist_user.id)
+    return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
+
+
 @api_bp.route("/user/<user_name>/services", methods=['GET', 'OPTIONS'])
 @crossdomain
 @ratelimit()
@@ -663,6 +691,82 @@ def get_service_details(user_name):
 
     services = db_external_service_oauth.get_services(user["id"])
     return jsonify({'user_name': user_name, 'services': services})
+
+
+@api_bp.route("/lb-radio/tags", methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+def get_tags_dataset():
+    """ Get recordings for use in LB radio with the specified tags that match the requested criteria.
+
+    .. code-block:: json
+
+
+
+    :param tag: the MusicBrainz tag to fetch recordings for, this parameter can be specified multiple times. if more
+        than one tag is specified, the condition param should also be specified.
+    :param condition: specify AND to retrieve recordings that have all the tags, otherwise specify OR to retrieve
+        recordings that have any one of the tags.
+    :param begin_percent: percent is a measure of the recording's popularity, begin_percent denotes a preferred
+        lower bound on the popularity of recordings to be returned.
+    :param end_percent: percent is a measure of the recording's popularity, end_percent denotes a preferred
+        upper bound on the popularity of recordings to be returned.
+    :param count: number of recordings to return for the
+    :resheader Content-Type: *application/json*
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: Invalid or missing param in request, see error message for details.
+    """
+    tag = request.args.getlist("tag")
+    if tag is None:
+        raise APIBadRequest("tag param is missing")
+
+    condition = request.args.get("condition")
+
+    # if there is only one tag, then we can use any of the condition's query to retrieve data
+    if len(tag) == 1 and condition is None:
+        condition = "OR"
+
+    if condition is None:
+        raise APIBadRequest("multiple tags are specified but the condition param is missing")
+    condition = condition.upper()
+    if condition != "AND" and condition != "OR":
+        raise APIBadRequest("condition param should be either 'AND' or 'OR'")
+
+    try:
+        begin_percent = request.args.get("begin_percent")
+        if begin_percent is None:
+            raise APIBadRequest("begin_percent param is missing")
+        begin_percent = float(begin_percent) / 100
+        if begin_percent < 0 or begin_percent > 1:
+            raise APIBadRequest("begin_percent should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"begin_percent: '{begin_percent}' is not a valid number")
+
+    try:
+        end_percent = request.args.get("end_percent")
+        if end_percent is None:
+            raise APIBadRequest("end_percent param is missing")
+        end_percent = float(end_percent) / 100
+        if end_percent < 0 or end_percent > 1:
+            raise APIBadRequest("end_percent should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"end_percent: '{end_percent}' is not a valid number")
+
+    try:
+        count = request.args.get("count")
+        if count is None:
+            raise APIBadRequest("count param is missing")
+        count = int(count)
+        if count <= 0:
+            raise APIBadRequest("count should be a positive number")
+    except ValueError:
+        raise APIBadRequest(f"count: '{count}' is not a valid positive number")
+
+    if condition == "AND":
+        results = tags.get_and(tag, begin_percent, end_percent, count)
+    else:
+        results = tags.get_or(tag, begin_percent, end_percent, count)
+    return jsonify(results)
 
 
 def _get_listen_type(listen_type):

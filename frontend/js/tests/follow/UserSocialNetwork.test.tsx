@@ -34,13 +34,13 @@ import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 jest.useFakeTimers();
 
 const { loggedInUser, ...otherProps } = userSocialNetworkProps;
 const props = {
   ...otherProps,
-  newAlert: jest.fn(),
 };
 
 const globalContext: GlobalAppContextT = {
@@ -48,6 +48,10 @@ const globalContext: GlobalAppContextT = {
   youtubeAuth: {},
   spotifyAuth: {},
   currentUser: loggedInUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 const similarUsers = [

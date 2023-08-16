@@ -111,7 +111,7 @@
         }
       }
 
-      .fa-heart-broken {
+      .fa-heart-crack {
         stroke: @hate;
         color: transparent;
         stroke-width: 1.3em;
@@ -148,6 +148,8 @@
       border-radius: @border-radius;
       box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1) inset;
       background-color: @boxes-background-color;
+      min-height: 2.8em; // adapt to add-tag component height
+      align-items: center;
 
       &.white {
         background-color: white;
@@ -213,48 +215,6 @@
         }
         tr td + td {
           text-align: right;
-        }
-      }
-
-      .tags-wrapper {
-        display: flex;
-        position: relative;
-        .tags {
-          flex: 1;
-          align-items: center;
-          // horizontal scroll overflow with hidden scrollbar and faded overlay
-          display: flex;
-          overflow-x: scroll;
-          &::-webkit-scrollbar {
-            // hidden scrollbar
-            display: none;
-          }
-          .badge {
-            flex: none;
-            color: currentcolor;
-            background-color: lightgrey;
-          }
-          .badge + .badge {
-            margin-left: 0.3em;
-          }
-        }
-        .add-tag {
-          flex: none;
-          // Faded overlay to hide extra tags in .tags
-          &:before {
-            content: "";
-            position: absolute;
-            width: 60px;
-            height: 80%;
-            right: 75px;
-            top: 10%;
-            background: linear-gradient(
-              to right,
-              transparent,
-              @boxes-background-color
-            );
-            pointer-events: none;
-          }
         }
       }
     }

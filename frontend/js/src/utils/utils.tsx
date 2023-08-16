@@ -1,14 +1,17 @@
 import * as React from "react";
 import * as _ from "lodash";
+import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
-import { isFinite, isUndefined, castArray } from "lodash";
 import { Rating } from "react-simple-star-rating";
+import { toast } from "react-toastify";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
 import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
+import { ToastMsg } from "../notifications/Notifications";
+import RecordingFeedbackManager from "./RecordingFeedbackManager";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
@@ -129,6 +132,44 @@ const searchForYoutubeTrack = async (
   const videoIds = tracks.map((track) => track.id.videoId);
   if (videoIds.length) return videoIds;
   return null;
+};
+
+const searchForSoundcloudTrack = async (
+  soundcloudToken: string,
+  trackName?: string,
+  artistName?: string,
+  releaseName?: string
+): Promise<string | null> => {
+  let query = trackName ?? "";
+  if (artistName) {
+    query += ` ${artistName}`;
+  }
+  // Considering we cannot tell the Soundcloud API that this should match only an album title,
+  // results are paradoxically sometimes worse if we add it to the query
+  if (releaseName) {
+    query += ` ${releaseName}`;
+  }
+  if (!query) {
+    return null;
+  }
+
+  const response = await fetch(
+    `https://api.soundcloud.com/tracks?q=${encodeURIComponent(
+      query
+    )}&access=playable`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `OAuth ${soundcloudToken}`,
+      },
+    }
+  );
+  const responseBody = await response.json();
+  if (!response.ok) {
+    throw responseBody;
+  }
+  return responseBody?.[0]?.uri ?? null;
 };
 
 const getAdditionalContent = (metadata: EventMetadata): string =>
@@ -414,19 +455,6 @@ export function loadScriptAsync(document: any, scriptSrc: string): void {
   container.appendChild(el);
 }
 
-const createAlert = (
-  type: AlertType,
-  title: string,
-  message: string | JSX.Element
-): Alert => {
-  return {
-    id: new Date().getTime(),
-    type,
-    headline: title,
-    message,
-  };
-};
-
 type SentryProps = {
   sentry_dsn: string;
   sentry_traces_sample_rate?: number;
@@ -436,7 +464,9 @@ type GlobalAppProps = {
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
-  critiquebrainz?: CritiqueBrainzUser;
+  soundcloud?: SoundCloudUser;
+  critiquebrainz?: MetaBrainzProjectUser;
+  musicbrainz?: MetaBrainzProjectUser;
   user_preferences?: UserPreferences;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
@@ -445,7 +475,6 @@ const getPageProps = (): {
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
   sentryProps: SentryProps;
-  optionalAlerts: Alert[];
   globalAppContext: GlobalAppContextT;
 } => {
   let domContainer = document.getElementById("react-container");
@@ -455,7 +484,6 @@ const getPageProps = (): {
   let globalReactProps = {} as GlobalProps;
   let sentryProps = {} as SentryProps;
   let globalAppContext = {} as GlobalAppContextT;
-  const optionalAlerts = [];
   if (!domContainer) {
     // Ensure there is a container for React rendering
     // We should always have on on the page already, but displaying errors to the user relies on there being one
@@ -481,7 +509,9 @@ const getPageProps = (): {
       api_url,
       spotify,
       youtube,
+      soundcloud,
       critiquebrainz,
+      musicbrainz,
       sentry_traces_sample_rate,
       sentry_dsn,
     } = globalReactProps;
@@ -505,8 +535,14 @@ const getPageProps = (): {
       currentUser: current_user,
       spotifyAuth: spotify,
       youtubeAuth: youtube,
+      soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
+      musicbrainzAuth: musicbrainz,
       userPreferences: user_preferences,
+      recordingFeedbackManager: new RecordingFeedbackManager(
+        apiService,
+        current_user
+      ),
     };
     sentryProps = {
       sentry_dsn,
@@ -517,19 +553,16 @@ const getPageProps = (): {
     const errorMessage = `Please refresh the page.
 	If the problem persists, please contact us.
 	Reason: ${err}`;
-    const newAlert = createAlert(
-      "danger",
-      "Error loading the page",
-      errorMessage
+    toast.error(
+      <ToastMsg title="Error loading the Page" message={errorMessage} />,
+      { toastId: "page-load-error" }
     );
-    optionalAlerts.push(newAlert);
   }
   return {
     domContainer,
     reactProps,
     sentryProps,
     globalAppContext,
-    optionalAlerts,
   };
 };
 
@@ -864,6 +897,7 @@ export function getPersonalRecommendationEventContent(
 
 export {
   searchForSpotifyTrack,
+  searchForSoundcloudTrack,
   getArtistLink,
   getTrackLink,
   formatWSMessageToListen,
@@ -872,7 +906,6 @@ export {
   convertDateToUnixTimestamp,
   getPageProps,
   searchForYoutubeTrack,
-  createAlert,
   getListenablePin,
   countWords,
   handleNavigationClickEvent,

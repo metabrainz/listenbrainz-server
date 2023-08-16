@@ -8,30 +8,24 @@ import { createRoot } from "react-dom/client";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import {
-  faCompactDisc,
-  faPlusCircle,
-  faTrashAlt,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Integrations } from "@sentry/tracing";
 import { get, isEqual } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
+import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "../add-listen/AddListenModal";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
-import FollowButton from "../follow/FollowButton";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import ListenCountCard from "../listens/ListenCountCard";
+import { ToastMsg } from "../notifications/Notifications";
 import PinnedRecordingCard from "../pins/PinnedRecordingCard";
 import APIServiceClass from "../utils/APIService";
 import ErrorBoundary from "../utils/ErrorBoundary";
@@ -50,17 +44,16 @@ export type ListensProps = {
   oldestListenTs: number;
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface ListensState {
   lastFetchedDirection?: "older" | "newer";
   listens: Array<Listen>;
+  webSocketListens: Array<Listen>;
   listenCount?: number;
   loading: boolean;
   nextListenTs?: number;
   previousListenTs?: number;
-  recordingMsidFeedbackMap: RecordingFeedbackMap;
-  recordingMbidFeedbackMap: RecordingFeedbackMap;
   dateTimePickerValue: Date;
   /* This is used to mark a listen as deleted
   which give the UI some time to animate it out of the page
@@ -84,6 +77,7 @@ export default class Listens extends React.Component<
   private socket!: Socket;
 
   private expectedListensPerPage = 25;
+  private maxWebsocketListens = 7;
 
   constructor(props: ListensProps) {
     super(props);
@@ -93,12 +87,11 @@ export default class Listens extends React.Component<
       : undefined;
     this.state = {
       listens: props.listens || [],
+      webSocketListens: [],
       lastFetchedDirection: "older",
       loading: false,
       nextListenTs,
       previousListenTs: props.listens?.[0]?.listened_at,
-      recordingMsidFeedbackMap: {},
-      recordingMbidFeedbackMap: {},
       dateTimePickerValue: nextListenTs
         ? new Date(nextListenTs * 1000)
         : new Date(Date.now()),
@@ -112,7 +105,6 @@ export default class Listens extends React.Component<
   }
 
   componentDidMount() {
-    const { newAlert } = this.props;
     // Get API instance from React context provided for in top-level component
     const { APIService } = this.context;
     const { playingNowListen } = this.state;
@@ -131,10 +123,12 @@ export default class Listens extends React.Component<
           this.setState({ listenCount });
         })
         .catch((error) => {
-          newAlert(
-            "danger",
-            "Sorry, we couldn't load your listens count…",
-            error?.toString()
+          toast.error(
+            <ToastMsg
+              title="Sorry, we couldn't load your listens count…"
+              message={error?.toString()}
+            />,
+            { toastId: "listen-count-error" }
           );
         });
     }
@@ -142,7 +136,6 @@ export default class Listens extends React.Component<
       this.receiveNewPlayingNow(playingNowListen);
     }
     this.getFollowing();
-    this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -221,11 +214,12 @@ export default class Listens extends React.Component<
     try {
       json = JSON.parse(newListen);
     } catch (error) {
-      const { newAlert } = this.props;
-      newAlert(
-        "danger",
-        "Coudn't parse the new listen as JSON: ",
-        error.toString()
+      toast.error(
+        <ToastMsg
+          title="Coudn't parse the new listen as JSON: "
+          message={error?.toString()}
+        />,
+        { toastId: "parse-listen-error" }
       );
       return;
     }
@@ -233,13 +227,14 @@ export default class Listens extends React.Component<
 
     if (listen) {
       this.setState((prevState) => {
-        const { listens } = prevState;
-        // Crop listens array to 100 max
-        while (listens.length >= 100) {
-          listens.pop();
-        }
-        listens.unshift(listen);
-        return { listens };
+        const { webSocketListens } = prevState;
+        // Crop listens array to a max length
+        return {
+          webSocketListens: [
+            listen,
+            ..._.take(webSocketListens, this.maxWebsocketListens - 1),
+          ],
+        };
       });
     }
   };
@@ -266,26 +261,23 @@ export default class Listens extends React.Component<
           artist_mbids,
           caa_id: metadata?.release?.caa_id,
           caa_release_mbid: metadata?.release?.caa_release_mbid,
-          artists: metadata?.artist?.artists?.map((artist, index)=>{
+          artists: metadata?.artist?.artists?.map((artist, index) => {
             return {
               artist_credit_name: artist.name,
               join_phrase: artist.join_phrase,
-              artist_mbid: artist_mbids[index]
-            }
-          })
+              artist_mbid: artist_mbids[index],
+            };
+          }),
         };
       }
-
-      await this.loadFeedbackForNowPlaying(playingNow);
     } catch (error) {
-      const { newAlert } = this.props;
-      if (newAlert) {
-        newAlert(
-          "danger",
-          "We could not load data for the now playing listen",
-          typeof error === "object" ? error.message : error.toString()
-        );
-      }
+      toast.error(
+        <ToastMsg
+          title="We could not load data for the now playing listen "
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "load-listen-error" }
+      );
     }
     this.setState({
       playingNowListen: playingNow,
@@ -365,8 +357,11 @@ export default class Listens extends React.Component<
       event.preventDefault();
     }
     const { user, latestListenTs } = this.props;
-    const { listens } = this.state;
-    if (listens?.[0]?.listened_at >= latestListenTs) {
+    const { listens, webSocketListens } = this.state;
+    if (
+      listens?.[0]?.listened_at >= latestListenTs &&
+      !webSocketListens?.length
+    ) {
       return;
     }
     this.setState({ loading: true });
@@ -374,6 +369,7 @@ export default class Listens extends React.Component<
     this.setState(
       {
         listens: newListens,
+        webSocketListens: [],
         lastFetchedDirection: "newer",
       },
       this.afterListensFetch
@@ -424,142 +420,7 @@ export default class Listens extends React.Component<
     }
   };
 
-  getFeedback = async () => {
-    const { newAlert } = this.props;
-    const { APIService, currentUser } = this.context;
-    const { listens } = this.state;
-    const recording_msids: string[] = [];
-    const recording_mbids: string[] = [];
-
-    if (listens && listens.length && currentUser?.name) {
-      listens.forEach((listen) => {
-        const recordingMsid = getRecordingMSID(listen);
-        if (recordingMsid) {
-          recording_msids.push(recordingMsid);
-        }
-        const recordingMBID = getRecordingMBID(listen);
-        if (recordingMBID) {
-          recording_mbids.push(recordingMBID);
-        }
-      });
-
-      try {
-        const data = await APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recording_mbids,
-          recording_msids
-        );
-        return data.feedback;
-      } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
-      }
-    }
-    return [];
-  };
-
-  loadFeedbackForNowPlaying = async (listen: Listen): Promise<void> => {
-    const { newAlert } = this.props;
-    const { APIService, currentUser } = this.context;
-    const recordingMBID = getRecordingMBID(listen);
-    if (!currentUser?.name || !recordingMBID) {
-      return;
-    }
-    try {
-      const data = await APIService.getFeedbackForUserForRecordings(
-        currentUser.name,
-        [recordingMBID],
-        []
-      );
-      if (data.feedback.length) {
-        const { recordingMbidFeedbackMap } = this.state;
-        const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
-        const item = data.feedback[0];
-        newMbidFeedbackMap[item.recording_mbid] = item.score;
-        this.setState({ recordingMbidFeedbackMap: newMbidFeedbackMap });
-      }
-    } catch (error) {
-      if (newAlert) {
-        newAlert(
-          "danger",
-          "We could not load love/hate feedback",
-          typeof error === "object" ? error.message : error
-        );
-      }
-    }
-  };
-
-  loadFeedback = async () => {
-    const feedback = await this.getFeedback();
-    if (!feedback) {
-      return;
-    }
-    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
-    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
-    feedback.forEach((fb: FeedbackResponse) => {
-      if (fb.recording_msid) {
-        recordingMsidFeedbackMap[fb.recording_msid] = fb.score;
-      }
-      if (fb.recording_mbid) {
-        recordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
-      }
-    });
-    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMsid?: string
-  ) => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
-    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
-
-    if (recordingMsid) {
-      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
-    }
-    if (recordingMbid) {
-      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
-    }
-    this.setState({
-      recordingMsidFeedbackMap: newMsidFeedbackMap,
-      recordingMbidFeedbackMap: newMbidFeedbackMap,
-    });
-  };
-
-  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    // first check whether the mbid has any feedback available
-    // if yes and the feedback is not zero, return it. if the
-    // feedback is zero or not the mbid is absent from the map,
-    // look for the feedback using the msid.
-
-    const recordingMbid = getRecordingMBID(listen);
-    const mbidFeedback = recordingMbid
-      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
-      : 0;
-
-    if (mbidFeedback) {
-      return mbidFeedback;
-    }
-
-    const recordingMsid = getRecordingMSID(listen);
-
-    return recordingMsid
-      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
-      : 0;
-  };
-
   deleteListen = async (listen: Listen) => {
-    const { newAlert } = this.props;
     const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -575,11 +436,15 @@ export default class Listens extends React.Component<
         );
         if (status === 200) {
           this.setState({ deletedListen: listen });
-          newAlert(
-            "info",
-            "Success",
-            "This listen has not been deleted yet, but is scheduled for deletion," +
-              " which usually happens shortly after the hour."
+          toast.info(
+            <ToastMsg
+              title="Success"
+              message={
+                "This listen has not been deleted yet, but is scheduled for deletion," +
+                "which usually happens shortly after the hour."
+              }
+            />,
+            { toastId: "delete-listen" }
           );
           // wait for the delete animation to finish
           setTimeout(() => {
@@ -587,10 +452,14 @@ export default class Listens extends React.Component<
           }, 1000);
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Error while deleting listen",
-          typeof error === "object" ? error.message : error.toString()
+        toast.error(
+          <ToastMsg
+            title="Error while deleting listen"
+            message={
+              typeof error === "object" ? error.message : error.toString()
+            }
+          />,
+          { toastId: "delete-listen-error" }
         );
       }
     }
@@ -608,8 +477,13 @@ export default class Listens extends React.Component<
 
       this.setState({ followingList: following });
     } catch (err) {
-      const { newAlert } = this.props;
-      newAlert("danger", "Error while fetching followers", err.toString());
+      toast.error(
+        <ToastMsg
+          title="Error while fetching following"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-following-error" }
+      );
     }
   };
 
@@ -725,7 +599,7 @@ export default class Listens extends React.Component<
 
   getListenCard = (listen: Listen): JSX.Element => {
     const { deletedListen } = this.state;
-    const { newAlert } = this.props;
+
     const { currentUser } = this.context;
     const isCurrentUser =
       Boolean(listen.user_name) && listen.user_name === currentUser?.name;
@@ -758,9 +632,6 @@ export default class Listens extends React.Component<
         showTimestamp
         showUsername={false}
         listen={listen}
-        currentFeedback={this.getFeedbackForListen(listen)}
-        updateFeedbackCallback={this.updateFeedback}
-        newAlert={newAlert}
         className={`${listen.playing_now ? "playing-now " : ""}${
           shouldBeDeleted ? "deleted " : ""
         }`}
@@ -773,7 +644,6 @@ export default class Listens extends React.Component<
     this.setState({ loading: false });
     // Scroll to the top of the listens list
     this.updatePaginationVariables();
-    this.loadFeedback();
     if (typeof this.listensTable?.current?.scrollIntoView === "function") {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -782,6 +652,7 @@ export default class Listens extends React.Component<
   render() {
     const {
       listens,
+      webSocketListens,
       listenCount,
       loading,
       nextListenTs,
@@ -790,15 +661,13 @@ export default class Listens extends React.Component<
       userPinnedRecording,
       playingNowListen,
     } = this.state;
-    const { latestListenTs, oldestListenTs, user, newAlert } = this.props;
+    const { latestListenTs, oldestListenTs, user } = this.props;
     const { APIService, currentUser } = this.context;
 
     let allListenables = listens;
-    let userPinnedRecordingFeedback: ListenFeedBack = 0;
     if (userPinnedRecording) {
       const listenablePin = getListenablePin(userPinnedRecording);
       allListenables = [listenablePin, ...listens];
-      userPinnedRecordingFeedback = this.getFeedbackForListen(listenablePin);
     }
 
     const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
@@ -813,97 +682,17 @@ export default class Listens extends React.Component<
     return (
       <div role="main">
         <div className="row">
-          <div className="col-md-8 listen-header">
-            {listens.length === 0 ? (
-              <div id="spacer" />
-            ) : (
-              <h3>Recent listens</h3>
-            )}
-            {isCurrentUsersPage && (
-              <div className="dropdow add-listen-btn">
-                <button
-                  className="btn btn-info dropdown-toggle"
-                  type="button"
-                  id="addListensDropdown"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                >
-                  <FontAwesomeIcon icon={faPlusCircle} title="Add listens" />
-                  &nbsp;Add listens&nbsp;
-                  <span className="caret" />
-                </button>
-                <ul
-                  className="dropdown-menu dropdown-menu-right"
-                  aria-labelledby="addListensDropdown"
-                >
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show(AddListenModal, {
-                          newAlert,
-                        });
-                      }}
-                      data-toggle="modal"
-                      data-target="#AddListenModal"
-                    >
-                      Manual addition
-                    </button>
-                  </li>
-                  <li>
-                    <a href="/profile/music-services/details/">
-                      Connect music services
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/profile/import/">Import your listens</a>
-                  </li>
-                  <li>
-                    <a href="/add-data/">Submit from music players</a>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-          <div className="col-md-4" style={{ marginTop: "1em" }}>
-            {!isCurrentUsersPage && (
-              <FollowButton
-                type="icon-only"
-                user={user}
-                loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
-                updateFollowingList={this.updateFollowingList}
-              />
-            )}
-            <a
-              href={`https://musicbrainz.org/user/${user.name}`}
-              className="btn lb-follow-button" // for same style as follow button next to it
-              target="_blank"
-              rel="noreferrer"
-            >
-              <img
-                src="/static/img/musicbrainz-16.svg"
-                alt="MusicBrainz Logo"
-              />{" "}
-              MusicBrainz
-            </a>
-          </div>
-        </div>
-
-        <div className="row">
           <div className="col-md-4 col-md-push-8">
             {playingNowListen && this.getListenCard(playingNowListen)}
             {userPinnedRecording && (
               <PinnedRecordingCard
                 pinnedRecording={userPinnedRecording}
                 isCurrentUser={isCurrentUsersPage}
-                currentFeedback={userPinnedRecordingFeedback}
-                updateFeedbackCallback={this.updateFeedback}
                 removePinFromPinsList={() => {}}
-                newAlert={newAlert}
               />
             )}
             <ListenCountCard user={user} listenCount={listenCount} />
-            {user && <UserSocialNetwork user={user} newAlert={newAlert} />}
+            {user && <UserSocialNetwork user={user} />}
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (
@@ -930,6 +719,47 @@ export default class Listens extends React.Component<
                 )}
               </div>
             )}
+            {webSocketListens.length > 0 && (
+              <div className="webSocket-box">
+                <h4>New listens since you arrived</h4>
+                <div id="webSocketListens">
+                  {webSocketListens.map((listen) => this.getListenCard(listen))}
+                </div>
+                <div className="read-more">
+                  <button
+                    type="button"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickNewest();
+                    }}
+                    onClick={this.handleClickNewest}
+                    className="btn btn-outline"
+                  >
+                    See more fresh listens
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="listen-header">
+              {listens.length === 0 ? (
+                <div id="spacer" />
+              ) : (
+                <h3>Recent listens</h3>
+              )}
+              {isCurrentUsersPage && (
+                <button
+                  type="button"
+                  className="btn btn-primary add-listen-btn"
+                  style={{}}
+                  onClick={() => {
+                    NiceModal.show(AddListenModal);
+                  }}
+                  data-Toggle="modal"
+                  data-Target="#AddListenModal"
+                >
+                  Add listen
+                </button>
+              )}
+            </div>
             {listens.length > 0 && (
               <div>
                 <div
@@ -965,11 +795,7 @@ export default class Listens extends React.Component<
                         if (e.key === "Enter") this.handleClickNewest();
                       }}
                       tabIndex={0}
-                      href={
-                        isNewestButtonDisabled
-                          ? undefined
-                          : window.location.pathname
-                      }
+                      href={window.location.pathname}
                     >
                       &#x21E4;
                     </a>
@@ -1066,6 +892,7 @@ export default class Listens extends React.Component<
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
+          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
         />
       </div>
     );
@@ -1078,7 +905,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -1105,7 +931,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <ListensWithAlertNotifications
-            initialAlerts={optionalAlerts}
             latestListenTs={latest_listen_ts}
             listens={listens}
             userPinnedRecording={userPinnedRecording}

@@ -2,21 +2,16 @@
 
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { get } from "lodash";
 
 import { faCog, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
-
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
@@ -30,14 +25,14 @@ import { getPageProps } from "../utils/utils";
 import ListenControl from "../listens/ListenControl";
 import ListenCard from "../listens/ListenCard";
 import ErrorBoundary from "../utils/ErrorBoundary";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PlayerPageProps = {
   playlist: JSPFObject;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export interface PlayerPageState {
   playlist: JSPFPlaylist;
-  recordingFeedbackMap: RecordingFeedbackMap;
 }
 
 export default class PlayerPage extends React.Component<
@@ -55,7 +50,6 @@ export default class PlayerPage extends React.Component<
   }
 
   declare context: React.ContextType<typeof GlobalAppContext>;
-  private APIService!: APIServiceClass;
 
   constructor(props: PlayerPageProps) {
     super(props);
@@ -70,41 +64,8 @@ export default class PlayerPage extends React.Component<
     );
     this.state = {
       playlist: props.playlist?.playlist || {},
-      recordingFeedbackMap: {},
     };
   }
-
-  async componentDidMount(): Promise<void> {
-    const { APIService } = this.context;
-    this.APIService = APIService;
-    const recordingFeedbackMap = await this.loadFeedback();
-    this.setState({ recordingFeedbackMap });
-  }
-
-  getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
-    const { newAlert } = this.props;
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    const { track: tracks } = playlist;
-    if (currentUser?.name && tracks) {
-      const recordings = mbids ?? tracks.map(getRecordingMBIDFromJSPFTrack);
-      try {
-        const data = await this.APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recordings,
-          []
-        );
-        return data.feedback;
-      } catch (error) {
-        newAlert(
-          "danger",
-          "Playback error",
-          typeof error === "object" ? error?.message : error
-        );
-      }
-    }
-    return [];
-  };
 
   getAlbumDetails(): JSX.Element {
     const { playlist } = this.state;
@@ -119,65 +80,41 @@ export default class PlayerPage extends React.Component<
   }
 
   savePlaylist = async () => {
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     if (!currentUser?.auth_token) {
       return;
     }
-    const { newAlert, playlist } = this.props;
+    const { playlist } = this.props;
     try {
-      const newPlaylistId = await this.APIService.createPlaylist(
+      const newPlaylistId = await APIService.createPlaylist(
         currentUser.auth_token,
         playlist
       );
-      newAlert(
-        "success",
-        "Created playlist",
-        <>
-          Created a new public{" "}
-          <a href={`/playlist/${newPlaylistId}`}>instant playlist</a>
-        </>
+      toast.success(
+        <ToastMsg
+          title="Created playlist"
+          message={
+            <div>
+              {" "}
+              Created a new public
+              <a href={`/playlist/${newPlaylistId}`}>instant playlist</a>
+            </div>
+          }
+        />,
+        { toastId: "create-playlist-success" }
       );
     } catch (error) {
-      newAlert("danger", "Could not save playlist", error.message);
+      toast.error(
+        <ToastMsg title="Could not save playlist" message={error.message} />,
+        { toastId: "create-playlist-error" }
+      );
     }
-  };
-
-  loadFeedback = async (mbids?: string[]): Promise<RecordingFeedbackMap> => {
-    const { recordingFeedbackMap } = this.state;
-    const feedback = await this.getFeedback(mbids);
-    const newRecordingFeedbackMap: RecordingFeedbackMap = {
-      ...recordingFeedbackMap,
-    };
-    feedback.forEach((fb: FeedbackResponse) => {
-      if (fb.recording_mbid) {
-        newRecordingFeedbackMap[fb.recording_mbid] = fb.score;
-      }
-    });
-    return newRecordingFeedbackMap;
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack
-  ) => {
-    if (!recordingMbid) {
-      return;
-    }
-    const { recordingFeedbackMap } = this.state;
-    recordingFeedbackMap[recordingMbid] = score as ListenFeedBack;
-    this.setState({ recordingFeedbackMap });
-  };
-
-  getFeedbackForRecordingMbid = (
-    recordingMbid?: string | null
-  ): ListenFeedBack => {
-    const { recordingFeedbackMap } = this.state;
-    return recordingMbid ? get(recordingFeedbackMap, recordingMbid, 0) : 0;
   };
 
   handleError = (error: any) => {
-    const { newAlert } = this.props;
-    newAlert("danger", "Error", error.message);
+    toast.error(<ToastMsg title="Error" message={error.message} />, {
+      toastId: "error",
+    });
   };
 
   getHeader = (): JSX.Element => {
@@ -281,7 +218,7 @@ export default class PlayerPage extends React.Component<
   render() {
     const { playlist } = this.state;
     const { APIService } = this.context;
-    const { newAlert } = this.props;
+
     const { track: tracks } = playlist;
     if (!playlist || !playlist.track) {
       return <div>Nothing to see here.</div>;
@@ -298,10 +235,8 @@ export default class PlayerPage extends React.Component<
                   <ListenCard
                     key={`${track.id}-${index.toString()}`}
                     listen={listen}
-                    currentFeedback={this.getFeedbackForRecordingMbid(track.id)}
                     showTimestamp={false}
                     showUsername={false}
-                    newAlert={newAlert}
                   />
                 );
               })}
@@ -312,6 +247,7 @@ export default class PlayerPage extends React.Component<
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
+            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
           />
         </div>
       </div>
@@ -325,7 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -345,10 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <PlayerPageWithAlertNotifications
-            initialAlerts={optionalAlerts}
-            playlist={playlist}
-          />
+          <PlayerPageWithAlertNotifications playlist={playlist} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

@@ -2,7 +2,7 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
-
+import { toast } from "react-toastify";
 import {
   faBell,
   faBullhorn,
@@ -28,10 +28,7 @@ import { sanitize } from "dompurify";
 import { Integrations } from "@sentry/tracing";
 import * as _ from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
@@ -51,6 +48,7 @@ import {
 } from "../utils/utils";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
+import { ToastMsg } from "../notifications/Notifications";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -67,7 +65,7 @@ export enum EventType {
 
 export type UserFeedPageProps = {
   events: TimelineEvent[];
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type UserFeedPageState = {
   nextEventTs?: number;
@@ -75,8 +73,6 @@ export type UserFeedPageState = {
   earliestEventTs?: number;
   events: TimelineEvent[];
   loading: boolean;
-  recordingMsidFeedbackMap: RecordingFeedbackMap;
-  recordingMbidFeedbackMap: RecordingFeedbackMap;
 };
 
 export default class UserFeedPage extends React.Component<
@@ -167,8 +163,6 @@ export default class UserFeedPage extends React.Component<
   constructor(props: UserFeedPageProps) {
     super(props);
     this.state = {
-      recordingMsidFeedbackMap: {},
-      recordingMbidFeedbackMap: {},
       nextEventTs: props.events?.[props.events.length - 1]?.created,
       previousEventTs: props.events?.[0]?.created,
       events: props.events || [],
@@ -183,7 +177,6 @@ export default class UserFeedPage extends React.Component<
     // Fetch initial events from API
     // TODO: Pass the required data in the props and remove this initial API call
     await this.getFeedFromAPI();
-    await this.loadFeedback();
   }
 
   componentWillUnmount() {
@@ -239,7 +232,6 @@ export default class UserFeedPage extends React.Component<
     maxTs?: number,
     successCallback?: () => void
   ) => {
-    const { newAlert } = this.props;
     const { earliestEventTs } = this.state;
     const { APIService, currentUser } = this.context;
     this.setState({ loading: true });
@@ -252,17 +244,21 @@ export default class UserFeedPage extends React.Component<
         maxTs
       );
     } catch (error) {
-      newAlert(
-        "warning",
-        "Could not load timeline events",
-        <>
-          Something went wrong when we tried to load your events, please try
-          again or contact us if the problem persists.
-          <br />
-          <strong>
-            {error.name}: {error.message}
-          </strong>
-        </>
+      toast.warn(
+        <ToastMsg
+          title="Could not load timeline events"
+          message={
+            <div>
+              Something went wrong when we tried to load your events, please try
+              again or contact us if the problem persists.
+              <br />
+              <strong>
+                {error.name}: {error.message}
+              </strong>
+            </div>
+          }
+        />,
+        { toastId: "timeline-load-error" }
       );
       this.setState({ loading: false });
       return;
@@ -296,11 +292,10 @@ export default class UserFeedPage extends React.Component<
         previousEventTs: newEvents[0].created,
         ...optionalProps,
       },
-      async () => {
+      () => {
         if (successCallback) {
           successCallback();
         }
-        await this.loadFeedback();
       }
     );
 
@@ -311,118 +306,9 @@ export default class UserFeedPage extends React.Component<
     }
   };
 
-  /** User feedback mechanism (love/hate button) */
-  getFeedback = async () => {
-    const { currentUser, APIService } = this.context;
-    const { events, newAlert } = this.props;
-    const recording_msids: string[] = [];
-    const recording_mbids: string[] = [];
-
-    if (currentUser?.name && events) {
-      events.forEach((event) => {
-        const recordingMsid = _get(
-          event,
-          "metadata.track_metadata.additional_info.recording_msid"
-        );
-        const recordingMbid = _get(
-          event,
-          "metadata.track_metadata.additional_info.recording_mbid"
-        );
-        if (recordingMsid) {
-          recording_msids.push(recordingMsid);
-        }
-        if (recordingMbid) {
-          recording_mbids.push(recordingMbid);
-        }
-      });
-      try {
-        const data = await APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recording_mbids,
-          recording_msids
-        );
-        return data.feedback;
-      } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
-      }
-    }
-    return [];
-  };
-
-  loadFeedback = async () => {
-    const feedback = await this.getFeedback();
-    if (!feedback) {
-      return;
-    }
-    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
-    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
-
-    feedback.forEach((item: FeedbackResponse) => {
-      if (item.recording_msid) {
-        recordingMsidFeedbackMap[item.recording_msid] = item.score;
-      }
-      if (item.recording_mbid) {
-        recordingMbidFeedbackMap[item.recording_mbid] = item.score;
-      }
-    });
-    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
-  };
-
-  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    // first check whether the mbid has any feedback available
-    // if yes and the feedback is not zero, return it. if the
-    // feedback is zero or not the mbid is absent from the map,
-    // look for the feedback using the msid.
-
-    const recordingMbid = getRecordingMBID(listen);
-    const mbidFeedback = recordingMbid
-      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
-      : 0;
-
-    if (mbidFeedback) {
-      return mbidFeedback;
-    }
-
-    const recordingMsid = getRecordingMSID(listen);
-
-    return recordingMsid
-      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
-      : 0;
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMsid?: string
-  ) => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
-    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
-
-    if (recordingMsid) {
-      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
-    }
-    if (recordingMbid) {
-      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
-    }
-    this.setState({
-      recordingMsidFeedbackMap: newMsidFeedbackMap,
-      recordingMbidFeedbackMap: newMbidFeedbackMap,
-    });
-  };
-
   deleteFeedEvent = async (event: TimelineEvent) => {
     const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
+
     const { events } = this.state;
     if (
       event.event_type === EventType.RECORDING_RECOMMENDATION ||
@@ -436,7 +322,9 @@ export default class UserFeedPage extends React.Component<
           event.id!
         );
         if (status === 200) {
-          newAlert("success", "", <>Successfully deleted!</>);
+          toast.success(<ToastMsg title="Successfully deleted!" message="" />, {
+            toastId: "deleted",
+          });
           const new_events = _reject(events, (element) => {
             // Making sure the event that is getting deleted is either a recommendation or notification
             // Since, recommendation and notification are in same db, and might have same id as a pin
@@ -450,17 +338,21 @@ export default class UserFeedPage extends React.Component<
           this.setState({ events: new_events });
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Could not delete event",
-          <>
-            Something went wrong when we tried to delete your event, please try
-            again or contact us if the problem persists.
-            <br />
-            <strong>
-              {error.name}: {error.message}
-            </strong>
-          </>
+        toast.error(
+          <ToastMsg
+            title="Could not delete event"
+            message={
+              <>
+                Something went wrong when we tried to delete your event, please
+                try again or contact us if the problem persists.
+                <br />
+                <strong>
+                  {error.name}: {error.message}
+                </strong>
+              </>
+            }
+          />,
+          { toastId: "delete-error" }
         );
       }
     } else if (event.event_type === EventType.RECORDING_PIN) {
@@ -470,7 +362,9 @@ export default class UserFeedPage extends React.Component<
           event.id as number
         );
         if (status === 200) {
-          newAlert("success", "", <>Successfully deleted!</>);
+          toast.success(<ToastMsg title="Successfully deleted!" message="" />, {
+            toastId: "deleted",
+          });
           const new_events = _reject(events, (element) => {
             return (
               element?.id === event.id &&
@@ -480,17 +374,21 @@ export default class UserFeedPage extends React.Component<
           this.setState({ events: new_events });
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Could not delete event",
-          <>
-            Something went wrong when we tried to delete your event, please try
-            again or contact us if the problem persists.
-            <br />
-            <strong>
-              {error.name}: {error.message}
-            </strong>
-          </>
+        toast.error(
+          <ToastMsg
+            title="Could not delete event"
+            message={
+              <>
+                Something went wrong when we tried to delete your event, please
+                try again or contact us if the problem persists.
+                <br />
+                <strong>
+                  {error.name}: {error.message}
+                </strong>
+              </>
+            }
+          />,
+          { toastId: "delete-error" }
         );
       }
     }
@@ -498,7 +396,7 @@ export default class UserFeedPage extends React.Component<
 
   hideFeedEvent = async (event: TimelineEvent) => {
     const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
+
     const { events } = this.state;
 
     try {
@@ -523,13 +421,16 @@ export default class UserFeedPage extends React.Component<
         this.setState({ events: new_events });
       }
     } catch (error) {
-      newAlert("danger", error.toString(), <>Could not hide event</>);
+      toast.error(
+        <ToastMsg title="Could not hide event" message={error.toString()} />,
+        { toastId: "hide-error" }
+      );
     }
   };
 
   unhideFeedEvent = async (event: TimelineEvent) => {
     const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
+
     const { events } = this.state;
 
     try {
@@ -554,7 +455,10 @@ export default class UserFeedPage extends React.Component<
         this.setState({ events: new_events });
       }
     } catch (error) {
-      newAlert("danger", "", <>Could not unhide event</>);
+      toast.error(
+        <ToastMsg title="Could not unhide event" message={error.toString()} />,
+        { toastId: "unhide-error" }
+      );
     }
   };
 
@@ -612,7 +516,7 @@ export default class UserFeedPage extends React.Component<
     if (UserFeedPage.isEventListenable(event) && !event.hidden) {
       const { metadata, event_type } = event;
       const { currentUser } = this.context;
-      const { newAlert } = this.props;
+
       let listen: Listen;
       let additionalContent: string | JSX.Element;
       if (event_type === EventType.REVIEW) {
@@ -650,13 +554,10 @@ export default class UserFeedPage extends React.Component<
       return (
         <div className="event-content">
           <ListenCard
-            updateFeedbackCallback={this.updateFeedback}
-            currentFeedback={this.getFeedbackForListen(listen)}
             showUsername={false}
             showTimestamp={false}
             listen={listen}
             additionalContent={additionalContent}
-            newAlert={newAlert}
             additionalMenuItems={additionalMenuItems}
           />
         </div>
@@ -740,7 +641,7 @@ export default class UserFeedPage extends React.Component<
 
   render() {
     const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
+
     const {
       events,
       previousEventTs,
@@ -883,7 +784,7 @@ export default class UserFeedPage extends React.Component<
               </ul>
             </div>
             <div className="col-md-offset-1 col-md-4">
-              <UserSocialNetwork user={currentUser} newAlert={newAlert} />
+              <UserSocialNetwork user={currentUser} />
             </div>
           </div>
           <BrainzPlayer
@@ -891,6 +792,7 @@ export default class UserFeedPage extends React.Component<
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
+            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
           />
         </div>
       </>
@@ -904,7 +806,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -925,10 +826,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <UserFeedPageWithAlertNotifications
-            initialAlerts={optionalAlerts}
-            events={events}
-          />
+          <UserFeedPageWithAlertNotifications events={events} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

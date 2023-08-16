@@ -1,13 +1,15 @@
 import datetime
 from flask import Blueprint, jsonify, request, current_app
 
+from brainzutils.ratelimit import ratelimit
+from brainzutils import cache
 import listenbrainz.db.fresh_releases
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import _parse_int_arg
 from listenbrainz.db.color import get_releases_for_color
-from brainzutils.ratelimit import ratelimit
-from brainzutils import cache
+from troi.patches.lb_radio import LBRadioPatch
+from troi.core import generate_playlist
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 30
@@ -59,9 +61,9 @@ def get_fresh_releases():
             raise APIBadRequest("Cannot parse date. Must be in YYYY-MM-DD format.")
     else:
         release_date = datetime.date.today()
-    
+
     try:
-        db_releases = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days)   
+        db_releases = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days)
     except Exception as e:
         current_app.logger.error("Server failed to get latest release: {}".format(e))
         raise APIInternalServerError("Server failed to get latest release")
@@ -104,7 +106,7 @@ def huesound(color):
         if len(color) != 6:
             raise ValueError()
 
-        color_tuple = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
+        color_tuple = tuple(int(color[i:i + 2], 16) for i in (0, 2, 4))
     except ValueError:
         raise APIBadRequest("color must be a 6 digit hex color code.")
 
@@ -118,3 +120,47 @@ def huesound(color):
         cache.set(cache_key, results, DEFAULT_CACHE_EXPIRE_TIME, encode=True)
 
     return jsonify({"payload": {"releases": results}})
+
+
+@explore_api_bp.route("/lb-radio", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def lb_radio():
+    """
+    Generate a playlist with LB Radio.
+
+    :param prompt: The LB Radio prompt from which to generate playlists.
+    :param mode: The mode that LB radio should use. Must be easy, medium or hard.
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "jspf" : <JSPF playlist here>,
+                "feedback": [ <user feedback items> ]
+            }
+        }
+
+    :statuscode 200: success
+    :statuscode 400: bad request: some parameters are missing or invalid
+    :statuscode 500: Troi encountered an error
+    :resheader Content-Type: *application/json*
+    """
+    prompt = request.args.get("prompt", None)
+    if prompt is None:
+        raise APIBadRequest(f"The prompt parameter cannot be empty.")
+
+    mode = request.args.get("mode", None)
+    if mode is None or mode not in ("easy", "medium", "hard"):
+        raise APIBadRequest(f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
+
+    patch = LBRadioPatch()
+    try:
+        playlist = generate_playlist(patch, args={"mode": mode, "prompt": prompt, "echo": False})
+    except RuntimeError as err:
+        raise APIBadRequest(f"LB Radio generation failed: {err}")
+
+    jspf = playlist.get_jspf() if playlist is not None else {"playlist": { "tracks": [] } }
+    feedback = patch.user_feedback()
+
+    return jsonify({"payload": {"jspf": jspf, "feedback": feedback}})

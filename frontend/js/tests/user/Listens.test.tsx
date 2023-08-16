@@ -16,6 +16,7 @@ import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPl
 
 import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -50,7 +51,6 @@ const props = {
   profileUrl,
   user,
   userPinnedRecording,
-  newAlert: () => {},
 };
 
 // Create a new instance of GlobalAppContext
@@ -60,12 +60,15 @@ const mountOptions: { context: GlobalAppContextT } = {
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
     currentUser: { id: 1, name: "iliekcomputers", auth_token: "fnord" },
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIServiceClass("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 
 const propsOneListen = {
   ...recentListensPropsOneListen,
-  newAlert: () => {},
 };
 
 fetchMock.mockIf(
@@ -124,47 +127,6 @@ describe("Listens page", () => {
 
       expect(spy).toHaveBeenCalledWith(user.name);
       expect(wrapper.state("listenCount")).toEqual(42);
-    });
-
-    it("calls loadFeedback if user is logged in", () => {
-      const wrapper = mount<Listens>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...propsOneListen} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      instance.loadFeedback = jest.fn();
-
-      act(() => {
-        instance.componentDidMount();
-      });
-
-      expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not fetch user feedback if user is not logged in"', () => {
-      const wrapper = mount<Listens>(
-        <GlobalAppContext.Provider
-          value={{
-            ...mountOptions.context,
-            currentUser: {} as ListenBrainzUser,
-          }}
-        >
-          <Listens {...propsOneListen} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const loadFeedbackSpy = jest.spyOn(instance, "loadFeedback");
-      const APIFeedbackSpy = jest.spyOn(
-        instance.context.APIService,
-        "getFeedbackForUserForRecordings"
-      );
-      act(() => {
-        instance.componentDidMount();
-      });
-
-      expect(loadFeedbackSpy).toHaveBeenCalledTimes(1);
-      expect(APIFeedbackSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -260,7 +222,7 @@ describe("Listens page", () => {
       listened_at: 1586580524,
       listened_at_iso: "2020-04-10T10:12:04Z",
     };
-    it("crops the listens array if length is more than or equal to 100", async () => {
+    it("crops the websocket listens array to a maximum of 7", async () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
@@ -269,38 +231,27 @@ describe("Listens page", () => {
           {...(JSON.parse(
             JSON.stringify(recentListensPropsTooManyListens)
           ) as ListensProps)}
-          newAlert={jest.fn()}
         />,
         mountOptions
       );
-      const instance = wrapper.instance();
-
-      await act(() => {
-        instance.receiveNewListen(JSON.stringify(mockListen));
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
-
-      /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
-       * so that it doesn't get passed as a reference.
-       */
       await act(() => {
         wrapper.setState({
-          listens: JSON.parse(
+          webSocketListens: JSON.parse(
             JSON.stringify(recentListensPropsTooManyListens.listens)
           ),
         });
       });
+
+      const instance = wrapper.instance();
       await act(() => {
         instance.receiveNewListen(JSON.stringify(mockListen));
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
+      expect(wrapper.state("webSocketListens")).toHaveLength(7);
     });
 
-    it("inserts the received listen for other modes", async () => {
+    it("inserts the received listen in separate state", async () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
@@ -309,17 +260,15 @@ describe("Listens page", () => {
         mountOptions
       );
       const instance = wrapper.instance();
-      const result: Array<Listen> = Array.from(
-        recentListensPropsOneListen.listens
-      );
-      result.unshift(mockListen);
       await act(() => {
         instance.receiveNewListen(JSON.stringify(mockListen));
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("listens")).toHaveLength(result.length);
-      expect(wrapper.state("listens")).toEqual(result);
+      expect(wrapper.state("listens")).toHaveLength(1);
+      expect(wrapper.state("listens")).toEqual(propsOneListen.listens);
+      expect(wrapper.state("webSocketListens")).toHaveLength(1);
+      expect(wrapper.state("webSocketListens")).toEqual([mockListen]);
     });
   });
 
@@ -348,7 +297,6 @@ describe("Listens page", () => {
             {...(JSON.parse(
               JSON.stringify(recentListensPropsPlayingNow)
             ) as ListensProps)}
-            newAlert={jest.fn()}
           />
         </GlobalAppContext.Provider>
       );
@@ -377,10 +325,9 @@ describe("Listens page", () => {
 
   describe("deleteListen", () => {
     it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
-      const newAlertMock = jest.fn();
       const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...props} newAlert={newAlertMock} />
+          <Listens {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -410,12 +357,6 @@ describe("Listens page", () => {
       expect(removeListenCallbackSpy).toHaveBeenCalledWith(listenToDelete);
       expect(instance.state.deletedListen).toEqual(listenToDelete);
       expect(instance.state.listens).not.toContainEqual(listenToDelete);
-      expect(newAlertMock).toHaveBeenCalledWith(
-        "info",
-        "Success",
-        "This listen has not been deleted yet, but is scheduled for deletion," +
-          " which usually happens shortly after the hour."
-      );
     });
 
     it("does nothing if isCurrentUser is false", async () => {
@@ -521,11 +462,10 @@ describe("Listens page", () => {
       expect(instance.state.listens).toContainEqual(listenToDelete);
     });
 
-    it("calls newAlert if error is returned", async () => {
-      const newAlertMock = jest.fn();
+    it("handles error for delete listen", async () => {
       const wrapper = mount<Listens>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Listens {...props} newAlert={newAlertMock} />
+          <Listens {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -542,12 +482,6 @@ describe("Listens page", () => {
         await instance.deleteListen(listenToDelete);
       });
       await waitForComponentToPaint(wrapper);
-
-      expect(newAlertMock).toHaveBeenCalledWith(
-        "danger",
-        "Error while deleting listen",
-        "my error message"
-      );
     });
   });
 
@@ -689,7 +623,6 @@ describe("Listens page", () => {
           .mockImplementation(() => Promise.resolve(expectedListensArray));
         // eslint-disable-next-line dot-notation
         instance["APIService"].getListensForUser = spy;
-        instance.getFeedback = jest.fn();
 
         await act(() => {
           instance.handleClickOlder();

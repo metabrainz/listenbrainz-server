@@ -156,6 +156,11 @@ SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 SPOTIFY_CALLBACK_URL = 'http://localhost:8100/profile/music-services/spotify/callback/'
 
+# SOUNDCLOUD
+SOUNDCLOUD_CLIENT_ID = 'needs a non empty default value for tests, change this'
+SOUNDCLOUD_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
+SOUNDCLOUD_REDIRECT_URI = 'http://localhost:8100/profile/music-services/soundcloud/callback/'
+
 # CRITIQUEBRAINZ
 CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change this'
 CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'

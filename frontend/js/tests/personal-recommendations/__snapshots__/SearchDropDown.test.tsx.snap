@@ -20,9 +20,12 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
           "icon": Array [
             448,
             512,
-            Array [],
+            Array [
+              128100,
+              62144,
+            ],
             "f007",
-            "M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z",
+            "M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z",
           ],
           "iconName": "user",
           "prefix": "fas",
@@ -39,18 +42,25 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
         type="button"
       >
         <FontAwesomeIcon
+          beat={false}
+          beatFade={false}
           border={false}
+          bounce={false}
           className=""
+          fade={false}
           fixedWidth={false}
-          flip={null}
+          flip={false}
           icon={
             Object {
               "icon": Array [
                 448,
                 512,
-                Array [],
+                Array [
+                  128100,
+                  62144,
+                ],
                 "f007",
-                "M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z",
+                "M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z",
               ],
               "iconName": "user",
               "prefix": "fas",
@@ -59,19 +69,24 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
           inverse={false}
           listItem={false}
           mask={null}
+          maskId={null}
           pull={null}
           pulse={false}
           rotation={null}
+          shake={false}
           size={null}
           spin={false}
+          spinPulse={false}
+          spinReverse={false}
           swapOpacity={false}
           symbol={false}
           title=""
+          titleId={null}
           transform={null}
         >
           <svg
             aria-hidden="true"
-            className="svg-inline--fa fa-user fa-w-14 "
+            className="svg-inline--fa fa-user "
             data-icon="user"
             data-prefix="fas"
             focusable="false"
@@ -81,7 +96,7 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"
+              d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"
               fill="currentColor"
               style={Object {}}
             />
@@ -98,9 +113,12 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
           "icon": Array [
             448,
             512,
-            Array [],
+            Array [
+              128100,
+              62144,
+            ],
             "f007",
-            "M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z",
+            "M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z",
           ],
           "iconName": "user",
           "prefix": "fas",
@@ -117,18 +135,25 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
         type="button"
       >
         <FontAwesomeIcon
+          beat={false}
+          beatFade={false}
           border={false}
+          bounce={false}
           className=""
+          fade={false}
           fixedWidth={false}
-          flip={null}
+          flip={false}
           icon={
             Object {
               "icon": Array [
                 448,
                 512,
-                Array [],
+                Array [
+                  128100,
+                  62144,
+                ],
                 "f007",
-                "M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z",
+                "M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z",
               ],
               "iconName": "user",
               "prefix": "fas",
@@ -137,19 +162,24 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
           inverse={false}
           listItem={false}
           mask={null}
+          maskId={null}
           pull={null}
           pulse={false}
           rotation={null}
+          shake={false}
           size={null}
           spin={false}
+          spinPulse={false}
+          spinReverse={false}
           swapOpacity={false}
           symbol={false}
           title=""
+          titleId={null}
           transform={null}
         >
           <svg
             aria-hidden="true"
-            className="svg-inline--fa fa-user fa-w-14 "
+            className="svg-inline--fa fa-user "
             data-icon="user"
             data-prefix="fas"
             focusable="false"
@@ -159,7 +189,7 @@ exports[`<SearchDropDown /> renders correctly 1`] = `
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"
+              d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"
               fill="currentColor"
               style={Object {}}
             />

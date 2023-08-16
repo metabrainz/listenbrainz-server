@@ -140,6 +140,8 @@ def load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids):
                 "artist_credit_id": data["artist_credit_id"],
                 "artist_credit_name": data["artist"],
                 "[artist_credit_mbids]": data["artist_mbids"],
+                "release_name": data["release"],
+                "release_mbid": data["release_mbid"],
                 "caa_id": data["caa_id"],
                 "caa_release_mbid": data["caa_release_mbid"],
                 "original_recording_mbid": mbid,
@@ -153,6 +155,8 @@ def load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids):
                 'artist_credit_id': None,
                 'artist_credit_name': None,
                 '[artist_credit_mbids]': None,
+                'release_name': None,
+                'release_mbid': None,
                 'canonical_recording_mbid': None,
                 'original_recording_mbid': mbid
             }

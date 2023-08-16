@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get } from "lodash";
+import { get as _get, isFunction, isUndefined } from "lodash";
 import { faGripLines, faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,19 +10,10 @@ import ListenControl from "../listens/ListenControl";
 
 export type PlaylistItemCardProps = {
   track: JSPFTrack;
-  currentFeedback: ListenFeedBack;
   canEdit: Boolean;
-  removeTrackFromPlaylist: (track: JSPFTrack) => void;
-  updateFeedbackCallback: (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
-  ) => void;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
+  removeTrackFromPlaylist?: (track: JSPFTrack) => void;
+  showTimestamp?: boolean;
+  showUsername?: boolean;
 };
 
 export default class PlaylistItemCard extends React.Component<
@@ -30,16 +21,18 @@ export default class PlaylistItemCard extends React.Component<
 > {
   removeTrack = () => {
     const { track, removeTrackFromPlaylist } = this.props;
-    removeTrackFromPlaylist(track);
+    if (removeTrackFromPlaylist) {
+      removeTrackFromPlaylist(track);
+    }
   };
 
   render() {
     const {
       track,
       canEdit,
-      currentFeedback,
-      newAlert,
-      updateFeedbackCallback,
+      showUsername,
+      showTimestamp,
+      removeTrackFromPlaylist,
     } = this.props;
     // const customFields = getTrackExtension(track);
     // const trackDuration = track.duration
@@ -55,7 +48,7 @@ export default class PlaylistItemCard extends React.Component<
       </div>
     ) : undefined;
     let additionalMenuItems;
-    if (canEdit) {
+    if (canEdit && isFunction(removeTrackFromPlaylist)) {
       additionalMenuItems = [
         <ListenControl
           title="Remove from playlist"
@@ -70,15 +63,11 @@ export default class PlaylistItemCard extends React.Component<
       <ListenCard
         className="playlist-item-card"
         listen={listen}
-        currentFeedback={currentFeedback}
-        showTimestamp={Boolean(listen.listened_at_iso)}
-        showUsername={Boolean(listen.user_name)}
-        // showTrackLength
-        newAlert={newAlert}
+        showTimestamp={showTimestamp ?? Boolean(listen.listened_at_iso)}
+        showUsername={showUsername ?? Boolean(listen.user_name)}
         beforeThumbnailContent={dragHandle}
         data-recording-mbid={track.id}
         additionalMenuItems={additionalMenuItems}
-        updateFeedbackCallback={updateFeedbackCallback}
       />
     );
   }
