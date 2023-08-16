@@ -23,7 +23,7 @@ class Crawler(threading.Thread):
         self.queue = UniqueQueue()
 
     def put(self, item: JobItem):
-        self.queue.put(item)
+        self.queue.put(item, block=False)
 
     def terminate(self):
         self.done = True
@@ -48,7 +48,7 @@ class Crawler(threading.Thread):
 
                 try:
                     for _ in range(BATCH_SIZE):
-                        item = self.queue.get()
+                        item = self.queue.get(block=False)
                         item_ids.append(item.item_id)
                 except Empty:
                     if len(item_ids) == 0:
