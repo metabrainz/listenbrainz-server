@@ -166,6 +166,7 @@
     "webpack-manifest-plugin": "^5.0.0"
   },
   "overrides": {
-    "d3-color": "^3.1.0"
+    "d3-color": "^3.1.0",
+    "xmlhttprequest-ssl": "^2.1.1"
   }
 }
