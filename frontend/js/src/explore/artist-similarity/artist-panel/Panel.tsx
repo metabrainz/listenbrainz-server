@@ -49,22 +49,22 @@ function Panel({ artist }: PanelProps) {
   return (
     artistInfo && (
       <div className="artist-panel">
-        <div className="artist-header">
-          <h2>{artistInfo.name}</h2>
-          <p>{artistInfo.type}</p>
+        <div className="artist-panel-header">
+          <h2 id="artist-name">{artistInfo.name}</h2>
+          <p id="artist-type">{artistInfo.type}</p>
         </div>
-        <div className="artist-info">
-          <div className="area">
+        <div className="artist-panel-info">
+          <div className="artist-birth-area">
             <strong>Born: </strong>
             {artistInfo.born}
             <br />
             <strong>Area: </strong>
             {artistInfo.area}
           </div>
-          <div className="wiki">{artistInfo.wiki}</div>
-          <div className="mb-link">
+          <div id="artist-wiki">{artistInfo.wiki}</div>
+          <div className="artist-mb-link">
             <a
-              id="mb-link-button"
+              id="artist-mb-link-button"
               href={artistInfo.mbLink}
               target="_blank"
               rel="noreferrer"
@@ -76,7 +76,7 @@ function Panel({ artist }: PanelProps) {
         </div>
         {artistInfo.topTrack && (
           <div className="artist-top-album">
-            <h3>Top Album</h3>
+            <h5>Top Album</h5>
             {/**
              * Needs to be replaced with top album when endpoint is available.
              */}
@@ -92,7 +92,7 @@ function Panel({ artist }: PanelProps) {
         )}
         {artistInfo.topTrack && (
           <div className="artist-top-track">
-            <h3>Top Track</h3>
+            <h5>Top Track</h5>
             {artistInfo.topTrack && (
               <ReleaseCard
                 releaseMBID={artistInfo.topTrack.release_mbid}

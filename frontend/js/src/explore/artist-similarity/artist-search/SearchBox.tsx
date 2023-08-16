@@ -115,35 +115,45 @@ function SearchBox({
     onSimilarArtistsLimitChange(currentsimilarArtistsLimit - 1);
   };
   return (
-    <form className="search-box" autoComplete="off">
-      <div className="artist-input">
-        <div className="artist-input-box">
+    <form className="user-inputs-container" autoComplete="off">
+      <div
+        className="artist-input-container"
+        onFocus={() => searchResults.length && setOpenDropdown(true)}
+        onBlur={() => setTimeout(() => setOpenDropdown(false), 100)}
+      >
+        <div className="searchbox-container">
           <input
-            id="artist-input-name"
+            id="searchbox-artist-name"
             type="search"
             name="artist_mbid"
             placeholder="Artist name"
             onChange={(e) => handleQueryChange(e.target.value)}
             value={searchQuery}
           />
-          <button id="artist-input-icon" type="button">
+          <button id="searchbox-icon" type="button">
             <FontAwesomeIcon icon={faMagnifyingGlass} color="white" />
           </button>
         </div>
-        {openDropdown && (
-          <SearchDropdown
-            searchResults={searchResults}
-            onArtistChange={onArtistChange}
-            onDropdownChange={setOpenDropdown}
-            id="search-dropdown"
-          />
-        )}
+        <div className="search-dropdown-container">
+          {openDropdown && (
+            <SearchDropdown
+              searchResults={searchResults}
+              onArtistChange={onArtistChange}
+              onDropdownChange={setOpenDropdown}
+              id="search-dropdown"
+            />
+          )}
+        </div>
       </div>
-      <div className="graph-size-input">
+      <div className="graph-size-input-container">
         <label htmlFor="graph-size-input-number" id="graph-size-input-label">
           Web size:
         </label>
-        <button id="graph-size-input-minus" type="button" onClick={decrement}>
+        <button
+          id="graph-size-input-icon-minus"
+          type="button"
+          onClick={decrement}
+        >
           <FontAwesomeIcon icon={faMinus} color="white" />
         </button>
         <input
@@ -151,12 +161,17 @@ function SearchBox({
           type="number"
           name="similarArtistsLimit"
           placeholder="Graph size"
+          size={2}
           onChange={(e) => onSimilarArtistsLimitChange(e.target.valueAsNumber)}
           value={currentsimilarArtistsLimit}
           required
         />
         <span id="graph-size-input-warning" className="validity" />
-        <button id="graph-size-input-plus" type="button" onClick={increment}>
+        <button
+          id="graph-size-input-icon-plus"
+          type="button"
+          onClick={increment}
+        >
           <FontAwesomeIcon icon={faPlus} color="white" />
         </button>
       </div>

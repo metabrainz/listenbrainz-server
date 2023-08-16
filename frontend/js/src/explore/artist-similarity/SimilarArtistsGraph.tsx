@@ -6,7 +6,6 @@ import {
   NetworkSvgProps,
 } from "@nivo/network";
 import { animated, to } from "@react-spring/web";
-import { shallow } from "enzyme";
 import type { NodeType, LinkType, GraphDataType } from "./Data";
 
 interface GraphProps {

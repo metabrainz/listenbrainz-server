@@ -215,12 +215,14 @@ function Data() {
         onSimilarArtistsLimitChange={setSimilarArtistsLimit}
         currentsimilarArtistsLimit={similarArtistsLimit}
       />
-      <SimilarArtistsGraph
-        onArtistChange={setArtistMBID}
-        data={transformedArtists}
-        background={backgroundGradient}
-      />
-      {mainArtist && <Panel artist={mainArtist} />}
+      <div className="artist-similarity-graph-panel-container">
+        <SimilarArtistsGraph
+          onArtistChange={setArtistMBID}
+          data={transformedArtists}
+          background={backgroundGradient}
+        />
+        {mainArtist && <Panel artist={mainArtist} />}
+      </div>
     </div>
   );
 }
