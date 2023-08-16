@@ -9,9 +9,9 @@ from brainzutils import cache
 from spotipy import SpotifyClientCredentials
 
 from listenbrainz.db import timescale
-from listenbrainz.mbid_mapping_writer.job_queue import JobItem
 from listenbrainz.metadata_cache.handler import BaseHandler
 from listenbrainz.metadata_cache.spotify.store import insert_normalized, insert_raw
+from listenbrainz.metadata_cache.unique_queue import JobItem
 
 DISCOVERED_ALBUM_PRIORITY = 3
 INCOMING_ALBUM_PRIORITY = 0
