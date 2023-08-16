@@ -70,9 +70,13 @@ function Data() {
   // Score in case it is undefined (as in case of main artist)
   const NULL_SCORE = Infinity;
 
-  const [color1, setColor1] = useState(colorGenerator());
-  const [color2, setColor2] = useState(color1.clone().tetrad()[1]);
+  const color1 = colorGenerator();
+  const color2 = color1.clone().tetrad()[1];
   const [similarArtistsList, setSimilarArtistsList] = useState<
+    Array<ArtistType>
+  >([]);
+  // State to store the complete list of similar artists to help with when user changes artist limit
+  const [completeSimilarArtistsList, setCompleteSimilarArtistsList] = useState<
     Array<ArtistType>
   >([]);
   const [mainArtist, setMainArtist] = useState<ArtistType>();
@@ -100,6 +104,7 @@ function Data() {
         // Get the similar artists from the second dataset
         const similarArtistsResponse = artistsData[1];
         if (similarArtistsResponse?.data?.length) {
+          setCompleteSimilarArtistsList(similarArtistsResponse.data);
           setSimilarArtistsList(
             similarArtistsResponse.data.slice(0, similarArtistsLimit)
           );
@@ -111,7 +116,7 @@ function Data() {
       }
       setColors([tinycolor.mix(color1, color2, COLOR_MIX_WEIGHT), color2]);
     },
-    [color1, color2, similarArtistsLimit]
+    [artistMBID]
   );
 
   const fetchData = useCallback(
@@ -133,7 +138,15 @@ function Data() {
   // Update the graph when either artistMBID or similarArtistsLimit changes
   useEffect(() => {
     fetchData(artistMBID);
-  }, [artistMBID, fetchData, similarArtistsLimit]);
+  }, [artistMBID, fetchData]);
+  // Update the graph when limit changes by only changing the data and not making a new request to server
+  useEffect(() => {
+    const newSimilarArtistsList = completeSimilarArtistsList.slice(
+      0,
+      similarArtistsLimit
+    );
+    setSimilarArtistsList(newSimilarArtistsList);
+  }, [similarArtistsLimit]);
 
   // Calculating minScore for normalization which is always the last element of the array (because it's sorted)
   let minScore = similarArtistsList?.[similarArtistsLimit - 1]?.score ?? 0;

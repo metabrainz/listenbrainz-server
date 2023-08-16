@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ResponsiveNetwork,
   NodeProps,
@@ -13,6 +13,8 @@ interface GraphProps {
   onArtistChange: (artist_mbid: string) => void;
   background: string;
 }
+
+type OmitHeightWidth<T> = Omit<T, "height" | "width">;
 
 const MAX_LINES = 2;
 const MAX_WORD_LENGTH = 10;
@@ -109,11 +111,32 @@ function CustomNodeTooltipComponent({ node }: NodeTooltipProps<NodeType>) {
 }
 
 function SimilarArtistsGraph({ data, onArtistChange, background }: GraphProps) {
-  const chartProperties: NetworkSvgProps<NodeType, LinkType> = {
+  const [graphMargin, setGraphMargin] = useState({
+    top: 0,
+    right: window.innerWidth / 5,
+    bottom: 0,
+    left: 0,
+  });
+  useEffect(() => {
+    const handleResize = () => {
+      setGraphMargin({
+        top: 0,
+        right: window.innerWidth / 5,
+        bottom: 0,
+        left: 0,
+      });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+  const chartProperties: OmitHeightWidth<NetworkSvgProps<
+    NodeType,
+    LinkType
+  >> = {
     data,
-    height: window.innerHeight * 0.9,
-    width: window.innerWidth * 0.9,
-    margin: { top: 0, right: window.innerWidth / 5, bottom: 0, left: 0 },
+    margin: graphMargin,
     repulsivity: 350,
     iterations: 120,
     centeringStrength: 0.11,
@@ -135,7 +158,10 @@ function SimilarArtistsGraph({ data, onArtistChange, background }: GraphProps) {
   return data ? (
     <div
       className="artist-similarity-graph-container"
-      style={{ background, height: "800px" }}
+      style={{
+        background,
+        height: "85vh",
+      }}
     >
       <ResponsiveNetwork
         {...chartProperties}
