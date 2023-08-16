@@ -55,11 +55,7 @@ class BaseBrainzService(ExternalService):
         )
 
     def refresh_access_token(self, user_id: int, refresh_token: str):
-        oauth = OAuth2Session(
-            client_id=self.client_id,
-            redirect_uri=self.redirect_uri,
-            scope=self.scopes
-        )
+        oauth = OAuth2Session(client_id=self.client_id, redirect_uri=self.redirect_uri)
         try:
             token = oauth.refresh_token(
                 self.token_url,

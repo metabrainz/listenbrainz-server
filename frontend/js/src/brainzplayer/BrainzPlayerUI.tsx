@@ -1,24 +1,23 @@
-import * as React from "react";
 import {
   faFastBackward,
   faFastForward,
   faHeart,
-  faHeartBroken,
+  faHeartCrack,
   faPauseCircle,
   faPlayCircle,
 } from "@fortawesome/free-solid-svg-icons";
+import * as React from "react";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { isNaN as _isNaN } from "lodash";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
-import ProgressBar from "./ProgressBar";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import MenuOptions from "./MenuOptions";
-import { millisecondsToStr } from "../playlists/utils";
-import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
 import { ToastMsg } from "../notifications/Notifications";
+import { millisecondsToStr } from "../playlists/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
+import MenuOptions from "./MenuOptions";
+import ProgressBar from "./ProgressBar";
 
 type BrainzPlayerUIProps = {
   currentDataSourceName?: string;
@@ -240,7 +239,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           }`}
         />
         <FontAwesomeIcon
-          icon={faHeartBroken}
+          icon={faHeartCrack}
           title="Hate"
           onClick={
             isPlayingATrack

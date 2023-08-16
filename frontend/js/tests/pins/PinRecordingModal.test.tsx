@@ -7,8 +7,11 @@ import PinRecordingModal, {
   maxBlurbContentLength,
 } from "../../src/pins/PinRecordingModal";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const recordingToPin: Listen = {
   listened_at: 1605927742,
@@ -47,18 +50,20 @@ const user = {
   auth_token: "auth_token",
 };
 const APIService = new APIServiceClass("");
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService,
   currentUser: user,
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(APIService, {
+    name: "Fnord",
+  }),
 };
 
 const niceModalProps: NiceModalHocProps = {
   id: "fnord",
   defaultVisible: true,
 };
-
 
 const submitPinRecordingSpy = jest
   .spyOn(APIService, "submitPinRecording")
@@ -84,7 +89,6 @@ describe("PinRecordingModal", () => {
           <PinRecordingModal
             {...niceModalProps}
             recordingToPin={recordingToPin}
-            
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
@@ -101,7 +105,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -129,7 +132,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -168,7 +170,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -190,7 +191,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -217,7 +217,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -254,7 +253,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>

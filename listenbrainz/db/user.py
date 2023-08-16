@@ -9,9 +9,7 @@ from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 from typing import Tuple, List
 
-
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 def create(musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> int:
@@ -141,7 +139,8 @@ def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
             SELECT {columns}
               FROM "user"
              WHERE LOWER(musicbrainz_id) in :mb_ids
-        """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
+        """.format(columns=','.join(USER_GET_COLUMNS))),
+                                    {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
         return {row["musicbrainz_id"].lower(): row for row in result.mappings()}
 
 
@@ -559,9 +558,9 @@ def search_query(search_term: str, limit: int, connection: any):
           ORDER BY query_similarity DESC
              LIMIT :limit
             """), {
-            "search_term": search_term,
-            "limit": limit
-        })
+        "search_term": search_term,
+        "limit": limit
+    })
     rows = result.fetchall()
     return rows
 
@@ -582,17 +581,16 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
           calculated by spark
     """
     with db.engine.connect() as connection:
-        rows = search_query(search_term,limit,connection)
+        rows = search_query(search_term, limit, connection)
         if not rows:
             return []
-        
-        similar_users = get_similar_users(searcher_id) if searcher_id else None
-
-        # Constructing an id-similarity map
-        id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
 
         search_results = []
-        if similar_users:
+
+        if searcher_id:
+            # Constructing an id-similarity map
+            similar_users = get_similar_users(searcher_id)
+            id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
             for row in rows:
                 similarity = id_similarity_map.get(row.musicbrainz_id, None)
                 search_results.append((row.musicbrainz_id, row.query_similarity, similarity))
@@ -602,9 +600,8 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
 
 
 def search_user_name(search_term: str, limit: int) -> List[object]:
-
     with db.engine.connect() as connection:
-        rows = search_query(search_term,limit,connection)
+        rows = search_query(search_term, limit, connection)
 
         if not rows:
             return []
@@ -612,6 +609,5 @@ def search_user_name(search_term: str, limit: int) -> List[object]:
         search_results = []
 
         for row in rows:
-            search_results.append({"user_name":row.musicbrainz_id})
+            search_results.append({"user_name": row.musicbrainz_id})
         return search_results
-

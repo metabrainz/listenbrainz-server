@@ -1,7 +1,12 @@
 import * as React from "react";
-import { get as _get, throttle as _throttle } from "lodash";
+import { get as _get, isString, throttle as _throttle } from "lodash";
 import { faSoundcloud } from "@fortawesome/free-brands-svg-icons";
-import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
+import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
+import {
+  getArtistName,
+  getTrackName,
+  searchForSoundcloudTrack,
+} from "../utils/utils";
 
 require("../../lib/soundcloud-player-api");
 
@@ -51,12 +56,21 @@ type ProgressEvent = {
 };
 
 export type SoundcloudPlayerState = {
-  currentSoundId?: number;
+  currentSound?: SoundCloudTrack;
+};
+
+export type SoundCloudPlayerProps = DataSourceProps & {
+  soundcloudUser?: SoundCloudUser;
+  refreshSoundcloudToken: () => Promise<string>;
 };
 
 export default class SoundcloudPlayer
-  extends React.Component<DataSourceProps, SoundcloudPlayerState>
+  extends React.Component<SoundCloudPlayerProps, SoundcloudPlayerState>
   implements DataSourceType {
+  static hasPermissions = (soundcloudUser?: SoundCloudUser) => {
+    return Boolean(soundcloudUser?.access_token);
+  };
+
   static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     return !!originURL && /soundcloud\.com/.test(originURL);
@@ -81,8 +95,8 @@ export default class SoundcloudPlayer
   // HTML widget options: https://developers.soundcloud.com/docs/api/html5-widget#parameters
   options = {
     auto_play: true,
-    show_artwork: true,
-    visual: true,
+    show_artwork: false,
+    visual: false,
     buying: false,
     liking: false,
     download: false,
@@ -93,10 +107,20 @@ export default class SoundcloudPlayer
     hide_related: true,
   };
 
-  constructor(props: DataSourceProps) {
+  // Saving the access token outside of React state , we do not need it for any rendering purposes
+  // and it simplifies some of the closure issues we've had with old tokens.
+  private accessToken = "";
+  private authenticationRetries = 0;
+
+  constructor(props: SoundCloudPlayerProps) {
     super(props);
-    this.state = { currentSoundId: undefined };
+    this.accessToken = props.soundcloudUser?.access_token || "";
+    this.state = { currentSound: undefined };
     this.iFrameRef = React.createRef();
+    // initial permissions check
+    if (!SoundcloudPlayer.hasPermissions(props.soundcloudUser)) {
+      this.handleAccountError();
+    }
   }
 
   componentDidMount() {
@@ -122,7 +146,7 @@ export default class SoundcloudPlayer
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
-    if (prevProps.show === true && show === false && this.soundcloudPlayer) {
+    if (prevProps.show && !show && this.soundcloudPlayer) {
       this.soundcloudPlayer.pause();
     }
   }
@@ -170,9 +194,8 @@ export default class SoundcloudPlayer
   onPlay = (event: ProgressEvent): void => {
     const { onPlayerPausedChange } = this.props;
     // Detect new track loaded
-    const { currentSoundId } = this.state;
-    if (event.soundId !== currentSoundId) {
-      this.setState({ currentSoundId: event.soundId });
+    const { currentSound } = this.state;
+    if (event.soundId !== currentSound?.id) {
       this.updateTrackInfo(event);
     }
 
@@ -180,11 +203,99 @@ export default class SoundcloudPlayer
   };
 
   canSearchAndPlayTracks = (): boolean => {
-    return false;
+    const { soundcloudUser } = this.props;
+    // check if the user is authed to search with the SoundCloud API
+    return Boolean(soundcloudUser) && Boolean(soundcloudUser?.access_token);
   };
 
   datasourceRecordsListens = (): boolean => {
     return false;
+  };
+
+  searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
+    const trackName = getTrackName(listen);
+    const artistName = getArtistName(listen);
+    const releaseName = trackName
+      ? ""
+      : _get(listen, "track_metadata.release_name");
+    const { handleError, handleWarning, onTrackNotFound } = this.props;
+    if (!trackName && !artistName && !releaseName) {
+      handleWarning(
+        "We are missing a track title, artist or album name to search on Soundcloud",
+        "Not enough info to search on Soundcloud"
+      );
+      onTrackNotFound();
+      return;
+    }
+
+    try {
+      const streamUrl = await searchForSoundcloudTrack(
+        this.accessToken,
+        trackName,
+        artistName,
+        releaseName
+      );
+      if (streamUrl) {
+        this.playStreamUrl(streamUrl);
+        return;
+      }
+      onTrackNotFound();
+    } catch (errorObject) {
+      if (errorObject.code === 401) {
+        // Handle token error and try again if fixed
+        await this.handleTokenError(
+          errorObject.message,
+          this.searchAndPlayTrack.bind(this, listen)
+        );
+      }
+      if (errorObject.code === 400) {
+        onTrackNotFound();
+      }
+      handleError(
+        errorObject.message ?? errorObject,
+        "Error searching on Soundcloud"
+      );
+    }
+  };
+
+  handleTokenError = async (
+    error: Error | string | Spotify.Error,
+    callbackFunction: () => void
+  ): Promise<void> => {
+    const { refreshSoundcloudToken, onTrackNotFound, handleError } = this.props;
+    if (this.authenticationRetries > 5) {
+      handleError(
+        isString(error) ? error : error?.message,
+        "Soundcloud token error"
+      );
+      onTrackNotFound();
+      return;
+    }
+    this.authenticationRetries += 1;
+    try {
+      this.accessToken = await refreshSoundcloudToken();
+      this.authenticationRetries = 0;
+      callbackFunction();
+    } catch (refreshError) {
+      handleError(refreshError, "Error connecting to SoundCloud");
+    }
+  };
+
+  handleAccountError = (): void => {
+    const errorMessage = (
+      <p>
+        In order to play music with SoundCloud, you will need a SoundCloud
+        account linked to your ListenBrainz account.
+        <br />
+        Please try to{" "}
+        <a href="/profile/music-services/details/" target="_blank">
+          link for &quot;playing music&quot; feature
+        </a>{" "}
+        and refresh this page
+      </p>
+    );
+    const { onInvalidateDataSource } = this.props;
+    onInvalidateDataSource(this, errorMessage);
   };
 
   playListen = (listen: Listen | JSPFTrack) => {
@@ -192,16 +303,23 @@ export default class SoundcloudPlayer
     if (!show) {
       return;
     }
-    if (!SoundcloudPlayer.isListenFromThisService(listen)) {
-      onTrackNotFound();
-      return;
+    if (SoundcloudPlayer.isListenFromThisService(listen)) {
+      const originURL = _get(
+        listen,
+        "track_metadata.additional_info.origin_url"
+      );
+      this.playStreamUrl(originURL);
+    } else {
+      this.searchAndPlayTrack(listen);
     }
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+  };
+
+  playStreamUrl = (streamUrl: string) => {
     if (this.soundcloudPlayer) {
-      this.soundcloudPlayer.load(originURL, this.options);
+      this.soundcloudPlayer.load(streamUrl, this.options);
     } else if (this.retries <= 3) {
       this.retries += 1;
-      setTimeout(this.playListen.bind(this, listen), 500);
+      setTimeout(this.playStreamUrl.bind(this, streamUrl), 500);
     } else {
       // Abort!
       const { onInvalidateDataSource } = this.props;
@@ -218,10 +336,11 @@ export default class SoundcloudPlayer
     if (!this.soundcloudPlayer) {
       return;
     }
-    this.soundcloudPlayer.getCurrentSound((currentTrack: any) => {
+    this.soundcloudPlayer.getCurrentSound((currentTrack: SoundCloudTrack) => {
       if (!currentTrack) {
         return;
       }
+      this.setState({ currentSound: currentTrack });
       const artwork: MediaImage[] = currentTrack.artwork_url
         ? [{ src: currentTrack.artwork_url }]
         : [];
@@ -232,7 +351,7 @@ export default class SoundcloudPlayer
         undefined,
         artwork
       );
-      onDurationChange(currentTrack.full_duration);
+      onDurationChange(currentTrack.duration);
       if (event) {
         onProgressChange(event.currentPosition);
       }
@@ -259,6 +378,20 @@ export default class SoundcloudPlayer
     onTrackNotFound();
   };
 
+  getAlbumArt = (): JSX.Element | null => {
+    const { currentSound } = this.state;
+    if (!currentSound || !currentSound.artwork_url) {
+      return null;
+    }
+    return (
+      <img
+        alt="coverart"
+        className="img-responsive"
+        src={currentSound.artwork_url}
+      />
+    );
+  };
+
   render() {
     const { show } = this.props;
     return (
@@ -269,11 +402,13 @@ export default class SoundcloudPlayer
           title="Soundcloud player"
           width="100%"
           height="420px"
+          style={{ display: "none" }}
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
           src="https://w.soundcloud.com/player/?auto_play=false"
         />
+        <div>{this.getAlbumArt()}</div>
       </div>
     );
   }

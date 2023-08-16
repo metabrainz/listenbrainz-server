@@ -1,51 +1,81 @@
-import psycopg2
-from flask import current_app
-from psycopg2.extras import execute_values
+from sqlalchemy import text
 
 from listenbrainz.db import timescale
+from listenbrainz.spark.spark_dataset import DatabaseDataset
 
 
-def insert(query, values):
-    connection = timescale.engine.raw_connection()
-    try:
-        with connection.cursor() as cursor:
-            execute_values(cursor, query, values)
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting popularity data:", exc_info=True)
+class PopularityDataset(DatabaseDataset):
+    """ Dataset class for artists, recordings and releases with popularity info (listen count and unique listener count)
+     from MLHD data """
+
+    def __init__(self, entity):
+        super().__init__(f"mlhd_popularity_{entity}", entity, "popularity")
+        self.entity = entity
+        self.entity_mbid = f"{entity}_mbid"
+
+    def get_table(self):
+        return f"""
+            CREATE TABLE {{table}} (
+                {self.entity_mbid}      UUID NOT NULL,
+                total_listen_count      INTEGER NOT NULL,
+                total_user_count        INTEGER NOT NULL
+            )
+        """
+
+    def get_inserts(self, message):
+        query = f"INSERT INTO {{table}} ({self.entity_mbid}, total_listen_count, total_user_count) VALUES %s"
+        values = [(r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
+        return query, None, values
 
 
-def insert_recording(data):
-    """ Insert recording popularity data. """
-    query = "INSERT INTO popularity.recording (recording_mbid, total_listen_count, total_user_count) VALUES %s"
-    values = [(r["recording_mbid"], r["total_listen_count"], r["total_user_count"]) for r in data]
-    insert(query, values)
+class PopularityTopDataset(DatabaseDataset):
+    """ Dataset class for all recordings and releases with popularity info (total listen count and unique listener
+     count) for each artist in MLHD data. """
+    def __init__(self, entity):
+        super().__init__(f"mlhd_popularity_top_{entity}", f"top_{entity}", "popularity")
+        self.entity = entity
+        self.entity_mbid = f"{entity}_mbid"
+
+    def get_table(self):
+        return f"""
+            CREATE TABLE {{table}} (
+                artist_mbid             UUID NOT NULL,
+                {self.entity_mbid}      UUID NOT NULL,
+                total_listen_count      INTEGER NOT NULL,
+                total_user_count        INTEGER NOT NULL
+            )
+        """
+
+    def get_inserts(self, message):
+        query = f"INSERT INTO {{table}} (artist_mbid, {self.entity_mbid}, total_listen_count, total_user_count) VALUES %s"
+        values = [
+            (r["artist_mbid"], r[self.entity_mbid], r["total_listen_count"], r["total_user_count"])
+            for r in message["data"]
+        ]
+        return query, None, values
 
 
-def insert_artist(data):
-    """ Insert artist popularity data. """
-    query = "INSERT INTO popularity.artist (artist_mbid, total_listen_count, total_user_count) VALUES %s"
-    values = [(r["artist_mbid"], r["total_listen_count"], r["total_user_count"]) for r in data]
-    insert(query, values)
+RecordingPopularityDataset = PopularityDataset("recording")
+ArtistPopularityDataset = PopularityDataset("artist")
+ReleasePopularityDataset = PopularityDataset("release")
+TopRecordingPopularityDataset = PopularityTopDataset("recording")
+TopReleasePopularityDataset = PopularityTopDataset("release")
 
 
-def insert_release(data):
-    """ Insert release popularity data. """
-    query = "INSERT INTO popularity.release (release_mbid, total_listen_count, total_user_count) VALUES %s"
-    values = [(r["release_mbid"], r["total_listen_count"], r["total_user_count"]) for r in data]
-    insert(query, values)
-
-
-def insert_top_recording(data):
-    """ Insert artist's top recordings data. """
-    query = "INSERT INTO popularity.top_recording (artist_mbid, recording_mbid, total_listen_count, total_user_count) VALUES %s"
-    values = [(r["artist_mbid"], r["recording_mbid"], r["total_listen_count"], r["total_user_count"]) for r in data]
-    insert(query, values)
-
-
-def insert_top_release(data):
-    """ Insert artist's top releases data. """
-    query = "INSERT INTO popularity.top_release (artist_mbid, release_mbid, total_listen_count, total_user_count) VALUES %s"
-    values = [(r["artist_mbid"], r["release_mbid"], r["total_listen_count"], r["total_user_count"]) for r in data]
-    insert(query, values)
+def get_top_entity_for_artist(entity, artist_mbid):
+    """ Get the top recordings or releases for a given artist mbid """
+    if entity == "recording":
+        entity_mbid = "recording_mbid"
+    else:
+        entity_mbid = "release_mbid"
+    query = """
+        SELECT """ + entity_mbid + """
+             , total_listen_count
+             , total_user_count
+          FROM popularity.top_recording
+         WHERE artist_mbid = :artist_mbid
+      ORDER BY total_listen_count DESC
+    """
+    with timescale.engine.begin() as connection:
+        results = connection.execute(text(query), {"artist_mbid": artist_mbid})
+        return results.mappings().all()

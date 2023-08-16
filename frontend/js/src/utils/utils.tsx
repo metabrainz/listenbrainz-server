@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
+import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
-import { isFinite, isUndefined, castArray } from "lodash";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
@@ -11,6 +11,7 @@ import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
 import { ToastMsg } from "../notifications/Notifications";
+import RecordingFeedbackManager from "./RecordingFeedbackManager";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
@@ -131,6 +132,44 @@ const searchForYoutubeTrack = async (
   const videoIds = tracks.map((track) => track.id.videoId);
   if (videoIds.length) return videoIds;
   return null;
+};
+
+const searchForSoundcloudTrack = async (
+  soundcloudToken: string,
+  trackName?: string,
+  artistName?: string,
+  releaseName?: string
+): Promise<string | null> => {
+  let query = trackName ?? "";
+  if (artistName) {
+    query += ` ${artistName}`;
+  }
+  // Considering we cannot tell the Soundcloud API that this should match only an album title,
+  // results are paradoxically sometimes worse if we add it to the query
+  if (releaseName) {
+    query += ` ${releaseName}`;
+  }
+  if (!query) {
+    return null;
+  }
+
+  const response = await fetch(
+    `https://api.soundcloud.com/tracks?q=${encodeURIComponent(
+      query
+    )}&access=playable`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `OAuth ${soundcloudToken}`,
+      },
+    }
+  );
+  const responseBody = await response.json();
+  if (!response.ok) {
+    throw responseBody;
+  }
+  return responseBody?.[0]?.uri ?? null;
 };
 
 const getAdditionalContent = (metadata: EventMetadata): string =>
@@ -425,6 +464,7 @@ type GlobalAppProps = {
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
+  soundcloud?: SoundCloudUser;
   critiquebrainz?: MetaBrainzProjectUser;
   musicbrainz?: MetaBrainzProjectUser;
   user_preferences?: UserPreferences;
@@ -469,6 +509,7 @@ const getPageProps = (): {
       api_url,
       spotify,
       youtube,
+      soundcloud,
       critiquebrainz,
       musicbrainz,
       sentry_traces_sample_rate,
@@ -494,9 +535,14 @@ const getPageProps = (): {
       currentUser: current_user,
       spotifyAuth: spotify,
       youtubeAuth: youtube,
+      soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
       musicbrainzAuth: musicbrainz,
       userPreferences: user_preferences,
+      recordingFeedbackManager: new RecordingFeedbackManager(
+        apiService,
+        current_user
+      ),
     };
     sentryProps = {
       sentry_dsn,
@@ -851,6 +897,7 @@ export function getPersonalRecommendationEventContent(
 
 export {
   searchForSpotifyTrack,
+  searchForSoundcloudTrack,
   getArtistLink,
   getTrackLink,
   formatWSMessageToListen,

@@ -137,6 +137,10 @@ export default class APIService {
     return parseInt(result.payload.count, 10);
   };
 
+  refreshSoundcloudToken = async (): Promise<string> => {
+    return this.refreshAccessToken("soundcloud");
+  };
+
   refreshYoutubeToken = async (): Promise<string> => {
     return this.refreshAccessToken("youtube");
   };
@@ -1231,7 +1235,7 @@ export default class APIService {
     }
     const url = new URL(`${this.APIBaseURI}/metadata/recording/`);
 
-    url.searchParams.append("recording_mbids", recordingMBIDs.join(" "));
+    url.searchParams.append("recording_mbids", recordingMBIDs.join(","));
 
     if (metadata) {
       url.searchParams.append("inc", "artist tag release");
