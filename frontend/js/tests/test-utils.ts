@@ -8,9 +8,9 @@ export async function waitForComponentToPaint<P = {}>(
   amount = 0
 ) {
   await act(async () => {
-    // await new Promise((resolve) => {
-    //   setTimeout(resolve, amount);
-    // });
+    await new Promise((resolve) => {
+      setTimeout(resolve, amount);
+    });
     wrapper.update();
   });
 }
