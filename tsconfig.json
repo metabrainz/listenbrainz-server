@@ -21,10 +21,4 @@
   "exclude": [
     "node_modules", "**/dist"
   ],
-  "include": [
-    // need to add this include here to support @testing-library/jest-dom types
-    "frontend/js/tests/jest-setup.ts",
-    "@testing-library/jest-dom",
-    "frontend/js/**/types.d.ts"
-  ]
 }

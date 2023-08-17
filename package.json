@@ -148,7 +148,7 @@
     "jest-canvas-mock": "^2.3.1",
     "jest-environment-jsdom": "^29.6.2",
     "jest-fetch-mock": "^3.0.3",
-    "jest-junit": "^12.0.0",
+    "jest-junit": "^12.3.0",
     "jest-location-mock": "^1.0.9",
     "less-loader": "^11.1.0",
     "network-information-types": "^0.1.1",
