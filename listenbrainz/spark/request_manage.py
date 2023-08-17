@@ -319,15 +319,13 @@ def request_model(rank, itr, lmbda, alpha, use_transformed_listencounts):
 
 
 @cli.command(name='request_recommendations')
-@click.option("--top", type=int, default=1000, help="Generate given number of top artist recommendations")
 @click.option("--raw", type=int, default=1000, help="Generate given number of raw recommendations")
 @click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
               help="Generate recommendations for given users. Generate recommendations for all users by default.")
-def request_recommendations(top, similar, raw, users):
+def request_recommendations(raw, users):
     """ Send the cluster a request to generate recommendations.
     """
     params = {
-        'recommendation_top_artist_limit': top,
         'recommendation_raw_limit': raw,
         'users': users
     }
