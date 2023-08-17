@@ -1,5 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import "@testing-library/jest-dom";
 import * as React from "react";
 import { RenderOptions, render } from "@testing-library/react";
 import { ToastContainer } from "react-toastify";
