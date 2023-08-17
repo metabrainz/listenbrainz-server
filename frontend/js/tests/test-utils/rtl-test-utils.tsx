@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import/prefer-default-export, import/no-extraneous-dependencies */
 import * as React from "react";
 import { RenderOptions, render } from "@testing-library/react";
 import { ToastContainer } from "react-toastify";
@@ -33,7 +33,7 @@ const defaultGlobalContext: GlobalAppContextT = {
   }),
 };
 
-const customRender = (
+export const renderWithProviders = (
   ui: React.ReactElement,
   globalContext?: Partial<GlobalAppContextT>,
   renderOptions?: RenderOptions
@@ -65,9 +65,3 @@ const customRender = (
   }
   return render(ui, { wrapper: WithProviders, ...renderOptions });
 };
-
-// re-export everything
-export * from "@testing-library/react";
-
-// override render method
-export { customRender as render };

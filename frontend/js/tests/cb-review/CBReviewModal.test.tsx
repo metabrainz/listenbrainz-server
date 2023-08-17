@@ -2,13 +2,14 @@ import * as React from "react";
 import NiceModal from "@ebay/nice-modal-react";
 import userEvent from "@testing-library/user-event";
 import { merge } from "lodash";
+import { act, screen } from "@testing-library/react";
 import * as lookupMBRelease from "../__mocks__/lookupMBRelease.json";
 import * as lookupMBReleaseFromTrack from "../__mocks__/lookupMBReleaseFromTrack.json";
 
 import CBReviewModal, {
   CBReviewModalProps,
 } from "../../src/cb-review/CBReviewModal";
-import { act, render, screen } from "../test-utils/rtl-test-utils";
+import { renderWithProviders } from "../test-utils/rtl-test-utils";
 
 import APIService from "../../src/utils/APIService";
 
@@ -63,7 +64,7 @@ describe("CBReviewModal", () => {
   });
 
   it("renders the modal correctly", async () => {
-    render(<NiceModal.Provider />);
+    renderWithProviders(<NiceModal.Provider />);
     await act(async () => {
       NiceModal.show(CBReviewModal, { ...props });
     });
@@ -71,7 +72,7 @@ describe("CBReviewModal", () => {
   });
 
   it("requires the user to be logged in, showing a message otherwise", async () => {
-    render(<NiceModal.Provider />, { critiquebrainzAuth: {} });
+    renderWithProviders(<NiceModal.Provider />, { critiquebrainzAuth: {} });
     await act(async () => {
       NiceModal.show(CBReviewModal, { ...props });
     });
@@ -84,7 +85,7 @@ describe("CBReviewModal", () => {
     ).toBeVisible();
   });
   it("prevents submission if license was not accepted", async () => {
-    const { getByRole } = render(<NiceModal.Provider />);
+    const { getByRole } = renderWithProviders(<NiceModal.Provider />);
     await act(async () => {
       NiceModal.show(CBReviewModal, { ...props });
     });
@@ -110,7 +111,7 @@ describe("CBReviewModal", () => {
   });
 
   it("submits the review and displays a success alert", async () => {
-    const { getByRole } = render(<NiceModal.Provider />, {
+    const { getByRole } = renderWithProviders(<NiceModal.Provider />, {
       APIService: testAPIService,
     });
     await act(async () => {
@@ -152,9 +153,12 @@ describe("CBReviewModal", () => {
       message: "Computer says no!",
     });
 
-    const { getByRole, findByText } = render(<NiceModal.Provider />, {
-      APIService: testAPIService,
-    });
+    const { getByRole, findByText } = renderWithProviders(
+      <NiceModal.Provider />,
+      {
+        APIService: testAPIService,
+      }
+    );
     await act(async () => {
       NiceModal.show(CBReviewModal, { ...props });
     });
@@ -184,7 +188,7 @@ describe("CBReviewModal", () => {
   });
 
   it("shows a message if text content is too short and prevents submission", async () => {
-    const { getByRole } = render(<NiceModal.Provider />, {
+    const { getByRole } = renderWithProviders(<NiceModal.Provider />, {
       APIService: testAPIService,
     });
     await act(async () => {
@@ -206,7 +210,7 @@ describe("CBReviewModal", () => {
   });
 
   it("prevents submission if there is no entity to review", async () => {
-    const { queryByRole } = render(<NiceModal.Provider />, {
+    const { queryByRole } = renderWithProviders(<NiceModal.Provider />, {
       APIService: testAPIService,
     });
     await act(async () => {
@@ -237,7 +241,7 @@ describe("CBReviewModal", () => {
 
   it("getGroupMBIDFromRelease calls API and returns the correct release group MBID", async () => {
     const releaseMBID = "40ef0ae1-5626-43eb-838f-1b34187519bf";
-    const { getByRole } = render(<NiceModal.Provider />, {
+    const { getByRole } = renderWithProviders(<NiceModal.Provider />, {
       APIService: testAPIService,
     });
     await act(async () => {
@@ -263,7 +267,7 @@ describe("CBReviewModal", () => {
   });
   it("getRecordingMBIDFromTrack calls API and returns the correct recording MBID", async () => {
     const mbid = "0255f1ea-3199-49b4-8b5c-bdcc3716ebc9";
-    const { getAllByRole } = render(<NiceModal.Provider />, {
+    const { getAllByRole } = renderWithProviders(<NiceModal.Provider />, {
       APIService: testAPIService,
     });
     await act(async () => {
@@ -290,7 +294,7 @@ describe("CBReviewModal", () => {
   it("retries once if API throws invalid token error", async () => {
     submitReviewToCBSpy.mockRejectedValueOnce({ message: "invalid_token" });
 
-    const { getByRole } = render(<NiceModal.Provider />, {
+    const { getByRole } = renderWithProviders(<NiceModal.Provider />, {
       APIService: testAPIService,
     });
     await act(async () => {
