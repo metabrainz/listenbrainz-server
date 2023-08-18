@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import current_app
 from psycopg2.extras import execute_values
