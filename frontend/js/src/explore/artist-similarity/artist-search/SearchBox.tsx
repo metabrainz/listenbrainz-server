@@ -9,7 +9,6 @@ import { faSearch, faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
 import { ToastContainer, toast } from "react-toastify";
-import SearchDropdown from "./SearchDropdown";
 import artistLookup, { ArtistType } from "./artistLookup";
 import { ToastMsg } from "../../../notifications/Notifications";
 
