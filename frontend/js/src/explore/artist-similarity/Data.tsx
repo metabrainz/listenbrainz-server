@@ -125,6 +125,7 @@ function Data() {
     links: [],
   };
 
+  // This piece of code needs to be moved to a different function.
   // Checking if mainArtist is defined
   if (mainArtist) {
     transformedArtists = {

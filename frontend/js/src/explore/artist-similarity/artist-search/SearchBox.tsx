@@ -103,6 +103,11 @@ function SearchBox({
     throttledGetArtists(query);
   };
 
+  // Handle button click on an artist in the dropdown list
+  const handleButtonClick = (artist: ArtistType) => {
+    onArtistChange(artist.id);
+    setOpenDropdown(false);
+  };
   const increment = () => {
     onSimilarArtistsLimitChange(currentsimilarArtistsLimit + 1);
   };
@@ -131,11 +136,20 @@ function SearchBox({
         </div>
         <div className="searchbox-dropdown-container">
           {openDropdown && Boolean(searchResults?.length) && (
-            <SearchDropdown
-              searchResults={searchResults}
-              onArtistChange={onArtistChange}
-              onDropdownChange={setOpenDropdown}
-            />
+            <div className="searchbox-dropdown">
+              {searchResults.map((artist) => {
+                return (
+                  <button
+                    type="button"
+                    className="search-item"
+                    key={artist.id}
+                    onClick={() => handleButtonClick(artist)}
+                  >
+                    {artist.name} - {artist.country ?? "Unknown"}
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
