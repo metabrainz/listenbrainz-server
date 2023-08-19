@@ -2,7 +2,7 @@ from flask import current_app
 from kombu import Connection, Exchange
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 
-from listenbrainz.apple_metadata_cache.apple import Apple
+from listenbrainz.metadata_cache.apple.client import Apple
 from listenbrainz.utils import get_fallback_connection_name
 
 
