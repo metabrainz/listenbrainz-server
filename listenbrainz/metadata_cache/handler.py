@@ -56,7 +56,7 @@ class BaseHandler(abc.ABC):
         """ Query the metadata service API to discover newly added albums """
         pass
 
-    def check_and_fetch_albums(self, album_ids) -> tuple[list[Album], list[JobItem]]:
+    def check_and_fetch_albums(self, album_ids) -> tuple[list[Album], list[str]]:
         """ Checks if the albums are present in the cache and not expired yet before querying external services """
         filtered_ids = []
         for album_id in album_ids:

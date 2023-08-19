@@ -57,6 +57,13 @@ CREATE UNIQUE INDEX spotify_cache_track_spotify_id_idx ON spotify_cache.track (t
 CREATE INDEX spotify_cache_rel_album_artist_track_id_idx ON spotify_cache.rel_album_artist (album_id);
 CREATE INDEX spotify_cache_rel_track_artist_track_id_idx ON spotify_cache.rel_track_artist (track_id);
 
+CREATE UNIQUE INDEX apple_metadata_cache_album_id_ndx ON apple_cache.raw_cache_data (album_id);
+CREATE UNIQUE INDEX apple_cache_album_apple_id_idx ON apple_cache.album (apple_id);
+CREATE UNIQUE INDEX apple_cache_artist_apple_id_idx ON apple_cache.artist (apple_id);
+CREATE UNIQUE INDEX apple_cache_track_apple_id_idx ON apple_cache.track (apple_id);
+CREATE INDEX apple_cache_rel_album_artist_track_id_idx ON apple_cache.rel_album_artist (album_id);
+CREATE INDEX apple_cache_rel_track_artist_track_id_idx ON apple_cache.rel_track_artist (track_id);
+
 CREATE UNIQUE INDEX similar_recordings_dev_uniq_idx ON similarity.recording_dev (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_recordings_dev_reverse_uniq_idx ON similarity.recording_dev (mbid1, mbid0);
 CREATE INDEX similar_recordings_algorithm_dev_idx ON similarity.recording_dev USING gin (metadata);
