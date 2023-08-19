@@ -5,15 +5,13 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  faMagnifyingGlass,
-  faMinus,
-  faPlus,
-} from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
+import { ToastContainer, toast } from "react-toastify";
 import SearchDropdown from "./SearchDropdown";
 import artistLookup, { ArtistType } from "./artistLookup";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 interface SearchBoxProps {
   currentsimilarArtistsLimit: number;
@@ -27,49 +25,10 @@ function SearchBox({
   onArtistChange,
 }: SearchBoxProps) {
   // State to store the search results (list of artists)
-  const [searchResults, setSearchResults] = React.useState<Array<ArtistType>>(
-    []
-  );
-  const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const [searchResults, setSearchResults] = useState<Array<ArtistType>>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   // State to toggle the dropdown menu for search
-  const [openDropdown, setOpenDropdown] = useState(false);
-
-  /* Below is the piece of the code with problem.
-    *   My plan: 
-    *       I decided to make the api call outside of this component in artistLookup, a bit different from SearchTrackorMBID.
-    *       Thinking it would decrease the complexity of the code but I guess I added more unintentionally.
-    *   Problem:
-    *       Oftentimes the results presented in the dropdown would lag behind the search query e.g. Bruno Mars even though the api call
-    *       was made correctly. I believe the problem is how React re-renders on state changes but I am very unsure. In this part I use 
-    *       throttle in the artistLookup.
-    * /
-    
-    /*
-    // Lookup the artist based on the query
-    const getArtists = async (): Promise<void> => {
-        if(searchQuery.length && searchQuery.trim() !== ""){
-            let results = await artistLookup(searchQuery);
-            setSearchResults(results ?? []);
-            //console.log(searchResults);
-            // Open the dropdown if any results exist
-            if(searchResults.length) {
-                //console.log(searchResults);
-                setOpenDropdown(true);
-            }
-        }
-        else{
-            setSearchResults([]);
-        }
-    };
-
-    const handleQueryChange = (query: string) => {
-        setSearchQuery(query);
-    }
-
-    useEffect(() => {
-        getArtists();
-    },[searchQuery]);
-    */
+  const [openDropdown, setOpenDropdown] = useState<boolean>(false);
 
   /**
    * Solution:
@@ -77,13 +36,26 @@ function SearchBox({
    *  The solution works as expected but I feel like it might be a bit hard to understand what's going on.
    */
 
+  /*
   const getArtists = useCallback(async () => {
     if (searchQuery.length && searchQuery.trim().length) {
-      const results = await artistLookup(searchQuery);
-      setSearchResults(results);
-      setOpenDropdown(true);
+      try {
+        const results = await artistLookup(searchQuery);
+        setSearchResults(results);
+        setOpenDropdown(true);
+      } catch (error) {
+        setSearchResults([]);
+        toast.error(
+          <ToastMsg
+            title="Search Error"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "error" }
+        );
+      }
     }
   }, [searchQuery]);
+ 
   const getArtistsRef = useRef(getArtists);
 
   useEffect(() => {
@@ -101,11 +73,34 @@ function SearchBox({
       { leading: false, trailing: true }
     );
   }, []);
+  */
+  const getArtists = useCallback(async (query: string) => {
+    if (query.length && query.trim().length) {
+      try {
+        const results = await artistLookup(query);
+        setSearchResults(results);
+        setOpenDropdown(true);
+      } catch (error) {
+        setSearchResults([]);
+        toast.error(
+          <ToastMsg
+            title="Search Error"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "error" }
+        );
+      }
+    }
+  }, []);
+
+  const throttledGetArtists = useMemo(() => {
+    return throttle(getArtists, 800, { leading: false, trailing: true });
+  }, [getArtists]);
 
   // Lookup the artist based on the query
   const handleQueryChange = (query: string) => {
     setSearchQuery(query);
-    throttledGetArtists();
+    throttledGetArtists(query);
   };
 
   const increment = () => {
@@ -131,16 +126,15 @@ function SearchBox({
             value={searchQuery}
           />
           <button id="searchbox-icon" type="button">
-            <FontAwesomeIcon icon={faMagnifyingGlass} color="white" />
+            <FontAwesomeIcon icon={faSearch} color="white" />
           </button>
         </div>
-        <div className="search-dropdown-container">
-          {openDropdown && (
+        <div className="searchbox-dropdown-container">
+          {openDropdown && Boolean(searchResults?.length) && (
             <SearchDropdown
               searchResults={searchResults}
               onArtistChange={onArtistChange}
               onDropdownChange={setOpenDropdown}
-              id="search-dropdown"
             />
           )}
         </div>

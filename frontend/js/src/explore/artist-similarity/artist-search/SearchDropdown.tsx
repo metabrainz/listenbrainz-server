@@ -5,7 +5,6 @@ import SearchItem from "./SearchItem";
 interface SearchDropdownProps {
   searchResults: Array<ArtistType>;
   onArtistChange: (artist: string) => void;
-  id: string;
   onDropdownChange: (openDropdown: boolean) => void;
 }
 
@@ -13,11 +12,10 @@ function SearchDropdown({
   searchResults,
   onDropdownChange,
   onArtistChange,
-  id,
 }: SearchDropdownProps) {
   return (
-    <div id={id}>
-      {searchResults.map((artist, index) => {
+    <div className="searchbox-dropdown">
+      {searchResults.map((artist) => {
         return (
           <SearchItem
             artist={artist}

@@ -101,8 +101,7 @@ const InfoLookup = async (artistMBID: string): Promise<ArtistInfoType> => {
       topTrack: topTrackData,
     };
   } catch (error) {
-    alert("Error fetching artist info:");
-    throw error;
+    throw new Error("Cannot find info for the selected artist");
   }
   return artistInfo;
 };

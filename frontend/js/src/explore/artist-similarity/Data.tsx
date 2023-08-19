@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import tinycolor from "tinycolor2";
+import { toast } from "react-toastify";
 import SimilarArtistsGraph from "./SimilarArtistsGraph";
 import SearchBox from "./artist-search/SearchBox";
 import Panel from "./artist-panel/Panel";
+import { ToastMsg } from "../../notifications/Notifications";
 
 type ArtistType = {
   artist_mbid: string;
@@ -48,7 +50,7 @@ type GraphDataType = {
 };
 
 const colorGenerator = (): tinycolor.Instance => {
-  return tinycolor(`hsv(${Math.random() * 360}, 90%, 90%)`);
+  return tinycolor(`hsv(${Math.random() * 360}, 100%, 90%)`);
 };
 
 function Data() {
@@ -66,12 +68,10 @@ function Data() {
   const SIMILAR_NODE_SIZE = 85;
   // Apha value of the background color of the graph
   const BACKGROUND_ALPHA = 0.2;
-  const COLOR_MIX_WEIGHT = 0.3;
+  const COLOR_MIX_WEIGHT = 10;
   // Score in case it is undefined (as in case of main artist)
   const NULL_SCORE = Infinity;
 
-  const color1 = colorGenerator();
-  const color2 = color1.clone().tetrad()[1];
   const [similarArtistsList, setSimilarArtistsList] = useState<
     Array<ArtistType>
   >([]);
@@ -83,80 +83,48 @@ function Data() {
   const [similarArtistsLimit, setSimilarArtistsLimit] = useState(
     SIMILAR_ARTISTS_LIMIT_VALUE
   );
-  const [colors, setColors] = useState([color1, color2]);
+  const color1 = colorGenerator();
+  const color2 = color1.clone().tetrad()[1];
+  const [colors, setColors] = useState([colorGenerator(), colorGenerator()]);
+
   const [artistMBID, setArtistMBID] = useState(ARTIST_MBID);
 
-  const scoreList: Array<number> = [];
-
-  const processData = useCallback(
-    (dataResponse: ApiResponseType): void => {
-      // Type guard for dataset response
-      const isDatasetResponse = (
-        response: MarkupResponseType | DatasetResponseType
-      ): response is DatasetResponseType => {
-        return response.type === "dataset";
-      };
-      // Get the datasets out of the API response
-      const artistsData = dataResponse.filter(isDatasetResponse);
-      if (artistsData.length) {
-        // Get the main artist from the first dataset
-        setMainArtist(artistsData[0].data[0]);
-        // Get the similar artists from the second dataset
-        const similarArtistsResponse = artistsData[1];
-        if (similarArtistsResponse?.data?.length) {
-          setCompleteSimilarArtistsList(similarArtistsResponse.data);
-          setSimilarArtistsList(
-            similarArtistsResponse.data.slice(0, similarArtistsLimit)
-          );
-        }
-        // In case no similar artists are found
-        else {
-          setSimilarArtistsList([]);
-        }
+  const processData = useCallback((dataResponse: ApiResponseType): void => {
+    // Type guard for dataset response
+    const isDatasetResponse = (
+      response: MarkupResponseType | DatasetResponseType
+    ): response is DatasetResponseType => {
+      return response.type === "dataset";
+    };
+    // Get the datasets out of the API response
+    const artistsData = dataResponse.filter(isDatasetResponse);
+    if (artistsData.length) {
+      // Get the main artist from the first dataset
+      setMainArtist(artistsData[0].data[0]);
+      // Get the similar artists from the second dataset
+      const similarArtistsResponse = artistsData[1];
+      if (similarArtistsResponse.data.length) {
+        setCompleteSimilarArtistsList(similarArtistsResponse.data);
       }
-      setColors([tinycolor.mix(color1, color2, COLOR_MIX_WEIGHT), color2]);
-    },
-    [artistMBID]
-  );
-
-  const fetchData = useCallback(
-    async (artist_mbid: string): Promise<void> => {
-      try {
-        const response = await fetch(BASE_URL + artist_mbid);
-        const data = await response.json();
-        processData(data);
-      } catch (error) {
-        // Error message goes here.
-        alert(
-          "Something went wrong while loading information, please try again"
-        );
+      // In case no similar artists are found
+      else {
+        setCompleteSimilarArtistsList([]);
       }
-    },
-    [processData]
-  );
-
-  // Update the graph when either artistMBID or similarArtistsLimit changes
-  useEffect(() => {
-    fetchData(artistMBID);
-  }, [artistMBID, fetchData]);
-  // Update the graph when limit changes by only changing the data and not making a new request to server
-  useEffect(() => {
-    const newSimilarArtistsList = completeSimilarArtistsList.slice(
-      0,
-      similarArtistsLimit
-    );
-    setSimilarArtistsList(newSimilarArtistsList);
-  }, [similarArtistsLimit]);
+    }
+    setColors((prevColors) => [prevColors[1], prevColors[1].tetrad()[1]]);
+  }, []);
 
   // Calculating minScore for normalization which is always the last element of the array (because it's sorted)
   let minScore = similarArtistsList?.[similarArtistsLimit - 1]?.score ?? 0;
   minScore = Math.sqrt(minScore);
+  const scoreList: Array<number> = [];
 
   // Transforming the data into the format required by the graph
   let transformedArtists: GraphDataType = {
     nodes: [],
     links: [],
   };
+
   // Checking if mainArtist is defined
   if (mainArtist) {
     transformedArtists = {
@@ -210,6 +178,39 @@ function Data() {
       ),
     };
   }
+
+  const fetchData = useCallback(
+    async (artist_mbid: string): Promise<void> => {
+      try {
+        const response = await fetch(BASE_URL + artist_mbid);
+        const data = await response.json();
+        processData(data);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="Search Error"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "error" }
+        );
+      }
+    },
+    [processData]
+  );
+
+  // Update the graph when either artistMBID or similarArtistsLimit changes
+  useEffect(() => {
+    fetchData(artistMBID);
+  }, [artistMBID, fetchData]);
+  // Update the graph when limit changes by only changing the data and not making a new request to server
+  useEffect(() => {
+    const newSimilarArtistsList = completeSimilarArtistsList.slice(
+      0,
+      similarArtistsLimit
+    );
+    setSimilarArtistsList(newSimilarArtistsList);
+  }, [completeSimilarArtistsList, similarArtistsLimit]);
+
   const backgroundColor1 = colors[0]
     .clone()
     .setAlpha(BACKGROUND_ALPHA)

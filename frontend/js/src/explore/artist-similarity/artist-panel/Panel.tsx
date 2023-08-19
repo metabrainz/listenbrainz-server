@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 import { ArtistType } from "../Data";
 import infoLookup from "./infoLookup";
 import ReleaseCard from "./ReleaseCard";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 interface PanelProps {
   artist: ArtistType;
@@ -35,13 +37,23 @@ function Panel({ artist }: PanelProps) {
   const [artistInfo, setArtistInfo] = useState<ArtistInfoType | null>(null);
   useEffect(() => {
     const getArtistInfo = async () => {
-      const artistApiInfo = await infoLookup(artist.artist_mbid);
-      const MB_URL = `https://musicbrainz.org/artist/${artist.artist_mbid}`;
-      const newArtistInfo = artistApiInfo;
-      // Adding name & type properties to artist info.
-      newArtistInfo.name = artist.name;
-      newArtistInfo.type = artist.type;
-      setArtistInfo(newArtistInfo);
+      try {
+        const artistApiInfo = await infoLookup(artist.artist_mbid);
+        const MB_URL = `https://musicbrainz.org/artist/${artist.artist_mbid}`;
+        const newArtistInfo = artistApiInfo;
+        // Adding name & type properties to artist info.
+        newArtistInfo.name = artist.name;
+        newArtistInfo.type = artist.type;
+        setArtistInfo(newArtistInfo);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="Search Error"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "error" }
+        );
+      }
     };
     getArtistInfo();
   }, [artist]);

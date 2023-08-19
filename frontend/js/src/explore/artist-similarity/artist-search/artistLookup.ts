@@ -15,20 +15,21 @@ type ArtistLookupResponseType = {
 const artistLookup = async (searchQuery: string) => {
   let resultsArray: Array<ArtistType> = [];
   const LOOKUP_URL = `https://musicbrainz.org/ws/2/artist/?query=artist:${searchQuery}&fmt=json`;
-  let data: ArtistLookupResponseType;
   // Fetches the artists from the MusicBrainz API
   try {
     const response = await fetch(LOOKUP_URL);
-    data = await response.json();
+    if (!response.ok) {
+      throw Error();
+    }
+    const data: ArtistLookupResponseType = await response.json();
     resultsArray = data.artists;
   } catch (error) {
-    alert(error);
+    throw new Error(
+      "An error occured while looking up artists. Please try again later"
+    );
   }
   return resultsArray;
 };
-// Old code commented out:
-// const throttledArtistLookup = throttle(artistLookup, 800, {leading: false});
-// export default throttledArtistLookup;
 
 export default artistLookup;
 export type { ArtistType, ArtistLookupResponseType };
