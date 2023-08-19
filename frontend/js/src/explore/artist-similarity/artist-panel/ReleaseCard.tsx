@@ -1,10 +1,10 @@
 import * as React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { formatReleaseDate } from "./utils";
 import {
   generateAlbumArtThumbnailLink,
   getAlbumArtFromReleaseMBID,
 } from "../../../utils/utils";
+import { formatReleaseDate } from "../../fresh-releases/utils";
 
 type ReleaseCardProps = {
   releaseDate?: string;

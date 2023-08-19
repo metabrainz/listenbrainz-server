@@ -1,14 +1,8 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { faSearch, faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import artistLookup, { ArtistType } from "./artistLookup";
 import { ToastMsg } from "../../../notifications/Notifications";
 
@@ -29,50 +23,6 @@ function SearchBox({
   // State to toggle the dropdown menu for search
   const [openDropdown, setOpenDropdown] = useState<boolean>(false);
 
-  /**
-   * Solution:
-   *  I was able to look up an article for the problem, https://www.developerway.com/posts/debouncing-in-react
-   *  The solution works as expected but I feel like it might be a bit hard to understand what's going on.
-   */
-
-  /*
-  const getArtists = useCallback(async () => {
-    if (searchQuery.length && searchQuery.trim().length) {
-      try {
-        const results = await artistLookup(searchQuery);
-        setSearchResults(results);
-        setOpenDropdown(true);
-      } catch (error) {
-        setSearchResults([]);
-        toast.error(
-          <ToastMsg
-            title="Search Error"
-            message={typeof error === "object" ? error.message : error}
-          />,
-          { toastId: "error" }
-        );
-      }
-    }
-  }, [searchQuery]);
- 
-  const getArtistsRef = useRef(getArtists);
-
-  useEffect(() => {
-    // Update the getArtists reference when searchQuery gets updated.
-    getArtistsRef.current = getArtists;
-  }, [getArtists, searchQuery]);
-
-  // Create a throttled function using the current reference of getArtists
-  const throttledGetArtists = useMemo(() => {
-    return throttle(
-      () => {
-        getArtistsRef.current?.();
-      },
-      800,
-      { leading: false, trailing: true }
-    );
-  }, []);
-  */
   const getArtists = useCallback(async (query: string) => {
     if (query.length && query.trim().length) {
       try {
@@ -97,9 +47,9 @@ function SearchBox({
   }, [getArtists]);
 
   // Lookup the artist based on the query
-  const handleQueryChange = (query: string) => {
+  const handleQueryChange = async (query: string) => {
     setSearchQuery(query);
-    throttledGetArtists(query);
+    await throttledGetArtists(query);
   };
 
   // Handle button click on an artist in the dropdown list

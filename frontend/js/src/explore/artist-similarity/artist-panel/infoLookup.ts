@@ -85,7 +85,6 @@ const InfoLookup = async (artistMBID: string): Promise<ArtistInfoType> => {
   const WIKI_URL = `${ARTIST_URL}/wikipedia-extract`;
   const BIRTH_AREA_URL = `https://musicbrainz.org/ws/2/artist/${artistMBID}?fmt=json`;
   const RECORDING_URL = `https://test-api.listenbrainz.org/1/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
-  let artistInfo: ArtistInfoType;
   try {
     const [wikiData, birthAreaData, topTrackData] = await Promise.all([
       wikiLookup(WIKI_URL),
@@ -93,7 +92,7 @@ const InfoLookup = async (artistMBID: string): Promise<ArtistInfoType> => {
       topTrackLookup(RECORDING_URL),
     ]);
     // Merge the info in the artistInfo array
-    artistInfo = {
+    return {
       born: birthAreaData.born,
       area: birthAreaData.area,
       wiki: wikiData,
@@ -103,7 +102,6 @@ const InfoLookup = async (artistMBID: string): Promise<ArtistInfoType> => {
   } catch (error) {
     throw new Error("Cannot find info for the selected artist");
   }
-  return artistInfo;
 };
 
 export default InfoLookup;
