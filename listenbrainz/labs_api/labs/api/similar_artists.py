@@ -2,7 +2,7 @@ from typing import Optional, Union
 from uuid import UUID
 
 import psycopg2
-from datasethoster import Query
+from datasethoster import Query, QueryOutputLine, RequestSource
 from flask import current_app
 from markupsafe import Markup
 from psycopg2.extras import execute_values
@@ -10,11 +10,10 @@ from pydantic import BaseModel
 
 from listenbrainz.db import similarity
 from listenbrainz.db.recording import resolve_redirect_mbids
-from listenbrainz.labs_api.labs.api.similar_recordings import SimilarRecordingsViewerOutputComment
 
 
 class SimilarArtistsViewerInput(BaseModel):
-    artist_mbids: UUID
+    artist_mbids: list[UUID]
     algorithm: str
 
 
@@ -28,11 +27,7 @@ class SimilarArtistsViewerOutputItem(BaseModel):
     reference_mbid: Optional[str]
 
 
-class SimilarArtistsViewerOutputComment(BaseModel):
-    comment: str
-
-
-SimilarArtistsViewerOutput = Union[SimilarArtistsViewerOutputComment, SimilarArtistsViewerOutputItem]
+SimilarArtistsViewerOutput = Union[QueryOutputLine, SimilarArtistsViewerOutputItem]
 
 
 class SimilarArtistsViewerQuery(Query):
@@ -100,7 +95,7 @@ class SimilarArtistsViewerQuery(Query):
         return [SimilarArtistsViewerOutputItem(**item) for item in metadata]
 
     def fetch(self, params, source, offset=-1, count=-1):
-        artist_mbids = [params[0].artist_mbid]
+        artist_mbids = params[0].artist_mbids
         algorithm = params[0].algorithm.strip()
         count = count if count > 0 else 100
 
@@ -108,17 +103,21 @@ class SimilarArtistsViewerQuery(Query):
                 psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
                 ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+            results = []
 
-            references = self.get_artists_dataset(mb_curs, artist_mbids)
-            results = [SimilarRecordingsViewerOutputComment(comment=Markup("<p><b>Reference artist</b></p>"))]
-            results.extend(references)
+            if source == RequestSource.web:
+                references = self.get_artists_dataset(mb_curs, artist_mbids)
+                results.append(QueryOutputLine(line=Markup("<p><b>Reference artists</b></p>")))
+                results.extend(references)
 
             similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "artist_credit_mbids_dev", artist_mbids, algorithm, count)
-            if len(similar_mbids) == 0:
-                results.append(SimilarRecordingsViewerOutputComment(comment=Markup("<p><b>No similar artists found!</b></p>")))
-                return results
+            if source == RequestSource.web:
+                if len(similar_mbids) == 0:
+                    results.append(QueryOutputLine(line=Markup("<p><b>No similar artists found!</b></p>")))
+                    return results
+                else:
+                    results.append(QueryOutputLine(line=Markup("<p><b>Similar artists</b></p>")))
 
-            results.append(SimilarRecordingsViewerOutputComment(comment=Markup("<p><b>Similar artists</b></p>")))
             similar_dataset = self.get_artists_dataset(mb_curs, similar_mbids, score_idx, mbid_idx)
             results.extend(similar_dataset)
 
