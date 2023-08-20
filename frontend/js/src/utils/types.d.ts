@@ -7,16 +7,6 @@ declare module "debounce-async";
 // declaration typescript file doesn't exist for react-datetime-picker/dist/entry.nostyle.js so had to declare a dummy declaration.
 declare module "react-datetime-picker/dist/entry.nostyle";
 
-declare module "react-bs-notifier";
-declare type AlertType = "danger" | "warning" | "success" | "info";
-declare type Alert = {
-  id: number;
-  type: AlertType;
-  headline: string;
-  message: string | JSX.Element;
-  count?: number;
-};
-
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {
   artist_mbids?: Array<string> | null;
@@ -102,7 +92,11 @@ declare type YoutubeUser = {
   api_key?: string;
 };
 
-declare type CritiqueBrainzUser = {
+declare type SoundCloudUser = {
+  access_token?: string;
+};
+
+declare type MetaBrainzProjectUser = {
   access_token?: string;
 };
 
@@ -215,6 +209,19 @@ declare type SpotifyPagingObject<T> = {
 // Adding an any here for now.
 // TODO: remove this any eventually
 declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
+
+declare type SoundCloudTrack = {
+  id: number;
+  permalink_url: string;
+  artwork_url: string;
+  title: string;
+  uri: string;
+  duration: number;
+  user: {
+    id: string;
+    username: string;
+  }
+};
 
 // Expect either a string or an Error or an html Response object
 declare type BrainzPlayerError =
@@ -481,12 +488,21 @@ declare type JSPFObject = {
   playlist: JSPFPlaylist;
 };
 
+declare type JSPFPlaylistMetadata = {
+  external_urls?: { [key: string]: any };
+  algorithm_metadata: {
+    source_patch: string;
+  };
+  expires_at?: string; // ISO date string
+};
+
 declare type JSPFPlaylistExtension = {
-  collaborators: string[];
+  collaborators?: string[];
   public: boolean;
   created_for?: string;
   copied_from?: string; // Full ListenBrainz playlist URI
   last_modified_at?: string; // ISO date string
+  additional_metadata?: JSPFPlaylistMetadata;
 };
 
 declare type JSPFTrackExtension = {

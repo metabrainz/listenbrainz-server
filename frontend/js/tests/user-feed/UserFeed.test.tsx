@@ -30,22 +30,28 @@ import UserFeedPage, {
 import UserSocialNetwork from "../../src/follow/UserSocialNetwork";
 import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 import * as timelineProps from "../__mocks__/timelineProps.json";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // typescript doesn't recognise string literal values
 const props = {
   ...timelineProps,
   events: timelineProps.events as TimelineEvent[],
-  newAlert: jest.fn(),
 };
 
-const GlobalContextMock = {
+const GlobalContextMock: GlobalAppContextT = {
   APIService: new APIService("base-uri"),
   spotifyAuth: timelineProps.spotify as SpotifyUser,
   youtubeAuth: timelineProps.youtube as YoutubeUser,
   currentUser: timelineProps.currentUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 describe("UserFeed", () => {

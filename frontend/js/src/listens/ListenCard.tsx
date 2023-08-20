@@ -1,73 +1,63 @@
-import * as React from "react";
-import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
-import {
-  faMusic,
-  faEllipsisV,
-  faPlay,
-  faCommentDots,
-  faExternalLinkAlt,
-  faCode,
-  faPaperPlane,
-  faThumbtack,
-  faPencilAlt,
-  faLink,
-} from "@fortawesome/free-solid-svg-icons";
+import NiceModal from "@ebay/nice-modal-react";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faSoundcloud,
   faSpotify,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import NiceModal from "@ebay/nice-modal-react";
 import {
-  getArtistLink,
-  getTrackLink,
-  preciseTimestamp,
-  fullLocalizedDateFromTimestampOrISODate,
-  getRecordingMBID,
-  getAlbumArtFromListenMetadata,
-  getReleaseMBID,
-  getArtistName,
-  getTrackName,
-  getTrackDurationInMs,
-  getRecordingMSID,
-  getArtistMBIDs,
-  getReleaseGroupMBID,
-} from "../utils/utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import Card from "../components/Card";
-import ListenControl from "./ListenControl";
-import ListenFeedbackComponent from "./ListenFeedbackComponent";
-import YoutubePlayer from "../brainzplayer/YoutubePlayer";
-import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
+  faCode,
+  faCommentDots,
+  faEllipsisVertical,
+  faExternalLinkAlt,
+  faLink,
+  faMusic,
+  faPaperPlane,
+  faPencilAlt,
+  faPlay,
+  faThumbtack,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
+import * as React from "react";
+import { toast } from "react-toastify";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
-import { millisecondsToStr } from "../playlists/utils";
+import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
+import YoutubePlayer from "../brainzplayer/YoutubePlayer";
+import CBReviewModal from "../cb-review/CBReviewModal";
+import Card from "../components/Card";
+import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
+import { ToastMsg } from "../notifications/Notifications";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 import PinRecordingModal from "../pins/PinRecordingModal";
-import CBReviewModal from "../cb-review/CBReviewModal";
-import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
-import ListenPayloadModal from "./ListenPayloadModal";
+import { millisecondsToStr } from "../playlists/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import {
+  fullLocalizedDateFromTimestampOrISODate,
+  getAlbumArtFromListenMetadata,
+  getArtistLink,
+  getArtistMBIDs,
+  getArtistName,
+  getRecordingMBID,
+  getRecordingMSID,
+  getReleaseGroupMBID,
+  getReleaseMBID,
+  getTrackDurationInMs,
+  getTrackLink,
+  getTrackName,
+  preciseTimestamp,
+} from "../utils/utils";
 import CoverArtWithFallback from "./CoverArtWithFallback";
+import ListenControl from "./ListenControl";
+import ListenFeedbackComponent from "./ListenFeedbackComponent";
+import ListenPayloadModal from "./ListenPayloadModal";
 
 export type ListenCardProps = {
   listen: Listen;
   className?: string;
-  currentFeedback?: ListenFeedBack | RecommendationFeedBack | null;
   showTimestamp: boolean;
   showUsername: boolean;
-  // Only used when not passing a custom feedbackComponent
-  updateFeedbackCallback?: (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
-  ) => void;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
   // This show under the first line of listen details. It's meant for reviews, etc.
   additionalContent?: string | JSX.Element;
   // Displays left of the cover art thumbnail. For special items like reorder/grab icon
@@ -190,7 +180,6 @@ export default class ListenCard extends React.Component<
   };
 
   recommendListenToFollowers = async () => {
-    const { newAlert } = this.props;
     const { listen } = this.state;
     const { APIService, currentUser } = this.context;
 
@@ -214,10 +203,12 @@ export default class ListenCard extends React.Component<
           metadata
         );
         if (status === 200) {
-          newAlert(
-            "success",
-            `You recommended a track to your followers!`,
-            `${getArtistName(listen)} - ${getTrackName(listen)}`
+          toast.success(
+            <ToastMsg
+              title="You recommended a track to your followers"
+              message={`${getArtistName(listen)} - ${getTrackName(listen)}`}
+            />,
+            { toastId: "recommended-success" }
           );
         }
       } catch (error) {
@@ -230,14 +221,15 @@ export default class ListenCard extends React.Component<
   };
 
   handleError = (error: string | Error, title?: string): void => {
-    const { newAlert } = this.props;
     if (!error) {
       return;
     }
-    newAlert(
-      "danger",
-      title || "Error",
-      typeof error === "object" ? error.message : error
+    toast.error(
+      <ToastMsg
+        title={title || "Error"}
+        message={typeof error === "object" ? error.message : error}
+      />,
+      { toastId: "recommended-error" }
     );
   };
 
@@ -254,9 +246,6 @@ export default class ListenCard extends React.Component<
       compact,
       feedbackComponent,
       additionalMenuItems,
-      currentFeedback,
-      newAlert,
-      updateFeedbackCallback,
       additionalActions,
       listen: listenFromProps,
       ...otherProps
@@ -372,7 +361,6 @@ export default class ListenCard extends React.Component<
       const openModal = () => {
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
-          newAlert,
         }).then((linkedTrackMetadata: any) => {
           this.setState((prevState) => {
             return {
@@ -473,17 +461,12 @@ export default class ListenCard extends React.Component<
             <div className="listen-controls">
               {isLoggedIn &&
                 (feedbackComponent ?? (
-                  <ListenFeedbackComponent
-                    newAlert={newAlert}
-                    listen={listen}
-                    currentFeedback={currentFeedback as ListenFeedBack}
-                    updateFeedbackCallback={updateFeedbackCallback}
-                  />
+                  <ListenFeedbackComponent listen={listen} />
                 ))}
               {hideActionsMenu ? null : (
                 <>
                   <FontAwesomeIcon
-                    icon={faEllipsisV as IconProp}
+                    icon={faEllipsisVertical as IconProp}
                     title="More actions"
                     className="dropdown-toggle"
                     id="listenControlsDropdown"
@@ -550,7 +533,6 @@ export default class ListenCard extends React.Component<
                         action={() => {
                           NiceModal.show(PinRecordingModal, {
                             recordingToPin: listen,
-                            newAlert,
                           });
                         }}
                         dataToggle="modal"
@@ -572,7 +554,6 @@ export default class ListenCard extends React.Component<
                         action={() => {
                           NiceModal.show(PersonalRecommendationModal, {
                             listenToPersonallyRecommend: listen,
-                            newAlert,
                           });
                         }}
                         dataToggle="modal"
@@ -586,7 +567,6 @@ export default class ListenCard extends React.Component<
                         action={() => {
                           NiceModal.show(MBIDMappingModal, {
                             listenToMap: listen,
-                            newAlert,
                           });
                         }}
                       />
@@ -598,7 +578,6 @@ export default class ListenCard extends React.Component<
                         action={() => {
                           NiceModal.show(CBReviewModal, {
                             listen,
-                            newAlert,
                           });
                         }}
                         dataToggle="modal"

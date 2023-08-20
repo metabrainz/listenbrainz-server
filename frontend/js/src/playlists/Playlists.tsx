@@ -14,10 +14,8 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
+import { toast } from "react-toastify";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
@@ -31,12 +29,13 @@ import {
 import { getPageProps } from "../utils/utils";
 import PlaylistsList from "./PlaylistsList";
 import Pill from "../components/Pill";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
   user: ListenBrainzUser;
   playlistCount: number;
-} & WithAlertNotificationsInjectedProps;
+};
 
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
@@ -68,11 +67,12 @@ export default class UserPlaylists extends React.Component<
   };
 
   alertNotAuthorized = () => {
-    const { newAlert } = this.props;
-    newAlert(
-      "danger",
-      "Not allowed",
-      "You are not authorized to modify this playlist"
+    toast.error(
+      <ToastMsg
+        title="Not allowed"
+        message="You are not authorized to modify this playlist"
+      />,
+      { toastId: "auth-error" }
     );
   };
 
@@ -106,13 +106,14 @@ export default class UserPlaylists extends React.Component<
     id?: string,
     onSuccessCallback?: () => void
   ): Promise<void> => {
-    const { newAlert } = this.props;
     const { currentUser, APIService } = this.context;
     if (id) {
-      newAlert(
-        "danger",
-        "Error",
-        "Called createPlaylist method with an ID; should call editPlaylist instead"
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message="Called createPlaylist method with an ID; should call editPlaylist instead"
+        />,
+        { toastId: "create-playlists-error" }
       );
       return;
     }
@@ -122,14 +123,19 @@ export default class UserPlaylists extends React.Component<
     }
     if (!this.isCurrentUserPage()) {
       // Just in case the user find a way to access this method, let's nudge them to their own page
-      newAlert(
-        "warning",
-        "",
-        <span>
-          Please go to&nbsp;
-          <a href={`/user/${currentUser.name}/playlists`}>your playlists</a> to
-          create a new one
-        </span>
+      toast.warn(
+        <ToastMsg
+          title=""
+          message={
+            <div>
+              Please go to&nbsp;
+              <a href={`/user/${currentUser.name}/playlists`}>
+                your playlists
+              </a>{" "}
+              to create a new one
+            </div>
+          }
+        />
       );
       return;
     }
@@ -156,13 +162,17 @@ export default class UserPlaylists extends React.Component<
         currentUser.auth_token,
         newPlaylist
       );
-      newAlert(
-        "success",
-        "Created playlist",
-        <>
-          Created new {isPublic ? "public" : "private"} playlist{" "}
-          <a href={`/playlist/${newPlaylistId}`}>{title}</a>
-        </>
+      toast.success(
+        <ToastMsg
+          title="Created playlist"
+          message={
+            <>
+              Created new {isPublic ? "public" : "private"} playlist{" "}
+              <a href={`/playlist/${newPlaylistId}`}>{title}</a>
+            </>
+          }
+        />,
+        { toastId: "create-playlist-success" }
       );
       // Fetch the newly created playlist and add it to the state
       const JSPFObject: JSPFObject = await APIService.getPlaylist(
@@ -176,7 +186,9 @@ export default class UserPlaylists extends React.Component<
         onSuccessCallback
       );
     } catch (error) {
-      newAlert("danger", "Error", error.message);
+      toast.error(<ToastMsg title="Error" message={error.message} />, {
+        toastId: "fetch-playlist-error",
+      });
     }
   };
 
@@ -187,13 +199,16 @@ export default class UserPlaylists extends React.Component<
     collaborators: string[],
     id?: string
   ): Promise<void> => {
-    const { newAlert } = this.props;
     const { currentUser, APIService } = this.context;
     if (!id) {
-      newAlert(
-        "danger",
-        "Error",
-        "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={
+            "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
+          }
+        />,
+        { toastId: "edit-playlist-error" }
       );
       return;
     }
@@ -232,8 +247,9 @@ export default class UserPlaylists extends React.Component<
         playlist: editedPlaylist,
       });
 
-      newAlert("success", "Saved playlist", "");
-
+      toast.success(<ToastMsg title="Saved Playlist" message="" />, {
+        toastId: "saved-playlist",
+      });
       // Once API call succeeds, update playlist in state
       playlistsCopy[playlistIndex] = editedPlaylist;
       this.setState({
@@ -241,12 +257,13 @@ export default class UserPlaylists extends React.Component<
         playlistSelectedForOperation: undefined,
       });
     } catch (error) {
-      newAlert("danger", "Error", error.message);
+      toast.error(<ToastMsg title="Error" message={error.message} />, {
+        toastId: "saved-playlist-error",
+      });
     }
   };
 
   deletePlaylist = async (): Promise<void> => {
-    const { newAlert } = this.props;
     const { currentUser, APIService } = this.context;
     const { playlistSelectedForOperation: playlist, playlists } = this.state;
     if (!currentUser?.auth_token) {
@@ -254,7 +271,9 @@ export default class UserPlaylists extends React.Component<
       return;
     }
     if (!playlist) {
-      newAlert("danger", "Error", "No playlist to delete");
+      toast.error(<ToastMsg title="Error" message="No playlist to delete" />, {
+        toastId: "delete-playlist-error",
+      });
       return;
     }
     if (!this.isOwner(playlist)) {
@@ -268,28 +287,34 @@ export default class UserPlaylists extends React.Component<
       );
       // redirect
       // Remove playlist from state and display success message afterwards
-      this.setState(
-        {
-          playlists: playlists.filter(
-            (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
-          ),
-          playlistSelectedForOperation: undefined,
-        },
-        newAlert.bind(
-          this,
-          "success",
-          "Deleted playlist",
-          `Deleted playlist ${playlist.title}`
-        )
+      this.setState({
+        playlists: playlists.filter(
+          (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
+        ),
+        playlistSelectedForOperation: undefined,
+      });
+      toast.success(
+        <ToastMsg
+          title="Deleted playlist"
+          message={`Deleted playlist ${playlist.title}`}
+        />,
+        { toastId: "delete-playlist-success" }
       );
     } catch (error) {
-      newAlert("danger", "Error", error.message);
+      toast.error(<ToastMsg title="Error" message={error.message} />, {
+        toastId: "delete-playlist-error",
+      });
     }
   };
 
   alertMustBeLoggedIn = () => {
-    const { newAlert } = this.props;
-    newAlert("danger", "Error", "You must be logged in for this operation");
+    toast.error(
+      <ToastMsg
+        title="Error"
+        message="You must be logged in for this operation"
+      />,
+      { toastId: "auth-error" }
+    );
   };
 
   isCurrentUserPage = () => {
@@ -299,7 +324,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   render() {
-    const { user, newAlert } = this.props;
+    const { user } = this.props;
     const {
       playlists,
       playlistSelectedForOperation,
@@ -333,7 +358,6 @@ export default class UserPlaylists extends React.Component<
           user={user}
           playlistCount={playlistCount}
           selectPlaylistForEdit={this.selectPlaylistForEdit}
-          newAlert={newAlert}
         >
           {this.isCurrentUserPage() && (
             <Card
@@ -353,13 +377,11 @@ export default class UserPlaylists extends React.Component<
             <CreateOrEditPlaylistModal
               onSubmit={this.createPlaylist}
               htmlId="playlistCreateModal"
-              newAlert={newAlert}
             />
             <CreateOrEditPlaylistModal
               onSubmit={this.editPlaylist}
               playlist={playlistSelectedForOperation}
               htmlId="playlistEditModal"
-              newAlert={newAlert}
             />
             <DeletePlaylistConfirmationModal
               onConfirm={this.deletePlaylist}
@@ -378,7 +400,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reactProps,
     globalAppContext,
     sentryProps,
-    optionalAlerts,
   } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
@@ -401,7 +422,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <UserPlaylistsWithAlertNotifications
-            initialAlerts={optionalAlerts}
             playlistCount={playlistCount}
             playlists={playlists}
             user={user}

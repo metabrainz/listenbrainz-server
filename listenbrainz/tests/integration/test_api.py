@@ -1064,3 +1064,10 @@ class APITestCase(ListenAPIIntegrationTestCase):
             content_type="application/json"
         )
         self.assert403(response)
+
+    def test_user_recommendations(self):
+        r = self.client.get(url_for("api_v1.user_recommendations", playlist_user_name=self.followed_user["musicbrainz_id"]))
+        self.assert200(r)
+
+        r = self.client.get(url_for("api_v1.user_recommendations", playlist_user_name="does not exist"))
+        self.assert404(r)

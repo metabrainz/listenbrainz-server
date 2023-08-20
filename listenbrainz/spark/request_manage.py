@@ -318,38 +318,14 @@ def request_model(rank, itr, lmbda, alpha, use_transformed_listencounts):
     send_request_to_spark_cluster('cf.recommendations.recording.train_model', **params)
 
 
-@cli.command(name='request_candidate_sets')
-@click.option("--days", type=int, required=False, help="Request recommendations to be generated on history of given number of days")
-@click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
-@click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
-@click.option("--html", is_flag=True, default=False, help='Enable/disable HTML file generation')
-@click.option("--user-name", "users", callback=parse_list, default=[], multiple=True,
-              help="Generate candidate set for given users. Generate for all active users by default.")
-def request_candidate_sets(days, top, similar, users, html):
-    """ Send the cluster a request to generate candidate sets.
-    """
-    params = {
-        "recommendation_generation_window": days,
-        "top_artist_limit": top,
-        "similar_artist_limit": similar,
-        "users": users,
-        "html_flag": html
-    }
-    send_request_to_spark_cluster('cf.recommendations.recording.candidate_sets', **params)
-
-
 @cli.command(name='request_recommendations')
-@click.option("--top", type=int, default=1000, help="Generate given number of top artist recommendations")
-@click.option("--similar", type=int, default=1000, help="Generate given number of similar artist recommendations")
 @click.option("--raw", type=int, default=1000, help="Generate given number of raw recommendations")
 @click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
               help="Generate recommendations for given users. Generate recommendations for all users by default.")
-def request_recommendations(top, similar, raw, users):
+def request_recommendations(raw, users):
     """ Send the cluster a request to generate recommendations.
     """
     params = {
-        'recommendation_top_artist_limit': top,
-        'recommendation_similar_artist_limit': similar,
         'recommendation_raw_limit': raw,
         'users': users
     }
@@ -386,12 +362,41 @@ def request_import_musicbrainz_release_dump():
     send_request_to_spark_cluster('import.musicbrainz_release_dump')
 
 
+@cli.command(name='request_import_mlhd_dump')
+def request_import_mlhd_dump():
+    """ Send the spark cluster a request to import musicbrainz release dump. """
+    send_request_to_spark_cluster("import.dump.mlhd")
+
+
 @cli.command(name='request_similar_users')
 @click.option("--max-num-users", type=int, default=25, help="The maxiumum number of similar users to return for any given user.")
 def request_similar_users(max_num_users):
     """ Send the cluster a request to generate similar users.
     """
     send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
+
+
+@cli.command(name="request_similar_recordings_mlhd")
+@click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
+                                          " session.", required=True)
+@click.option("--contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
+                                               " score of a recording pair.", required=True)
+@click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the"
+                                            " simlarity index.", required=True)
+@click.option("--limit", type=int, help="The maximum number of similar recordings to generate per recording"
+                                        " (the limit is instructive. upto 2x recordings may be returned than"
+                                        " the limit).", required=True)
+@click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
+def request_similar_recordings(session, contribution, threshold, limit, skip):
+    """ Send the cluster a request to generate similar recordings index. """
+    send_request_to_spark_cluster(
+        "similarity.recording.mlhd",
+        session=session,
+        contribution=contribution,
+        threshold=threshold,
+        limit=limit,
+        skip=skip
+    )
 
 
 @cli.command(name="request_similar_recordings")
@@ -406,8 +411,9 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
-                                                 " affects how the resulting dataset is stored in LB.", required=True)
+@click.option("--production", is_flag=True, default=False,
+              help="whether the dataset is being created as a production dataset. affects"
+                   " how the resulting dataset is stored in LB.", required=True)
 def request_similar_recordings(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
@@ -434,8 +440,9 @@ def request_similar_recordings(days, session, contribution, threshold, limit, sk
                                         " (the limit is instructive. upto 2x artists may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-@click.option("--production", is_flag=True, help="whether the dataset is being created as a production dataset."
-                                                 " affects how the resulting dataset is stored in LB.", required=True)
+@click.option("--production", is_flag=True, default=False,
+              help="whether the dataset is being created as a production dataset. affects how the resulting"
+                   " dataset is stored in LB.", required=True)
 def request_similar_artists(days, session, contribution, threshold, limit, skip, production):
     """ Send the cluster a request to generate similar artists index. """
     send_request_to_spark_cluster(
@@ -448,6 +455,12 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip,
         skip=skip,
         is_production_dataset=production
     )
+
+
+@cli.command(name='request_mlhd_popularity')
+def request_mlhd_popularity():
+    """ Request mlhd popularity data. """
+    send_request_to_spark_cluster("mlhd.popularity.all")
 
 
 @cli.command(name="request_yim_similar_users")
@@ -508,6 +521,12 @@ def request_troi_playlists(slug, create_all):
     send_request_to_spark_cluster("troi.playlists", slug=slug, users=users)
 
 
+@cli.command(name="request_tags")
+def request_troi_playlists():
+    """ Generate the tags dataset with percent rank """
+    send_request_to_spark_cluster("tags.default")
+
+
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
 # rather combine multiple commands related to a task so that they are always invoked in the correct order.
 
@@ -544,7 +563,6 @@ def cron_request_similar_users(ctx):
 def cron_request_recommendations(ctx):
     ctx.invoke(request_dataframes)
     ctx.invoke(request_model)
-    ctx.invoke(request_candidate_sets)
     ctx.invoke(request_recording_discovery)
     ctx.invoke(request_recommendations)
 

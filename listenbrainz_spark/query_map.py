@@ -1,5 +1,4 @@
 import listenbrainz_spark.missing_mb_data.missing_mb_data
-import listenbrainz_spark.recommendations.recording.candidate_sets
 import listenbrainz_spark.recommendations.recording.create_dataframes
 import listenbrainz_spark.recommendations.recording.recommend
 import listenbrainz_spark.recommendations.recording.discovery
@@ -28,6 +27,10 @@ import listenbrainz_spark.similarity.artist
 import listenbrainz_spark.similarity.user
 import listenbrainz_spark.postgres
 import listenbrainz_spark.troi.periodic_jams
+import listenbrainz_spark.tags.tags
+import listenbrainz_spark.mlhd.download
+import listenbrainz_spark.mlhd.similarity
+import listenbrainz_spark.mlhd.popularity
 
 functions = {
     'stats.entity.listeners': listenbrainz_spark.stats.listener.entity.get_listener_stats,
@@ -39,18 +42,20 @@ functions = {
     'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
     'import.dump.incremental_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,
+    'import.dump.mlhd': listenbrainz_spark.mlhd.download.import_mlhd_dump_to_hdfs,
     'import.dump.incremental_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_incremental_dump_by_id_handler,
     'cf.missing_mb_data': listenbrainz_spark.missing_mb_data.missing_mb_data.main,
     'cf.recommendations.recording.create_dataframes': listenbrainz_spark.recommendations.recording.create_dataframes.main,
     'cf.recommendations.recording.train_model': listenbrainz_spark.recommendations.recording.train_models.main,
-    'cf.recommendations.recording.candidate_sets': listenbrainz_spark.recommendations.recording.candidate_sets.main,
     'cf.recommendations.recording.recommendations': listenbrainz_spark.recommendations.recording.recommend.main,
     'cf.recommendations.recording.discovery': listenbrainz_spark.recommendations.recording.discovery.get_recording_discovery,
     'import.artist_relation': listenbrainz_spark.request_consumer.jobs.import_dump.import_artist_relation_to_hdfs,
     'import.musicbrainz_release_dump': listenbrainz_spark.request_consumer.jobs.import_dump.import_release_json_dump_to_hdfs,
     'similarity.similar_users': listenbrainz_spark.similarity.user.main,
+    'similarity.recording.mlhd': listenbrainz_spark.mlhd.similarity.main,
     'similarity.recording': listenbrainz_spark.similarity.recording.main,
     'similarity.artist': listenbrainz_spark.similarity.artist.main,
+    'mlhd.popularity.all': listenbrainz_spark.mlhd.popularity.main,
     'year_in_music.new_releases_of_top_artists':
         listenbrainz_spark.year_in_music.new_releases_of_top_artists.get_new_releases_of_top_artists,
     'year_in_music.tracks_of_the_year': listenbrainz_spark.year_in_music.tracks_of_the_year.calculate_tracks_of_the_year,
@@ -66,6 +71,7 @@ functions = {
     'import.pg_metadata_tables': listenbrainz_spark.postgres.import_all_pg_tables,
     'releases.fresh': listenbrainz_spark.fresh_releases.fresh_releases.main,
     'troi.playlists': listenbrainz_spark.troi.periodic_jams.main,
+    'tags.default': listenbrainz_spark.tags.tags.main,
 }
 
 

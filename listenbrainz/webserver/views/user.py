@@ -13,7 +13,7 @@ from listenbrainz.db import listens_importer
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, \
-    get_playlists_collaborated_on
+    get_playlists_collaborated_on, get_recommendation_playlists_for_user
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db import year_in_music as db_year_in_music
@@ -279,15 +279,14 @@ def recommendation_playlists(user_name: str):
     }
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_created_for_user(
-        user.id, False, count, offset)
+    user_playlists = get_recommendation_playlists_for_user(
+        user.id)
     for playlist in user_playlists:
         playlists.append(serialize_jspf(playlist))
 
     props = {
         "playlists": playlists,
         "user": user_data,
-        "playlist_count": playlist_count,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 

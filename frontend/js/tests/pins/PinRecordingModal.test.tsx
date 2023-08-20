@@ -7,8 +7,11 @@ import PinRecordingModal, {
   maxBlurbContentLength,
 } from "../../src/pins/PinRecordingModal";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const recordingToPin: Listen = {
   listened_at: 1605927742,
@@ -47,11 +50,14 @@ const user = {
   auth_token: "auth_token",
 };
 const APIService = new APIServiceClass("");
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService,
   currentUser: user,
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(APIService, {
+    name: "Fnord",
+  }),
 };
 
 const niceModalProps: NiceModalHocProps = {
@@ -59,7 +65,6 @@ const niceModalProps: NiceModalHocProps = {
   defaultVisible: true,
 };
 
-const newAlert = jest.fn();
 const submitPinRecordingSpy = jest
   .spyOn(APIService, "submitPinRecording")
   .mockImplementation(() =>
@@ -84,7 +89,6 @@ describe("PinRecordingModal", () => {
           <PinRecordingModal
             {...niceModalProps}
             recordingToPin={recordingToPin}
-            newAlert={newAlert}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
@@ -101,7 +105,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              newAlert={newAlert}
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -120,7 +123,6 @@ describe("PinRecordingModal", () => {
         "recording_mbid",
         undefined
       );
-      expect(newAlert).toHaveBeenCalledTimes(1);
     });
 
     it("sets default blurbContent in state on success", async () => {
@@ -130,7 +132,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              newAlert={newAlert}
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -169,7 +170,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              newAlert={newAlert}
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -191,7 +191,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              newAlert={newAlert}
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -207,12 +206,6 @@ describe("PinRecordingModal", () => {
         submitButton?.simulate("click");
       });
       await waitForComponentToPaint(wrapper);
-      expect(newAlert).toHaveBeenCalledTimes(1);
-      expect(newAlert).toHaveBeenCalledWith(
-        "danger",
-        "Error while pinning track",
-        "error"
-      );
     });
   });
 
@@ -224,7 +217,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              newAlert={newAlert}
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
@@ -261,7 +253,6 @@ describe("PinRecordingModal", () => {
             <PinRecordingModal
               {...niceModalProps}
               recordingToPin={recordingToPin}
-              newAlert={newAlert}
             />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>

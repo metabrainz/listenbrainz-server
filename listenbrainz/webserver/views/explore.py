@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, current_app
+from flask import Blueprint, render_template, current_app, request
+from flask_login import current_user
 import orjson
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, BadRequest
 
 from listenbrainz.db.similar_users import get_top_similar_users
 
@@ -77,3 +78,35 @@ def ai_brainz():
     """ Explore your love of Rick """
 
     return render_template("explore/ai-brainz.html")
+
+@explore_bp.route("/lb-radio/")
+def lb_radio():
+    """ LB Radio view
+
+        Possible page arguments:
+           mode: string, must be easy, medium or hard.
+           prompt: string, the prompt for playlist generation.
+    """
+
+    mode = request.args.get("mode", "")
+    if mode != "" and mode not in ("easy", "medium", "hard"):
+        raise BadRequest("mode parameter is required and must be one of 'easy', 'medium' or 'hard'")
+
+    prompt = request.args.get("prompt", "")
+    if prompt != "" and prompt == "":
+        raise BadRequest("prompt parameter is required and must be non-zero length.")
+
+    if current_user.is_authenticated:
+        user = current_user.musicbrainz_id
+        token = current_user.auth_token
+    else:
+        user = ""
+        token = ""
+    props = {
+        "mode": mode,
+        "prompt": prompt,
+        "user": user,
+        "token": token
+    }
+
+    return render_template("explore/lb-radio.html", props=orjson.dumps(props).decode("utf-8"))

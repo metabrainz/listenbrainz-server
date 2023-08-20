@@ -7,12 +7,9 @@ import uuid
 from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from data.model.similar_user_model import SimilarUsers
 from typing import Tuple, List
 
-
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 def create(musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> int:
@@ -142,7 +139,8 @@ def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
             SELECT {columns}
               FROM "user"
              WHERE LOWER(musicbrainz_id) in :mb_ids
-        """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
+        """.format(columns=','.join(USER_GET_COLUMNS))),
+                                    {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
         return {row["musicbrainz_id"].lower(): row for row in result.mappings()}
 
 
@@ -437,13 +435,33 @@ def get_users_in_order(user_ids):
         return [row for row in r.mappings() if row["musicbrainz_id"] is not None]
 
 
-def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
-    """ Given a user_id, fetch the similar users for that given user.
-        Returns a dict { "user_x" : .453, "user_y": .123 } """
+def get_similar_users(user_id: int) -> Optional[list[dict]]:
+    """ Given a user_id, fetch the similar users for that given user ordered by "similarity" score.
+
+        :code:: python
+        ```
+        [   
+            { 
+                "musicbrainz_id" : "user_x",
+                "id": 123, 
+                "similarity": 0.54 
+            },
+            { 
+                "musicbrainz_id" : "user_y",
+                "id": 545, 
+                "similarity": 0.22 
+            }
+        ]
+        ```
+            
+        :param user_id: ID of the user.
+        :type user_id: ``int``
+    """
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT musicbrainz_id AS user_name
+            SELECT musicbrainz_id
+                 , id
                  , value->0 AS similarity -- first element of array is local similarity, second is global_similarity
               FROM recommendation.similar_user r 
               JOIN jsonb_each(r.similar_users) j
@@ -451,9 +469,9 @@ def get_similar_users(user_id: int) -> Optional[SimilarUsers]:
               JOIN "user" u
                 ON j.key::int = u.id 
              WHERE user_id = :user_id
+             ORDER BY similarity DESC
         """), {"user_id": user_id})
-        users = {row.user_name: row.similarity for row in result.fetchall()}
-        return SimilarUsers(user_id=user_id, similar_users=users)
+        return [dict(**row) for row in result.mappings()]
 
 
 def get_users_by_id(user_ids: List[int]):
@@ -531,7 +549,8 @@ def update_user_details(lb_id: int, musicbrainz_id: str, email: str):
             raise DatabaseException(
                 "Couldn't update user's email: %s" % str(err))
 
-def search_query(search_term:str, limit:int, connection:any):
+
+def search_query(search_term: str, limit: int, connection: any):
     result = connection.execute(sqlalchemy.text("""
             SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
               FROM "user"
@@ -539,9 +558,9 @@ def search_query(search_term:str, limit:int, connection:any):
           ORDER BY query_similarity DESC
              LIMIT :limit
             """), {
-            "search_term": search_term,
-            "limit": limit
-        })
+        "search_term": search_term,
+        "limit": limit
+    })
     rows = result.fetchall()
     return rows
 
@@ -562,15 +581,18 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
           calculated by spark
     """
     with db.engine.connect() as connection:
-        rows = search_query(search_term,limit,connection)
+        rows = search_query(search_term, limit, connection)
         if not rows:
             return []
-        similar_users = get_similar_users(searcher_id) if searcher_id else None
 
         search_results = []
-        if similar_users:
+
+        if searcher_id:
+            # Constructing an id-similarity map
+            similar_users = get_similar_users(searcher_id)
+            id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
             for row in rows:
-                similarity = similar_users.similar_users.get(row.musicbrainz_id, None)
+                similarity = id_similarity_map.get(row.musicbrainz_id, None)
                 search_results.append((row.musicbrainz_id, row.query_similarity, similarity))
         else:
             search_results = [(row.musicbrainz_id, row.query_similarity, None) for row in rows]
@@ -578,9 +600,8 @@ def search(search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[
 
 
 def search_user_name(search_term: str, limit: int) -> List[object]:
-
     with db.engine.connect() as connection:
-        rows = search_query(search_term,limit,connection)
+        rows = search_query(search_term, limit, connection)
 
         if not rows:
             return []
@@ -588,6 +609,5 @@ def search_user_name(search_term: str, limit: int) -> List[object]:
         search_results = []
 
         for row in rows:
-            search_results.append({"user_name":row.musicbrainz_id})
+            search_results.append({"user_name": row.musicbrainz_id})
         return search_results
-

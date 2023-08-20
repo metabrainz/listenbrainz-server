@@ -97,11 +97,12 @@ def serialize_jspf(playlist: Playlist):
         Given a playlist, return a properly formated dict that can be passed to jsonify.
     """
 
-    pl = {"creator": playlist.creator,
-          "title": playlist.name,
-          "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
-          "date": playlist.created.astimezone(datetime.timezone.utc).isoformat()
-          }
+    pl = {
+        "creator": playlist.creator,
+        "title": playlist.name,
+        "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
+        "date": playlist.created.astimezone(datetime.timezone.utc).isoformat()
+    }
     if playlist.description:
         pl["annotation"] = playlist.description
 
@@ -134,8 +135,7 @@ def serialize_jspf(playlist: Playlist):
         if rec.title:
             tr["title"] = rec.title
 
-        extension = {"added_by": rec.added_by,
-                     "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
+        extension = {"added_by": rec.added_by, "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
         if rec.artist_mbids:
             extension["artist_identifiers"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
 
@@ -161,10 +161,7 @@ def serialize_xspf(playlist: Playlist):
     """
 
     playlist_root = ET.Element("playlist")
-    playlist_root.attrib = {
-        "version": "1",
-        "xmlns": "http://xspf.org/ns/0/"
-    }
+    playlist_root.attrib = {"version": "1", "xmlns": "http://xspf.org/ns/0/"}
 
     creator = ET.SubElement(playlist_root, "creator")
     creator.text = playlist.creator
@@ -197,8 +194,7 @@ def serialize_xspf(playlist: Playlist):
 
     if playlist.copied_from_id is not None:
         if playlist.copied_from_mbid is None:
-            playlist_extension_copied_from_deleted = ET.SubElement(playlist_extension,
-                                                                   "playlist_extension_copied_from_deleted")
+            playlist_extension_copied_from_deleted = ET.SubElement(playlist_extension, "playlist_extension_copied_from_deleted")
             playlist_extension_copied_from_deleted.text = "true"
         else:
             playlist_extension_copied_from_mbid = ET.SubElement(playlist_extension, "copied_from_mbid")
@@ -430,8 +426,9 @@ def create_playlist():
     if "track" in data["playlist"]:
         for track in data["playlist"]["track"]:
             try:
-                playlist.recordings.append(WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
-                                                                     added_by_id=user["id"]))
+                playlist.recordings.append(
+                    WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                              added_by_id=user["id"]))
             except ValueError:
                 log_raise_400("Invalid recording MBID found in submitted recordings")
 
@@ -849,9 +846,11 @@ def copy_playlist(playlist_mbid):
 def export_playlist(playlist_mbid, service):
     """
 
-    Export a playlist to an external service.
+    Export a playlist to an external service, given a playlist MBID. 
 
     :reqheader Authorization: Token <user token>
+    :param playlist_mbid: The playlist mbid to export.
+    :param is_public: Should the exported playlist be public or not?
     :statuscode 200: playlist copied.
     :statuscode 401: invalid authorization. See error message for details.
     :statuscode 404: Playlist not found
@@ -877,7 +876,47 @@ def export_playlist(playlist_mbid, service):
 
     is_public = parse_boolean_arg("is_public", True)
     try:
-        url = export_to_spotify(user["auth_token"], token["access_token"], playlist_mbid, is_public)
+        url = export_to_spotify(user["auth_token"], token["access_token"], is_public, playlist_mbid=playlist_mbid)
+        return jsonify({"external_url": url})
+    except requests.exceptions.HTTPError as exc:
+        error = exc.response.json()
+        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+
+
+@playlist_api_bp.route("/export-jspf/<service>", methods=["POST", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def export_playlist_jspf(service):
+    """
+
+    Export a playlist to an external service from JSPF POSTed to this endpoint.
+
+    :reqheader Authorization: Token <user token>
+    :param is_public: Should the exported playlist be public or not?
+    :statuscode 200: playlist copied.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    if service != "spotify":
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+
+    spotify_service = SpotifyService()
+    token = spotify_service.get_user(user["id"], refresh=True)
+    if not token:
+        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
+
+    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+        raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
+                            f" to use this feature.")
+
+    is_public = parse_boolean_arg("is_public", True)
+    jspf = request.json
+    try:
+        url = export_to_spotify(user["auth_token"], token["access_token"], is_public, jspf=jspf)
         return jsonify({"external_url": url})
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()

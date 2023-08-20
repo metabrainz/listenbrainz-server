@@ -182,26 +182,3 @@ class DumpImporterJobTestCase(SparkNewTestCase):
         self.assertEqual(len(messages), 1)
         self.assertListEqual(['listenbrainz-spark-dump-202-20200915-180002-incremental.tar'],
                              messages[0]['imported_dump'])
-
-    @patch('ftplib.FTP')
-    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.download_artist_relation')
-    @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.upload_artist_relation')
-    @patch('listenbrainz_spark.request_consumer.jobs.import_dump.shutil.rmtree')
-    @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile')
-    def test_import_artist_relation_to_hdfs(self, mock_temp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
-        mock_temp.mkdtemp.return_value = 'fake_dir'
-        mock_download.return_value = ('download_dir', 'artist-credit-artist-credit-relations-01-20191230-134806.tar.bz2')
-        message = import_dump.import_artist_relation_to_hdfs()
-
-        mock_download.assert_called_once()
-        self.assertEqual(mock_download.call_args[1]['directory'], 'fake_dir')
-
-        mock_upload.assert_called_once()
-        self.assertEqual(mock_upload.call_args[1]['archive'], 'download_dir')
-
-        self.assertEqual(len(message), 1)
-        self.assertEqual(message[0]['imported_artist_relation'],
-                         'artist-credit-artist-credit-relations-01-20191230-134806.tar.bz2')
-        self.assertTrue(message[0]['type'], 'import_artist_relation')
-        self.assertTrue('import_time' in message[0])
-        self.assertTrue('time_taken_to_import' in message[0])

@@ -219,4 +219,44 @@ CREATE TABLE similarity.artist_credit_mbids (
     score INT NOT NULL
 );
 
+CREATE TABLE tags.lb_tag_radio (
+    tag                     TEXT NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    tag_count               INTEGER NOT NULL,
+    percent                 DOUBLE PRECISION NOT NULL,
+    source                  lb_tag_radio_source_type_enum NOT NULL
+);
+
+CREATE TABLE popularity.recording (
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.artist (
+    artist_mbid             UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.release (
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.top_recording (
+    artist_mbid             UUID NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.top_release (
+    artist_mbid             UUID NOT NULL,
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
 COMMIT;

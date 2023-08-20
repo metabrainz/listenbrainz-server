@@ -9,21 +9,17 @@ import React, {
 import { throttle, throttle as _throttle } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 import GlobalAppContext from "./GlobalAppContext";
+import { ToastMsg } from "../notifications/Notifications";
 
 const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 type SearchTrackOrMBIDProps = {
   onSelectRecording: (selectedRecordingMetadata: TrackMetadata) => void;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 export default function SearchTrackOrMBID({
   onSelectRecording,
-  newAlert,
 }: SearchTrackOrMBIDProps) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRecording } = APIService;
@@ -47,13 +43,15 @@ export default function SearchTrackOrMBID({
       if (!error) {
         return;
       }
-      newAlert(
-        "danger",
-        title || "Error",
-        typeof error === "object" ? error.message : error
+      toast.error(
+        <ToastMsg
+          title={title || "Error"}
+          message={typeof error === "object" ? error.message : error}
+        />,
+        { toastId: "search-error" }
       );
     },
-    [newAlert]
+    []
   );
 
   const throttledSearchTrack = useMemo(

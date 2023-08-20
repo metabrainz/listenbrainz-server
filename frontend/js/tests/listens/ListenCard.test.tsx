@@ -10,10 +10,13 @@ import ListenCard, {
 } from "../../src/listens/ListenCard";
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import { waitForComponentToPaint } from "../test-utils";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -39,18 +42,19 @@ const listen: Listen = {
 
 const props: ListenCardProps = {
   listen,
-  currentFeedback: 1,
   showTimestamp: true,
   showUsername: true,
-  updateFeedbackCallback: () => {},
-  newAlert: () => {},
 };
 
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
   currentUser: { auth_token: "baz", name: "test" },
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIServiceClass(""),
+    { name: "Fnord" }
+  ),
 };
 
 describe("ListenCard", () => {
@@ -189,30 +193,11 @@ describe("ListenCard", () => {
     expect(durationElement.text()).toEqual("2:22");
   });
 
-  describe("handleError", () => {
-    it("calls newAlert", async () => {
-      const wrapper = mount<ListenCard>(
-        <ListenCard {...{ ...props, newAlert: jest.fn() }} />
-      );
-      const instance = wrapper.instance();
-      await act(() => {
-        instance.handleError("error");
-      });
-
-      expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
-      expect(instance.props.newAlert).toHaveBeenCalledWith(
-        "danger",
-        "Error",
-        "error"
-      );
-    });
-  });
-
   describe("recommendTrackToFollowers", () => {
     it("calls API, and creates a new alert on success", async () => {
       const wrapper = mount<ListenCard>(
         <GlobalAppContext.Provider value={globalProps}>
-          <ListenCard {...{ ...props, newAlert: jest.fn() }} />
+          <ListenCard {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -234,8 +219,6 @@ describe("ListenCard", () => {
         recording_mbid:
           instance.props.listen.track_metadata.additional_info?.recording_mbid,
       });
-
-      expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
@@ -292,11 +275,10 @@ describe("ListenCard", () => {
   });
   describe("pinRecordingModal", () => {
     it("renders the PinRecordingModal component with the correct props", async () => {
-      const newAlert = jest.fn();
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
-            <ListenCard {...props} newAlert={newAlert} />
+            <ListenCard {...props} />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
@@ -314,17 +296,15 @@ describe("ListenCard", () => {
         wrapper.find(PinRecordingModal).first().childAt(0).props()
       ).toEqual({
         recordingToPin: props.listen,
-        newAlert,
       });
     });
   });
   describe("CBReviewModal", () => {
     it("renders the CBReviewModal component with the correct props", async () => {
-      const newAlert = jest.fn();
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
-            <ListenCard {...props} newAlert={newAlert} />
+            <ListenCard {...props} />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
@@ -341,7 +321,6 @@ describe("ListenCard", () => {
       // recentListens renders CBReviewModal with listens[0] as listen by default
       expect(wrapper.find(CBReviewModal).first().childAt(0).props()).toEqual({
         listen: props.listen,
-        newAlert,
       });
     });
   });

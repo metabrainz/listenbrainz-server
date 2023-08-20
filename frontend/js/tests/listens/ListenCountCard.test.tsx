@@ -6,6 +6,7 @@ import GlobalAppContext, {
 } from "../../src/utils/GlobalAppContext";
 import ListenCountCard from "../../src/listens/ListenCountCard";
 import APIService from "../../src/utils/APIService";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const user = {
   id: 1,
@@ -20,6 +21,10 @@ const loggedInUser = {
 const globalContext: GlobalAppContextT = {
   APIService: new APIService("foo"),
   currentUser: loggedInUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 describe("ListenCountCard", () => {
