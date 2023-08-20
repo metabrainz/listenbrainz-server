@@ -19,7 +19,7 @@ body {
   display: flex;
   > nav[role="navigation"] {
     #side-nav {
-      min-width: @sidenav-width;
+      width: @sidenav-width;
       // using important here to override Botostrap 3 collapse plugin setting height
       height: 100vh !important;
       display: flex;
@@ -74,6 +74,8 @@ body {
         .username {
           font-weight: 700;
           margin-bottom: 0.3em;
+          // prevent long usernames from breaking the layout
+          word-break: break-all;
         }
         line-height: 1.5em;
 
