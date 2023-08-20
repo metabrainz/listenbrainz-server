@@ -45,7 +45,7 @@ class SpotifyCrawlerHandler(BaseHandler):
         return []
 
     def get_items_from_seeder(self, message) -> list[JobItem]:
-        return [JobItem(INCOMING_ALBUM_PRIORITY, album_id) for album_id in message["album_ids"]]
+        return [JobItem(INCOMING_ALBUM_PRIORITY, album_id) for album_id in message["spotify_album_ids"]]
 
     @staticmethod
     def transform_album(album) -> Album:
