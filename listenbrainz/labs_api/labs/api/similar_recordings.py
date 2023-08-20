@@ -3,33 +3,34 @@ from uuid import UUID
 
 import psycopg2
 import psycopg2.extras
-from datasethoster import Query
+from datasethoster import Query, QueryOutputLine, RequestSource
 from flask import current_app
 from markupsafe import Markup
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from listenbrainz.db import similarity
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 
 
 class SimilarRecordingsViewerInput(BaseModel):
-    recording_mbid: UUID
+    recording_mbids: list[UUID]
     algorithm: str
 
 
 class SimilarRecordingsViewerOutputItem(BaseModel):
-    artist_credit_name: Optional[str]
-    recording_name: Optional[str]
-    artist_credit_id: Optional[int]
-    artist_credit_mbids: Optional[list[UUID]]
     recording_mbid: Optional[UUID]
+    recording_name: Optional[str]
+    artist_credit_name: Optional[str]
+    artist_credit_mbids: Optional[list[UUID]] = Field(alias="[artist_credit_mbids]")
+    release_name: Optional[str]
+    release_mbid: Optional[UUID]
+    caa_id: Optional[int]
+    caa_release_mbid: Optional[UUID]
+    score: Optional[int]
+    reference_mbid: Optional[UUID]
 
 
-class SimilarRecordingsViewerOutputComment(BaseModel):
-    comment: str
-
-
-SimilarRecordingsViewerOutput = Union[SimilarRecordingsViewerOutputComment, SimilarRecordingsViewerOutputItem]
+SimilarRecordingsViewerOutput = Union[QueryOutputLine, SimilarRecordingsViewerOutputItem]
 
 
 class SimilarRecordingsViewerQuery(Query):
@@ -70,7 +71,7 @@ class SimilarRecordingsViewerQuery(Query):
         return [SimilarRecordingsViewerOutputItem(**item) for item in metadata]
 
     def fetch(self, params, source, offset=-1, count=-1):
-        recording_mbids = [params[0].recording_mbid]
+        recording_mbids = [str(x) for x in params[0].recording_mbids]
         algorithm = params[0].algorithm
         count = count if count > 0 else 100
 
@@ -78,17 +79,22 @@ class SimilarRecordingsViewerQuery(Query):
                 psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
                 ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+            results = []
 
-            references = self.get_recordings_dataset(mb_curs, ts_curs, recording_mbids)
-            results = [SimilarRecordingsViewerOutputComment(comment=Markup("<p><b>Reference recording</b></p>"))]
-            results.extend(references)
+            if source == RequestSource.web:
+                references = self.get_recordings_dataset(mb_curs, ts_curs, recording_mbids)
+                results.append(QueryOutputLine(line=Markup("<p><b>Reference recording</b></p>")))
+                results.extend(references)
 
-            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "recording_dev", recording_mbids, algorithm, count)
-            if len(similar_mbids) == 0:
-                results.append(SimilarRecordingsViewerOutputComment(comment=Markup("<p><b>No similar recordings found!</b></p>")))
-                return results
+            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "recording_dev", recording_mbids,
+                                                                algorithm, count)
+            if source == RequestSource.web:
+                if len(similar_mbids) == 0:
+                    results.append(QueryOutputLine(line=Markup("<p><b>No similar recordings found!</b></p>")))
+                    return results
+                else:
+                    results.append(QueryOutputLine(line=Markup("<p><b>Similar Recordings</b></p>")))
 
-            results.append(SimilarRecordingsViewerOutputComment(comment=Markup("<p><b>Similar Recordings</b></p>")))
             similar_dataset = self.get_recordings_dataset(mb_curs, ts_curs, similar_mbids, score_idx, mbid_idx)
             results.extend(similar_dataset)
 
