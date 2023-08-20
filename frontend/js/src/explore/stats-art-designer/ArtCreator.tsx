@@ -10,7 +10,7 @@ import * as React from "react";
 import { useCallback, useState } from "react";
 import * as ReactDOM from "react-dom";
 import "../../../../css/App.less";
-import { withAlertNotifications } from "../../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
@@ -351,12 +351,7 @@ function ArtCreator() {
 export default ArtCreator;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    globalAppContext,
-    sentryProps,
-    optionalAlerts,
-  } = getPageProps();
+  const { domContainer, globalAppContext, sentryProps } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
@@ -373,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
-        <ArtCreatorPageWithAlertNotifications initialAlerts={optionalAlerts} />
+        <ArtCreatorPageWithAlertNotifications />
       </GlobalAppContext.Provider>
     </ErrorBoundary>,
     domContainer

@@ -1,5 +1,10 @@
 // import NiceModal from "@ebay/nice-modal-react";
-import { faClipboard, faUser } from "@fortawesome/free-solid-svg-icons";
+import {
+  faClipboard,
+  faCode,
+  faDownload,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import MagicShareButton from "../../../year-in-music/2022/MagicShareButton";
@@ -27,36 +32,25 @@ function IconTray(props: IconTrayProps) {
         </select>
       </div>
       <div className="icon-bar ms-auto">
-        <div className="bb icon-tray">
-          <MagicShareButton
-            svgURL=""
-            shareUrl=""
-            shareText="Check out my"
-            shareTitle="My top albums of 2022"
-            fileName=""
-          />
-          {/* <button type="button">
-            <FontAwesomeIcon className="icon-bar-item mx-2" icon={faLink} />
+        <div className="icon-tray">
+          <button type="button">
+            <MagicShareButton
+              svgURL=""
+              shareUrl=""
+              shareText="Check out my"
+              shareTitle="My top albums of 2022"
+              fileName=""
+            />
+            {/* <FontAwesomeIcon className="icon-bar-item mx-2" icon={faLink} /> */}
           </button>
           <button type="button">
             <FontAwesomeIcon className="icon-bar-item mx-2" icon={faDownload} />
-          </button> */}
-          {/* <button type="button">
+          </button>
+          <button type="button">
             <FontAwesomeIcon className="icon-bar-item mx-2" icon={faCode} />
-          </button> */}
-          {/* <ListenControl
-            text="Inspect listen"
-            icon={faCode}
-            action={() => {
-              NiceModal.show(ListenPayloadModal, {
-                listen,
-              });
-            }}
-            dataToggle="modal"
-            dataTarget="#ListenPayloadModal"
-          /> */}
+          </button>
         </div>
-        <div className="bb border p-0 link-container">
+        <div className="border p-0 link-container">
           <input type="text" id="Link" value={previewUrl} disabled />
           <button
             type="button"
