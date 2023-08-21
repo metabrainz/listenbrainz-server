@@ -1,20 +1,25 @@
+/* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
+
 import * as React from "react";
 
 import {
-  faPen,
-  faTrashAlt,
-  faSave,
   faCog,
+  faFileExport,
+  faPen,
+  faSave,
+  faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import { saveAs } from "file-saver";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { toast } from "react-toastify";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { sanitize } from "dompurify";
-import { getPlaylistExtension, getPlaylistId } from "./utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { toast } from "react-toastify";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { getPlaylistExtension, getPlaylistId } from "./utils";
 
 export type PlaylistCardProps = {
   playlist: JSPFPlaylist;
@@ -31,10 +36,13 @@ export default function PlaylistCard({
   selectPlaylistForEdit,
   showOptions = true,
 }: PlaylistCardProps) {
-  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { APIService, currentUser, spotifyAuth } = React.useContext(
+    GlobalAppContext
+  );
 
   const playlistId = getPlaylistId(playlist);
   const customFields = getPlaylistExtension(playlist);
+  const [loading, setLoading] = React.useState(false);
 
   const onSelectPlaylistForEdit = React.useCallback(() => {
     selectPlaylistForEdit(playlist);
@@ -94,6 +102,78 @@ export default function PlaylistCard({
       });
     }
   }, [playlistId, currentUser, onSuccessfulCopy]);
+
+  const showSpotifyExportButton = spotifyAuth?.permission?.includes(
+    "playlist-modify-public"
+  );
+
+  const handleError = (error: any) => {
+    toast.error(<ToastMsg title="Error" message={error.message} />, {
+      toastId: "error",
+    });
+  };
+
+  const exportToSpotify = React.useCallback(
+    async (playlistTitle: string, auth_token: string) => {
+      const result = await APIService.exportPlaylistToSpotify(
+        auth_token,
+        playlistId
+      );
+      const { external_url } = result;
+      toast.success(
+        <ToastMsg
+          title="Playlist exported to Spotify"
+          message={
+            <>
+              Successfully exported playlist:{" "}
+              <a href={external_url} target="_blank" rel="noopener noreferrer">
+                {playlistTitle}
+              </a>
+              Heads up: the new playlist is public on Spotify.
+            </>
+          }
+        />,
+        { toastId: "export-playlist" }
+      );
+    },
+    [APIService, playlistId]
+  );
+
+  const exportAsJSPF = React.useCallback(
+    async (playlistTitle: string, auth_token: string) => {
+      const result = await APIService.getPlaylist(playlistId, auth_token);
+      saveAs(await result.blob(), `${playlistTitle}.jspf`);
+    },
+    []
+  );
+
+  const handlePlaylistExport = React.useCallback(
+    async (handler: (playlistTitle: string, auth_token: string) => void) => {
+      if (!playlist || !currentUser.auth_token) {
+        return;
+      }
+      if (!playlist.track.length) {
+        toast.warn(
+          <ToastMsg
+            title="Empty playlist"
+            message={
+              "Why don't you fill up the playlist a bit before trying to export it?"
+            }
+          />,
+          { toastId: "empty-playlist" }
+        );
+        return;
+      }
+      setLoading(true);
+      try {
+        handler(playlist.title, currentUser.auth_token);
+      } catch (error) {
+        handleError(error.error ?? error);
+      }
+      setLoading(false);
+    },
+    [playlist, currentUser]
+  );
 
   return (
     <Card className="playlist" key={playlistId}>
@@ -155,6 +235,34 @@ export default function PlaylistCard({
                 </li>
               </>
             )}
+            {showSpotifyExportButton && (
+              <>
+                <li role="separator" className="divider" />
+                <li>
+                  <a
+                    id="exportPlaylistToSpotify"
+                    role="button"
+                    href="#"
+                    onClick={() => handlePlaylistExport(exportToSpotify)}
+                  >
+                    <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to
+                    Spotify
+                  </a>
+                </li>
+              </>
+            )}
+            <li role="separator" className="divider" />
+            <li>
+              <a
+                id="exportPlaylistToJSPF"
+                role="button"
+                href="#"
+                onClick={() => handlePlaylistExport(exportAsJSPF)}
+              >
+                <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as
+                JSPF
+              </a>
+            </li>
           </ul>
         </div>
       )}
