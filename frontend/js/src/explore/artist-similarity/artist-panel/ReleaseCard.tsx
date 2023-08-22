@@ -93,19 +93,19 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       {releaseDate && (
         <div className="release-date">{formatReleaseDate(releaseDate)}</div>
       )}
-      <a href={LB_PLAYER_URL} target="_blank" rel="noopener noreferrer">
+      {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+      <p>
         <LazyLoadImage
           className="release-coverart"
           src={coverartSrc}
           alt={`${releaseName} by ${artistCreditName}`}
           placeholderSrc={COVERART_PLACEHOLDER}
         />
-      </a>
+      </p>
       <div className="name-type-container">
         <div className="release-name" title={releaseName}>
-          <a href={LB_PLAYER_URL} target="_blank" rel="noopener noreferrer">
-            {releaseName}
-          </a>
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+          <p>{releaseName}</p>
         </div>
         {releaseTypePrimary && (
           <div className="release-type-chip" title={releaseTypeTooltip()!}>

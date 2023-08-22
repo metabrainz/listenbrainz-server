@@ -9,6 +9,7 @@ import { ToastMsg } from "../../../notifications/Notifications";
 
 interface PanelProps {
   artist: ArtistType;
+  onTrackChange: (currentTrack: Array<Listen>) => void;
 }
 
 type ArtistInfoType = {
@@ -33,8 +34,31 @@ type RecordingType = {
   caa_id: number;
   caa_release_mbid: string;
 };
-function Panel({ artist }: PanelProps) {
+function Panel({ artist, onTrackChange }: PanelProps) {
   const [artistInfo, setArtistInfo] = useState<ArtistInfoType | null>(null);
+
+  const handleTrackChange = () => {
+    if (
+      artistInfo &&
+      artistInfo.topTrack &&
+      artistInfo.topTrack.recording_name
+    ) {
+      const newTrack: Array<Listen> = [
+        {
+          listened_at: 0,
+          track_metadata: {
+            artist_name: artist.name,
+            track_name: artistInfo.topTrack.recording_name,
+            release_name: artistInfo.topTrack.release_name,
+            release_mbid: artistInfo.topTrack.release_mbid,
+            recording_mbid: artistInfo.topTrack.recording_mbid,
+          },
+        },
+      ];
+      onTrackChange(newTrack);
+    }
+  };
+
   useEffect(() => {
     const getArtistInfo = async () => {
       try {
@@ -87,32 +111,44 @@ function Panel({ artist }: PanelProps) {
           </div>
         </div>
         {artistInfo.topTrack && (
-          <div className="artist-top-album">
+          <div className="artist-top-album-container">
             <h5>Top Album</h5>
             {/**
              * Needs to be replaced with top album when endpoint is available.
              */}
             {artistInfo.topTrack && (
-              <ReleaseCard
-                releaseMBID={artistInfo.topTrack.release_mbid}
-                releaseName={artistInfo.topTrack.release_name}
-                caaID={artistInfo.topTrack.caa_id}
-                caaReleaseMBID={artistInfo.topTrack.caa_release_mbid}
-              />
+              <button
+                type="button"
+                id="artist-top-album"
+                onClick={handleTrackChange}
+              >
+                <ReleaseCard
+                  releaseMBID={artistInfo.topTrack.release_mbid}
+                  releaseName={artistInfo.topTrack.release_name}
+                  caaID={artistInfo.topTrack.caa_id}
+                  caaReleaseMBID={artistInfo.topTrack.caa_release_mbid}
+                />
+              </button>
             )}
           </div>
         )}
         {artistInfo.topTrack && (
-          <div className="artist-top-track">
+          <div className="artist-top-track-container">
             <h5>Top Track</h5>
             {artistInfo.topTrack && (
-              <ReleaseCard
-                releaseMBID={artistInfo.topTrack.release_mbid}
-                releaseName={artistInfo.topTrack.recording_name ?? "Unknown"}
-                caaID={artistInfo.topTrack.caa_id}
-                caaReleaseMBID={artistInfo.topTrack.caa_release_mbid}
-                recordingMBID={artistInfo.topTrack.recording_mbid}
-              />
+              <button
+                type="button"
+                id="artist-top-track"
+                onClick={handleTrackChange}
+              >
+                <ReleaseCard
+                  releaseMBID={artistInfo.topTrack.release_mbid}
+                  releaseName={artistInfo.topTrack.recording_name ?? "Unknown"}
+                  caaID={artistInfo.topTrack.caa_id}
+                  caaReleaseMBID={artistInfo.topTrack.caa_release_mbid}
+                  recordingMBID={artistInfo.topTrack.recording_mbid}
+                />
+              </button>
             )}
           </div>
         )}

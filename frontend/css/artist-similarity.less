@@ -191,15 +191,15 @@
         }
       }
 
-      .artist-top-album,
-      .artist-top-track {
+      .artist-top-album-container,
+      .artist-top-track-container {
         height: 30%;
         > h5 {
           font-weight: bolder;
           color: inherit;
           overflow: hidden;
           margin: 0;
-          padding-bottom: 0.5em;
+          //padding-bottom: 0.5em;
           &:after {
             content: "";
             display: inline-block;
@@ -211,12 +211,17 @@
             border-top: 1.75px solid #d9d9d9;
           }
         }
+        #artist-top-track, #artist-top-album {
+          border: none;
+          border-radius: 0.5em;
+          padding: 1em 0 0 0;
+        }
       }
       .release-card-container {
         text-align: center;
       }
       .release-coverart {
-        width: 80%;
+        width: 70%;
         height: auto;
         aspect-ratio: 1 / 1;
         border-radius: 14px;

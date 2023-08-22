@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import SimilarArtistsGraph from "./SimilarArtistsGraph";
@@ -6,6 +6,8 @@ import SearchBox from "./artist-search/SearchBox";
 import Panel from "./artist-panel/Panel";
 import { ToastMsg } from "../../notifications/Notifications";
 import generateTransformedArtists from "./generateTransformedArtists";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 type ArtistType = {
   artist_mbid: string;
@@ -78,6 +80,21 @@ function Data() {
 
   const [artistMBID, setArtistMBID] = useState(ARTIST_MBID);
 
+  const testCurrentTrack: Array<Listen> = [
+    {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Arjan Dhillon",
+        track_name: "Danabaad",
+        // release_name: "Awara",
+        // recording_mbid: "908a8f0f-1e08-45b4-94cb-0458280d0889",
+        // release_mbid: "d8c0026f-e10c-494d-b66c-2085062b8c2e",
+      },
+    },
+  ];
+
+  const [currentTracks, setCurrentTracks] = useState<Array<Listen>>();
+
   const processData = useCallback((dataResponse: ApiResponseType): void => {
     // Type guard for dataset response
     const isDatasetResponse = (
@@ -148,6 +165,17 @@ function Data() {
     setSimilarArtistsList(newSimilarArtistsList);
   }, [completeSimilarArtistsList, similarArtistsLimit]);
 
+  useEffect(() => {
+    window.postMessage(
+      { brainzplayer_event: "current-listen-change", payload: currentTracks },
+      window.location.origin
+    );
+    window.postMessage(
+      { brainzplayer_event: "play-listen", payload: currentTracks },
+      window.location.origin
+    );
+  }, [currentTracks]);
+
   const backgroundColor1 = colors[0]
     .clone()
     .setAlpha(BACKGROUND_ALPHA)
@@ -159,6 +187,7 @@ function Data() {
   const backgroundGradient = `linear-gradient(${
     Math.random() * 360
   }deg ,${backgroundColor1},${backgroundColor2})`;
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
   return (
     <div className="artist-similarity-main-container">
       <SearchBox
@@ -172,8 +201,19 @@ function Data() {
           data={transformedArtists}
           background={backgroundGradient}
         />
-        {mainArtist && <Panel artist={mainArtist} />}
+        {mainArtist && (
+          <Panel artist={mainArtist} onTrackChange={setCurrentTracks} />
+        )}
       </div>
+      {currentTracks && (
+        <BrainzPlayer
+          listens={currentTracks}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
+        />
+      )}
     </div>
   );
 }
