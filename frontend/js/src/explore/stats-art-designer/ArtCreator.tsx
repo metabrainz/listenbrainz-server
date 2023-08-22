@@ -28,9 +28,9 @@ enum StyleEnum {
 }
 
 function ArtCreator() {
-  // NOTE: Add useThrottle to slow down updates of the userName field.
+  const { currentUser } = React.useContext(GlobalAppContext);
   // Add images for the gallery, don't compose them on the fly
-  const [userName, setUserName] = useState("rob");
+  const [userName, setUserName] = useState(currentUser?.name);
   const [style, setStyle] = useState(StyleEnum.designerTop5);
   const [timeRange, setTimeRange] = useState("week");
   const [gridSize, setGridSize] = useState(4);
