@@ -11,7 +11,7 @@ function DropdownList({ opts, onChange, value, id }: DropdownListProps) {
   return (
     <select
       id={id ?? "dropdown"}
-      className="dropdown-list"
+      className="form-control"
       value={value}
       onChange={onChange}
     >
