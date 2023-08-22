@@ -11,6 +11,8 @@ import {
   faPaperPlane,
   faPencilAlt,
   faPlay,
+  faPlus,
+  faSquare,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -90,7 +92,6 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  static addCoverArtThumbnailSrc: string = "/static/img/add-cover-art.svg";
   static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -353,10 +354,18 @@ export default class ListenCard extends React.Component<
           className="listen-thumbnail"
         >
           <div className="add-cover-art">
-            <img
-              src={ListenCard.addCoverArtThumbnailSrc}
-              alt="Add cover art in MusicBrainz"
-            />
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faImage} />
+              <FontAwesomeIcon
+                icon={faSquare}
+                transform="shrink-10 left-5 up-2.5"
+              />
+              <FontAwesomeIcon
+                icon={faPlus}
+                inverse
+                transform="shrink-11.5 left-2 up-2.5"
+              />
+            </span>
           </div>
         </a>
       );
@@ -400,7 +409,13 @@ export default class ListenCard extends React.Component<
           className="listen-thumbnail"
         >
           <div className="cover-art-fallback">
-            <FontAwesomeIcon icon={faImage} />
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faImage} />
+              <FontAwesomeIcon
+                icon={faSquare}
+                transform="shrink-10 left-5 up-2.5"
+              />
+            </span>
           </div>
         </a>
       );
