@@ -9,6 +9,7 @@ import { Integrations } from "@sentry/tracing";
 import * as React from "react";
 import { useCallback, useState } from "react";
 import * as ReactDOM from "react-dom";
+import { debounce } from "lodash";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -35,6 +36,7 @@ function ArtCreator() {
   const [timeRange, setTimeRange] = useState("week");
   const [gridSize, setGridSize] = useState(4);
   const [gridStyle, setGridStyle] = useState(0);
+  const [previewUrl, setPreviewUrl] = useState("");
   const [font, setFont] = useState("");
   const [textColor, setTextColor] = useState("");
   const [firstBgColor, setFirstBgColor] = useState("");
@@ -201,13 +203,28 @@ function ArtCreator() {
     },
     [setFont]
   );
-
-  let previewUrl = "";
-  if (style === "grid-stats") {
-    previewUrl = `https://api.listenbrainz.org/1/art/${style}/${userName}/${timeRange}/${gridSize}/${gridStyle}/750`;
-  } else {
-    previewUrl = `https://api.listenbrainz.org/1/art/${style}/${userName}/${timeRange}/750`;
-  }
+  /* We want the username input to update as fast as the user types,
+  but we don't want to update the preview URL on each keystroke so we debounce */
+  const debouncedSetPreviewUrl = React.useMemo(() => {
+    return debounce(
+      (styleArg, userNameArg, timeRangeArg, gridSizeArg, gridStyleArg) => {
+        if (styleArg === StyleEnum.gridStats) {
+          setPreviewUrl(
+            `https://api.listenbrainz.org/1/art/${styleArg}/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridStyleArg}/750`
+          );
+        } else {
+          setPreviewUrl(
+            `https://api.listenbrainz.org/1/art/${styleArg}/${userNameArg}/${timeRangeArg}/750`
+          );
+        }
+      },
+      1000,
+      { leading: false }
+    );
+  }, [setPreviewUrl]);
+  React.useEffect(() => {
+    debouncedSetPreviewUrl(style, userName, timeRange, gridSize, gridStyle);
+  }, [userName, style, timeRange, gridSize, gridStyle, debouncedSetPreviewUrl]);
 
   return (
     <div id="stats-art-creator">
