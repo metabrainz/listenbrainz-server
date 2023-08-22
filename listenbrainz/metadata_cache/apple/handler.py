@@ -1,16 +1,11 @@
 import traceback
-from collections import Counter
-from datetime import datetime, timedelta
 
 import sentry_sdk
 
-from listenbrainz.db import timescale
 from listenbrainz.metadata_cache.apple.client import Apple
-from listenbrainz.metadata_cache.apple.store import insert
-
 from listenbrainz.metadata_cache.handler import BaseHandler
+from listenbrainz.metadata_cache.models import Album, Artist, Track
 from listenbrainz.metadata_cache.unique_queue import JobItem
-from brainzutils import cache
 
 UPDATE_INTERVAL = 60  # in seconds
 CACHE_TIME = 180  # in days
@@ -25,17 +20,29 @@ CACHE_KEY_PREFIX = "apple:album:"
 class AppleCrawlerHandler(BaseHandler):
 
     def __init__(self, app):
+        super().__init__(
+            name="listenbrainz-apple-metadata-cache",
+            external_service_queue=app.config["EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE"],
+            schema_name="apple_cache",
+            cache_key_prefix=CACHE_KEY_PREFIX
+        )
         self.app = app
         self.discovered_albums = set()
         self.discovered_artists = set()
-        self.stats = Counter()
         self.client = Apple()
 
-    def get_name(self) -> str:
-        return "listenbrainz-apple-metadata-cache"
-
-    def get_external_service_queue_name(self) -> str:
-        return self.app.config["EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE"]
+    def get_seed_albums(self) -> list[str]:
+        """ Retrieve apple album ids from new releases for all markets"""
+        client = Apple()
+        storefronts = client.get("https://api.music.apple.com/v1/storefronts")
+        album_ids = set()
+        for storefront in storefronts:
+            response = client.get(f"https://api.music.apple.com/v1/catalog/{storefront}/charts", {
+                "types": "albums",
+                "limit": 200
+            })
+            album_ids |= {album["id"] for album in response["results"]["albums"][0]["data"]}
+        return list(album_ids)
 
     def get_items_from_listen(self, listen) -> list[JobItem]:
         album_id = listen["track_metadata"]["additional_info"].get("apple_album_id")
@@ -44,19 +51,45 @@ class AppleCrawlerHandler(BaseHandler):
         return []
 
     def get_items_from_seeder(self, message) -> list[JobItem]:
-        return [JobItem(INCOMING_ALBUM_PRIORITY, album_id) for album_id in message["album_ids"]]
+        return [JobItem(INCOMING_ALBUM_PRIORITY, album_id) for album_id in message["apple_album_ids"]]
 
-    def update_metrics(self) -> dict:
-        discovered_artists_count = len(self.discovered_artists)
-        discovered_albums_count = len(self.discovered_albums)
-        self.app.logger.info("Artists discovered so far: %d", discovered_artists_count)
-        self.app.logger.info("Albums discovered so far: %d", discovered_albums_count)
-        self.app.logger.info("Albums inserted so far: %d", self.stats["albums_inserted"])
-        return {
-            "discovered_artists_count": discovered_artists_count,
-            "discovered_albums_count": discovered_albums_count,
-            "albums_inserted": self.stats["albums_inserted"]
-        }
+    @staticmethod
+    def transform_album(album) -> Album:
+        tracks = []
+        for track in album.pop("tracks"):
+            track_artists = []
+            for artist in track.pop("relationships")["artists"]["data"]:
+                artist.pop("relationships")
+                track_artists.append(Artist(id=artist["id"], name=artist["attributes"]["name"], data=artist))
+            tracks.append(Track(
+                id=track["id"],
+                name=track["attributes"]["name"],
+                track_number=track["attributes"]["trackNumber"],
+                artists=track_artists,
+                data=track
+            ))
+
+        artists = []
+        for artist in album.pop("artists"):
+            artist.pop("relationships")
+            artists.append(Artist(id=artist["id"], name=artist["name"], data=artist))
+
+        if album["attributes"]["isSingle"]:
+            album_type = "Single"
+        elif album["attributes"]["isCompilation"]:
+            album_type = "Compilation"
+        else:
+            album_type = "Album"
+
+        return Album(
+            id=album["id"],
+            name=album["name"],
+            type_=album_type,
+            release_date=album["attributes"]["releaseDate"],
+            tracks=tracks,
+            artists=artists,
+            data=album
+        )
 
     def fetch_albums(self, album_ids):
         """ retrieve album data from apple to store in the apple metadata cache """
@@ -87,14 +120,17 @@ class AppleCrawlerHandler(BaseHandler):
             album["tracks"] = tracks
             album["artists"] = relationships["artists"]["data"]
 
-        return albums, new_items
+        transformed_albums = [self.transform_album(album) for album in albums]
+        return transformed_albums, new_items
 
     def discover_albums(self, artist_id) -> list[JobItem]:
         """ lookup albums of the given artist to discover more albums to seed the job queue """
+        new_items = []
         try:
             if artist_id in self.discovered_artists:
                 return []
             self.discovered_artists.add(artist_id)
+            self.metrics["discovered_artists_count"] += 1
 
             album_ids = []
             while True:
@@ -107,47 +143,11 @@ class AppleCrawlerHandler(BaseHandler):
                 except Exception:
                     break
 
-            new_items = []
             for album_id in album_ids:
                 self.discovered_albums.add(album_id)
+                self.metrics["discovered_albums_count"] += 1
                 new_items.append(JobItem(DISCOVERED_ALBUM_PRIORITY, album_id))
-            return new_items
         except Exception as e:
             sentry_sdk.capture_exception(e)
             self.app.logger.info(traceback.format_exc())
-
-    def insert(self, data):
-        """ insert album data into the apple metadata cache """
-        last_refresh = datetime.utcnow()
-        expires_at = datetime.utcnow() + timedelta(days=CACHE_TIME)
-
-        conn = timescale.engine.raw_connection()
-        try:
-            with conn.cursor() as curs:
-                insert(curs, data, last_refresh, expires_at)
-            conn.commit()
-        finally:
-            conn.close()
-
-        cache_key = CACHE_KEY_PREFIX + data["id"]
-        cache.set(cache_key, 1, expirein=0)
-        cache.expireat(cache_key, int(expires_at.timestamp()))
-
-        self.stats["albums_inserted"] += 1
-
-    def process_items(self, apple_ids: list[str]) -> list[JobItem]:
-        filtered_ids = []
-        for apple_id in apple_ids:
-            cache_key = CACHE_KEY_PREFIX + apple_id
-            if cache.get(cache_key) is None:
-                filtered_ids.append(apple_id)
-
-        if len(filtered_ids) == 0:
-            return []
-
-        albums, new_items = self.fetch_albums(filtered_ids)
-        for album in albums:
-            if album is None:
-                continue
-            self.insert(album)
         return new_items

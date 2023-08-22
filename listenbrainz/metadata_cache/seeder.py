@@ -35,6 +35,13 @@ def submit_new_releases_to_cache():
 
         current_app.logger.info("Searching new album ids to seed spotify metadata cache")
         spotify_handler = SpotifyCrawlerHandler(app)
+        spotify_album_ids = spotify_handler.get_seed_albums()
+        current_app.logger.info("Found %d album ids", len(spotify_album_ids))
+        submit_albums(connection, spotify_handler.external_service_queue, {"spotify_album_ids": spotify_album_ids})
+        current_app.logger.info("Submitted new release album ids")
+
+        current_app.logger.info("Searching new album ids to seed spotify metadata cache")
+        spotify_handler = SpotifyCrawlerHandler(app)
         album_ids = spotify_handler.get_seed_albums()
         current_app.logger.info("Found %d album ids", len(album_ids))
         submit_albums(connection, spotify_handler.external_service_queue, {"spotify_album_ids": album_ids})
