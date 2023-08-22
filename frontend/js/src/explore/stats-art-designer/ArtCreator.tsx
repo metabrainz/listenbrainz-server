@@ -13,12 +13,12 @@ import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
-import ColorPicker from "./components/ColorPicker/ColorPicker";
-import DropdownList from "./components/DropdownList/DropdownList";
-import Gallery from "./components/Gallery/Gallery";
-import IconTray from "./components/IconTray/IconTray";
-import Preview from "./components/Preview/Preview";
-import ToggleOption from "./components/ToggleOption/ToggleOption";
+import ColorPicker from "./components/ColorPicker";
+import DropdownList from "./components/DropdownList";
+import Gallery from "./components/Gallery";
+import IconTray from "./components/IconTray";
+import Preview from "./components/Preview";
+import ToggleOption from "./components/ToggleOption";
 
 enum StyleEnum {
   designerTop5 = "designer-top-5",

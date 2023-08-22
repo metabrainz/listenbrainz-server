@@ -7,7 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import MagicShareButton from "../../../year-in-music/2022/MagicShareButton";
+import MagicShareButton from "../../year-in-music/2022/MagicShareButton";
 
 // import ListenControl from "../../../../listens/ListenControl";
 // import ListenPayloadModal from "../../../../listens/ListenPayloadModal";

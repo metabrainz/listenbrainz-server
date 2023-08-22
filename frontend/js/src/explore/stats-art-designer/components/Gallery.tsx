@@ -1,5 +1,5 @@
 import * as React from "react";
-import GalleryTile from "../GalleryTile/GalleryTile";
+import GalleryTile from "./GalleryTile";
 
 enum StyleEnum {
   designerTop5 = "designer-top-5",
