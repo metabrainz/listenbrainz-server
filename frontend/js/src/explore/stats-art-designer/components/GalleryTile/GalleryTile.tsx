@@ -22,16 +22,20 @@ function GalleryTile(props: GalleryTileProps) {
     },
     [name, onStyleSelect]
   );
-
+  let tileCSSClasses = "gallery-tile";
+  if (isSelected) {
+    tileCSSClasses += " selected";
+  }
   return (
     <div
       role="presentation"
       onClick={updateStyleCallback}
-      className="galleryItem"
+      className="gallery-item"
     >
       <object
-        title="galleryTile"
-        className={isSelected ? "selected-gallery-tile" : "gallery-tile"}
+        title={name}
+        aria-label={name}
+        className={tileCSSClasses}
         data={url}
       />
     </div>

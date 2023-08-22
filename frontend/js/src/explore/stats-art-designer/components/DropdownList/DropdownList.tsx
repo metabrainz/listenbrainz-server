@@ -4,11 +4,17 @@ type DropdownListProps = {
   opts: Array<Array<string>>;
   onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   value: string;
+  id?: string;
 };
 
-function DropdownList({ opts, onChange, value }: DropdownListProps) {
+function DropdownList({ opts, onChange, value, id }: DropdownListProps) {
   return (
-    <select className="dropdown-list" value={value} onChange={onChange}>
+    <select
+      id={id ?? "dropdown"}
+      className="dropdown-list"
+      value={value}
+      onChange={onChange}
+    >
       {opts.map((opt) => (
         <option key={opt[0]} value={opt[0]}>
           {opt[1]}

@@ -19,48 +19,50 @@ type IconTrayProps = {
 function IconTray(props: IconTrayProps) {
   const { previewUrl } = props;
   return (
-    <div className="align-center">
-      <button type="button" className="align-center user-icon-container">
-        <FontAwesomeIcon icon={faUser} />
-      </button>
-      <div className="profile-container">
-        add to profile, refresh
-        <select className="borderless-dropdown-list">
+    <div className="flex-center" id="share-button-bar">
+      <div className="profile">
+        <div className="btn btn-icon btn-info">
+          <FontAwesomeIcon icon={faUser} fixedWidth />
+        </div>
+        &nbsp;add to profile, refresh
+        <select className="borderless">
           <option value="daily">daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="Monthly">Monthly</option>
+          <option value="weekly">weekly</option>
+          <option value="monthly">monthly</option>
         </select>
       </div>
-      <div className="icon-bar ms-auto">
-        <div className="icon-tray">
-          <button type="button">
-            <MagicShareButton
-              svgURL=""
-              shareUrl=""
-              shareText="Check out my"
-              shareTitle="My top albums of 2022"
-              fileName=""
-            />
-            {/* <FontAwesomeIcon className="icon-bar-item mx-2" icon={faLink} /> */}
-          </button>
-          <button type="button">
-            <FontAwesomeIcon className="icon-bar-item mx-2" icon={faDownload} />
-          </button>
-          <button type="button">
-            <FontAwesomeIcon className="icon-bar-item mx-2" icon={faCode} />
-          </button>
-        </div>
-        <div className="border p-0 link-container">
-          <input type="text" id="Link" value={previewUrl} disabled />
-          <button
-            type="button"
-            onClick={async () => {
-              await navigator.clipboard.writeText(previewUrl);
-            }}
-            className="d-flex copy-link-container"
-          >
-            <FontAwesomeIcon icon={faClipboard} />
-          </button>
+      <div className="share-buttons flex-center">
+        <MagicShareButton
+          svgURL=""
+          shareUrl=""
+          shareText="Check out my"
+          shareTitle="My top albums of 2022"
+          fileName=""
+        />
+        <button type="button" className="btn btn-icon btn-info">
+          <FontAwesomeIcon icon={faDownload} fixedWidth />
+        </button>
+        <button type="button" className="btn btn-icon btn-info">
+          <FontAwesomeIcon icon={faCode} fixedWidth />
+        </button>
+        <div className="input-group link-container">
+          <input
+            type="text"
+            value={previewUrl}
+            disabled
+            className="form-control"
+          />
+          <span className="input-group-btn">
+            <button
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(previewUrl);
+              }}
+              className="btn btn-info btn-sm"
+            >
+              <FontAwesomeIcon icon={faClipboard} fixedWidth />
+            </button>
+          </span>
         </div>
       </div>
     </div>

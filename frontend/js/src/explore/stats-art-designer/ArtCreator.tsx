@@ -9,7 +9,6 @@ import { Integrations } from "@sentry/tracing";
 import * as React from "react";
 import { useCallback, useState } from "react";
 import * as ReactDOM from "react-dom";
-import "../../../../css/App.less";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -163,7 +162,7 @@ function ArtCreator() {
     [setTimeRange]
   );
 
-  const updateTextColourCallback = useCallback(
+  const updateTextColorCallback = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) =>
       setTextColor(event.target.value),
     [setTextColor]
@@ -211,37 +210,36 @@ function ArtCreator() {
   }
 
   return (
-    <div className="row">
-      <div className="col-sm-7">
-        <div className="artwork-container">
-          <Gallery
-            currentStyle={style}
-            galleryOpts={galleryOpts}
-            onStyleSelect={updateStyleButtonCallback}
-          />
-          <hr />
-          <Preview url={previewUrl} />
-          <IconTray previewUrl={previewUrl} />
-        </div>
+    <div id="stats-art-creator">
+      <div className="artwork-container">
+        <Gallery
+          currentStyle={style}
+          galleryOpts={galleryOpts}
+          onStyleSelect={updateStyleButtonCallback}
+        />
+        <hr />
+        <Preview url={previewUrl} />
+        <IconTray previewUrl={previewUrl} />
       </div>
-      <div className="col-sm-2 setting-navbar">
+      <div className="sidebar settings-navbar">
         <div className="basic-settings-container">
-          <div className="content-container">
+          <div className="sidenav-content-grid">
             <h4>Settings</h4>
             <input
               type="text"
               value={userName}
               onChange={updateUserNameCallback}
               placeholder="user name.."
+              className="form-control"
             />
             <DropdownList
               opts={styleOpts}
               value={style}
               onChange={updateStyleCallback}
             />
-            <div className="count-container">
+            <div className="flex-center">
               <div>top:</div>
-              <input className="ms-4" type="text" placeholder="5" />
+              <input className="form-control" type="text" placeholder="5" />
             </div>
             <DropdownList
               opts={timeRangeOpts}
@@ -258,60 +256,77 @@ function ArtCreator() {
           </div>
         </div>
         <div className="advanced-settings-container">
-          <div className="content-container">
+          <div className="sidenav-content-grid">
             <h4>Advanced</h4>
             <div>
-              Text colour:
-              <div className="color-container">
+              <label htmlFor="text-color">Text color:</label>
+              <div className="color-container input-group">
                 <input
-                  className="input-color-container"
+                  id="text-color"
+                  className="form-control"
                   type="text"
-                  onChange={updateTextColourCallback}
+                  onChange={updateTextColorCallback}
                   placeholder="#321529"
                 />
-                <div className="d-flex border icon-container">
-                  <FontAwesomeIcon icon={faPaintBrush} />
-                </div>
+                <span className="input-group-btn">
+                  <button type="button" className="btn btn-default btn-sm">
+                    <FontAwesomeIcon icon={faPaintBrush} />
+                  </button>
+                </span>
               </div>
             </div>
             <div>
-              Bg colour:
-              <div className="color-container">
+              <label htmlFor="bg-color">Background color:</label>
+              <div className="color-container input-group">
                 <input
+                  id="bg-color"
                   type="text"
-                  className="border input-color-container"
+                  className="form-control"
                   onChange={updateFirstBgColorCallback}
                   placeholder="#321529"
                 />
-                <div className="d-flex border icon-container">
-                  <FontAwesomeIcon icon={faPaintBrush} />
-                </div>
+                <span className="input-group-btn">
+                  <button type="button" className="btn btn-default btn-sm">
+                    <FontAwesomeIcon icon={faPaintBrush} />
+                  </button>
+                </span>
               </div>
             </div>
-            <div className="color-container">
+
+            <div className="color-container input-group">
               <input
                 type="text"
-                className="border input-color-container"
+                className="form-control"
                 onChange={updateSecondBgColorCallback}
                 placeholder="#321529"
               />
-              <div className="d-flex border icon-container">
-                <FontAwesomeIcon icon={faPaintBrush} />
+              <span className="input-group-btn">
+                <button type="button" className="btn btn-default btn-sm">
+                  <FontAwesomeIcon icon={faPaintBrush} />
+                </button>
+              </span>
+            </div>
+            <div className="flex-center color-container input-group">
+              <label htmlFor="bg-upload">Background image:</label>
+              <div className="input-group">
+                <input className="form-control" type="text" disabled />
+                <div className="input-group-btn">
+                  <button type="button" className="btn btn-default btn-sm">
+                    <FontAwesomeIcon icon={faCloudArrowUp} />
+                  </button>
+                  <input id="bg-upload" type="file" className="hidden" />
+                </div>
               </div>
             </div>
-            <div className="d-flex color-container">
-              <div className="input-color-container">Bg Image:</div>
-              <div className="d-flex border icon-container">
-                <FontAwesomeIcon icon={faCloudArrowUp} />
-              </div>
-            </div>
+
             <div>
-              Genres: <FontAwesomeIcon icon={faCircleQuestion} />
-              <br />
+              <label htmlFor="genres">
+                Genres: <FontAwesomeIcon icon={faCircleQuestion} />
+              </label>
               <input
+                id="genres"
                 type="text"
-                className="border"
-                placeholder=""
+                className="form-control"
                 onChange={updateGenresCallback}
               />
             </div>
@@ -323,9 +338,9 @@ function ArtCreator() {
               <ToggleOption onClick={genresToggler} buttonName="Genres" />
             </div>
             <div>
-              Font:
-              <br />
+              <label htmlFor="font-select">Font:</label>
               <DropdownList
+                id="font-select"
                 opts={fontOpts}
                 value={style}
                 onChange={updateFontCallback}
@@ -337,11 +352,12 @@ function ArtCreator() {
           </div>
         </div>
         <div className="generate-button-container">
-          <div className="btn-container border">
-            <button type="button" className="btn btn-primary generate-button">
-              GENERATE
-            </button>
-          </div>
+          <button
+            type="button"
+            className="btn btn-block btn-info text-uppercase"
+          >
+            Generate
+          </button>
         </div>
       </div>
     </div>

@@ -28,7 +28,7 @@
 @import "stats.less";
 @import "new-navbar.less";
 @import "tags.less";
-@import "App.less";
+@import "stats-art-creator.less";
 
 @icon-font-path: "/static/fonts/";
 
@@ -345,12 +345,18 @@ pre code.hljs {
 .btn-icon {
   padding: 0.5em;
   font-size: 1.5em;
-  width: 2em;
   height: 2em;
   line-height: 1em;
   border-radius: 5px;
+  text-align: center;
+  display: inline-block;
   & + .btn-icon {
     margin-left: 0.4em;
+  }
+  > svg {
+    /* We might forget to set the fixedWidth attribute on FontAwesome icons
+    but we do want to make sure all icons have the same width, so extend the FA class */
+    &:extend(.fa-fw);
   }
 }
 
