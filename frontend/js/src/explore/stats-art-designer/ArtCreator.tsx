@@ -38,9 +38,9 @@ function ArtCreator() {
   const [gridStyle, setGridStyle] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
   const [font, setFont] = useState("");
-  const [textColor, setTextColor] = useState("");
-  const [firstBgColor, setFirstBgColor] = useState("");
-  const [secondBgColor, setSecondBgColor] = useState("");
+  const [textColor, setTextColor] = useState<string>("#321529");
+  const [firstBgColor, setFirstBgColor] = useState<string>("");
+  const [secondBgColor, setSecondBgColor] = useState<string>("");
   const [genres, setGenres] = useState("");
   const [usersToggle, setUsersToggle] = useState(false);
   const [dateToggle, setDateToggle] = useState(false);
@@ -235,7 +235,14 @@ function ArtCreator() {
           onStyleSelect={updateStyleButtonCallback}
         />
         <hr />
-        <Preview url={previewUrl} />
+        <Preview
+          url={previewUrl}
+          styles={{
+            textColor,
+            bgColor1: firstBgColor,
+            bgColor2: secondBgColor,
+          }}
+        />
         <IconTray previewUrl={previewUrl} />
       </div>
       <div className="sidebar settings-navbar">
@@ -276,36 +283,46 @@ function ArtCreator() {
           <div className="sidenav-content-grid">
             <h4>Advanced</h4>
             <div>
-              <label htmlFor="text-color">Text color:</label>
+              <label htmlFor="text-color-input">Text color:</label>
               <div className="color-container input-group">
                 <input
-                  id="text-color"
                   className="form-control"
                   type="text"
-                  onChange={updateTextColorCallback}
                   placeholder="#321529"
+                  value={textColor}
+                  disabled
                 />
                 <span className="input-group-btn">
-                  <button type="button" className="btn btn-default btn-sm">
-                    <FontAwesomeIcon icon={faPaintBrush} />
-                  </button>
+                  <input
+                    id="text-color-input"
+                    type="color"
+                    className="btn btn-outline form-control"
+                    onChange={updateTextColorCallback}
+                    placeholder="#321529"
+                    value={textColor}
+                  />
                 </span>
               </div>
             </div>
             <div>
-              <label htmlFor="bg-color">Background color:</label>
+              <label htmlFor="bg-color">Background colors:</label>
               <div className="color-container input-group">
                 <input
-                  id="bg-color"
                   type="text"
                   className="form-control"
-                  onChange={updateFirstBgColorCallback}
-                  placeholder="#321529"
+                  placeholder="Select a color…"
+                  disabled
+                  readOnly
+                  value={firstBgColor}
                 />
                 <span className="input-group-btn">
-                  <button type="button" className="btn btn-default btn-sm">
-                    <FontAwesomeIcon icon={faPaintBrush} />
-                  </button>
+                  <input
+                    id="bg-color"
+                    type="color"
+                    className="btn btn-outline form-control"
+                    onChange={updateFirstBgColorCallback}
+                    value={firstBgColor}
+                  />
                 </span>
               </div>
             </div>
@@ -314,13 +331,19 @@ function ArtCreator() {
               <input
                 type="text"
                 className="form-control"
-                onChange={updateSecondBgColorCallback}
-                placeholder="#321529"
+                placeholder="Select a color…"
+                disabled
+                readOnly
+                value={secondBgColor}
               />
               <span className="input-group-btn">
-                <button type="button" className="btn btn-default btn-sm">
-                  <FontAwesomeIcon icon={faPaintBrush} />
-                </button>
+                <input
+                  id="bg-color-2"
+                  type="color"
+                  className="btn btn-outline form-control"
+                  onChange={updateSecondBgColorCallback}
+                  value={secondBgColor}
+                />
               </span>
             </div>
             <div className="flex-center color-container input-group">
