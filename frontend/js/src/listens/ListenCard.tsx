@@ -363,7 +363,8 @@ export default class ListenCard extends React.Component<
               <FontAwesomeIcon
                 icon={faPlus}
                 inverse
-                transform="shrink-11.5 left-2 up-2.5"
+                transform="shrink-11 left-2.5 up-2.5"
+                style={{stroke: "white", strokeWidth: "60"}}
               />
             </span>
           </div>
