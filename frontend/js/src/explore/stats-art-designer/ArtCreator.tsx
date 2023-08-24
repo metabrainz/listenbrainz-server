@@ -353,7 +353,7 @@ function ArtCreator() {
             </div>
             <div className="input-group">
               <label className="input-group-addon" htmlFor="style">
-                Style
+                Template
               </label>
               <DropdownList
                 id="style"
@@ -362,7 +362,7 @@ function ArtCreator() {
                 onChange={updateStyleCallback}
               />
             </div>
-            <div className="input-group">
+            {/* <div className="input-group">
               <label className="input-group-addon" htmlFor="top-x">
                 Top
               </label>
@@ -372,7 +372,7 @@ function ArtCreator() {
                 type="number"
                 defaultValue="5"
               />
-            </div>
+            </div> */}
             <div className="input-group">
               <label className="input-group-addon" htmlFor="time-range">
                 Time range
