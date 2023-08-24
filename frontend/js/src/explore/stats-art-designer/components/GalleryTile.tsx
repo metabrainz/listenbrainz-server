@@ -9,13 +9,13 @@ enum StyleEnum {
 }
 type GalleryTileProps = {
   name: StyleEnum;
-  url: string;
+  imagePath: string;
   isSelected: Boolean;
   onStyleSelect: (styleName: string) => void;
 };
 
 function GalleryTile(props: GalleryTileProps) {
-  const { name, url, onStyleSelect, isSelected } = props;
+  const { name, imagePath, onStyleSelect, isSelected } = props;
   const updateStyleCallback = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
       onStyleSelect(name);
@@ -32,11 +32,11 @@ function GalleryTile(props: GalleryTileProps) {
       onClick={updateStyleCallback}
       className="gallery-item"
     >
-      <object
+      <img
         title={name}
         aria-label={name}
         className={tileCSSClasses}
-        data={url}
+        src={imagePath}
       />
     </div>
   );

@@ -10,7 +10,7 @@ enum StyleEnum {
 
 type GalleryOption = {
   name: StyleEnum;
-  url: string;
+  image: string;
 };
 
 type GalleryProps = {
@@ -29,7 +29,7 @@ function Gallery(props: GalleryProps) {
           name={opt.name}
           onStyleSelect={onStyleSelect}
           isSelected={currentStyle === opt.name}
-          url={opt.url}
+          imagePath={opt.image}
         />
       ))}
     </div>

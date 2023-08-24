@@ -125,19 +125,19 @@ function ArtCreator() {
   const galleryOpts = [
     {
       name: StyleEnum.designerTop5,
-      url: "https://api.listenbrainz.org/1/art/designer-top-5/rob/week/750",
+      image: "/static/img/explore/stats-art/template-designer-top-5.png",
     },
     {
       name: StyleEnum.designerTop10,
-      url: "https://api.listenbrainz.org/1/art/designer-top-10/rob/week/750",
+      image: "/static/img/explore/stats-art/template-designer-top-10.png",
     },
     {
       name: StyleEnum.lPsOnTheFloor,
-      url: "https://api.listenbrainz.org/1/art/lps-on-the-floor/rob/week/750",
+      image: "/static/img/explore/stats-art/template-lps-on-the-floor.png",
     },
     {
       name: StyleEnum.gridStats,
-      url: "https://api.listenbrainz.org/1/art/grid-stats/rob/month/5/0/750",
+      image: "/static/img/explore/stats-art/template-grid-stats.png",
     },
   ];
 
