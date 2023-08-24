@@ -364,7 +364,7 @@ export default class ListenCard extends React.Component<
                 icon={faPlus}
                 inverse
                 transform="shrink-11 left-2.5 up-2.5"
-                style={{stroke: "white", strokeWidth: "60"}}
+                style={{ stroke: "white", strokeWidth: "60" }}
               />
             </span>
           </div>
@@ -404,7 +404,7 @@ export default class ListenCard extends React.Component<
       thumbnail = (
         <a
           href={`https://musicbrainz.org/recording/${recordingMBID}`}
-          title="Open in MusicBrainz"
+          title="Could not load cover art. Open in MusicBrainz"
           target="_blank"
           rel="noopener noreferrer"
           className="listen-thumbnail"
