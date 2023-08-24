@@ -7,10 +7,11 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import * as React from "react";
 import { useCallback, useState } from "react";
-import * as ReactDOM from "react-dom";
 import { debounce } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
+import NiceModal from "@ebay/nice-modal-react";
+import { createRoot } from "react-dom/client";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -574,16 +575,19 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
+
   const ArtCreatorPageWithAlertNotifications = withAlertNotifications(
     ArtCreator
   );
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
-        <ArtCreatorPageWithAlertNotifications />
+        <NiceModal.Provider>
+          <ArtCreatorPageWithAlertNotifications />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });
