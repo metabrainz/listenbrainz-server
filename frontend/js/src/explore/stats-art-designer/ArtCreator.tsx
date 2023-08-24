@@ -1,7 +1,6 @@
 import {
   faCircleQuestion,
   faCloudArrowUp,
-  faPaintBrush,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as Sentry from "@sentry/react";
@@ -10,6 +9,8 @@ import * as React from "react";
 import { useCallback, useState } from "react";
 import * as ReactDOM from "react-dom";
 import { debounce } from "lodash";
+import { saveAs } from "file-saver";
+import { toast } from "react-toastify";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -20,6 +21,8 @@ import Gallery from "./components/Gallery";
 import IconTray from "./components/IconTray";
 import Preview from "./components/Preview";
 import ToggleOption from "./components/ToggleOption";
+import { svgToBlob, toPng } from "./utils";
+import { ToastMsg } from "../../notifications/Notifications";
 
 enum StyleEnum {
   designerTop5 = "designer-top-5",
@@ -62,6 +65,7 @@ function ArtCreator() {
   const [totalToggle, setTotalToggle] = useState(false);
   const [genresToggle, setGenresToggle] = useState(false);
   const [vaToggle, setVaToggle] = useState(false);
+  const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
   const userToggler = useCallback(() => {
     if (usersToggle) {
@@ -206,6 +210,82 @@ function ArtCreator() {
     },
     [setFont]
   );
+
+  const onClickDownload = useCallback(async () => {
+    if (!previewSVGRef?.current) {
+      return;
+    }
+    const { current: svgElement } = previewSVGRef;
+    const { width, height } = svgElement.getBBox();
+    const { outerHTML } = svgElement;
+    try {
+      const png = await toPng(width, height, outerHTML);
+      if (!png) {
+        return;
+      }
+      saveAs(
+        png,
+        `ListenBrainz-stats-${userName}-${TimeRangeOptions[timeRange]}.png`
+      );
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not save as an image"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "download-svg-error" }
+      );
+    }
+  }, [previewSVGRef, userName, timeRange]);
+
+  const onClickCopyImage = useCallback(async () => {
+    if (!previewSVGRef?.current) {
+      return;
+    }
+    try {
+      const { current: svgElement } = previewSVGRef;
+      const { width, height } = svgElement.getBBox();
+      const { outerHTML } = svgElement;
+      const svgBlob = await svgToBlob(
+        width,
+        height,
+        outerHTML,
+        "image/svg+xml"
+      );
+      console.debug("svgBlob", svgBlob);
+      const data = [new ClipboardItem({ [svgBlob.type]: svgBlob })];
+      await navigator.clipboard.write(data);
+      toast.success("Copied image");
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not copy SVG image"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "copy-svg-error" }
+      );
+    }
+  }, [previewSVGRef]);
+
+  const onClickCopyCode = useCallback(async () => {
+    if (!previewSVGRef?.current) {
+      return;
+    }
+    try {
+      const { current: svgElement } = previewSVGRef;
+      const { outerHTML } = svgElement;
+      await navigator.clipboard.writeText(outerHTML);
+      toast.success("Copied image source");
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not copy SVG image source"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "copy-svg-error" }
+      );
+    }
+  }, [previewSVGRef]);
   /* We want the username input to update as fast as the user types,
   but we don't want to update the preview URL on each keystroke so we debounce */
   const debouncedSetPreviewUrl = React.useMemo(() => {
@@ -245,8 +325,14 @@ function ArtCreator() {
             bgColor1: firstBgColor,
             bgColor2: secondBgColor,
           }}
+          ref={previewSVGRef}
         />
-        <IconTray previewUrl={previewUrl} />
+        <IconTray
+          previewUrl={previewUrl}
+          onClickDownload={onClickDownload}
+          onClickCopy={onClickCopyImage}
+          onClickCopyCode={onClickCopyCode}
+        />
       </div>
       <div className="sidebar settings-navbar">
         <div className="basic-settings-container">

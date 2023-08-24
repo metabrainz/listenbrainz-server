@@ -10,7 +10,10 @@ type PreviewProps = {
   };
 };
 
-function Preview(props: PreviewProps) {
+const Preview = React.forwardRef(function PreviewComponent(
+  props: PreviewProps,
+  ref: React.ForwardedRef<SVGSVGElement>
+) {
   const { url, styles } = props;
   const hasCustomStyles = Boolean(
     Object.values(styles)?.filter(Boolean).length
@@ -28,32 +31,38 @@ function Preview(props: PreviewProps) {
     If using an <object> element, the SVG is in a separate DOM and we can't style it.
   */
   return (
-    <div className="preview">
-      <svg name="preview" data-src={url} data-unique-ids="disabled" />
+    <>
+      <svg
+        className="preview"
+        name="preview"
+        data-src={url}
+        data-unique-ids="disabled"
+        ref={ref}
+      />
       {hasCustomStyles && (
         <style>
           {textColor
             ? `
-          .preview > svg text > tspan {
+          svg.preview text > tspan {
             fill: ${textColor};
           }`
             : ""}
           {bgColor1
             ? `
-          .preview > svg stop:first-child {
+          svg.preview stop:first-child {
             stop-color: ${bgColor1};
           }`
             : ""}
           {bgColor2
             ? `
-          .preview > svg stop:nth-child(2) {
+          svg.preview stop:nth-child(2) {
             stop-color: ${bgColor2};
           }`
             : ""}
         </style>
       )}
-    </div>
+    </>
   );
-}
+});
 
 export default Preview;

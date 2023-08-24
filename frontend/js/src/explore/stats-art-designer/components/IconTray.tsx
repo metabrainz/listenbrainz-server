@@ -1,26 +1,25 @@
-// import NiceModal from "@ebay/nice-modal-react";
 import {
   faClipboard,
   faCode,
+  faCopy,
   faDownload,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import MagicShareButton from "../../year-in-music/2022/MagicShareButton";
-
-// import ListenControl from "../../../../listens/ListenControl";
-// import ListenPayloadModal from "../../../../listens/ListenPayloadModal";
 
 type IconTrayProps = {
   previewUrl: string;
+  onClickDownload: React.MouseEventHandler;
+  onClickCopy: React.MouseEventHandler;
+  onClickCopyCode: React.MouseEventHandler;
 };
 
 function IconTray(props: IconTrayProps) {
-  const { previewUrl } = props;
+  const { previewUrl, onClickDownload, onClickCopy, onClickCopyCode } = props;
   return (
     <div className="flex-center" id="share-button-bar">
-      <div className="profile">
+      {/* <div className="profile">
         <div className="btn btn-icon btn-info">
           <FontAwesomeIcon icon={faUser} fixedWidth />
         </div>
@@ -30,19 +29,27 @@ function IconTray(props: IconTrayProps) {
           <option value="weekly">weekly</option>
           <option value="monthly">monthly</option>
         </select>
-      </div>
+      </div> */}
       <div className="share-buttons flex-center">
-        <MagicShareButton
-          svgURL=""
-          shareUrl=""
-          shareText="Check out my"
-          shareTitle="My top albums of 2022"
-          fileName=""
-        />
-        <button type="button" className="btn btn-icon btn-info">
+        <button
+          type="button"
+          className="btn btn-icon btn-info"
+          onClick={onClickDownload}
+        >
           <FontAwesomeIcon icon={faDownload} fixedWidth />
         </button>
-        <button type="button" className="btn btn-icon btn-info">
+        <button
+          type="button"
+          className="btn btn-icon btn-info"
+          onClick={onClickCopy}
+        >
+          <FontAwesomeIcon icon={faCopy} fixedWidth />
+        </button>
+        <button
+          type="button"
+          className="btn btn-icon btn-info"
+          onClick={onClickCopyCode}
+        >
           <FontAwesomeIcon icon={faCode} fixedWidth />
         </button>
         <div className="input-group link-container">

@@ -7,6 +7,7 @@
   .artwork-container{
     margin: auto;
     padding: 15px 0;
+    text-align: center;
   }
   
   .stats-art-gallery {
@@ -46,12 +47,16 @@
     border-radius: 50%;
     position: relative;
     overflow: hidden;
+    border:none;
 
     .color-half {
       width: 50%;
       height: 100%;
       position: absolute;
       top: 0;
+      &:first-child {
+        left: 0;
+      }
       &:last-child {
         left: 50%;
       }
@@ -59,7 +64,7 @@
     
   }
   
-  .preview svg{
+  .preview{
     border-radius: 5px;
     margin-bottom: 10px;
     max-width: min(700px, 55vw);
@@ -193,6 +198,9 @@
     .share-buttons {
       flex: 1;
       flex-basis: 300px;
+    }
+    .profile{
+        text-align: left;
     }
     .share-buttons {
       margin-left: auto;
