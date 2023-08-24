@@ -249,33 +249,101 @@ function ArtCreator() {
         <div className="basic-settings-container">
           <div className="sidenav-content-grid">
             <h4>Settings</h4>
-            <input
-              type="text"
-              value={userName}
-              onChange={updateUserNameCallback}
-              placeholder="user name.."
-              className="form-control"
-            />
-            <DropdownList
-              opts={styleOpts}
-              value={style}
-              onChange={updateStyleCallback}
-            />
-            <div className="flex-center">
-              <div>top:</div>
-              <input className="form-control" type="text" placeholder="5" />
+            <div className="input-group">
+              <label className="input-group-addon" htmlFor="user-name">
+                Username
+              </label>
+              <input
+                id="user-name"
+                type="text"
+                value={userName}
+                onChange={updateUserNameCallback}
+                placeholder="user name.."
+                className="form-control"
+              />
             </div>
-            <DropdownList
-              opts={timeRangeOpts}
-              value={timeRange}
-              onChange={updateTimeRangeCallback}
-            />
-            <div className="color-picker-panel">
-              <ColorPicker firstColor="#6b4078" secondColor="#33234c" />
-              <ColorPicker firstColor="#ff2f6e" secondColor="#e8ff2c" />
-              <ColorPicker firstColor="#786aba" secondColor="#faff5b" />
-              <ColorPicker firstColor="#083023" secondColor="#006d39" />
-              <ColorPicker firstColor="#ffffff" secondColor="#006d39" />
+            <div className="input-group">
+              <label className="input-group-addon" htmlFor="style">
+                Style
+              </label>
+              <DropdownList
+                id="style"
+                opts={styleOpts}
+                value={style}
+                onChange={updateStyleCallback}
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-group-addon" htmlFor="top-x">
+                Top
+              </label>
+              <input
+                id="top-x"
+                className="form-control"
+                type="number"
+                defaultValue="5"
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-group-addon" htmlFor="time-range">
+                Time range
+              </label>
+              <DropdownList
+                id="time-range"
+                opts={timeRangeOpts}
+                value={timeRange}
+                onChange={updateTimeRangeCallback}
+              />
+            </div>
+            <div>
+              <label htmlFor="color-presets">Color presets:</label>
+              <div className="color-picker-panel" id="color-presets">
+                <ColorPicker
+                  firstColor="#6b4078"
+                  secondColor="#33234c"
+                  onClick={() => {
+                    setTextColor("#e5cdc8");
+                    setFirstBgColor("#6b4078");
+                    setSecondBgColor("#33234c");
+                  }}
+                />
+                <ColorPicker
+                  firstColor="#ff2f6e"
+                  secondColor="#e8ff2c"
+                  onClick={() => {
+                    setTextColor("#8a1515");
+                    setFirstBgColor("#ff2f6e");
+                    setSecondBgColor("#e8ff2c");
+                  }}
+                />
+                <ColorPicker
+                  firstColor="#786aba"
+                  secondColor="#ff0000"
+                  onClick={() => {
+                    setTextColor("#1f2170");
+                    setFirstBgColor("#786aba");
+                    setSecondBgColor("#ff0000");
+                  }}
+                />
+                <ColorPicker
+                  firstColor="#083023"
+                  secondColor="#0fc26c"
+                  onClick={() => {
+                    setTextColor("#dde2bb");
+                    setFirstBgColor("#083023");
+                    setSecondBgColor("#0fc26c");
+                  }}
+                />
+                <ColorPicker
+                  firstColor="#ffffff"
+                  secondColor="#006d39"
+                  onClick={() => {
+                    setTextColor("#006d39");
+                    setFirstBgColor("#ffffff");
+                    setSecondBgColor("#006d39");
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -284,7 +352,17 @@ function ArtCreator() {
             <h4>Advanced</h4>
             <div>
               <label htmlFor="text-color-input">Text color:</label>
-              <div className="color-container input-group">
+              <div className="input-group">
+                <span className="input-group-btn">
+                  <input
+                    id="text-color-input"
+                    type="color"
+                    className="btn btn-transparent form-control"
+                    onChange={updateTextColorCallback}
+                    placeholder="#321529"
+                    value={textColor}
+                  />
+                </span>
                 <input
                   className="form-control"
                   type="text"
@@ -292,21 +370,20 @@ function ArtCreator() {
                   value={textColor}
                   disabled
                 />
-                <span className="input-group-btn">
-                  <input
-                    id="text-color-input"
-                    type="color"
-                    className="btn btn-outline form-control"
-                    onChange={updateTextColorCallback}
-                    placeholder="#321529"
-                    value={textColor}
-                  />
-                </span>
               </div>
             </div>
             <div>
               <label htmlFor="bg-color">Background colors:</label>
-              <div className="color-container input-group">
+              <div className="input-group">
+                <span className="input-group-btn">
+                  <input
+                    id="bg-color"
+                    type="color"
+                    className="btn btn-transparent form-control"
+                    onChange={updateFirstBgColorCallback}
+                    value={firstBgColor}
+                  />
+                </span>
                 <input
                   type="text"
                   className="form-control"
@@ -315,19 +392,19 @@ function ArtCreator() {
                   readOnly
                   value={firstBgColor}
                 />
-                <span className="input-group-btn">
-                  <input
-                    id="bg-color"
-                    type="color"
-                    className="btn btn-outline form-control"
-                    onChange={updateFirstBgColorCallback}
-                    value={firstBgColor}
-                  />
-                </span>
               </div>
             </div>
 
-            <div className="color-container input-group">
+            <div className="input-group">
+              <span className="input-group-btn">
+                <input
+                  id="bg-color-2"
+                  type="color"
+                  className="btn btn-transparent form-control"
+                  onChange={updateSecondBgColorCallback}
+                  value={secondBgColor}
+                />
+              </span>
               <input
                 type="text"
                 className="form-control"
@@ -336,17 +413,8 @@ function ArtCreator() {
                 readOnly
                 value={secondBgColor}
               />
-              <span className="input-group-btn">
-                <input
-                  id="bg-color-2"
-                  type="color"
-                  className="btn btn-outline form-control"
-                  onChange={updateSecondBgColorCallback}
-                  value={secondBgColor}
-                />
-              </span>
             </div>
-            <div className="flex-center color-container input-group">
+            {/* <div className="flex-center input-group">
               <label htmlFor="bg-upload">Background image:</label>
               <div className="input-group">
                 <input className="form-control" type="text" disabled />
@@ -357,9 +425,9 @@ function ArtCreator() {
                   <input id="bg-upload" type="file" className="hidden" />
                 </div>
               </div>
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               <label htmlFor="genres">
                 Genres: <FontAwesomeIcon icon={faCircleQuestion} />
               </label>
@@ -369,15 +437,15 @@ function ArtCreator() {
                 className="form-control"
                 onChange={updateGenresCallback}
               />
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <ToggleOption onClick={userToggler} buttonName="Users" />
               <ToggleOption onClick={dateToggler} buttonName="Date" />
               <ToggleOption onClick={rangeToggler} buttonName="Range" />
               <ToggleOption onClick={totalToggler} buttonName="Total" />
               <ToggleOption onClick={genresToggler} buttonName="Genres" />
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <label htmlFor="font-select">Font:</label>
               <DropdownList
                 id="font-select"
@@ -385,20 +453,20 @@ function ArtCreator() {
                 value={style}
                 onChange={updateFontCallback}
               />
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
-            </div>
+            </div> */}
           </div>
         </div>
-        <div className="generate-button-container">
+        {/* <div className="generate-button-container">
           <button
             type="button"
             className="btn btn-block btn-info text-uppercase"
           >
             Generate
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
