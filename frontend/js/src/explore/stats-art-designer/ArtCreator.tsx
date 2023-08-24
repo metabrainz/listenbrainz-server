@@ -28,12 +28,26 @@ enum StyleEnum {
   gridStats = "grid-stats",
 }
 
+enum TimeRangeOptions {
+  "this_week" = "This week",
+  "week" = "Last week",
+  "this_month" = "This month",
+  "month" = "Last month",
+  "quarter" = "Last quarter",
+  "half_yearly" = "Last half year",
+  "this_year" = "This year",
+  "year" = "Last year",
+  "all_time" = "All time",
+}
+
 function ArtCreator() {
   const { currentUser } = React.useContext(GlobalAppContext);
   // Add images for the gallery, don't compose them on the fly
   const [userName, setUserName] = useState(currentUser?.name);
   const [style, setStyle] = useState(StyleEnum.designerTop5);
-  const [timeRange, setTimeRange] = useState("week");
+  const [timeRange, setTimeRange] = useState<keyof typeof TimeRangeOptions>(
+    "week"
+  );
   const [gridSize, setGridSize] = useState(4);
   const [gridStyle, setGridStyle] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -123,17 +137,6 @@ function ArtCreator() {
     },
   ];
 
-  const timeRangeOpts = [
-    ["week", "Last week"],
-    ["month", "Last month"],
-    ["quarter", "last quarter"],
-    ["half_yearly", "Last half year"],
-    ["year", "Last year"],
-    ["all_time", "All time"],
-    ["this_week", "This week"],
-    ["this_month", "This month"],
-    ["this_year", "This year"],
-  ];
   const fontOpts = [
     ["Roboto", "Roboto"],
     ["Integer", "Integer"],
@@ -160,7 +163,7 @@ function ArtCreator() {
 
   const updateTimeRangeCallback = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setTimeRange(event.target.value),
+      setTimeRange(event.target.value as keyof typeof TimeRangeOptions),
     [setTimeRange]
   );
 
@@ -290,7 +293,7 @@ function ArtCreator() {
               </label>
               <DropdownList
                 id="time-range"
-                opts={timeRangeOpts}
+                opts={Object.entries(TimeRangeOptions)}
                 value={timeRange}
                 onChange={updateTimeRangeCallback}
               />
