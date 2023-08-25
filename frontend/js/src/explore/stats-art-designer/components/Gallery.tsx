@@ -1,35 +1,23 @@
 import * as React from "react";
 import GalleryTile from "./GalleryTile";
-
-enum StyleEnum {
-  designerTop5 = "designer-top-5",
-  designerTop10 = "designer-top-10",
-  lPsOnTheFloor = "lps-on-the-floor",
-  gridStats = "grid-stats",
-}
-
-type GalleryOption = {
-  name: StyleEnum;
-  image: string;
-};
+import { TemplateOption, TemplateNameEnum } from "../ArtCreator";
 
 type GalleryProps = {
-  currentStyle: StyleEnum;
-  galleryOpts: GalleryOption[];
-  onStyleSelect: (styleName: string) => void;
+  currentStyle: TemplateOption;
+  options: TemplateOption[];
+  onStyleSelect: (styleName: TemplateNameEnum) => void;
 };
 
 function Gallery(props: GalleryProps) {
-  const { currentStyle, galleryOpts, onStyleSelect } = props;
+  const { currentStyle, options, onStyleSelect } = props;
   return (
     <div className="stats-art-gallery">
-      {galleryOpts.map((opt) => (
+      {options.map((opt) => (
         <GalleryTile
           key={opt.name}
-          name={opt.name}
+          templateOption={opt}
           onStyleSelect={onStyleSelect}
-          isSelected={currentStyle === opt.name}
-          imagePath={opt.image}
+          isSelected={currentStyle.name === opt.name}
         />
       ))}
     </div>

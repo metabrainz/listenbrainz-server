@@ -25,12 +25,52 @@ import ToggleOption from "./components/ToggleOption";
 import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
 
-enum StyleEnum {
+export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
   designerTop10 = "designer-top-10",
   lPsOnTheFloor = "lps-on-the-floor",
   gridStats = "grid-stats",
 }
+
+export interface TemplateOption {
+  name: TemplateNameEnum;
+  displayName: string;
+  image: string;
+  type: "text" | "image";
+}
+
+/* Fancy TypeScript to get a typed enum of object literals representing the options */
+export type TemplateEnumType = {
+  [key in TemplateNameEnum]: TemplateOption;
+};
+export const TemplateEnum: TemplateEnumType = {
+  [TemplateNameEnum.designerTop5]: {
+    name: TemplateNameEnum.designerTop5,
+    displayName: "Designer top 5",
+    image: "/static/img/explore/stats-art/template-designer-top-5.png",
+    type: "text",
+  },
+  [TemplateNameEnum.designerTop10]: {
+    name: TemplateNameEnum.designerTop10,
+    displayName: "Designer top 10",
+    image: "/static/img/explore/stats-art/template-designer-top-10.png",
+    type: "text",
+  },
+  [TemplateNameEnum.lPsOnTheFloor]: {
+    name: TemplateNameEnum.lPsOnTheFloor,
+    displayName: "LPs on the floor",
+    image: "/static/img/explore/stats-art/template-lps-on-the-floor.png",
+    type: "image",
+  },
+  [TemplateNameEnum.gridStats]: {
+    name: TemplateNameEnum.gridStats,
+    displayName: "Stats grid",
+    image: "/static/img/explore/stats-art/template-grid-stats.png",
+    type: "image",
+  },
+} as const;
+
+const templatesArray = Object.values(TemplateEnum);
 
 enum TimeRangeOptions {
   "this_week" = "This week",
@@ -48,7 +88,9 @@ function ArtCreator() {
   const { currentUser } = React.useContext(GlobalAppContext);
   // Add images for the gallery, don't compose them on the fly
   const [userName, setUserName] = useState(currentUser?.name);
-  const [style, setStyle] = useState(StyleEnum.designerTop5);
+  const [style, setStyle] = useState<TemplateOption>(
+    TemplateEnum["designer-top-5"]
+  );
   const [timeRange, setTimeRange] = useState<keyof typeof TimeRangeOptions>(
     "week"
   );
@@ -116,32 +158,6 @@ function ArtCreator() {
     }
   }, [vaToggle]);
 
-  const styleOpts = [
-    [StyleEnum.designerTop5, "Designer top 5"],
-    [StyleEnum.designerTop10, "Designer top 10"],
-    [StyleEnum.lPsOnTheFloor, "LPs on the floor"],
-    [StyleEnum.gridStats, "Stats grid"],
-  ];
-
-  const galleryOpts = [
-    {
-      name: StyleEnum.designerTop5,
-      image: "/static/img/explore/stats-art/template-designer-top-5.png",
-    },
-    {
-      name: StyleEnum.designerTop10,
-      image: "/static/img/explore/stats-art/template-designer-top-10.png",
-    },
-    {
-      name: StyleEnum.lPsOnTheFloor,
-      image: "/static/img/explore/stats-art/template-lps-on-the-floor.png",
-    },
-    {
-      name: StyleEnum.gridStats,
-      image: "/static/img/explore/stats-art/template-grid-stats.png",
-    },
-  ];
-
   const fontOpts = [
     ["Roboto", "Roboto"],
     ["Integer", "Integer"],
@@ -149,14 +165,14 @@ function ArtCreator() {
   ];
 
   const updateStyleButtonCallback = useCallback(
-    (name: string) => {
-      setStyle(name as StyleEnum);
+    (name: TemplateNameEnum) => {
+      setStyle(TemplateEnum[name]);
     },
     [setStyle]
   );
   const updateStyleCallback = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setStyle(event.target.value as StyleEnum),
+      setStyle(TemplateEnum[event.target.value as TemplateNameEnum]),
     [setStyle]
   );
 
@@ -292,7 +308,7 @@ function ArtCreator() {
   const debouncedSetPreviewUrl = React.useMemo(() => {
     return debounce(
       (styleArg, userNameArg, timeRangeArg, gridSizeArg, gridStyleArg) => {
-        if (styleArg === StyleEnum.gridStats) {
+        if (styleArg === TemplateNameEnum.gridStats) {
           setPreviewUrl(
             `https://api.listenbrainz.org/1/art/${styleArg}/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridStyleArg}/750`
           );
@@ -315,7 +331,7 @@ function ArtCreator() {
       <div className="artwork-container">
         <Gallery
           currentStyle={style}
-          galleryOpts={galleryOpts}
+          options={templatesArray}
           onStyleSelect={updateStyleButtonCallback}
         />
         <hr />

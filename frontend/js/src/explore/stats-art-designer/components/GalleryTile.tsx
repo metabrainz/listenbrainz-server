@@ -1,26 +1,20 @@
 import * as React from "react";
 import { useCallback } from "react";
+import { TemplateNameEnum, TemplateOption } from "../ArtCreator";
 
-enum StyleEnum {
-  designerTop5 = "designer-top-5",
-  designerTop10 = "designer-top-10",
-  lPsOnTheFloor = "lps-on-the-floor",
-  gridStats = "grid-stats",
-}
 type GalleryTileProps = {
-  name: StyleEnum;
-  imagePath: string;
+  templateOption: TemplateOption;
   isSelected: Boolean;
-  onStyleSelect: (styleName: string) => void;
+  onStyleSelect: (styleName: TemplateNameEnum) => void;
 };
 
 function GalleryTile(props: GalleryTileProps) {
-  const { name, imagePath, onStyleSelect, isSelected } = props;
+  const { templateOption, onStyleSelect, isSelected } = props;
   const updateStyleCallback = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      onStyleSelect(name);
+      onStyleSelect(templateOption.name);
     },
-    [name, onStyleSelect]
+    [templateOption.name, onStyleSelect]
   );
   let tileCSSClasses = "gallery-tile";
   if (isSelected) {
@@ -33,10 +27,10 @@ function GalleryTile(props: GalleryTileProps) {
       className="gallery-item"
     >
       <img
-        title={name}
-        aria-label={name}
+        title={templateOption.name}
+        aria-label={templateOption.name}
         className={tileCSSClasses}
-        src={imagePath}
+        src={templateOption.image}
       />
     </div>
   );
