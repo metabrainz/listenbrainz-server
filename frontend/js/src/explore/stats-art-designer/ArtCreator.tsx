@@ -23,6 +23,7 @@ import Preview from "./components/Preview";
 import ToggleOption from "./components/ToggleOption";
 import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
+import UserSearch from "../../playlists/UserSearch";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -120,12 +121,6 @@ function ArtCreator() {
     (event: React.ChangeEvent<HTMLSelectElement>) =>
       setStyle(TemplateEnum[event.target.value as TemplateNameEnum]),
     [setStyle]
-  );
-
-  const updateUserNameCallback = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) =>
-      setUserName(event.target.value),
-    [setUserName]
   );
 
   const updateTimeRangeCallback = useCallback(
@@ -245,7 +240,13 @@ function ArtCreator() {
     );
   }, [setPreviewUrl]);
   React.useEffect(() => {
-    debouncedSetPreviewUrl(style, userName, timeRange, gridSize, gridStyle);
+    debouncedSetPreviewUrl(
+      style.name,
+      userName,
+      timeRange,
+      gridSize,
+      gridStyle
+    );
   }, [userName, style, timeRange, gridSize, gridStyle, debouncedSetPreviewUrl]);
 
   return (
@@ -281,13 +282,10 @@ function ArtCreator() {
               <label className="input-group-addon" htmlFor="user-name">
                 Username
               </label>
-              <input
-                id="user-name"
-                type="text"
-                value={userName}
-                onChange={updateUserNameCallback}
-                placeholder="user name.."
-                className="form-control"
+              <UserSearch
+                initialValue={userName}
+                onSelectUser={setUserName}
+                placeholder="Search for a user…"
               />
             </div>
             <div className="input-group">
