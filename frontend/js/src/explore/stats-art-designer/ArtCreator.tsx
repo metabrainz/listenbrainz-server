@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { debounce } from "lodash";
+import { debounce, isNaN } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import NiceModal from "@ebay/nice-modal-react";
@@ -104,66 +104,11 @@ function ArtCreator() {
   const [gridSize, setGridSize] = useState(4);
   const [gridStyle, setGridStyle] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
+  // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
   const [textColor, setTextColor] = useState<string>("#321529");
   const [firstBgColor, setFirstBgColor] = useState<string>("");
   const [secondBgColor, setSecondBgColor] = useState<string>("");
-  const [genres, setGenres] = useState("");
-  const [usersToggle, setUsersToggle] = useState(false);
-  const [dateToggle, setDateToggle] = useState(false);
-  const [rangeToggle, setRangeToggle] = useState(false);
-  const [totalToggle, setTotalToggle] = useState(false);
-  const [genresToggle, setGenresToggle] = useState(false);
-  const [vaToggle, setVaToggle] = useState(false);
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
-
-  const userToggler = useCallback(() => {
-    if (usersToggle) {
-      setUsersToggle(false);
-    } else {
-      setUsersToggle(true);
-    }
-  }, [usersToggle]);
-
-  const dateToggler = useCallback(() => {
-    if (dateToggle) {
-      setDateToggle(false);
-    } else {
-      setDateToggle(true);
-    }
-  }, [dateToggle]);
-
-  const rangeToggler = useCallback(() => {
-    if (rangeToggle) {
-      setRangeToggle(false);
-    } else {
-      setRangeToggle(true);
-    }
-  }, [rangeToggle]);
-
-  const totalToggler = useCallback(() => {
-    if (totalToggle) {
-      setTotalToggle(false);
-    } else {
-      setTotalToggle(true);
-    }
-  }, [totalToggle]);
-
-  const genresToggler = useCallback(() => {
-    if (genresToggle) {
-      setGenresToggle(false);
-    } else {
-      setGenresToggle(true);
-    }
-  }, [genresToggle]);
-
-  const vaToggler = useCallback(() => {
-    if (vaToggle) {
-      setVaToggle(false);
-    } else {
-      setVaToggle(true);
-    }
-  }, [vaToggle]);
 
   const updateStyleButtonCallback = useCallback(
     (name: TemplateNameEnum) => {
@@ -203,30 +148,6 @@ function ArtCreator() {
     (event: React.ChangeEvent<HTMLInputElement>) =>
       setSecondBgColor(event.target.value),
     [setSecondBgColor]
-  );
-  const updateGenresCallback = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) =>
-      setGenres(event.target.value),
-    [setGenres]
-  );
-
-  const updateGridSizeCallback = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setGridSize(Number(event.target.value)),
-    [setGridSize]
-  );
-
-  const updateGridStyleCallback = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setGridStyle(Number(event.target.value)),
-    [setGridStyle]
-  );
-
-  const updateFontCallback = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) => {
-      setFont(event.target.value as keyof typeof FontNameEnum);
-    },
-    [setFont]
   );
 
   const onClickDownload = useCallback(async () => {
