@@ -83,6 +83,14 @@ enum TimeRangeOptions {
   "all_time" = "All time",
 }
 
+enum FontNameEnum {
+  "Roboto",
+  "Integer",
+  "Sans Serif",
+}
+
+const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
+
 function ArtCreator() {
   const { currentUser } = React.useContext(GlobalAppContext);
   // Add images for the gallery, don't compose them on the fly
@@ -91,12 +99,12 @@ function ArtCreator() {
     TemplateEnum["designer-top-5"]
   );
   const [timeRange, setTimeRange] = useState<keyof typeof TimeRangeOptions>(
-    "week"
+    "this_month"
   );
   const [gridSize, setGridSize] = useState(4);
   const [gridStyle, setGridStyle] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [font, setFont] = useState("Roboto");
+  const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
   const [textColor, setTextColor] = useState<string>("#321529");
   const [firstBgColor, setFirstBgColor] = useState<string>("");
   const [secondBgColor, setSecondBgColor] = useState<string>("");
@@ -157,8 +165,6 @@ function ArtCreator() {
     }
   }, [vaToggle]);
 
-  const fontOptions = ["Roboto", "Integer", "Sans Serif"];
-
   const updateStyleButtonCallback = useCallback(
     (name: TemplateNameEnum) => {
       setStyle(TemplateEnum[name]);
@@ -218,7 +224,7 @@ function ArtCreator() {
 
   const updateFontCallback = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
-      setFont(event.target.value);
+      setFont(event.target.value as keyof typeof FontNameEnum);
     },
     [setFont]
   );
