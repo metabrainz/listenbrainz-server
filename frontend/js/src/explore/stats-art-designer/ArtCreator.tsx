@@ -90,6 +90,8 @@ enum FontNameEnum {
   "Sans Serif",
 }
 
+const DEFAULT_IMAGE_SIZE = 750;
+
 const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
 function ArtCreator() {
@@ -150,10 +152,13 @@ function ArtCreator() {
       return;
     }
     const { current: svgElement } = previewSVGRef;
-    const { width, height } = svgElement.getBBox();
     const { outerHTML } = svgElement;
     try {
-      const png = await toPng(width, height, outerHTML);
+      const png = await toPng(
+        DEFAULT_IMAGE_SIZE,
+        DEFAULT_IMAGE_SIZE,
+        outerHTML
+      );
       if (!png) {
         return;
       }
@@ -178,11 +183,10 @@ function ArtCreator() {
     }
     try {
       const { current: svgElement } = previewSVGRef;
-      const { width, height } = svgElement.getBBox();
       const { outerHTML } = svgElement;
       const svgBlob = await svgToBlob(
-        width,
-        height,
+        DEFAULT_IMAGE_SIZE,
+        DEFAULT_IMAGE_SIZE,
         outerHTML,
         "image/svg+xml"
       );
@@ -227,11 +231,11 @@ function ArtCreator() {
       (styleArg, userNameArg, timeRangeArg, gridSizeArg, gridStyleArg) => {
         if (styleArg === TemplateNameEnum.gridStats) {
           setPreviewUrl(
-            `https://api.listenbrainz.org/1/art/${styleArg}/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridStyleArg}/750`
+            `https://api.listenbrainz.org/1/art/${styleArg}/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridStyleArg}/${DEFAULT_IMAGE_SIZE}`
           );
         } else {
           setPreviewUrl(
-            `https://api.listenbrainz.org/1/art/${styleArg}/${userNameArg}/${timeRangeArg}/750`
+            `https://api.listenbrainz.org/1/art/${styleArg}/${userNameArg}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
           );
         }
       },
@@ -266,6 +270,7 @@ function ArtCreator() {
             bgColor2: secondBgColor,
           }}
           ref={previewSVGRef}
+          size={DEFAULT_IMAGE_SIZE}
         />
         <IconTray
           previewUrl={previewUrl}
