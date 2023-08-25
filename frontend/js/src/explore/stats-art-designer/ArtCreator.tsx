@@ -17,7 +17,6 @@ import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
 import ColorPicker from "./components/ColorPicker";
-import DropdownList from "./components/DropdownList";
 import Gallery from "./components/Gallery";
 import IconTray from "./components/IconTray";
 import Preview from "./components/Preview";
@@ -97,7 +96,7 @@ function ArtCreator() {
   const [gridSize, setGridSize] = useState(4);
   const [gridStyle, setGridStyle] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [font, setFont] = useState("");
+  const [font, setFont] = useState("Roboto");
   const [textColor, setTextColor] = useState<string>("#321529");
   const [firstBgColor, setFirstBgColor] = useState<string>("");
   const [secondBgColor, setSecondBgColor] = useState<string>("");
@@ -158,11 +157,7 @@ function ArtCreator() {
     }
   }, [vaToggle]);
 
-  const fontOpts = [
-    ["Roboto", "Roboto"],
-    ["Integer", "Integer"],
-    ["Sans Serif", "Sans Serif"],
-  ];
+  const fontOptions = ["Roboto", "Integer", "Sans Serif"];
 
   const updateStyleButtonCallback = useCallback(
     (name: TemplateNameEnum) => {
@@ -372,12 +367,18 @@ function ArtCreator() {
               <label className="input-group-addon" htmlFor="style">
                 Template
               </label>
-              <DropdownList
+              <select
                 id="style"
-                opts={styleOpts}
-                value={style}
+                className="form-control"
+                value={style.name}
                 onChange={updateStyleCallback}
-              />
+              >
+                {templatesArray.map((opt) => (
+                  <option key={opt.name} value={opt.name}>
+                    {opt.displayName}
+                  </option>
+                ))}
+              </select>
             </div>
             {/* <div className="input-group">
               <label className="input-group-addon" htmlFor="top-x">
@@ -394,12 +395,18 @@ function ArtCreator() {
               <label className="input-group-addon" htmlFor="time-range">
                 Time range
               </label>
-              <DropdownList
+              <select
                 id="time-range"
-                opts={Object.entries(TimeRangeOptions)}
+                className="form-control"
                 value={timeRange}
                 onChange={updateTimeRangeCallback}
-              />
+              >
+                {Object.entries(TimeRangeOptions).map((opt) => (
+                  <option key={opt[0]} value={opt[0]}>
+                    {opt[1]}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label htmlFor="color-presets">Color presets:</label>
@@ -553,12 +560,18 @@ function ArtCreator() {
             </div> */}
             {/* <div>
               <label htmlFor="font-select">Font:</label>
-              <DropdownList
+              <select
                 id="font-select"
-                opts={fontOpts}
-                value={style}
+                className="form-control"
+                value={font}
                 onChange={updateFontCallback}
-              />
+              >
+                {fontOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
             </div> */}
             {/* <div>
               <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
