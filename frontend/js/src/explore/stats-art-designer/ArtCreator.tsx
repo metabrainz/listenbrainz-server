@@ -36,8 +36,11 @@ export interface TemplateOption {
   name: TemplateNameEnum;
   displayName: string;
   image: string;
-  type: "text" | "image";
+  type: "text" | "image" | "grid";
 }
+/* How many layouts are available fro each grid dimension (number of rows/columns)
+See GRID_TILE_DESIGNS in listenbrainz/art/cover_art_generator.py */
+const layoutsPerGridDimensionArr = [undefined, undefined, 1, 3, 4, 2];
 
 /* Fancy TypeScript to get a typed enum of object literals representing the options */
 export type TemplateEnumType = {
@@ -66,7 +69,7 @@ export const TemplateEnum: TemplateEnumType = {
     name: TemplateNameEnum.gridStats,
     displayName: "Stats grid",
     image: "/static/img/explore/stats-art/template-grid-stats.png",
-    type: "image",
+    type: "grid",
   },
 } as const;
 
@@ -105,7 +108,7 @@ function ArtCreator() {
     "this_month"
   );
   const [gridSize, setGridSize] = useState(4);
-  const [gridStyle, setGridStyle] = useState(0);
+  const [gridLayout, setGridLayout] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
   // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
   const [textColor, setTextColor] = useState<string>("#321529");
@@ -228,14 +231,20 @@ function ArtCreator() {
   but we don't want to update the preview URL on each keystroke so we debounce */
   const debouncedSetPreviewUrl = React.useMemo(() => {
     return debounce(
-      (styleArg, userNameArg, timeRangeArg, gridSizeArg, gridStyleArg) => {
-        if (styleArg === TemplateNameEnum.gridStats) {
+      (
+        styleArg: TemplateOption,
+        userNameArg: string,
+        timeRangeArg: keyof typeof TimeRangeOptions,
+        gridSizeArg: number,
+        gridLayoutArg: number
+      ) => {
+        if (styleArg.type === "grid") {
           setPreviewUrl(
-            `https://api.listenbrainz.org/1/art/${styleArg}/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridStyleArg}/${DEFAULT_IMAGE_SIZE}`
+            `https://api.listenbrainz.org/1/art/${styleArg.name}/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
           );
         } else {
           setPreviewUrl(
-            `https://api.listenbrainz.org/1/art/${styleArg}/${userNameArg}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
+            `https://api.listenbrainz.org/1/art/${styleArg.name}/${userNameArg}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
           );
         }
       },
@@ -244,14 +253,15 @@ function ArtCreator() {
     );
   }, [setPreviewUrl]);
   React.useEffect(() => {
-    debouncedSetPreviewUrl(
-      style.name,
-      userName,
-      timeRange,
-      gridSize,
-      gridStyle
-    );
-  }, [userName, style, timeRange, gridSize, gridStyle, debouncedSetPreviewUrl]);
+    debouncedSetPreviewUrl(style, userName, timeRange, gridSize, gridLayout);
+  }, [
+    userName,
+    style,
+    timeRange,
+    gridSize,
+    gridLayout,
+    debouncedSetPreviewUrl,
+  ]);
 
   return (
     <div id="stats-art-creator">
@@ -310,17 +320,6 @@ function ArtCreator() {
                 ))}
               </select>
             </div>
-            {/* <div className="input-group">
-              <label className="input-group-addon" htmlFor="top-x">
-                Top
-              </label>
-              <input
-                id="top-x"
-                className="form-control"
-                type="number"
-                defaultValue="5"
-              />
-            </div> */}
             <div className="input-group">
               <label className="input-group-addon" htmlFor="time-range">
                 Time range
@@ -338,125 +337,166 @@ function ArtCreator() {
                 ))}
               </select>
             </div>
-            <div>
-              <label htmlFor="color-presets">Color presets:</label>
-              <div className="color-picker-panel" id="color-presets">
-                <ColorPicker
-                  firstColor="#6b4078"
-                  secondColor="#33234c"
-                  onClick={() => {
-                    setTextColor("#e5cdc8");
-                    setFirstBgColor("#6b4078");
-                    setSecondBgColor("#33234c");
-                  }}
-                />
-                <ColorPicker
-                  firstColor="#ff2f6e"
-                  secondColor="#e8ff2c"
-                  onClick={() => {
-                    setTextColor("#8a1515");
-                    setFirstBgColor("#ff2f6e");
-                    setSecondBgColor("#e8ff2c");
-                  }}
-                />
-                <ColorPicker
-                  firstColor="#786aba"
-                  secondColor="#ff0000"
-                  onClick={() => {
-                    setTextColor("#1f2170");
-                    setFirstBgColor("#786aba");
-                    setSecondBgColor("#ff0000");
-                  }}
-                />
-                <ColorPicker
-                  firstColor="#083023"
-                  secondColor="#0fc26c"
-                  onClick={() => {
-                    setTextColor("#dde2bb");
-                    setFirstBgColor("#083023");
-                    setSecondBgColor("#0fc26c");
-                  }}
-                />
-                <ColorPicker
-                  firstColor="#ffffff"
-                  secondColor="#006d39"
-                  onClick={() => {
-                    setTextColor("#006d39");
-                    setFirstBgColor("#ffffff");
-                    setSecondBgColor("#006d39");
-                  }}
-                />
-              </div>
-            </div>
           </div>
         </div>
         <div className="advanced-settings-container">
           <div className="sidenav-content-grid">
             <h4>Advanced</h4>
-            <div>
-              <label htmlFor="text-color-input">Text color:</label>
-              <div className="input-group">
-                <span className="input-group-btn">
+            {style.type === "grid" && (
+              <>
+                <div className="input-group">
+                  <label className="input-group-addon" htmlFor="albums-per-row">
+                    Albums per row
+                  </label>
                   <input
-                    id="text-color-input"
-                    type="color"
-                    className="btn btn-transparent form-control"
-                    onChange={updateTextColorCallback}
-                    placeholder="#321529"
-                    value={textColor}
+                    id="albums-per-row"
+                    className="form-control"
+                    type="number"
+                    min={2}
+                    max={5}
+                    value={gridSize}
+                    onChange={(event) => {
+                      setGridSize(event.target.valueAsNumber);
+                      setGridLayout(0);
+                    }}
                   />
-                </span>
-                <input
-                  className="form-control"
-                  type="text"
-                  placeholder="#321529"
-                  value={textColor}
-                  disabled
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="bg-color">Background colors:</label>
-              <div className="input-group">
-                <span className="input-group-btn">
+                </div>
+                <div className="input-group">
+                  <label className="input-group-addon" htmlFor="grid-layout">
+                    Grid layout
+                  </label>
                   <input
-                    id="bg-color"
-                    type="color"
-                    className="btn btn-transparent form-control"
-                    onChange={updateFirstBgColorCallback}
-                    value={firstBgColor}
+                    id="grid-layout"
+                    className="form-control"
+                    type="number"
+                    min={1}
+                    max={layoutsPerGridDimensionArr[gridSize]}
+                    value={gridLayout + 1}
+                    onChange={(event) => {
+                      setGridLayout(event.target.valueAsNumber - 1);
+                    }}
                   />
-                </span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Select a color…"
-                  disabled
-                  readOnly
-                  value={firstBgColor}
-                />
-              </div>
-            </div>
+                </div>
+              </>
+            )}
+            {style.type === "text" && (
+              <>
+                <div>
+                  <label htmlFor="color-presets">Color presets:</label>
+                  <div className="color-picker-panel" id="color-presets">
+                    <ColorPicker
+                      firstColor="#6b4078"
+                      secondColor="#33234c"
+                      onClick={() => {
+                        setTextColor("#e5cdc8");
+                        setFirstBgColor("#6b4078");
+                        setSecondBgColor("#33234c");
+                      }}
+                    />
+                    <ColorPicker
+                      firstColor="#ff2f6e"
+                      secondColor="#e8ff2c"
+                      onClick={() => {
+                        setTextColor("#8a1515");
+                        setFirstBgColor("#ff2f6e");
+                        setSecondBgColor("#e8ff2c");
+                      }}
+                    />
+                    <ColorPicker
+                      firstColor="#786aba"
+                      secondColor="#ff0000"
+                      onClick={() => {
+                        setTextColor("#1f2170");
+                        setFirstBgColor("#786aba");
+                        setSecondBgColor("#ff0000");
+                      }}
+                    />
+                    <ColorPicker
+                      firstColor="#083023"
+                      secondColor="#0fc26c"
+                      onClick={() => {
+                        setTextColor("#dde2bb");
+                        setFirstBgColor("#083023");
+                        setSecondBgColor("#0fc26c");
+                      }}
+                    />
+                    <ColorPicker
+                      firstColor="#ffffff"
+                      secondColor="#006d39"
+                      onClick={() => {
+                        setTextColor("#006d39");
+                        setFirstBgColor("#ffffff");
+                        setSecondBgColor("#006d39");
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="text-color-input">Text color:</label>
+                  <div className="input-group">
+                    <span className="input-group-btn">
+                      <input
+                        id="text-color-input"
+                        type="color"
+                        className="btn btn-transparent form-control"
+                        onChange={updateTextColorCallback}
+                        placeholder="#321529"
+                        value={textColor}
+                      />
+                    </span>
+                    <input
+                      className="form-control"
+                      type="text"
+                      placeholder="#321529"
+                      value={textColor}
+                      disabled
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="bg-color">Background colors:</label>
+                  <div className="input-group">
+                    <span className="input-group-btn">
+                      <input
+                        id="bg-color"
+                        type="color"
+                        className="btn btn-transparent form-control"
+                        onChange={updateFirstBgColorCallback}
+                        value={firstBgColor}
+                      />
+                    </span>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Select a color…"
+                      disabled
+                      readOnly
+                      value={firstBgColor}
+                    />
+                  </div>
+                </div>
 
-            <div className="input-group">
-              <span className="input-group-btn">
-                <input
-                  id="bg-color-2"
-                  type="color"
-                  className="btn btn-transparent form-control"
-                  onChange={updateSecondBgColorCallback}
-                  value={secondBgColor}
-                />
-              </span>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Select a color…"
-                disabled
-                readOnly
-                value={secondBgColor}
-              />
-            </div>
+                <div className="input-group">
+                  <span className="input-group-btn">
+                    <input
+                      id="bg-color-2"
+                      type="color"
+                      className="btn btn-transparent form-control"
+                      onChange={updateSecondBgColorCallback}
+                      value={secondBgColor}
+                    />
+                  </span>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Select a color…"
+                    disabled
+                    readOnly
+                    value={secondBgColor}
+                  />
+                </div>
+              </>
+            )}
             {/* <div className="flex-center input-group">
               <label htmlFor="bg-upload">Background image:</label>
               <div className="input-group">
