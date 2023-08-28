@@ -213,8 +213,12 @@
         }
         #artist-top-track, #artist-top-album {
           border: none;
+          background-color: @white;
           border-radius: 0.5em;
           padding: 1em 0 0 0;
+          &:hover {
+            background-color: #e0e0e0;
+          }
         }
       }
       .release-card-container {
@@ -227,9 +231,9 @@
         border-radius: 14px;
       }
       .release-name {
-        padding-left: 10%;
+        padding-left: 15%;
         text-align: left;
-        > a {
+        > a, p {
           font-weight: normal;
           color: @blue;
           text-decoration: inherit;

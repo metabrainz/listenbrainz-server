@@ -55,7 +55,6 @@ function SearchBox({
   // Handle button click on an artist in the dropdown list
   const handleButtonClick = (artist: ArtistType) => {
     onArtistChange(artist.id);
-    setOpenDropdown(false);
   };
   const increment = () => {
     onSimilarArtistsLimitChange(currentsimilarArtistsLimit + 1);
@@ -68,7 +67,7 @@ function SearchBox({
       <div
         className="artist-input-container"
         onFocus={() => searchResults.length && setOpenDropdown(true)}
-        onBlur={() => setTimeout(() => setOpenDropdown(false), 100)}
+        onBlur={() => setTimeout(() => setOpenDropdown(false), 200)}
       >
         <div className="searchbox-container">
           <input
