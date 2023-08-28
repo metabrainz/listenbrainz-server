@@ -77,22 +77,7 @@ function Data() {
     SIMILAR_ARTISTS_LIMIT_VALUE
   );
   const [colors, setColors] = useState(colorGenerator);
-
   const [artistMBID, setArtistMBID] = useState(ARTIST_MBID);
-
-  const testCurrentTrack: Array<Listen> = [
-    {
-      listened_at: 0,
-      track_metadata: {
-        artist_name: "Arjan Dhillon",
-        track_name: "Danabaad",
-        // release_name: "Awara",
-        // recording_mbid: "908a8f0f-1e08-45b4-94cb-0458280d0889",
-        // release_mbid: "d8c0026f-e10c-494d-b66c-2085062b8c2e",
-      },
-    },
-  ];
-
   const [currentTracks, setCurrentTracks] = useState<Array<Listen>>();
 
   const processData = useCallback((dataResponse: ApiResponseType): void => {
@@ -140,6 +125,7 @@ function Data() {
         const data = await response.json();
         processData(data);
       } catch (error) {
+        setSimilarArtistsList([]);
         toast.error(
           <ToastMsg
             title="Search Error"
