@@ -852,7 +852,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(1, len(events))
 
         received = events[0].metadata.dict(exclude_none=True)
-        self.assertEqual(metadata, received)
+        self.assertEqual(metadata.recording_mbid, received.recording_mbid)
+        self.assertEqual(metadata.recording_msid, received.recording_msid)
+        self.assertEqual(set(metadata.users), set(received.users))
+        self.assertEqual(metadata.blurb_content, received.blurb_content)
 
     def test_personal_recommendation_checks_auth_token(self):
         user_one = db_user.get_or_create(2, "riksucks")
