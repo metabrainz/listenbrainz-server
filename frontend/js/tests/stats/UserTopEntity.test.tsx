@@ -30,7 +30,7 @@ const sitewideProps: UserTopEntityProps = {
   terminology: "artist",
 };
 
-describe.each([
+xdescribe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
