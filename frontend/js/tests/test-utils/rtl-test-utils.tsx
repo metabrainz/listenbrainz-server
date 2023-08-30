@@ -48,19 +48,10 @@ export const renderWithProviders = (
     );
 
     return (
-      <>
-        <GlobalAppContext.Provider value={globalProps}>
-          {children}
-        </GlobalAppContext.Provider>
-        <ToastContainer
-          position="bottom-right"
-          hideProgressBar
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          theme="light"
-        />
-      </>
+      <GlobalAppContext.Provider value={globalProps}>
+        <ToastContainer />
+        {children}
+      </GlobalAppContext.Provider>
     );
   }
   return render(ui, { wrapper: WithProviders, ...renderOptions });

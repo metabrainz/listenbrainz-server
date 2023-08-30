@@ -113,15 +113,9 @@ describe("CBReviewModal", () => {
   });
 
   it("submits the review and displays a success alert", async () => {
-    renderWithProviders(
-      <>
-        <ToastContainer />
-        <NiceModal.Provider />
-      </>,
-      {
-        APIService: testAPIService,
-      }
-    );
+    renderWithProviders(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
     act(() => {
       NiceModal.show(CBReviewModal, { ...props });
     });
@@ -277,15 +271,9 @@ describe("CBReviewModal", () => {
         metadata: { review_id: "new-review-id-that-API-returns" },
       });
 
-    renderWithProviders(
-      <>
-        <ToastContainer />
-        <NiceModal.Provider />
-      </>,
-      {
-        APIService: testAPIService,
-      }
-    );
+    renderWithProviders(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
     act(() => {
       NiceModal.show(CBReviewModal, { ...props });
     });
@@ -329,15 +317,9 @@ describe("CBReviewModal", () => {
         metadata: { review_id: "new-review-id-that-API-returns" },
       });
 
-    const { debug } = renderWithProviders(
-      <>
-        <ToastContainer />
-        <NiceModal.Provider />
-      </>,
-      {
-        APIService: testAPIService,
-      }
-    );
+    const { debug } = renderWithProviders(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
     act(() => {
       NiceModal.show(CBReviewModal, { ...props });
     });
