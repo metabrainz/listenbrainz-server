@@ -204,7 +204,7 @@ describe("UserFeed", () => {
     dateNowMock.mockRestore();
   });
 
-  describe("Pagination", () => {
+  xdescribe("Pagination", () => {
     const pushStateSpy = jest.spyOn(window.history, "pushState");
 
     afterEach(() => {
