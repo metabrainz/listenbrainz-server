@@ -104,7 +104,6 @@
     "name": "cf.recommendations.recording.recommendations",
     "description": "Generate recommendations for all active ListenBrainz users.",
     "params": [
-      "recommendation_top_artist_limit",
       "recommendation_raw_limit",
       "users"
     ]

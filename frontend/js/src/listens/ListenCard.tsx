@@ -1,38 +1,31 @@
-import NiceModal from "@ebay/nice-modal-react";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import {
-  faSoundcloud,
-  faSpotify,
-  faYoutube,
-} from "@fortawesome/free-brands-svg-icons";
-import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
+import * as React from "react";
+
 import {
   faCode,
   faCommentDots,
   faEllipsisVertical,
   faExternalLinkAlt,
+  faImage,
   faLink,
   faMusic,
   faPaperPlane,
   faPencilAlt,
   faPlay,
+  faPlus,
+  faSquare,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faSoundcloud,
+  faSpotify,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
 import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
-import * as React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import NiceModal from "@ebay/nice-modal-react";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { toast } from "react-toastify";
-import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
-import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
-import YoutubePlayer from "../brainzplayer/YoutubePlayer";
-import CBReviewModal from "../cb-review/CBReviewModal";
-import Card from "../components/Card";
-import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
-import { ToastMsg } from "../notifications/Notifications";
-import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
-import PinRecordingModal from "../pins/PinRecordingModal";
-import { millisecondsToStr } from "../playlists/utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
@@ -48,10 +41,22 @@ import {
   getTrackName,
   preciseTimestamp,
 } from "../utils/utils";
+
+import CBReviewModal from "../cb-review/CBReviewModal";
+import Card from "../components/Card";
 import CoverArtWithFallback from "./CoverArtWithFallback";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import ListenPayloadModal from "./ListenPayloadModal";
+import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
+import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
+import PinRecordingModal from "../pins/PinRecordingModal";
+import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
+import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
+import { ToastMsg } from "../notifications/Notifications";
+import YoutubePlayer from "../brainzplayer/YoutubePlayer";
+import { millisecondsToStr } from "../playlists/utils";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -87,7 +92,6 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  static addCoverArtThumbnailSrc: string = "/static/img/add-cover-art.svg";
   static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -350,10 +354,19 @@ export default class ListenCard extends React.Component<
           className="listen-thumbnail"
         >
           <div className="add-cover-art">
-            <img
-              src={ListenCard.addCoverArtThumbnailSrc}
-              alt="Add cover art in MusicBrainz"
-            />
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faImage} />
+              <FontAwesomeIcon
+                icon={faSquare}
+                transform="shrink-10 left-5 up-2.5"
+              />
+              <FontAwesomeIcon
+                icon={faPlus}
+                inverse
+                transform="shrink-11 left-2.5 up-2.5"
+                style={{ stroke: "white", strokeWidth: "60" }}
+              />
+            </span>
           </div>
         </a>
       );
@@ -391,16 +404,19 @@ export default class ListenCard extends React.Component<
       thumbnail = (
         <a
           href={`https://musicbrainz.org/recording/${recordingMBID}`}
-          title="Open in MusicBrainz"
+          title="Could not load cover art. Open in MusicBrainz"
           target="_blank"
           rel="noopener noreferrer"
           className="listen-thumbnail"
         >
           <div className="cover-art-fallback">
-            <img
-              src={ListenCard.coverartPlaceholder}
-              alt="Open in MusicBrainz"
-            />
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faImage} />
+              <FontAwesomeIcon
+                icon={faSquare}
+                transform="shrink-10 left-5 up-2.5"
+              />
+            </span>
           </div>
         </a>
       );
