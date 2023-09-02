@@ -134,7 +134,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     ]
   );
 
-  const copyLinkFunction = React.useCallback(() => {
+  const copyTextToSearchField = React.useCallback(() => {
     setDefaultValue(
       `${getTrackName(listenToMap)} - ${getArtistName(listenToMap)}`
     );
@@ -218,9 +218,9 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
 
               <div className="text-center mb-10 mt-10">
                 <button
-                  className="abcd"
+                  className="searchFieldCopyButton"
                   disabled={Boolean(selectedRecording)}
-                  onClick={copyLinkFunction}
+                  onClick={copyTextToSearchField}
                 >
                   <FontAwesomeIcon
                     icon={faExchangeAlt}
