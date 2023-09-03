@@ -1,35 +1,36 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable camelcase */
 
-import * as React from "react";
-import { createRoot } from "react-dom/client";
 import {
   faListAlt,
   faPlusCircle,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
+import * as React from "react";
+import { createRoot } from "react-dom/client";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
 import Card from "../components/Card";
+import Pill from "../components/Pill";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { ToastMsg } from "../notifications/Notifications";
+import ErrorBoundary from "../utils/ErrorBoundary";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { getPageProps } from "../utils/utils";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import PlaylistsList from "./PlaylistsList";
 import {
   getPlaylistId,
+  isPlaylistOwner,
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   PlaylistType,
 } from "./utils";
-import { getPageProps } from "../utils/utils";
-import PlaylistsList from "./PlaylistsList";
-import Pill from "../components/Pill";
-import { ToastMsg } from "../notifications/Notifications";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
@@ -60,11 +61,6 @@ export default class UserPlaylists extends React.Component<
       playlistType: PlaylistType.playlists,
     };
   }
-
-  isOwner = (playlist: JSPFPlaylist): boolean => {
-    const { currentUser } = this.context;
-    return Boolean(currentUser) && currentUser?.name === playlist.creator;
-  };
 
   alertNotAuthorized = () => {
     toast.error(
@@ -222,7 +218,7 @@ export default class UserPlaylists extends React.Component<
       (pl) => getPlaylistId(pl) === id
     );
     const playlistToEdit = playlists[playlistIndex];
-    if (!this.isOwner(playlistToEdit)) {
+    if (!isPlaylistOwner(playlistToEdit, currentUser)) {
       this.alertNotAuthorized();
       return;
     }
@@ -276,7 +272,7 @@ export default class UserPlaylists extends React.Component<
       });
       return;
     }
-    if (!this.isOwner(playlist)) {
+    if (!isPlaylistOwner(playlist, currentUser)) {
       this.alertNotAuthorized();
       return;
     }
