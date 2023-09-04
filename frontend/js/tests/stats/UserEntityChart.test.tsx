@@ -48,7 +48,7 @@ const GlobalContextMock = {
   currentUser: { name: "" },
 };
 
-xdescribe.each([
+describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {

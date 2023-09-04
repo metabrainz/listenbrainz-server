@@ -10,8 +10,8 @@ import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 /*
 This shouldn't be required once we move all the tests away
-from Jest, and the file at frontend/js/tests/__mocks__/react-toastify.js
-needs to be be deleted
+from Enzyme to RTL, and the file at frontend/js/tests/__mocks__/react-toastify.js
+will need to be be deleted
 */
 jest.requireActual("react-toastify");
 

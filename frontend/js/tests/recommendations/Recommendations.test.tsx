@@ -71,7 +71,7 @@ const feedback = {
   ],
 };
 
-xdescribe("Recommendations", () => {
+describe("Recommendations", () => {
   it("renders correctly on the recommendations page", () => {
     const wrapper = mount<Recommendations>(
       <GlobalAppContext.Provider

@@ -76,7 +76,7 @@ fetchMock.mockIf(
     return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
   }
 );
-xdescribe("Listens page", () => {
+describe("Listens page", () => {
   it("renders correctly on the profile page", () => {
     // Datepicker component uses current time at load as max date,
     // and PinnedRecordingModal component uses current time at load to display recording unpin date,
