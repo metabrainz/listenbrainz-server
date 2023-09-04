@@ -19,7 +19,7 @@
     "format": "npm run lint:js; npm run lint:less",
     "format:ci": "npm run lint:js:ci; npm run lint:less:ci",
     "test": "TZ='Europe/London' jest",
-    "test:ci": "JEST_JUNIT_OUTPUT_DIR=/tmp TZ='Europe/London' jest --ci --reporters=default --reporters=jest-junit --runInBand --detectOpenHandles",
+    "test:ci": "JEST_JUNIT_OUTPUT_DIR=/tmp TZ='Europe/London' jest --ci --reporters=default --reporters=jest-junit --runInBand --detectOpenHandles --silent",
     "test:watch": "TZ='Europe/London' jest --watch",
     "test:update-snapshots": "TZ='Europe/London' jest -u",
     "test:coverage": "TZ='Europe/London' jest --coverage --colors",
