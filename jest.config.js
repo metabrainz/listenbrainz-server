@@ -21,11 +21,11 @@ module.exports = {
 
   setupFilesAfterEnv: [
     "jest-location-mock",
-    "<rootDir>/frontend/js/tests/jest-setup.js",
+    "<rootDir>/frontend/js/tests/jest-setup.ts",
   ],
 
   // The test environment that will be used for testing
-  testEnvironment: "jsdom",
+  testEnvironment: "jest-environment-jsdom",
 
   // The glob patterns Jest uses to detect test files
   testMatch: ["**/?(*.)+(spec|test).(ts|js)?(x)"],
@@ -34,7 +34,9 @@ module.exports = {
   testPathIgnorePatterns: ["\\\\node_modules\\\\"],
 
   // This option sets the URL for the jsdom environment. It is reflected in properties such as location.href
-  testURL: "http://localhost",
+  testEnvironmentOptions: {
+    url: "http://localhost",
+  },
   transform: {
     "\\.[jt]sx?$": "ts-jest",
   },
@@ -49,4 +51,9 @@ module.exports = {
   verbose: true,
 
   snapshotSerializers: ["enzyme-to-json/serializer"],
+
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true,
+  },
 };

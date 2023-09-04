@@ -16,7 +16,7 @@ import * as encodeScrobbleOutput from "../__mocks__/encodeScrobbleOutput.json";
 import * as lastFMPrivateUser from "../__mocks__/lastFMPrivateUser.json";
 import { waitForComponentToPaint } from "../test-utils";
 
-jest.useFakeTimers();
+jest.useFakeTimers({advanceTimers: true});
 const props = {
   user: {
     id: "id",
@@ -343,7 +343,7 @@ describe("LastFMImporter", () => {
       // Flush all promises
       // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
       await new Promise((resolve) => {
-        setImmediate(resolve);
+        setTimeout(resolve, 0);
       });
 
       expect(instance.APIService.submitListens).toHaveBeenCalledTimes(1);
@@ -368,7 +368,7 @@ describe("LastFMImporter", () => {
       // Flush all promises
       // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
       await new Promise((resolve) => {
-        setImmediate(resolve);
+        setTimeout(resolve, 0);
       });
 
       expect(instance.updateRateLimitParameters).toHaveBeenCalledTimes(1);
