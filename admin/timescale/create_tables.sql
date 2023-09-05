@@ -148,7 +148,7 @@ CREATE TABLE spotify_cache.raw_cache_data (
 
 CREATE TABLE spotify_cache.album (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    spotify_id              TEXT   NOT NULL,
+    album_id                TEXT   NOT NULL,
     name                    TEXT   NOT NULL,
     type                    TEXT   NOT NULL,
     release_date            TEXT   NOT NULL,
@@ -159,14 +159,14 @@ CREATE TABLE spotify_cache.album (
 
 CREATE TABLE spotify_cache.artist (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    spotify_id              TEXT NOT NULL,
+    artist_id               TEXT NOT NULL,
     name                    TEXT NOT NULL,
     data                    JSONB NOT NULL
 );
 
 CREATE TABLE spotify_cache.track (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    spotify_id              TEXT NOT NULL,
+    track_id                TEXT NOT NULL,
     name                    TEXT NOT NULL,
     track_number            INTEGER NOT NULL,
     album_id                TEXT NOT NULL,
