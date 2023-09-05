@@ -36,7 +36,7 @@ MAILTO=""
 0 3 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_fresh_releases --days 30 >> /logs/fresh_releases.log 2>&1
 
 # Run spotify metadata cache seeder
-0 4 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark run-spotify-metadata-cache-seeder >> /logs/spotify_metadata_cache.log 2>&1
+0 4 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark run-metadata-cache-seeder >> /logs/metadata_cache.log 2>&1
 
 ## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
 0 4 1,15 * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/dumps.log 2>&1
