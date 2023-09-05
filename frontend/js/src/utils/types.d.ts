@@ -220,7 +220,7 @@ declare type SoundCloudTrack = {
   user: {
     id: string;
     username: string;
-  }
+  };
 };
 
 // Expect either a string or an Error or an html Response object
@@ -507,10 +507,9 @@ declare type JSPFPlaylistExtension = {
 
 declare type JSPFTrackExtension = {
   added_by: string;
-  artist_identifiers: string[]; // Full MusicBrainz artist URIs
   added_at: string; // ISO date string
+  artist_identifiers?: string[]; // Full MusicBrainz artist URIs
   release_identifier?: string; // Full MusicBrainz release URI
-
   additional_metadata?: { [key: string]: any };
 };
 
