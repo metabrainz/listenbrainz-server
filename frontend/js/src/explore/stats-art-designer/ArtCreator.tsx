@@ -125,7 +125,7 @@ const DEFAULT_IMAGE_SIZE = 750;
 const defaultStyleOnLoad = TemplateEnum["designer-top-5"] as TextTemplateOption;
 
 function ArtCreator() {
-  const { currentUser } = React.useContext(GlobalAppContext);
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
   // Add images for the gallery, don't compose them on the fly
   const [userName, setUserName] = useState(currentUser?.name);
   const [style, setStyle] = useState<TemplateOption>(defaultStyleOnLoad);
@@ -323,11 +323,11 @@ function ArtCreator() {
       ) => {
         if (styleArg.type === "grid") {
           setPreviewUrl(
-            `https://api.listenbrainz.org/1/art/grid-stats/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
+            `${APIService.APIBaseURI}/art/grid-stats/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
           );
         } else {
           setPreviewUrl(
-            `https://api.listenbrainz.org/1/art/${styleArg.name}/${userNameArg}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
+            `${APIService.APIBaseURI}/art/${styleArg.name}/${userNameArg}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
           );
         }
       },
