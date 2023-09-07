@@ -272,6 +272,12 @@ function ArtCreator() {
           onStyleSelect={updateStyleButtonCallback}
         />
         <hr />
+        <IconTray
+          previewUrl={previewUrl}
+          onClickDownload={onClickDownload}
+          onClickCopy={onClickCopyImage}
+          onClickCopyCode={onClickCopyCode}
+        />
         <Preview
           url={previewUrl}
           styles={{
@@ -281,12 +287,6 @@ function ArtCreator() {
           }}
           ref={previewSVGRef}
           size={DEFAULT_IMAGE_SIZE}
-        />
-        <IconTray
-          previewUrl={previewUrl}
-          onClickDownload={onClickDownload}
-          onClickCopy={onClickCopyImage}
-          onClickCopyCode={onClickCopyCode}
         />
       </div>
       <div className="sidebar settings-navbar">
