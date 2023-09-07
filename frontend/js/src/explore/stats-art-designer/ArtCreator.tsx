@@ -365,17 +365,24 @@ function ArtCreator() {
                   <label className="input-group-addon" htmlFor="grid-layout">
                     Grid layout
                   </label>
-                  <input
+                  <select
                     id="grid-layout"
                     className="form-control"
-                    type="number"
-                    min={1}
-                    max={layoutsPerGridDimensionArr[gridSize]}
                     value={gridLayout + 1}
                     onChange={(event) => {
-                      setGridLayout(event.target.valueAsNumber - 1);
+                      setGridLayout(Number(event.target.value) - 1);
                     }}
-                  />
+                  >
+                    {[...Array(layoutsPerGridDimensionArr[gridSize])].map(
+                      (val, index) => {
+                        return (
+                          <option key={`option-${index + 1}`} value={index + 1}>
+                            Option {index + 1}
+                          </option>
+                        );
+                      }
+                    )}
+                  </select>
                 </div>
               </>
             )}
