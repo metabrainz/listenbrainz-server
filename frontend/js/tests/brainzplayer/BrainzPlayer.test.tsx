@@ -649,7 +649,7 @@ describe("BrainzPlayer", () => {
   });
   describe("submitListenToListenBrainz", () => {
     beforeAll(() => {
-      jest.useFakeTimers();
+      jest.useFakeTimers({advanceTimers: true});
     });
     afterAll(() => {
       jest.useRealTimers();

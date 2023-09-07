@@ -32,8 +32,8 @@ class Crawler(threading.Thread):
     def update_metrics(self):
         pending_count = self.queue.size()
         self.app.logger.info("Pending IDs in Queue: %d", pending_count)
-        observations = self.handler.update_metrics()
-        metrics.set(self.handler.get_name(), pending_count=pending_count, **observations)
+        self.app.logger.info("Metrics: %s", self.handler.metrics)
+        metrics.set(self.handler.name, pending_count=pending_count, **self.handler.metrics)
 
     def run(self):
         """ main thread entry point"""
@@ -56,7 +56,7 @@ class Crawler(threading.Thread):
                         continue
 
                 try:
-                    items = self.handler.process_items(item_ids)
+                    items = self.handler.process_albums(item_ids)
                     for item in items:
                         self.put(item)
                 except Exception as e:

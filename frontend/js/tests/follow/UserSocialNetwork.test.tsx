@@ -36,7 +36,7 @@ import GlobalAppContext, {
 import APIService from "../../src/utils/APIService";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
-jest.useFakeTimers();
+jest.useFakeTimers({advanceTimers: true});
 
 const { loggedInUser, ...otherProps } = userSocialNetworkProps;
 const props = {
