@@ -122,13 +122,13 @@ const DEFAULT_IMAGE_SIZE = 750;
 
 // const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
+const defaultStyleOnLoad = TemplateEnum["designer-top-5"] as TextTemplateOption;
+
 function ArtCreator() {
   const { currentUser } = React.useContext(GlobalAppContext);
   // Add images for the gallery, don't compose them on the fly
   const [userName, setUserName] = useState(currentUser?.name);
-  const [style, setStyle] = useState<TemplateOption>(
-    TemplateEnum["designer-top-5"]
-  );
+  const [style, setStyle] = useState<TemplateOption>(defaultStyleOnLoad);
   const [timeRange, setTimeRange] = useState<keyof typeof TimeRangeOptions>(
     "this_month"
   );
@@ -136,9 +136,15 @@ function ArtCreator() {
   const [gridLayout, setGridLayout] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
   // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
-  const [textColor, setTextColor] = useState<string>("#321529");
-  const [firstBgColor, setFirstBgColor] = useState<string>("");
-  const [secondBgColor, setSecondBgColor] = useState<string>("");
+  const [textColor, setTextColor] = useState<string>(
+    defaultStyleOnLoad.defaultColors[0]
+  );
+  const [firstBgColor, setFirstBgColor] = useState<string>(
+    defaultStyleOnLoad.defaultColors[1]
+  );
+  const [secondBgColor, setSecondBgColor] = useState<string>(
+    defaultStyleOnLoad.defaultColors[2]
+  );
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
   const updateStyleButtonCallback = useCallback(
