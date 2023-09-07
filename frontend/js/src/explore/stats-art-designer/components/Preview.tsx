@@ -99,7 +99,7 @@ const Preview = React.forwardRef(function PreviewComponent(
             : ""}
         </style>
       )}
-      <svg data-src={url} data-js="enabled" />
+      <svg data-src={url} data-js="enabled" data-cache="21600" />
     </svg>
   );
 });

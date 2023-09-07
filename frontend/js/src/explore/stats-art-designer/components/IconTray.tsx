@@ -1,5 +1,5 @@
 import {
-  faClipboard,
+  faLink,
   faCode,
   faCopy,
   faDownload,
@@ -67,7 +67,7 @@ function IconTray(props: IconTrayProps) {
               }}
               className="btn btn-info btn-sm"
             >
-              <FontAwesomeIcon icon={faClipboard} fixedWidth />
+              <FontAwesomeIcon icon={faLink} fixedWidth />
             </button>
           </span>
         </div>

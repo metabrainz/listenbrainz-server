@@ -39,6 +39,10 @@ export interface TemplateOption {
   image: string;
   type: "text" | "image" | "grid";
 }
+export interface TextTemplateOption extends TemplateOption {
+  type: "text";
+  defaultColors: readonly string[];
+}
 export interface GridTemplateOption extends TemplateOption {
   type: "grid";
   defaultGridSize: number;
@@ -50,7 +54,10 @@ const layoutsPerGridDimensionArr = [undefined, undefined, 1, 3, 4, 2];
 
 /* Fancy TypeScript to get a typed enum of object literals representing the options */
 export type TemplateEnumType = {
-  [key in TemplateNameEnum]: TemplateOption | GridTemplateOption;
+  [key in TemplateNameEnum]:
+    | TemplateOption
+    | TextTemplateOption
+    | GridTemplateOption;
 };
 export const TemplateEnum: TemplateEnumType = {
   [TemplateNameEnum.designerTop5]: {
@@ -58,12 +65,14 @@ export const TemplateEnum: TemplateEnumType = {
     displayName: "Designer top 5",
     image: "/static/img/explore/stats-art/template-designer-top-5.png",
     type: "text",
+    defaultColors: ["#321529", "#9b3361", "#a76798"],
   },
   [TemplateNameEnum.designerTop10]: {
     name: TemplateNameEnum.designerTop10,
     displayName: "Designer top 10",
     image: "/static/img/explore/stats-art/template-designer-top-10.png",
     type: "text",
+    defaultColors: ["#FAFF5B", "#00A2CC", "#FF29A5"],
   },
   [TemplateNameEnum.lPsOnTheFloor]: {
     name: TemplateNameEnum.lPsOnTheFloor,
@@ -139,6 +148,12 @@ function ArtCreator() {
       if (selectedStyle.type === "grid") {
         setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
         setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
+      } else if (selectedStyle.type === "text") {
+        setTextColor((selectedStyle as TextTemplateOption).defaultColors[0]);
+        setFirstBgColor((selectedStyle as TextTemplateOption).defaultColors[1]);
+        setSecondBgColor(
+          (selectedStyle as TextTemplateOption).defaultColors[2]
+        );
       }
     },
     [setStyle]
