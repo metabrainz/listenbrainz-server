@@ -229,21 +229,44 @@ function ArtCreator() {
     try {
       const { current: svgElement } = previewSVGRef;
       const { outerHTML } = svgElement;
-      const svgBlob = await svgToBlob(
+      const svgBlobPromise = svgToBlob(
         DEFAULT_IMAGE_SIZE,
         DEFAULT_IMAGE_SIZE,
         outerHTML,
-        "image/svg+xml"
+        "image/png"
       );
-      console.debug("svgBlob", svgBlob);
-      const data = [new ClipboardItem({ [svgBlob.type]: svgBlob })];
-      await navigator.clipboard.write(data);
-      toast.success("Copied image");
+      let data: ClipboardItems;
+      if ("ClipboardItem" in navigator) {
+        data = [new ClipboardItem({ "image/png": await svgBlobPromise })];
+      } else {
+        // For browers with no support for ClipboardItem
+        throw new Error(
+          "ClipboardItem is not available. User may be on FireFox with asyncClipboard.clipboardItem disabled"
+        );
+      }
+      // Safari browsers require that we await our promise directly in the ClipboardItem call
+      // rather than await the clipboard() function call
+      // https://stackoverflow.com/questions/66312944/javascript-clipboard-api-write-does-not-work-in-safari*/
+      navigator.clipboard
+        .write(data)
+        .then(() => {
+          toast.success("Copied image to clipboard");
+        })
+        .catch((err) => {
+          throw err;
+        });
     } catch (error) {
       toast.error(
         <ToastMsg
-          title="Could not copy SVG image"
-          message={typeof error === "object" ? error.message : error.toString()}
+          title="Could not copy image to clipboard"
+          message={
+            <>
+              This feature might not be supported in your browser or may be
+              behind an experimental setting
+              <br />
+              {typeof error === "object" ? error.message : error.toString()}
+            </>
+          }
         />,
         { toastId: "copy-svg-error" }
       );
@@ -258,17 +281,35 @@ function ArtCreator() {
       const { current: svgElement } = previewSVGRef;
       const { outerHTML } = svgElement;
       await navigator.clipboard.writeText(outerHTML);
-      toast.success("Copied image source");
+      toast.success("Copied SVG image source to clipboard");
     } catch (error) {
       toast.error(
         <ToastMsg
-          title="Could not copy SVG image source"
+          title="Could not copy SVG image source to clipboard"
           message={typeof error === "object" ? error.message : error.toString()}
         />,
         { toastId: "copy-svg-error" }
       );
     }
   }, [previewSVGRef]);
+
+  const onClickCopyURL = useCallback(async () => {
+    if (!previewUrl) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(previewUrl);
+      toast.success("Copied link to clipboard");
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not copy link to clipboard"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "copy-link-error" }
+      );
+    }
+  }, [previewUrl]);
   /* We want the username input to update as fast as the user types,
   but we don't want to update the preview URL on each keystroke so we debounce */
   const debouncedSetPreviewUrl = React.useMemo(() => {
@@ -322,6 +363,7 @@ function ArtCreator() {
           onClickDownload={onClickDownload}
           onClickCopy={onClickCopyImage}
           onClickCopyCode={onClickCopyCode}
+          onClickCopyURL={onClickCopyURL}
         />
         <Preview
           url={previewUrl}
