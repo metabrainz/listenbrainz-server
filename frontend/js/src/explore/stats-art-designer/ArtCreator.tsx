@@ -90,7 +90,7 @@ export const TemplateEnum: TemplateEnumType = {
   },
   [TemplateNameEnum.gridStatsSpecial]: {
     name: TemplateNameEnum.gridStatsSpecial,
-    displayName: "Album grid with special layout",
+    displayName: "Album grid alt",
     image: "/static/img/explore/stats-art/template-grid-stats-2.png",
     type: "grid",
     defaultGridSize: 5,
