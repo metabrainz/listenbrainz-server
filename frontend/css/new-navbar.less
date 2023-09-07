@@ -7,6 +7,7 @@
 @max-content-width: 1400px;
 @nav-background-color: #f3f3f3;
 
+@nav-bottom-padding: 1.5em;
 @nav-tabs-link-padding: 1em 1.5em;
 @nav-tabs-link-padding-mobile: 0.8em 1em;
 @nav-tabs-background-color: @nav-background-color;
@@ -14,6 +15,8 @@
 @tabs-height-mobile: 42px;
 @nav-link-color: #1e1e1e;
 @gradient-orange: #ffa500;
+
+@sidebar-gradient: linear-gradient(50deg, #dedede, transparent);
 
 body {
   display: flex;
@@ -65,7 +68,7 @@ body {
         display: flex;
         flex-direction: column;
         justify-content: space-around;
-        margin-bottom: 1.5em;
+        margin-bottom: @nav-bottom-padding;
         font-weight: 500;
       }
       .navbar-bottom {
@@ -116,7 +119,7 @@ body {
     .navbar-logo {
       height: auto;
       width: 40px;
-      margin-bottom: 1.5em;
+      margin-bottom: @nav-bottom-padding;
     }
     // header shown on small screens, with button to open drawer menu
     .navbar-header {
@@ -228,7 +231,7 @@ body {
   width: calc(100% + @grid-gutter-width);
   margin-left: ceil((@grid-gutter-width / -2));
   margin-right: floor((@grid-gutter-width / -2));
-  margin-bottom: 1.5em;
+  margin-bottom: @nav-bottom-padding;
   &,
   > * {
     background-color: @nav-tabs-background-color;
@@ -398,5 +401,20 @@ body {
   margin: 0;
   &:not(.in) {
     pointer-events: none;
+  }
+}
+
+/* Settings side bar on the right-hand side*/
+.sidebar {
+  background: #f3f3f3;
+
+  > * {
+    background: @sidebar-gradient;
+    padding: 12px 20px;
+  }
+  .sidenav-content-grid {
+    display: grid;
+    gap: 8px;
+    padding-bottom: 12px;
   }
 }

@@ -139,14 +139,6 @@ export default function MagicShareButton({
       >
         x
       </span>
-      <button
-        className="yim-share-button"
-        type="button"
-        data-toggle="modal"
-        data-target={`#${id}`}
-      >
-        <FontAwesomeIcon icon={faShareAlt} />
-      </button>
       <div
         className="modal fade share-modal"
         id={id}
@@ -210,6 +202,14 @@ export default function MagicShareButton({
           </form>
         </div>
       </div>
+      <button
+        className="yim-share-button btn btn-icon btn-info"
+        type="button"
+        data-toggle="modal"
+        data-target={`#${id}`}
+      >
+        <FontAwesomeIcon icon={faShareAlt} />
+      </button>
     </>
   );
 }

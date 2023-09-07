@@ -10,6 +10,8 @@ import { ToastMsg } from "../notifications/Notifications";
 export type UserSearchProps = {
   onSelectUser: (userName: string) => void;
   placeholder: string;
+  clearOnSelect?: boolean;
+  initialValue?: string;
 };
 
 export type UserSearchState = {
@@ -28,7 +30,7 @@ export default class UserSearch extends React.Component<
   constructor(props: UserSearchProps) {
     super(props);
     this.state = {
-      newUser: "",
+      newUser: props.initialValue ?? "",
       userSearchResults: [],
     };
   }
@@ -60,10 +62,10 @@ export default class UserSearch extends React.Component<
   };
 
   handleResultClick = (user: string) => {
-    const { onSelectUser } = this.props;
+    const { onSelectUser, clearOnSelect } = this.props;
     onSelectUser(user);
     this.setState({
-      newUser: "",
+      newUser: clearOnSelect ? "" : user,
       userSearchResults: [],
     });
   };
@@ -78,20 +80,23 @@ export default class UserSearch extends React.Component<
     const { newUser, userSearchResults } = this.state;
     const { placeholder } = this.props;
     return (
-      <div>
+      <>
         <input
+          id="user-name-search"
           type="text"
           className="form-control"
           name="newUser"
           onChange={this.handleInputChange}
           placeholder={placeholder}
           value={newUser}
+          aria-haspopup={Boolean(userSearchResults?.length)}
         />
         <div className="search-dropdown">
           {userSearchResults?.map((user) => {
             return (
               <ListenControl
-                text={`${user.user_name}`}
+                key={user.user_name}
+                text={user.user_name}
                 icon={faUser}
                 // eslint-disable-next-line react/jsx-no-bind
                 action={this.handleResultClick.bind(this, user.user_name)}
@@ -99,7 +104,7 @@ export default class UserSearch extends React.Component<
             );
           })}
         </div>
-      </div>
+      </>
     );
   }
 }
