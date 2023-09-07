@@ -90,7 +90,7 @@ export const TemplateEnum: TemplateEnumType = {
   },
   [TemplateNameEnum.gridStatsSpecial]: {
     name: TemplateNameEnum.gridStatsSpecial,
-    displayName: "Album grid with special layout",
+    displayName: "Album grid alt",
     image: "/static/img/explore/stats-art/template-grid-stats-2.png",
     type: "grid",
     defaultGridSize: 5,
@@ -122,13 +122,13 @@ const DEFAULT_IMAGE_SIZE = 750;
 
 // const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
+const defaultStyleOnLoad = TemplateEnum["designer-top-5"] as TextTemplateOption;
+
 function ArtCreator() {
-  const { currentUser } = React.useContext(GlobalAppContext);
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
   // Add images for the gallery, don't compose them on the fly
   const [userName, setUserName] = useState(currentUser?.name);
-  const [style, setStyle] = useState<TemplateOption>(
-    TemplateEnum["designer-top-5"]
-  );
+  const [style, setStyle] = useState<TemplateOption>(defaultStyleOnLoad);
   const [timeRange, setTimeRange] = useState<keyof typeof TimeRangeOptions>(
     "this_month"
   );
@@ -136,9 +136,15 @@ function ArtCreator() {
   const [gridLayout, setGridLayout] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
   // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
-  const [textColor, setTextColor] = useState<string>("#321529");
-  const [firstBgColor, setFirstBgColor] = useState<string>("");
-  const [secondBgColor, setSecondBgColor] = useState<string>("");
+  const [textColor, setTextColor] = useState<string>(
+    defaultStyleOnLoad.defaultColors[0]
+  );
+  const [firstBgColor, setFirstBgColor] = useState<string>(
+    defaultStyleOnLoad.defaultColors[1]
+  );
+  const [secondBgColor, setSecondBgColor] = useState<string>(
+    defaultStyleOnLoad.defaultColors[2]
+  );
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
   const updateStyleButtonCallback = useCallback(
@@ -223,21 +229,44 @@ function ArtCreator() {
     try {
       const { current: svgElement } = previewSVGRef;
       const { outerHTML } = svgElement;
-      const svgBlob = await svgToBlob(
+      const svgBlobPromise = svgToBlob(
         DEFAULT_IMAGE_SIZE,
         DEFAULT_IMAGE_SIZE,
         outerHTML,
-        "image/svg+xml"
+        "image/png"
       );
-      console.debug("svgBlob", svgBlob);
-      const data = [new ClipboardItem({ [svgBlob.type]: svgBlob })];
-      await navigator.clipboard.write(data);
-      toast.success("Copied image");
+      let data: ClipboardItems;
+      if ("ClipboardItem" in navigator) {
+        data = [new ClipboardItem({ "image/png": await svgBlobPromise })];
+      } else {
+        // For browers with no support for ClipboardItem
+        throw new Error(
+          "ClipboardItem is not available. User may be on FireFox with asyncClipboard.clipboardItem disabled"
+        );
+      }
+      // Safari browsers require that we await our promise directly in the ClipboardItem call
+      // rather than await the clipboard() function call
+      // https://stackoverflow.com/questions/66312944/javascript-clipboard-api-write-does-not-work-in-safari*/
+      navigator.clipboard
+        .write(data)
+        .then(() => {
+          toast.success("Copied image to clipboard");
+        })
+        .catch((err) => {
+          throw err;
+        });
     } catch (error) {
       toast.error(
         <ToastMsg
-          title="Could not copy SVG image"
-          message={typeof error === "object" ? error.message : error.toString()}
+          title="Could not copy image to clipboard"
+          message={
+            <>
+              This feature might not be supported in your browser or may be
+              behind an experimental setting
+              <br />
+              {typeof error === "object" ? error.message : error.toString()}
+            </>
+          }
         />,
         { toastId: "copy-svg-error" }
       );
@@ -252,17 +281,35 @@ function ArtCreator() {
       const { current: svgElement } = previewSVGRef;
       const { outerHTML } = svgElement;
       await navigator.clipboard.writeText(outerHTML);
-      toast.success("Copied image source");
+      toast.success("Copied SVG image source to clipboard");
     } catch (error) {
       toast.error(
         <ToastMsg
-          title="Could not copy SVG image source"
+          title="Could not copy SVG image source to clipboard"
           message={typeof error === "object" ? error.message : error.toString()}
         />,
         { toastId: "copy-svg-error" }
       );
     }
   }, [previewSVGRef]);
+
+  const onClickCopyURL = useCallback(async () => {
+    if (!previewUrl) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(previewUrl);
+      toast.success("Copied link to clipboard");
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not copy link to clipboard"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "copy-link-error" }
+      );
+    }
+  }, [previewUrl]);
   /* We want the username input to update as fast as the user types,
   but we don't want to update the preview URL on each keystroke so we debounce */
   const debouncedSetPreviewUrl = React.useMemo(() => {
@@ -276,11 +323,11 @@ function ArtCreator() {
       ) => {
         if (styleArg.type === "grid") {
           setPreviewUrl(
-            `https://api.listenbrainz.org/1/art/grid-stats/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
+            `${APIService.APIBaseURI}/art/grid-stats/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
           );
         } else {
           setPreviewUrl(
-            `https://api.listenbrainz.org/1/art/${styleArg.name}/${userNameArg}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
+            `${APIService.APIBaseURI}/art/${styleArg.name}/${userNameArg}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
           );
         }
       },
@@ -289,6 +336,9 @@ function ArtCreator() {
     );
   }, [setPreviewUrl]);
   React.useEffect(() => {
+    if (!userName) {
+      return;
+    }
     debouncedSetPreviewUrl(style, userName, timeRange, gridSize, gridLayout);
   }, [
     userName,
@@ -313,6 +363,7 @@ function ArtCreator() {
           onClickDownload={onClickDownload}
           onClickCopy={onClickCopyImage}
           onClickCopyCode={onClickCopyCode}
+          onClickCopyURL={onClickCopyURL}
         />
         <Preview
           url={previewUrl}

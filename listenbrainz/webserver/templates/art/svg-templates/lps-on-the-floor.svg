@@ -1,6 +1,7 @@
 <svg version="1.1"
      xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="{{ width }}" height="{{ height }}">
+     width="{{ width }}" height="{{ height }}"
+     viewBox="0 0 {{ width }} {{ height }}">
     <image x="89"
            y="318"
            width="195"
