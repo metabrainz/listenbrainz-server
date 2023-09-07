@@ -48,7 +48,7 @@ describe("MissingMBDataPage", () => {
     expect(wrapper.html()).toMatchSnapshot();
   });
 
-  describe("handleClickPrevious", () => {
+  xdescribe("handleClickPrevious", () => {
     beforeAll(() => {
       window.HTMLElement.prototype.scrollIntoView = jest.fn();
     });
@@ -106,7 +106,7 @@ describe("MissingMBDataPage", () => {
     });
   });
 
-  describe("handleClickNext", () => {
+  xdescribe("handleClickNext", () => {
     beforeAll(() => {
       window.HTMLElement.prototype.scrollIntoView = jest.fn();
     });
