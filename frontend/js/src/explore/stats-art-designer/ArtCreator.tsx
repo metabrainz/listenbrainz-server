@@ -30,6 +30,7 @@ export enum TemplateNameEnum {
   designerTop10 = "designer-top-10",
   lPsOnTheFloor = "lps-on-the-floor",
   gridStats = "grid-stats",
+  gridStatsSpecial = "grid-stats-special",
 }
 
 export interface TemplateOption {
@@ -38,13 +39,18 @@ export interface TemplateOption {
   image: string;
   type: "text" | "image" | "grid";
 }
+export interface GridTemplateOption extends TemplateOption {
+  type: "grid";
+  defaultGridSize: number;
+  defaultGridLayout: number;
+}
 /* How many layouts are available fro each grid dimension (number of rows/columns)
 See GRID_TILE_DESIGNS in listenbrainz/art/cover_art_generator.py */
 const layoutsPerGridDimensionArr = [undefined, undefined, 1, 3, 4, 2];
 
 /* Fancy TypeScript to get a typed enum of object literals representing the options */
 export type TemplateEnumType = {
-  [key in TemplateNameEnum]: TemplateOption;
+  [key in TemplateNameEnum]: TemplateOption | GridTemplateOption;
 };
 export const TemplateEnum: TemplateEnumType = {
   [TemplateNameEnum.designerTop5]: {
@@ -67,9 +73,19 @@ export const TemplateEnum: TemplateEnumType = {
   },
   [TemplateNameEnum.gridStats]: {
     name: TemplateNameEnum.gridStats,
-    displayName: "Stats grid",
+    displayName: "Album grid",
     image: "/static/img/explore/stats-art/template-grid-stats.png",
     type: "grid",
+    defaultGridSize: 4,
+    defaultGridLayout: 0,
+  },
+  [TemplateNameEnum.gridStatsSpecial]: {
+    name: TemplateNameEnum.gridStatsSpecial,
+    displayName: "Album grid with special layout",
+    image: "/static/img/explore/stats-art/template-grid-stats-2.png",
+    type: "grid",
+    defaultGridSize: 5,
+    defaultGridLayout: 1,
   },
 } as const;
 
@@ -87,15 +103,15 @@ enum TimeRangeOptions {
   "all_time" = "All time",
 }
 
-enum FontNameEnum {
-  "Roboto",
-  "Integer",
-  "Sans Serif",
-}
+// enum FontNameEnum {
+//   "Roboto",
+//   "Integer",
+//   "Sans Serif",
+// }
 
 const DEFAULT_IMAGE_SIZE = 750;
 
-const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
+// const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
 function ArtCreator() {
   const { currentUser } = React.useContext(GlobalAppContext);
@@ -118,7 +134,12 @@ function ArtCreator() {
 
   const updateStyleButtonCallback = useCallback(
     (name: TemplateNameEnum) => {
-      setStyle(TemplateEnum[name]);
+      const selectedStyle = TemplateEnum[name];
+      setStyle(selectedStyle);
+      if (selectedStyle.type === "grid") {
+        setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
+        setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
+      }
     },
     [setStyle]
   );
@@ -240,7 +261,7 @@ function ArtCreator() {
       ) => {
         if (styleArg.type === "grid") {
           setPreviewUrl(
-            `https://api.listenbrainz.org/1/art/${styleArg.name}/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
+            `https://api.listenbrainz.org/1/art/grid-stats/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
           );
         } else {
           setPreviewUrl(
@@ -344,6 +365,10 @@ function ArtCreator() {
             <h4>Advanced</h4>
             {style.type === "grid" && (
               <>
+                <small>
+                  You can customize the grid size and select one of our advanced
+                  layouts
+                </small>
                 <div className="input-group">
                   <label className="input-group-addon" htmlFor="albums-per-row">
                     Albums per row

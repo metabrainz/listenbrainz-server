@@ -11,13 +11,12 @@
   }
 
   .stats-art-gallery {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
     gap: 1em;
-    grid-auto-rows: 100px;
-    grid-template-columns: repeat(auto-fill, 100px);
     align-items: center;
     justify-items: center;
-    justify-content: space-around;
+    justify-content: center;
     .gallery-tile {
       max-width: 100px;
       border: none;
