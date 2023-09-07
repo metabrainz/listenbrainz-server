@@ -295,6 +295,9 @@ function ArtCreator() {
     );
   }, [setPreviewUrl]);
   React.useEffect(() => {
+    if (!userName) {
+      return;
+    }
     debouncedSetPreviewUrl(style, userName, timeRange, gridSize, gridLayout);
   }, [
     userName,
