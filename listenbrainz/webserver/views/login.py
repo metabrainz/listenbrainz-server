@@ -38,7 +38,8 @@ def musicbrainz_post():
     no_email_warning = Markup('You have not provided an email address. Please provide an '
                               '<a href="https://musicbrainz.org/account/edit">email address</a> ')
     blog_link = Markup('Read this <a href="https://blog.metabrainz.org/?p=8915">blog post</a> '
-                       'to understand why we need your email.')
+                       'to understand why we need your email. You can provide us with an email on your '
+                       '<a href="https://musicbrainz.org/account/edit">MusicBrainz account</a> page.')
 
     if provider.validate_post_login():
         try:
