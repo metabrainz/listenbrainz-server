@@ -1,4 +1,4 @@
-import { isUndefined, noop } from "lodash";
+import { isUndefined, noop, uniqBy } from "lodash";
 import * as React from "react";
 import { useCallback, useState, useEffect } from "react";
 import {
@@ -116,8 +116,8 @@ export default function AddTagSelect(props: {
       const responseJSON = await response.json();
       const userTags = responseJSON["user-tags"];
       if (userTags?.length) {
-        setSelected((prevSelected) =>
-          userTags
+        setSelected((prevSelected) => {
+          const tagsArray: TagOptionType[] = userTags
             .map(
               (tag: { name: string }): TagOptionType => ({
                 value: tag.name,
@@ -129,8 +129,9 @@ export default function AddTagSelect(props: {
                 originalTag: { tag: tag.name, count: 1 },
               })
             )
-            .concat(prevSelected)
-        );
+            .concat(prevSelected);
+          return uniqBy(tagsArray, "value");
+        });
       }
     }
   }, [entityType, entityMBID, musicbrainzAuthToken, MBBaseURI]);

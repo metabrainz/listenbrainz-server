@@ -54,13 +54,21 @@ def fresh_releases():
 
 @explore_bp.route("/artist-similarity/")
 def artist_similarity():
-    """ Explore fresh releases """
+    """ Explore artist similarity """
 
     return render_template(
         "explore/artist-similarity.html",
         props=orjson.dumps({}).decode("utf-8")
     )
 
+
+@explore_bp.route("/art-creator/")
+def art_creator():
+
+    return render_template(
+        "explore/stats-art-designer.html",
+        props=orjson.dumps({}).decode("utf-8")
+    )
 
 @explore_bp.route("/cover-art-collage/")
 @explore_bp.route("/cover-art-collage/<int:year>/")

@@ -5,11 +5,12 @@
 {% block settings_content %}
     <h2 class="page-title">Missing MusicBrainz Data of {{ user.musicbrainz_id }}</h2>
     <p>
-        MusicBrainz is the music encyclopedia that ListenBrainz uses to display more information about your music,
-        entirely built by a passionate open-source community.
+        <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source music encyclopedia that ListenBrainz uses
+        to display information about your music.<br/>
         <br/>
-        The songs (or “recordings”) below don’t seem to exist yet in MusicBrainz. Please take a few minutes to submit
-        this new data and help us improve this community resource and everyone’s experience on ListenBrainz.
+        This page displays your top 200 (by listen count) submitted songs that we haven’t been able to automatically
+        link with MusicBrainz “recordings”, or that don’t yet exist in MusicBrainz. Please take a few minutes to link
+        these recordings below, or to <a href="https://wiki.musicbrainz.org/How_to_Contribute>submit new data to MusicBrainz</a>.
     </p>
     <div id="react-container"></div>
 {% endblock %}
