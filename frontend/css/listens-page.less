@@ -564,33 +564,28 @@
     }
   }
 
-  &.deleted {
-    animation: deleted-animation 1s ease-in-out forwards;
+&.deleted {
+  animation: deleted-animation .6s ease-in-out forwards;
+  transform-origin: center;
+}
+
+@keyframes deleted-animation {
+  0% {
+    opacity: 1;
+    transform: rotateX(0) scale(1);
   }
 
-  @keyframes deleted-animation {
-    0% {
-      opacity: 1;
-      height: inherit;
-      padding: 1px;
-      transform: scaleY(1);
-      line-height: 1em;
-    }
-
-    50% {
-      opacity: 0;
-    }
-
-    100% {
-      opacity: 0;
-      height: 0;
-      margin-top: -10px;
-      padding-top: 0;
-      padding-bottom: 0;
-      transform: scaleY(0);
-      display: block;
-    }
+  40% {
+    opacity: 0.3;
+    transform: rotateX(40deg) scale(0.8);
   }
+
+  100% {
+    margin-top: -40px;
+    margin-bottom: -28px;
+    transform: rotateX(90deg) scale(0.8, 0.4);
+  }
+}
 }
 
 .input-group-flex {
