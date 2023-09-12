@@ -37,6 +37,7 @@
 @import (inline) "react-toastify/dist/ReactToastify.css";
 
 @import (inline, css) "highlight.js/styles/github.css";
+
 pre code.hljs {
   max-height: 50vh;
   overflow-y: scroll;
@@ -47,6 +48,7 @@ pre code.hljs {
     border-bottom-width: 1px;
   }
 }
+
 .table-nonfluid {
   width: auto !important;
 }
@@ -59,6 +61,7 @@ pre code.hljs {
 
 // Navbar
 @grid-float-breakpoint: @screen-md-min; // Point at which the navbar becomes uncollapsed
+
 .navbar {
   .nav {
     > li {
@@ -67,25 +70,31 @@ pre code.hljs {
       }
     }
   }
+
   .beta {
     .pull-right;
     color: @red;
   }
+
   @logo-width: 165px + 15px;
   .navbar-variant(#353070, @logo-width);
+
   .import-link {
     > a {
       color: white !important;
       font-size: 1.5em !important;
       background-color: @orange !important;
+
       &:hover,
       &:focus {
         background-color: darken(@orange, 6.5%) !important;
       }
     }
   }
+
   .navbar-form {
     padding-right: 0px;
+
     .btn {
       background-color: @orange;
       margin-right: 0px;
@@ -109,22 +118,27 @@ pre code.hljs {
   border-top-width: 2px;
   border-top-style: solid;
   border-top-color: #ddd;
+
   ul {
     line-height: 2;
   }
+
   li {
     vertical-align: middle;
   }
 }
+
 .center-p {
   color: var(--color);
   text-align: center;
   padding-top: 20px;
 }
+
 .section-line {
   padding-top: 30px;
   border-top: 1px solid #ddd;
 }
+
 .text-brand {
   font-size: 2rem;
   font-weight: 600;
@@ -135,6 +149,7 @@ pre code.hljs {
     font-size: 1.8rem;
   }
 }
+
 .color-purple {
   color: #353070;
 }
@@ -142,10 +157,12 @@ pre code.hljs {
 .color-orange {
   color: #e9733d;
 }
+
 .color-gray {
   text-decoration: none;
   color: #000000;
 }
+
 #homepage {
   #big-logo {
     .pull-left;
@@ -155,6 +172,7 @@ pre code.hljs {
     margin-bottom: 6px;
     margin-right: 26px;
   }
+
   #twitter-block > iframe {
     width: 100%;
   }
@@ -165,6 +183,7 @@ pre code.hljs {
     margin-top: 20px;
     width: 100%;
     height: 720px;
+
     @media (max-width: @screen-sm-max) {
       height: 80px;
     }
@@ -197,18 +216,22 @@ pre code.hljs {
 
 .flex {
   display: flex;
+
   > * {
     flex: 1;
   }
 }
+
 .flex-center,
 .vertical-align {
   display: flex;
   align-items: center;
 }
+
 .flex-center {
   justify-content: center;
 }
+
 .flex-wrap {
   flex-wrap: wrap;
 }
@@ -239,6 +262,7 @@ pre code.hljs {
       width: 300px;
     }
   }
+
   &.compact {
     > * {
       display: inline-block;
@@ -260,12 +284,15 @@ pre code.hljs {
 
   .progress-bar {
     border-radius: 16px;
+
     &.red {
       background-color: @red;
     }
+
     &.orange {
       background-color: @orange;
     }
+
     &.purple {
       background-color: @blue;
     }
@@ -283,23 +310,27 @@ pre code.hljs {
     > :not(:first-child) {
       color: @orange;
     }
+
     margin-right: 0.7em;
   }
 }
 
 // For cover art in alerts
 @alertThumbnailSize: 40px;
-.alert{
+
+.alert {
   display: flex;
-   align-items: center;
+  align-items: center;
   justify-content: center;
 }
-.alert-text{
+
+.alert-text {
   font-size: 11px;
   font-weight: bold;
   margin-left: 9px;
   color: #353070;
 }
+
 .alert-thumbnail {
   max-height: @alertThumbnailSize;
   margin: -@alert-padding;
@@ -361,9 +392,11 @@ pre code.hljs {
   border-radius: 5px;
   text-align: center;
   display: inline-block;
+
   & + .btn-icon {
     margin-left: 0.4em;
   }
+
   > svg {
     /* We might forget to set the fixedWidth attribute on FontAwesome icons
     but we do want to make sure all icons have the same width, so extend the FA class */
