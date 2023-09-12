@@ -152,7 +152,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
       <div
         className={`modal fade ${visible ? "in" : ""}`}
         style={visible ? { display: "block" } : {}}
-        id="MapToMusicBrainzRecordingModal"
+        id="MBIDMappingModal"
         role="dialog"
         aria-labelledby="MBIDMappingModalLabel"
       >
@@ -218,7 +218,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
 
               <div className="text-center mb-10 mt-10">
                 <button
-                  className="searchFieldCopyButton"
+                  className="search-field-copy-button"
                   disabled={Boolean(selectedRecording)}
                   onClick={copyTextToSearchField}
                 >
