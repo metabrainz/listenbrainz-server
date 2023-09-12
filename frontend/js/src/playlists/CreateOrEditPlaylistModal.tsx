@@ -209,6 +209,7 @@ export default class CreateOrEditPlaylistModal extends React.Component<
                 <UserSearch
                   onSelectUser={this.addCollaborator}
                   placeholder="Add collaborator"
+                  clearOnSelect
                 />
               </div>
             </div>

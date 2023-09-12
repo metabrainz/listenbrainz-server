@@ -56,7 +56,7 @@ const GlobalContextMock: GlobalAppContextT = {
 
 describe("UserFeed", () => {
   beforeAll(() => {
-    timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
+    jest.spyOn(timeago, "ago").mockImplementation(() => "1 day ago");
     // Font Awesome generates a random hash ID for each icon everytime.
     // Mocking Math.random() fixes this
     // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
