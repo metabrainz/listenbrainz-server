@@ -2,23 +2,16 @@
 
 import * as React from "react";
 
-import {
-  faCog,
-  faFileExport,
-  faPen,
-  faSave,
-  faTrashAlt,
-} from "@fortawesome/free-solid-svg-icons";
-import { saveAs } from "file-saver";
+import { faCog, faSave } from "@fortawesome/free-solid-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { sanitize } from "dompurify";
 import { toast } from "react-toastify";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import PlaylistMenu from "./PlaylistMenu";
 import { getPlaylistExtension, getPlaylistId } from "./utils";
 
 export type PlaylistCardProps = {
@@ -101,79 +94,7 @@ export default function PlaylistCard({
         toastId: "copy-playlist-error",
       });
     }
-  }, [playlistId, currentUser, onSuccessfulCopy]);
-
-  const showSpotifyExportButton = spotifyAuth?.permission?.includes(
-    "playlist-modify-public"
-  );
-
-  const handleError = (error: any) => {
-    toast.error(<ToastMsg title="Error" message={error.message} />, {
-      toastId: "error",
-    });
-  };
-
-  const exportToSpotify = React.useCallback(
-    async (playlistTitle: string, auth_token: string) => {
-      const result = await APIService.exportPlaylistToSpotify(
-        auth_token,
-        playlistId
-      );
-      const { external_url } = result;
-      toast.success(
-        <ToastMsg
-          title="Playlist exported to Spotify"
-          message={
-            <>
-              Successfully exported playlist:{" "}
-              <a href={external_url} target="_blank" rel="noopener noreferrer">
-                {playlistTitle}
-              </a>
-              Heads up: the new playlist is public on Spotify.
-            </>
-          }
-        />,
-        { toastId: "export-playlist" }
-      );
-    },
-    [APIService, playlistId]
-  );
-
-  const exportAsJSPF = React.useCallback(
-    async (playlistTitle: string, auth_token: string) => {
-      const result = await APIService.getPlaylist(playlistId, auth_token);
-      saveAs(await result.blob(), `${playlistTitle}.jspf`);
-    },
-    []
-  );
-
-  const handlePlaylistExport = React.useCallback(
-    async (handler: (playlistTitle: string, auth_token: string) => void) => {
-      if (!playlist || !currentUser.auth_token) {
-        return;
-      }
-      if (!playlist.track.length) {
-        toast.warn(
-          <ToastMsg
-            title="Empty playlist"
-            message={
-              "Why don't you fill up the playlist a bit before trying to export it?"
-            }
-          />,
-          { toastId: "empty-playlist" }
-        );
-        return;
-      }
-      setLoading(true);
-      try {
-        handler(playlist.title, currentUser.auth_token);
-      } catch (error) {
-        handleError(error.error ?? error);
-      }
-      setLoading(false);
-    },
-    [playlist, currentUser]
-  );
+  }, [currentUser.auth_token, playlistId, APIService, onSuccessfulCopy]);
 
   return (
     <Card className="playlist" key={playlistId}>
@@ -203,67 +124,7 @@ export default function PlaylistCard({
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options
           </button>
-          <ul
-            className="dropdown-menu"
-            aria-labelledby="playlistOptionsDropdown"
-          >
-            <li>
-              <button onClick={onCopyPlaylist} type="button">
-                Duplicate
-              </button>
-            </li>
-            {isOwner && (
-              <>
-                <li role="separator" className="divider" />
-                <li>
-                  <button
-                    type="button"
-                    data-toggle="modal"
-                    data-target="#playlistEditModal"
-                  >
-                    <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    data-toggle="modal"
-                    data-target="#confirmDeleteModal"
-                  >
-                    <FontAwesomeIcon icon={faTrashAlt as IconProp} /> Delete
-                  </button>
-                </li>
-              </>
-            )}
-            {showSpotifyExportButton && (
-              <>
-                <li role="separator" className="divider" />
-                <li>
-                  <a
-                    id="exportPlaylistToSpotify"
-                    role="button"
-                    href="#"
-                    onClick={() => handlePlaylistExport(exportToSpotify)}
-                  >
-                    <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to
-                    Spotify
-                  </a>
-                </li>
-              </>
-            )}
-            <li role="separator" className="divider" />
-            <li>
-              <a
-                id="exportPlaylistToJSPF"
-                role="button"
-                href="#"
-                onClick={() => handlePlaylistExport(exportAsJSPF)}
-              >
-                <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as
-                JSPF
-              </a>
-            </li>
-          </ul>
+          <PlaylistMenu playlist={playlist} />
         </div>
       )}
       <a className="info" href={`/playlist/${sanitize(playlistId)}`}>

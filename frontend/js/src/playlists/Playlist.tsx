@@ -185,48 +185,6 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  copyPlaylist = async (): Promise<void> => {
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    if (!playlist) {
-      toast.error(<ToastMsg title="Error" message="No playlist to copy" />, {
-        toastId: "copy-playlist-error",
-      });
-      return;
-    }
-    try {
-      const newPlaylistId = await this.APIService.copyPlaylist(
-        currentUser.auth_token,
-        getPlaylistId(playlist)
-      );
-      // Fetch the newly created playlist and add it to the state if it's the current user's page
-      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
-        newPlaylistId,
-        currentUser.auth_token
-      ).then((res) => res.json());
-      toast.success(
-        <ToastMsg
-          title="Duplicated playlist"
-          message={
-            <>
-              Duplicated to playlist&ensp;
-              <a href={`/playlist/${newPlaylistId}`}>
-                {JSPFObject.playlist.title}
-              </a>
-            </>
-          }
-        />,
-        { toastId: "copy-playlist-success" }
-      );
-    } catch (error) {
-      this.handleError(error);
-    }
-  };
-
   deletePlaylist = async (): Promise<void> => {
     const { currentUser } = this.context;
     const { playlist } = this.state;
@@ -447,42 +405,6 @@ export default class PlaylistPage extends React.Component<
     });
   };
 
-  exportToSpotify = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token: string
-  ) => {
-    const result = await this.APIService.exportPlaylistToSpotify(
-      auth_token,
-      playlistId
-    );
-    const { external_url } = result;
-    toast.success(
-      <ToastMsg
-        title="Playlist exported to Spotify"
-        message={
-          <>
-            Successfully exported playlist:{" "}
-            <a href={external_url} target="_blank" rel="noopener noreferrer">
-              {playlistTitle}
-            </a>
-            Heads up: the new playlist is public on Spotify.
-          </>
-        }
-      />,
-      { toastId: "export-playlist" }
-    );
-  };
-
-  exportAsJSPF = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token: string
-  ) => {
-    const result = await this.APIService.getPlaylist(playlistId, auth_token);
-    saveAs(await result.blob(), `${playlistTitle}.jspf`);
-  };
-
   exportAsXSPF = async (
     playlistId: string,
     playlistTitle: string,
@@ -493,40 +415,6 @@ export default class PlaylistPage extends React.Component<
       playlistId
     );
     saveAs(result, `${playlistTitle}.xspf`);
-  };
-
-  handlePlaylistExport = async (
-    handler: (
-      playlistId: string,
-      playlistTitle: string,
-      auth_token: string
-    ) => void
-  ) => {
-    const { playlist } = this.state;
-    const { currentUser } = this.context;
-    if (!playlist || !currentUser.auth_token) {
-      return;
-    }
-    if (!playlist.track.length) {
-      toast.warn(
-        <ToastMsg
-          title="Empty playlist"
-          message={
-            "Why don't you fill up the playlist a bit before trying to export it?"
-          }
-        />,
-        { toastId: "empty-playlist" }
-      );
-      return;
-    }
-    this.setState({ loading: true });
-    try {
-      const playlistId = getPlaylistId(playlist);
-      handler(playlistId, playlist.title, currentUser.auth_token);
-    } catch (error) {
-      this.handleError(error.error ?? error);
-    }
-    this.setState({ loading: false });
   };
 
   render() {
