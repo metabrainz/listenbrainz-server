@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { get } from "lodash";
 
 import { faCog, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
@@ -13,7 +12,6 @@ import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 
@@ -35,7 +33,6 @@ export type PlayerPageProps = {
 
 export interface PlayerPageState {
   playlist: JSPFPlaylist;
-  recordingFeedbackMap: RecordingFeedbackMap;
 }
 
 export default class PlayerPage extends React.Component<
@@ -53,7 +50,6 @@ export default class PlayerPage extends React.Component<
   }
 
   declare context: React.ContextType<typeof GlobalAppContext>;
-  private APIService!: APIServiceClass;
 
   constructor(props: PlayerPageProps) {
     super(props);
@@ -68,42 +64,8 @@ export default class PlayerPage extends React.Component<
     );
     this.state = {
       playlist: props.playlist?.playlist || {},
-      recordingFeedbackMap: {},
     };
   }
-
-  async componentDidMount(): Promise<void> {
-    const { APIService } = this.context;
-    this.APIService = APIService;
-    const recordingFeedbackMap = await this.loadFeedback();
-    this.setState({ recordingFeedbackMap });
-  }
-
-  getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    const { track: tracks } = playlist;
-    if (currentUser?.name && tracks) {
-      const recordings = mbids ?? tracks.map(getRecordingMBIDFromJSPFTrack);
-      try {
-        const data = await this.APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recordings,
-          []
-        );
-        return data.feedback;
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="Playback error"
-            message={typeof error === "object" ? error?.message : error}
-          />,
-          { toastId: "playback-error" }
-        );
-      }
-    }
-    return [];
-  };
 
   getAlbumDetails(): JSX.Element {
     const { playlist } = this.state;
@@ -118,13 +80,13 @@ export default class PlayerPage extends React.Component<
   }
 
   savePlaylist = async () => {
-    const { currentUser } = this.context;
+    const { currentUser, APIService } = this.context;
     if (!currentUser?.auth_token) {
       return;
     }
     const { playlist } = this.props;
     try {
-      const newPlaylistId = await this.APIService.createPlaylist(
+      const newPlaylistId = await APIService.createPlaylist(
         currentUser.auth_token,
         playlist
       );
@@ -147,39 +109,6 @@ export default class PlayerPage extends React.Component<
         { toastId: "create-playlist-error" }
       );
     }
-  };
-
-  loadFeedback = async (mbids?: string[]): Promise<RecordingFeedbackMap> => {
-    const { recordingFeedbackMap } = this.state;
-    const feedback = await this.getFeedback(mbids);
-    const newRecordingFeedbackMap: RecordingFeedbackMap = {
-      ...recordingFeedbackMap,
-    };
-    feedback.forEach((fb: FeedbackResponse) => {
-      if (fb.recording_mbid) {
-        newRecordingFeedbackMap[fb.recording_mbid] = fb.score;
-      }
-    });
-    return newRecordingFeedbackMap;
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack
-  ) => {
-    if (!recordingMbid) {
-      return;
-    }
-    const { recordingFeedbackMap } = this.state;
-    recordingFeedbackMap[recordingMbid] = score as ListenFeedBack;
-    this.setState({ recordingFeedbackMap });
-  };
-
-  getFeedbackForRecordingMbid = (
-    recordingMbid?: string | null
-  ): ListenFeedBack => {
-    const { recordingFeedbackMap } = this.state;
-    return recordingMbid ? get(recordingFeedbackMap, recordingMbid, 0) : 0;
   };
 
   handleError = (error: any) => {
@@ -306,7 +235,6 @@ export default class PlayerPage extends React.Component<
                   <ListenCard
                     key={`${track.id}-${index.toString()}`}
                     listen={listen}
-                    currentFeedback={this.getFeedbackForRecordingMbid(track.id)}
                     showTimestamp={false}
                     showUsername={false}
                   />
@@ -319,6 +247,7 @@ export default class PlayerPage extends React.Component<
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
+            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
           />
         </div>
       </div>

@@ -1,70 +1,68 @@
 import * as React from "react";
-import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
+
 import {
-  faMusic,
-  faEllipsisV,
-  faPlay,
-  faCommentDots,
-  faExternalLinkAlt,
   faCode,
-  faPaperPlane,
-  faThumbtack,
-  faPencilAlt,
+  faCommentDots,
+  faEllipsisVertical,
+  faExternalLinkAlt,
+  faImage,
   faLink,
+  faMusic,
+  faPaperPlane,
+  faPencilAlt,
+  faPlay,
+  faPlus,
+  faSquare,
+  faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSoundcloud,
   faSpotify,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
-import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal from "@ebay/nice-modal-react";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { toast } from "react-toastify";
 import {
-  getArtistLink,
-  getTrackLink,
-  preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
-  getRecordingMBID,
   getAlbumArtFromListenMetadata,
-  getReleaseMBID,
-  getArtistName,
-  getTrackName,
-  getTrackDurationInMs,
-  getRecordingMSID,
+  getArtistLink,
   getArtistMBIDs,
+  getArtistName,
+  getRecordingMBID,
+  getRecordingMSID,
   getReleaseGroupMBID,
+  getReleaseMBID,
+  getTrackDurationInMs,
+  getTrackLink,
+  getTrackName,
+  preciseTimestamp,
 } from "../utils/utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
+
+import CBReviewModal from "../cb-review/CBReviewModal";
 import Card from "../components/Card";
+import CoverArtWithFallback from "./CoverArtWithFallback";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
-import YoutubePlayer from "../brainzplayer/YoutubePlayer";
-import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
-import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
-import { millisecondsToStr } from "../playlists/utils";
+import ListenPayloadModal from "./ListenPayloadModal";
+import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 import PinRecordingModal from "../pins/PinRecordingModal";
-import CBReviewModal from "../cb-review/CBReviewModal";
-import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
-import ListenPayloadModal from "./ListenPayloadModal";
-import CoverArtWithFallback from "./CoverArtWithFallback";
+import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
+import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import { ToastMsg } from "../notifications/Notifications";
+import YoutubePlayer from "../brainzplayer/YoutubePlayer";
+import { millisecondsToStr } from "../playlists/utils";
 
 export type ListenCardProps = {
   listen: Listen;
   className?: string;
-  currentFeedback?: ListenFeedBack | RecommendationFeedBack | null;
   showTimestamp: boolean;
   showUsername: boolean;
-  // Only used when not passing a custom feedbackComponent
-  updateFeedbackCallback?: (
-    recordingMsid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMbid?: string
-  ) => void;
   // This show under the first line of listen details. It's meant for reviews, etc.
   additionalContent?: string | JSX.Element;
   // Displays left of the cover art thumbnail. For special items like reorder/grab icon
@@ -94,7 +92,6 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  static addCoverArtThumbnailSrc: string = "/static/img/add-cover-art.svg";
   static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -253,8 +250,6 @@ export default class ListenCard extends React.Component<
       compact,
       feedbackComponent,
       additionalMenuItems,
-      currentFeedback,
-      updateFeedbackCallback,
       additionalActions,
       listen: listenFromProps,
       ...otherProps
@@ -359,10 +354,19 @@ export default class ListenCard extends React.Component<
           className="listen-thumbnail"
         >
           <div className="add-cover-art">
-            <img
-              src={ListenCard.addCoverArtThumbnailSrc}
-              alt="Add cover art in MusicBrainz"
-            />
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faImage} />
+              <FontAwesomeIcon
+                icon={faSquare}
+                transform="shrink-10 left-5 up-2.5"
+              />
+              <FontAwesomeIcon
+                icon={faPlus}
+                inverse
+                transform="shrink-11 left-2.5 up-2.5"
+                style={{ stroke: "white", strokeWidth: "60" }}
+              />
+            </span>
           </div>
         </a>
       );
@@ -400,16 +404,19 @@ export default class ListenCard extends React.Component<
       thumbnail = (
         <a
           href={`https://musicbrainz.org/recording/${recordingMBID}`}
-          title="Open in MusicBrainz"
+          title="Could not load cover art. Open in MusicBrainz"
           target="_blank"
           rel="noopener noreferrer"
           className="listen-thumbnail"
         >
           <div className="cover-art-fallback">
-            <img
-              src={ListenCard.coverartPlaceholder}
-              alt="Open in MusicBrainz"
-            />
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faImage} />
+              <FontAwesomeIcon
+                icon={faSquare}
+                transform="shrink-10 left-5 up-2.5"
+              />
+            </span>
           </div>
         </a>
       );
@@ -470,16 +477,12 @@ export default class ListenCard extends React.Component<
             <div className="listen-controls">
               {isLoggedIn &&
                 (feedbackComponent ?? (
-                  <ListenFeedbackComponent
-                    listen={listen}
-                    currentFeedback={currentFeedback as ListenFeedBack}
-                    updateFeedbackCallback={updateFeedbackCallback}
-                  />
+                  <ListenFeedbackComponent listen={listen} />
                 ))}
               {hideActionsMenu ? null : (
                 <>
                   <FontAwesomeIcon
-                    icon={faEllipsisV as IconProp}
+                    icon={faEllipsisVertical as IconProp}
                     title="More actions"
                     className="dropdown-toggle"
                     id="listenControlsDropdown"

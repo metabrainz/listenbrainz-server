@@ -13,11 +13,10 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
     update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
     delete_listens as ts_delete_listens, \
-    delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data, \
     refresh_top_manual_mappings as ts_refresh_top_manual_mappings
 from listenbrainz.domain import spotify_fill_user_id
 from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
-from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
+from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
 
@@ -320,8 +319,7 @@ def run_daily_jams(create_all):
 @cli.command()
 def run_spotify_metadata_cache_seeder():
     """ Query spotify new releases api for new releases and submit those to our cache as seeds """
-    with create_app().app_context():
-        submit_new_releases_to_cache()
+    submit_new_releases_to_cache()
 
 
 @cli.command()

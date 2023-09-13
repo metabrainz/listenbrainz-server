@@ -2,7 +2,6 @@
 
 exports[`ListenCard renders correctly 1`] = `
 <ListenCard
-  currentFeedback={1}
   listen={
     Object {
       "listened_at": 0,
@@ -25,7 +24,6 @@ exports[`ListenCard renders correctly 1`] = `
   }
   showTimestamp={true}
   showUsername={true}
-  updateFeedbackCallback={[Function]}
 >
   <ForwardRef
     className="listen-card   "
@@ -48,10 +46,231 @@ exports[`ListenCard renders correctly 1`] = `
           <div
             className="add-cover-art"
           >
-            <img
-              alt="Add cover art in MusicBrainz"
-              src="/static/img/add-cover-art.svg"
-            />
+            <span
+              className="fa-layers fa-fw"
+            >
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      512,
+                      512,
+                      Array [],
+                      "f03e",
+                      "M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z",
+                    ],
+                    "iconName": "image",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size={null}
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform={null}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-image "
+                  data-icon="image"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      448,
+                      512,
+                      Array [
+                        9632,
+                        9723,
+                        9724,
+                        61590,
+                      ],
+                      "f0c8",
+                      "M0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96z",
+                    ],
+                    "iconName": "square",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size={null}
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform="shrink-10 left-5 up-2.5"
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-square "
+                  data-icon="square"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={
+                    Object {
+                      "transformOrigin": "0.125em 0.34375em",
+                    }
+                  }
+                  viewBox="0 0 448 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g
+                    style={Object {}}
+                    transform="translate(224 256)"
+                  >
+                    <g
+                      style={Object {}}
+                      transform="translate(-160, -80)  scale(0.375, 0.375)  rotate(0 0 0)"
+                    >
+                      <path
+                        d="M0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96z"
+                        fill="currentColor"
+                        style={Object {}}
+                        transform="translate(-224 -256)"
+                      />
+                    </g>
+                  </g>
+                </svg>
+              </FontAwesomeIcon>
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      448,
+                      512,
+                      Array [
+                        10133,
+                        61543,
+                        "add",
+                      ],
+                      "2b",
+                      "M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z",
+                    ],
+                    "iconName": "plus",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={true}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size={null}
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                style={
+                  Object {
+                    "stroke": "white",
+                    "strokeWidth": "60",
+                  }
+                }
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform="shrink-11 left-2.5 up-2.5"
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-plus fa-inverse "
+                  data-icon="plus"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={
+                    Object {
+                      "stroke": "white",
+                      "strokeWidth": "60",
+                      "transformOrigin": "0.28125em 0.34375em",
+                    }
+                  }
+                  viewBox="0 0 448 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g
+                    style={Object {}}
+                    transform="translate(224 256)"
+                  >
+                    <g
+                      style={Object {}}
+                      transform="translate(-80, -80)  scale(0.3125, 0.3125)  rotate(0 0 0)"
+                    >
+                      <path
+                        d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"
+                        fill="currentColor"
+                        style={Object {}}
+                        transform="translate(-224 -256)"
+                      />
+                    </g>
+                  </g>
+                </svg>
+              </FontAwesomeIcon>
+            </span>
           </div>
         </a>
         <div
@@ -119,21 +338,27 @@ exports[`ListenCard renders correctly 1`] = `
             <FontAwesomeIcon
               aria-expanded="true"
               aria-haspopup="true"
+              beat={false}
+              beatFade={false}
               border={false}
+              bounce={false}
               className="dropdown-toggle"
               data-toggle="dropdown"
+              fade={false}
               fixedWidth={false}
-              flip={null}
+              flip={false}
               icon={
                 Object {
                   "icon": Array [
-                    192,
+                    128,
                     512,
-                    Array [],
+                    Array [
+                      "ellipsis-v",
+                    ],
                     "f142",
-                    "M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z",
+                    "M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z",
                   ],
-                  "iconName": "ellipsis-v",
+                  "iconName": "ellipsis-vertical",
                   "prefix": "fas",
                 }
               }
@@ -141,28 +366,33 @@ exports[`ListenCard renders correctly 1`] = `
               inverse={false}
               listItem={false}
               mask={null}
+              maskId={null}
               pull={null}
               pulse={false}
               rotation={null}
+              shake={false}
               size={null}
               spin={false}
+              spinPulse={false}
+              spinReverse={false}
               swapOpacity={false}
               symbol={false}
               title="More actions"
+              titleId={null}
               transform={null}
             >
               <svg
                 aria-expanded="true"
                 aria-haspopup="true"
                 aria-labelledby="svg-inline--fa-title-000000000000"
-                className="svg-inline--fa fa-ellipsis-v fa-w-6 dropdown-toggle"
-                data-icon="ellipsis-v"
+                className="svg-inline--fa fa-ellipsis-vertical dropdown-toggle"
+                data-icon="ellipsis-vertical"
                 data-prefix="fas"
                 data-toggle="dropdown"
                 id="listenControlsDropdown"
                 role="img"
                 style={Object {}}
-                viewBox="0 0 192 512"
+                viewBox="0 0 128 512"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <title
@@ -172,7 +402,7 @@ exports[`ListenCard renders correctly 1`] = `
                   More actions
                 </title>
                 <path
-                  d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"
+                  d="M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"
                   fill="currentColor"
                   style={Object {}}
                 />
@@ -194,11 +424,13 @@ exports[`ListenCard renders correctly 1`] = `
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        "external-link-alt",
+                      ],
                       "f35d",
-                      "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                      "M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z",
                     ],
-                    "iconName": "external-link-alt",
+                    "iconName": "up-right-from-square",
                     "prefix": "fas",
                   }
                 }
@@ -214,40 +446,51 @@ exports[`ListenCard renders correctly 1`] = `
                   title="Open in MusicBrainz"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
                           512,
                           512,
-                          Array [],
+                          Array [
+                            "external-link-alt",
+                          ],
                           "f35d",
-                          "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                          "M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z",
                         ],
-                        "iconName": "external-link-alt",
+                        "iconName": "up-right-from-square",
                         "prefix": "fas",
                       }
                     }
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-external-link-alt fa-w-16 "
-                      data-icon="external-link-alt"
+                      className="svg-inline--fa fa-up-right-from-square "
+                      data-icon="up-right-from-square"
                       data-prefix="fas"
                       focusable="false"
                       role="img"
@@ -256,7 +499,7 @@ exports[`ListenCard renders correctly 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"
+                        d="M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -277,7 +520,7 @@ exports[`ListenCard renders correctly 1`] = `
                       512,
                       Array [],
                       "f121",
-                      "M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z",
+                      "M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z",
                     ],
                     "iconName": "code",
                     "prefix": "fas",
@@ -296,10 +539,14 @@ exports[`ListenCard renders correctly 1`] = `
                   type="button"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
@@ -307,7 +554,7 @@ exports[`ListenCard renders correctly 1`] = `
                           512,
                           Array [],
                           "f121",
-                          "M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z",
+                          "M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z",
                         ],
                         "iconName": "code",
                         "prefix": "fas",
@@ -316,19 +563,24 @@ exports[`ListenCard renders correctly 1`] = `
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-code fa-w-20 "
+                      className="svg-inline--fa fa-code "
                       data-icon="code"
                       data-prefix="fas"
                       focusable="false"
@@ -338,7 +590,7 @@ exports[`ListenCard renders correctly 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z"
+                        d="M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -356,40 +608,52 @@ exports[`ListenCard renders correctly 1`] = `
               type="button"
             >
               <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
                 border={false}
+                bounce={false}
                 className=""
+                fade={false}
                 fixedWidth={false}
-                flip={null}
+                flip={false}
                 icon={
                   Object {
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        61469,
+                        "play-circle",
+                      ],
                       "f144",
-                      "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                      "M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zM188.3 147.1c7.6-4.2 16.8-4.1 24.3 .5l144 88c7.1 4.4 11.5 12.1 11.5 20.5s-4.4 16.1-11.5 20.5l-144 88c-7.4 4.5-16.7 4.7-24.3 .5s-12.3-12.2-12.3-20.9V168c0-8.7 4.7-16.7 12.3-20.9z",
                     ],
-                    "iconName": "play-circle",
+                    "iconName": "circle-play",
                     "prefix": "far",
                   }
                 }
                 inverse={false}
                 listItem={false}
                 mask={null}
+                maskId={null}
                 pull={null}
                 pulse={false}
                 rotation={null}
+                shake={false}
                 size="2x"
                 spin={false}
+                spinPulse={false}
+                spinReverse={false}
                 swapOpacity={false}
                 symbol={false}
                 title=""
+                titleId={null}
                 transform={null}
               >
                 <svg
                   aria-hidden="true"
-                  className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
-                  data-icon="play-circle"
+                  className="svg-inline--fa fa-circle-play fa-2x "
+                  data-icon="circle-play"
                   data-prefix="far"
                   focusable="false"
                   role="img"
@@ -398,7 +662,7 @@ exports[`ListenCard renders correctly 1`] = `
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                    d="M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zM188.3 147.1c7.6-4.2 16.8-4.1 24.3 .5l144 88c7.1 4.4 11.5 12.1 11.5 20.5s-4.4 16.1-11.5 20.5l-144 88c-7.4 4.5-16.7 4.7-24.3 .5s-12.3-12.2-12.3-20.9V168c0-8.7 4.7-16.7 12.3-20.9z"
                     fill="currentColor"
                     style={Object {}}
                   />
@@ -415,7 +679,6 @@ exports[`ListenCard renders correctly 1`] = `
 
 exports[`ListenCard renders correctly for playing_now listen 1`] = `
 <ListenCard
-  currentFeedback={1}
   listen={
     Object {
       "listened_at": 0,
@@ -437,7 +700,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   }
   showTimestamp={true}
   showUsername={true}
-  updateFeedbackCallback={[Function]}
 >
   <ForwardRef
     className="listen-card   "
@@ -460,10 +722,231 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
           <div
             className="add-cover-art"
           >
-            <img
-              alt="Add cover art in MusicBrainz"
-              src="/static/img/add-cover-art.svg"
-            />
+            <span
+              className="fa-layers fa-fw"
+            >
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      512,
+                      512,
+                      Array [],
+                      "f03e",
+                      "M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z",
+                    ],
+                    "iconName": "image",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size={null}
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform={null}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-image "
+                  data-icon="image"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      448,
+                      512,
+                      Array [
+                        9632,
+                        9723,
+                        9724,
+                        61590,
+                      ],
+                      "f0c8",
+                      "M0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96z",
+                    ],
+                    "iconName": "square",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size={null}
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform="shrink-10 left-5 up-2.5"
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-square "
+                  data-icon="square"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={
+                    Object {
+                      "transformOrigin": "0.125em 0.34375em",
+                    }
+                  }
+                  viewBox="0 0 448 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g
+                    style={Object {}}
+                    transform="translate(224 256)"
+                  >
+                    <g
+                      style={Object {}}
+                      transform="translate(-160, -80)  scale(0.375, 0.375)  rotate(0 0 0)"
+                    >
+                      <path
+                        d="M0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96z"
+                        fill="currentColor"
+                        style={Object {}}
+                        transform="translate(-224 -256)"
+                      />
+                    </g>
+                  </g>
+                </svg>
+              </FontAwesomeIcon>
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      448,
+                      512,
+                      Array [
+                        10133,
+                        61543,
+                        "add",
+                      ],
+                      "2b",
+                      "M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z",
+                    ],
+                    "iconName": "plus",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={true}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size={null}
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                style={
+                  Object {
+                    "stroke": "white",
+                    "strokeWidth": "60",
+                  }
+                }
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform="shrink-11 left-2.5 up-2.5"
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-plus fa-inverse "
+                  data-icon="plus"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={
+                    Object {
+                      "stroke": "white",
+                      "strokeWidth": "60",
+                      "transformOrigin": "0.28125em 0.34375em",
+                    }
+                  }
+                  viewBox="0 0 448 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g
+                    style={Object {}}
+                    transform="translate(224 256)"
+                  >
+                    <g
+                      style={Object {}}
+                      transform="translate(-80, -80)  scale(0.3125, 0.3125)  rotate(0 0 0)"
+                    >
+                      <path
+                        d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"
+                        fill="currentColor"
+                        style={Object {}}
+                        transform="translate(-224 -256)"
+                      />
+                    </g>
+                  </g>
+                </svg>
+              </FontAwesomeIcon>
+            </span>
           </div>
         </a>
         <div
@@ -527,18 +1010,24 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                 target="_blank"
               >
                 <FontAwesomeIcon
+                  beat={false}
+                  beatFade={false}
                   border={false}
+                  bounce={false}
                   className=""
+                  fade={false}
                   fixedWidth={false}
-                  flip={null}
+                  flip={false}
                   icon={
                     Object {
                       "icon": Array [
                         512,
                         512,
-                        Array [],
+                        Array [
+                          127925,
+                        ],
                         "f001",
-                        "M470.38 1.51L150.41 96A32 32 0 0 0 128 126.51v261.41A139 139 0 0 0 96 384c-53 0-96 28.66-96 64s43 64 96 64 96-28.66 96-64V214.32l256-75v184.61a138.4 138.4 0 0 0-32-3.93c-53 0-96 28.66-96 64s43 64 96 64 96-28.65 96-64V32a32 32 0 0 0-41.62-30.49z",
+                        "M499.1 6.3c8.1 6 12.9 15.6 12.9 25.7v72V368c0 44.2-43 80-96 80s-96-35.8-96-80s43-80 96-80c11.2 0 22 1.6 32 4.6V147L192 223.8V432c0 44.2-43 80-96 80s-96-35.8-96-80s43-80 96-80c11.2 0 22 1.6 32 4.6V200 128c0-14.1 9.3-26.6 22.8-30.7l320-96c9.7-2.9 20.2-1.1 28.3 5z",
                       ],
                       "iconName": "music",
                       "prefix": "fas",
@@ -547,19 +1036,24 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   inverse={false}
                   listItem={false}
                   mask={null}
+                  maskId={null}
                   pull={null}
                   pulse={false}
                   rotation={null}
+                  shake={false}
                   size={null}
                   spin={false}
+                  spinPulse={false}
+                  spinReverse={false}
                   swapOpacity={false}
                   symbol={false}
                   title=""
+                  titleId={null}
                   transform={null}
                 >
                   <svg
                     aria-hidden="true"
-                    className="svg-inline--fa fa-music fa-w-16 "
+                    className="svg-inline--fa fa-music "
                     data-icon="music"
                     data-prefix="fas"
                     focusable="false"
@@ -569,7 +1063,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
-                      d="M470.38 1.51L150.41 96A32 32 0 0 0 128 126.51v261.41A139 139 0 0 0 96 384c-53 0-96 28.66-96 64s43 64 96 64 96-28.66 96-64V214.32l256-75v184.61a138.4 138.4 0 0 0-32-3.93c-53 0-96 28.66-96 64s43 64 96 64 96-28.65 96-64V32a32 32 0 0 0-41.62-30.49z"
+                      d="M499.1 6.3c8.1 6 12.9 15.6 12.9 25.7v72V368c0 44.2-43 80-96 80s-96-35.8-96-80s43-80 96-80c11.2 0 22 1.6 32 4.6V147L192 223.8V432c0 44.2-43 80-96 80s-96-35.8-96-80s43-80 96-80c11.2 0 22 1.6 32 4.6V200 128c0-14.1 9.3-26.6 22.8-30.7l320-96c9.7-2.9 20.2-1.1 28.3 5z"
                       fill="currentColor"
                       style={Object {}}
                     />
@@ -583,7 +1077,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
             className="listen-controls"
           >
             <ListenFeedbackComponent
-              currentFeedback={1}
               listen={
                 Object {
                   "listened_at": 0,
@@ -603,21 +1096,36 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   "user_name": "test",
                 }
               }
-              updateFeedbackCallback={[Function]}
             >
               <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
                 border={false}
-                className=" loved"
+                bounce={false}
+                className=""
+                fade={false}
                 fixedWidth={false}
-                flip={null}
+                flip={false}
                 icon={
                   Object {
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        128153,
+                        128154,
+                        128155,
+                        128156,
+                        128420,
+                        129293,
+                        129294,
+                        129505,
+                        9829,
+                        10084,
+                        61578,
+                      ],
                       "f004",
-                      "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
+                      "M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z",
                     ],
                     "iconName": "heart",
                     "prefix": "fas",
@@ -626,20 +1134,25 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                 inverse={false}
                 listItem={false}
                 mask={null}
+                maskId={null}
                 onClick={[Function]}
                 pull={null}
                 pulse={false}
                 rotation={null}
+                shake={false}
                 size={null}
                 spin={false}
+                spinPulse={false}
+                spinReverse={false}
                 swapOpacity={false}
                 symbol={false}
                 title="Love"
+                titleId={null}
                 transform={null}
               >
                 <svg
                   aria-labelledby="svg-inline--fa-title-000000000000"
-                  className="svg-inline--fa fa-heart fa-w-16  loved"
+                  className="svg-inline--fa fa-heart "
                   data-icon="heart"
                   data-prefix="fas"
                   onClick={[Function]}
@@ -655,48 +1168,60 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     Love
                   </title>
                   <path
-                    d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
+                    d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z"
                     fill="currentColor"
                     style={Object {}}
                   />
                 </svg>
               </FontAwesomeIcon>
               <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
                 border={false}
+                bounce={false}
                 className=""
+                fade={false}
                 fixedWidth={false}
-                flip={null}
+                flip={false}
                 icon={
                   Object {
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        128148,
+                        "heart-broken",
+                      ],
                       "f7a9",
-                      "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
+                      "M119.4 44.1c23.3-3.9 46.8-1.9 68.6 5.3l49.8 77.5-75.4 75.4c-1.5 1.5-2.4 3.6-2.3 5.8s1 4.2 2.6 5.7l112 104c2.9 2.7 7.4 2.9 10.5 .3s3.8-7 1.7-10.4l-60.4-98.1 90.7-75.6c2.6-2.1 3.5-5.7 2.4-8.8L296.8 61.8c28.5-16.7 62.4-23.2 95.7-17.6C461.5 55.6 512 115.2 512 185.1v5.8c0 41.5-17.2 81.2-47.6 109.5L283.7 469.1c-7.5 7-17.4 10.9-27.7 10.9s-20.2-3.9-27.7-10.9L47.6 300.4C17.2 272.1 0 232.4 0 190.9v-5.8c0-69.9 50.5-129.5 119.4-141z",
                     ],
-                    "iconName": "heart-broken",
+                    "iconName": "heart-crack",
                     "prefix": "fas",
                   }
                 }
                 inverse={false}
                 listItem={false}
                 mask={null}
+                maskId={null}
                 onClick={[Function]}
                 pull={null}
                 pulse={false}
                 rotation={null}
+                shake={false}
                 size={null}
                 spin={false}
+                spinPulse={false}
+                spinReverse={false}
                 swapOpacity={false}
                 symbol={false}
                 title="Hate"
+                titleId={null}
                 transform={null}
               >
                 <svg
                   aria-labelledby="svg-inline--fa-title-000000000000"
-                  className="svg-inline--fa fa-heart-broken fa-w-16 "
-                  data-icon="heart-broken"
+                  className="svg-inline--fa fa-heart-crack "
+                  data-icon="heart-crack"
                   data-prefix="fas"
                   onClick={[Function]}
                   role="img"
@@ -711,7 +1236,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     Hate
                   </title>
                   <path
-                    d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
+                    d="M119.4 44.1c23.3-3.9 46.8-1.9 68.6 5.3l49.8 77.5-75.4 75.4c-1.5 1.5-2.4 3.6-2.3 5.8s1 4.2 2.6 5.7l112 104c2.9 2.7 7.4 2.9 10.5 .3s3.8-7 1.7-10.4l-60.4-98.1 90.7-75.6c2.6-2.1 3.5-5.7 2.4-8.8L296.8 61.8c28.5-16.7 62.4-23.2 95.7-17.6C461.5 55.6 512 115.2 512 185.1v5.8c0 41.5-17.2 81.2-47.6 109.5L283.7 469.1c-7.5 7-17.4 10.9-27.7 10.9s-20.2-3.9-27.7-10.9L47.6 300.4C17.2 272.1 0 232.4 0 190.9v-5.8c0-69.9 50.5-129.5 119.4-141z"
                     fill="currentColor"
                     style={Object {}}
                   />
@@ -721,21 +1246,27 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
             <FontAwesomeIcon
               aria-expanded="true"
               aria-haspopup="true"
+              beat={false}
+              beatFade={false}
               border={false}
+              bounce={false}
               className="dropdown-toggle"
               data-toggle="dropdown"
+              fade={false}
               fixedWidth={false}
-              flip={null}
+              flip={false}
               icon={
                 Object {
                   "icon": Array [
-                    192,
+                    128,
                     512,
-                    Array [],
+                    Array [
+                      "ellipsis-v",
+                    ],
                     "f142",
-                    "M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z",
+                    "M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z",
                   ],
-                  "iconName": "ellipsis-v",
+                  "iconName": "ellipsis-vertical",
                   "prefix": "fas",
                 }
               }
@@ -743,28 +1274,33 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               inverse={false}
               listItem={false}
               mask={null}
+              maskId={null}
               pull={null}
               pulse={false}
               rotation={null}
+              shake={false}
               size={null}
               spin={false}
+              spinPulse={false}
+              spinReverse={false}
               swapOpacity={false}
               symbol={false}
               title="More actions"
+              titleId={null}
               transform={null}
             >
               <svg
                 aria-expanded="true"
                 aria-haspopup="true"
                 aria-labelledby="svg-inline--fa-title-000000000000"
-                className="svg-inline--fa fa-ellipsis-v fa-w-6 dropdown-toggle"
-                data-icon="ellipsis-v"
+                className="svg-inline--fa fa-ellipsis-vertical dropdown-toggle"
+                data-icon="ellipsis-vertical"
                 data-prefix="fas"
                 data-toggle="dropdown"
                 id="listenControlsDropdown"
                 role="img"
                 style={Object {}}
-                viewBox="0 0 192 512"
+                viewBox="0 0 128 512"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <title
@@ -774,7 +1310,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   More actions
                 </title>
                 <path
-                  d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"
+                  d="M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"
                   fill="currentColor"
                   style={Object {}}
                 />
@@ -796,11 +1332,13 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        "external-link-alt",
+                      ],
                       "f35d",
-                      "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                      "M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z",
                     ],
-                    "iconName": "external-link-alt",
+                    "iconName": "up-right-from-square",
                     "prefix": "fas",
                   }
                 }
@@ -816,40 +1354,51 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   title="Open in MusicBrainz"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
                           512,
                           512,
-                          Array [],
+                          Array [
+                            "external-link-alt",
+                          ],
                           "f35d",
-                          "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                          "M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z",
                         ],
-                        "iconName": "external-link-alt",
+                        "iconName": "up-right-from-square",
                         "prefix": "fas",
                       }
                     }
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-external-link-alt fa-w-16 "
-                      data-icon="external-link-alt"
+                      className="svg-inline--fa fa-up-right-from-square "
+                      data-icon="up-right-from-square"
                       data-prefix="fas"
                       focusable="false"
                       role="img"
@@ -858,7 +1407,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"
+                        d="M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -877,9 +1426,13 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     "icon": Array [
                       384,
                       512,
-                      Array [],
+                      Array [
+                        128204,
+                        128392,
+                        "thumb-tack",
+                      ],
                       "f08d",
-                      "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
+                      "M32 32C32 14.3 46.3 0 64 0H320c17.7 0 32 14.3 32 32s-14.3 32-32 32H290.5l11.4 148.2c36.7 19.9 65.7 53.2 79.5 94.7l1 3c3.3 9.8 1.6 20.5-4.4 28.8s-15.7 13.3-26 13.3H32c-10.3 0-19.9-4.9-26-13.3s-7.7-19.1-4.4-28.8l1-3c13.8-41.5 42.8-74.8 79.5-94.7L93.5 64H64C46.3 64 32 49.7 32 32zM160 384h64v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V384z",
                     ],
                     "iconName": "thumbtack",
                     "prefix": "fas",
@@ -898,18 +1451,26 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   type="button"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
                           384,
                           512,
-                          Array [],
+                          Array [
+                            128204,
+                            128392,
+                            "thumb-tack",
+                          ],
                           "f08d",
-                          "M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z",
+                          "M32 32C32 14.3 46.3 0 64 0H320c17.7 0 32 14.3 32 32s-14.3 32-32 32H290.5l11.4 148.2c36.7 19.9 65.7 53.2 79.5 94.7l1 3c3.3 9.8 1.6 20.5-4.4 28.8s-15.7 13.3-26 13.3H32c-10.3 0-19.9-4.9-26-13.3s-7.7-19.1-4.4-28.8l1-3c13.8-41.5 42.8-74.8 79.5-94.7L93.5 64H64C46.3 64 32 49.7 32 32zM160 384h64v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V384z",
                         ],
                         "iconName": "thumbtack",
                         "prefix": "fas",
@@ -918,19 +1479,24 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-thumbtack fa-w-12 "
+                      className="svg-inline--fa fa-thumbtack "
                       data-icon="thumbtack"
                       data-prefix="fas"
                       focusable="false"
@@ -940,7 +1506,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M298.028 214.267L285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.261 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.893 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-37.983-91.42-85.973-113.733z"
+                        d="M32 32C32 14.3 46.3 0 64 0H320c17.7 0 32 14.3 32 32s-14.3 32-32 32H290.5l11.4 148.2c36.7 19.9 65.7 53.2 79.5 94.7l1 3c3.3 9.8 1.6 20.5-4.4 28.8s-15.7 13.3-26 13.3H32c-10.3 0-19.9-4.9-26-13.3s-7.7-19.1-4.4-28.8l1-3c13.8-41.5 42.8-74.8 79.5-94.7L93.5 64H64C46.3 64 32 49.7 32 32zM160 384h64v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V384z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -957,9 +1523,13 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        128172,
+                        62075,
+                        "commenting",
+                      ],
                       "f4ad",
-                      "M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32zM128 272c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z",
+                      "M256 448c141.4 0 256-93.1 256-208S397.4 32 256 32S0 125.1 0 240c0 45.1 17.7 86.8 47.7 120.9c-1.9 24.5-11.4 46.3-21.4 62.9c-5.5 9.2-11.1 16.6-15.2 21.6c-2.1 2.5-3.7 4.4-4.9 5.7c-.6 .6-1 1.1-1.3 1.4l-.3 .3 0 0 0 0 0 0 0 0c-4.6 4.6-5.9 11.4-3.4 17.4c2.5 6 8.3 9.9 14.8 9.9c28.7 0 57.6-8.9 81.6-19.3c22.9-10 42.4-21.9 54.3-30.6c31.8 11.5 67 17.9 104.1 17.9zM128 208a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm128 0a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm96 32a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z",
                     ],
                     "iconName": "comment-dots",
                     "prefix": "fas",
@@ -977,18 +1547,26 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   type="button"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
                           512,
                           512,
-                          Array [],
+                          Array [
+                            128172,
+                            62075,
+                            "commenting",
+                          ],
                           "f4ad",
-                          "M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32zM128 272c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z",
+                          "M256 448c141.4 0 256-93.1 256-208S397.4 32 256 32S0 125.1 0 240c0 45.1 17.7 86.8 47.7 120.9c-1.9 24.5-11.4 46.3-21.4 62.9c-5.5 9.2-11.1 16.6-15.2 21.6c-2.1 2.5-3.7 4.4-4.9 5.7c-.6 .6-1 1.1-1.3 1.4l-.3 .3 0 0 0 0 0 0 0 0c-4.6 4.6-5.9 11.4-3.4 17.4c2.5 6 8.3 9.9 14.8 9.9c28.7 0 57.6-8.9 81.6-19.3c22.9-10 42.4-21.9 54.3-30.6c31.8 11.5 67 17.9 104.1 17.9zM128 208a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm128 0a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm96 32a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z",
                         ],
                         "iconName": "comment-dots",
                         "prefix": "fas",
@@ -997,19 +1575,24 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-comment-dots fa-w-16 "
+                      className="svg-inline--fa fa-comment-dots "
                       data-icon="comment-dots"
                       data-prefix="fas"
                       focusable="false"
@@ -1019,7 +1602,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M256 32C114.6 32 0 125.1 0 240c0 49.6 21.4 95 57 130.7C44.5 421.1 2.7 466 2.2 466.5c-2.2 2.3-2.8 5.7-1.5 8.7S4.8 480 8 480c66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 141.4 0 256-93.1 256-208S397.4 32 256 32zM128 272c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm128 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z"
+                        d="M256 448c141.4 0 256-93.1 256-208S397.4 32 256 32S0 125.1 0 240c0 45.1 17.7 86.8 47.7 120.9c-1.9 24.5-11.4 46.3-21.4 62.9c-5.5 9.2-11.1 16.6-15.2 21.6c-2.1 2.5-3.7 4.4-4.9 5.7c-.6 .6-1 1.1-1.3 1.4l-.3 .3 0 0 0 0 0 0 0 0c-4.6 4.6-5.9 11.4-3.4 17.4c2.5 6 8.3 9.9 14.8 9.9c28.7 0 57.6-8.9 81.6-19.3c22.9-10 42.4-21.9 54.3-30.6c31.8 11.5 67 17.9 104.1 17.9zM128 208a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm128 0a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm96 32a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -1038,9 +1621,11 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        61913,
+                      ],
                       "f1d8",
-                      "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                      "M498.1 5.6c10.1 7 15.4 19.1 13.5 31.2l-64 416c-1.5 9.7-7.4 18.2-16 23s-18.9 5.4-28 1.6L284 427.7l-68.5 74.1c-8.9 9.7-22.9 12.9-35.2 8.1S160 493.2 160 480V396.4c0-4 1.5-7.8 4.2-10.7L331.8 202.8c5.8-6.3 5.6-16-.4-22s-15.7-6.4-22-.7L106 360.8 17.7 316.6C7.1 311.3 .3 300.7 0 288.9s5.9-22.8 16.1-28.7l448-256c10.7-6.1 23.9-5.5 34 1.4z",
                     ],
                     "iconName": "paper-plane",
                     "prefix": "fas",
@@ -1059,18 +1644,24 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   type="button"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
                           512,
                           512,
-                          Array [],
+                          Array [
+                            61913,
+                          ],
                           "f1d8",
-                          "M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z",
+                          "M498.1 5.6c10.1 7 15.4 19.1 13.5 31.2l-64 416c-1.5 9.7-7.4 18.2-16 23s-18.9 5.4-28 1.6L284 427.7l-68.5 74.1c-8.9 9.7-22.9 12.9-35.2 8.1S160 493.2 160 480V396.4c0-4 1.5-7.8 4.2-10.7L331.8 202.8c5.8-6.3 5.6-16-.4-22s-15.7-6.4-22-.7L106 360.8 17.7 316.6C7.1 311.3 .3 300.7 0 288.9s5.9-22.8 16.1-28.7l448-256c10.7-6.1 23.9-5.5 34 1.4z",
                         ],
                         "iconName": "paper-plane",
                         "prefix": "fas",
@@ -1079,19 +1670,24 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-paper-plane fa-w-16 "
+                      className="svg-inline--fa fa-paper-plane "
                       data-icon="paper-plane"
                       data-prefix="fas"
                       focusable="false"
@@ -1101,7 +1697,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"
+                        d="M498.1 5.6c10.1 7 15.4 19.1 13.5 31.2l-64 416c-1.5 9.7-7.4 18.2-16 23s-18.9 5.4-28 1.6L284 427.7l-68.5 74.1c-8.9 9.7-22.9 12.9-35.2 8.1S160 493.2 160 480V396.4c0-4 1.5-7.8 4.2-10.7L331.8 202.8c5.8-6.3 5.6-16-.4-22s-15.7-6.4-22-.7L106 360.8 17.7 316.6C7.1 311.3 .3 300.7 0 288.9s5.9-22.8 16.1-28.7l448-256c10.7-6.1 23.9-5.5 34 1.4z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -1120,11 +1716,15 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        9999,
+                        61504,
+                        "pencil-alt",
+                      ],
                       "f303",
-                      "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                      "M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z",
                     ],
-                    "iconName": "pencil-alt",
+                    "iconName": "pencil",
                     "prefix": "fas",
                   }
                 }
@@ -1141,40 +1741,53 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   type="button"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
                           512,
                           512,
-                          Array [],
+                          Array [
+                            9999,
+                            61504,
+                            "pencil-alt",
+                          ],
                           "f303",
-                          "M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z",
+                          "M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z",
                         ],
-                        "iconName": "pencil-alt",
+                        "iconName": "pencil",
                         "prefix": "fas",
                       }
                     }
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-pencil-alt fa-w-16 "
-                      data-icon="pencil-alt"
+                      className="svg-inline--fa fa-pencil "
+                      data-icon="pencil"
                       data-prefix="fas"
                       focusable="false"
                       role="img"
@@ -1183,7 +1796,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                        d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -1204,7 +1817,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                       512,
                       Array [],
                       "f121",
-                      "M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z",
+                      "M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z",
                     ],
                     "iconName": "code",
                     "prefix": "fas",
@@ -1223,10 +1836,14 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   type="button"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
@@ -1234,7 +1851,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                           512,
                           Array [],
                           "f121",
-                          "M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z",
+                          "M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z",
                         ],
                         "iconName": "code",
                         "prefix": "fas",
@@ -1243,19 +1860,24 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-code fa-w-20 "
+                      className="svg-inline--fa fa-code "
                       data-icon="code"
                       data-prefix="fas"
                       focusable="false"
@@ -1265,7 +1887,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z"
+                        d="M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -1283,40 +1905,52 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               type="button"
             >
               <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
                 border={false}
+                bounce={false}
                 className=""
+                fade={false}
                 fixedWidth={false}
-                flip={null}
+                flip={false}
                 icon={
                   Object {
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        61469,
+                        "play-circle",
+                      ],
                       "f144",
-                      "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                      "M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zM188.3 147.1c7.6-4.2 16.8-4.1 24.3 .5l144 88c7.1 4.4 11.5 12.1 11.5 20.5s-4.4 16.1-11.5 20.5l-144 88c-7.4 4.5-16.7 4.7-24.3 .5s-12.3-12.2-12.3-20.9V168c0-8.7 4.7-16.7 12.3-20.9z",
                     ],
-                    "iconName": "play-circle",
+                    "iconName": "circle-play",
                     "prefix": "far",
                   }
                 }
                 inverse={false}
                 listItem={false}
                 mask={null}
+                maskId={null}
                 pull={null}
                 pulse={false}
                 rotation={null}
+                shake={false}
                 size="2x"
                 spin={false}
+                spinPulse={false}
+                spinReverse={false}
                 swapOpacity={false}
                 symbol={false}
                 title=""
+                titleId={null}
                 transform={null}
               >
                 <svg
                   aria-hidden="true"
-                  className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
-                  data-icon="play-circle"
+                  className="svg-inline--fa fa-circle-play fa-2x "
+                  data-icon="circle-play"
                   data-prefix="far"
                   focusable="false"
                   role="img"
@@ -1325,7 +1959,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                    d="M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zM188.3 147.1c7.6-4.2 16.8-4.1 24.3 .5l144 88c7.1 4.4 11.5 12.1 11.5 20.5s-4.4 16.1-11.5 20.5l-144 88c-7.4 4.5-16.7 4.7-24.3 .5s-12.3-12.2-12.3-20.9V168c0-8.7 4.7-16.7 12.3-20.9z"
                     fill="currentColor"
                     style={Object {}}
                   />
@@ -1342,7 +1976,6 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
 
 exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
 <ListenCard
-  currentFeedback={1}
   listen={
     Object {
       "listened_at": 0,
@@ -1365,7 +1998,6 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
   }
   showTimestamp={true}
   showUsername={true}
-  updateFeedbackCallback={[Function]}
 >
   <ForwardRef
     className="listen-card   "
@@ -1388,10 +2020,231 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
           <div
             className="add-cover-art"
           >
-            <img
-              alt="Add cover art in MusicBrainz"
-              src="/static/img/add-cover-art.svg"
-            />
+            <span
+              className="fa-layers fa-fw"
+            >
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      512,
+                      512,
+                      Array [],
+                      "f03e",
+                      "M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z",
+                    ],
+                    "iconName": "image",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size={null}
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform={null}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-image "
+                  data-icon="image"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={Object {}}
+                  viewBox="0 0 512 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      448,
+                      512,
+                      Array [
+                        9632,
+                        9723,
+                        9724,
+                        61590,
+                      ],
+                      "f0c8",
+                      "M0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96z",
+                    ],
+                    "iconName": "square",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size={null}
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform="shrink-10 left-5 up-2.5"
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-square "
+                  data-icon="square"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={
+                    Object {
+                      "transformOrigin": "0.125em 0.34375em",
+                    }
+                  }
+                  viewBox="0 0 448 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g
+                    style={Object {}}
+                    transform="translate(224 256)"
+                  >
+                    <g
+                      style={Object {}}
+                      transform="translate(-160, -80)  scale(0.375, 0.375)  rotate(0 0 0)"
+                    >
+                      <path
+                        d="M0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96z"
+                        fill="currentColor"
+                        style={Object {}}
+                        transform="translate(-224 -256)"
+                      />
+                    </g>
+                  </g>
+                </svg>
+              </FontAwesomeIcon>
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      448,
+                      512,
+                      Array [
+                        10133,
+                        61543,
+                        "add",
+                      ],
+                      "2b",
+                      "M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z",
+                    ],
+                    "iconName": "plus",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={true}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size={null}
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                style={
+                  Object {
+                    "stroke": "white",
+                    "strokeWidth": "60",
+                  }
+                }
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform="shrink-11 left-2.5 up-2.5"
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-plus fa-inverse "
+                  data-icon="plus"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={
+                    Object {
+                      "stroke": "white",
+                      "strokeWidth": "60",
+                      "transformOrigin": "0.28125em 0.34375em",
+                    }
+                  }
+                  viewBox="0 0 448 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g
+                    style={Object {}}
+                    transform="translate(224 256)"
+                  >
+                    <g
+                      style={Object {}}
+                      transform="translate(-80, -80)  scale(0.3125, 0.3125)  rotate(0 0 0)"
+                    >
+                      <path
+                        d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"
+                        fill="currentColor"
+                        style={Object {}}
+                        transform="translate(-224 -256)"
+                      />
+                    </g>
+                  </g>
+                </svg>
+              </FontAwesomeIcon>
+            </span>
           </div>
         </a>
         <div
@@ -1459,21 +2312,27 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
             <FontAwesomeIcon
               aria-expanded="true"
               aria-haspopup="true"
+              beat={false}
+              beatFade={false}
               border={false}
+              bounce={false}
               className="dropdown-toggle"
               data-toggle="dropdown"
+              fade={false}
               fixedWidth={false}
-              flip={null}
+              flip={false}
               icon={
                 Object {
                   "icon": Array [
-                    192,
+                    128,
                     512,
-                    Array [],
+                    Array [
+                      "ellipsis-v",
+                    ],
                     "f142",
-                    "M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z",
+                    "M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z",
                   ],
-                  "iconName": "ellipsis-v",
+                  "iconName": "ellipsis-vertical",
                   "prefix": "fas",
                 }
               }
@@ -1481,28 +2340,33 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               inverse={false}
               listItem={false}
               mask={null}
+              maskId={null}
               pull={null}
               pulse={false}
               rotation={null}
+              shake={false}
               size={null}
               spin={false}
+              spinPulse={false}
+              spinReverse={false}
               swapOpacity={false}
               symbol={false}
               title="More actions"
+              titleId={null}
               transform={null}
             >
               <svg
                 aria-expanded="true"
                 aria-haspopup="true"
                 aria-labelledby="svg-inline--fa-title-000000000000"
-                className="svg-inline--fa fa-ellipsis-v fa-w-6 dropdown-toggle"
-                data-icon="ellipsis-v"
+                className="svg-inline--fa fa-ellipsis-vertical dropdown-toggle"
+                data-icon="ellipsis-vertical"
                 data-prefix="fas"
                 data-toggle="dropdown"
                 id="listenControlsDropdown"
                 role="img"
                 style={Object {}}
-                viewBox="0 0 192 512"
+                viewBox="0 0 128 512"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <title
@@ -1512,7 +2376,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                   More actions
                 </title>
                 <path
-                  d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"
+                  d="M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"
                   fill="currentColor"
                   style={Object {}}
                 />
@@ -1534,11 +2398,13 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        "external-link-alt",
+                      ],
                       "f35d",
-                      "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                      "M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z",
                     ],
-                    "iconName": "external-link-alt",
+                    "iconName": "up-right-from-square",
                     "prefix": "fas",
                   }
                 }
@@ -1554,40 +2420,51 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                   title="Open in MusicBrainz"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
                           512,
                           512,
-                          Array [],
+                          Array [
+                            "external-link-alt",
+                          ],
                           "f35d",
-                          "M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z",
+                          "M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z",
                         ],
-                        "iconName": "external-link-alt",
+                        "iconName": "up-right-from-square",
                         "prefix": "fas",
                       }
                     }
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-external-link-alt fa-w-16 "
-                      data-icon="external-link-alt"
+                      className="svg-inline--fa fa-up-right-from-square "
+                      data-icon="up-right-from-square"
                       data-prefix="fas"
                       focusable="false"
                       role="img"
@@ -1596,7 +2473,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"
+                        d="M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -1617,7 +2494,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                       512,
                       Array [],
                       "f121",
-                      "M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z",
+                      "M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z",
                     ],
                     "iconName": "code",
                     "prefix": "fas",
@@ -1636,10 +2513,14 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                   type="button"
                 >
                   <FontAwesomeIcon
+                    beat={false}
+                    beatFade={false}
                     border={false}
+                    bounce={false}
                     className=""
+                    fade={false}
                     fixedWidth={false}
-                    flip={null}
+                    flip={false}
                     icon={
                       Object {
                         "icon": Array [
@@ -1647,7 +2528,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                           512,
                           Array [],
                           "f121",
-                          "M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z",
+                          "M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z",
                         ],
                         "iconName": "code",
                         "prefix": "fas",
@@ -1656,19 +2537,24 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                     inverse={false}
                     listItem={false}
                     mask={null}
+                    maskId={null}
                     pull={null}
                     pulse={false}
                     rotation={null}
+                    shake={false}
                     size={null}
                     spin={false}
+                    spinPulse={false}
+                    spinReverse={false}
                     swapOpacity={false}
                     symbol={false}
                     title=""
+                    titleId={null}
                     transform={null}
                   >
                     <svg
                       aria-hidden="true"
-                      className="svg-inline--fa fa-code fa-w-20 "
+                      className="svg-inline--fa fa-code "
                       data-icon="code"
                       data-prefix="fas"
                       focusable="false"
@@ -1678,7 +2564,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M278.9 511.5l-61-17.7c-6.4-1.8-10-8.5-8.2-14.9L346.2 8.7c1.8-6.4 8.5-10 14.9-8.2l61 17.7c6.4 1.8 10 8.5 8.2 14.9L293.8 503.3c-1.9 6.4-8.5 10.1-14.9 8.2zm-114-112.2l43.5-46.4c4.6-4.9 4.3-12.7-.8-17.2L117 256l90.6-79.7c5.1-4.5 5.5-12.3.8-17.2l-43.5-46.4c-4.5-4.8-12.1-5.1-17-.5L3.8 247.2c-5.1 4.7-5.1 12.8 0 17.5l144.1 135.1c4.9 4.6 12.5 4.4 17-.5zm327.2.6l144.1-135.1c5.1-4.7 5.1-12.8 0-17.5L492.1 112.1c-4.8-4.5-12.4-4.3-17 .5L431.6 159c-4.6 4.9-4.3 12.7.8 17.2L523 256l-90.6 79.7c-5.1 4.5-5.5 12.3-.8 17.2l43.5 46.4c4.5 4.9 12.1 5.1 17 .6z"
+                        d="M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z"
                         fill="currentColor"
                         style={Object {}}
                       />
@@ -1696,40 +2582,52 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
               type="button"
             >
               <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
                 border={false}
+                bounce={false}
                 className=""
+                fade={false}
                 fixedWidth={false}
-                flip={null}
+                flip={false}
                 icon={
                   Object {
                     "icon": Array [
                       512,
                       512,
-                      Array [],
+                      Array [
+                        61469,
+                        "play-circle",
+                      ],
                       "f144",
-                      "M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z",
+                      "M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zM188.3 147.1c7.6-4.2 16.8-4.1 24.3 .5l144 88c7.1 4.4 11.5 12.1 11.5 20.5s-4.4 16.1-11.5 20.5l-144 88c-7.4 4.5-16.7 4.7-24.3 .5s-12.3-12.2-12.3-20.9V168c0-8.7 4.7-16.7 12.3-20.9z",
                     ],
-                    "iconName": "play-circle",
+                    "iconName": "circle-play",
                     "prefix": "far",
                   }
                 }
                 inverse={false}
                 listItem={false}
                 mask={null}
+                maskId={null}
                 pull={null}
                 pulse={false}
                 rotation={null}
+                shake={false}
                 size="2x"
                 spin={false}
+                spinPulse={false}
+                spinReverse={false}
                 swapOpacity={false}
                 symbol={false}
                 title=""
+                titleId={null}
                 transform={null}
               >
                 <svg
                   aria-hidden="true"
-                  className="svg-inline--fa fa-play-circle fa-w-16 fa-2x "
-                  data-icon="play-circle"
+                  className="svg-inline--fa fa-circle-play fa-2x "
+                  data-icon="circle-play"
                   data-prefix="far"
                   focusable="false"
                   role="img"
@@ -1738,7 +2636,7 @@ exports[`ListenCard should render timestamp using preciseTimestamp 1`] = `
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M371.7 238l-176-107c-15.8-8.8-35.7 2.5-35.7 21v208c0 18.4 19.8 29.8 35.7 21l176-101c16.4-9.1 16.4-32.8 0-42zM504 256C504 119 393 8 256 8S8 119 8 256s111 248 248 248 248-111 248-248zm-448 0c0-110.5 89.5-200 200-200s200 89.5 200 200-89.5 200-200 200S56 366.5 56 256z"
+                    d="M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zM188.3 147.1c7.6-4.2 16.8-4.1 24.3 .5l144 88c7.1 4.4 11.5 12.1 11.5 20.5s-4.4 16.1-11.5 20.5l-144 88c-7.4 4.5-16.7 4.7-24.3 .5s-12.3-12.2-12.3-20.9V168c0-8.7 4.7-16.7 12.3-20.9z"
                     fill="currentColor"
                     style={Object {}}
                   />

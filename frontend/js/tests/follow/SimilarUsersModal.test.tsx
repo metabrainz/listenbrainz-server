@@ -5,6 +5,7 @@ import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const props = {
   user: { name: "shivam-kapila" },
@@ -18,6 +19,10 @@ const globalContext: GlobalAppContextT = {
   youtubeAuth: {},
   spotifyAuth: {},
   currentUser: {} as ListenBrainzUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 describe("<SimilarUsersModal />", () => {

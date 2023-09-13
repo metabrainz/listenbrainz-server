@@ -51,6 +51,14 @@ def fresh_releases():
         props=orjson.dumps({}).decode("utf-8")
     )
 
+@explore_bp.route("/art-creator/")
+def art_creator():
+
+    return render_template(
+        "explore/stats-art-designer.html",
+        props=orjson.dumps({}).decode("utf-8")
+    )
+
 @explore_bp.route("/cover-art-collage/")
 @explore_bp.route("/cover-art-collage/<int:year>/")
 def cover_art_collage(year: int = 2022):

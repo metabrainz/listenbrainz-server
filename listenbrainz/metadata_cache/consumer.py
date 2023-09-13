@@ -4,25 +4,25 @@ import time
 from kombu import Exchange, Queue, Connection, Consumer, Message
 from kombu.mixins import ConsumerMixin
 
-from listenbrainz.spotify_metadata_cache.spotify_lookup_queue import SpotifyIdsQueue
+from listenbrainz.metadata_cache.crawler import Crawler
+from listenbrainz.metadata_cache.handler import BaseHandler
 from listenbrainz.utils import get_fallback_connection_name
-from listenbrainz.webserver import create_app
 
 
-class SpotifyMetadataCache(ConsumerMixin):
-    """ Main entry point for the mapping writer. Sets up connections and 
-        handles messages from RabbitMQ and stuff them into the queue for the
-        job matcher to handle."""
+class ServiceMetadataCache(ConsumerMixin):
 
-    def __init__(self, app):
+    def __init__(self, app, handler: BaseHandler):
         self.app = app
-        self.queue = None
+        self.handler = handler
+        self.crawler = None
+
         self.connection = None
+        self.service_channel = None
         self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
-        # this queue gets spotify album ids from listens
+        # this queue gets album ids from listens
         self.listens_queue = Queue(
             self.app.config["SPOTIFY_METADATA_QUEUE"],
-            exchange=self.unique_exchange, 
+            exchange=self.unique_exchange,
             durable=True
         )
         self.external_services_exchange = Exchange(
@@ -31,37 +31,36 @@ class SpotifyMetadataCache(ConsumerMixin):
             durable=True
         )
         # this queue gets spotify album ids directly queued to the external spotify queue
-        self.spotify_queue = Queue(
-            self.app.config["EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE"],
-            exchange=self.external_services_exchange, 
+        self.service_queue = Queue(
+            self.handler.external_service_queue,
+            exchange=self.external_services_exchange,
             durable=True
         )
 
     def get_consumers(self, _, channel):
-        self.spotify_channel = channel.connection.channel()
+        self.service_channel = channel.connection.channel()
         return [
             Consumer(channel, queues=[self.listens_queue], on_message=lambda x: self.process_listens(x)),
-            Consumer(self.spotify_channel, queues=[self.spotify_queue], on_message=lambda x: self.process_album_ids(x))
+            Consumer(self.service_channel, queues=[self.service_queue], on_message=lambda x: self.process_seeder(x))
         ]
 
     def on_consume_end(self, connection, default_channel):
-        if self.spotify_channel:
-            self.spotify_channel.close()
+        if self.service_channel:
+            self.service_channel.close()
 
     def process_listens(self, message: Message):
         listens = json.loads(message.body)
-
         for listen in listens:
-            spotify_album_id = listen["track_metadata"]["additional_info"].get("spotify_album_id")
-            if spotify_album_id:
-                self.queue.add_spotify_ids(spotify_album_id)
-
+            items = self.handler.get_items_from_listen(listen)
+            for item in items:
+                self.crawler.put(item)
         message.ack()
 
-    def process_album_ids(self, message: Message):
+    def process_seeder(self, message: Message):
         body = json.loads(message.body)
-        for album_id in body["album_ids"]:
-            self.queue.add_spotify_ids(album_id)
+        items = self.handler.get_items_from_seeder(body)
+        for item in items:
+            self.crawler.put(item)
         message.ack()
 
     def init_rabbitmq_connection(self):
@@ -78,14 +77,14 @@ class SpotifyMetadataCache(ConsumerMixin):
         while True:
             try:
                 self.app.logger.info("Starting queue stuffer...")
-                self.queue = SpotifyIdsQueue(app)
-                self.queue.start()
+                self.crawler = Crawler(self.app, self.handler)
+                self.crawler.start()
 
                 self.app.logger.info("Starting Spotify Metadata Cache ...")
                 self.init_rabbitmq_connection()
                 self.run()
             except KeyboardInterrupt:
-                self.queue.terminate()
+                self.crawler.terminate()
                 self.app.logger.error("Keyboard interrupt!")
                 break
             except Exception:
@@ -94,11 +93,4 @@ class SpotifyMetadataCache(ConsumerMixin):
         # the while True loop above makes this line unreachable but adding it anyway
         # so that we remember that every started thread should also be joined.
         # (you may also want to read the commit message for the commit that added this)
-        self.queue.terminate()
-
-
-if __name__ == "__main__":
-    app = create_app()
-    with app.app_context():
-        smc = SpotifyMetadataCache(app)
-        smc.start()
+        self.crawler.terminate()

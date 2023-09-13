@@ -9,10 +9,15 @@ import {
   DataSourceProps,
   DataSourceTypes,
 } from "../../src/brainzplayer/BrainzPlayer";
+import APIService from "../../src/utils/APIService";
 
 const props = {
   show: true,
   playerPaused: false,
+  soundcloudUser: {
+    access_token: "heyo-soundcloud",
+  },
+  refreshSoundcloudToken: new APIService("base-uri").refreshSoundcloudToken,
   onPlayerPausedChange: (paused: boolean) => {},
   onProgressChange: (progressMs: number) => {},
   onDurationChange: (durationMs: number) => {},
@@ -80,39 +85,6 @@ describe("SoundcloudPlayer", () => {
     expect(onInvalidateDataSource).not.toHaveBeenCalled();
   });
 
-  it("should ignore listens if origin_url is not a soundcloud URL", () => {
-    const spotifyListen: Listen = {
-      listened_at: 0,
-      track_metadata: {
-        artist_name: "Moondog",
-        track_name: "Bird's Lament",
-        additional_info: {
-          spotify_id: "https://open.spotify.com/track/surprise!",
-        },
-      },
-    };
-    const onInvalidateDataSource = jest.fn();
-    const onTrackNotFound = jest.fn();
-    const mockProps = {
-      ...props,
-      onInvalidateDataSource,
-      onTrackNotFound,
-    };
-    const wrapper = mount<SoundcloudPlayer>(
-      <SoundcloudPlayer {...mockProps} />
-    );
-    const instance = wrapper.instance();
-
-    if (!instance.soundcloudPlayer) {
-      throw new Error("no SoundcloudPlayer");
-    }
-    instance.soundcloudPlayer.load = jest.fn();
-
-    instance.playListen(spotifyListen);
-    expect(onTrackNotFound).toHaveBeenCalledTimes(1);
-    expect(onInvalidateDataSource).not.toHaveBeenCalled();
-  });
-
   it("should update track info if playing a new track", async () => {
     const onPlayerPausedChange = jest.fn();
     const onTrackInfoChange = jest.fn();
@@ -130,19 +102,20 @@ describe("SoundcloudPlayer", () => {
     );
     const instance = wrapper.instance();
     await act(() => {
-      instance.setState({ currentSoundId: 1 });
+      instance.setState({ currentSound: undefined });
     });
     if (!instance.soundcloudPlayer) {
       throw new Error("no SoundcloudPlayer");
     }
+    const sound = {
+      title: "Dope track",
+      user: { username: "Emperor Norton the 1st" },
+      duration: 420,
+      permalink_url: "some/url/to/track",
+      artwork_url: "some/url/to/artwork",
+    };
     instance.soundcloudPlayer.getCurrentSound = jest.fn((callback) =>
-      callback({
-        title: "Dope track",
-        user: { username: "Emperor Norton the 1st" },
-        full_duration: 420,
-        permalink_url: "some/url/to/track",
-        artwork_url: "some/url/to/artwork",
-      })
+      callback(sound)
     );
     await act(() => {
       instance.onPlay({
@@ -152,7 +125,7 @@ describe("SoundcloudPlayer", () => {
         relativePosition: 789,
       });
     });
-    expect(instance.state.currentSoundId).toEqual(2);
+    expect(instance.state.currentSound).toEqual(sound);
     expect(onPlayerPausedChange).toHaveBeenCalledTimes(1);
     expect(onPlayerPausedChange).toHaveBeenCalledWith(false);
     expect(onTrackInfoChange).toHaveBeenCalledWith(

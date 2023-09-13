@@ -156,7 +156,6 @@ class RequestManageTestCase(unittest.TestCase):
         message = {
             'query': 'cf.recommendations.recording.recommendations',
             'params': {
-                'recommendation_top_artist_limit': 7,
                 'recommendation_raw_limit': 7,
                 'users': ['vansika']
             }

@@ -6,16 +6,6 @@ const freshReleasesSitewideData = require("../__mocks__/freshReleasesSitewideDat
 
 const apiService = new APIService("foobar");
 
-// from https://github.com/kentor/flush-promises/blob/46f58770b14fb74ce1ff27da00837c7e722b9d06/index.js
-const scheduler =
-  typeof setImmediate === "function" ? setImmediate : setTimeout;
-
-function flushPromises() {
-  return new Promise(function flushPromisesPromise(resolve) {
-    scheduler(resolve, 0);
-  });
-}
-
 describe("submitListens", () => {
   beforeEach(() => {
     // Mock function for fetch
@@ -25,7 +15,7 @@ describe("submitListens", () => {
         status: 200,
       });
     });
-    jest.useFakeTimers();
+    jest.useFakeTimers({advanceTimers: true});
   });
 
   it("calls fetch with correct parameters", async () => {
@@ -83,13 +73,9 @@ describe("submitListens", () => {
         },
       },
     ]);
+    
+    await jest.advanceTimersByTimeAsync(10000);
 
-    // The infamous flush promises sandwich
-    await flushPromises();
-    jest.runAllTimers();
-    await flushPromises();
-
-    expect(setTimeout).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenNthCalledWith(
       2,
@@ -136,12 +122,8 @@ describe("submitListens", () => {
       },
     ]);
 
-    // The infamous flush promises sandwich
-    await flushPromises();
-    jest.runAllTimers();
-    await flushPromises();
+    await jest.advanceTimersByTimeAsync(10000);
 
-    expect(setTimeout).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenNthCalledWith(
       2,
@@ -178,8 +160,8 @@ describe("submitListens", () => {
         },
       },
     ]);
+    await jest.advanceTimersByTimeAsync(10000);
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(setTimeout).not.toHaveBeenCalled(); // should return response with no calls for additional retries
   });
 
   it("returns the response if successful", async () => {

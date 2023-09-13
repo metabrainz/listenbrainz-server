@@ -110,6 +110,12 @@ function ExplorePage() {
           img_name="lb-radio-beta.jpg"
           url="/explore/lb-radio"
         />
+        <ExploreCard
+          name="Stats art generator"
+          desc="Visualize and share your stats"
+          img_name="stats-art-beta.jpg"
+          url="/explore/art-creator"
+        />
       </div>
     </>
   );
