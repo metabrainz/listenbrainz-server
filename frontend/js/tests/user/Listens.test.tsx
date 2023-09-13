@@ -10,7 +10,6 @@ import GlobalAppContext, {
 import APIServiceClass from "../../src/utils/APIService";
 
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
-import * as recentListensPropsTooManyListens from "../__mocks__/recentListensPropsTooManyListens.json";
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 
@@ -226,24 +225,30 @@ describe("Listens page", () => {
       /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
        * so that it doesn't get passed as a reference.
        */
-      const wrapper = mount<Listens>(
-        <Listens
-          {...(JSON.parse(
-            JSON.stringify(recentListensPropsTooManyListens)
-          ) as ListensProps)}
-        />,
-        mountOptions
-      );
+      const wrapper = mount<Listens>(<Listens {...props} />, mountOptions);
       await act(() => {
+        // Fill ws listens array with 10 listens
         wrapper.setState({
           webSocketListens: JSON.parse(
-            JSON.stringify(recentListensPropsTooManyListens.listens)
+            JSON.stringify([
+              mockListen,
+              mockListen,
+              mockListen,
+              mockListen,
+              mockListen,
+              mockListen,
+              mockListen,
+              mockListen,
+              mockListen,
+              mockListen,
+            ])
           ),
         });
       });
 
       const instance = wrapper.instance();
       await act(() => {
+        // Add one, the process should crop to 7 max
         instance.receiveNewListen(JSON.stringify(mockListen));
       });
       await waitForComponentToPaint(wrapper);
