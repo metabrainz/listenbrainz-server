@@ -58,9 +58,9 @@ CREATE INDEX spotify_cache_rel_album_artist_track_id_idx ON spotify_cache.rel_al
 CREATE INDEX spotify_cache_rel_track_artist_track_id_idx ON spotify_cache.rel_track_artist (track_id);
 
 CREATE UNIQUE INDEX apple_metadata_cache_album_id_ndx ON apple_cache.raw_cache_data (album_id);
-CREATE UNIQUE INDEX apple_cache_album_apple_id_idx ON apple_cache.album (apple_id);
-CREATE UNIQUE INDEX apple_cache_artist_apple_id_idx ON apple_cache.artist (apple_id);
-CREATE UNIQUE INDEX apple_cache_track_apple_id_idx ON apple_cache.track (apple_id);
+CREATE UNIQUE INDEX apple_cache_album_apple_id_idx ON apple_cache.album (album_id);
+CREATE UNIQUE INDEX apple_cache_artist_apple_id_idx ON apple_cache.artist (artist_id);
+CREATE UNIQUE INDEX apple_cache_track_apple_id_idx ON apple_cache.track (track_id);
 CREATE INDEX apple_cache_rel_album_artist_track_id_idx ON apple_cache.rel_album_artist (album_id);
 CREATE INDEX apple_cache_rel_track_artist_track_id_idx ON apple_cache.rel_track_artist (track_id);
 
