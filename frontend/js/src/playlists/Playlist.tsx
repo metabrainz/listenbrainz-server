@@ -224,7 +224,7 @@ export default class PlaylistPage extends React.Component<
     const { currentUser } = this.context;
     const { playlist } = this.state;
     const collaborators = getPlaylistExtension(playlist)?.collaborators ?? [];
-    if (!isPlaylistOwner(playlist, currentUser)) {
+    if (isPlaylistOwner(playlist, currentUser)) {
       return true;
     }
     return (
@@ -335,7 +335,7 @@ export default class PlaylistPage extends React.Component<
     const collaboratorsWithoutOwner = collaborators.filter(
       (username) => username.toLowerCase() !== playlist.creator.toLowerCase()
     );
-    if (isPlaylistOwner(playlist, currentUser)) {
+    if (!isPlaylistOwner(playlist, currentUser)) {
       this.alertNotAuthorized();
       return;
     }
