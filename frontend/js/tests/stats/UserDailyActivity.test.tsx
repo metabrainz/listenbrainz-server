@@ -119,7 +119,7 @@ describe("UserDailyActivity", () => {
       expect(wrapper.state()).toMatchObject({
         loading: false,
         hasError: true,
-        errorMessage: "Statistics for the user have not been calculated",
+        errorMessage: "There are no statistics available for this user for this period",
       });
     });
 
