@@ -26,15 +26,10 @@ export default function SearchTrackOrMBID({
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRecording } = APIService;
   const inputRef = useRef<HTMLInputElement>(null);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(defaultValue ?? "");
   const [searchResults, setSearchResults] = useState<Array<ACRMSearchResult>>(
     []
   );
-  useEffect(() => {
-    if (defaultValue) {
-      setInputValue(defaultValue);
-    }
-  }, [defaultValue]);
 
   useEffect(() => {
     // autoFocus property on the input element does not work
