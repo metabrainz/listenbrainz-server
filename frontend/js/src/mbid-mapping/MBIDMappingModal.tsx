@@ -43,6 +43,7 @@ function getListenFromSelectedRecording(
 export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   const modal = useModal();
   const { hide, remove, resolve, visible } = modal;
+  const [copyTextClickCounter, setCopyTextClickCounter] = React.useState(0);
   const [selectedRecording, setSelectedRecording] = React.useState<
     TrackMetadata
   >();
@@ -135,6 +136,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   );
 
   const copyTextToSearchField = React.useCallback(() => {
+    setCopyTextClickCounter((value) => value + 1);
     setDefaultValue(
       `${getTrackName(listenToMap)} - ${getArtistName(listenToMap)}`
     );
@@ -218,7 +220,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
 
               <div className="text-center mb-10 mt-10">
                 <button
-                  className="search-field-copy-button"
+                  className="btn btn-link btn-rounded"
                   disabled={Boolean(selectedRecording)}
                   onClick={copyTextToSearchField}
                 >
@@ -230,6 +232,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                       selectedRecording ? COLOR_LB_GREEN : COLOR_LB_LIGHT_GRAY
                     }
                   />
+                  <div className="text-muted">copy text</div>
                 </button>
               </div>
 
@@ -266,7 +269,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               ) : (
                 <div className="card listen-card">
                   <SearchTrackOrMBID
-                    key={defaultValue}
+                    key={`${defaultValue}-${copyTextClickCounter}`}
                     onSelectRecording={(trackMetadata) => {
                       setSelectedRecording(trackMetadata);
                     }}
