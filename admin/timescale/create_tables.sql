@@ -187,17 +187,9 @@ CREATE TABLE spotify_cache.rel_track_artist (
     position        INTEGER NOT NULL
 );
 
-CREATE TABLE apple_cache.raw_cache_data (
-    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    album_id        TEXT NOT NULL,
-    data            JSONB,
-    last_refresh    TIMESTAMP WITH TIME ZONE NOT NULL,
-    expires_at      TIMESTAMP WITH TIME ZONE NOT NULL
-);
-
 CREATE TABLE apple_cache.album (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    apple_id              TEXT   NOT NULL,
+    album_id                TEXT   NOT NULL,
     name                    TEXT   NOT NULL,
     type                    TEXT   NOT NULL,
     release_date            TEXT   NOT NULL,
@@ -208,14 +200,14 @@ CREATE TABLE apple_cache.album (
 
 CREATE TABLE apple_cache.artist (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    apple_id              TEXT NOT NULL,
+    artist_id               TEXT NOT NULL,
     name                    TEXT NOT NULL,
     data                    JSONB NOT NULL
 );
 
 CREATE TABLE apple_cache.track (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    apple_id              TEXT NOT NULL,
+    track_id                TEXT NOT NULL,
     name                    TEXT NOT NULL,
     track_number            INTEGER NOT NULL,
     album_id                TEXT NOT NULL,
