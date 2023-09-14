@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getEntityLink renders a link if MBID is provided 1`] = `
+<a
+  href="https://musicbrainz.org/artist/test_mbid"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  test_artist
+</a>
+`;
+
+exports[`getEntityLink renders a string if MBID is not provided 1`] = `
+<span>
+  test_artist
+</span>
+`;

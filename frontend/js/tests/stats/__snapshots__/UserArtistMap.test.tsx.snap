@@ -1,0 +1,1068 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Sitewide Stats UserArtistMap renders corectly when range is invalid 1`] = `
+<UserArtistMap
+  apiUrl="barfoo"
+  range="invalid_range"
+>
+  <ForwardRef
+    className="user-stats-card"
+  >
+    <div
+      className="card user-stats-card"
+    >
+      <div
+        className="row"
+      >
+        <div
+          className="col-md-9 col-xs-6"
+        >
+          <h3
+            style={
+              Object {
+                "marginLeft": 20,
+              }
+            }
+          >
+            <span
+              className="capitalize-bold"
+            >
+              Artist Origins
+            </span>
+            <small>
+               Click on a country to see more details
+            </small>
+          </h3>
+        </div>
+        <div
+          className="col-md-2 col-xs-4 text-right"
+          style={
+            Object {
+              "marginTop": 20,
+            }
+          }
+        >
+          <span>
+            Rank by
+          </span>
+          <span
+            className="dropdown"
+          >
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              artist
+              s
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Listens
+                </a>
+              </li>
+              <li
+                className="active"
+              >
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Artists
+                </a>
+              </li>
+            </ul>
+          </span>
+        </div>
+        <div
+          className="col-md-1 col-xs-2 text-right"
+        >
+          <h4
+            style={
+              Object {
+                "marginTop": 20,
+              }
+            }
+          >
+            <a
+              href="#artist-origin"
+            >
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                color="#000"
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      640,
+                      512,
+                      Array [
+                        128279,
+                        "chain",
+                      ],
+                      "f0c1",
+                      "M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z",
+                    ],
+                    "iconName": "link",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size="sm"
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                style={
+                  Object {
+                    "marginRight": 20,
+                  }
+                }
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform={null}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-link fa-sm "
+                  color="#000"
+                  data-icon="link"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={
+                    Object {
+                      "marginRight": 20,
+                    }
+                  }
+                  viewBox="0 0 640 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+            </a>
+          </h4>
+        </div>
+      </div>
+      <Loader
+        isLoading={false}
+      >
+        <div
+          className="flex-center"
+          style={
+            Object {
+              "minHeight": "inherit",
+            }
+          }
+        >
+          <span
+            className="text-center"
+            style={
+              Object {
+                "fontSize": 24,
+              }
+            }
+          >
+            <FontAwesomeIcon
+              beat={false}
+              beatFade={false}
+              border={false}
+              bounce={false}
+              className=""
+              fade={false}
+              fixedWidth={false}
+              flip={false}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [
+                      "exclamation-circle",
+                    ],
+                    "f06a",
+                    "M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z",
+                  ],
+                  "iconName": "circle-exclamation",
+                  "prefix": "fas",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              maskId={null}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              shake={false}
+              size={null}
+              spin={false}
+              spinPulse={false}
+              spinReverse={false}
+              swapOpacity={false}
+              symbol={false}
+              title=""
+              titleId={null}
+              transform={null}
+            >
+              <svg
+                aria-hidden="true"
+                className="svg-inline--fa fa-circle-exclamation "
+                data-icon="circle-exclamation"
+                data-prefix="fas"
+                focusable="false"
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+             
+            Invalid range: invalid_range
+          </span>
+        </div>
+      </Loader>
+    </div>
+  </ForwardRef>
+</UserArtistMap>
+`;
+
+exports[`Sitewide Stats UserArtistMap renders correctly 1`] = `
+<ForwardRef
+  className="user-stats-card"
+>
+  <div
+    className="row"
+  >
+    <div
+      className="col-md-9 col-xs-6"
+    >
+      <h3
+        style={
+          Object {
+            "marginLeft": 20,
+          }
+        }
+      >
+        <span
+          className="capitalize-bold"
+        >
+          Artist Origins
+        </span>
+        <small>
+           Click on a country to see more details
+        </small>
+      </h3>
+    </div>
+    <div
+      className="col-md-2 col-xs-4 text-right"
+      style={
+        Object {
+          "marginTop": 20,
+        }
+      }
+    >
+      <span>
+        Rank by
+      </span>
+      <span
+        className="dropdown"
+      >
+        <button
+          className="dropdown-toggle btn-transparent capitalize-bold"
+          data-toggle="dropdown"
+          type="button"
+        >
+          artist
+          s
+          <span
+            className="caret"
+          />
+        </button>
+        <ul
+          className="dropdown-menu"
+          role="menu"
+        >
+          <li>
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Listens
+            </a>
+          </li>
+          <li
+            className="active"
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Artists
+            </a>
+          </li>
+        </ul>
+      </span>
+    </div>
+    <div
+      className="col-md-1 col-xs-2 text-right"
+    >
+      <h4
+        style={
+          Object {
+            "marginTop": 20,
+          }
+        }
+      >
+        <a
+          href="#artist-origin"
+        >
+          <FontAwesomeIcon
+            beat={false}
+            beatFade={false}
+            border={false}
+            bounce={false}
+            className=""
+            color="#000"
+            fade={false}
+            fixedWidth={false}
+            flip={false}
+            icon={
+              Object {
+                "icon": Array [
+                  640,
+                  512,
+                  Array [
+                    128279,
+                    "chain",
+                  ],
+                  "f0c1",
+                  "M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z",
+                ],
+                "iconName": "link",
+                "prefix": "fas",
+              }
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            maskId={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            shake={false}
+            size="sm"
+            spin={false}
+            spinPulse={false}
+            spinReverse={false}
+            style={
+              Object {
+                "marginRight": 20,
+              }
+            }
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            titleId={null}
+            transform={null}
+          />
+        </a>
+      </h4>
+    </div>
+  </div>
+  <Loader
+    isLoading={false}
+  >
+    <CustomChoropleth
+      data={
+        Array [
+          Object {
+            "id": "GBR",
+            "value": 50,
+          },
+          Object {
+            "id": "USA",
+            "value": 135,
+          },
+          Object {
+            "id": "AUS",
+            "value": 6,
+          },
+          Object {
+            "id": "BEL",
+            "value": 2,
+          },
+          Object {
+            "id": "DEU",
+            "value": 10,
+          },
+          Object {
+            "id": "CAN",
+            "value": 10,
+          },
+          Object {
+            "id": "ARG",
+            "value": 1,
+          },
+          Object {
+            "id": "ESP",
+            "value": 1,
+          },
+          Object {
+            "id": "PRT",
+            "value": 1,
+          },
+          Object {
+            "id": "ISL",
+            "value": 3,
+          },
+          Object {
+            "id": "NLD",
+            "value": 6,
+          },
+          Object {
+            "id": "NOR",
+            "value": 2,
+          },
+          Object {
+            "id": "SWE",
+            "value": 10,
+          },
+          Object {
+            "id": "IND",
+            "value": 30,
+          },
+          Object {
+            "id": "IRL",
+            "value": 5,
+          },
+          Object {
+            "id": "FRA",
+            "value": 5,
+          },
+          Object {
+            "id": "URY",
+            "value": 1,
+          },
+          Object {
+            "id": "DNK",
+            "value": 2,
+          },
+          Object {
+            "id": "PAK",
+            "value": 1,
+          },
+          Object {
+            "id": "TUR",
+            "value": 1,
+          },
+          Object {
+            "id": "JAM",
+            "value": 1,
+          },
+          Object {
+            "id": "SGP",
+            "value": 1,
+          },
+          Object {
+            "id": "IDN",
+            "value": 2,
+          },
+          Object {
+            "id": "PHL",
+            "value": 1,
+          },
+          Object {
+            "id": "PRI",
+            "value": 1,
+          },
+          Object {
+            "id": "NZL",
+            "value": 1,
+          },
+          Object {
+            "id": "MYS",
+            "value": 1,
+          },
+        ]
+      }
+      selectedMetric="artist"
+    />
+  </Loader>
+</ForwardRef>
+`;
+
+exports[`User Stats UserArtistMap renders corectly when range is invalid 1`] = `
+<UserArtistMap
+  apiUrl="barfoo"
+  range="invalid_range"
+  user={
+    Object {
+      "name": "foobar",
+    }
+  }
+>
+  <ForwardRef
+    className="user-stats-card"
+  >
+    <div
+      className="card user-stats-card"
+    >
+      <div
+        className="row"
+      >
+        <div
+          className="col-md-9 col-xs-6"
+        >
+          <h3
+            style={
+              Object {
+                "marginLeft": 20,
+              }
+            }
+          >
+            <span
+              className="capitalize-bold"
+            >
+              Artist Origins
+            </span>
+            <small>
+               Click on a country to see more details
+            </small>
+          </h3>
+        </div>
+        <div
+          className="col-md-2 col-xs-4 text-right"
+          style={
+            Object {
+              "marginTop": 20,
+            }
+          }
+        >
+          <span>
+            Rank by
+          </span>
+          <span
+            className="dropdown"
+          >
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              artist
+              s
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Listens
+                </a>
+              </li>
+              <li
+                className="active"
+              >
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Artists
+                </a>
+              </li>
+            </ul>
+          </span>
+        </div>
+        <div
+          className="col-md-1 col-xs-2 text-right"
+        >
+          <h4
+            style={
+              Object {
+                "marginTop": 20,
+              }
+            }
+          >
+            <a
+              href="#artist-origin"
+            >
+              <FontAwesomeIcon
+                beat={false}
+                beatFade={false}
+                border={false}
+                bounce={false}
+                className=""
+                color="#000"
+                fade={false}
+                fixedWidth={false}
+                flip={false}
+                icon={
+                  Object {
+                    "icon": Array [
+                      640,
+                      512,
+                      Array [
+                        128279,
+                        "chain",
+                      ],
+                      "f0c1",
+                      "M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z",
+                    ],
+                    "iconName": "link",
+                    "prefix": "fas",
+                  }
+                }
+                inverse={false}
+                listItem={false}
+                mask={null}
+                maskId={null}
+                pull={null}
+                pulse={false}
+                rotation={null}
+                shake={false}
+                size="sm"
+                spin={false}
+                spinPulse={false}
+                spinReverse={false}
+                style={
+                  Object {
+                    "marginRight": 20,
+                  }
+                }
+                swapOpacity={false}
+                symbol={false}
+                title=""
+                titleId={null}
+                transform={null}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="svg-inline--fa fa-link fa-sm "
+                  color="#000"
+                  data-icon="link"
+                  data-prefix="fas"
+                  focusable="false"
+                  role="img"
+                  style={
+                    Object {
+                      "marginRight": 20,
+                    }
+                  }
+                  viewBox="0 0 640 512"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"
+                    fill="currentColor"
+                    style={Object {}}
+                  />
+                </svg>
+              </FontAwesomeIcon>
+            </a>
+          </h4>
+        </div>
+      </div>
+      <Loader
+        isLoading={false}
+      >
+        <div
+          className="flex-center"
+          style={
+            Object {
+              "minHeight": "inherit",
+            }
+          }
+        >
+          <span
+            className="text-center"
+            style={
+              Object {
+                "fontSize": 24,
+              }
+            }
+          >
+            <FontAwesomeIcon
+              beat={false}
+              beatFade={false}
+              border={false}
+              bounce={false}
+              className=""
+              fade={false}
+              fixedWidth={false}
+              flip={false}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [
+                      "exclamation-circle",
+                    ],
+                    "f06a",
+                    "M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z",
+                  ],
+                  "iconName": "circle-exclamation",
+                  "prefix": "fas",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              maskId={null}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              shake={false}
+              size={null}
+              spin={false}
+              spinPulse={false}
+              spinReverse={false}
+              swapOpacity={false}
+              symbol={false}
+              title=""
+              titleId={null}
+              transform={null}
+            >
+              <svg
+                aria-hidden="true"
+                className="svg-inline--fa fa-circle-exclamation "
+                data-icon="circle-exclamation"
+                data-prefix="fas"
+                focusable="false"
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+             
+            Invalid range: invalid_range
+          </span>
+        </div>
+      </Loader>
+    </div>
+  </ForwardRef>
+</UserArtistMap>
+`;
+
+exports[`User Stats UserArtistMap renders correctly 1`] = `
+<ForwardRef
+  className="user-stats-card"
+>
+  <div
+    className="row"
+  >
+    <div
+      className="col-md-9 col-xs-6"
+    >
+      <h3
+        style={
+          Object {
+            "marginLeft": 20,
+          }
+        }
+      >
+        <span
+          className="capitalize-bold"
+        >
+          Artist Origins
+        </span>
+        <small>
+           Click on a country to see more details
+        </small>
+      </h3>
+    </div>
+    <div
+      className="col-md-2 col-xs-4 text-right"
+      style={
+        Object {
+          "marginTop": 20,
+        }
+      }
+    >
+      <span>
+        Rank by
+      </span>
+      <span
+        className="dropdown"
+      >
+        <button
+          className="dropdown-toggle btn-transparent capitalize-bold"
+          data-toggle="dropdown"
+          type="button"
+        >
+          artist
+          s
+          <span
+            className="caret"
+          />
+        </button>
+        <ul
+          className="dropdown-menu"
+          role="menu"
+        >
+          <li>
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Listens
+            </a>
+          </li>
+          <li
+            className="active"
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Artists
+            </a>
+          </li>
+        </ul>
+      </span>
+    </div>
+    <div
+      className="col-md-1 col-xs-2 text-right"
+    >
+      <h4
+        style={
+          Object {
+            "marginTop": 20,
+          }
+        }
+      >
+        <a
+          href="#artist-origin"
+        >
+          <FontAwesomeIcon
+            beat={false}
+            beatFade={false}
+            border={false}
+            bounce={false}
+            className=""
+            color="#000"
+            fade={false}
+            fixedWidth={false}
+            flip={false}
+            icon={
+              Object {
+                "icon": Array [
+                  640,
+                  512,
+                  Array [
+                    128279,
+                    "chain",
+                  ],
+                  "f0c1",
+                  "M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z",
+                ],
+                "iconName": "link",
+                "prefix": "fas",
+              }
+            }
+            inverse={false}
+            listItem={false}
+            mask={null}
+            maskId={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            shake={false}
+            size="sm"
+            spin={false}
+            spinPulse={false}
+            spinReverse={false}
+            style={
+              Object {
+                "marginRight": 20,
+              }
+            }
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            titleId={null}
+            transform={null}
+          />
+        </a>
+      </h4>
+    </div>
+  </div>
+  <Loader
+    isLoading={false}
+  >
+    <CustomChoropleth
+      data={
+        Array [
+          Object {
+            "id": "GBR",
+            "value": 50,
+          },
+          Object {
+            "id": "USA",
+            "value": 135,
+          },
+          Object {
+            "id": "AUS",
+            "value": 6,
+          },
+          Object {
+            "id": "BEL",
+            "value": 2,
+          },
+          Object {
+            "id": "DEU",
+            "value": 10,
+          },
+          Object {
+            "id": "CAN",
+            "value": 10,
+          },
+          Object {
+            "id": "ARG",
+            "value": 1,
+          },
+          Object {
+            "id": "ESP",
+            "value": 1,
+          },
+          Object {
+            "id": "PRT",
+            "value": 1,
+          },
+          Object {
+            "id": "ISL",
+            "value": 3,
+          },
+          Object {
+            "id": "NLD",
+            "value": 6,
+          },
+          Object {
+            "id": "NOR",
+            "value": 2,
+          },
+          Object {
+            "id": "SWE",
+            "value": 10,
+          },
+          Object {
+            "id": "IND",
+            "value": 30,
+          },
+          Object {
+            "id": "IRL",
+            "value": 5,
+          },
+          Object {
+            "id": "FRA",
+            "value": 5,
+          },
+          Object {
+            "id": "URY",
+            "value": 1,
+          },
+          Object {
+            "id": "DNK",
+            "value": 2,
+          },
+          Object {
+            "id": "PAK",
+            "value": 1,
+          },
+          Object {
+            "id": "TUR",
+            "value": 1,
+          },
+          Object {
+            "id": "JAM",
+            "value": 1,
+          },
+          Object {
+            "id": "SGP",
+            "value": 1,
+          },
+          Object {
+            "id": "IDN",
+            "value": 2,
+          },
+          Object {
+            "id": "PHL",
+            "value": 1,
+          },
+          Object {
+            "id": "PRI",
+            "value": 1,
+          },
+          Object {
+            "id": "NZL",
+            "value": 1,
+          },
+          Object {
+            "id": "MYS",
+            "value": 1,
+          },
+        ]
+      }
+      selectedMetric="artist"
+    />
+  </Loader>
+</ForwardRef>
+`;
