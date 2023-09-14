@@ -591,7 +591,7 @@ export default class BrainzPlayer extends React.Component<
         createNotification(title, artist, album, artwork?.[0]?.src);
       } else {
         const message = (
-          <div className="alert">
+          <div className="alert brainzplayer-alert">
             {artwork?.length ? (
               <img
                 className="alert-thumbnail"
@@ -601,7 +601,7 @@ export default class BrainzPlayer extends React.Component<
             ) : (
               <FontAwesomeIcon icon={faPlayCircle as IconProp} />
             )}
-            <div className="alert-text">
+            <div>
               {title}
               {artist && ` — ${artist}`}
               {album && ` — ${album}`}

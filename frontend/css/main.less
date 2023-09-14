@@ -316,25 +316,18 @@ pre code.hljs {
 }
 
 // For cover art in alerts
-@alertThumbnailSize: 40px;
+@alertThumbnailSize: 60px;
 
-.alert {
+.brainzplayer-alert {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.alert-text {
-  font-size: 11px;
-  font-weight: bold;
-  margin-left: 9px;
-  color: #353070;
-}
-
 .alert-thumbnail {
   max-height: @alertThumbnailSize;
   margin: -@alert-padding;
-  margin-right: 0;
+  margin-right: @alert-padding;
 }
 
 .search-dropdown {
