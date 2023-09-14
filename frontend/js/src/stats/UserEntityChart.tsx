@@ -367,7 +367,8 @@ export default class UserEntityChart extends React.Component<
       if (error.response && error.response?.status === 204) {
         this.setState({
           hasError: true,
-          errorMessage: "Statistics for the user have not been calculated",
+          errorMessage:
+            "There are no statistics available for this user for this period",
           loading: false,
           currPage: page,
           entityCount: 0,

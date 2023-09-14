@@ -34752,7 +34752,7 @@ exports[`Sitewide Stats UserEntityChart Page renders correctly if stats are not 
                 </svg>
               </FontAwesomeIcon>
                
-              Statistics for the user have not been calculated
+              There are no statistics available for this user for this period
             </span>
           </div>
         </div>
@@ -70380,7 +70380,7 @@ exports[`User Stats UserEntityChart Page renders correctly if stats are not calc
                 </svg>
               </FontAwesomeIcon>
                
-              Statistics for the user have not been calculated
+              There are no statistics available for this user for this period
             </span>
           </div>
         </div>

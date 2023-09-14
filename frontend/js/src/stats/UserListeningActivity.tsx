@@ -136,7 +136,8 @@ export default class UserListeningActivity extends React.Component<
         this.setState({
           loading: false,
           hasError: true,
-          errorMessage: "Statistics for the user have not been calculated",
+          errorMessage:
+            "There are no statistics available for this user for this period",
         });
       } else {
         throw error;
