@@ -136,16 +136,6 @@ CREATE TABLE messybrainz.submissions (
     submitted       TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-
-
-CREATE TABLE spotify_cache.raw_cache_data (
-    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    album_id        TEXT NOT NULL,
-    data            JSONB,
-    last_refresh    TIMESTAMP WITH TIME ZONE NOT NULL,
-    expires_at      TIMESTAMP WITH TIME ZONE NOT NULL
-);
-
 CREATE TABLE spotify_cache.album (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
     album_id                TEXT   NOT NULL,
