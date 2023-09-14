@@ -22,7 +22,7 @@ class AppleCrawlerHandler(BaseHandler):
     def __init__(self, app):
         super().__init__(
             name="listenbrainz-apple-metadata-cache",
-            external_service_queue=app.config["EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE"],
+            external_service_queue=app.config["EXTERNAL_SERVICES_APPLE_CACHE_QUEUE"],
             schema_name="apple_cache",
             cache_key_prefix=CACHE_KEY_PREFIX
         )
@@ -45,16 +45,19 @@ class AppleCrawlerHandler(BaseHandler):
         return list(album_ids)
 
     def get_items_from_listen(self, listen) -> list[JobItem]:
+        """ convert listens to job itees to be enqueued in crawler """
         album_id = listen["track_metadata"]["additional_info"].get("apple_album_id")
         if album_id:
             return [JobItem(INCOMING_ALBUM_PRIORITY, album_id)]
         return []
 
     def get_items_from_seeder(self, message) -> list[JobItem]:
+        """ convert album_ids from seeder to job items to be enqueued in crawler """
         return [JobItem(INCOMING_ALBUM_PRIORITY, album_id) for album_id in message["apple_album_ids"]]
 
     @staticmethod
     def transform_album(album) -> Album:
+        """ convert an album response from apple API to Album object for storing in db """
         tracks = []
         for track in album.pop("tracks"):
             track_artists = []
