@@ -565,28 +565,25 @@
   }
 
   &.deleted {
-    animation: deleted-animation 0.3s linear forwards;
+    animation: deleted-animation 0.6s ease-in-out forwards;
+    transform-origin: center;
   }
 
   @keyframes deleted-animation {
     0% {
       opacity: 1;
-      padding: inherit;
-      height: inherit;
-      margin: inherit;
-      transform: scaleY(1);
+      transform: rotateX(0) scale(1);
     }
 
-    50% {
-      opacity: 0;
+    40% {
+      opacity: 0.3;
+      transform: rotateX(40deg) scale(0.8);
     }
 
     100% {
-      opacity: 0;
-      height: 0px;
       margin-top: -40px;
-      transform: scaleY(0);
-      display: none;
+      margin-bottom: -28px;
+      transform: rotateX(90deg) scale(0.8, 0.4);
     }
   }
 }

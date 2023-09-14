@@ -472,14 +472,14 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)
 
-        self.assertEqual(data["count"], 100)
+        self.assertEqual(data["count"], 110)
         self.assertEqual(data["total_count"], 110)
         self.assertEqual(data["offset"], 0)
         self.assertEqual(data["user_name"], self.user2['musicbrainz_id'])
 
         feedback = data["feedback"]  # sorted in descending order of their creation
-        self.assertEqual(len(feedback), 100)
-        for i in range(100):
+        self.assertEqual(len(feedback), 110)
+        for i in range(110):
             self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i]['recording_mbid'])
             self.assertEqual(feedback[i]['rating'], feedback_love[i]['rating'])
 
