@@ -220,7 +220,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
 
               <div className="text-center mb-10 mt-10">
                 <button
-                  className="btn btn-link btn-rounded"
+                  className="btn btn-transparent btn-rounded"
                   disabled={Boolean(selectedRecording)}
                   onClick={copyTextToSearchField}
                 >
