@@ -1,35 +1,34 @@
-import * as React from "react";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  has as _has,
   isEqual as _isEqual,
   isNil as _isNil,
   isString as _isString,
-  get as _get,
-  has as _has,
   throttle as _throttle,
   assign,
-  debounce,
   cloneDeep,
+  debounce,
   omit,
 } from "lodash";
-import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import * as React from "react";
 import { toast } from "react-toastify";
-import BrainzPlayerUI from "./BrainzPlayerUI";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import SpotifyPlayer from "./SpotifyPlayer";
-import YoutubePlayer from "./YoutubePlayer";
-import SoundcloudPlayer from "./SoundcloudPlayer";
 import {
-  hasNotificationPermission,
+  ToastMsg,
   createNotification,
   hasMediaSessionSupport,
+  hasNotificationPermission,
   overwriteMediaSession,
   updateMediaSession,
   updateWindowTitle,
-  ToastMsg,
 } from "../notifications/Notifications";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import { getArtistName, getTrackName } from "../utils/utils";
+import BrainzPlayerUI from "./BrainzPlayerUI";
+import SoundcloudPlayer from "./SoundcloudPlayer";
+import SpotifyPlayer from "./SpotifyPlayer";
+import YoutubePlayer from "./YoutubePlayer";
 
 export type DataSourceType = {
   name: string;
@@ -592,7 +591,7 @@ export default class BrainzPlayer extends React.Component<
         createNotification(title, artist, album, artwork?.[0]?.src);
       } else {
         const message = (
-          <>
+          <div className="alert brainzplayer-alert">
             {artwork?.length ? (
               <img
                 className="alert-thumbnail"
@@ -602,15 +601,14 @@ export default class BrainzPlayer extends React.Component<
             ) : (
               <FontAwesomeIcon icon={faPlayCircle as IconProp} />
             )}
-            &emsp;{title}
-            {artist && ` — ${artist}`}
-            {album && ` — ${album}`}
-          </>
+            <div>
+              {title}
+              {artist && ` — ${artist}`}
+              {album && ` — ${album}`}
+            </div>
+          </div>
         );
-        this.handleInfoMessage(
-          message,
-          `Playing ${title}${artist && ` — ${artist}`}`
-        );
+        this.handleInfoMessage(message, `Playing a track`);
       }
     });
 
