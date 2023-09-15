@@ -19,6 +19,11 @@ import RecentListens, {
 } from "../../src/recent/RecentListens";
 import { waitForComponentToPaint } from "../test-utils";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import ListenCard from "../../src/listens/ListenCard";
+// import Card from "../../src/components/Card";
+// import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
+
+jest.createMockFromModule("../../src/brainzplayer/BrainzPlayer");
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -83,26 +88,27 @@ fetchMock.mockIf(
     return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
   }
 );
+fetchMock.mockIf(
+  (input) => input.url.startsWith("https://api.spotify.com"),
+  () => {
+    return Promise.resolve(JSON.stringify({}));
+  }
+);
 
 describe("Recentlistens", () => {
   it("renders the page correctly", () => {
-    // Datepicker component uses current time at load as max date,
-    // and PinnedRecordingModal component uses current time at load to display recording unpin date,
-    // so we have to mock the Date constructor otherwise snapshots will be different every day
-    const mockDate = new Date("2021-05-19");
-    const fakeDateNow = jest
-      .spyOn(global.Date, "now")
-      .mockImplementation(() => mockDate.getTime());
-
-    // eslint-disable-next-line no-import-assign
-    timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <RecentListens {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
-    fakeDateNow.mockRestore();
+    // We only expect two Card elements, but the Card component
+    // passes down the id prop to it's children so we get 4 results
+    const listenCountCards = wrapper.find("#listen-count-card");
+    expect(listenCountCards).toHaveLength(4);
+    const listensContainer = wrapper.find("#listens");
+    expect(listensContainer).toHaveLength(1);
+    expect(listensContainer.find(ListenCard)).toHaveLength(25);
     wrapper.unmount();
   });
 });

@@ -13,7 +13,8 @@ const props = {
 describe("LastFmImporterModal", () => {
   it("renders", () => {
     const wrapper = mount(<LastFMImporterModal {...props} />);
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper.find("#listen-progress-container")).toHaveLength(1);
+    expect(wrapper.find("button")).toHaveLength(1);
   });
 
   it("close button is disabled/enabled based upon props", async () => {

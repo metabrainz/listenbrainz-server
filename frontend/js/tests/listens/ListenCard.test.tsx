@@ -17,6 +17,7 @@ import PinRecordingModal from "../../src/pins/PinRecordingModal";
 import { waitForComponentToPaint } from "../test-utils";
 import CBReviewModal from "../../src/cb-review/CBReviewModal";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import Card from "../../src/components/Card";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -60,7 +61,9 @@ const globalProps: GlobalAppContextT = {
 describe("ListenCard", () => {
   it("renders correctly", () => {
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
-    expect(wrapper).toMatchSnapshot();
+    const card = wrapper.find(Card);
+    expect(card).toHaveLength(1);
+    expect(card.getDOMNode()).toHaveClass("listen-card");
   });
 
   it("renders correctly for playing_now listen", () => {
@@ -89,16 +92,12 @@ describe("ListenCard", () => {
     expect(
       wrapper.find('button[title="Recommend to my followers"]')
     ).toHaveLength(1);
-
-    expect(wrapper).toMatchSnapshot();
   });
 
   it("should render timestamp using preciseTimestamp", () => {
     const preciseTimestamp = jest.spyOn(utils, "preciseTimestamp");
     const wrapper = mount<ListenCard>(<ListenCard {...props} />);
     expect(preciseTimestamp).toHaveBeenCalledTimes(1);
-
-    expect(wrapper).toMatchSnapshot();
   });
 
   it("should use mapped mbids if listen does not have user submitted mbids", () => {

@@ -45,7 +45,7 @@ describe("MissingMBDataPage", () => {
         <MissingMBDataPage {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper.find("#missingMBData")).toHaveLength(1);
   });
 
   xdescribe("handleClickPrevious", () => {

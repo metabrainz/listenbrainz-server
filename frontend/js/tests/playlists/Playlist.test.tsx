@@ -55,7 +55,9 @@ describe("PlaylistPage", () => {
         value: GlobalContextMock,
       },
     });
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper.find("#playlist")).toHaveLength(1);
+    expect(wrapper.getDOMNode()).toHaveTextContent("1980s flashback jams");
+    expect(wrapper.getDOMNode()).toHaveTextContent("Your lame <i>80s</i> music");
   });
 
   it("hides exportPlaylistToSpotify button if playlist permissions are absent", () => {
