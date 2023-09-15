@@ -1,20 +1,18 @@
+/* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
+
 import * as React from "react";
 
-import {
-  faPen,
-  faTrashAlt,
-  faSave,
-  faCog,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCog, faSave } from "@fortawesome/free-solid-svg-icons";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { toast } from "react-toastify";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { sanitize } from "dompurify";
-import { getPlaylistExtension, getPlaylistId } from "./utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { toast } from "react-toastify";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import PlaylistMenu from "./PlaylistMenu";
+import { getPlaylistExtension, getPlaylistId } from "./utils";
 
 export type PlaylistCardProps = {
   playlist: JSPFPlaylist;
@@ -31,10 +29,13 @@ export default function PlaylistCard({
   selectPlaylistForEdit,
   showOptions = true,
 }: PlaylistCardProps) {
-  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { APIService, currentUser, spotifyAuth } = React.useContext(
+    GlobalAppContext
+  );
 
   const playlistId = getPlaylistId(playlist);
   const customFields = getPlaylistExtension(playlist);
+  const [loading, setLoading] = React.useState(false);
 
   const onSelectPlaylistForEdit = React.useCallback(() => {
     selectPlaylistForEdit(playlist);
@@ -93,7 +94,7 @@ export default function PlaylistCard({
         toastId: "copy-playlist-error",
       });
     }
-  }, [playlistId, currentUser, onSuccessfulCopy]);
+  }, [currentUser.auth_token, playlistId, APIService, onSuccessfulCopy]);
 
   return (
     <Card className="playlist" key={playlistId}>
@@ -123,39 +124,7 @@ export default function PlaylistCard({
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options
           </button>
-          <ul
-            className="dropdown-menu"
-            aria-labelledby="playlistOptionsDropdown"
-          >
-            <li>
-              <button onClick={onCopyPlaylist} type="button">
-                Duplicate
-              </button>
-            </li>
-            {isOwner && (
-              <>
-                <li role="separator" className="divider" />
-                <li>
-                  <button
-                    type="button"
-                    data-toggle="modal"
-                    data-target="#playlistEditModal"
-                  >
-                    <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    data-toggle="modal"
-                    data-target="#confirmDeleteModal"
-                  >
-                    <FontAwesomeIcon icon={faTrashAlt as IconProp} /> Delete
-                  </button>
-                </li>
-              </>
-            )}
-          </ul>
+          <PlaylistMenu playlist={playlist} />
         </div>
       )}
       <a className="info" href={`/playlist/${sanitize(playlistId)}`}>

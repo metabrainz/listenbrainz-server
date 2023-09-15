@@ -1,14 +1,14 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable camelcase */
 
-import * as React from "react";
 import { noop } from "lodash";
+import * as React from "react";
 import { toast } from "react-toastify";
-import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
-import PlaylistCard from "./PlaylistCard";
-import { PlaylistType } from "./utils";
 import { ToastMsg } from "../notifications/Notifications";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import PlaylistCard from "./PlaylistCard";
+import { PlaylistType, isPlaylistOwner } from "./utils";
 
 export type PlaylistsListProps = {
   playlists: JSPFPlaylist[];
@@ -55,11 +55,6 @@ export default class PlaylistsList extends React.Component<
       await this.fetchPlaylists(0);
     }
   }
-
-  isOwner = (playlist: JSPFPlaylist): boolean => {
-    const { currentUser } = this.context;
-    return Boolean(currentUser) && currentUser?.name === playlist.creator;
-  };
 
   alertNotAuthorized = () => {
     toast.error(
@@ -161,6 +156,7 @@ export default class PlaylistsList extends React.Component<
       onCopiedPlaylist,
     } = this.props;
     const { paginationOffset, playlistCount, loading } = this.state;
+    const { currentUser } = this.context;
     return (
       <div>
         <Loader isLoading={loading} />
@@ -172,7 +168,7 @@ export default class PlaylistsList extends React.Component<
           style={{ opacity: loading ? "0.4" : "1" }}
         >
           {playlists.map((playlist: JSPFPlaylist) => {
-            const isOwner = this.isOwner(playlist);
+            const isOwner = isPlaylistOwner(playlist, currentUser);
 
             return (
               <PlaylistCard
