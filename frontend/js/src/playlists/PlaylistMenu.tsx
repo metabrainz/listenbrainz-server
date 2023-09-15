@@ -84,6 +84,19 @@ function PlaylistMenu({ playlist }: PlaylistMenuProps) {
     const result = await APIService.getPlaylist(playlistId, auth_token);
     saveAs(await result.blob(), `${playlistTitle}.jspf`);
   };
+
+  const exportAsXSPF = async (
+    playlistId: string,
+    playlistTitle: string,
+    auth_token: string
+  ) => {
+    const result = await APIService.exportPlaylistToXSPF(
+      auth_token,
+      playlistId
+    );
+    saveAs(result, `${playlistTitle}.xspf`);
+  };
+  
   const exportToSpotify = async (
     playlistId: string,
     playlistTitle: string,
