@@ -7,7 +7,6 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
 import { omit } from "lodash";
-import APIService from "../utils/APIService";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;

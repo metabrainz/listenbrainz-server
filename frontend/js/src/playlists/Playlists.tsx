@@ -93,170 +93,28 @@ export default class UserPlaylists extends React.Component<
     }
   };
 
-  createPlaylist = async (
-    title: string,
-    description: string,
-    isPublic: boolean,
-    // Not sure what to do with those yet
-    collaborators: string[],
-    id?: string,
-    onSuccessCallback?: () => void
+  onPlaylistEdited = async (
+    playlist:JSPFPlaylist
   ): Promise<void> => {
-    const { currentUser, APIService } = this.context;
-    if (id) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message="Called createPlaylist method with an ID; should call editPlaylist instead"
-        />,
-        { toastId: "create-playlists-error" }
-      );
-      return;
-    }
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    if (!this.isCurrentUserPage()) {
-      // Just in case the user find a way to access this method, let's nudge them to their own page
-      toast.warn(
-        <ToastMsg
-          title=""
-          message={
-            <div>
-              Please go to&nbsp;
-              <a href={`/user/${currentUser.name}/playlists`}>
-                your playlists
-              </a>{" "}
-              to create a new one
-            </div>
-          }
-        />
-      );
-      return;
-    }
-    try {
-      const newPlaylist: JSPFObject = {
-        playlist: {
-          // Th following 4 fields to satisfy TS type
-          creator: currentUser?.name,
-          identifier: "",
-          date: "",
-          track: [],
-
-          title,
-          annotation: description,
-          extension: {
-            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-              public: isPublic,
-              collaborators,
-            },
-          },
-        },
-      };
-      const newPlaylistId = await APIService.createPlaylist(
-        currentUser.auth_token,
-        newPlaylist
-      );
-      toast.success(
-        <ToastMsg
-          title="Created playlist"
-          message={
-            <>
-              Created new {isPublic ? "public" : "private"} playlist{" "}
-              <a href={`/playlist/${newPlaylistId}`}>{title}</a>
-            </>
-          }
-        />,
-        { toastId: "create-playlist-success" }
-      );
-      // Fetch the newly created playlist and add it to the state
-      const JSPFObject: JSPFObject = await APIService.getPlaylist(
-        newPlaylistId,
-        currentUser.auth_token
-      ).then((res) => res.json());
-      this.setState(
-        (prevState) => ({
-          playlists: [JSPFObject.playlist, ...prevState.playlists],
-        }),
-        onSuccessCallback
-      );
-    } catch (error) {
-      toast.error(<ToastMsg title="Error" message={error.message} />, {
-        toastId: "fetch-playlist-error",
-      });
-    }
-  };
-
-  editPlaylist = async (
-    name: string,
-    description: string,
-    isPublic: boolean,
-    collaborators: string[],
-    id?: string
-  ): Promise<void> => {
-    const { currentUser, APIService } = this.context;
-    if (!id) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={
-            "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
-          }
-        />,
-        { toastId: "edit-playlist-error" }
-      );
-      return;
-    }
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
+    // Once API call succeeds, update playlist in state
     const { playlists } = this.state;
     const playlistsCopy = [...playlists];
     const playlistIndex = playlistsCopy.findIndex(
-      (pl) => getPlaylistId(pl) === id
+      (pl) => getPlaylistId(pl) === getPlaylistId(playlist)
     );
-    const playlistToEdit = playlists[playlistIndex];
-    if (!isPlaylistOwner(playlistToEdit, currentUser)) {
-      this.alertNotAuthorized();
-      return;
-    }
-    try {
-      // Owner can't be collaborator
-      const collaboratorsWithoutOwner = collaborators.filter(
-        (username) =>
-          username.toLowerCase() !== playlistToEdit.creator.toLowerCase()
-      );
-      const editedPlaylist: JSPFPlaylist = {
-        ...playlistToEdit,
-        annotation: description,
-        title: name,
-        extension: {
-          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-            public: isPublic,
-            collaborators: collaboratorsWithoutOwner,
-          },
-        },
-      };
-      await APIService.editPlaylist(currentUser.auth_token, id, {
-        playlist: editedPlaylist,
-      });
-
-      toast.success(<ToastMsg title="Saved Playlist" message="" />, {
-        toastId: "saved-playlist",
-      });
-      // Once API call succeeds, update playlist in state
-      playlistsCopy[playlistIndex] = editedPlaylist;
-      this.setState({
-        playlists: playlistsCopy,
-        playlistSelectedForOperation: undefined,
-      });
-    } catch (error) {
-      toast.error(<ToastMsg title="Error" message={error.message} />, {
-        toastId: "saved-playlist-error",
-      });
-    }
+    playlistsCopy[playlistIndex] = playlist;
+    this.setState({
+      playlists: playlistsCopy,
+    });
+  };
+  
+  onPlaylistCreated = async (
+    playlist:JSPFPlaylist
+  ): Promise<void> => {
+    const { playlists } = this.state;
+    this.setState({
+      playlists: [playlist,...playlists],
+    });
   };
 
   deletePlaylist = async (): Promise<void> => {
@@ -354,12 +212,19 @@ export default class UserPlaylists extends React.Component<
           user={user}
           playlistCount={playlistCount}
           selectPlaylistForEdit={this.selectPlaylistForEdit}
+          onPlaylistEdited={this.onPlaylistEdited}
         >
           {this.isCurrentUserPage() && (
             <Card
               className="new-playlist"
               data-toggle="modal"
               data-target="#playlistCreateModal"
+              onClick={()=>{
+                NiceModal.show(CreateOrEditPlaylistModal)
+                // @ts-ignore
+                .then((playlist: JSPFPlaylist) => {
+                this.onPlaylistCreated(playlist);
+              })}}
             >
               <div>
                 <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
@@ -370,15 +235,6 @@ export default class UserPlaylists extends React.Component<
         </PlaylistsList>
         {this.isCurrentUserPage() && (
           <>
-            <CreateOrEditPlaylistModal
-              onSubmit={this.createPlaylist}
-              htmlId="playlistCreateModal"
-            />
-            <CreateOrEditPlaylistModal
-              onSubmit={this.editPlaylist}
-              playlist={playlistSelectedForOperation}
-              htmlId="playlistEditModal"
-            />
             <DeletePlaylistConfirmationModal
               onConfirm={this.deletePlaylist}
               playlist={playlistSelectedForOperation}

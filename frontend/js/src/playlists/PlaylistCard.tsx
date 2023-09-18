@@ -18,6 +18,7 @@ export type PlaylistCardProps = {
   playlist: JSPFPlaylist;
   isOwner: boolean;
   onSuccessfulCopy: (playlist: JSPFPlaylist) => void;
+  onPlaylistEdited: (playlist: JSPFPlaylist) => void;
   selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
   showOptions: boolean;
 };
@@ -26,6 +27,7 @@ export default function PlaylistCard({
   playlist,
   isOwner,
   onSuccessfulCopy,
+  onPlaylistEdited,
   selectPlaylistForEdit,
   showOptions = true,
 }: PlaylistCardProps) {
@@ -124,7 +126,7 @@ export default function PlaylistCard({
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options
           </button>
-          <PlaylistMenu playlist={playlist} />
+          <PlaylistMenu playlist={playlist} onPlaylistSave={onPlaylistEdited}/>
         </div>
       )}
       <a className="info" href={`/playlist/${sanitize(playlistId)}`}>

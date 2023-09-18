@@ -15,12 +15,15 @@ import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getPlaylistId, isPlaylistOwner } from "./utils";
+import NiceModal from "@ebay/nice-modal-react";
+import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 
 export type PlaylistMenuProps = {
   playlist: JSPFPlaylist;
+  onPlaylistSave?:(playlist:JSPFPlaylist) => void;
 };
 
-function PlaylistMenu({ playlist }: PlaylistMenuProps) {
+function PlaylistMenu({ playlist, onPlaylistSave}: PlaylistMenuProps) {
   const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
   const [loading, setLoading] = React.useState(false);
   const alertMustBeLoggedIn = () => {
@@ -176,6 +179,14 @@ function PlaylistMenu({ playlist }: PlaylistMenuProps) {
               data-target="#playlistModal"
               role="button"
               href="#"
+               onClick={()=>{
+                NiceModal.show(CreateOrEditPlaylistModal,{playlist})
+                // @ts-ignore
+                .then((playlist: JSPFPlaylist) => {
+                  if(onPlaylistSave){
+                    onPlaylistSave(playlist);
+                  }
+              })}}
             >
               <FontAwesomeIcon icon={faPen as IconProp} />
               Edit

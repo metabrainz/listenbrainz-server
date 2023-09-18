@@ -17,6 +17,7 @@ export type PlaylistsListProps = {
   playlistCount: number;
   activeSection: PlaylistType;
   onCopiedPlaylist?: (playlist: JSPFPlaylist) => void;
+  onPlaylistEdited: (playlist: JSPFPlaylist) => void;
   selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
   onPaginatePlaylists: (playlists: JSPFPlaylist[]) => void;
 };
@@ -154,6 +155,7 @@ export default class PlaylistsList extends React.Component<
       activeSection,
       children,
       onCopiedPlaylist,
+      onPlaylistEdited,
     } = this.props;
     const { paginationOffset, playlistCount, loading } = this.state;
     const { currentUser } = this.context;
@@ -176,6 +178,7 @@ export default class PlaylistsList extends React.Component<
                 playlist={playlist}
                 isOwner={isOwner}
                 onSuccessfulCopy={onCopiedPlaylist ?? noop}
+                onPlaylistEdited={onPlaylistEdited}
                 selectPlaylistForEdit={selectPlaylistForEdit}
                 key={playlist.identifier}
               />

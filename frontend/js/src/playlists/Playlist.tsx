@@ -27,7 +27,6 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
 import { getPageProps } from "../utils/utils";
-import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 import PlaylistItemCard from "./PlaylistItemCard";
 import PlaylistMenu from "./PlaylistMenu";
@@ -37,7 +36,6 @@ import {
   getRecordingMBIDFromJSPFTrack,
   isPlaylistOwner,
   JSPFTrackToListen,
-  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
 } from "./utils";
@@ -219,6 +217,10 @@ export default class PlaylistPage extends React.Component<
       this.handleError(error);
     }
   };
+  
+  onPlaylistSave = (playlist:JSPFPlaylist)=>{
+    this.setState({playlist}, this.emitPlaylistChanged)
+  }
 
   hasRightToEdit = (): boolean => {
     const { currentUser } = this.context;
@@ -306,79 +308,6 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  editPlaylist = async (
-    name: string,
-    description: string,
-    isPublic: boolean,
-    collaborators: string[],
-    id?: string
-  ) => {
-    if (!id) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={
-            "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
-          }
-        />,
-        { toastId: "edit-playlist-error" }
-      );
-      return;
-    }
-    const { currentUser } = this.context;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    const { playlist } = this.state;
-    // Owner can't be collaborator
-    const collaboratorsWithoutOwner = collaborators.filter(
-      (username) => username.toLowerCase() !== playlist.creator.toLowerCase()
-    );
-    if (!isPlaylistOwner(playlist, currentUser)) {
-      this.alertNotAuthorized();
-      return;
-    }
-    if (
-      description === playlist.annotation &&
-      name === playlist.title &&
-      isPublic ===
-        playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.public &&
-      collaboratorsWithoutOwner ===
-        playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.collaborators
-    ) {
-      // Nothing changed
-      return;
-    }
-    try {
-      const editedPlaylist: JSPFPlaylist = {
-        ...playlist,
-        annotation: description,
-        title: name,
-        extension: {
-          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-            public: isPublic,
-            collaborators: collaboratorsWithoutOwner,
-          },
-        },
-      };
-
-      await this.APIService.editPlaylist(currentUser.auth_token, id, {
-        playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
-      });
-      this.setState({ playlist: editedPlaylist }, this.emitPlaylistChanged);
-      toast.success(
-        <ToastMsg
-          title="Saved playlist"
-          message={`Saved playlist ${playlist.title}`}
-        />,
-        { toastId: "saved-playlist" }
-      );
-    } catch (error) {
-      this.handleError(error);
-    }
-  };
-
   alertMustBeLoggedIn = () => {
     toast.error(
       <ToastMsg
@@ -459,7 +388,7 @@ export default class PlaylistPage extends React.Component<
                       />
                       &nbsp;Options
                     </button>
-                    <PlaylistMenu playlist={playlist} />
+                    <PlaylistMenu playlist={playlist} onPlaylistSave={this.onPlaylistSave}/>
                   </span>
                 </div>
                 <small>
@@ -571,10 +500,6 @@ export default class PlaylistPage extends React.Component<
             </div>
             {isPlaylistOwner(playlist, currentUser) && (
               <>
-                <CreateOrEditPlaylistModal
-                  onSubmit={this.editPlaylist}
-                  playlist={playlist}
-                />
                 <DeletePlaylistConfirmationModal
                   onConfirm={this.deletePlaylist}
                   playlist={playlist}
