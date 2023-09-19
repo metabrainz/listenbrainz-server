@@ -682,7 +682,7 @@ export default class Listens extends React.Component<
     return (
       <div role="main">
         <div className="row">
-          <div className="col-md-4 col-md-push-8">
+          <div className="col-md-4 col-md-push-8 mt-15">
             <div className="mb-15">
               {!isCurrentUsersPage && (
                 <FollowButton
