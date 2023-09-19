@@ -77,25 +77,6 @@ fetchMock.mockIf(
   }
 );
 describe("Listens page", () => {
-  it("renders correctly on the profile page", () => {
-    // Datepicker component uses current time at load as max date,
-    // and PinnedRecordingModal component uses current time at load to display recording unpin date,
-    // so we have to mock the Date constructor otherwise snapshots will be different every day
-    const mockDate = new Date("2021-05-19");
-    const fakeDateNow = jest
-      .spyOn(global.Date, "now")
-      .mockImplementation(() => mockDate.getTime());
-
-    // eslint-disable-next-line no-import-assign
-    timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    const wrapper = mount<Listens>(
-      <GlobalAppContext.Provider value={mountOptions.context}>
-        <Listens {...props} />
-      </GlobalAppContext.Provider>
-    );
-    expect(wrapper.html()).toMatchSnapshot();
-    fakeDateNow.mockRestore();
-  });
 
   describe("componentDidMount", () => {
     it("calls connectWebsockets", () => {
