@@ -317,8 +317,8 @@ def run_daily_jams(create_all):
 
 
 @cli.command()
-def run_spotify_metadata_cache_seeder():
-    """ Query spotify new releases api for new releases and submit those to our cache as seeds """
+def run_metadata_cache_seeder():
+    """ Query external services' new releases api for new releases and submit those to our cache as seeds """
     submit_new_releases_to_cache()
 
 

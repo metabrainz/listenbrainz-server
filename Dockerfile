@@ -171,6 +171,12 @@ COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.service /et
 COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.finish /etc/service/spotify_metadata_cache/finish
 RUN touch /etc/service/spotify_metadata_cache/down
 
+# Apple Metadata Cache
+COPY ./docker/services/apple_metadata_cache/consul-template-apple-metadata-cache.conf /etc/consul-template-apple-metadata-cache.conf
+COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.service /etc/service/apple_metadata_cache/run
+COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.finish /etc/service/apple_metadata_cache/finish
+RUN touch /etc/service/apple_metadata_cache/down
+
 # uwsgi (website)
 COPY ./docker/services/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf

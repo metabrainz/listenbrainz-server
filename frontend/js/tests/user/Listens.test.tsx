@@ -84,7 +84,6 @@ describe("Listens page", () => {
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find("#listens")).toHaveLength(1);
-
   });
 
   describe("componentDidMount", () => {
