@@ -1,5 +1,7 @@
 BEGIN;
 
+CREATE SCHEMA apple_cache;
+
 CREATE TABLE apple_cache.album (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
     album_id                TEXT   NOT NULL,
@@ -41,7 +43,6 @@ CREATE TABLE apple_cache.rel_track_artist (
     position        INTEGER NOT NULL
 );
 
-CREATE UNIQUE INDEX apple_metadata_cache_album_id_ndx ON apple_cache.raw_cache_data (album_id);
 CREATE UNIQUE INDEX apple_cache_album_apple_id_idx ON apple_cache.album (album_id);
 CREATE UNIQUE INDEX apple_cache_artist_apple_id_idx ON apple_cache.artist (artist_id);
 CREATE UNIQUE INDEX apple_cache_track_apple_id_idx ON apple_cache.track (track_id);
