@@ -683,6 +683,28 @@ export default class Listens extends React.Component<
       <div role="main">
         <div className="row">
           <div className="col-md-4 col-md-push-8">
+            <div className="mb-15">
+              {!isCurrentUsersPage && (
+                <FollowButton
+                  type="icon-only"
+                  user={user}
+                  loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
+                  updateFollowingList={this.updateFollowingList}
+                />
+              )}
+              <a
+                href={`https://musicbrainz.org/user/${user.name}`}
+                className="btn lb-follow-button" // for same style as follow button next to it
+                target="_blank"
+                rel="noreferrer"
+              >
+                <img
+                  src="/static/img/musicbrainz-16.svg"
+                  alt="MusicBrainz Logo"
+                />{" "}
+                MusicBrainz
+              </a>
+            </div>
             {playingNowListen && this.getListenCard(playingNowListen)}
             {userPinnedRecording && (
               <PinnedRecordingCard
@@ -739,7 +761,7 @@ export default class Listens extends React.Component<
                 </div>
               </div>
             )}
-            <div className="col-md-8 listen-header">
+            <div className="listen-header">
               {listens.length === 0 ? (
                 <div id="spacer" />
               ) : (
@@ -789,28 +811,7 @@ export default class Listens extends React.Component<
                 </div>
               )}
             </div>
-            <div className="col-md-4 mt-15">
-              {!isCurrentUsersPage && (
-                <FollowButton
-                  type="icon-only"
-                  user={user}
-                  loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
-                  updateFollowingList={this.updateFollowingList}
-                />
-              )}
-              <a
-                href={`https://musicbrainz.org/user/${user.name}`}
-                className="btn lb-follow-button" // for same style as follow button next to it
-                target="_blank"
-                rel="noreferrer"
-              >
-                <img
-                  src="/static/img/musicbrainz-16.svg"
-                  alt="MusicBrainz Logo"
-                />{" "}
-                MusicBrainz
-              </a>
-            </div>
+
             {listens.length > 0 && (
               <div>
                 <div
