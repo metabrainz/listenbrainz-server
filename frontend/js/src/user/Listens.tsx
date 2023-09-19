@@ -36,6 +36,7 @@ import {
   getRecordingMSID,
   getTrackName,
 } from "../utils/utils";
+import FollowButton from "../follow/FollowButton";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -738,7 +739,7 @@ export default class Listens extends React.Component<
                 </div>
               </div>
             )}
-            <div className="listen-header">
+            <div className="col-md-8 listen-header">
               {listens.length === 0 ? (
                 <div id="spacer" />
               ) : (
@@ -787,6 +788,28 @@ export default class Listens extends React.Component<
                   </ul>
                 </div>
               )}
+            </div>
+            <div className="col-md-4 mt-15">
+              {!isCurrentUsersPage && (
+                <FollowButton
+                  type="icon-only"
+                  user={user}
+                  loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
+                  updateFollowingList={this.updateFollowingList}
+                />
+              )}
+              <a
+                href={`https://musicbrainz.org/user/${user.name}`}
+                className="btn lb-follow-button" // for same style as follow button next to it
+                target="_blank"
+                rel="noreferrer"
+              >
+                <img
+                  src="/static/img/musicbrainz-16.svg"
+                  alt="MusicBrainz Logo"
+                />{" "}
+                MusicBrainz
+              </a>
             </div>
             {listens.length > 0 && (
               <div>
