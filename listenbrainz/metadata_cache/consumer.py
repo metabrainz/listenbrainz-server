@@ -34,7 +34,8 @@ class ServiceMetadataCache(ConsumerMixin):
         self.service_queue = Queue(
             self.handler.external_service_queue,
             exchange=self.external_services_exchange,
-            durable=True
+            durable=True,
+            routing_key=self.handler.external_service_queue
         )
 
     def get_consumers(self, _, channel):
@@ -80,7 +81,7 @@ class ServiceMetadataCache(ConsumerMixin):
                 self.crawler = Crawler(self.app, self.handler)
                 self.crawler.start()
 
-                self.app.logger.info("Starting Spotify Metadata Cache ...")
+                self.app.logger.info(f"Starting {self.crawler.name} Metadata Cache ...")
                 self.init_rabbitmq_connection()
                 self.run()
             except KeyboardInterrupt:
@@ -88,7 +89,7 @@ class ServiceMetadataCache(ConsumerMixin):
                 self.app.logger.error("Keyboard interrupt!")
                 break
             except Exception:
-                self.app.logger.error("Error in Spotify Metadata Cache: ", exc_info=True)
+                self.app.logger.error(f"Error in {self.crawler.name} Metadata Cache: ", exc_info=True)
                 time.sleep(3)
         # the while True loop above makes this line unreachable but adding it anyway
         # so that we remember that every started thread should also be joined.

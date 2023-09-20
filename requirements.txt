@@ -55,4 +55,4 @@ countryinfo==0.1.2
 urllib3==1.26.9
 orjson==3.8.7
 dnspython==2.2.1
-pyjwt==2.7.0
+pyjwt[crypto]==2.7.0
