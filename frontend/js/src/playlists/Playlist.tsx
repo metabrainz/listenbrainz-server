@@ -27,7 +27,6 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
 import { getPageProps } from "../utils/utils";
-import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 import PlaylistItemCard from "./PlaylistItemCard";
 import PlaylistMenu from "./PlaylistMenu";
 import {
@@ -183,39 +182,13 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  deletePlaylist = async (): Promise<void> => {
+  onDeletePlaylist = async (): Promise<void> => {
     const { currentUser } = this.context;
-    const { playlist } = this.state;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    if (!isPlaylistOwner(playlist, currentUser)) {
-      this.alertNotAuthorized();
-      return;
-    }
-    try {
-      await this.APIService.deletePlaylist(
-        currentUser.auth_token,
-        getPlaylistId(playlist)
-      );
-      // redirect
-      toast.success(
-        <ToastMsg
-          title="Deleted playlist"
-          message={`Deleted playlist ${playlist.title}`}
-        />,
-        { toastId: "delete-playlist-success" }
-      );
-
-      // Wait 1.5 second before navigating to user playlists page
-      await new Promise((resolve) => {
-        setTimeout(resolve, 1500);
-      });
-      window.location.href = `${window.location.origin}/user/${currentUser.name}/playlists`;
-    } catch (error) {
-      this.handleError(error);
-    }
+    // Wait 1.5 second before navigating to user playlists page
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1500);
+    });
+    window.location.href = `${window.location.origin}/user/${currentUser?.name}/playlists`;
   };
   
   onPlaylistSave = (playlist:JSPFPlaylist)=>{
@@ -388,7 +361,7 @@ export default class PlaylistPage extends React.Component<
                       />
                       &nbsp;Options
                     </button>
-                    <PlaylistMenu playlist={playlist} onPlaylistSave={this.onPlaylistSave}/>
+                    <PlaylistMenu playlist={playlist} onPlaylistSave={this.onPlaylistSave} onPlaylistDelete={this.onDeletePlaylist}/>
                   </span>
                 </div>
                 <small>
@@ -498,14 +471,6 @@ export default class PlaylistPage extends React.Component<
                 </Card>
               )}
             </div>
-            {isPlaylistOwner(playlist, currentUser) && (
-              <>
-                <DeletePlaylistConfirmationModal
-                  onConfirm={this.deletePlaylist}
-                  playlist={playlist}
-                />
-              </>
-            )}
           </div>
           <BrainzPlayer
             listens={tracks.map(JSPFTrackToListen)}

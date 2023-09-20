@@ -16,19 +16,17 @@ import { getPlaylistExtension, getPlaylistId } from "./utils";
 
 export type PlaylistCardProps = {
   playlist: JSPFPlaylist;
-  isOwner: boolean;
   onSuccessfulCopy: (playlist: JSPFPlaylist) => void;
   onPlaylistEdited: (playlist: JSPFPlaylist) => void;
-  selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
+  onPlaylistDeleted: (playlist: JSPFPlaylist) => void;
   showOptions: boolean;
 };
 
 export default function PlaylistCard({
   playlist,
-  isOwner,
   onSuccessfulCopy,
   onPlaylistEdited,
-  selectPlaylistForEdit,
+  onPlaylistDeleted,
   showOptions = true,
 }: PlaylistCardProps) {
   const { APIService, currentUser, spotifyAuth } = React.useContext(
@@ -37,11 +35,7 @@ export default function PlaylistCard({
 
   const playlistId = getPlaylistId(playlist);
   const customFields = getPlaylistExtension(playlist);
-  const [loading, setLoading] = React.useState(false);
 
-  const onSelectPlaylistForEdit = React.useCallback(() => {
-    selectPlaylistForEdit(playlist);
-  }, [selectPlaylistForEdit, playlist]);
 
   const onCopyPlaylist = React.useCallback(async (): Promise<void> => {
     if (!currentUser?.auth_token) {
@@ -121,12 +115,11 @@ export default function PlaylistCard({
             data-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="true"
-            onClick={onSelectPlaylistForEdit}
           >
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options
           </button>
-          <PlaylistMenu playlist={playlist} onPlaylistSave={onPlaylistEdited}/>
+          <PlaylistMenu playlist={playlist} onPlaylistSave={onPlaylistEdited} onPlaylistDelete={onPlaylistDeleted}/>
         </div>
       )}
       <a className="info" href={`/playlist/${sanitize(playlistId)}`}>

@@ -8,7 +8,7 @@ import Loader from "../components/Loader";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import PlaylistCard from "./PlaylistCard";
-import { PlaylistType, isPlaylistOwner } from "./utils";
+import { PlaylistType } from "./utils";
 
 export type PlaylistsListProps = {
   playlists: JSPFPlaylist[];
@@ -18,12 +18,11 @@ export type PlaylistsListProps = {
   activeSection: PlaylistType;
   onCopiedPlaylist?: (playlist: JSPFPlaylist) => void;
   onPlaylistEdited: (playlist: JSPFPlaylist) => void;
-  selectPlaylistForEdit: (playlist: JSPFPlaylist) => void;
+  onPlaylistDeleted: (playlist: JSPFPlaylist) => void;
   onPaginatePlaylists: (playlists: JSPFPlaylist[]) => void;
 };
 
 export type PlaylistsListState = {
-  playlistSelectedForOperation?: JSPFPlaylist;
   loading: boolean;
   paginationOffset: number;
   playlistCount: number;
@@ -77,8 +76,6 @@ export default class PlaylistsList extends React.Component<
   };
 
   handleClickNext = async () => {
-    const { user, activeSection } = this.props;
-    const { currentUser } = this.context;
     const { paginationOffset, playlistCount } = this.state;
     const newOffset = paginationOffset + this.DEFAULT_PLAYLISTS_PER_PAGE;
     // No more playlists to fetch
@@ -89,8 +86,6 @@ export default class PlaylistsList extends React.Component<
   };
 
   handleClickPrevious = async () => {
-    const { user, activeSection } = this.props;
-    const { currentUser } = this.context;
     const { paginationOffset } = this.state;
     // No more playlists to fetch
     if (paginationOffset === 0) {
@@ -151,11 +146,11 @@ export default class PlaylistsList extends React.Component<
   render() {
     const {
       playlists,
-      selectPlaylistForEdit,
       activeSection,
       children,
       onCopiedPlaylist,
       onPlaylistEdited,
+      onPlaylistDeleted,
     } = this.props;
     const { paginationOffset, playlistCount, loading } = this.state;
     const { currentUser } = this.context;
@@ -170,16 +165,13 @@ export default class PlaylistsList extends React.Component<
           style={{ opacity: loading ? "0.4" : "1" }}
         >
           {playlists.map((playlist: JSPFPlaylist) => {
-            const isOwner = isPlaylistOwner(playlist, currentUser);
-
             return (
               <PlaylistCard
                 showOptions={activeSection !== PlaylistType.recommendations}
                 playlist={playlist}
-                isOwner={isOwner}
                 onSuccessfulCopy={onCopiedPlaylist ?? noop}
                 onPlaylistEdited={onPlaylistEdited}
-                selectPlaylistForEdit={selectPlaylistForEdit}
+                onPlaylistDeleted={onPlaylistDeleted}
                 key={playlist.identifier}
               />
             );

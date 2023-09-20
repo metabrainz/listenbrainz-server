@@ -3,6 +3,7 @@
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import {
+  faCopy,
   faFileExport,
   faPen,
   faTrashAlt,
@@ -17,13 +18,15 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import { getPlaylistId, isPlaylistOwner } from "./utils";
 import NiceModal from "@ebay/nice-modal-react";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
+import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
 export type PlaylistMenuProps = {
   playlist: JSPFPlaylist;
   onPlaylistSave?:(playlist:JSPFPlaylist) => void;
+  onPlaylistDelete?:(playlist:JSPFPlaylist) => void;
 };
 
-function PlaylistMenu({ playlist, onPlaylistSave}: PlaylistMenuProps) {
+function PlaylistMenu({ playlist, onPlaylistSave, onPlaylistDelete}: PlaylistMenuProps) {
   const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
   const [loading, setLoading] = React.useState(false);
   const alertMustBeLoggedIn = () => {
@@ -167,7 +170,7 @@ function PlaylistMenu({ playlist, onPlaylistSave}: PlaylistMenuProps) {
     >
       <li>
         <a onClick={copyPlaylist} role="button" href="#">
-          Duplicate
+        <FontAwesomeIcon icon={faCopy as IconProp} /> Duplicate
         </a>
       </li>
       {isPlaylistOwner(playlist, currentUser) && (
@@ -179,7 +182,7 @@ function PlaylistMenu({ playlist, onPlaylistSave}: PlaylistMenuProps) {
               data-target="#CreateOrEditPlaylistModal"
               role="button"
               href="#"
-               onClick={()=>{
+              onClick={()=>{
                 NiceModal.show(CreateOrEditPlaylistModal,{playlist})
                 // @ts-ignore
                 .then((playlist: JSPFPlaylist) => {
@@ -194,9 +197,17 @@ function PlaylistMenu({ playlist, onPlaylistSave}: PlaylistMenuProps) {
           <li>
             <a
               data-toggle="modal"
-              data-target="#confirmDeleteModal"
+              data-target="#ConfirmPlaylistDeletionModal"
               role="button"
               href="#"
+              onClick={()=>{
+                NiceModal.show(DeletePlaylistConfirmationModal,{playlist})
+                // @ts-ignore
+                .then((playlist: JSPFPlaylist) => {
+                  if(onPlaylistDelete){
+                    onPlaylistDelete(playlist);
+                  }
+              })}}
             >
               <FontAwesomeIcon icon={faTrashAlt as IconProp} /> Delete
             </a>

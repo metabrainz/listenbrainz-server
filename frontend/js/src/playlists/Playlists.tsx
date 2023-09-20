@@ -23,12 +23,9 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getPageProps } from "../utils/utils";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
-import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 import PlaylistsList from "./PlaylistsList";
 import {
   getPlaylistId,
-  isPlaylistOwner,
-  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   PlaylistType,
 } from "./utils";
 
@@ -40,7 +37,6 @@ export type UserPlaylistsProps = {
 
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
-  playlistSelectedForOperation?: JSPFPlaylist;
   playlistCount: number;
   playlistType: PlaylistType;
 };
@@ -70,10 +66,6 @@ export default class UserPlaylists extends React.Component<
       />,
       { toastId: "auth-error" }
     );
-  };
-
-  selectPlaylistForEdit = (playlist: JSPFPlaylist): void => {
-    this.setState({ playlistSelectedForOperation: playlist });
   };
 
   updatePlaylists = (playlists: JSPFPlaylist[]): void => {
@@ -117,48 +109,12 @@ export default class UserPlaylists extends React.Component<
     });
   };
 
-  deletePlaylist = async (): Promise<void> => {
-    const { currentUser, APIService } = this.context;
-    const { playlistSelectedForOperation: playlist, playlists } = this.state;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    if (!playlist) {
-      toast.error(<ToastMsg title="Error" message="No playlist to delete" />, {
-        toastId: "delete-playlist-error",
-      });
-      return;
-    }
-    if (!isPlaylistOwner(playlist, currentUser)) {
-      this.alertNotAuthorized();
-      return;
-    }
-    try {
-      await APIService.deletePlaylist(
-        currentUser.auth_token,
-        getPlaylistId(playlist)
-      );
-      // redirect
-      // Remove playlist from state and display success message afterwards
-      this.setState({
-        playlists: playlists.filter(
-          (pl) => getPlaylistId(pl) !== getPlaylistId(playlist)
-        ),
-        playlistSelectedForOperation: undefined,
-      });
-      toast.success(
-        <ToastMsg
-          title="Deleted playlist"
-          message={`Deleted playlist ${playlist.title}`}
-        />,
-        { toastId: "delete-playlist-success" }
-      );
-    } catch (error) {
-      toast.error(<ToastMsg title="Error" message={error.message} />, {
-        toastId: "delete-playlist-error",
-      });
-    }
+  onPlaylistDeleted = (deletedPlaylist: JSPFPlaylist):void => {
+    this.setState(prevState=> ({
+      playlists: prevState.playlists?.filter(
+        (pl) => getPlaylistId(pl) !== getPlaylistId(deletedPlaylist)
+      ),
+    }));
   };
 
   alertMustBeLoggedIn = () => {
@@ -181,7 +137,6 @@ export default class UserPlaylists extends React.Component<
     const { user } = this.props;
     const {
       playlists,
-      playlistSelectedForOperation,
       playlistCount,
       playlistType,
     } = this.state;
@@ -211,8 +166,8 @@ export default class UserPlaylists extends React.Component<
           activeSection={playlistType}
           user={user}
           playlistCount={playlistCount}
-          selectPlaylistForEdit={this.selectPlaylistForEdit}
           onPlaylistEdited={this.onPlaylistEdited}
+          onPlaylistDeleted={this.onPlaylistDeleted}
         >
           {this.isCurrentUserPage() && (
             <Card
@@ -233,14 +188,6 @@ export default class UserPlaylists extends React.Component<
             </Card>
           )}
         </PlaylistsList>
-        {this.isCurrentUserPage() && (
-          <>
-            <DeletePlaylistConfirmationModal
-              onConfirm={this.deletePlaylist}
-              playlist={playlistSelectedForOperation}
-            />
-          </>
-        )}
       </div>
     );
   }
