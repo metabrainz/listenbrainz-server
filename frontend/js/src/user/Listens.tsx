@@ -8,7 +8,11 @@ import { createRoot } from "react-dom/client";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import { faCompactDisc, faPlusCircle, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCompactDisc,
+  faPlusCircle,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Integrations } from "@sentry/tracing";
 import { get, isEqual } from "lodash";
