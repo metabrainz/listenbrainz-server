@@ -1,12 +1,17 @@
 import * as React from "react";
-import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION, getPlaylistExtension, getPlaylistId, isPlaylistOwner } from "./utils";
+import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { toast } from "react-toastify";
+import { omit } from "lodash";
+import {
+  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
+  getPlaylistExtension,
+  getPlaylistId,
+  isPlaylistOwner,
+} from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import UserSearch from "./UserSearch";
 import NamePill from "../personal-recommendations/NamePill";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
-import { omit } from "lodash";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
@@ -25,102 +30,121 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   const playlistId = getPlaylistId(playlist);
   const isEdit = Boolean(playlistId);
 
-  
   const [name, setName] = React.useState(playlist?.title ?? "");
-  const [description, setDescription] = React.useState(playlist?.annotation ?? "");
+  const [description, setDescription] = React.useState(
+    playlist?.annotation ?? ""
+  );
   const [isPublic, setIsPublic] = React.useState(customFields?.public ?? true);
-  const [collaborators, setCollaborators] = React.useState<string[]>(customFields?.collaborators ?? []);
+  const [collaborators, setCollaborators] = React.useState<string[]>(
+    customFields?.collaborators ?? []
+  );
   const collaboratorsWithoutOwner = collaborators.filter(
     (username) => username.toLowerCase() !== currentUser.name
   );
-  
-const createPlaylist = React.useCallback(async () => {
-  // Creating a new playlist
-  if (!currentUser?.auth_token) {
-    toast.error(
-      <ToastMsg
-        title="Error"
-        message="You must be logged in for this operation"
-      />,
-      { toastId: "auth-error" }
-    );
-    return;
-  }
-  // Owner can't be collaborator
-  
-  const newPlaylist: JSPFObject = {
-    playlist: {
-      // Th following 4 fields to satisfy TS type
-      creator: currentUser?.name,
-      identifier: "",
-      date: "",
-      track: [],
 
-      title:name,
-      annotation: description,
-      extension: {
-        [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-          public: isPublic,
-          collaborators: collaboratorsWithoutOwner,
+  const createPlaylist = React.useCallback(async (): Promise<
+    JSPFPlaylist | undefined
+  > => {
+    // Creating a new playlist
+    if (!currentUser?.auth_token) {
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message="You must be logged in for this operation"
+        />,
+        { toastId: "auth-error" }
+      );
+      return undefined;
+    }
+    // Owner can't be collaborator
+
+    const newPlaylist: JSPFObject = {
+      playlist: {
+        // Th following 4 fields to satisfy TS type
+        creator: currentUser?.name,
+        identifier: "",
+        date: "",
+        track: [],
+
+        title: name,
+        annotation: description,
+        extension: {
+          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+            public: isPublic,
+            collaborators: collaboratorsWithoutOwner,
+          },
         },
       },
-    },
-  };
-  const newPlaylistId = await APIService.createPlaylist(
-    currentUser?.auth_token,
-    newPlaylist
-  );
-  toast.success(
-    <ToastMsg
-      title="Created playlist"
-      message={
-        <>
-          Created new {isPublic ? "public" : "private"} playlist{" "}
-          <a href={`/playlist/${newPlaylistId}`}>{name}</a>
-        </>
+    };
+    try {
+      const newPlaylistId = await APIService.createPlaylist(
+        currentUser?.auth_token,
+        newPlaylist
+      );
+      toast.success(
+        <ToastMsg
+          title="Created playlist"
+          message={
+            <>
+              Created new {isPublic ? "public" : "private"} playlist{" "}
+              <a href={`/playlist/${newPlaylistId}`}>{name}</a>
+            </>
+          }
+        />,
+        { toastId: "create-playlist-success" }
+      );
+      try {
+        // Fetch the newly created playlist and addreturn it
+        const response = await APIService.getPlaylist(
+          newPlaylistId,
+          currentUser.auth_token
+        );
+        const JSPFObject: JSPFObject = await response.json();
+        return JSPFObject.playlist;
+      } catch (error) {
+        console.error(error);
+        return newPlaylist.playlist;
       }
-    />,
-    { toastId: "create-playlist-success" }
-  );
-  try {
-    // Fetch the newly created playlist and addreturn it
-    const response = await APIService.getPlaylist(
-      newPlaylistId,
-      currentUser.auth_token
-    )
-    const JSPFObject: JSPFObject = await response.json();
-    return JSPFObject.playlist
-  } catch (error) {
-    return newPlaylist.playlist
-  }
-},[currentUser,name, description,isPublic,collaboratorsWithoutOwner])
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not create playlist"
+          message={`Something went wrong: ${error.toString()}`}
+        />,
+        { toastId: "create-playlist-error" }
+      );
+      return undefined;
+    }
+  }, [currentUser, name, description, isPublic, collaboratorsWithoutOwner]);
 
-const editPlaylist = React.useCallback(async () => {
-  // Editing an existing playlist
-  if (!currentUser?.auth_token) {
-    toast.error(
-      <ToastMsg
-        title="Error"
-        message="You must be logged in for this operation"
-      />,
-      { toastId: "auth-error" }
-    );
-    return;
-  }
+  const editPlaylist = React.useCallback(async (): Promise<
+    JSPFPlaylist | undefined
+  > => {
+    // Editing an existing playlist
+    if (!currentUser?.auth_token) {
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message="You must be logged in for this operation"
+        />,
+        { toastId: "auth-error" }
+      );
+      return undefined;
+    }
 
-  if (!playlist || !playlistId) {
-    toast.error(
-      <ToastMsg
-        title="Error"
-        message={
-          "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
-        }
-      />,
-      { toastId: "edit-playlist-error" }
-    );
-    return;
-  }
-  
+    if (!playlist || !playlistId) {
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={
+            "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
+          }
+        />,
+        { toastId: "edit-playlist-error" }
+      );
+      return undefined;
+    }
+
     if (!isPlaylistOwner(playlist, currentUser)) {
       toast.error(
         <ToastMsg
@@ -129,40 +153,58 @@ const editPlaylist = React.useCallback(async () => {
         />,
         { toastId: "auth-error" }
       );
-      return;
+      return undefined;
     }
-
-    const editedPlaylist: JSPFPlaylist = {
-      ...playlist,
-      annotation: description,
-      title: name,
-      extension: {
-        [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-          public: isPublic,
-          collaborators: collaboratorsWithoutOwner,
+    try {
+      const editedPlaylist: JSPFPlaylist = {
+        ...playlist,
+        annotation: description,
+        title: name,
+        extension: {
+          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+            public: isPublic,
+            collaborators: collaboratorsWithoutOwner,
+          },
         },
-      },
-    };
+      };
 
-    await APIService.editPlaylist(currentUser.auth_token, playlistId, {
-      playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
-    });
+      await APIService.editPlaylist(currentUser.auth_token, playlistId, {
+        playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
+      });
 
-    toast.success(
-      <ToastMsg
-        title="Saved playlist"
-        message={`Saved playlist ${playlist.title}`}
-      />,
-      { toastId: "saved-playlist" }
-    );
+      toast.success(
+        <ToastMsg
+          title="Saved playlist"
+          message={`Saved playlist ${playlist.title}`}
+        />,
+        { toastId: "saved-playlist" }
+      );
 
-    return editedPlaylist
-},[playlist,playlistId,currentUser,name, description,isPublic,collaboratorsWithoutOwner]);
-  
+      return editedPlaylist;
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not edit playlist"
+          message={`Something went wrong: ${error.toString()}`}
+        />,
+        { toastId: "create-playlist-error" }
+      );
+      return undefined;
+    }
+  }, [
+    playlist,
+    playlistId,
+    currentUser,
+    name,
+    description,
+    isPublic,
+    collaboratorsWithoutOwner,
+  ]);
+
   const onSubmit = async (event: React.SyntheticEvent) => {
     try {
       let newPlaylist;
-      if(isEdit){
+      if (isEdit) {
         newPlaylist = await editPlaylist();
       } else {
         // Creating a new playlist
@@ -180,11 +222,10 @@ const editPlaylist = React.useCallback(async () => {
       );
     }
   };
-  
+
   const removeCollaborator = (username: string): void => {
-    setCollaborators(collaborators.filter(
-        (collabName) => collabName !== username
-      )
+    setCollaborators(
+      collaborators.filter((collabName) => collabName !== username)
     );
   };
 
@@ -198,7 +239,7 @@ const editPlaylist = React.useCallback(async () => {
       setCollaborators([...collaborators, user]);
     }
   };
-  
+
   return (
     <div
       className={`modal fade ${modal.visible ? "in" : ""}`}
@@ -233,7 +274,7 @@ const editPlaylist = React.useCallback(async () => {
                 placeholder="Name"
                 value={name}
                 name="name"
-                onChange={event => setName(event.target.value)}
+                onChange={(event) => setName(event.target.value)}
               />
             </div>
 
@@ -245,7 +286,7 @@ const editPlaylist = React.useCallback(async () => {
                 placeholder="Description"
                 value={description}
                 name="description"
-                onChange={event => setDescription(event.target.value)}
+                onChange={(event) => setDescription(event.target.value)}
               />
             </div>
             <div className="checkbox">
@@ -255,7 +296,7 @@ const editPlaylist = React.useCallback(async () => {
                   type="checkbox"
                   checked={isPublic}
                   name="isPublic"
-                  onChange={event => setIsPublic(event.target.checked)}
+                  onChange={(event) => setIsPublic(event.target.checked)}
                 />
                 &nbsp;Make playlist public
               </label>
@@ -263,17 +304,21 @@ const editPlaylist = React.useCallback(async () => {
 
             <div className="form-group">
               <div>
-                <label style={{ display: "block" }}>Collaborators</label>
-
-                {collaborators.map((user) => {
-                  return (
-                    <NamePill
-                      key={user}
-                      title={user}
-                      closeAction={removeCollaborator.bind(this, user)}
-                    />
-                  );
-                })}
+                <label style={{ display: "block" }} htmlFor="collaborators">
+                  Collaborators
+                </label>
+                <div id="collaborators">
+                  {collaborators.map((user) => {
+                    return (
+                      <NamePill
+                        key={user}
+                        title={user}
+                        // eslint-disable-next-line react/jsx-no-bind
+                        closeAction={removeCollaborator.bind(this, user)}
+                      />
+                    );
+                  })}
+                </div>
               </div>
 
               <UserSearch

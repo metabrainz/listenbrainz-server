@@ -13,20 +13,24 @@ import { saveAs } from "file-saver";
 import * as React from "react";
 import { useContext } from "react";
 import { toast } from "react-toastify";
+import NiceModal from "@ebay/nice-modal-react";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getPlaylistId, isPlaylistOwner } from "./utils";
-import NiceModal from "@ebay/nice-modal-react";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
 export type PlaylistMenuProps = {
   playlist: JSPFPlaylist;
-  onPlaylistSave?:(playlist:JSPFPlaylist) => void;
-  onPlaylistDelete?:(playlist:JSPFPlaylist) => void;
+  onPlaylistSave?: (playlist: JSPFPlaylist) => void;
+  onPlaylistDelete?: (playlist: JSPFPlaylist) => void;
 };
 
-function PlaylistMenu({ playlist, onPlaylistSave, onPlaylistDelete}: PlaylistMenuProps) {
+function PlaylistMenu({
+  playlist,
+  onPlaylistSave,
+  onPlaylistDelete,
+}: PlaylistMenuProps) {
   const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
   const [loading, setLoading] = React.useState(false);
   const alertMustBeLoggedIn = () => {
@@ -102,7 +106,7 @@ function PlaylistMenu({ playlist, onPlaylistSave, onPlaylistDelete}: PlaylistMen
     );
     saveAs(result, `${playlistTitle}.xspf`);
   };
-  
+
   const exportToSpotify = async (
     playlistId: string,
     playlistTitle: string,
@@ -170,7 +174,7 @@ function PlaylistMenu({ playlist, onPlaylistSave, onPlaylistDelete}: PlaylistMen
     >
       <li>
         <a onClick={copyPlaylist} role="button" href="#">
-        <FontAwesomeIcon icon={faCopy as IconProp} /> Duplicate
+          <FontAwesomeIcon icon={faCopy as IconProp} /> Duplicate
         </a>
       </li>
       {isPlaylistOwner(playlist, currentUser) && (
@@ -182,14 +186,15 @@ function PlaylistMenu({ playlist, onPlaylistSave, onPlaylistDelete}: PlaylistMen
               data-target="#CreateOrEditPlaylistModal"
               role="button"
               href="#"
-              onClick={()=>{
-                NiceModal.show(CreateOrEditPlaylistModal,{playlist})
-                // @ts-ignore
-                .then((playlist: JSPFPlaylist) => {
-                  if(onPlaylistSave){
-                    onPlaylistSave(playlist);
-                  }
-              })}}
+              onClick={() => {
+                NiceModal.show(CreateOrEditPlaylistModal, { playlist })
+                  // @ts-ignore
+                  .then((editedPlaylist: JSPFPlaylist) => {
+                    if (onPlaylistSave) {
+                      onPlaylistSave(editedPlaylist);
+                    }
+                  });
+              }}
             >
               <FontAwesomeIcon icon={faPen as IconProp} /> Edit
             </a>
@@ -200,14 +205,15 @@ function PlaylistMenu({ playlist, onPlaylistSave, onPlaylistDelete}: PlaylistMen
               data-target="#ConfirmPlaylistDeletionModal"
               role="button"
               href="#"
-              onClick={()=>{
-                NiceModal.show(DeletePlaylistConfirmationModal,{playlist})
-                // @ts-ignore
-                .then((playlist: JSPFPlaylist) => {
-                  if(onPlaylistDelete){
-                    onPlaylistDelete(playlist);
-                  }
-              })}}
+              onClick={() => {
+                NiceModal.show(DeletePlaylistConfirmationModal, { playlist })
+                  // @ts-ignore
+                  .then((deletedPlaylist: JSPFPlaylist) => {
+                    if (onPlaylistDelete) {
+                      onPlaylistDelete(deletedPlaylist);
+                    }
+                  });
+              }}
             >
               <FontAwesomeIcon icon={faTrashAlt as IconProp} /> Delete
             </a>
