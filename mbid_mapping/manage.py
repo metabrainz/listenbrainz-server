@@ -16,6 +16,7 @@ from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache, incremental_update_mb_metadata_cache, \
     cleanup_mbid_mapping_table
 from mapping.spotify_metadata_index import create_spotify_metadata_index
+from similar.tag_similarity import create_tag_similarity
 
 
 @click.group()
@@ -140,6 +141,13 @@ def build_spotify_metadata_index(use_lb_conn):
         Build the spotify metadata index that LB uses
     """
     create_spotify_metadata_index(use_lb_conn)
+  
+@cli.command()
+def build_tag_similarity():
+    """
+        Build the tag similarity data
+    """
+    create_tag_similarity()
 
 
 def usage(command):

@@ -153,7 +153,7 @@ describe.each([
       await act(() => {
         wrapper.setState({
           hasError: true,
-          errorMessage: "Statistics for the user have not been calculated",
+          errorMessage: "There are no statistics available for this user for this period",
           entity: "artist",
           range: "all_time",
           currPage: 1,
@@ -723,7 +723,7 @@ describe.each([
         loading: false,
         entityCount: 0,
         hasError: true,
-        errorMessage: "Statistics for the user have not been calculated",
+        errorMessage: "There are no statistics available for this user for this period",
       });
       wrapper.unmount();
     });

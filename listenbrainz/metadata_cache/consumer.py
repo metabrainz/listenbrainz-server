@@ -32,7 +32,7 @@ class ServiceMetadataCache(ConsumerMixin):
         )
         # this queue gets spotify album ids directly queued to the external spotify queue
         self.service_queue = Queue(
-            self.handler.get_external_service_queue_name(),
+            self.handler.external_service_queue,
             exchange=self.external_services_exchange,
             durable=True
         )

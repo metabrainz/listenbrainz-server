@@ -1,5 +1,5 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.11-20221221
-ARG NODE_VERSION=16-alpine
+ARG NODE_VERSION=20-alpine
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
@@ -170,6 +170,12 @@ COPY ./docker/services/spotify_metadata_cache/consul-template-spotify-metadata-c
 COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.service /etc/service/spotify_metadata_cache/run
 COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.finish /etc/service/spotify_metadata_cache/finish
 RUN touch /etc/service/spotify_metadata_cache/down
+
+# Apple Metadata Cache
+COPY ./docker/services/apple_metadata_cache/consul-template-apple-metadata-cache.conf /etc/consul-template-apple-metadata-cache.conf
+COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.service /etc/service/apple_metadata_cache/run
+COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.finish /etc/service/apple_metadata_cache/finish
+RUN touch /etc/service/apple_metadata_cache/down
 
 # uwsgi (website)
 COPY ./docker/services/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
