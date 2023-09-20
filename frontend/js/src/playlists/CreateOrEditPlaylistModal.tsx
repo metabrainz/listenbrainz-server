@@ -89,12 +89,10 @@ const createPlaylist = React.useCallback(async () => {
       currentUser.auth_token
     )
     const JSPFObject: JSPFObject = await response.json();
-    modal.resolve(JSPFObject.playlist)
+    return JSPFObject.playlist
   } catch (error) {
-    modal.resolve(newPlaylist.playlist)
+    return newPlaylist.playlist
   }
-  closeModal();
-
 },[currentUser,name, description,isPublic,collaboratorsWithoutOwner])
 
 const editPlaylist = React.useCallback(async () => {
@@ -134,10 +132,6 @@ const editPlaylist = React.useCallback(async () => {
       return;
     }
 
-    // Owner can't be collaborator
-    const collaboratorsWithoutOwner = collaborators.filter(
-      (username) => username.toLowerCase() !== playlist.creator.toLowerCase()
-    );
     const editedPlaylist: JSPFPlaylist = {
       ...playlist,
       annotation: description,
@@ -154,7 +148,6 @@ const editPlaylist = React.useCallback(async () => {
       playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
     });
 
-    modal.resolve(editedPlaylist);
     toast.success(
       <ToastMsg
         title="Saved playlist"
@@ -162,19 +155,21 @@ const editPlaylist = React.useCallback(async () => {
       />,
       { toastId: "saved-playlist" }
     );
-    closeModal();
+
+    return editedPlaylist
 },[playlist,playlistId,currentUser,name, description,isPublic,collaboratorsWithoutOwner]);
   
   const onSubmit = async (event: React.SyntheticEvent) => {
-    event.preventDefault();
-
     try {
+      let newPlaylist;
       if(isEdit){
-        await editPlaylist()
+        newPlaylist = await editPlaylist();
       } else {
         // Creating a new playlist
-        await createPlaylist();
+        newPlaylist = await createPlaylist();
       }
+      modal.resolve(newPlaylist);
+      closeModal();
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -214,7 +209,7 @@ const editPlaylist = React.useCallback(async () => {
       data-backdrop="static"
     >
       <div className="modal-dialog" role="document">
-        <form className="modal-content"  onSubmit={onSubmit}>
+        <form className="modal-content">
           <div className="modal-header">
             <button
               type="button"
@@ -302,6 +297,7 @@ const editPlaylist = React.useCallback(async () => {
               className="btn btn-primary"
               data-dismiss="modal"
               disabled={!currentUser?.auth_token}
+              onClick={onSubmit}
             >
               {isEdit ? "Save" : "Create"}
             </button>

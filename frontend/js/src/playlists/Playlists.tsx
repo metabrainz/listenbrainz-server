@@ -218,7 +218,7 @@ export default class UserPlaylists extends React.Component<
             <Card
               className="new-playlist"
               data-toggle="modal"
-              data-target="#playlistCreateModal"
+              data-target="#CreateOrEditPlaylistModal"
               onClick={()=>{
                 NiceModal.show(CreateOrEditPlaylistModal)
                 // @ts-ignore

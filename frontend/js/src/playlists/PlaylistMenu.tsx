@@ -176,7 +176,7 @@ function PlaylistMenu({ playlist, onPlaylistSave}: PlaylistMenuProps) {
           <li>
             <a
               data-toggle="modal"
-              data-target="#playlistModal"
+              data-target="#CreateOrEditPlaylistModal"
               role="button"
               href="#"
                onClick={()=>{
@@ -188,8 +188,7 @@ function PlaylistMenu({ playlist, onPlaylistSave}: PlaylistMenuProps) {
                   }
               })}}
             >
-              <FontAwesomeIcon icon={faPen as IconProp} />
-              Edit
+              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
             </a>
           </li>
           <li>
