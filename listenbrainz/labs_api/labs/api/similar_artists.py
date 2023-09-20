@@ -1,11 +1,33 @@
+from typing import Optional, Union
+from uuid import UUID
+
 import psycopg2
-from datasethoster import Query
+from datasethoster import Query, QueryOutputLine, RequestSource
 from flask import current_app
 from markupsafe import Markup
 from psycopg2.extras import execute_values
+from pydantic import BaseModel
 
 from listenbrainz.db import similarity
 from listenbrainz.db.recording import resolve_redirect_mbids
+
+
+class SimilarArtistsViewerInput(BaseModel):
+    artist_mbids: list[UUID]
+    algorithm: str
+
+
+class SimilarArtistsViewerOutputItem(BaseModel):
+    artist_mbid: Optional[UUID]
+    name: Optional[str]
+    comment: Optional[str]
+    type: Optional[str]
+    gender: Optional[str]
+    score: Optional[int]
+    reference_mbid: Optional[str]
+
+
+SimilarArtistsViewerOutput = Union[QueryOutputLine, SimilarArtistsViewerOutputItem]
 
 
 class SimilarArtistsViewerQuery(Query):
@@ -18,13 +40,13 @@ class SimilarArtistsViewerQuery(Query):
         return "similar-artists", "Similar Artists Viewer"
 
     def inputs(self):
-        return ['artist_mbid', 'algorithm']
+        return SimilarArtistsViewerInput
 
     def introduction(self):
         return """This page allows you to view artists similar to a given artist and algorithm."""
 
     def outputs(self):
-        return None
+        return SimilarArtistsViewerOutput
 
     @staticmethod
     def get_artists_dataset(mb_curs, mbids, score_idx=None, similar_mbid_idx=None):
@@ -70,36 +92,33 @@ class SimilarArtistsViewerQuery(Query):
 
             metadata.append(item)
 
-        return {
-            "type": "dataset",
-            "columns": list(metadata[0].keys()),
-            "data": metadata
-        }
+        return [SimilarArtistsViewerOutputItem(**item) for item in metadata]
 
-    def fetch(self, params, offset=-1, count=-1):
-        artist_mbids = params[0]["artist_mbid"].strip().split(",")
-        algorithm = params[0]["algorithm"].strip()
+    def fetch(self, params, source, offset=-1, count=-1):
+        artist_mbids = params[0].artist_mbids
+        algorithm = params[0].algorithm.strip()
         count = count if count > 0 else 100
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
                 psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
                 ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+            results = []
 
-            references = self.get_artists_dataset(mb_curs, artist_mbids)
-            results = [{"type": "markup", "data": Markup("<p><b>Reference artist</b></p>")}]
-            results.append(references)
+            if source == RequestSource.web:
+                references = self.get_artists_dataset(mb_curs, artist_mbids)
+                results.append(QueryOutputLine(line=Markup("<p><b>Reference artists</b></p>")))
+                results.extend(references)
 
             similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "artist_credit_mbids_dev", artist_mbids, algorithm, count)
-            if len(similar_mbids) == 0:
-                results.append({
-                    "type": "markup",
-                    "data": Markup("<p><b>No similar artists found!</b></p>")
-                })
-                return results
+            if source == RequestSource.web:
+                if len(similar_mbids) == 0:
+                    results.append(QueryOutputLine(line=Markup("<p><b>No similar artists found!</b></p>")))
+                    return results
+                else:
+                    results.append(QueryOutputLine(line=Markup("<p><b>Similar artists</b></p>")))
 
             similar_dataset = self.get_artists_dataset(mb_curs, similar_mbids, score_idx, mbid_idx)
-            results.append({"type": "markup", "data": Markup("<p><b>Similar artists</b></p>")})
-            results.append(similar_dataset)
+            results.extend(similar_dataset)
 
             return results

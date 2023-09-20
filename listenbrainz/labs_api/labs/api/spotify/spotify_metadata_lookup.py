@@ -1,6 +1,14 @@
 from datasethoster import Query
+from pydantic import BaseModel
 
+from listenbrainz.labs_api.labs.api.spotify import SpotifyIdFromMBIDOutput
 from listenbrainz.labs_api.labs.api.spotify.utils import lookup_using_metadata
+
+
+class SpotifyIdFromMetadataInput(BaseModel):
+    artist_name: str
+    release_name: str
+    track_name: str
 
 
 class SpotifyIdFromMetadataQuery(Query):
@@ -10,21 +18,15 @@ class SpotifyIdFromMetadataQuery(Query):
         return "spotify-id-from-metadata", "Spotify Track ID Lookup using metadata"
 
     def inputs(self):
-        return ['[artist_name]', '[release_name]', '[track_name]']
+        return SpotifyIdFromMetadataInput
 
     def introduction(self):
         return """Given the name of an artist, the name of a release and the name of a recording (track)
                   this query will attempt to find a suitable match in Spotify."""
 
     def outputs(self):
-        return ['artist_name', 'release_name', 'track_name', 'spotify_track_ids']
+        return SpotifyIdFromMBIDOutput
 
-    def fetch(self, params, offset=-1, count=-1):
-        data = []
-        for param in params:
-            data.append({
-                "artist_name": param.get("[artist_name]", ""),
-                "release_name": param.get("[release_name]", ""),
-                "track_name": param.get("[track_name]", "")
-            })
+    def fetch(self, params, source, offset=-1, count=-1):
+        data = [p.dict() for p in params]
         return lookup_using_metadata(data)

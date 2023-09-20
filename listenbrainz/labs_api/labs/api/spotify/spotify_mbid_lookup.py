@@ -4,10 +4,15 @@ import psycopg2
 from psycopg2.extras import execute_values
 from datasethoster import Query
 from flask import current_app
-from werkzeug.exceptions import BadRequest
+from pydantic import BaseModel
 
+from listenbrainz.labs_api.labs.api.spotify import SpotifyIdFromMBIDOutput
 from listenbrainz.labs_api.labs.api.spotify.utils import lookup_using_metadata
 from listenbrainz.db.recording import resolve_redirect_mbids, resolve_canonical_mbids
+
+
+class SpotifyIdFromMBIDInput(BaseModel):
+    recording_mbid: uuid.UUID
 
 
 class SpotifyIdFromMBIDQuery(Query):
@@ -17,14 +22,14 @@ class SpotifyIdFromMBIDQuery(Query):
         return "spotify-id-from-mbid", "Spotify Track ID Lookup using recording mbid"
 
     def inputs(self):
-        return ['[recording_mbid]']
+        return SpotifyIdFromMBIDInput
 
     def introduction(self):
         return """Given a recording mbid, lookup its metadata using canonical metadata
         tables and using that attempt to find a suitable match in Spotify."""
 
     def outputs(self):
-        return ['recording_mbid', 'artist_name', 'release_name', 'track_name', 'spotify_track_ids']
+        return SpotifyIdFromMBIDOutput
 
     def fetch_metadata_from_mbids(self, curs, mbids):
         """ Retrieve metadata from canonical tables for given mbids. Note that all mbids should be canonical mbids
@@ -51,14 +56,8 @@ class SpotifyIdFromMBIDQuery(Query):
 
         return metadata
 
-    def fetch(self, params, offset=-1, count=-1):
-        mbids = []
-        for param in params:
-            try:
-                uuid.UUID(param["[recording_mbid]"])
-            except (ValueError, TypeError):
-                raise BadRequest(f"Invalid recording mbid: {param['[recording_mbid]']}")
-            mbids.append(param["[recording_mbid]"])
+    def fetch(self, params, source, offset=-1, count=-1):
+        mbids = [p.recording_mbid for p in params]
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, conn.cursor() as curs:
             redirected_mbids, redirect_index, _ = resolve_redirect_mbids(curs, "recording", mbids)

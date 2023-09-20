@@ -1,5 +1,10 @@
+from datetime import datetime
+from typing import Optional, Union
+from uuid import UUID
+
 from datasethoster import Query
 from markupsafe import Markup
+from pydantic import BaseModel
 from sqlalchemy import text
 
 from listenbrainz import db
@@ -7,6 +12,31 @@ from listenbrainz.db import timescale
 
 SESSION_SKIP_THRESHOLD = 30
 DEFAULT_TRACK_LENGTH = 180
+MAX_TIME_RANGE = 30 * 24 * 60 * 60
+
+
+class UserListensSessionInput(BaseModel):
+    user_name: str
+    from_ts: datetime
+    to_ts: datetime
+    threshold: int
+
+
+class UserListensSessionOutputItem(BaseModel):
+    listened_at: str
+    duration: int
+    difference: Optional[int]
+    skipped: Optional[int]
+    artist_name: str
+    track_name: str
+    recording_mbid: Optional[UUID]
+
+
+class UserListensSessionOutputComment(BaseModel):
+    comment: str
+
+
+UserListensSessionOutput = Union[UserListensSessionOutputComment, UserListensSessionOutputItem]
 
 
 class UserListensSessionQuery(Query):
@@ -19,7 +49,7 @@ class UserListensSessionQuery(Query):
         return "sessions-viewer", "ListenBrainz Session Viewer"
 
     def inputs(self):
-        return ['user_name', 'from_ts', 'to_ts', 'threshold']
+        return UserListensSessionInput
 
     def introduction(self):
         return """This page allows you to view the listens of the given time period for a user distributed
@@ -31,15 +61,14 @@ class UserListensSessionQuery(Query):
         """
 
     def outputs(self):
-        return None
+        return UserListensSessionOutput
 
-    def fetch(self, params, offset=-1, count=-1):
-        user_name = params[0]["user_name"].strip()
-        from_ts = int(params[0]["from_ts"])
-        to_ts = int(params[0]["to_ts"])
-        threshold = int(params[0]["threshold"])
+    def fetch(self, params, source, offset=-1, count=-1):
+        user_name = params[0].user_name
+        from_ts = params[0].from_ts
+        to_ts = params[0].to_ts
+        threshold = params[0].threshold
 
-        MAX_TIME_RANGE = 30 * 24 * 60 * 60
         if to_ts - from_ts >= MAX_TIME_RANGE:
             to_ts = from_ts + MAX_TIME_RANGE
 
@@ -49,12 +78,7 @@ class UserListensSessionQuery(Query):
             if row:
                 user_id = row["id"]
             else:
-                return [
-                    {
-                        "type": "markup",
-                        "data": f"User {user_name} not found"
-                    }
-                ]
+                return [UserListensSessionOutputComment(comment=Markup(f"User {user_name} not found"))]
 
         query = f"""
             WITH listens AS (
@@ -134,14 +158,8 @@ class UserListensSessionQuery(Query):
         with timescale.engine.connect() as conn:
             curs = conn.execute(text(query), user_id=user_id, from_ts=from_ts, to_ts=to_ts, threshold=threshold)
             for row in curs.fetchall():
-                results.append({
-                    "type": "markup",
-                    "data": Markup(f"<p><b>Session Number: {row['session_id']}</b></p>")
-                })
-                results.append({
-                    "type": "dataset",
-                    "columns": ["listened_at", "duration", "difference", "skipped",
-                                "artist_name", "track_name", "recording_mbid"],
-                    "data": row["data"]
-                })
+                results.append(UserListensSessionOutputComment(
+                    comment=Markup(f"<p><b>Session Number: {row['session_id']}</b></p>")
+                ))
+                results.append(UserListensSessionOutputItem(**row["data"]))
         return results
