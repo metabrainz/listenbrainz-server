@@ -4,7 +4,7 @@ import sentry_sdk
 
 from listenbrainz.metadata_cache.apple.client import Apple
 from listenbrainz.metadata_cache.handler import BaseHandler
-from listenbrainz.metadata_cache.models import Album, Artist, Track
+from listenbrainz.metadata_cache.models import Album, Artist, Track, AlbumType
 from listenbrainz.metadata_cache.unique_queue import JobItem
 
 UPDATE_INTERVAL = 60  # in seconds
@@ -36,8 +36,9 @@ class AppleCrawlerHandler(BaseHandler):
         client = Apple()
         storefronts = client.get("https://api.music.apple.com/v1/storefronts")
         album_ids = set()
-        for storefront in storefronts:
-            response = client.get(f"https://api.music.apple.com/v1/catalog/{storefront}/charts", {
+        for storefront in storefronts["data"]:
+            storefront_code = storefront["id"]
+            response = client.get(f"https://api.music.apple.com/v1/catalog/{storefront_code}/charts", {
                 "types": "albums",
                 "limit": 200
             })
@@ -61,9 +62,11 @@ class AppleCrawlerHandler(BaseHandler):
         tracks = []
         for track in album.pop("tracks"):
             track_artists = []
-            for artist in track.pop("relationships")["artists"]["data"]:
-                artist.pop("relationships")
-                track_artists.append(Artist(id=artist["id"], name=artist["attributes"]["name"], data=artist))
+            if "relationships" in track:
+                for artist in track.pop("relationships")["artists"]["data"]:
+                    artist.pop("relationships")
+                    track_artists.append(Artist(id=artist["id"], name=artist["attributes"]["name"], data=artist))
+
             tracks.append(Track(
                 id=track["id"],
                 name=track["attributes"]["name"],
@@ -74,19 +77,19 @@ class AppleCrawlerHandler(BaseHandler):
 
         artists = []
         for artist in album.pop("artists"):
-            artist.pop("relationships")
-            artists.append(Artist(id=artist["id"], name=artist["name"], data=artist))
+            artist.pop("relationships", None)
+            artists.append(Artist(id=artist["id"], name=artist["attributes"]["name"], data=artist))
 
         if album["attributes"]["isSingle"]:
-            album_type = "Single"
+            album_type = AlbumType.single
         elif album["attributes"]["isCompilation"]:
-            album_type = "Compilation"
+            album_type = AlbumType.compilation
         else:
-            album_type = "Album"
+            album_type = AlbumType.album
 
         return Album(
             id=album["id"],
-            name=album["name"],
+            name=album["attributes"]["name"],
             type_=album_type,
             release_date=album["attributes"]["releaseDate"],
             tracks=tracks,
