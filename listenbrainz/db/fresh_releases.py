@@ -92,7 +92,6 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                 ORDER BY {sort_order_str}
                 LIMIT %s OFFSET %s;
         """.format(sort_order_str=sort_order_str)
-    print(query)
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, \
             conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         curs.execute(query, (from_date, to_date, limit, offset))
