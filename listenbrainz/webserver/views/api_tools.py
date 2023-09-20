@@ -420,6 +420,17 @@ def _parse_int_arg(name, default=None):
     else:
         return default
 
+def _parse_bool_arg(name, default=None):
+    value = request.args.get(name)
+    if value:
+        if value == "true":
+            return True
+        elif value == "false":
+            return False
+        else:
+            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
+    else:
+        return default
 
 def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
