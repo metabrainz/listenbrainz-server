@@ -56,8 +56,10 @@ describe("PlaylistPage", () => {
       },
     });
     expect(wrapper.find("#playlist")).toHaveLength(1);
-    expect(wrapper.getDOMNode()).toHaveTextContent("1980s flashback jams");
-    expect(wrapper.getDOMNode()).toHaveTextContent("Your lame <i>80s</i> music");
+    const h1 = wrapper.find("h1");
+    expect(h1).toHaveLength(1);
+    expect(h1.getDOMNode()).toHaveTextContent("1980s flashback jams");
+    expect(wrapper.getDOMNode()).toHaveTextContent(/Your lame 80s music/i);
   });
 
   it("hides exportPlaylistToSpotify button if playlist permissions are absent", () => {
