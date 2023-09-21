@@ -4,7 +4,6 @@ import flask_testing
 from datasethoster.main import create_app
 from listenbrainz.labs_api.labs.api.tag_similarity import TagSimilarityQuery
 
-
 json_request = [
     {
         "tag": "trip-hop"
@@ -12,27 +11,27 @@ json_request = [
 ]
 
 db_response = [
-  {
-     "tag_0": "trippy",
-     "tag_1": "trip-hop",
-     "count": 9
-  },
-  {
-     "tag_0": "welsh",
-     "tag_1": "trip-hop",
-     "count": 8
-  },
+    {
+        "tag_0": "trippy",
+        "tag_1": "trip-hop",
+        "count": 9
+    },
+    {
+        "tag_0": "welsh",
+        "tag_1": "trip-hop",
+        "count": 8
+    },
 ]
 
 json_response = [
-  {
-     "similar_tag": "trippy",
-     "count": 9
-  },                                                              
-  {
-     "similar_tag": "welsh",
-     "count": 8                               
-  },
+    {
+        "similar_tag": "trippy",
+        "count": 9
+    },
+    {
+        "similar_tag": "welsh",
+        "count": 8
+    },
 ]
 
 

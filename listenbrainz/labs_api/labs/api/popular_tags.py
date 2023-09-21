@@ -260,10 +260,10 @@ WITH counts AS (
                 ON rect.tag = t.id
           GROUP BY t.name
             HAVING t.count > 0
-)           
+)
           SELECT c.name, sum(c.cnt) as cnt
             FROM counts c
            WHERE cnt > 10000
-        GROUP BY c.name  
-        ORDER BY cnt DESC;  
+        GROUP BY c.name
+        ORDER BY cnt DESC;
 """
