@@ -12,7 +12,7 @@ from troi.patches.lb_radio import LBRadioPatch
 from troi.core import generate_playlist
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
-MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 30
+MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
 DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
 DEFAULT_CACHE_EXPIRE_TIME = 3600 * 24  # 1 day
 HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"

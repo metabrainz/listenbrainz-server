@@ -51,7 +51,8 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                          , array_agg(distinct a.gid) AS artist_mbids
                          , rgpt.name AS release_group_primary_type
                          , rgst.name AS release_group_secondary_type
-                         , COUNT(*) OVER () AS total_count
+                         , array_agg(distinct t.name) AS tags
+                         , COUNT(*) AS total_count
                       FROM release rl
                       JOIN release_group rg
                         ON rl.release_group = rg.id
@@ -69,6 +70,10 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                         ON acn.artist_credit = ac.id
                       JOIN artist a
                         ON acn.artist = a.id
+                 LEFT JOIN release_tag rt
+                        ON rt.release = rl.id
+                 LEFT JOIN tag t
+                        ON t.id = rt.tag
                      WHERE make_date(rgm.first_release_date_year,
                                      rgm.first_release_date_month,
                                      rgm.first_release_date_day) >= %s
@@ -102,6 +107,8 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
         fresh_releases = []
         total_count = 0
         for mbid, row in result.items():
+            if row["tags"] == [None]:
+                row["tags"] = []
             row["caa_id"] = covers[mbid]["caa_id"]
             if covers[mbid]["caa_release_mbid"]:
                 row["caa_release_mbid"] = uuid.UUID(covers[mbid]["caa_release_mbid"])
