@@ -1,12 +1,15 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, request
+import psycopg2
+from flask import Blueprint, render_template, request, current_app
 from flask_login import current_user, login_required
-from werkzeug.exceptions import BadRequest, ServiceUnavailable, NotFound
+from werkzeug.exceptions import BadRequest, NotFound
 import orjson
 
 from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.musicbrainz_db.release import get_release_by_mbid
+
+from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
 from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.db.model.playlist import WritablePlaylistRecording, WritablePlaylist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
@@ -142,6 +145,10 @@ def load_release(release_mbid):
         if not release:
             raise NotFound("This release was not found in our database. It may not have replicated to this server yet.")
 
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, \
+                conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            cover = get_caa_ids_for_release_mbids(curs, [release_mbid])[release_mbid]
+
         name = "Release %s by %s" % (release["name"], release["artist-credit-phrase"])
         desc = 'Release <a href="https://musicbrainz.org/release/%s">%s</a> by %s' % (release["mbid"],
                                                                                       release["name"],
@@ -163,6 +170,7 @@ def load_release(release_mbid):
                         release_mbid=release["mbid"],
                         position=recording["position"],
                         mbid=recording["recording_id"],
+                        additional_metadata={"caa_id": cover["caa_id"], "caa_release_mbid": cover["caa_release_mbid"]},
                         added_by_id=1,
                         created=now
                     )

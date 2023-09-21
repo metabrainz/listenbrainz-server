@@ -16,6 +16,13 @@ export enum PlaylistType {
   "recommendations",
 }
 
+export function isPlaylistOwner(
+  playlist: JSPFPlaylist,
+  user: ListenBrainzUser
+): boolean {
+  return Boolean(user) && user?.name === playlist.creator;
+}
+
 export function getPlaylistExtension(
   playlist?: JSPFPlaylist
 ): JSPFPlaylistExtension | null {

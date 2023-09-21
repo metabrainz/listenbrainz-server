@@ -27,7 +27,7 @@ PyYAML==6.0
 eventlet == 0.33.1
 # eventlet fails to patch dnspython >= 2.3 https://github.com/eventlet/eventlet/issues/781
 dnspython==2.2.1
-uWSGI == 2.0.21
+uWSGI == 2.0.22
 sentry-sdk[flask]==1.5.8
 pydantic == 1.9.1
 pycountry==22.3.5
