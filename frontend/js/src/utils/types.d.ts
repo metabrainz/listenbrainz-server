@@ -711,6 +711,7 @@ type FreshReleaseItem = {
   release_group_secondary_type?: string;
   release_mbid: string;
   release_name: string;
+  release_tags: Array<string>;
 };
 
 type UserFreshReleasesResponse = {

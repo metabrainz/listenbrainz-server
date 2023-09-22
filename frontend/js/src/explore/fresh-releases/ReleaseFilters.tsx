@@ -1,5 +1,7 @@
 import * as React from "react";
-import Pill from "../../components/Pill";
+import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Switch from "../../components/Switch";
 
 type ReleaseFiltersProps = {
   allFilters: Array<string | undefined>;
@@ -7,15 +9,40 @@ type ReleaseFiltersProps = {
   setFilteredList: React.Dispatch<
     React.SetStateAction<Array<FreshReleaseItem>>
   >;
+  range: string;
+  handleRangeChange: (childData: string) => void;
+  displaySettings: { [key: string]: boolean };
+  toggleSettings: (setting: string) => void;
+  showPastReleases: boolean;
+  setShowPastReleases: React.Dispatch<React.SetStateAction<boolean>>;
+  showFutureReleases: boolean;
+  setShowFutureReleases: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
-  const { allFilters, releases, setFilteredList } = props;
+  const {
+    allFilters,
+    releases,
+    setFilteredList,
+    range,
+    handleRangeChange,
+    displaySettings,
+    toggleSettings,
+    showPastReleases,
+    setShowPastReleases,
+    showFutureReleases,
+    setShowFutureReleases,
+  } = props;
 
   const [checkedList, setCheckedList] = React.useState<
     Array<string | undefined>
   >([]);
   const [coverartOnly, setCoverartOnly] = React.useState<boolean>(false);
+  const [filtersOpen, setFiltersOpen] = React.useState<boolean>(true);
+
+  const toggleFilters = () => {
+    setFiltersOpen(!filtersOpen);
+  };
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.persist();
@@ -28,6 +55,12 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
       const filtersList = checkedList.filter((item) => item !== value);
       setCheckedList(filtersList);
     }
+  };
+
+  const handleRangeDropdown = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    event.persist();
+    const { value } = event.target;
+    handleRangeChange(value);
   };
 
   React.useEffect(() => {
@@ -63,63 +96,90 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   }, [checkedList, coverartOnly]);
 
   return (
-    <div id="filters-container">
-      <div id="coverart-checkbox">
-        <Pill
-          type="secondary"
-          active={coverartOnly}
-          onClick={() => setCoverartOnly(!coverartOnly)}
-          style={{
-            padding: "4px 12px",
-            margin: "unset",
-          }}
-        >
-          Hide releases without coverart
-        </Pill>
-      </div>
-      <div id="release-filters">
-        <div id="title-container">
-          <div id="type-title" className="text-muted">
-            Filters
+    <div className="sidebar settings-navbar">
+      <div className="basic-settings-container">
+        <div className="sidenav-content-grid">
+          <h4>
+            {filtersOpen ? (
+              <FontAwesomeIcon icon={faChevronDown} onClick={toggleFilters} />
+            ) : (
+              <FontAwesomeIcon icon={faChevronUp} onClick={toggleFilters} />
+            )}
+            {"  "}
+            <b>Filter</b>
+          </h4>
+          <div id="range">Range: </div>
+
+          <div className="input-group">
+            <select
+              id="style"
+              className="form-control"
+              value={range}
+              onChange={handleRangeDropdown}
+            >
+              <option value="week">1 Week</option>
+              <option value="month">1 Month</option>
+              <option value="three_months">3 Month</option>
+            </select>
           </div>
-          <div
-            id={
-              checkedList.length === 0
-                ? "clearall-btn-inactive"
-                : "clearall-btn-active"
-            }
-            className="text-muted"
-            role="button"
-            onClick={() => setCheckedList([])}
-            aria-hidden="true"
-          >
-            &times;
-          </div>
+          <Switch
+            id="date-filter-item-past"
+            value="past"
+            checked={showPastReleases}
+            onChange={(e) => setShowPastReleases(!showPastReleases)}
+            switchLabel="Past"
+          />
+          <Switch
+            id="date-filter-item-future"
+            value="future"
+            checked={showFutureReleases}
+            onChange={(e) => setShowFutureReleases(!showFutureReleases)}
+            switchLabel="Future"
+          />
+          {allFilters.length > 0 && (
+            <>
+              <span id="types">Types:</span>
+              {allFilters.map((type, index) => (
+                <Switch
+                  id={`filters-item-${index}`}
+                  value={type}
+                  checked={checkedList.includes(type)}
+                  onChange={handleFilterChange}
+                  switchLabel={type}
+                />
+              ))}
+            </>
+          )}
         </div>
-        <div id="filters-list">
-          {allFilters.map((type, index) => (
-            <span key={`filter-${type}`}>
-              <input
-                id={`filters-item-${index}`}
-                className="type-container"
-                type="checkbox"
-                value={type}
-                checked={checkedList.includes(type)}
-                onChange={(e) => handleFilterChange(e)}
-                aria-hidden="true"
-                aria-checked="false"
-              />
-              <label
-                htmlFor={`filters-item-${index}`}
-                className={
-                  checkedList.includes(type)
-                    ? "type-name-active"
-                    : "type-name-inactive"
-                }
-              >
-                {type}
-              </label>
-            </span>
+      </div>
+      <div className="basic-settings-container">
+        <div className="sidenav-content-grid">
+          <h4>
+            {filtersOpen ? (
+              <FontAwesomeIcon icon={faChevronDown} onClick={toggleFilters} />
+            ) : (
+              <FontAwesomeIcon icon={faChevronUp} onClick={toggleFilters} />
+            )}
+            {"  "}
+            <b>Display</b>
+          </h4>
+
+          <Switch
+            id="coverart-only"
+            value="coverart-only"
+            checked={coverartOnly}
+            onChange={(e) => setCoverartOnly(!coverartOnly)}
+            switchLabel="Only Releases with artwork"
+          />
+
+          {Object.keys(displaySettings).map((setting, index) => (
+            <Switch
+              id={`display-item-${index}`}
+              value={setting}
+              checked={displaySettings[setting]}
+              onChange={(e) => toggleSettings(setting)}
+              switchLabel={setting}
+            />
           ))}
         </div>
       </div>

@@ -15,6 +15,13 @@ import ReleaseFilters from "./ReleaseFilters";
 import ReleaseTimeline from "./ReleaseTimeline";
 import Pill from "../../components/Pill";
 
+const initialDisplayState = {
+  "Release Title": true,
+  Artist: true,
+  Information: true,
+  Tags: false,
+};
+
 export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
 
@@ -34,13 +41,53 @@ export default function FreshReleases() {
     isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
 
+  const [range, setRange] = React.useState<string>("day");
+  const [displaySettings, setDisplaySettings] = React.useState<{
+    [key: string]: boolean;
+  }>(initialDisplayState);
+  const [showPastReleases, setShowPastReleases] = React.useState<boolean>(true);
+  const [showFutureReleases, setShowFutureReleases] = React.useState<boolean>(
+    true
+  );
+  const [sort, setSort] = React.useState<string>("release_date");
+
+  const handleRangeChange = (childData: string) => {
+    setRange(childData);
+  };
+
+  const toggleSettings = (setting: string) => {
+    setDisplaySettings({
+      ...displaySettings,
+      [setting]: !displaySettings[setting],
+    });
+  };
+
+  const convertRangeToDays = (releaseRange: string): number => {
+    switch (releaseRange) {
+      case "week":
+        return 7;
+      case "month":
+        return 30;
+      case "three_months":
+        return 90;
+      default:
+        return 1;
+    }
+  };
+
   React.useEffect(() => {
     const fetchReleases = async () => {
       setIsLoading(true);
       let freshReleases: Array<FreshReleaseItem>;
       try {
         if (pageType === PAGE_TYPE_SITEWIDE) {
-          freshReleases = await APIService.fetchSitewideFreshReleases(3);
+          const allFreshReleases = await APIService.fetchSitewideFreshReleases(
+            convertRangeToDays(range),
+            showPastReleases,
+            showFutureReleases,
+            sort
+          );
+          freshReleases = allFreshReleases.payload.releases;
         } else {
           const userFreshReleases = await APIService.fetchUserFreshReleases(
             currentUser.name
@@ -92,33 +139,44 @@ export default function FreshReleases() {
     };
     // Call the async function defined above (useEffect can't return a Promise)
     fetchReleases();
-  }, [pageType]);
+  }, [pageType, range, showPastReleases, showFutureReleases, sort]);
 
   return (
     <>
-      <h2 id="fr-heading">Fresh Releases</h2>
       {isLoggedIn ? (
-        <>
-          <h3 id="fr-subheading">
-            Discover new music from artists you listen to
-          </h3>
-          <div id="fr-pill-row">
+        <div id="fr-pill-row">
+          <div id="fr-row">
             <Pill
               id="sitewide-releases"
               onClick={() => setPageType(PAGE_TYPE_SITEWIDE)}
               active={pageType === PAGE_TYPE_SITEWIDE}
             >
-              All Releases
+              All
             </Pill>
             <Pill
               id="user-releases"
               onClick={() => setPageType(PAGE_TYPE_USER)}
               active={pageType === PAGE_TYPE_USER}
             >
-              Releases For You
+              For You
             </Pill>
           </div>
-        </>
+          <div id="fr-row">
+            <span>Sort By:</span>{" "}
+            <div className="input-group">
+              <select
+                id="style"
+                className="form-control"
+                value={sort}
+                onChange={(event) => setSort(event.target.value)}
+              >
+                <option value="release_date">Release Date</option>
+                <option value="artist_credit_name">Artist</option>
+                <option value="release_name">Release Title</option>
+              </select>
+            </div>
+          </div>
+        </div>
       ) : (
         <h3 id="fr-subheading">Discover new music</h3>
       )}
@@ -141,19 +199,12 @@ export default function FreshReleases() {
           </div>
         ) : (
           <>
-            <div className="filters-main col-xs-12 col-md-1">
-              <ReleaseFilters
-                allFilters={allFilters}
-                releases={releases}
-                setFilteredList={setFilteredList}
-              />
-            </div>
             <div
               id="release-cards-grid"
               className={
                 pageType === PAGE_TYPE_SITEWIDE
-                  ? "col-xs-12 col-md-10"
-                  : "col-xs-12 col-md-11"
+                  ? "col-xs-12 col-md-9"
+                  : "col-xs-12 col-md-10"
               }
             >
               {filteredList?.map((release) => {
@@ -170,6 +221,8 @@ export default function FreshReleases() {
                     confidence={release.confidence}
                     caaID={release.caa_id}
                     caaReleaseMBID={release.caa_release_mbid}
+                    displaySettings={displaySettings}
+                    releaseTags={release.release_tags}
                   />
                 );
               })}
@@ -182,6 +235,22 @@ export default function FreshReleases() {
                 ) : null}
               </div>
             ) : null}
+
+            <div className="filters-main col-xs-12 col-md-2">
+              <ReleaseFilters
+                allFilters={allFilters}
+                releases={releases}
+                setFilteredList={setFilteredList}
+                range={range}
+                handleRangeChange={handleRangeChange}
+                displaySettings={displaySettings}
+                toggleSettings={toggleSettings}
+                showPastReleases={showPastReleases}
+                setShowPastReleases={setShowPastReleases}
+                showFutureReleases={showFutureReleases}
+                setShowFutureReleases={setShowFutureReleases}
+              />
+            </div>
           </>
         )}
       </div>
