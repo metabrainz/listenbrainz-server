@@ -32,6 +32,7 @@ def load_all_releases():
             release_group_mbid=release["release_group_mbid"],
             release_group_primary_type=release.get("release_group_primary_type"),
             release_group_secondary_type=release.get("release_group_secondary_type"),
+            release_tags=release.get("release_tags"),
             caa_id=release.get("caa_id"),
             caa_release_mbid=release.get("caa_release_mbid")
         ))
@@ -68,6 +69,7 @@ def get_query():
                  , rr.release_group_secondary_type
                  , rr.caa_id
                  , rr.caa_release_mbid
+                 , rr.release_tags
                  , SUM(partial_confidence) AS confidence
               FROM artist_discovery ad
               JOIN fresh_releases rr
@@ -83,6 +85,7 @@ def get_query():
                  , rr.release_group_secondary_type
                  , rr.caa_id
                  , rr.caa_release_mbid
+                 , rr.release_tags
         )
         SELECT user_id
              , array_sort(
@@ -98,6 +101,7 @@ def get_query():
                           , release_group_secondary_type
                           , caa_id
                           , caa_release_mbid
+                          , release_tags
                           , confidence
                         )
                     )
