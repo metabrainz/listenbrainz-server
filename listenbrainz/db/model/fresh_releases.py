@@ -57,7 +57,7 @@ class FreshRelease(BaseModel):
     release_group_secondary_type: Optional[ReleaseGroupSecondaryType]
 
     # The array of tags for this release
-    tags: List[str]
+    release_tags: List[str]
 
     # The cover art archive id of the release's front cover art if it has any
     caa_id: Optional[int]

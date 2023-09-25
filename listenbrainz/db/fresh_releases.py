@@ -11,7 +11,7 @@ from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
 from listenbrainz.db.model.fresh_releases import FreshRelease
 
 
-def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_days: int, offset: int, limit: int, sort: str, past: bool, future: bool) -> List[FreshRelease]:
+def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_days: int, sort: str, past: bool, future: bool) -> List[FreshRelease]:
     """ Fetch fresh and recent releases from the MusicBrainz DB with a given window that is days number
         of days into the past and days number of days into the future.
 
@@ -19,8 +19,6 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
             pivot_release_date: The release_date around which to fetch the fresh releases.
             release_date_window_days: The number of days into the past and future to show releases for. Must be
                                       between 1 and 90 days. If an invalid value is passed, 90 days is used.
-            offset: The offset into the result set to start fetching results from.
-            limit: The maximum number of results to fetch.
             sort: The sort order of the results. Must be one of "release_date", "artist_credit_name" or "release_name".
 
         Returns:
@@ -51,7 +49,7 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                          , array_agg(distinct a.gid) AS artist_mbids
                          , rgpt.name AS release_group_primary_type
                          , rgst.name AS release_group_secondary_type
-                         , array_agg(distinct t.name) AS tags
+                         , array_agg(distinct t.name) AS release_tags
                          , COUNT(*) AS total_count
                       FROM release rl
                       JOIN release_group rg
@@ -94,12 +92,11 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                 ) SELECT *,
                          total_count AS total_count
                     FROM releases
-                ORDER BY {sort_order_str}
-                LIMIT %s OFFSET %s;
+                ORDER BY {sort_order_str};
         """.format(sort_order_str=sort_order_str)
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, \
             conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-        curs.execute(query, (from_date, to_date, limit, offset))
+        curs.execute(query, (from_date, to_date))
         result = {str(row["release_mbid"]): dict(row) for row in curs.fetchall()}
 
         covers = get_caa_ids_for_release_mbids(curs, result.keys())
@@ -107,8 +104,8 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
         fresh_releases = []
         total_count = 0
         for mbid, row in result.items():
-            if row["tags"] == [None]:
-                row["tags"] = []
+            if row["release_tags"] == [None]:
+                row["release_tags"] = []
             row["caa_id"] = covers[mbid]["caa_id"]
             if covers[mbid]["caa_release_mbid"]:
                 row["caa_release_mbid"] = uuid.UUID(covers[mbid]["caa_release_mbid"])

@@ -16,7 +16,6 @@ MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
 DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
 DEFAULT_CACHE_EXPIRE_TIME = 3600 * 24  # 1 day
 HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
-RELEASES_PER_PAGE = 30
 
 explore_api_bp = Blueprint('explore_api_v1', __name__)
 
@@ -45,7 +44,6 @@ def get_fresh_releases():
     :param release_date: Fresh releases will be shown around this pivot date.
                          Must be in YYYY-MM-DD format
     :param days: The number of days of fresh releases to show. Max 30 days.
-    :param page: The page number of results to show. Default 1.
     :param sort: The sort order of the results. Must be one of "release_date", "artist_credit_name" or "release_name". Default "release_date".
     :param past: Whether to show releases in the past. Default True.
     :param future: Whether to show releases in the future. Default True.
@@ -57,10 +55,6 @@ def get_fresh_releases():
     days = _parse_int_arg("days", DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS)
     if days < 1 or days > MAX_NUMBER_OF_FRESH_RELEASE_DAYS:
         raise APIBadRequest(f"days must be between 1 and {MAX_NUMBER_OF_FRESH_RELEASE_DAYS}.")
-    
-    page = _parse_int_arg("page", 1)
-    if page < 1:
-        raise APIBadRequest("page must be greater than 0.")
     
     sort = request.args.get("sort", "release_date")
     if sort not in ("release_date", "artist_credit_name", "release_name"):
@@ -79,8 +73,7 @@ def get_fresh_releases():
         release_date = datetime.date.today()
 
     try:
-        offset = (page - 1) * RELEASES_PER_PAGE
-        db_releases, total_count = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days, offset, RELEASES_PER_PAGE, sort, past, future)
+        db_releases, total_count = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days, sort, past, future)
     except Exception as e:
         current_app.logger.error("Server failed to get latest release: {}".format(e))
         raise APIInternalServerError("Server failed to get latest release")
