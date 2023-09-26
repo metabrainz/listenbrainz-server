@@ -15,8 +15,6 @@ type LBRadioFeedbackProps = {
 type PlaylistProps = {
   playlist?: JSPFPlaylist;
   onSavePlaylist: () => void;
-  onSaveToSpotify: () => void;
-  onExportJSPF: () => void;
 };
 
 export function LBRadioFeedback(props: LBRadioFeedbackProps) {
@@ -39,7 +37,7 @@ export function LBRadioFeedback(props: LBRadioFeedbackProps) {
 }
 
 export function Playlist(props: PlaylistProps) {
-  const { playlist, onSavePlaylist, onSaveToSpotify, onExportJSPF } = props;
+  const { playlist, onSavePlaylist } = props;
   const { spotifyAuth, currentUser } = React.useContext(GlobalAppContext);
   const showSpotifyExportButton = spotifyAuth?.permission?.includes(
     "playlist-modify-public"
