@@ -15,6 +15,7 @@ from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache, incremental_update_mb_metadata_cache, \
     cleanup_mbid_mapping_table
+from mapping.mb_release_group_cache import create_mb_release_group_cache
 from mapping.spotify_metadata_index import create_spotify_metadata_index
 from similar.tag_similarity import create_tag_similarity
 
@@ -114,6 +115,13 @@ def build_mb_metadata_cache(use_lb_conn):
     """
     create_mb_metadata_cache(use_lb_conn)
 
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_mb_release_group_cache(use_lb_conn):
+    """
+        Build the MB release group cache that LB uses
+    """
+    create_mb_release_group_cache(use_lb_conn)
 
 @cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
@@ -132,7 +140,6 @@ def cron_build_mb_metadata_cache():
     create_canonical_musicbrainz_data(False)
     create_mb_metadata_cache(True)
     cleanup_mbid_mapping_table()
-
 
 @cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
