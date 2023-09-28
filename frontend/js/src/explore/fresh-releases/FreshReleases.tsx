@@ -20,6 +20,7 @@ const initialDisplayState = {
   Artist: true,
   Information: true,
   Tags: false,
+  Listens: false,
 };
 
 export default function FreshReleases() {
@@ -33,15 +34,19 @@ export default function FreshReleases() {
   const [filteredList, setFilteredList] = React.useState<
     Array<FreshReleaseItem>
   >([]);
-  const [allFilters, setAllFilters] = React.useState<Array<string | undefined>>(
-    []
-  );
+  const [allFilters, setAllFilters] = React.useState<{
+    releaseTypes: Array<string | undefined>;
+    releaseTags: Array<string | undefined>;
+  }>({
+    releaseTypes: [],
+    releaseTags: [],
+  });
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [pageType, setPageType] = React.useState<string>(
     isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
 
-  const [range, setRange] = React.useState<string>("day");
+  const [range, setRange] = React.useState<string>("week");
   const [displaySettings, setDisplaySettings] = React.useState<{
     [key: string]: boolean;
   }>(initialDisplayState);
@@ -121,9 +126,21 @@ export default function FreshReleases() {
               value !== null
           );
 
+        const uniqueReleaseTagsSet = new Set<string>();
+        cleanReleases.forEach((item) => {
+          item.release_tags.forEach((tag) => {
+            uniqueReleaseTagsSet.add(tag);
+          });
+        });
+
+        const releaseTags = Array.from(uniqueReleaseTagsSet);
+
         setReleases(cleanReleases);
         setFilteredList(cleanReleases);
-        setAllFilters(releaseTypes);
+        setAllFilters({
+          releaseTypes,
+          releaseTags,
+        });
         setIsLoading(false);
       } catch (error) {
         toast.error(
@@ -150,6 +167,7 @@ export default function FreshReleases() {
               id="sitewide-releases"
               onClick={() => setPageType(PAGE_TYPE_SITEWIDE)}
               active={pageType === PAGE_TYPE_SITEWIDE}
+              type="secondary"
             >
               All
             </Pill>
@@ -157,6 +175,7 @@ export default function FreshReleases() {
               id="user-releases"
               onClick={() => setPageType(PAGE_TYPE_USER)}
               active={pageType === PAGE_TYPE_USER}
+              type="secondary"
             >
               For You
             </Pill>
@@ -223,6 +242,7 @@ export default function FreshReleases() {
                     caaReleaseMBID={release.caa_release_mbid}
                     displaySettings={displaySettings}
                     releaseTags={release.release_tags}
+                    listenCount={release.listen_count}
                   />
                 );
               })}

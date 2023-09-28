@@ -11,6 +11,18 @@ export function formatReleaseDate(releaseDate: string) {
     .join("");
 }
 
+export function formatListenCount(listenCount: number) {
+  if (listenCount >= 1e3 && listenCount < 1e6)
+    return `${+(listenCount / 1e3).toFixed(1)}K`;
+  if (listenCount >= 1e6 && listenCount < 1e9)
+    return `${+(listenCount / 1e6).toFixed(1)}M`;
+  if (listenCount >= 1e9 && listenCount < 1e12)
+    return `${+(listenCount / 1e9).toFixed(1)}B`;
+  if (listenCount >= 1e12) return `${+(listenCount / 1e12).toFixed(1)}T`;
+
+  return listenCount;
+}
+
 // Originally from https://usehooks-ts.com/react-hook/use-media-query
 export function useMediaQuery(queryStr: string) {
   const getMatches = (query: string): boolean => {

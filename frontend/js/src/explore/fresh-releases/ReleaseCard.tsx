@@ -2,11 +2,12 @@ import * as React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { faPlay, faHourglass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { formatReleaseDate } from "./utils";
+import { formatListenCount, formatReleaseDate } from "./utils";
 import {
   generateAlbumArtThumbnailLink,
   getAlbumArtFromReleaseMBID,
 } from "../../utils/utils";
+import Pill from "../../components/Pill";
 
 type ReleaseCardProps = {
   releaseDate: string;
@@ -21,6 +22,7 @@ type ReleaseCardProps = {
   caaReleaseMBID: string | null;
   displaySettings: { [key: string]: boolean };
   releaseTags: Array<string>;
+  listenCount: number;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -37,6 +39,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     caaReleaseMBID,
     displaySettings,
     releaseTags,
+    listenCount,
   } = props;
 
   const futureRelease = new Date(releaseDate) > new Date();
@@ -91,6 +94,18 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   return (
     <div className="release-card-container">
       <div className="release-item">
+        {displaySettings.Listens && listenCount ? (
+          <div className="listen-count">
+            <Pill title="Listens" type="secondary" active>
+              <>
+                <FontAwesomeIcon icon={faPlay} />
+                <span className="listen-count-number">
+                  {formatListenCount(listenCount)}
+                </span>
+              </>
+            </Pill>
+          </div>
+        ) : null}
         <div className="release-information">
           {displaySettings.Tags && releaseTags && releaseTags.length ? (
             <div className="cover-art-info">

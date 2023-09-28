@@ -712,6 +712,7 @@ type FreshReleaseItem = {
   release_mbid: string;
   release_name: string;
   release_tags: Array<string>;
+  listen_count: number;
 };
 
 type UserFreshReleasesResponse = {
