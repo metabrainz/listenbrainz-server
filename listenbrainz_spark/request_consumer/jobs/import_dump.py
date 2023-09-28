@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 # of the params in request_queries.json.
 
 
-def import_full_dump_to_hdfs(dump_id: int = None) -> str:
+def import_full_dump_to_hdfs(dump_id: int = None, local: bool = False) -> str:
     """ Import the full dump with the given dump_id if specified otherwise the
      latest full dump.
 
@@ -28,6 +28,7 @@ def import_full_dump_to_hdfs(dump_id: int = None) -> str:
         Deletes all the existing listens and uploads listens from new dump.
     Args:
         dump_id: id of the full dump to be imported
+        local: if True, import the dump from local file system instead of FTP
     Returns:
         the name of the imported dump
     """
@@ -44,7 +45,7 @@ def import_full_dump_to_hdfs(dump_id: int = None) -> str:
     return dump_name
 
 
-def import_incremental_dump_to_hdfs(dump_id: int = None) -> str:
+def import_incremental_dump_to_hdfs(dump_id: int = None, local: bool = False) -> str:
     """ Import the incremental dump with the given dump_id if specified otherwise the
      latest incremental dump.
 
@@ -53,6 +54,7 @@ def import_incremental_dump_to_hdfs(dump_id: int = None) -> str:
         listens directory.
     Args:
         dump_id: id of the incremental dump to be imported
+        local: if True, import the dump from local file system instead of FTP
     Returns:
         the name of the imported dump
     """
@@ -71,11 +73,11 @@ def import_incremental_dump_to_hdfs(dump_id: int = None) -> str:
     return dump_name
 
 
-def import_newest_full_dump_handler():
+def import_newest_full_dump_handler(local: bool):
     errors = []
     dumps = []
     try:
-        dumps.append(import_full_dump_to_hdfs(dump_id=None))
+        dumps.append(import_full_dump_to_hdfs(dump_id=None, local=local))
     except Exception as e:
         logger.error("Error while importing full dump: ", exc_info=True)
         errors.append(str(e))
@@ -87,11 +89,11 @@ def import_newest_full_dump_handler():
     }]
 
 
-def import_full_dump_by_id_handler(dump_id: int):
+def import_full_dump_by_id_handler(dump_id: int, local: bool):
     errors = []
     dumps = []
     try:
-        dumps.append(import_full_dump_to_hdfs(dump_id=dump_id))
+        dumps.append(import_full_dump_to_hdfs(dump_id=dump_id, local=local))
     except Exception as e:
         logger.error("Error while importing full dump: ", exc_info=True)
         errors.append(str(e))
@@ -103,13 +105,13 @@ def import_full_dump_by_id_handler(dump_id: int):
     }]
 
 
-def import_newest_incremental_dump_handler():
+def import_newest_incremental_dump_handler(local: bool):
     errors = []
     imported_dumps = []
     latest_full_dump = utils.get_latest_full_dump()
     if latest_full_dump is None:
         # If no prior full dump is present, just import the latest incremental dump
-        imported_dumps.append(import_incremental_dump_to_hdfs(dump_id=None))
+        imported_dumps.append(import_incremental_dump_to_hdfs(dump_id=None, local=local))
 
         error_msg = "No previous full dump found, importing latest incremental dump"
         errors.append(error_msg)
@@ -123,7 +125,7 @@ def import_newest_incremental_dump_handler():
         for dump_id in range(start_id, end_id, 1):
             if not utils.search_dump(dump_id, DumpType.INCREMENTAL, imported_at):
                 try:
-                    imported_dumps.append(import_incremental_dump_to_hdfs(dump_id))
+                    imported_dumps.append(import_incremental_dump_to_hdfs(dump_id=dump_id, local=local))
                 except Exception as e:
                     # Skip current dump if any error occurs during import
                     error_msg = f"Error while importing incremental dump with ID {dump_id}: {e}"
@@ -139,11 +141,11 @@ def import_newest_incremental_dump_handler():
     }]
 
 
-def import_incremental_dump_by_id_handler(dump_id: int):
+def import_incremental_dump_by_id_handler(dump_id: int, local: bool):
     errors = []
     dumps = []
     try:
-        dumps.append(import_incremental_dump_to_hdfs(dump_id=dump_id))
+        dumps.append(import_incremental_dump_to_hdfs(dump_id=dump_id, local=local))
     except Exception as e:
         logger.error("Error while importing incremental dump: ", exc_info=True)
         errors.append(str(e))
