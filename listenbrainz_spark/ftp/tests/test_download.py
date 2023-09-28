@@ -22,12 +22,6 @@ class FTPDownloaderTestCase(unittest.TestCase):
             ListenbrainzDataDownloader().get_dump_name_to_download(dump, 3, 1)
 
     @patch('ftplib.FTP')
-    def test_get_dump_archive_name(self, mock_ftp_cons):
-        dump_name = 'listenbrainz-01-00000'
-        filename = ListenbrainzDataDownloader().get_dump_archive_name(dump_name)
-        self.assertEqual(dump_name + '.tar.bz2', filename)
-
-    @patch('ftplib.FTP')
     def test_get_listens_dump_file_name(self, mock_ftp_cons):
         filename = ListenbrainzDataDownloader().get_listens_dump_file_name('listenbrainz-dump-17-20190101-000001-full/')
         self.assertEqual('listenbrainz-spark-dump-17-20190101-000001-full.tar', filename)
