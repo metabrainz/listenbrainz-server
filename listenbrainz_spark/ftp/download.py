@@ -1,5 +1,4 @@
 import os
-import re
 import tempfile
 import time
 import logging
@@ -43,17 +42,6 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         else:
             req_dump = dump[-1]
         return req_dump
-
-    def get_dump_archive_name(self, dump_name):
-        """ Get the name of the Spark dump archive from the dump directory name.
-
-            Args:
-                dump_name (str): FTP dump directory name.
-
-            Returns:
-                '' : Spark dump archive name.
-        """
-        return dump_name + '.tar.bz2'
 
     def get_listens_dump_file_name(self, dump_name):
         """ Get the name of Spark listens dump name archive.
@@ -112,7 +100,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         req_dump = self.get_dump_name_to_download(dump, artist_relation_dump_id, ARTIST_RELATION_DUMP_ID_POS)
 
         self.connection.cwd(req_dump)
-        artist_relation_file_name = self.get_dump_archive_name(req_dump)
+        artist_relation_file_name = req_dump + '.tar.bz2'
 
         t0 = time.monotonic()
         logger.info('Downloading {} from FTP...'.format(artist_relation_file_name))
