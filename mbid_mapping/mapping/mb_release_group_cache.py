@@ -322,6 +322,9 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                               FROM musicbrainz.release_group r
                               JOIN musicbrainz.release rel
                                 ON r.id = rel.release_group
+                              JOIN mapping.canonical_release_redirect crr
+                                ON crr.release_mbid = rel.gid
+                               AND r.gid = crr.release_group_mbid
                               JOIN musicbrainz.artist_credit rac
                                 ON rac.id = rel.artist_credit
                          LEFT JOIN rg_cover_art rgca
@@ -611,6 +614,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                         self.delete_rows(batch_recording_mbids)
                         insert_rows(lb_curs, self.table_name, rows)
                         conn.commit()
+                        log("mb metadata update: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
                         rows = []
 
                 if rows:
