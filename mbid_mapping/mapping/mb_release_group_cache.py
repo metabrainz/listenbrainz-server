@@ -101,7 +101,6 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
             release_group_data, artist_data, tag_data JSON strings as a tuple.
         """
 
-        print(row)
         artist = {
             "name": row["artist_credit_name"],
             "artist_credit_id": row["artist_credit_id"],
@@ -337,9 +336,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                  , artist_tags
                                  , release_group_tags
                                  , rd.name AS release_name
-                                 , rd.release_group_mbid::TEXT
                                  , r.gid::TEXT AS release_group_mbid
-                                 , rd.release_group_mbid::TEXT
                                  , rd.album_artist_name
                                  , rd.caa_id
                                  , rd.caa_release_mbid
@@ -614,7 +611,6 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                         self.delete_rows(batch_recording_mbids)
                         insert_rows(lb_curs, self.table_name, rows)
                         conn.commit()
-                        log("mb metadata update: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
                         rows = []
 
                 if rows:
