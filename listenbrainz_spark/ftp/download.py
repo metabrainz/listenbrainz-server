@@ -63,29 +63,6 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         """
         return ListensDump.from_ftp_dir(dump_name).get_dump_file()
 
-    def get_available_dumps(self, dump, mapping_name_prefix):
-        """ Get list of available mapping dumps.
-
-            Args:
-                dump: list of dumps in the current working directory.
-                mapping_name_prefix (str): prefix of mapping dump name.
-
-            Returns:
-                mapping: list of mapping dump names in the current working directory.
-        """
-        mapping = list()
-        for mapping_name in dump:
-            mapping_pattern = '{}-\\d+-\\d+(.tar.bz2)$'.format(mapping_name_prefix)
-
-            if re.match(mapping_pattern, mapping_name):
-                mapping.append(mapping_name)
-
-        if len(mapping) == 0:
-            err_msg = '{} type mapping not found'.format(mapping_name_prefix)
-            raise DumpNotFoundException(err_msg)
-
-        return mapping
-
     def download_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL):
         """ Download listens to dir passed as an argument.
 
