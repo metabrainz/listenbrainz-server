@@ -35,33 +35,6 @@ class FTPDownloaderTestCase(unittest.TestCase):
         filename = ListenbrainzDataDownloader().get_listens_dump_file_name('listenbrainz-dump-17-20190101-000001-incremental/')
         self.assertEqual('listenbrainz-spark-dump-17-20190101-000001-incremental.tar', filename)
 
-    @patch('ftplib.FTP')
-    def test_get_available_dumps(self, mock_ftp):
-        dump = [
-            'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
-            'msid-mbid-mapping-with-text-20180603-202000.tar.bz2',
-            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
-            'msid-mbid-mapping-with-matchable-xxxx-20200603-202732.tar.bz2'
-            'msid-mbid-mapping-with-matchable-20100603-202732.tar.bz2.md5',
-        ]
-
-        mapping = ListenbrainzDataDownloader().get_available_dumps(dump, 'msid-mbid-mapping-with-matchable')
-
-        expected_mapping = [
-            'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
-            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
-        ]
-
-        self.assertEqual(mapping, expected_mapping)
-
-        dump = [
-            'msid-mbid-mapping-with-text-20180603-202000.tar.bz2',
-            'msid-mbid-mapping-with-matchable-20100603-202732.tar.bz2.md5',
-        ]
-
-        with self.assertRaises(DumpNotFoundException):
-            ListenbrainzDataDownloader().get_available_dumps(dump, 'msid-mbid-mapping-with-matchable')
-
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_listens_dump_file_name')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir')
