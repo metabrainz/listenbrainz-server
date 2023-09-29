@@ -159,122 +159,118 @@ export default function FreshReleases() {
   }, [pageType, range, showPastReleases, showFutureReleases, sort]);
 
   return (
-    <>
-      {isLoggedIn ? (
-        <div id="fr-pill-row">
-          <div id="fr-row">
-            <Pill
-              id="sitewide-releases"
-              onClick={() => setPageType(PAGE_TYPE_SITEWIDE)}
-              active={pageType === PAGE_TYPE_SITEWIDE}
-              type="secondary"
-            >
-              All
-            </Pill>
-            <Pill
-              id="user-releases"
-              onClick={() => setPageType(PAGE_TYPE_USER)}
-              active={pageType === PAGE_TYPE_USER}
-              type="secondary"
-            >
-              For You
-            </Pill>
-          </div>
-          <div id="fr-row">
-            <span>Sort By:</span>{" "}
-            <div className="input-group">
-              <select
-                id="style"
-                className="form-control"
-                value={sort}
-                onChange={(event) => setSort(event.target.value)}
+    <div className="row">
+      <div className="col-xs-12 col-md-10">
+        {isLoggedIn ? (
+          <div id="fr-pill-row">
+            <div id="fr-row">
+              <Pill
+                id="sitewide-releases"
+                onClick={() => setPageType(PAGE_TYPE_SITEWIDE)}
+                active={pageType === PAGE_TYPE_SITEWIDE}
+                type="secondary"
               >
-                <option value="release_date">Release Date</option>
-                <option value="artist_credit_name">Artist</option>
-                <option value="release_name">Release Title</option>
-              </select>
+                All
+              </Pill>
+              <Pill
+                id="user-releases"
+                onClick={() => setPageType(PAGE_TYPE_USER)}
+                active={pageType === PAGE_TYPE_USER}
+                type="secondary"
+              >
+                For You
+              </Pill>
             </div>
-          </div>
-        </div>
-      ) : (
-        <h3 id="fr-subheading">Discover new music</h3>
-      )}
-      <div className="releases-page row">
-        {isLoading ? (
-          <div className="spinner-container">
-            <Spinner
-              type="Grid"
-              color="#eb743b"
-              height={100}
-              width={100}
-              visible
-            />
-            <div
-              className="text-muted"
-              style={{ fontSize: "2rem", margin: "1rem" }}
-            >
-              Loading Fresh Releases&#8230;
+            <div id="fr-row">
+              <span>Sort By:</span>{" "}
+              <div className="input-group">
+                <select
+                  id="style"
+                  className="form-control"
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value)}
+                >
+                  <option value="release_date">Release Date</option>
+                  <option value="artist_credit_name">Artist</option>
+                  <option value="release_name">Release Title</option>
+                </select>
+              </div>
             </div>
           </div>
         ) : (
-          <>
-            <div
-              id="release-cards-grid"
-              className={
-                pageType === PAGE_TYPE_SITEWIDE
-                  ? "col-xs-12 col-md-9"
-                  : "col-xs-12 col-md-10"
-              }
-            >
-              {filteredList?.map((release) => {
-                return (
-                  <ReleaseCard
-                    key={release.release_mbid}
-                    releaseDate={release.release_date}
-                    releaseMBID={release.release_mbid}
-                    releaseName={release.release_name}
-                    releaseTypePrimary={release.release_group_primary_type}
-                    releaseTypeSecondary={release.release_group_secondary_type}
-                    artistCreditName={release.artist_credit_name}
-                    artistMBIDs={release.artist_mbids}
-                    confidence={release.confidence}
-                    caaID={release.caa_id}
-                    caaReleaseMBID={release.caa_release_mbid}
-                    displaySettings={displaySettings}
-                    releaseTags={release.release_tags}
-                    listenCount={release.listen_count}
-                  />
-                );
-              })}
-            </div>
-
-            {pageType === PAGE_TYPE_SITEWIDE ? (
-              <div className="releases-timeline col-xs-12 col-md-1">
-                {releases.length > 0 ? (
-                  <ReleaseTimeline releases={filteredList} />
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="filters-main col-xs-12 col-md-2">
-              <ReleaseFilters
-                allFilters={allFilters}
-                releases={releases}
-                setFilteredList={setFilteredList}
-                range={range}
-                handleRangeChange={handleRangeChange}
-                displaySettings={displaySettings}
-                toggleSettings={toggleSettings}
-                showPastReleases={showPastReleases}
-                setShowPastReleases={setShowPastReleases}
-                showFutureReleases={showFutureReleases}
-                setShowFutureReleases={setShowFutureReleases}
-              />
-            </div>
-          </>
+          <h3 id="fr-subheading">Discover new music</h3>
         )}
+        <div className="releases-page row">
+          {isLoading ? (
+            <div className="spinner-container">
+              <Spinner
+                type="Grid"
+                color="#eb743b"
+                height={100}
+                width={100}
+                visible
+              />
+              <div
+                className="text-muted"
+                style={{ fontSize: "2rem", margin: "1rem" }}
+              >
+                Loading Fresh Releases&#8230;
+              </div>
+            </div>
+          ) : (
+            <>
+              <div id="release-cards-grid" className="col-xs-12 col-md-11">
+                {filteredList?.map((release) => {
+                  return (
+                    <ReleaseCard
+                      key={release.release_mbid}
+                      releaseDate={release.release_date}
+                      releaseMBID={release.release_mbid}
+                      releaseName={release.release_name}
+                      releaseTypePrimary={release.release_group_primary_type}
+                      releaseTypeSecondary={
+                        release.release_group_secondary_type
+                      }
+                      artistCreditName={release.artist_credit_name}
+                      artistMBIDs={release.artist_mbids}
+                      confidence={release.confidence}
+                      caaID={release.caa_id}
+                      caaReleaseMBID={release.caa_release_mbid}
+                      displaySettings={displaySettings}
+                      releaseTags={release.release_tags}
+                      listenCount={release.listen_count}
+                    />
+                  );
+                })}
+              </div>
+
+              {pageType === PAGE_TYPE_SITEWIDE ? (
+                <div className="releases-timeline col-xs-12 col-md-1">
+                  {releases.length > 0 ? (
+                    <ReleaseTimeline releases={filteredList} />
+                  ) : null}
+                </div>
+              ) : null}
+            </>
+          )}
+        </div>
       </div>
-    </>
+      <div className="release-filters col-xs-12 col-md-2">
+        <ReleaseFilters
+          allFilters={allFilters}
+          releases={releases}
+          setFilteredList={setFilteredList}
+          range={range}
+          handleRangeChange={handleRangeChange}
+          displaySettings={displaySettings}
+          toggleSettings={toggleSettings}
+          showPastReleases={showPastReleases}
+          setShowPastReleases={setShowPastReleases}
+          showFutureReleases={showFutureReleases}
+          setShowFutureReleases={setShowFutureReleases}
+        />
+      </div>
+    </div>
   );
 }
 

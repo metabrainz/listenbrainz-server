@@ -374,7 +374,7 @@
     }
 
     @media (min-width: @screen-md) and (max-width: @screen-lg) {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       & > .release-card-container {
         & > .lazy-load-image-background .release-coverart {
           width: 12em;
@@ -389,7 +389,11 @@
       }
     }
 
-    @media (min-width: 1200px) {
+    @media (min-width: @screen-lg) and (max-width: 1400px) {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    @media (min-width: 1400px) {
       grid-template-columns: repeat(5, 1fr);
       & > .release-card-container {
         & > .lazy-load-image-background .release-coverart {
@@ -440,4 +444,12 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
+}
+
+.release-filters {
+  top: 6px;
+  position: sticky;
+  height: min-content;
+  max-height: 100vh;
+  overflow-y: scroll;
 }
