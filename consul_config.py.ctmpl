@@ -180,6 +180,7 @@ EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_app
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
 MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
+MUSICBRAINZ_OAUTH_URL = f"{MUSICBRAINZ_BASE_URL}/oauth2/userinfo"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
