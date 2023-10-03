@@ -84,6 +84,7 @@ COUCHDB_ADMIN_KEY = "listenbrainz"
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
 MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
+MUSICBRAINZ_OAUTH_URL = f"{MUSICBRAINZ_BASE_URL}/oauth2/userinfo"
 
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
