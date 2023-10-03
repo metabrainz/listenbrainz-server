@@ -83,6 +83,7 @@ COUCHDB_ADMIN_KEY = "listenbrainz"
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
 MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
+MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
 
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
@@ -137,7 +138,6 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8101/'
 SERVER_ROOT_URL = 'http://localhost:8100'
-MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 
 # Flask Debug redirect

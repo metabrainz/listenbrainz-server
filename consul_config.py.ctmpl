@@ -179,6 +179,7 @@ EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_app
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
 MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
+MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
@@ -201,7 +202,6 @@ UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 API_URL = '''{{template "KEY" "api_url"}}'''
 LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
 SERVER_ROOT_URL = '''{{template "KEY" "server_root_url"}}'''
-MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
 
 # Sentry config
