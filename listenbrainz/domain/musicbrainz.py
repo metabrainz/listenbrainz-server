@@ -22,7 +22,7 @@ class MusicBrainzService(BaseBrainzService):
 
     def get_user_info(self, token: str):
         response = requests.post(
-            f"{current_app.config['MUSICBRAINZ_BASE_URL']}/userinfo",
+            f"{current_app.config['MUSICBRAINZ_BASE_URL']}/oauth2/userinfo",
             headers={"Authorization": f"Bearer {token}"}
         )
         response.raise_for_status()
