@@ -62,7 +62,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                 ("artist_mbids ",              "UUID[] NOT NULL"),
                 ("artist_data ",               "JSONB NOT NULL"),
                 ("tag_data ",                  "JSONB NOT NULL"),
-                ("release_data",               "JSONB NOT NULL")]
+                ("release_group_data",         "JSONB NOT NULL")]
 
     def get_insert_queries_test_values(self):
         if config.USE_MINIMAL_DATASET:

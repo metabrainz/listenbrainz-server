@@ -56,7 +56,7 @@ def get_metadata_for_release_group(release_group_mbid_list: List[str]) -> List[R
         raise ValueError("Too many recording mbids passed in.")
 
     query = """SELECT *
-                 FROM mapping.mb_release_group_metadata_cache
+                 FROM mapping.mb_release_group_cache
                 WHERE release_group_mbid in %s
              ORDER BY release_group_mbid"""
 

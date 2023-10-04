@@ -63,7 +63,7 @@ def fetch_release_group_metadata(release_group_mbids, incs):
             data["tag"] = entry.tag_data
 
         if "release" in incs:
-            data["release"] = entry.release_data
+            data["release"] = entry.release_group_data
 
         result[str(entry.release_group_mbid)] = data
 
