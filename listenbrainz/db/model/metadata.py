@@ -30,3 +30,19 @@ class RecordingMetadata(BaseModel):
 
     # JSON which contains metadata about the release for this recording
     release_data: Dict
+
+
+class ArtistMetadata(BaseModel):
+    """Metadata for an artist that is cached in LB to reduce the impact on MB."""
+
+    # The mbids of this artist
+    artist_mbid: uuid.UUID
+
+    # Has this entry been marked dirty for imminent re-fetching?
+    dirty: bool
+
+    # JSON which contains metadata about the artist for this recording
+    artist_data: Dict
+
+    # JSON which contains metadata about the tags for this recording and its artist
+    tag_data: Dict
