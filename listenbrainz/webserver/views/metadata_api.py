@@ -2,7 +2,7 @@ from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify,current_app
 
 from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
-from listenbrainz.db.metadata import get_metadata_for_recording
+from listenbrainz.db.metadata import get_metadata_for_recording, get_metadata_for_artist
 from listenbrainz.db.release_group_metadata import get_metadata_for_release_group
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
@@ -304,3 +304,51 @@ def get_manual_mapping():
         })
     else:
         return jsonify({"status": "none"}), 404
+
+
+@metadata_bp.route("/artist/", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def metadata_artist():
+    """
+    This endpoint takes in a list of artist_mbids and returns an array of dicts that contain
+    recording metadata suitable for showing in a context that requires as much detail about
+    a recording and the artist. Using the inc parameter, you can control which portions of metadata
+    to fetch.
+
+    The data returned by this endpoint can be seen here:
+
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_metadata_cache_example.json
+       :language: json
+
+    :param artist_mbids: A comma separated list of recording_mbids
+    :type artist_mbids: ``str``
+    :param inc: A space separated list of "artist", "tag" and/or "release" to indicate which portions
+                of metadata you're interested in fetching. We encourage users to only fetch the data
+                they plan to consume.
+    :type inc: ``str``
+    :statuscode 200: you have data!
+    :statuscode 400: invalid recording_mbid arguments
+    """
+    incs = parse_incs()
+
+    artists = request.args.get("artist_mbids", default=None)
+    if artists is None:
+        raise APIBadRequest(
+            "artist_mbids argument must be present and contain a comma separated list of artist_mbids")
+
+    artist_mbids = []
+    for mbid in artists.split(","):
+        mbid_clean = mbid.strip()
+        if not is_valid_uuid(mbid_clean):
+            raise APIBadRequest(f"artist mbid {mbid} is not valid.")
+
+        artist_mbids.append(mbid_clean)
+
+    results = []
+    for row in get_metadata_for_artist(artist_mbids):
+        item = {"artist_mbid": row.artist_mbid}
+        item.update(**row.artist_data)
+        item["tag"] = row.tag_data
+        results.append(item)
+    return jsonify(results)
