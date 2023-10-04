@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify,current_app
 
 from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
 from listenbrainz.db.metadata import get_metadata_for_recording
+from listenbrainz.db.release_group_metadata import get_metadata_for_release_group
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup import \
@@ -50,6 +51,24 @@ def fetch_metadata(recording_mbids, incs):
     return result
 
 
+def fetch_release_group_metadata(release_group_mbids, incs):
+    metadata = get_metadata_for_release_group(release_group_mbids)
+    result = {}
+    for entry in metadata:
+        data = {"release_group": entry.release_group_data}
+        if "artist" in incs:
+            data["artist"] = entry.artist_data
+
+        if "tag" in incs:
+            data["tag"] = entry.tag_data
+
+        if "release" in incs:
+            data["release"] = entry.release_data
+
+        result[str(entry.release_group_mbid)] = data
+
+    return result
+
 @metadata_bp.route("/recording/", methods=["GET", "OPTIONS"])
 @crossdomain
 @ratelimit()
@@ -90,6 +109,49 @@ def metadata_recording():
         recording_mbids.append(mbid_clean)
 
     result = fetch_metadata(recording_mbids, incs)
+    return jsonify(result)
+
+
+@metadata_bp.route("/release_group/", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def metadata_release_group():
+    """
+    This endpoint takes in a list of release_group_mbids and returns an array of dicts that contain
+    release_group metadata suitable for showing in a context that requires as much detail about
+    a release_group and the artist. Using the inc parameter, you can control which portions of metadata
+    to fetch.
+
+    The data returned by this endpoint can be seen here:
+
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_release_group_metadata_cache_example.json
+       :language: json
+
+    :param release_group_mbids: A comma separated list of release_group_mbids
+    :type release_group_mbids: ``str``
+    :param inc: A space separated list of "artist", "tag" and/or "release" to indicate which portions
+                of metadata you're interested in fetching. We encourage users to only fetch the data
+                they plan to consume.
+    :type inc: ``str``
+    :statuscode 200: you have data!
+    :statuscode 400: invalid release_group_mbid arguments
+    """
+    incs = parse_incs()
+
+    release_groups = request.args.get("release_group_mbids", default=None)
+    if release_groups is None:
+        raise APIBadRequest(
+            "release_group_mbids argument must be present and contain a comma separated list of release_group_mbids")
+
+    release_group_mbids = []
+    for mbid in release_groups.split(","):
+        mbid_clean = mbid.strip()
+        if not is_valid_uuid(mbid_clean):
+            raise APIBadRequest(f"Release group mbid {mbid} is not valid.")
+
+        release_group_mbids.append(mbid_clean)
+
+    result = fetch_release_group_metadata(release_group_mbids, incs)
     return jsonify(result)
 
 
