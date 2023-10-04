@@ -7,6 +7,7 @@ import subprocess
 import click
 
 from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
+from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache
 from mapping.typesense_index import build_all as action_build_index
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
@@ -115,6 +116,7 @@ def build_mb_metadata_cache(use_lb_conn):
     """
     create_mb_metadata_cache(use_lb_conn)
 
+
 @cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
 def build_mb_release_group_cache(use_lb_conn):
@@ -122,6 +124,16 @@ def build_mb_release_group_cache(use_lb_conn):
         Build the MB release group cache that LB uses
     """
     create_mb_release_group_cache(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_mb_artist_metadata_cache(use_lb_conn):
+    """
+        Build the MB release group cache that LB uses
+    """
+    create_mb_artist_metadata_cache(use_lb_conn)
+
 
 @cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
@@ -141,6 +153,7 @@ def cron_build_mb_metadata_cache():
     create_mb_metadata_cache(True)
     cleanup_mbid_mapping_table()
 
+
 @cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
 def build_spotify_metadata_index(use_lb_conn):
@@ -148,7 +161,8 @@ def build_spotify_metadata_index(use_lb_conn):
         Build the spotify metadata index that LB uses
     """
     create_spotify_metadata_index(use_lb_conn)
-  
+
+
 @cli.command()
 def build_tag_similarity():
     """

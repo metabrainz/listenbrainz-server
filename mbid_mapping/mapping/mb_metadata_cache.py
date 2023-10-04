@@ -697,10 +697,10 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         log("mb metadata update: Done!")
 
 
-def select_metadata_cache_timestamp(conn):
+def select_metadata_cache_timestamp(conn, key):
     """ Retrieve the last time the mb metadata cache update was updated """
     query = SQL("SELECT value FROM background_worker_state WHERE key = {key}")\
-        .format(key=Literal(MB_METADATA_CACHE_TIMESTAMP_KEY))
+        .format(key=Literal(key))
     try:
         with conn.cursor() as curs:
             curs.execute(query)
@@ -714,11 +714,11 @@ def select_metadata_cache_timestamp(conn):
         return None
 
 
-def update_metadata_cache_timestamp(conn, ts: datetime):
+def update_metadata_cache_timestamp(conn, ts: datetime, key):
     """ Update the timestamp of metadata creation in database. The incremental update process will read this
      timestamp next time it runs and only update cache for rows updated since then in MB database. """
     query = SQL("UPDATE background_worker_state SET value = %s WHERE key = {key}") \
-        .format(key=Literal(MB_METADATA_CACHE_TIMESTAMP_KEY))
+        .format(key=Literal(key))
     with conn.cursor() as curs:
         curs.execute(query, (ts.isoformat(),))
     conn.commit()
@@ -751,7 +751,7 @@ def create_mb_metadata_cache(use_lb_conn: bool):
         new_timestamp = datetime.now()
         cache = MusicBrainzMetadataCache(mb_conn, lb_conn)
         cache.run()
-        update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp)
+        update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, MB_METADATA_CACHE_TIMESTAMP_KEY)
 
 
 def incremental_update_mb_metadata_cache(use_lb_conn: bool):
@@ -775,7 +775,7 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
 
         log("mb metadata cache: starting incremental update")
 
-        timestamp = select_metadata_cache_timestamp(lb_conn or mb_conn)
+        timestamp = select_metadata_cache_timestamp(lb_conn or mb_conn, MB_METADATA_CACHE_TIMESTAMP_KEY)
         log(f"mb metadata cache: last update timestamp - {timestamp}")
         if not timestamp:
             return
@@ -788,7 +788,7 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
             log("mb metadata cache: no recording mbids found to update")
             return
 
-        update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp)
+        update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, MB_METADATA_CACHE_TIMESTAMP_KEY)
 
         log("mb metadata cache: incremental update completed")
 
