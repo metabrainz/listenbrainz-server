@@ -52,11 +52,7 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
         self.config_postgres_join_limit(curs)
 
     def get_post_process_queries(self):
-        return ["""
-            ALTER TABLE mapping.mb_artist_metadata_cache_tmp
-            ADD CONSTRAINT mb_artist_metadata_cache_artist_mbids_check_tmp
-                    CHECK ( array_ndims(artist_mbids) = 1 )
-        """]
+        return []
 
     def get_index_names(self):
         return [("mb_artist_metadata_cache_idx_artist_mbid", "artist_mbid", True),
@@ -85,14 +81,15 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
         if row["area"] is not None:
             artist["area"] = row["area"]
 
-        filtered = {}
-        for name, url in row["artist_links"]:
-            if name is None or url is None:
-                continue
-            filtered[name] = url
+        if row["artist_links"]:
+            filtered = {}
+            for name, url in row["artist_links"]:
+                if name is None or url is None:
+                    continue
+                filtered[name] = url
 
-        if filtered:
-            artist["rels"] = filtered
+            if filtered:
+                artist["rels"] = filtered
 
         artist_tags = []
         for tag, count, artist_mbid, genre_mbid in row["artist_tags"] or []:
@@ -114,7 +111,6 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
                             SELECT a.gid AS artist_mbid
                                  , array_agg(distinct(ARRAY[lt.name, url])) AS artist_links
                               FROM musicbrainz.artist a
-                                ON acn.artist = a.id
                               JOIN musicbrainz.l_artist_url lau
                                 ON lau.entity0 = a.id
                               JOIN musicbrainz.url u
@@ -126,31 +122,10 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
                               {values_join}
                              WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
                           GROUP BY a.gid
-                   ), artist_data AS (
-                            SELECT a.gid AS artist_mbid
-                                 , a.name AS artist_name
-                                 , a.begin_date_year
-                                 , a.end_date_year
-                                 , at.name AS artist_type
-                                 , ag.name AS gender
-                                 , ar.name AS area
-                                 , artist_links
-                              FROM musicbrainz.artist a
-                         LEFT JOIN musicbrainz.artist_type at
-                                ON a.type = at.id
-                         LEFT JOIN musicbrainz.gender ag
-                                ON a.gender = ag.id
-                         LEFT JOIN musicbrainz.area ar
-                                ON a.area = ar.id
-                         LEFT JOIN artist_rels arl
-                                ON arl.gid = a.gid
-                              {values_join}
-                          GROUP BY a.gid
                    ), artist_tags AS (
                             SELECT a.gid AS artist_mbid
                                  , array_agg(jsonb_build_array(t.name, count, a.gid, g.gid)) AS artist_tags
                               FROM musicbrainz.artist a
-                                ON acn.artist = a.id
                               JOIN musicbrainz.artist_tag at
                                 ON at.artist = a.id
                               JOIN musicbrainz.tag t
@@ -161,23 +136,27 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
                              WHERE count > 0
                           GROUP BY a.gid
                    )
-                            SELECT artist_mbid
-                                 , artist_name
-                                 , begin_date_year
-                                 , end_date_year
-                                 , artist_type
-                                 , gender
-                                 , area
+                            SELECT a.gid AS artist_mbid
+                                 , a.name AS artist_name
+                                 , a.begin_date_year
+                                 , a.end_date_year
+                                 , at.name AS artist_type
+                                 , ag.name AS gender
+                                 , ar.name AS area
                                  , artist_links
                                  , artist_tags
-                              FROM artist_data ard
-                                ON ard.gid = r.gid
+                              FROM musicbrainz.artist a
+                         LEFT JOIN musicbrainz.artist_type at
+                                ON a.type = at.id
+                         LEFT JOIN musicbrainz.gender ag
+                                ON a.gender = ag.id
+                         LEFT JOIN musicbrainz.area ar
+                                ON a.area = ar.id
+                         LEFT JOIN artist_rels arl
+                                ON arl.artist_mbid = a.gid
                          LEFT JOIN artist_tags ats
-                                ON ats.artist_mbid = ard.artist_mbid
+                                ON ats.artist_mbid = a.gid
                               {values_join}
-                          GROUP BY a.gid AS artist_mbid
-                                 , artist_data
-                                 , artist_tags
         """
         return query
 
