@@ -20,8 +20,11 @@ def artist_entity(artist_mbid):
 
     artist_data = get_metadata_for_artist([artist_mbid])
     props = {
-        "artist_data": artist_data
+            "artist_data": { "artist_mbid": str(artist_data.artist_mbid),
+                             "artist_data": artist_data.artist_data,
+                             "artist_tags": artist_data.tag_data }
     }
+    current_app.logger.error(props)
 
     return render_template(
         "entities/artist.html",
