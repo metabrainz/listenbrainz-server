@@ -12,8 +12,8 @@ type ReleaseCardProps = {
   releaseMBID: string;
   releaseName: string;
   artistCreditName: string;
-  releaseTypePrimary: string | undefined | null;
-  releaseTypeSecondary: string | undefined | null;
+  releaseTypePrimary?: string | null;
+  releaseTypeSecondary?: string | null;
   confidence?: number | null;
   caaID: number | null;
   caaReleaseMBID: string | null;
