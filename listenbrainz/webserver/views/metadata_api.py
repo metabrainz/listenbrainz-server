@@ -2,8 +2,8 @@ from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify,current_app
 
 from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
-from listenbrainz.db.metadata import get_metadata_for_recording, get_metadata_for_artist
-from listenbrainz.db.release_group_metadata import get_metadata_for_release_group
+from listenbrainz.db.metadata import get_metadata_for_recording, get_metadata_for_artist, get_metadata_for_release_group
+from listenbrainz.db.model.metadata import ReleaseGroupMetadata
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup import \
