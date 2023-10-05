@@ -4,7 +4,7 @@ from listenbrainz import webserver
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, NotFound
 import orjson
 
 artist_bp = Blueprint("artist", __name__)
@@ -19,12 +19,15 @@ def artist_entity(artist_mbid):
         raise BadRequest("Provided artist ID is invalid: %s" % artist_mbid)
 
     artist_data = get_metadata_for_artist([artist_mbid])
+    if len(artist_data) == 0:
+        raise NotFound(f"artist {artist_mbid} not found in the metadata cache")
+
+    current_app.logger.error(artist_data)
     props = {
             "artist_data": { "artist_mbid": str(artist_data.artist_mbid),
                              "artist_data": artist_data.artist_data,
                              "artist_tags": artist_data.tag_data }
     }
-    current_app.logger.error(props)
 
     return render_template(
         "entities/artist.html",
