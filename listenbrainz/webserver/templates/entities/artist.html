@@ -1,40 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head>
-  {%- block head -%}
-  <meta charset="utf-8" />
-  <title>{% block title %}Artist page{% endblock %}</title>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+{%- extends 'base-react.html' -%}
 
-  <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
-  <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
-  <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
+{% block title %}
+Artist Page - ListenBrainz
+{% endblock %}
 
-  {# The css file has a .less extension in the manifest file entry (due to its original name in Webpack entry) #}
-  <link href="{{ get_static_path('main.less') }}" rel="stylesheet" media="screen" />
-  {%- endblock -%}
-  <style type="css">
-    body {
-      padding-bottom:0;
-    }
-  </style>
-</head>
+{% block content %}
 
-<body>
+    <div class="secondary-nav">
+        <ol class="breadcrumb">
+            <li><a href="javascript:history.back(-1)">← Back</a></li>
+        </ol>
+    </div>
 
-  {%- block content -%}
-  <div id="react-container">
-  </div>
-  {%- endblock -%}
-  
-  {% block scripts %}
-	<script src="{{ url_for('static', filename='js/lib/jquery-2.1.0.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
-	<script id="global-react-props" type="application/json">{{ global_props|safe }}</script>
-	<script id="page-react-props" type="application/json">{{ props|safe }}</script>
-	
-	<script src="{{ get_static_path('artistPage.js') }}" type="text/javascript"></script>
-  {% endblock %}
-</body>
-</html>
+    {{ super() }}
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ get_static_path('artistPage.js') }}" type="text/javascript"></script>
+{% endblock %}
