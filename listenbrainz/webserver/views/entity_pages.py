@@ -35,9 +35,29 @@ def artist_entity(artist_mbid):
     else:
         popular_recordings = list(r.json())
 
+    # Fetch similar artists
+    r = requests.post("https://labs.api.listenbrainz.org/similar-artists/json",
+                  json=[{
+                      'artist_mbid':
+                      artist_mbid,
+                      'algorithm':
+                      "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30"
+                  }])
+
+    if r.status_code != 200:
+        raise RuntimeError(f"Cannot fetch similar artists: {r.status_code} ({r.text})")
+
+    try:
+        artists = r.json()[3]["data"][:15]
+    except IndexError:
+        artists = []
+
+    current_app.logger.warn(artists)
+
     props = {
         "artist_data": item,
-        "popular_recordings": popular_recordings
+        "popular_recordings": popular_recordings,
+        "similar_artists": artists
     }
 
     return render_template(

@@ -171,7 +171,10 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
 
   const listensFromJSPFTracks = popular_tracks ?? [];
   return (
-    <div id="artist-page" style={{ ["--bg-color" as string]: adjustedAlbumColor }}>
+    <div
+      id="artist-page"
+      style={{ ["--bg-color" as string]: adjustedAlbumColor }}
+    >
       <Loader isLoading={loading} />
       <div className="artist-page-header flex">
         <div className="cover-art">
