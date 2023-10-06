@@ -22,11 +22,12 @@ def artist_entity(artist_mbid):
     if len(artist_data) == 0:
         raise NotFound(f"artist {artist_mbid} not found in the metadata cache")
 
-    current_app.logger.error(artist_data)
+    item = {"artist_mbid": artist_data[0].artist_mbid}
+    item.update(**artist_data[0].artist_data)
+    item["tag"] = artist_data[0].tag_data
+
     props = {
-            "artist_data": { "artist_mbid": str(artist_data.artist_mbid),
-                             "artist_data": artist_data.artist_data,
-                             "artist_tags": artist_data.tag_data }
+        "artist_data": item
     }
 
     return render_template(
