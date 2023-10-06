@@ -268,7 +268,7 @@ export default class Listens extends React.Component<
           artists: metadata?.artist?.artists?.map((artist, index) => {
             return {
               artist_credit_name: artist.name,
-              join_phrase: artist.join_phrase,
+              join_phrase: artist.join_phrase ?? "",
               artist_mbid: artist_mbids[index],
             };
           }),
