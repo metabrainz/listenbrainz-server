@@ -1,10 +1,10 @@
 #artist-page {
-	--bg-color: lightgrey;
+	--bg-color: #ebebde99; // default color
 	.artist-page-header {
 		// max-height: 500px;
 		padding: 2em;
 		gap: 2em;
-		// linear-gradient(45deg, var(--bg-color), transparent);
+		background: linear-gradient(45deg, var(--bg-color), transparent);
 		.cover-art {
 			aspect-ratio: 1;
 			height: 100%;
@@ -21,23 +21,60 @@
 			font-size: 1.5em;
 			flex-grow: 2;
 		}
-		.listening-stats {
-			font-size: 2em;
-			flex-grow: 1;
+		.artist-rels {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: space-between;
 		}
-		.tags {
-			margin-top: 0.5em;
+		.top-listeners{
+			max-width: 400px;
 		}
 	}
+	.listening-stats {
+		font-size: 1.6em;
+		flex-grow: 1;
+		.number {
+			font-size: 1.5em;
+		}
+	}
+	.tags {
+		margin-top: 0.5em;
+	}
 	.artist-page-content {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		grid-template-areas:
-		"a b"
-		"c c";
+		display: flex;
+		flex-wrap: wrap;
 		gap: 2em;
-		.full-width {
-			grid-area: c;
+		
+		.tracks {
+			flex:3 400px;
+		}
+		.stats {
+			flex: 1 250px;
+			display: flex;
+			flex-wrap: wrap;
+			align-content: flex-start;
+			gap: 3em;
+		}
+		.top-listeners,.listening-stats {
+			flex:1;
+		    flex-basis: 250px;
+		}
+		.albums {
+			width:100%;
+			.cover-art-container {
+				overflow-x: scroll;
+				width: 100%;
+				display: grid;
+				grid-gap: 3em;
+				grid-auto-columns: 200px;
+				grid-auto-flow: column;
+				overflow-y: hidden;
+				scroll-snap-type: x proximity;
+				.cover-art{
+					aspect-ratio: 1;
+					background: lightgrey;
+				}
+			}
 		}
 	}
 }

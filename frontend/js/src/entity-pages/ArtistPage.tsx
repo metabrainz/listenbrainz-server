@@ -7,13 +7,15 @@ import NiceModal from "@ebay/nice-modal-react";
 import { toast, ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChevronLeft,
-  faChevronRight,
   faHeadphones,
+  faHomeAlt,
+  faLink,
   faUserAstronaut,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { pick, sortBy } from "lodash";
+import { chain, pick, sortBy } from "lodash";
 import tinycolor from "tinycolor2";
+import { faYoutube } from "@fortawesome/free-brands-svg-icons";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
@@ -24,100 +26,36 @@ import { ToastMsg } from "../notifications/Notifications";
 import TagsComponent from "../tags/TagsComponent";
 import ReleaseCard from "../explore/fresh-releases/ReleaseCard";
 import ListenCard from "../listens/ListenCard";
+import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
+import {
+  JSPFTrackToListen,
+  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
+} from "../playlists/utils";
 
 export type ArtistPageProps = {
-  popular_tracks?: JSPFTrack[];
+  popular_recordings?: Array<{
+    artist_mbid: string;
+    count: number;
+    recording_mbid: string;
+  }>;
   artist_tags?: ArtistTag[];
   artist: MusicBrainzArtist;
 };
 
-const fakeData = {
-  area: "United Kingdom",
-  artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-  begin_year: 1991,
-  name: "Portishead",
-  rels: {
-    "free streaming": "https://www.deezer.com/artist/1069",
-    lyrics: "https://muzikum.eu/en/122-6105/portishead/lyrics.html",
-    "official homepage": "http://www.portishead.co.uk/",
-    "purchase for download":
-      "https://www.junodownload.com/artists/Portishead/releases/",
-    "social network": "https://www.facebook.com/portishead",
-    streaming: "https://tidal.com/artist/27441",
-    wikidata: "https://www.wikidata.org/wiki/Q191352",
-    youtube: "https://www.youtube.com/user/portishead1002",
-  },
-  type: "Group",
-  tag: {
-    artist: [
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 1,
-        tag: "the lost generation",
-      },
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 6,
-        genre_mbid: "89255676-1f14-4dd8-bbad-fca839d6aff4",
-        tag: "electronic",
-      },
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 4,
-        genre_mbid: "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7",
-        tag: "experimental rock",
-      },
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 1,
-        genre_mbid: "6e2e809f-8c54-4e0f-aca0-0642771ab3cf",
-        tag: "electro-industrial",
-      },
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 7,
-        tag: "trip-hop",
-      },
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 3,
-        tag: "british",
-      },
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 1,
-        genre_mbid: "ec5a14c7-7793-46dc-b858-470183eb63f7",
-        tag: "folktronica",
-      },
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 11,
-        genre_mbid: "45eb1d9c-588c-4dc8-9394-a14b7c8f02bc",
-        tag: "trip hop",
-      },
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 2,
-        genre_mbid: "ba318056-9ddf-46cd-8b95-61fc993b962d",
-        tag: "krautrock",
-      },
-      {
-        artist_mbid: "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        count: 9,
-        genre_mbid: "cc38aba3-48ed-439a-83b9-f81a34a66598",
-        tag: "downtempo",
-      },
-    ],
-  },
-};
-
 export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const { artist: initialArtist, popular_tracks, artist_tags } = props;
+  const { artist: initialArtist, popular_recordings, artist_tags } = props;
 
   const [artist, setArtist] = React.useState(initialArtist);
-  const [popularTracks, setPopularTracks] = React.useState(popular_tracks);
-  const [artistTags, setArtistTags] = React.useState(artist_tags);
+  const [topListeners, setTopListeners] = React.useState([]);
+  const [listenCount, setListenCount] = React.useState(0);
+  const [reviews, setReviews] = React.useState([]);
+  // Data we get from the back end, doesn't contain metadata
+  const [popularRecordings, setPopularRecordings] = React.useState(
+    popular_recordings
+  );
+  // JSPF Tracks fetched using the recording mbids above
+  const [popularTracks, setPopularTracks] = React.useState<JSPFTrack[]>([]);
   const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
@@ -168,8 +106,81 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   // }
   //     setLoading(false);
   //   };
+  React.useEffect(() => {
+    async function getRecordingMetadata() {
+      const recordingMBIDs = popularRecordings
+        ?.slice(0, 10)
+        ?.map((rec) => rec.recording_mbid);
+      if (!recordingMBIDs?.length) {
+        return;
+      }
+      const recordingMetadataMap = await APIService.getRecordingMetadata(
+        recordingMBIDs,
+        true
+      );
+      if (recordingMetadataMap) {
+        const tracks = Object.entries(recordingMetadataMap).map(
+          ([mbid, metadata]) => {
+            const trackObject: JSPFTrack = {
+              identifier: `https://musicbrainz.org/recording/${mbid}`,
+              title: metadata.recording?.name ?? mbid,
+              creator: metadata.artist?.name ?? artist.name,
+              duration: metadata.recording?.length,
+              extension: {
+                [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
+                  additional_metadata: {
+                    caa_id: metadata.release?.caa_id,
+                    caa_release_mbid: metadata.release?.caa_release_mbid,
+                  },
+                  added_at: "",
+                  added_by: "ListenBrainz",
+                },
+              },
+            };
+            return trackObject;
+          }
+        );
+        setPopularTracks(tracks);
+      }
+    }
+    getRecordingMetadata();
+  }, [popularRecordings]);
 
-  const listensFromJSPFTracks = popular_tracks ?? [];
+  React.useEffect(() => {
+    async function fetchListenerStats() {
+      try {
+        const response = await fetch(
+          `${APIService.APIBaseURI}/stats/artist/${artist.artist_mbid}/listeners`
+        );
+        const body = await response.json();
+        if (!response.ok) {
+          throw body?.message ?? response.statusText;
+        }
+        setTopListeners(body.payload.listeners);
+        setListenCount(body.payload.total_listen_count);
+      } catch (error) {
+        toast.error(error);
+      }
+    }
+    async function fetchReviews() {
+      try {
+        const response = await fetch(
+          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artist.artist_mbid}&entity_type=artist`
+        );
+        const body = await response.json();
+        if (!response.ok) {
+          throw body?.message ?? response.statusText;
+        }
+        setReviews(body.reviews);
+      } catch (error) {
+        toast.error(error);
+      }
+    }
+    fetchListenerStats();
+    fetchReviews();
+  }, [artist]);
+
+  const listensFromJSPFTracks = popularTracks.map(JSPFTrackToListen) ?? [];
   return (
     <div
       id="artist-page"
@@ -186,58 +197,160 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           />
         </div>
         <div className="artist-info">
-          <h3>{artist.name}</h3>
+          <h2>{artist.name}</h2>
           <div>
-            <small>{artist.begin_year}</small>
+            <small>
+              {artist.begin_year} — {artist.area}
+            </small>
           </div>
-          <div>{artist.area}</div>
+          <OpenInMusicBrainzButton
+            entityType="artist"
+            entityMBID={artist.artist_mbid}
+          />
         </div>
-        <div className="listening-stats">
-          Listening stats
-          <div>
-            123 <FontAwesomeIcon icon={faUserAstronaut} />
-          </div>
-          <div>
-            123 <FontAwesomeIcon icon={faHeadphones} />
-          </div>
+        <div className="artist-rels">
+          {Object.entries(artist.rels).map(([relName, relValue]) => {
+            let icon;
+            switch (relName) {
+              case "youtube":
+                icon = faYoutube;
+                break;
+              case "official homepage":
+                icon = faHomeAlt;
+                break;
+              case "free streaming":
+                icon = faHeadphones;
+                break;
+              default:
+                icon = faLink;
+                break;
+            }
+            return (
+              <a
+                key={relName}
+                href={relValue}
+                title={relName}
+                className="btn btn-icon btn-link"
+                type="button"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FontAwesomeIcon icon={icon} fixedWidth />
+              </a>
+            );
+          })}
         </div>
       </div>
       <div className="tags">
         <TagsComponent
           key={artist.name}
-          tags={sortBy(artistTags, "count")}
+          tags={chain(artist.tag?.artist)
+            .filter("genre_mbid")
+            .sortBy("count")
+            .value()
+            .reverse()}
           entityType="artist"
           entityMBID={artist.name}
         />
       </div>
       <div className="artist-page-content">
-        <div className="tracks">
-          <h3>Popular tracks</h3>
-          {Array.from(Array(5).keys()).map(() => {
-            return (
-              <ListenCard
-                listen={{
-                  listened_at: 0,
-                  track_metadata: {
-                    artist_name: artist.name,
-                    track_name: "Track name",
-                  },
-                }}
-                showTimestamp={false}
-                showUsername={false}
-              />
-            );
-          })}
-          <button className="btn btn-info btn-block">See more…</button>
+        {Boolean(listensFromJSPFTracks?.length) && (
+          <div className="tracks">
+            <h3>Popular tracks</h3>
+            {listensFromJSPFTracks?.map((listen) => {
+              const recording = popularRecordings?.find(
+                (rec) =>
+                  rec.recording_mbid === listen.track_metadata.recording_mbid
+              );
+              let listenCountComponent;
+              if (recording && Number.isFinite(recording.count)) {
+                listenCountComponent = (
+                  <>
+                    {recording.count} x <FontAwesomeIcon icon={faHeadphones} />
+                  </>
+                );
+              }
+              return (
+                <ListenCard
+                  key={listen.track_metadata.track_name}
+                  listen={listen}
+                  showTimestamp={false}
+                  showUsername={false}
+                  additionalActions={listenCountComponent}
+                />
+              );
+            })}
+            <button type="button" className="btn btn-info btn-block">
+              See more…
+            </button>
+          </div>
+        )}
+        <div className="stats">
+          <div className="listening-stats">
+            <h3>Listening stats</h3>
+            <div>
+              <span className="number">
+                {Intl.NumberFormat().format(listenCount)}
+              </span>
+              <span className="text-muted">
+                <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" />
+                <FontAwesomeIcon icon={faHeadphones} />
+              </span>
+            </div>
+            <div>
+              <span className="number">
+                {Intl.NumberFormat().format(topListeners.length)}
+              </span>
+              <span className="text-muted">
+                <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" />
+                <FontAwesomeIcon icon={faUserAstronaut} />
+              </span>
+            </div>
+          </div>
+          {Boolean(topListeners?.length) && (
+            <div className="top-listeners">
+              <h3>Top listeners</h3>
+              {topListeners
+                .slice(0, 10)
+                .map(
+                  (listener: { listen_count: number; user_name: string }) => {
+                    return (
+                      <div key={listener.user_name}>
+                        <a
+                          href={`/user/${listener.user_name}/`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {listener.user_name}
+                        </a>
+                        <span className="label label-info pull-right">
+                          {listener.listen_count} x{" "}
+                          <FontAwesomeIcon icon={faHeadphones} />
+                        </span>
+                      </div>
+                    );
+                  }
+                )}
+            </div>
+          )}
         </div>
-        <div className="reviews">
-          <h3>Reviews</h3>
-          <button className="btn btn-info btn-block">See more…</button>
-        </div>
-        <div className="full-width scroll-start">
+        {Boolean(reviews?.length) && (
+          <div className="reviews">
+            <h3>Reviews</h3>
+            {reviews.map((review: any) => (
+              <div>
+                {review.user.display_name} - {review.text}
+              </div>
+            ))}
+            <button type="button" className="btn btn-info btn-block">
+              See more…
+            </button>
+          </div>
+        )}
+        <div className="albums full-width scroll-start">
           <h3>Albums</h3>
-          <div className="dragscroll flex">
-            {Array.from(Array(10).keys()).map(() => {
+          <div className="cover-art-container dragscroll">
+            {Array.from(Array(10).keys()).map((number) => {
               return (
                 // <ReleaseCard
                 //   releaseDate=""
@@ -248,7 +361,13 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 //   artistMBIDs={[artist.name]}
                 //   artistCreditName={artist.name}
                 // />
-                <div className="cover-art">Album cover here</div>
+                <div
+                  key={number}
+                  className="cover-art"
+                  style={{ background: tinycolor.random().toHexString() }}
+                >
+                  Album cover here
+                </div>
               );
             })}
           </div>
@@ -285,8 +404,8 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
-  const { artist_data } = reactProps;
-  const { tag, ...artist_metadata } = fakeData;
+  const { artist_data, popular_recordings } = reactProps;
+  const { tag, ...artist_metadata } = artist_data;
 
   const ArtistPageWithAlertNotifications = withAlertNotifications(ArtistPage);
 
@@ -303,6 +422,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <ArtistPageWithAlertNotifications
             artist={artist_metadata}
             artist_tags={tag?.artist}
+            popular_recordings={popular_recordings}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
