@@ -13,6 +13,7 @@ import {
   getRecordingMBID,
   getTrackName,
 } from "../utils/utils";
+import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 
 type MetadataViewerProps = {
   recordingData?: MetadataLookup;
@@ -29,35 +30,6 @@ const supportLinkTypes = [
   "crowdfunding",
   "blog",
 ];
-
-function OpenInMusicBrainzButton(props: {
-  entityType: Entity;
-  entityMBID?: string;
-}) {
-  const { entityType, entityMBID } = props;
-  if (!entityMBID) {
-    return null;
-  }
-  return (
-    <a
-      href={`${musicBrainzURLRoot}${entityType}/${entityMBID}`}
-      aria-label="Open in MusicBrainz"
-      title="Open in MusicBrainz"
-      className="btn btn-outline"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <img
-        src="/static/img/meb-icons/MusicBrainz.svg"
-        width="18"
-        height="18"
-        alt="MusicBrainz"
-        style={{ verticalAlign: "bottom" }}
-      />{" "}
-      Open in MusicBrainz
-    </a>
-  );
-}
 
 function getNowPlayingRecordingMBID(
   recordingData?: MetadataLookup,
