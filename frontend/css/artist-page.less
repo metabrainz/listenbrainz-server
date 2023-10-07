@@ -20,14 +20,38 @@
 		.artist-info {
 			font-size: 1.5em;
 			flex-grow: 2;
+			display: flex;
+			flex-direction: column;
+			.lb-radio-button {
+				align-self: flex-start;
+				margin-top: auto;
+			}
+		}
+		.right-side {
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
 		}
 		.artist-rels {
 			display: flex;
 			flex-wrap: wrap;
-			justify-content: space-between;
+			align-content: flex-end;
+			justify-content: flex-end;
+			.btn {
+				color: gainsboro;
+			}
 		}
-		.top-listeners{
-			max-width: 400px;
+	}
+	.top-listeners{
+		max-width: 400px;
+		.listener {
+			line-height: 2em;
+			.pill {
+				line-height: 1em;
+				position: absolute;
+				right: 0;
+				font-size: 0.9em;
+			}
 		}
 	}
 	.listening-stats {
@@ -47,6 +71,19 @@
 		
 		.tracks {
 			flex:3 400px;
+			max-height: 530px;
+			min-height: 150px;
+			position: relative;
+			overflow-y: hidden;
+			border-bottom-style: inset;
+			.read-more {
+				position: absolute;
+				bottom: 0;
+				width: 100%;
+				text-align: center;
+				padding: 100px 0 20px;
+				background-image: linear-gradient(to bottom, transparent, #fff 80%);
+			}
 		}
 		.stats {
 			flex: 1 250px;

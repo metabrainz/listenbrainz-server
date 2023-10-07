@@ -7,15 +7,30 @@ import NiceModal from "@ebay/nice-modal-react";
 import { toast, ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faBarcode,
+  faCircleNodes,
+  faCompactDisc,
   faHeadphones,
   faHomeAlt,
   faLink,
+  faMicrophone,
+  faMusic,
+  faPlay,
   faUserAstronaut,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, pick, sortBy } from "lodash";
+import { chain } from "lodash";
 import tinycolor from "tinycolor2";
-import { faYoutube } from "@fortawesome/free-brands-svg-icons";
+import {
+  faApple,
+  faBandcamp,
+  faFacebook,
+  faInstagram,
+  faLastfm,
+  faSoundcloud,
+  faTwitter,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
@@ -203,42 +218,96 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               {artist.begin_year} — {artist.area}
             </small>
           </div>
+          <a
+            className="btn btn-info btn-lg btn-rounded lb-radio-button"
+            href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+              artist.name
+            )})&mode=easy`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Radio <FontAwesomeIcon icon={faPlay} />
+          </a>
+        </div>
+        <div className="right-side">
           <OpenInMusicBrainzButton
             entityType="artist"
             entityMBID={artist.artist_mbid}
           />
-        </div>
-        <div className="artist-rels">
-          {Object.entries(artist.rels).map(([relName, relValue]) => {
-            let icon;
-            switch (relName) {
-              case "youtube":
-                icon = faYoutube;
-                break;
-              case "official homepage":
-                icon = faHomeAlt;
-                break;
-              case "free streaming":
-                icon = faHeadphones;
-                break;
-              default:
-                icon = faLink;
-                break;
-            }
-            return (
-              <a
-                key={relName}
-                href={relValue}
-                title={relName}
-                className="btn btn-icon btn-link"
-                type="button"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FontAwesomeIcon icon={icon} fixedWidth />
-              </a>
-            );
-          })}
+          <div className="artist-rels">
+            {Object.entries(artist.rels).map(([relName, relValue]) => {
+              let icon;
+              switch (relName) {
+                case "streaming":
+                case "free streaming":
+                  icon = faMusic;
+                  break;
+                case "lyrics":
+                  icon = faMicrophone;
+                  break;
+                case "wikidata":
+                  icon = faBarcode;
+                  break;
+                case "youtube":
+                case "youtube music":
+                  icon = faYoutube;
+                  break;
+                case "soundcloud":
+                  icon = faSoundcloud;
+                  break;
+                case "official homepage":
+                  icon = faHomeAlt;
+                  break;
+                case "bandcamp":
+                  icon = faBandcamp;
+                  break;
+                case "last.fm":
+                  icon = faLastfm;
+                  break;
+                case "apple music":
+                  icon = faApple;
+                  break;
+                case "get the music":
+                case "purchase for mail-order":
+                case "purchase for download":
+                case "download for free":
+                  icon = faCompactDisc;
+                  break;
+                case "social network":
+                case "online community":
+                  if (/instagram/.test(relValue)) {
+                    icon = faInstagram;
+                  } else if (/facebook/.test(relValue)) {
+                    icon = faFacebook;
+                  } else if (
+                    /twitter/.test(relValue) ||
+                    /x.com/.test(relValue)
+                  ) {
+                    icon = faTwitter;
+                  } else if (/soundcloud/.test(relValue)) {
+                    icon = faSoundcloud;
+                  } else {
+                    icon = faCircleNodes;
+                  }
+                  break;
+                default:
+                  icon = faLink;
+                  break;
+              }
+              return (
+                <a
+                  key={relName}
+                  href={relValue}
+                  title={relName}
+                  className="btn btn-icon btn-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FontAwesomeIcon icon={icon} fixedWidth />
+                </a>
+              );
+            })}
+          </div>
         </div>
       </div>
       <div className="tags">
@@ -280,9 +349,11 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 />
               );
             })}
-            <button type="button" className="btn btn-info btn-block">
-              See more…
-            </button>
+            <div className="read-more">
+              <button type="button" className="btn btn-outline">
+                See more…
+              </button>
+            </div>
           </div>
         )}
         <div className="stats">
@@ -315,7 +386,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 .map(
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
-                      <div key={listener.user_name}>
+                      <div key={listener.user_name} className="listener">
                         <a
                           href={`/user/${listener.user_name}/`}
                           target="_blank"
@@ -323,8 +394,13 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                         >
                           {listener.user_name}
                         </a>
-                        <span className="label label-info pull-right">
-                          {listener.listen_count} x{" "}
+                        <span className="pill">
+                          {Intl.NumberFormat().format(listener.listen_count)}
+                          <FontAwesomeIcon
+                            icon={faXmark}
+                            fixedWidth
+                            size="xs"
+                          />
                           <FontAwesomeIcon icon={faHeadphones} />
                         </span>
                       </div>
