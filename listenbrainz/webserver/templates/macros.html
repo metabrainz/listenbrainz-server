@@ -39,3 +39,13 @@
         </label>
     </div>
 {% endmacro %}
+
+{% macro render_entity_link (entity, mbid, name) %}
+  {%- if mbid is defined and mbid is not none -%}
+    <a href="https://musicbrainz/{{ entity }}/{{ mbid }}">
+      {{ name }}
+    </a>
+  {%- else -%}
+    {{ name }}
+  {%- endif -%}
+{% endmacro %}
