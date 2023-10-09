@@ -2,41 +2,93 @@
      xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="{{ width }}" height="{{ height }}"
      viewBox="0 0 {{ width }} {{ height }}">
-    <image x="89"
+    {% if releases is iterable %}
+       <a href="https://musicbrainz.org/release/{{ releases[2].release_mbid }}" >
+     {% endif %}
+       <image x="89"
            y="318"
            width="195"
            height="195"
            xlink:href="{{ images[2].url }}"
            preserveAspectRatio="xMidYMid slice"
-           transform="rotate(6.1)"/>
-    <image x="17"
+           transform="rotate(6.1)">
+             {% if releases is iterable %}
+           <title>
+              {% releases[2].release_name %}
+           </title>
+           {% endif %}
+       </image>
+     {% if releases is iterable %}
+      </a>
+       <a href="https://musicbrainz.org/release/{{ releases[1].release_mbid }}" >
+     {% endif %}
+       <image x="17"
            y="223"
            width="193"
            height="193"
            xlink:href="{{ images[1].url }}"
            preserveAspectRatio="xMidYMid slice"
-           transform="rotate(-22.4)"/>
-    <image x="189"
+           transform="rotate(-22.4)">
+         {% if releases is iterable %}
+           <title>
+              {% releases[1].release_name %}
+           </title>
+           {% endif %}
+       </image>
+    {% if releases is iterable %}
+      </a>
+       <a href="https://musicbrainz.org/release/{{ releases[0].release_mbid }}" >
+     {% endif %}
+       <image x="189"
            y="240"
            width="189"
            height="189"
            xlink:href="{{ images[0].url }}"
            preserveAspectRatio="xMidYMid slice"
-           transform="rotate(-4)"/>
-    <image x="404"
+           transform="rotate(-4)">
+         {% if releases is iterable %}
+           <title>
+              {% releases[0].release_name %}
+           </title>
+           {% endif %}
+       </image>
+    {% if releases is iterable %}
+      </a>
+       <a href="https://musicbrainz.org/release/{{ releases[4].release_mbid }}" >
+     {% endif %}
+       <image x="404"
            y="480"
            width="198"
            height="198"
            xlink:href="{{ images[4].url }}"
            preserveAspectRatio="xMidYMid slice"
-           transform="rotate(-11.9)"/>
-    <image x="385"
+           transform="rotate(-11.9)">
+         {% if releases is iterable %}
+           <title>
+              {% releases[4].release_name %}
+           </title>
+           {% endif %}
+       </image>
+    {% if releases is iterable %}
+      </a>
+       <a href="https://musicbrainz.org/release/{{ releases[3].release_mbid }}" >
+     {% endif %}
+       <image x="385"
            y="488"
            width="202"
            height="203"
            xlink:href="{{ images[3].url }}"
            preserveAspectRatio="xMidYMid slice"
-           transform="rotate(2.2)"/>
+           transform="rotate(2.2)">
+         {% if releases is iterable %}
+           <title>
+              {% releases[3].release_name %}
+           </title>
+           {% endif %}
+       </image>
+    {% if releases is iterable %}
+      </a>
+    {% endif %}
     <image x="0"
            y="0"
            width="{{ width }}"
