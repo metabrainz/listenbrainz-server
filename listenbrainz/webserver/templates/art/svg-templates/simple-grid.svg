@@ -6,7 +6,9 @@
 
      <rect id="background" fill="{{ background }}" x="0" ry="0" width="{{ width }}" height="{{ height}}"/>
      {% for index, image in enumerate(images) %}
-       <a href="{{ image.url }}" >
+     {% if releases is iterable %}
+       <a href="https://musicbrainz.org/release/{{ releases[index].release_mbid }}" >
+     {% endif %}
           <image x="{{ image.x }}"
                y="{{ image.y }}"
                width="{{ image.width }}"
@@ -18,6 +20,8 @@
                </title>
                {% endif %}
           </image>
+     {% if releases is iterable %}
        </a>
+     {% endif %}
      {% endfor %}
 </svg>
