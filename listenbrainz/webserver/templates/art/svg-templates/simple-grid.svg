@@ -5,12 +5,19 @@
      height="{{ height }}">
 
      <rect id="background" fill="{{ background }}" x="0" ry="0" width="{{ width }}" height="{{ height}}"/>
-     {% for image in images %}
-        <image x="{{ image.x }}"
+     {% for index, image in enumerate(images) %}
+       <a href="{{ image.url }}" >
+          <image x="{{ image.x }}"
                y="{{ image.y }}"
                width="{{ image.width }}"
-               height="{{ image.height }}" 
-               preserveAspectRatio="xMidYMid slice"
-               xlink:href="{{ image.url }}"/>
+               height="{{ image.height }}"
+               preserveAspectRatio="xMidYMid slice">
+               {% if releases is iterable %}
+               <title>
+                    {% releases[index].release_name %} - {% releases[index].artist_name %}
+               </title>
+               {% endif %}
+          </image>
+       </a>
      {% endfor %}
 </svg>
