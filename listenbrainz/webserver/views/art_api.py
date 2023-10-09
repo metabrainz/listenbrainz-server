@@ -156,7 +156,7 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
         return f"layout {layout} is not available for dimension {dimension}."
 
     try:
-        images, _ = cac.create_grid_stats_cover(user_name, time_range, layout)
+        images, releases = cac.create_grid_stats_cover(user_name, time_range, layout)
         if images is None:
             raise APIInternalServerError("Failed to grid cover art SVG")
     except ValueError as error:
@@ -165,6 +165,7 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
     return render_template("art/svg-templates/simple-grid.svg",
                            background=cac.background,
                            images=images,
+                           releases=releases,
                            width=image_size,
                            height=image_size), 200, {
                                'Content-Type': 'image/svg+xml'
