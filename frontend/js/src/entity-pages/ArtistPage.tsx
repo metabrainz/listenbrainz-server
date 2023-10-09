@@ -466,7 +466,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           </div>
         )}
         <div className="stats">
-          <div className="listening-stats card flex flex-center">
+          <div className="listening-stats card flex-center">
             <div className="text-center">
               <div className="number">
                 {Intl.NumberFormat().format(listenCount)}
