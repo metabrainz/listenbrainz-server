@@ -96,6 +96,14 @@ declare type MusicBrainzRecordingRel = {
   type: string;
 };
 
+declare type WikipediaExtract = {
+  url: string;
+  content: string; // HTML string
+  title: string;
+  canonical: string;
+  language: string;
+};
+
 /** Tags / Genres / Moods */
 declare type EntityTag = {
   count: number;

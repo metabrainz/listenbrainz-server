@@ -15,7 +15,7 @@ import {
   faLink,
   faMicrophone,
   faMusic,
-  faPlay,
+  faPlayCircle,
   faUserAstronaut,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -31,11 +31,16 @@ import {
   faTwitter,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
+import { sanitize } from "dompurify";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import { getAverageRGBOfImage, getPageProps } from "../utils/utils";
+import {
+  getAverageRGBOfImage,
+  getPageProps,
+  getReviewEventContent,
+} from "../utils/utils";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import { ToastMsg } from "../notifications/Notifications";
 import TagsComponent from "../tags/TagsComponent";
@@ -64,7 +69,10 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const [artist, setArtist] = React.useState(initialArtist);
   const [topListeners, setTopListeners] = React.useState([]);
   const [listenCount, setListenCount] = React.useState(0);
-  const [reviews, setReviews] = React.useState([]);
+  const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
+  const [wikipediaExtract, setWikipediaExtract] = React.useState<
+    WikipediaExtract
+  >();
   // Data we get from the back end, doesn't contain metadata
   const [popularRecordings, setPopularRecordings] = React.useState(
     popular_recordings
@@ -191,11 +199,32 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         toast.error(error);
       }
     }
+    async function fetchWikipediaExtract() {
+      try {
+        const response = await fetch(
+          `https://musicbrainz.org/artist/${artist.artist_mbid}/wikipedia-extract`
+        );
+        const body = await response.json();
+        if (!response.ok) {
+          throw body?.message ?? response.statusText;
+        }
+        setWikipediaExtract(body.wikipediaExtract);
+      } catch (error) {
+        toast.error(error);
+      }
+    }
     fetchListenerStats();
     fetchReviews();
+    fetchWikipediaExtract();
   }, [artist]);
 
   const listensFromJSPFTracks = popularTracks.map(JSPFTrackToListen) ?? [];
+  const filteredTags = chain(artist.tag?.artist)
+    .filter("genre_mbid")
+    .sortBy("count")
+    .value()
+    .reverse();
+
   return (
     <div
       id="artist-page"
@@ -210,30 +239,37 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             crossOrigin="anonymous"
             alt="Album art"
           />
-        </div>
-        <div className="artist-info">
-          <h2>{artist.name}</h2>
-          <div>
-            <small>
-              {artist.begin_year} — {artist.area}
-            </small>
-          </div>
-          <a
-            className="btn btn-info btn-lg btn-rounded lb-radio-button"
-            href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-              artist.name
-            )})&mode=easy`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Radio <FontAwesomeIcon icon={faPlay} />
-          </a>
-        </div>
-        <div className="right-side">
           <OpenInMusicBrainzButton
             entityType="artist"
             entityMBID={artist.artist_mbid}
           />
+        </div>
+        <div className="artist-info">
+          <h2>{artist.name}</h2>
+          <div className="details">
+            {artist.begin_year} — {artist.area}
+          </div>
+          {wikipediaExtract && (
+            <div className="wikipedia-extract">
+              <div
+                className="content"
+                // eslint-disable-next-line react/no-danger
+                dangerouslySetInnerHTML={{
+                  __html: sanitize(wikipediaExtract.content),
+                }}
+              />
+              <a
+                className="btn btn-link pull-right"
+                href={wikipediaExtract.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Read on Wikipedia…
+              </a>
+            </div>
+          )}
+        </div>
+        <div className="right-side">
           <div className="artist-rels">
             {Object.entries(artist.rels).map(([relName, relValue]) => {
               let icon;
@@ -308,16 +344,71 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               );
             })}
           </div>
+          <div className="btn-group btn-group-lg lb-radio-button">
+            <a
+              type="button"
+              className="btn btn-info"
+              href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                artist.name
+              )})&mode=easy`}
+            >
+              <FontAwesomeIcon icon={faPlayCircle} /> Radio
+            </a>
+            <button
+              type="button"
+              className="btn btn-info dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <span className="caret" />
+              <span className="sr-only">Toggle Dropdown</span>
+            </button>
+            <ul className="dropdown-menu">
+              <li>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                    artist.name
+                  )})::nosim&mode=easy`}
+                >
+                  This artist
+                </a>
+              </li>
+              <li>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                    artist.name
+                  )})&mode=easy`}
+                >
+                  Similar artists
+                </a>
+              </li>
+              {Boolean(filteredTags?.length) && (
+                <li>
+                  <a
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                      filteredTags.join(",")
+                    )})::or&mode=easy`}
+                  >
+                    Tags (
+                    <span className="tags-list">{filteredTags.join(",")}</span>)
+                  </a>
+                </li>
+              )}
+            </ul>
+          </div>
         </div>
       </div>
       <div className="tags">
         <TagsComponent
           key={artist.name}
-          tags={chain(artist.tag?.artist)
-            .filter("genre_mbid")
-            .sortBy("count")
-            .value()
-            .reverse()}
+          tags={filteredTags}
           entityType="artist"
           entityMBID={artist.name}
         />
@@ -325,7 +416,25 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
       <div className="artist-page-content">
         {Boolean(listensFromJSPFTracks?.length) && (
           <div className="tracks">
-            <h3>Popular tracks</h3>
+            <div className="header">
+              <h3>Popular tracks</h3>
+              <button
+                type="button"
+                className="btn btn-icon btn-info btn-rounded"
+                title="Play popular tracks"
+                onClick={() => {
+                  window.postMessage(
+                    {
+                      brainzplayer_event: "play-listen",
+                      payload: listensFromJSPFTracks,
+                    },
+                    window.location.origin
+                  );
+                }}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} fixedWidth />
+              </button>
+            </div>
             {listensFromJSPFTracks?.map((listen) => {
               const recording = popularRecordings?.find(
                 (rec) =>
@@ -357,25 +466,24 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           </div>
         )}
         <div className="stats">
-          <div className="listening-stats">
-            <h3>Listening stats</h3>
-            <div>
-              <span className="number">
+          <div className="listening-stats card flex flex-center">
+            <div className="text-center">
+              <div className="number">
                 {Intl.NumberFormat().format(listenCount)}
-              </span>
-              <span className="text-muted">
-                <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" />
-                <FontAwesomeIcon icon={faHeadphones} />
-              </span>
+              </div>
+              <div className="text-muted small">
+                {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
+                <FontAwesomeIcon icon={faHeadphones} /> plays
+              </div>
             </div>
-            <div>
-              <span className="number">
+            <div className="text-center">
+              <div className="number">
                 {Intl.NumberFormat().format(topListeners.length)}
-              </span>
-              <span className="text-muted">
-                <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" />
-                <FontAwesomeIcon icon={faUserAstronaut} />
-              </span>
+              </div>
+              <div className="text-muted small">
+                {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
+                <FontAwesomeIcon icon={faUserAstronaut} /> listeners
+              </div>
             </div>
           </div>
           {Boolean(topListeners?.length) && (
@@ -410,19 +518,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             </div>
           )}
         </div>
-        {Boolean(reviews?.length) && (
-          <div className="reviews">
-            <h3>Reviews</h3>
-            {reviews.map((review: any) => (
-              <div>
-                {review.user.display_name} - {review.text}
-              </div>
-            ))}
-            <button type="button" className="btn btn-info btn-block">
-              See more…
-            </button>
-          </div>
-        )}
         <div className="albums full-width scroll-start">
           <h3>Albums</h3>
           <div className="cover-art-container dragscroll">
@@ -448,6 +543,18 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             })}
           </div>
         </div>
+        {Boolean(reviews?.length) && (
+          <div className="reviews">
+            <h3>Reviews</h3>
+            {reviews.slice(0, 3).map(getReviewEventContent)}
+            <a
+              href={`critiquebrainz.org/artist/${artist.artist_mbid}`}
+              className="btn btn-link"
+            >
+              More on CritiqueBrainz…
+            </a>
+          </div>
+        )}
         <div className="similarity">
           <h3>Similar artists</h3>
           Artist similarity here

@@ -11,23 +11,38 @@
 			max-height: 400px;
 			flex-grow: 1;
 			flex-shrink: 0;
-			background: lightgray;
 		    border-radius: 5px;
+			text-align: center;
 			>img{
 				max-width: 100%;
+				margin-bottom: 0.5em;
 			}
 		}
 		.artist-info {
-			font-size: 1.5em;
 			flex-grow: 2;
 			display: flex;
 			flex-direction: column;
-			.lb-radio-button {
-				align-self: flex-start;
-				margin-top: auto;
+			.wikipedia-extract {
+				margin-top: 2em;
+				.content{
+					max-height: 6em;
+					overflow-y: hidden;
+					mask-image: linear-gradient(180deg, #000 60%, transparent);
+					-webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
+				}
+			}
+		}
+		.lb-radio-button {
+			min-width: 200px;
+			align-self: flex-end;
+			.tags-list{
+				overflow: hidden;
+				text-overflow: ellipsis;
+				max-width: 10em;
 			}
 		}
 		.right-side {
+			flex-grow: 0.8;
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
@@ -57,6 +72,10 @@
 	.listening-stats {
 		font-size: 1.6em;
 		flex-grow: 1;
+		height: 5em;
+		 > div + div {
+			border-left : 1px solid @light;
+		 }
 		.number {
 			font-size: 1.5em;
 		}
@@ -84,17 +103,25 @@
 				padding: 100px 0 20px;
 				background-image: linear-gradient(to bottom, transparent, #fff 80%);
 			}
+			.header > *{
+				display: inline-block;
+				margin-right: 1em;
+			}
 		}
 		.stats {
+			margin-top: 4em;
 			flex: 1 250px;
 			display: flex;
 			flex-wrap: wrap;
 			align-content: flex-start;
 			gap: 3em;
 		}
-		.top-listeners,.listening-stats {
+		.top-listeners,.listening-stats, .reviews {
 			flex:1;
 		    flex-basis: 250px;
+		}
+		.reviews,.stats {
+			max-width: 50%;
 		}
 		.albums {
 			width:100%;

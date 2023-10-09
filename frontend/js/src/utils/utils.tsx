@@ -843,18 +843,22 @@ export function personalRecommendationEventToListen(
 }
 
 export function getReviewEventContent(
-  eventMetadata: CritiqueBrainzReview
+  eventMetadata: CritiqueBrainzReview | CritiqueBrainzReviewAPI
 ): JSX.Element {
-  const additionalContent = getAdditionalContent(eventMetadata);
+  const additionalContent = getAdditionalContent(
+    eventMetadata as CritiqueBrainzReview
+  );
+  const reviewID =
+    _.get(eventMetadata, "review_mbid") ?? _.get(eventMetadata, "id");
   return (
     <>
       <a
-        href={`https://critiquebrainz.org/review/${eventMetadata.review_mbid}`}
+        href={`https://critiquebrainz.org/review/${reviewID}`}
         target="_blank"
         rel="noopener noreferrer"
         className="pull-right"
       >
-        See this review on CritiqueBrainz
+        Read on CritiqueBrainz
       </a>
       {!isUndefined(eventMetadata.rating) && isFinite(eventMetadata.rating) && (
         <div className="rating-container">
