@@ -17,6 +17,15 @@ type AddToPlaylistProps = {
   listen: Listen | JSPFTrack;
 };
 
+function listenOrTrackToJSPFTrack(
+  listenOrTrack: Listen | JSPFTrack
+): JSPFTrack {
+  if (has(listenOrTrack, "title")) {
+    return listenOrTrack as JSPFTrack;
+  }
+  return listenToJSPFTrack(listenOrTrack as Listen);
+}
+
 export default NiceModal.create((props: AddToPlaylistProps) => {
   const modal = useModal();
 
@@ -73,12 +82,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
         const playlistIdentifier = currentTarget.getAttribute(
           "data-playlist-identifier"
         );
-        let trackToSend;
-        if (has(listen, "title")) {
-          trackToSend = listen as JSPFTrack;
-        } else {
-          trackToSend = listenToJSPFTrack(listen as Listen);
-        }
+        const trackToSend = listenOrTrackToJSPFTrack(listen);
         if (!playlistIdentifier) {
           throw new Error(`No identifier for playlist ${playlistName}`);
         }
@@ -128,12 +132,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
   );
 
   const createPlaylist = React.useCallback(async () => {
-    let trackToSend;
-    if (has(listen, "title")) {
-      trackToSend = listen as JSPFTrack;
-    } else {
-      trackToSend = listenToJSPFTrack(listen as Listen);
-    }
+    const trackToSend = listenOrTrackToJSPFTrack(listen);
     NiceModal.show(CreateOrEditPlaylistModal, { initialTracks: [trackToSend] });
     closeModal();
   }, [listen]);
