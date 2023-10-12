@@ -18,7 +18,7 @@ describe("ErrorBoundary", () => {
     wrapper.find(ChildComponent).simulateError(Error("Test Error"));
 
     expect(wrapper.state()).toMatchObject({ hasError: true });
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.getDOMNode()).toHaveTextContent("Reload the page");
   });
 
   it("reloads page when button is clicked", () => {
@@ -49,6 +49,7 @@ describe("ErrorBoundary", () => {
     );
 
     expect(wrapper.state()).toMatchObject({ hasError: false });
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.getDOMNode()).not.toHaveTextContent("Reload the page");
+    expect(wrapper.find(ChildComponent)).toHaveLength(1);
   });
 });

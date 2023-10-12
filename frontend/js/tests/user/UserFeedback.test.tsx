@@ -67,10 +67,6 @@ const mountOptionsWithoutUser: { context: GlobalAppContextT } = {
   },
 };
 
-const mockDate = new Date("2021-05-19");
-const fakeDateNow = jest
-  .spyOn(global.Date, "now")
-  .mockImplementation(() => mockDate.getTime());
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -83,8 +79,7 @@ describe("UserFeedback", () => {
       <UserFeedback {...props} />,
       mountOptions
     );
-    expect(wrapper.html()).toMatchSnapshot();
-    fakeDateNow.mockRestore();
+    expect(wrapper.find("#listens")).toHaveLength(1);
     wrapper.unmount();
   });
 

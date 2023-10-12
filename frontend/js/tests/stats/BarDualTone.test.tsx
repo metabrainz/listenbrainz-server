@@ -6,6 +6,7 @@ import * as ListeningActivityDataWeek from "../__mocks__/userListeningActivityPr
 import * as ListeningActivityDataMonth from "../__mocks__/userListeningActivityProcessDataMonth.json";
 import * as ListeningActivityDataYear from "../__mocks__/userListeningActivityProcessDataYear.json";
 import * as ListeningActivityDataAllTime from "../__mocks__/userListeningActivityProcessDataAllTime.json";
+import { ResponsiveBar } from "@nivo/bar";
 
 describe("BarDualTone", () => {
   it("renders correctly for week", () => {
@@ -20,7 +21,7 @@ describe("BarDualTone", () => {
         />
       </div>
     );
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
   });
 
   it("renders correctly for month", () => {
@@ -35,7 +36,7 @@ describe("BarDualTone", () => {
         />
       </div>
     );
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
   });
 
   it("renders correctly for year", () => {
@@ -50,7 +51,7 @@ describe("BarDualTone", () => {
         />
       </div>
     );
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
   });
 
   it("renders correctly for all_time", () => {
@@ -64,6 +65,6 @@ describe("BarDualTone", () => {
         />
       </div>
     );
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
   });
 });

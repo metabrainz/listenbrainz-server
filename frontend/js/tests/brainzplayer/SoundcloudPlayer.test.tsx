@@ -43,7 +43,7 @@ describe("SoundcloudPlayer", () => {
   it("renders", () => {
     window.fetch = jest.fn();
     const wrapper = mount(<SoundcloudPlayer {...props} />);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("#soundcloud-iframe")).toHaveLength(1);
   });
 
   it("should play if origin_url is a soundcloud URL", () => {

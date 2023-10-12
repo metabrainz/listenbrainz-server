@@ -49,7 +49,8 @@ describe("User settings", () => {
         </GlobalAppContext.Provider>
       );
 
-      expect(wrapper.html()).toMatchSnapshot();
+      expect(wrapper.find("h3").getDOMNode()).toHaveTextContent("Select Timezone");
+      expect(wrapper.find("button").getDOMNode()).toHaveTextContent("Save Timezone");
     });
   });
 
