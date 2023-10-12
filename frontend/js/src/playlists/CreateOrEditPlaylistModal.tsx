@@ -94,7 +94,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
         { toastId: "create-playlist-success" }
       );
       try {
-        // Fetch the newly created playlist and addreturn it
+        // Fetch the newly created playlist and return it
         const response = await APIService.getPlaylist(
           newPlaylistId,
           currentUser.auth_token
@@ -122,6 +122,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
     isPublic,
     collaboratorsWithoutOwner,
     initialTracks,
+    APIService,
   ]);
 
   const editPlaylist = React.useCallback(async (): Promise<
@@ -206,6 +207,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
     description,
     isPublic,
     collaboratorsWithoutOwner,
+    APIService,
   ]);
 
   const onSubmit = async (event: React.SyntheticEvent) => {

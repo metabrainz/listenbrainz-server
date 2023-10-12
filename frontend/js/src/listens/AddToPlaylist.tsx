@@ -128,14 +128,14 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
         );
       }
     },
-    [listen, currentUser.auth_token]
+    [listen, currentUser.auth_token, APIService]
   );
 
   const createPlaylist = React.useCallback(async () => {
     const trackToSend = listenOrTrackToJSPFTrack(listen);
     NiceModal.show(CreateOrEditPlaylistModal, { initialTracks: [trackToSend] });
     closeModal();
-  }, [listen]);
+  }, [listen, closeModal]);
 
   const trackName = getTrackName(listen);
   return (
