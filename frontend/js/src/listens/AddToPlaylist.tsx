@@ -43,7 +43,6 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
                 }
                 const { playlists: existingPlaylists} = response;
                 setPlaylists(existingPlaylists);
-                window.sessionStorage.setItem("listenbrainz_playlists", JSON.stringify(existingPlaylists));
             } catch (error) {
                 toast.error(
                     <ToastMsg
@@ -53,18 +52,6 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
                     { toastId: "load-playlists-error" }
                 );
             }
-        }
-        try {
-            // First, try to load playlists from sessionStorage
-            const storedPlaylists = window.sessionStorage.getItem("listenbrainz_playlists");
-            if(storedPlaylists){
-                setPlaylists(JSON.parse(storedPlaylists));
-                return;
-            }
-        } catch (error) {
-            // There was an issue parsing the stored playlists
-            // Ignore the issue and load playlists as if there were none stored
-            console.error(error);
         }
 
         if(currentUser?.auth_token){
