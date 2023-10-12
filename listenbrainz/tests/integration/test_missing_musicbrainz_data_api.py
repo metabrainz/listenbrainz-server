@@ -99,7 +99,7 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
     def test_missing_musicbrainz_data_too_many(self):
         response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
                                            user_name=self.user['musicbrainz_id']),
-                                   query_string={'count': 108})
+                                   query_string={'count': 100})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 

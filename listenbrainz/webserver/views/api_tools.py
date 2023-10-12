@@ -38,7 +38,7 @@ MAX_LISTEN_PAYLOAD_SIZE = MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST
 MAX_TAG_SIZE = 64
 
 #: The maximum number of listens returned in a single GET request.
-MAX_ITEMS_PER_GET = 100
+MAX_ITEMS_PER_GET = 1000
 
 #: The default number of listens returned in a single GET request.
 DEFAULT_ITEMS_PER_GET = 25

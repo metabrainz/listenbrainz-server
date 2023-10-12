@@ -7,8 +7,10 @@
     {% if not user_has_email %}
         <div class="alert alert-danger">
             You have not provided an email address. Please provide an <a href="https://musicbrainz.org/account/edit">
-            email address</a> to submit listens. Read this <a href="https://blog.metabrainz.org/?p=8915">blog post</a>
-            to understand why we need your email.
+            email address</a> and <em>verify it</em> to submit listens. Read this 
+            <a href="https://blog.metabrainz.org/?p=8915">blog post</a>
+            to understand why we need your email. You can provide us with an email on your
+            <a href="https://musicbrainz.org/account/edit">MusicBrainz account</a> page.
         </div>
     {% endif %}
     {% if current_user.is_authenticated and current_user == user %}

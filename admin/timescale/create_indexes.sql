@@ -50,12 +50,17 @@ CREATE INDEX messybrainz_release_ndx ON messybrainz.submissions (lower(release))
 CREATE INDEX messybrainz_track_number_ndx ON messybrainz.submissions (lower(track_number));
 CREATE INDEX messybrainz_duration_ndx ON messybrainz.submissions (duration);
 
-CREATE UNIQUE INDEX spotify_metadata_cache_album_id_ndx ON spotify_cache.raw_cache_data (album_id);
-CREATE UNIQUE INDEX spotify_cache_album_spotify_id_idx ON spotify_cache.album (spotify_id);
-CREATE UNIQUE INDEX spotify_cache_artist_spotify_id_idx ON spotify_cache.artist (spotify_id);
-CREATE UNIQUE INDEX spotify_cache_track_spotify_id_idx ON spotify_cache.track (spotify_id);
+CREATE UNIQUE INDEX spotify_cache_album_spotify_id_idx ON spotify_cache.album (album_id);
+CREATE UNIQUE INDEX spotify_cache_artist_spotify_id_idx ON spotify_cache.artist (artist_id);
+CREATE UNIQUE INDEX spotify_cache_track_spotify_id_idx ON spotify_cache.track (track_id);
 CREATE INDEX spotify_cache_rel_album_artist_track_id_idx ON spotify_cache.rel_album_artist (album_id);
 CREATE INDEX spotify_cache_rel_track_artist_track_id_idx ON spotify_cache.rel_track_artist (track_id);
+
+CREATE UNIQUE INDEX apple_cache_album_apple_id_idx ON apple_cache.album (album_id);
+CREATE UNIQUE INDEX apple_cache_artist_apple_id_idx ON apple_cache.artist (artist_id);
+CREATE UNIQUE INDEX apple_cache_track_apple_id_idx ON apple_cache.track (track_id);
+CREATE INDEX apple_cache_rel_album_artist_track_id_idx ON apple_cache.rel_album_artist (album_id);
+CREATE INDEX apple_cache_rel_track_artist_track_id_idx ON apple_cache.rel_track_artist (track_id);
 
 CREATE UNIQUE INDEX similar_recordings_dev_uniq_idx ON similarity.recording_dev (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_recordings_dev_reverse_uniq_idx ON similarity.recording_dev (mbid1, mbid0);

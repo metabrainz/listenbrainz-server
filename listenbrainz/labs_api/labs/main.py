@@ -16,6 +16,7 @@ from listenbrainz.labs_api.labs.api.similar_recordings import SimilarRecordingsV
 from listenbrainz.labs_api.labs.api.spotify.spotify_mbid_lookup import SpotifyIdFromMBIDQuery
 from listenbrainz.labs_api.labs.api.spotify.spotify_metadata_lookup import SpotifyIdFromMetadataQuery
 from listenbrainz.labs_api.labs.api.user_listen_sessions import UserListensSessionQuery
+from listenbrainz.labs_api.labs.api.tag_similarity import TagSimilarityQuery
 from listenbrainz.webserver import load_config
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
@@ -34,6 +35,7 @@ register_query(SpotifyIdFromMBIDQuery())
 register_query(UserListensSessionQuery())
 register_query(SimilarRecordingsViewerQuery())
 register_query(SimilarArtistsViewerQuery())
+register_query(TagSimilarityQuery())
 
 app = create_app()
 load_config(app)

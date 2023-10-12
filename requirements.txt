@@ -22,12 +22,12 @@ pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v2.7.1
 spotipy>=2.22.1
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@a1e12968af93d2f296a42a8094ebff83f3ed33f3
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2023-08-11.1
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@6b02541946f3e7b308ba20b04de8817463c1e504
 PyYAML==6.0
 eventlet == 0.33.1
 # eventlet fails to patch dnspython >= 2.3 https://github.com/eventlet/eventlet/issues/781
 dnspython==2.2.1
-uWSGI == 2.0.21
+uWSGI == 2.0.22
 sentry-sdk[flask]==1.5.8
 pydantic == 1.9.1
 pycountry==22.3.5
@@ -52,7 +52,7 @@ more-itertools==8.13.0
 kombu==5.2.4
 itsdangerous==2.1.2
 countryinfo==0.1.2
-urllib3==1.26.9
+urllib3==1.26.17
 orjson==3.8.7
 dnspython==2.2.1
-pyjwt==2.7.0
+pyjwt[crypto]==2.7.0

@@ -2,6 +2,7 @@ from flask import current_app
 from kombu import Connection, Exchange
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 
+from listenbrainz.metadata_cache.apple.handler import AppleCrawlerHandler
 from listenbrainz.metadata_cache.spotify.handler import SpotifyCrawlerHandler
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
@@ -35,7 +36,14 @@ def submit_new_releases_to_cache():
 
         current_app.logger.info("Searching new album ids to seed spotify metadata cache")
         spotify_handler = SpotifyCrawlerHandler(app)
-        album_ids = spotify_handler.get_seed_albums()
+        spotify_album_ids = spotify_handler.get_seed_albums()
+        current_app.logger.info("Found %d album ids", len(spotify_album_ids))
+        submit_albums(connection, spotify_handler.external_service_queue, {"spotify_album_ids": spotify_album_ids})
+        current_app.logger.info("Submitted new release album ids")
+
+        current_app.logger.info("Searching new album ids to seed apple metadata cache")
+        apple_handler = AppleCrawlerHandler(app)
+        album_ids = apple_handler.get_seed_albums()
         current_app.logger.info("Found %d album ids", len(album_ids))
-        submit_albums(connection, spotify_handler.external_service_queue, {"spotify_album_ids": album_ids})
+        submit_albums(connection, apple_handler.external_service_queue, {"apple_album_ids": album_ids})
         current_app.logger.info("Submitted new release album ids")

@@ -34,15 +34,15 @@ class SpotifyMetadataIndex(BulkInsertTable):
         purposes. The order by determines the tie-breaking score in case of multiple rows have the same lookup.
         """
         return [("LB", """
-                    SELECT album.spotify_id AS album_id
+                    SELECT album.album_id AS album_id
                          , album.name AS album_name
                          , album.type AS album_type
                          , album.release_date AS release_date
-                         , track.spotify_id AS track_id
+                         , track.track_id AS track_id
                          , track.name AS track_name
                          , track.track_number AS track_number
                          -- retrieve track artists in same order as they appear on the spotify track
-                         , array_agg(ARRAY[artist.name, artist.spotify_id] ORDER BY rta.position) AS artists
+                         , array_agg(ARRAY[artist.name, artist.artist_id] ORDER BY rta.position) AS artists
                          -- prefer albums over single over compilations.
                          , CASE 
                             WHEN album.type = 'album' THEN 1
@@ -52,16 +52,16 @@ class SpotifyMetadataIndex(BulkInsertTable):
                             AS album_sort_order
                       FROM spotify_cache.album album
                       JOIN spotify_cache.track track
-                        ON album.spotify_id = track.album_id
+                        ON album.album_id = track.album_id
                       JOIN spotify_cache.rel_track_artist rta
-                        ON track.spotify_id = rta.track_id
+                        ON track.track_id = rta.track_id
                       JOIN spotify_cache.artist artist
-                        ON rta.artist_id = artist.spotify_id
-                  GROUP BY album.spotify_id
+                        ON rta.artist_id = artist.artist_id
+                  GROUP BY album.album_id
                          , album.name
                          , album.type
                          , album.release_date
-                         , track.spotify_id
+                         , track.track_id
                          , track.name
                          , track.track_number
                   ORDER BY album_sort_order

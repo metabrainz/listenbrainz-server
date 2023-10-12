@@ -2,6 +2,7 @@ from abc import abstractmethod
 from itertools import zip_longest
 
 import psycopg2
+from tqdm import tqdm
 from psycopg2.errors import OperationalError
 from mapping.utils import insert_rows, log
 
@@ -40,6 +41,7 @@ class BulkInsertTable:
         if batch_size is None:
             batch_size = BATCH_SIZE
         self.batch_size = batch_size
+        self.total_rows = 0
 
     def add_additional_bulk_table(self, bulk_table):
         """
@@ -404,8 +406,9 @@ class BulkInsertTable:
 
                     row_count = 0
                     inserted = 0
-                    total_rows = curs.rowcount
-                    log(f"{self.table_name}: fetch {total_rows:,} rows")
+                    self.total_rows = curs.rowcount
+                    log(f"{self.table_name}: fetch {self.total_rows:,} rows")
+                    progress_bar = tqdm(total=self.total_rows)
                     while True:
                         batch = curs.fetchmany(BATCH_SIZE)
                         if len(batch) == 0:
@@ -415,6 +418,7 @@ class BulkInsertTable:
                             row_count += 1
                             total_row_count += 1
                             result = self.process_row(row)
+                            progress_bar.update(1)
                             rows.extend(self._handle_result(result))
 
                         if len(rows) >= self.batch_size:
@@ -426,8 +430,10 @@ class BulkInsertTable:
                             inserted_total += self.batch_size
 
                             if batch_count % 20 == 0:
-                                percent = "%.1f" % (100.0 * row_count / total_rows)
+                                percent = "%.1f" % (100.0 * row_count / self.total_rows)
                                 log(f"{self.table_name}: inserted {inserted:,} from {row_count:,} rows. {percent}% complete")
+
+                    progress_bar.close()
 
                 rows.extend(self._handle_result(self.process_row_complete()))
                 if rows:
