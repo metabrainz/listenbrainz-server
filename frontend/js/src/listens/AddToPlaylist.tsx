@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { getTrackName } from "../utils/utils";
+import CreateOrEditPlaylistModal from "../playlists/CreateOrEditPlaylistModal";
 
 type AddToPlaylistProps = {
     listen: Listen | JSPFTrack;
@@ -118,6 +119,17 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
         }
     },[listen,currentUser.auth_token]);
 
+    const createPlaylist = React.useCallback(async()=>{
+        let trackToSend;
+        if(has(listen,"title")){
+            trackToSend = listen as JSPFTrack;
+        } else {
+            trackToSend = listenToJSPFTrack(listen as Listen);
+        }
+        NiceModal.show(CreateOrEditPlaylistModal, { initialTracks: [trackToSend]});
+        closeModal();
+    },[listen]);
+    
     const trackName = getTrackName(listen)
     return (
         <div
@@ -151,9 +163,14 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
                 <div className="modal-body">
                     <p className="text-muted">Add the track <i>{trackName}</i> to one or more of your playlists below:</p>
                     <div className="list-group" style={{maxHeight: "50vh", overflow:"scroll"}}>
-                        {/* <button type="button" className="list-group-item list-group-item-info" onClick={createPlaylist}>
+                        <button type="button"
+                            className="list-group-item list-group-item-info"
+                            data-dismiss="modal"
+                            data-toggle="modal" data-target="#CreateOrEditPlaylistModal"
+                            onClick={createPlaylist}
+                            >
                             <FontAwesomeIcon icon={faFileCirclePlus} /> Create new playlist
-                        </button> */}
+                        </button>
                         {playlists?.map(jspfObject =>{
                             const {playlist} = jspfObject;
                             return (

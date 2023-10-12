@@ -15,6 +15,7 @@ import { ToastMsg } from "../notifications/Notifications";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
+  initialTracks?: JSPFTrack[];
 };
 
 export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
@@ -25,7 +26,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   }, [modal]);
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const { playlist } = props;
+  const { playlist,initialTracks } = props;
   const customFields = getPlaylistExtension(props.playlist);
   const playlistId = getPlaylistId(playlist);
   const isEdit = Boolean(playlistId);
@@ -64,8 +65,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
         creator: currentUser?.name,
         identifier: "",
         date: "",
-        track: [],
-
+        track: initialTracks ?? [],
         title: name,
         annotation: description,
         extension: {
@@ -115,7 +115,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
       );
       return undefined;
     }
-  }, [currentUser, name, description, isPublic, collaboratorsWithoutOwner]);
+  }, [currentUser, name, description, isPublic, collaboratorsWithoutOwner, initialTracks]);
 
   const editPlaylist = React.useCallback(async (): Promise<
     JSPFPlaylist | undefined
