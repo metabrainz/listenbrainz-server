@@ -26,7 +26,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   }, [modal]);
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const { playlist,initialTracks } = props;
+  const { playlist, initialTracks } = props;
   const customFields = getPlaylistExtension(props.playlist);
   const playlistId = getPlaylistId(playlist);
   const isEdit = Boolean(playlistId);
@@ -115,7 +115,14 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
       );
       return undefined;
     }
-  }, [currentUser, name, description, isPublic, collaboratorsWithoutOwner, initialTracks]);
+  }, [
+    currentUser,
+    name,
+    description,
+    isPublic,
+    collaboratorsWithoutOwner,
+    initialTracks,
+  ]);
 
   const editPlaylist = React.useCallback(async (): Promise<
     JSPFPlaylist | undefined
