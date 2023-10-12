@@ -1,12 +1,12 @@
 import * as React from "react";
-import GlobalAppContext from "../utils/GlobalAppContext";
 import { has } from "lodash";
-import { PLAYLIST_URI_PREFIX,  listenToJSPFTrack } from "../playlists/utils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileCirclePlus, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
-import { ToastMsg } from "../notifications/Notifications";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { ToastMsg } from "../notifications/Notifications";
+import { PLAYLIST_URI_PREFIX,  listenToJSPFTrack } from "../playlists/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import { getTrackName } from "../utils/utils";
 import CreateOrEditPlaylistModal from "../playlists/CreateOrEditPlaylistModal";
 
@@ -41,9 +41,9 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
                 if(!response){
                     return;
                 }
-                const { playlists} = response;
-                window.sessionStorage.setItem("listenbrainz_playlists", JSON.stringify(playlists));
-                setPlaylists(prevPlaylists => {return [...prevPlaylists, ...playlists]});
+                const { playlists: existingPlaylists} = response;
+                setPlaylists(existingPlaylists);
+                window.sessionStorage.setItem("listenbrainz_playlists", JSON.stringify(existingPlaylists));
             } catch (error) {
                 toast.error(
                     <ToastMsg
@@ -58,8 +58,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
             // First, try to load playlists from sessionStorage
             const storedPlaylists = window.sessionStorage.getItem("listenbrainz_playlists");
             if(storedPlaylists){
-                const playlists = 	JSON.parse(storedPlaylists);
-                setPlaylists(playlists);
+                setPlaylists(JSON.parse(storedPlaylists));
                 return;
             }
         } catch (error) {
