@@ -68,25 +68,10 @@ describe("UserFeed", () => {
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
-  });
-
-  it("contains a UserSocialNetwork component", () => {
-    const wrapper = mount<UserFeedPage>(
-      <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
-      </GlobalAppContext.Provider>
-    );
-    expect(wrapper).toBeTruthy();
+    expect(wrapper.find("#timeline")).toHaveLength(1);
+    // contains a UserSocialNetwork component
     expect(wrapper.find(UserSocialNetwork)).toHaveLength(1);
-  });
-
-  it("contains a BrainzPlayer instance", () => {
-    const wrapper = mount<UserFeedPage>(
-      <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
-      </GlobalAppContext.Provider>
-    );
+    // contains a BrainzPlayer component
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
   });
 

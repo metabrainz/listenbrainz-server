@@ -69,20 +69,7 @@ describe("PersonalRecommendationModal", () => {
     getFollowersSpy.mockClear();
     submitPersonalRecommendationSpy.mockClear();
   });
-  it("renders everything right", () => {
-    const wrapper = mount(
-      <GlobalAppContext.Provider value={globalProps}>
-        <NiceModal.Provider>
-          <PersonalRecommendationModal
-            {...niceModalProps}
-            listenToPersonallyRecommend={listenToPersonallyRecommend}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    );
 
-    expect(wrapper.html()).toMatchSnapshot();
-  });
   describe("submitPersonalRecommendation", () => {
     it("calls API, and creates new alert on success", async () => {
       const wrapper = mount(

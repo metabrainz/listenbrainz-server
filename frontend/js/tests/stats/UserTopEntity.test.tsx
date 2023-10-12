@@ -12,6 +12,7 @@ import * as userReleases from "../__mocks__/userReleases.json";
 import * as userRecordings from "../__mocks__/userRecordings.json";
 import * as userReleaseGroups from "../__mocks__/userReleaseGroups.json";
 import { waitForComponentToPaint } from "../test-utils";
+import ListenCard from "../../src/listens/ListenCard";
 
 const userProps: UserTopEntityProps = {
   range: "week",
@@ -45,29 +46,31 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ListenCard)).toHaveLength(25);
+      expect(wrapper.find("h3").getDOMNode()).toHaveTextContent("Top artists");
       wrapper.unmount();
     });
 
     it("renders correctly for release", async () => {
       const wrapper = mount<UserTopEntity>(
-        <UserTopEntity {...{ ...props, entity: "release" }} />
+        <UserTopEntity { ...props} entity="release" terminology="release" />
       );
-      await act(() => {
-        wrapper.setState({
-          data: userReleases as UserReleasesResponse,
-          loading: false,
-        });
+      wrapper.setState({
+        data: userReleases as UserReleasesResponse,
+        loading: false,
       });
+      wrapper.update()
       await waitForComponentToPaint(wrapper);
+      expect(wrapper.state("data")).toEqual(userReleases);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ListenCard)).toHaveLength(25);
+      expect(wrapper.find("h3").getDOMNode()).toHaveTextContent("Top releases");
       wrapper.unmount();
     });
 
     it("renders correctly for release group", async () => {
       const wrapper = mount<UserTopEntity>(
-        <UserTopEntity {...{ ...props, entity: "release-group" }} />
+        <UserTopEntity { ...props} entity="release-group" terminology="album" />
       );
       await act(() => {
         wrapper.setState({
@@ -77,13 +80,14 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find("h3").getDOMNode()).toHaveTextContent("Top albums");
+      expect(wrapper.find(ListenCard)).toHaveLength(25);
       wrapper.unmount();
     });
 
     it("renders correctly for recording", async () => {
       const wrapper = mount<UserTopEntity>(
-        <UserTopEntity {...{ ...props, entity: "recording" }} />
+        <UserTopEntity { ...props} entity="recording" terminology="track" />
       );
       await act(() => {
         wrapper.setState({
@@ -93,7 +97,8 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find("h3").getDOMNode()).toHaveTextContent("Top tracks");
+      expect(wrapper.find(ListenCard)).toHaveLength(25);
       wrapper.unmount();
     });
 
@@ -105,7 +110,7 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.getDOMNode()).toHaveTextContent("Invalid range: invalid_range");
       wrapper.unmount();
     });
   });

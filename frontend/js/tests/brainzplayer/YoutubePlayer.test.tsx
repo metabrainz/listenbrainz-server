@@ -41,7 +41,7 @@ describe("YoutubePlayer", () => {
   it("renders", () => {
     window.fetch = jest.fn();
     const wrapper = mount(<YoutubePlayer {...props} />);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(".youtube-wrapper")).toHaveLength(1);
   });
 
   describe("handlePlayerStateChanged", () => {

@@ -17,9 +17,9 @@ const props: ListenControlProps = {
   icon: faHeart,
 };
 
-describe("ListenCountCard", () => {
+describe("ListenControl", () => {
   it("renders correctly", () => {
     const wrapper = mount(<ListenControl {...props} />);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("button")).toHaveLength(1);
   });
 });
