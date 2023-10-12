@@ -725,7 +725,12 @@ export default class APIService {
     count: number = 25,
     createdFor: boolean = false,
     collaborator: boolean = false
-  ) => {
+  ): Promise<{
+    playlists: JSPFObject[];
+    playlist_count: number;
+    count: string;
+    offset: string;
+  }> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
