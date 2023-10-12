@@ -102,7 +102,6 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
                 } />, {
                     toastId: "success-add-track-to-playlist",
                 });
-                closeModal();
             } else {
                 throw new Error("Could not add track to playlist");
             }
