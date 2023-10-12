@@ -42,7 +42,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
                     return;
                 }
                 const { playlists} = response;
-                window.localStorage.setItem("listenbrainz_playlists", JSON.stringify(playlists));
+                window.sessionStorage.setItem("listenbrainz_playlists", JSON.stringify(playlists));
                 setPlaylists(prevPlaylists => {return [...prevPlaylists, ...playlists]});
             } catch (error) {
                 toast.error(
@@ -55,8 +55,8 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
             }
         }
         try {
-            // First, try to load playlists from localStorage
-            const storedPlaylists = window.localStorage.getItem("listenbrainz_playlists");
+            // First, try to load playlists from sessionStorage
+            const storedPlaylists = window.sessionStorage.getItem("listenbrainz_playlists");
             if(storedPlaylists){
                 const playlists = 	JSON.parse(storedPlaylists);
                 setPlaylists(playlists);
