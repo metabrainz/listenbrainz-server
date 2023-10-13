@@ -118,9 +118,7 @@ function LBRadio(props: LBRadioProps) {
             className="playlist-loader"
           >
             <LBRadioFeedback feedback={feedback} />
-            <Playlist
-              playlist={jspfPlaylist?.playlist}
-            />
+            <Playlist playlist={jspfPlaylist?.playlist} />
           </Loader>
         </div>
       </div>

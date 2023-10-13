@@ -32,6 +32,10 @@ function PlaylistMenu({
   onPlaylistDelete,
 }: PlaylistMenuProps) {
   const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
+  const { auth_token } = currentUser;
+  const playlistID = getPlaylistId(playlist);
+  const playlistTitle = playlist.title;
+
   const alertMustBeLoggedIn = () => {
     toast.error(
       <ToastMsg
@@ -41,13 +45,15 @@ function PlaylistMenu({
       { toastId: "auth-error" }
     );
   };
+
   const handleError = (error: any) => {
     toast.error(<ToastMsg title="Error" message={error.message} />, {
       toastId: "error",
     });
   };
+
   const copyPlaylist = async (): Promise<void> => {
-    if (!currentUser?.auth_token) {
+    if (!auth_token) {
       alertMustBeLoggedIn();
       return;
     }
@@ -58,21 +64,27 @@ function PlaylistMenu({
       return;
     }
     try {
-      const newPlaylistId = await APIService.copyPlaylist(
-        currentUser.auth_token,
-        getPlaylistId(playlist)
-      );
+      let newPlaylistId;
+      if (playlistID) {
+        newPlaylistId = await APIService.copyPlaylist(auth_token, playlistID);
+      } else {
+        newPlaylistId = await APIService.createPlaylist(auth_token, {
+          playlist,
+        });
+      }
       // Fetch the newly created playlist and add it to the state if it's the current user's page
       const JSPFObject: JSPFObject = await APIService.getPlaylist(
         newPlaylistId,
-        currentUser.auth_token
+        auth_token
       ).then((res) => res.json());
+
+      const successTerm = playlistID ? "Duplicated" : "Saved";
       toast.success(
         <ToastMsg
-          title="Duplicated playlist"
+          title={`${successTerm} playlist`}
           message={
             <>
-              Duplicated to playlist&ensp;
+              {successTerm} to playlist&ensp;
               <a href={`/playlist/${newPlaylistId}`}>
                 {JSPFObject.playlist.title}
               </a>
@@ -85,39 +97,32 @@ function PlaylistMenu({
       handleError(error);
     }
   };
-  const exportAsJSPF = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token?: string
-  ) => {
-    const result = await APIService.getPlaylist(playlistId, auth_token);
+
+  const exportAsJSPF = async () => {
+    const result = await APIService.getPlaylist(playlistID, auth_token);
     saveAs(await result.blob(), `${playlistTitle}.jspf`);
   };
 
-  const exportAsXSPF = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token: string
-  ) => {
+  const exportAsXSPF = async () => {
+    if (!auth_token) {
+      alertMustBeLoggedIn();
+      return;
+    }
     const result = await APIService.exportPlaylistToXSPF(
       auth_token,
-      playlistId
+      playlistID
     );
     saveAs(result, `${playlistTitle}.xspf`);
   };
 
-  const exportToSpotify = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token?: string
-  ) => {
-    if(!auth_token){
+  const exportToSpotify = async () => {
+    if (!auth_token) {
       alertMustBeLoggedIn();
       return;
     }
     const result = await APIService.exportPlaylistToSpotify(
       auth_token,
-      playlistId
+      playlistID
     );
     const { external_url } = result;
     toast.success(
@@ -136,13 +141,7 @@ function PlaylistMenu({
       { toastId: "export-playlist" }
     );
   };
-  const handlePlaylistExport = async (
-    handler: (
-      playlistId: string,
-      playlistTitle: string,
-      auth_token?: string
-    ) => void
-  ) => {
+  const handlePlaylistExport = async (handler: () => void) => {
     if (!playlist || !playlist.track.length) {
       toast.warn(
         <ToastMsg
@@ -156,8 +155,7 @@ function PlaylistMenu({
       return;
     }
     try {
-      const playlistId = getPlaylistId(playlist);
-      handler(playlistId, playlist.title, currentUser?.auth_token);
+      handler();
     } catch (error) {
       handleError(error.error ?? error);
     }
@@ -172,7 +170,8 @@ function PlaylistMenu({
     >
       <li>
         <a onClick={copyPlaylist} role="button" href="#">
-          <FontAwesomeIcon icon={faCopy as IconProp} /> Duplicate
+          <FontAwesomeIcon icon={faCopy as IconProp} />{" "}
+          {playlistID ? "Duplicate" : "Save to my playlists"}
         </a>
       </li>
       {isPlaylistOwner(playlist, currentUser) && (

@@ -190,10 +190,10 @@ export default class PlaylistPage extends React.Component<
     });
     window.location.href = `${window.location.origin}/user/${currentUser?.name}/playlists`;
   };
-  
-  onPlaylistSave = (playlist:JSPFPlaylist)=>{
-    this.setState({playlist}, this.emitPlaylistChanged)
-  }
+
+  onPlaylistSave = (playlist: JSPFPlaylist) => {
+    this.setState({ playlist }, this.emitPlaylistChanged);
+  };
 
   hasRightToEdit = (): boolean => {
     const { currentUser } = this.context;
@@ -356,7 +356,11 @@ export default class PlaylistPage extends React.Component<
                       />
                       &nbsp;Options
                     </button>
-                    <PlaylistMenu playlist={playlist} onPlaylistSave={this.onPlaylistSave} onPlaylistDelete={this.onDeletePlaylist}/>
+                    <PlaylistMenu
+                      playlist={playlist}
+                      onPlaylistSave={this.onPlaylistSave}
+                      onPlaylistDelete={this.onDeletePlaylist}
+                    />
                   </span>
                 </div>
                 <small>
