@@ -89,7 +89,7 @@ function PlaylistMenu({
   const exportAsJSPF = async (
     playlistId: string,
     playlistTitle: string,
-    auth_token: string
+    auth_token?: string
   ) => {
     const result = await APIService.getPlaylist(playlistId, auth_token);
     saveAs(await result.blob(), `${playlistTitle}.jspf`);
@@ -110,8 +110,12 @@ function PlaylistMenu({
   const exportToSpotify = async (
     playlistId: string,
     playlistTitle: string,
-    auth_token: string
+    auth_token?: string
   ) => {
+    if(!auth_token){
+      alertMustBeLoggedIn();
+      return;
+    }
     const result = await APIService.exportPlaylistToSpotify(
       auth_token,
       playlistId
@@ -137,13 +141,10 @@ function PlaylistMenu({
     handler: (
       playlistId: string,
       playlistTitle: string,
-      auth_token: string
+      auth_token?: string
     ) => void
   ) => {
-    if (!playlist || !currentUser.auth_token) {
-      return;
-    }
-    if (!playlist.track.length) {
+    if (!playlist || !playlist.track.length) {
       toast.warn(
         <ToastMsg
           title="Empty playlist"
@@ -158,7 +159,7 @@ function PlaylistMenu({
     setLoading(true);
     try {
       const playlistId = getPlaylistId(playlist);
-      handler(playlistId, playlist.title, currentUser.auth_token);
+      handler(playlistId, playlist.title, currentUser?.auth_token);
     } catch (error) {
       handleError(error.error ?? error);
     }
