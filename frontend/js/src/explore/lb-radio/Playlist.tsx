@@ -13,7 +13,6 @@ type LBRadioFeedbackProps = {
 
 type PlaylistProps = {
   playlist?: JSPFPlaylist;
-  onSavePlaylist: () => void;
 };
 
 export function LBRadioFeedback(props: LBRadioFeedbackProps) {
@@ -36,7 +35,7 @@ export function LBRadioFeedback(props: LBRadioFeedbackProps) {
 }
 
 export function Playlist(props: PlaylistProps) {
-  const { playlist, onSavePlaylist } = props;
+  const { playlist } = props;
 
   if (!playlist?.track?.length) {
     if (playlist !== undefined) {
@@ -59,7 +58,7 @@ export function Playlist(props: PlaylistProps) {
             <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
             &nbsp;Options
           </button>
-          <PlaylistMenu playlist={playlist} onPlaylistSave={onSavePlaylist} />
+          <PlaylistMenu playlist={playlist} />
         </span>
         <div id="title">{playlist?.title}</div>
         <div id="description">{playlist?.annotation}</div>

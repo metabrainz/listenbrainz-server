@@ -5,11 +5,9 @@ import { merge } from "lodash";
 import * as React from "react";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { toast } from "react-toastify";
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
-import { ToastMsg } from "../../notifications/Notifications";
 import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
@@ -33,7 +31,7 @@ function LBRadio(props: LBRadioProps) {
   const [isLoading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { APIService } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
     async (prompt: string, mode: Modes) => {
       setErrorMessage("");
@@ -104,58 +102,6 @@ function LBRadio(props: LBRadioProps) {
     [setJspfPlaylist, setFeedback, APIService]
   );
 
-  const onSavePlaylist = React.useCallback(async () => {
-    // TODO: Move the guts of this to APIService
-    const args = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${currentUser.auth_token}`,
-      },
-      body: JSON.stringify(jspfPlaylist),
-    };
-    try {
-      const request = await fetch(
-        `${APIService.APIBaseURI}/playlist/create`,
-        args
-      );
-      if (request.ok) {
-        const { playlist_mbid } = await request.json();
-        toast.success(
-          <ToastMsg
-            title="Saved playlist"
-            message={
-              <>
-                Playlist saved to &ensp;
-                <a href={`/playlist/${playlist_mbid}`}>
-                  {jspfPlaylist?.playlist.title}
-                </a>
-              </>
-            }
-          />,
-          { toastId: "saved-playlist" }
-        );
-      } else {
-        const { error } = await request.json();
-        toast.error(
-          <ToastMsg
-            title="Error"
-            message={`Failed to save playlist: ${error}.`}
-          />,
-          { toastId: "saved-playlist-error" }
-        );
-      }
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={`Failed to save playlist: ${error}.`}
-        />,
-        { toastId: "saved-playlist-error" }
-      );
-    }
-  }, [currentUser.auth_token, jspfPlaylist, APIService.APIBaseURI]);
-
   return (
     <>
       <div className="row">
@@ -174,7 +120,6 @@ function LBRadio(props: LBRadioProps) {
             <LBRadioFeedback feedback={feedback} />
             <Playlist
               playlist={jspfPlaylist?.playlist}
-              onSavePlaylist={onSavePlaylist}
             />
           </Loader>
         </div>

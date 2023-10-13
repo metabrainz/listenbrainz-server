@@ -32,7 +32,6 @@ function PlaylistMenu({
   onPlaylistDelete,
 }: PlaylistMenuProps) {
   const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
-  const [loading, setLoading] = React.useState(false);
   const alertMustBeLoggedIn = () => {
     toast.error(
       <ToastMsg
@@ -156,14 +155,12 @@ function PlaylistMenu({
       );
       return;
     }
-    setLoading(true);
     try {
       const playlistId = getPlaylistId(playlist);
       handler(playlistId, playlist.title, currentUser?.auth_token);
     } catch (error) {
       handleError(error.error ?? error);
     }
-    setLoading(false);
   };
   const showSpotifyExportButton = spotifyAuth?.permission?.includes(
     "playlist-modify-public"
