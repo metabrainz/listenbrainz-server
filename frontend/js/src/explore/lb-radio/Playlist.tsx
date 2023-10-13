@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import PlaylistItemCard from "../../playlists/PlaylistItemCard";
 import PlaylistMenu from "../../playlists/PlaylistMenu";
-import GlobalAppContext from "../../utils/GlobalAppContext";
 
 type LBRadioFeedbackProps = {
   feedback: string[];
@@ -38,10 +37,7 @@ export function LBRadioFeedback(props: LBRadioFeedbackProps) {
 
 export function Playlist(props: PlaylistProps) {
   const { playlist, onSavePlaylist } = props;
-  const { spotifyAuth, currentUser } = React.useContext(GlobalAppContext);
-  const showSpotifyExportButton = spotifyAuth?.permission?.includes(
-    "playlist-modify-public"
-  );
+
   if (!playlist?.track?.length) {
     if (playlist !== undefined) {
       return <div id="title">No playlist was generated.</div>;

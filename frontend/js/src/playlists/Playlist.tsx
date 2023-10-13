@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import { saveAs } from "file-saver";
-import { findIndex, omit } from "lodash";
+import { findIndex } from "lodash";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 
@@ -321,15 +321,10 @@ export default class PlaylistPage extends React.Component<
 
   render() {
     const { playlist, loading } = this.state;
-    const { APIService, spotifyAuth } = this.context;
+    const { APIService } = this.context;
 
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
-    const { currentUser } = this.context;
-
-    const showSpotifyExportButton = spotifyAuth?.permission?.includes(
-      "playlist-modify-public"
-    );
 
     const customFields = getPlaylistExtension(playlist);
 
