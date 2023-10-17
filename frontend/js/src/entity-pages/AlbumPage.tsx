@@ -7,31 +7,14 @@ import NiceModal from "@ebay/nice-modal-react";
 import { toast, ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBarcode,
-  faCircleNodes,
-  faCompactDisc,
   faHeadphones,
-  faHomeAlt,
-  faLink,
-  faMicrophone,
-  faMusic,
   faPlayCircle,
   faUserAstronaut,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { chain } from "lodash";
 import tinycolor from "tinycolor2";
-import {
-  faApple,
-  faBandcamp,
-  faFacebook,
-  faInstagram,
-  faLastfm,
-  faSoundcloud,
-  faTwitter,
-  faYoutube,
-} from "@fortawesome/free-brands-svg-icons";
-import { sanitize } from "dompurify";
+import { getRelIconLink } from "./utils";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
@@ -42,9 +25,7 @@ import {
   getReviewEventContent,
 } from "../utils/utils";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import { ToastMsg } from "../notifications/Notifications";
 import TagsComponent from "../tags/TagsComponent";
-import ReleaseCard from "../explore/fresh-releases/ReleaseCard";
 import ListenCard from "../listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import {
@@ -220,80 +201,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         </div>
         <div className="right-side">
           <div className="artist-rels">
-            {Object.entries(album.artist?.artists?.[0].rels).map(
-              ([relName, relValue]) => {
-                let icon;
-                switch (relName) {
-                  case "streaming":
-                  case "free streaming":
-                    icon = faMusic;
-                    break;
-                  case "lyrics":
-                    icon = faMicrophone;
-                    break;
-                  case "wikidata":
-                    icon = faBarcode;
-                    break;
-                  case "youtube":
-                  case "youtube music":
-                    icon = faYoutube;
-                    break;
-                  case "soundcloud":
-                    icon = faSoundcloud;
-                    break;
-                  case "official homepage":
-                    icon = faHomeAlt;
-                    break;
-                  case "bandcamp":
-                    icon = faBandcamp;
-                    break;
-                  case "last.fm":
-                    icon = faLastfm;
-                    break;
-                  case "apple music":
-                    icon = faApple;
-                    break;
-                  case "get the music":
-                  case "purchase for mail-order":
-                  case "purchase for download":
-                  case "download for free":
-                    icon = faCompactDisc;
-                    break;
-                  case "social network":
-                  case "online community":
-                    if (/instagram/.test(relValue)) {
-                      icon = faInstagram;
-                    } else if (/facebook/.test(relValue)) {
-                      icon = faFacebook;
-                    } else if (
-                      /twitter/.test(relValue) ||
-                      /x.com/.test(relValue)
-                    ) {
-                      icon = faTwitter;
-                    } else if (/soundcloud/.test(relValue)) {
-                      icon = faSoundcloud;
-                    } else {
-                      icon = faCircleNodes;
-                    }
-                    break;
-                  default:
-                    icon = faLink;
-                    break;
-                }
-                return (
-                  <a
-                    key={relName}
-                    href={relValue}
-                    title={relName}
-                    className="btn btn-icon btn-link"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <FontAwesomeIcon icon={icon} fixedWidth />
-                  </a>
-                );
-              }
-            )}
+            {Object.entries(
+              album.artist?.artists?.[0].rels
+            ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}
           </div>
           <div className="btn-group btn-group-lg lb-radio-button">
             <a
