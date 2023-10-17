@@ -26,7 +26,7 @@ module.exports = function (env, argv) {
   const distDir = path.join(baseDir, "dist");
   const cssDir = path.join(baseDir, "css");
   const plugins = [
-//    new WebpackManifestPlugin(),
+    new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
       typescript: {
         diagnosticOptions: {
