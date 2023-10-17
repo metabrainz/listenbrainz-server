@@ -153,3 +153,25 @@ declare type MetadataLookup = {
   release_mbid: string;
   release_name: string;
 };
+declare type ReleaseGroupMetadataLookupResponse = {
+  [string]: ReleaseGroupMetadataLookup;
+};
+declare type ReleaseGroupMetadataLookup = {
+  artist: {
+    artist_credit_id: number;
+    artists: MusicBrainzArtist[];
+    name: string;
+  };
+  release: {
+    name: string;
+    rels: { [key: string]: string };
+  };
+  release_group: {
+    name: string;
+    rels: { [key: string]: string };
+  };
+  tag?: {
+    artist?: Array<ArtistTag>;
+    release_group?: Array<ReleaseGroupTag>;
+  };
+};
