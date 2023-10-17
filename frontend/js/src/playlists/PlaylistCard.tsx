@@ -36,7 +36,6 @@ export default function PlaylistCard({
   const playlistId = getPlaylistId(playlist);
   const customFields = getPlaylistExtension(playlist);
 
-
   const onCopyPlaylist = React.useCallback(async (): Promise<void> => {
     if (!currentUser?.auth_token) {
       toast.error(
@@ -119,7 +118,11 @@ export default function PlaylistCard({
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options
           </button>
-          <PlaylistMenu playlist={playlist} onPlaylistSave={onPlaylistEdited} onPlaylistDelete={onPlaylistDeleted}/>
+          <PlaylistMenu
+            playlist={playlist}
+            onPlaylistSave={onPlaylistEdited}
+            onPlaylistDelete={onPlaylistDeleted}
+          />
         </div>
       )}
       <a className="info" href={`/playlist/${sanitize(playlistId)}`}>

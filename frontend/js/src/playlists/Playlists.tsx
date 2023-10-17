@@ -24,10 +24,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import { getPageProps } from "../utils/utils";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import PlaylistsList from "./PlaylistsList";
-import {
-  getPlaylistId,
-  PlaylistType,
-} from "./utils";
+import { getPlaylistId, PlaylistType } from "./utils";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
@@ -85,9 +82,7 @@ export default class UserPlaylists extends React.Component<
     }
   };
 
-  onPlaylistEdited = async (
-    playlist:JSPFPlaylist
-  ): Promise<void> => {
+  onPlaylistEdited = async (playlist: JSPFPlaylist): Promise<void> => {
     // Once API call succeeds, update playlist in state
     const { playlists } = this.state;
     const playlistsCopy = [...playlists];
@@ -99,18 +94,16 @@ export default class UserPlaylists extends React.Component<
       playlists: playlistsCopy,
     });
   };
-  
-  onPlaylistCreated = async (
-    playlist:JSPFPlaylist
-  ): Promise<void> => {
+
+  onPlaylistCreated = async (playlist: JSPFPlaylist): Promise<void> => {
     const { playlists } = this.state;
     this.setState({
-      playlists: [playlist,...playlists],
+      playlists: [playlist, ...playlists],
     });
   };
 
-  onPlaylistDeleted = (deletedPlaylist: JSPFPlaylist):void => {
-    this.setState(prevState=> ({
+  onPlaylistDeleted = (deletedPlaylist: JSPFPlaylist): void => {
+    this.setState((prevState) => ({
       playlists: prevState.playlists?.filter(
         (pl) => getPlaylistId(pl) !== getPlaylistId(deletedPlaylist)
       ),
@@ -135,11 +128,7 @@ export default class UserPlaylists extends React.Component<
 
   render() {
     const { user } = this.props;
-    const {
-      playlists,
-      playlistCount,
-      playlistType,
-    } = this.state;
+    const { playlists, playlistCount, playlistType } = this.state;
 
     return (
       <div role="main" id="playlists-page">
@@ -174,12 +163,13 @@ export default class UserPlaylists extends React.Component<
               className="new-playlist"
               data-toggle="modal"
               data-target="#CreateOrEditPlaylistModal"
-              onClick={()=>{
+              onClick={() => {
                 NiceModal.show(CreateOrEditPlaylistModal)
-                // @ts-ignore
-                .then((playlist: JSPFPlaylist) => {
-                this.onPlaylistCreated(playlist);
-              })}}
+                  // @ts-ignore
+                  .then((playlist: JSPFPlaylist) => {
+                    this.onPlaylistCreated(playlist);
+                  });
+              }}
             >
               <div>
                 <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
