@@ -2,13 +2,14 @@ from flask import Blueprint, render_template, current_app
 from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.db.metadata import get_metadata_for_artist
+from listenbrainz.db.metadata import get_metadata_for_artist, get_metadata_for_release_group
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 import requests
 from werkzeug.exceptions import BadRequest, NotFound
 import orjson
 
 artist_bp = Blueprint("artist", __name__)
+album_bp = Blueprint("album", __name__)
 
 @artist_bp.route("/<artist_mbid>", methods=["GET"])
 # TODO: unsure if this is needed
@@ -62,5 +63,34 @@ def artist_entity(artist_mbid):
 
     return render_template(
         "entities/artist.html",
+        props=orjson.dumps(props).decode("utf-8")
+    )
+
+
+@album_bp.route("/<release_group_mbid>", methods=["GET"])
+# TODO: unsure if this is needed
+@web_listenstore_needed
+def album_entity(release_group_mbid):
+    """ Show an album page with all their relevant information """
+
+    if not is_valid_uuid(release_group_mbid):
+        raise BadRequest("Provided release group ID is invalid: %s" % release_group_mbid)
+
+    # Fetch the artist cached data
+    release_group_data = get_metadata_for_release_group([release_group_mbid])
+    if len(release_group_data) == 0:
+        raise NotFound(f"release group {release_group_mbid} not found in the metadata cache")
+
+    item = {"release_group_mbid": release_group_data[0].release_group_mbid}
+    item.update(**release_group_data[0].release_group_data)
+    item["tag"] = release_group_data[0].tag_data
+
+    props = {
+        "release_group_data": item,
+        "release_group_mbid": release_group_mbid
+    }
+
+    return render_template(
+        "entities/album.html",
         props=orjson.dumps(props).decode("utf-8")
     )
