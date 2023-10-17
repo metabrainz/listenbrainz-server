@@ -446,10 +446,46 @@
   flex-direction: column;
 }
 
+.release-filters.open {
+    @media screen and (max-width: @screen-md) {
+        right: 0;
+    }
+}
+
 .release-filters {
   top: 6px;
   position: sticky;
   height: min-content;
   max-height: 100vh;
   overflow-y: scroll;
+  z-index: 9998;
+
+  @media screen and (max-width: @screen-md) {
+    position: fixed;
+    top: 0;
+    right: -80%; /* Initially hidden, adjust as needed */
+    height: 100%;
+    width: 80%; /* Adjust as needed */
+    background-color: #fff; /* Background color for the sidebar */
+    overflow-y: auto; /* Enable scrolling within the sidebar */
+    box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2); /* Add shadow to the sidebar */
+    transition: right 0.3s ease-in-out;
+  }
+}
+
+.toggle-sidebar-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    width: 64px;
+    height: 64px;
+    padding: 10px;
+    border-radius: 50%;
+    border-color: black;
+    cursor: pointer;
+
+    @media screen and (min-width: @screen-md) {
+        display: none;
+    }
 }

@@ -5,6 +5,8 @@ import { Integrations } from "@sentry/tracing";
 import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
+import { faGear, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -46,6 +48,8 @@ export default function FreshReleases() {
     isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
 
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);
+
   const [range, setRange] = React.useState<string>("week");
   const [displaySettings, setDisplaySettings] = React.useState<{
     [key: string]: boolean;
@@ -65,6 +69,10 @@ export default function FreshReleases() {
       ...displaySettings,
       [setting]: !displaySettings[setting],
     });
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   const convertRangeToDays = (releaseRange: string): number => {
@@ -161,8 +169,11 @@ export default function FreshReleases() {
   return (
     <div className="row">
       <div className="col-xs-12 col-md-10">
-        {isLoggedIn ? (
-          <div id="fr-pill-row">
+        <div
+          id="fr-pill-row"
+          style={!isLoggedIn ? { justifyContent: "flex-end" } : {}}
+        >
+          {isLoggedIn ? (
             <div id="fr-row">
               <Pill
                 id="sitewide-releases"
@@ -181,25 +192,23 @@ export default function FreshReleases() {
                 For You
               </Pill>
             </div>
-            <div id="fr-row">
-              <span>Sort By:</span>{" "}
-              <div className="input-group">
-                <select
-                  id="style"
-                  className="form-control"
-                  value={sort}
-                  onChange={(event) => setSort(event.target.value)}
-                >
-                  <option value="release_date">Release Date</option>
-                  <option value="artist_credit_name">Artist</option>
-                  <option value="release_name">Release Title</option>
-                </select>
-              </div>
+          ) : null}
+          <div id="fr-row">
+            <span>Sort By:</span>{" "}
+            <div className="input-group">
+              <select
+                id="style"
+                className="form-control"
+                value={sort}
+                onChange={(event) => setSort(event.target.value)}
+              >
+                <option value="release_date">Release Date</option>
+                <option value="artist_credit_name">Artist</option>
+                <option value="release_name">Release Title</option>
+              </select>
             </div>
           </div>
-        ) : (
-          <h3 id="fr-subheading">Discover new music</h3>
-        )}
+        </div>
         <div className="releases-page row">
           {isLoading ? (
             <div className="spinner-container">
@@ -255,7 +264,11 @@ export default function FreshReleases() {
           )}
         </div>
       </div>
-      <div className="release-filters col-xs-12 col-md-2">
+      <div
+        className={`release-filters ${
+          isSidebarOpen ? "open" : ""
+        } col-xs-12 col-md-2`}
+      >
         <ReleaseFilters
           allFilters={allFilters}
           releases={releases}
@@ -270,6 +283,17 @@ export default function FreshReleases() {
           setShowFutureReleases={setShowFutureReleases}
         />
       </div>
+      <button
+        className="toggle-sidebar-button"
+        style={{
+          backgroundColor: isSidebarOpen ? "#353070" : "#fff",
+          color: isSidebarOpen ? "#fff" : "#353070",
+        }}
+        onClick={toggleSidebar}
+        type="button"
+      >
+        <FontAwesomeIcon icon={isSidebarOpen ? faXmark : faGear} size="2x" />
+      </button>
     </div>
   );
 }
