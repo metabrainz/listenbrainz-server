@@ -120,10 +120,15 @@ function PlaylistMenu({
       alertMustBeLoggedIn();
       return;
     }
-    const result = await APIService.exportPlaylistToSpotify(
-      auth_token,
-      playlistID
-    );
+    let result;
+    if (playlistID) {
+      result = await APIService.exportPlaylistToSpotify(auth_token, playlistID);
+    } else {
+      result = await APIService.exportJSPFPlaylistToSpotify(
+        auth_token,
+        playlist
+      );
+    }
     const { external_url } = result;
     toast.success(
       <ToastMsg
