@@ -18,7 +18,14 @@ import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import * as worldCountries from "./world_countries.json";
 import { COLOR_BLACK } from "../utils/constants";
 
-const { useState, useCallback, useMemo, useEffect, useRef } = React;
+const {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  useLayoutEffect,
+} = React;
 
 export type ChoroplethProps = {
   data: UserArtistMapData;
@@ -88,14 +95,16 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     ChoroplethBoundFeature
   >();
   const refContainer = useRef<HTMLDivElement>(null);
-  const { current: currentRefContainer } = refContainer;
 
-  const [containerWidth, setContainerWidth] = useState<number>();
-  useEffect(() => {
-    if (currentRefContainer) {
-      setContainerWidth(currentRefContainer.clientWidth);
+  // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
+  const [containerWidth, setContainerWidth] = useState<number>(1000);
+  useLayoutEffect(() => {
+    if (!refContainer.current) {
+      return;
     }
-  }, [currentRefContainer]);
+    const { width } = refContainer.current.getBoundingClientRect();
+    setContainerWidth(width);
+  }, []);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
@@ -122,8 +131,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   // Create a custom legend component because the default doesn't work with scaleThreshold
   const customLegend = () => (
     <BoxLegendSvg
-      containerHeight={containerWidth ? containerWidth / 2 : 500}
-      containerWidth={containerWidth ?? 1000}
+      containerHeight={containerWidth / 2}
+      containerWidth={containerWidth}
       data={colorScale.range().map((color: string, index: number) => {
         // eslint-disable-next-line prefer-const
         let [start, end] = colorScale.invertExtent(color);
@@ -259,7 +268,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         onClick={showTooltipFromEvent}
         unknownColor="#efefef"
         label="properties.name"
-        projectionScale={containerWidth ? containerWidth / 5.5 : 175}
+        projectionScale={containerWidth / 5.5}
         projectionType="naturalEarth1"
         projectionTranslation={[0.5, 0.53]}
         borderWidth={0.5}
