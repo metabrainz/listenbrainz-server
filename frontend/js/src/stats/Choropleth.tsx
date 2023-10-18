@@ -9,7 +9,7 @@ import { Chip } from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
 import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
-import { maxBy } from "lodash";
+import { debounce, isFinite, isUndefined, maxBy } from "lodash";
 import * as React from "react";
 import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -99,11 +99,32 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
   const [containerWidth, setContainerWidth] = useState<number>(1000);
   useLayoutEffect(() => {
-    if (!refContainer.current) {
-      return;
+    // Set the container width *before* initial render
+    const width = refContainer.current?.getBoundingClientRect().width;
+    if (!isUndefined(width) && isFinite(width)) {
+      setContainerWidth(width);
     }
-    const { width } = refContainer.current.getBoundingClientRect();
-    setContainerWidth(width);
+
+    // Then observe the target element and update the width when resized (with debounce)
+    const resizeHandler = (entries: ResizeObserverEntry[]) => {
+      // We only observe one element
+      const newWidth = entries[0]?.contentBoxSize?.[0].inlineSize;
+      setContainerWidth(newWidth);
+    };
+    const debouncedResizeHandler = debounce(resizeHandler, 1000, {
+      leading: false,
+      trailing: true,
+    });
+    let resizeObserver: ResizeObserver | undefined;
+    if (refContainer.current && window.ResizeObserver) {
+      resizeObserver = new window.ResizeObserver(debouncedResizeHandler);
+      resizeObserver.observe(refContainer.current);
+    }
+
+    return () => {
+      resizeObserver?.disconnect?.();
+      debouncedResizeHandler.cancel();
+    };
   }, []);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
