@@ -156,164 +156,166 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
   return (
     <div className="sidebar settings-navbar">
-      <div className="basic-settings-container">
-        <div className="sidenav-content-grid">
-          <h4>
-            {filtersOpen ? (
-              <FontAwesomeIcon icon={faChevronDown} onClick={toggleFilters} />
-            ) : (
-              <FontAwesomeIcon icon={faChevronUp} onClick={toggleFilters} />
+      <div id="sidebar-fresh-release">
+        <p>Fresh Releases</p>
+        <p>Listen to recent releases, and browse what&apos;s dropping soon.</p>
+        <p>
+          Check out all releases worldwide, or just from artists you&apos;ve
+          listened to before, with &apos;for you&apos;.
+        </p>
+      </div>
+      <div className="sidenav-content-grid">
+        <h4>
+          {filtersOpen ? (
+            <FontAwesomeIcon icon={faChevronDown} onClick={toggleFilters} />
+          ) : (
+            <FontAwesomeIcon icon={faChevronUp} onClick={toggleFilters} />
+          )}
+          {"  "}
+          <b>Filter</b>
+        </h4>
+
+        {filtersOpen && (
+          <>
+            <div id="range">Range: </div>
+
+            <div className="input-group">
+              <select
+                id="style"
+                className="form-control"
+                value={range}
+                onChange={handleRangeDropdown}
+              >
+                <option value="week">1 Week</option>
+                <option value="month">1 Month</option>
+                <option value="three_months">3 Month</option>
+              </select>
+            </div>
+            <Switch
+              id="date-filter-item-past"
+              value="past"
+              checked={showPastReleases}
+              onChange={(e) => setShowPastReleases(!showPastReleases)}
+              switchLabel="Past"
+            />
+            <Switch
+              id="date-filter-item-future"
+              value="future"
+              checked={showFutureReleases}
+              onChange={(e) => setShowFutureReleases(!showFutureReleases)}
+              switchLabel="Future"
+            />
+            {allFilters.releaseTypes.length > 0 && (
+              <>
+                <span id="types">Types:</span>
+                {allFilters.releaseTypes.map((type, index) => (
+                  <Switch
+                    id={`filters-item-${index}`}
+                    value={type}
+                    checked={checkedList.includes(type)}
+                    onChange={handleFilterChange}
+                    switchLabel={type}
+                  />
+                ))}
+              </>
             )}
-            {"  "}
-            <b>Filter</b>
-          </h4>
 
-          {filtersOpen && (
-            <>
-              <div id="range">Range: </div>
+            {allFilters.releaseTags.length > 0 && (
+              <>
+                <span id="tags">Include (only):</span>
+                <select
+                  id="include-tags"
+                  className="form-control"
+                  value=""
+                  onChange={handleIncludeTagChange}
+                >
+                  <option value="" disabled>
+                    genre/tag...
+                  </option>
+                  {allFilters.releaseTags
+                    .filter((tag) => !releaseTagsCheckList.includes(tag))
+                    .map((tag, index) => (
+                      <option value={tag}>{tag}</option>
+                    ))}
+                </select>
 
-              <div className="input-group">
+                <div className="release-tags">
+                  {releaseTagsCheckList.map((tag, index) => (
+                    <div id={`include-tag-item-${index}`} className="tags">
+                      <span className="release-tag-name">{tag}</span>
+                      <FontAwesomeIcon
+                        icon={faCircleXmark}
+                        onClick={() => removeFilterTag(tag!)}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <span id="tags">Exclude:</span>
                 <select
                   id="style"
                   className="form-control"
-                  value={range}
-                  onChange={handleRangeDropdown}
+                  value=""
+                  onChange={handleExcludeTagChange}
                 >
-                  <option value="week">1 Week</option>
-                  <option value="month">1 Month</option>
-                  <option value="three_months">3 Month</option>
+                  <option value="" disabled>
+                    genre/tag...
+                  </option>
+                  {allFilters.releaseTags
+                    .filter((tag) => !releaseTagsExcludeCheckList.includes(tag))
+                    .map((tag, index) => (
+                      <option value={tag}>{tag}</option>
+                    ))}
                 </select>
-              </div>
-              <Switch
-                id="date-filter-item-past"
-                value="past"
-                checked={showPastReleases}
-                onChange={(e) => setShowPastReleases(!showPastReleases)}
-                switchLabel="Past"
-              />
-              <Switch
-                id="date-filter-item-future"
-                value="future"
-                checked={showFutureReleases}
-                onChange={(e) => setShowFutureReleases(!showFutureReleases)}
-                switchLabel="Future"
-              />
-              {allFilters.releaseTypes.length > 0 && (
-                <>
-                  <span id="types">Types:</span>
-                  {allFilters.releaseTypes.map((type, index) => (
-                    <Switch
-                      id={`filters-item-${index}`}
-                      value={type}
-                      checked={checkedList.includes(type)}
-                      onChange={handleFilterChange}
-                      switchLabel={type}
-                    />
+
+                <div className="release-tags">
+                  {releaseTagsExcludeCheckList.map((tag, index) => (
+                    <div id={`exclude-tag-item-${index}`} className="tags">
+                      <span className="release-tag-name">{tag}</span>
+                      <FontAwesomeIcon
+                        icon={faCircleXmark}
+                        onClick={() => removeExcludeTag(tag!)}
+                      />
+                    </div>
                   ))}
-                </>
-              )}
-
-              {allFilters.releaseTags.length > 0 && (
-                <>
-                  <span id="tags">Include (only):</span>
-                  <select
-                    id="include-tags"
-                    className="form-control"
-                    value=""
-                    onChange={handleIncludeTagChange}
-                  >
-                    <option value="" disabled>
-                      genre/tag...
-                    </option>
-                    {allFilters.releaseTags
-                      .filter((tag) => !releaseTagsCheckList.includes(tag))
-                      .map((tag, index) => (
-                        <option value={tag}>{tag}</option>
-                      ))}
-                  </select>
-
-                  <div className="release-tags">
-                    {releaseTagsCheckList.map((tag, index) => (
-                      <div id={`include-tag-item-${index}`} className="tags">
-                        <span className="release-tag-name">{tag}</span>
-                        <FontAwesomeIcon
-                          icon={faCircleXmark}
-                          onClick={() => removeFilterTag(tag!)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <span id="tags">Exclude:</span>
-                  <select
-                    id="style"
-                    className="form-control"
-                    value=""
-                    onChange={handleExcludeTagChange}
-                  >
-                    <option value="" disabled>
-                      genre/tag...
-                    </option>
-                    {allFilters.releaseTags
-                      .filter(
-                        (tag) => !releaseTagsExcludeCheckList.includes(tag)
-                      )
-                      .map((tag, index) => (
-                        <option value={tag}>{tag}</option>
-                      ))}
-                  </select>
-
-                  <div className="release-tags">
-                    {releaseTagsExcludeCheckList.map((tag, index) => (
-                      <div id={`exclude-tag-item-${index}`} className="tags">
-                        <span className="release-tag-name">{tag}</span>
-                        <FontAwesomeIcon
-                          icon={faCircleXmark}
-                          onClick={() => removeExcludeTag(tag!)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-      <div className="basic-settings-container">
-        <div className="sidenav-content-grid">
-          <h4>
-            {displayOpen ? (
-              <FontAwesomeIcon icon={faChevronDown} onClick={toggleDisplay} />
-            ) : (
-              <FontAwesomeIcon icon={faChevronUp} onClick={toggleDisplay} />
+                </div>
+              </>
             )}
-            {"  "}
-            <b>Display</b>
-          </h4>
-
-          {displayOpen && (
-            <>
-              <Switch
-                id="coverart-only"
-                value="coverart-only"
-                checked={coverartOnly}
-                onChange={(e) => setCoverartOnly(!coverartOnly)}
-                switchLabel="Only Releases with artwork"
-              />
-
-              {Object.keys(displaySettings).map((setting, index) => (
-                <Switch
-                  id={`display-item-${index}`}
-                  value={setting}
-                  checked={displaySettings[setting]}
-                  onChange={(e) => toggleSettings(setting)}
-                  switchLabel={setting}
-                />
-              ))}
-            </>
+          </>
+        )}
+      </div>
+      <div className="sidenav-content-grid">
+        <h4>
+          {displayOpen ? (
+            <FontAwesomeIcon icon={faChevronDown} onClick={toggleDisplay} />
+          ) : (
+            <FontAwesomeIcon icon={faChevronUp} onClick={toggleDisplay} />
           )}
-        </div>
+          {"  "}
+          <b>Display</b>
+        </h4>
+
+        {displayOpen && (
+          <>
+            <Switch
+              id="coverart-only"
+              value="coverart-only"
+              checked={coverartOnly}
+              onChange={(e) => setCoverartOnly(!coverartOnly)}
+              switchLabel="Only Releases with artwork"
+            />
+
+            {Object.keys(displaySettings).map((setting, index) => (
+              <Switch
+                id={`display-item-${index}`}
+                value={setting}
+                checked={displaySettings[setting]}
+                onChange={(e) => toggleSettings(setting)}
+                switchLabel={setting}
+              />
+            ))}
+          </>
+        )}
       </div>
     </div>
   );
