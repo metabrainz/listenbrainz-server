@@ -16,6 +16,7 @@ import ReleaseCard from "./ReleaseCard";
 import ReleaseFilters from "./ReleaseFilters";
 import ReleaseTimeline from "./ReleaseTimeline";
 import Pill from "../../components/Pill";
+import ReleaseCardsGrid from "./ReleaseCardsGrid";
 
 const initialDisplayState = {
   "Release Title": true,
@@ -227,40 +228,28 @@ export default function FreshReleases() {
               </div>
             </div>
           ) : (
-            <>
-              <div id="release-cards-grid" className="col-xs-12 col-md-11">
-                {filteredList?.map((release) => {
-                  return (
-                    <ReleaseCard
-                      key={release.release_mbid}
-                      releaseDate={release.release_date}
-                      releaseMBID={release.release_mbid}
-                      releaseName={release.release_name}
-                      releaseTypePrimary={release.release_group_primary_type}
-                      releaseTypeSecondary={
-                        release.release_group_secondary_type
-                      }
-                      artistCreditName={release.artist_credit_name}
-                      artistMBIDs={release.artist_mbids}
-                      confidence={release.confidence}
-                      caaID={release.caa_id}
-                      caaReleaseMBID={release.caa_release_mbid}
-                      displaySettings={displaySettings}
-                      releaseTags={release.release_tags}
-                      listenCount={release.listen_count}
-                    />
-                  );
-                })}
-              </div>
+            <div id="release-card-grids">
+              {filteredList.length === 0 ? (
+                <div id="no-release">
+                  <img
+                    src="/static/img/recommendations/no-freshness.png"
+                    alt="No Releases Found"
+                  />
+                </div>
+              ) : (
+                <ReleaseCardsGrid
+                  filteredList={filteredList}
+                  displaySettings={displaySettings}
+                  order={sort}
+                />
+              )}
 
-              {pageType === PAGE_TYPE_SITEWIDE ? (
+              {pageType === PAGE_TYPE_SITEWIDE && releases.length > 0 ? (
                 <div className="releases-timeline col-xs-12 col-md-1">
-                  {releases.length > 0 ? (
-                    <ReleaseTimeline releases={filteredList} />
-                  ) : null}
+                  <ReleaseTimeline releases={filteredList} order={sort} />
                 </div>
               ) : null}
-            </>
+            </div>
           )}
         </div>
       </div>

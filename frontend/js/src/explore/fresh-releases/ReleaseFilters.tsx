@@ -145,7 +145,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     setFilteredList(filteredReleases);
     window.scrollTo(
       0,
-      document.getElementById("release-cards-grid")!.offsetTop
+      document.getElementById("release-card-grids")!.offsetTop
     );
   }, [
     checkedList,
