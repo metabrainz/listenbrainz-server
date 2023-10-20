@@ -59,6 +59,9 @@ class FreshRelease(BaseModel):
     # The array of tags for this release
     release_tags: List[str]
 
+    # The listen count for this release
+    listen_count: int
+
     # The cover art archive id of the release's front cover art if it has any
     caa_id: Optional[int]
 

@@ -4,6 +4,7 @@ from typing import List
 
 import psycopg2
 import psycopg2.extras
+from psycopg2.extras import execute_values
 from flask import current_app
 
 from listenbrainz.db import couchdb
@@ -50,7 +51,7 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                          , rgpt.name AS release_group_primary_type
                          , rgst.name AS release_group_secondary_type
                          , array_agg(distinct t.name) AS release_tags
-                         , COUNT(*) AS total_count
+                         , COUNT(*) OVER () AS total_count
                       FROM release rl
                       JOIN release_group rg
                         ON rl.release_group = rg.id
@@ -94,12 +95,29 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                     FROM releases
                 ORDER BY {sort_order_str};
         """.format(sort_order_str=sort_order_str)
-    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, \
-            conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-        curs.execute(query, (from_date, to_date))
-        result = {str(row["release_mbid"]): dict(row) for row in curs.fetchall()}
 
-        covers = get_caa_ids_for_release_mbids(curs, result.keys())
+    listen_count_query = """
+                SELECT
+                    release_mbid,
+                    total_listen_count
+                FROM
+                    popularity.release
+                WHERE
+                    release_mbid in %s;
+    """
+    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs , \
+            ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+        mb_curs.execute(query, (from_date, to_date))
+        result = {str(row["release_mbid"]): dict(row) for row in mb_curs.fetchall()}
+
+        release_mbids = [row["release_mbid"] for row in result.values()]
+        release_count_result = execute_values(ts_curs, listen_count_query, (tuple(release_mbids),))
+
+        listen_counts = {row["release_mbid"]: row["total_listen_count"] for row in release_count_result} if release_count_result else {}
+
+        covers = get_caa_ids_for_release_mbids(mb_curs, result.keys())
 
         fresh_releases = []
         total_count = 0
@@ -111,13 +129,15 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                 row["caa_release_mbid"] = uuid.UUID(covers[mbid]["caa_release_mbid"])
             else:
                 row["caa_release_mbid"] = None
+
+            row["listen_count"] = listen_counts.get(mbid, 0)
             fresh_releases.append(FreshRelease(**row))
             total_count = row["total_count"]
 
         return fresh_releases, total_count
 
 
-def insert_fresh_releases(database: str, docs: list[dict]):
+def insert_fresh_releases(database: str, docs: List[dict]):
     """ Insert the given fresh releases in the couchdb database. """
     for doc in docs:
         doc["_id"] = str(doc["user_id"])
