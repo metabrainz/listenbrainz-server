@@ -54,11 +54,13 @@ def get_fresh_releases():
 
     days = _parse_int_arg("days", DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS)
     if days < 1 or days > MAX_NUMBER_OF_FRESH_RELEASE_DAYS:
-        raise APIBadRequest(f"days must be between 1 and {MAX_NUMBER_OF_FRESH_RELEASE_DAYS}.")
-    
+        raise APIBadRequest(
+            f"days must be between 1 and {MAX_NUMBER_OF_FRESH_RELEASE_DAYS}.")
+
     sort = request.args.get("sort", "release_date")
     if sort not in ("release_date", "artist_credit_name", "release_name"):
-        raise APIBadRequest("sort must be one of 'release_date', 'artist_credit_name' or 'release_name'.")
+        raise APIBadRequest(
+            "sort must be one of 'release_date', 'artist_credit_name' or 'release_name'.")
 
     past = _parse_bool_arg("past", True)
     future = _parse_bool_arg("future", True)
@@ -66,16 +68,20 @@ def get_fresh_releases():
     release_date = request.args.get("release_date", "")
     if release_date != "":
         try:
-            release_date = datetime.datetime.strptime(release_date, "%Y-%m-%d").date()
+            release_date = datetime.datetime.strptime(
+                release_date, "%Y-%m-%d").date()
         except ValueError as err:
-            raise APIBadRequest("Cannot parse date. Must be in YYYY-MM-DD format.")
+            raise APIBadRequest(
+                "Cannot parse date. Must be in YYYY-MM-DD format.")
     else:
         release_date = datetime.date.today()
 
     try:
-        db_releases, total_count = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days, sort, past, future)
+        db_releases, total_count = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(
+            release_date, days, sort, past, future)
     except Exception as e:
-        current_app.logger.error("Server failed to get latest release: {}".format(e))
+        current_app.logger.error(
+            "Server failed to get latest release: {}".format(e))
         raise APIInternalServerError("Server failed to get latest release")
 
     return jsonify({
@@ -167,15 +173,22 @@ def lb_radio():
 
     mode = request.args.get("mode", None)
     if mode is None or mode not in ("easy", "medium", "hard"):
-        raise APIBadRequest(f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
+        raise APIBadRequest(
+            f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
 
     patch = LBRadioPatch()
     try:
-        playlist = generate_playlist(patch, args={"mode": mode, "prompt": prompt, "echo": False})
+        playlist = generate_playlist(
+            patch,
+            args={
+                "mode": mode,
+                "prompt": prompt,
+                "echo": False})
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
 
-    jspf = playlist.get_jspf() if playlist is not None else {"playlist": { "tracks": [] } }
+    jspf = playlist.get_jspf() if playlist is not None else {
+        "playlist": {"tracks": []}}
     feedback = patch.user_feedback()
 
     return jsonify({"payload": {"jspf": jspf, "feedback": feedback}})

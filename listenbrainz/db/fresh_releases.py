@@ -12,7 +12,12 @@ from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
 from listenbrainz.db.model.fresh_releases import FreshRelease
 
 
-def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_days: int, sort: str, past: bool, future: bool) -> List[FreshRelease]:
+def get_sitewide_fresh_releases(
+        pivot_release_date: date,
+        release_date_window_days: int,
+        sort: str,
+        past: bool,
+        future: bool) -> List[FreshRelease]:
     """ Fetch fresh and recent releases from the MusicBrainz DB with a given window that is days number
         of days into the past and days number of days into the future.
 
@@ -29,11 +34,14 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
     if release_date_window_days > 90 or release_date_window_days < 1:
         release_date_window_days = 90
 
-    from_date = pivot_release_date + timedelta(days=-release_date_window_days) if past else pivot_release_date
-    to_date = pivot_release_date + timedelta(days=release_date_window_days) if future else pivot_release_date
+    from_date = pivot_release_date + \
+        timedelta(days=-release_date_window_days) if past else pivot_release_date
+    to_date = pivot_release_date + \
+        timedelta(days=release_date_window_days) if future else pivot_release_date
 
     sort_order = ["release_date", "artist_credit_name", "release_name"]
-    sort_order = sort_order[sort_order.index(sort):] + sort_order[:sort_order.index(sort)]
+    sort_order = sort_order[sort_order.index(
+        sort):] + sort_order[:sort_order.index(sort)]
     sort_order_str = ", ".join(sort_order)
 
     query = """
@@ -107,15 +115,18 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
     """
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
             psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
-            mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs , \
+            mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
             ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
         mb_curs.execute(query, (from_date, to_date))
-        result = {str(row["release_mbid"]): dict(row) for row in mb_curs.fetchall()}
+        result = {str(row["release_mbid"]): dict(row)
+                  for row in mb_curs.fetchall()}
 
         release_mbids = [row["release_mbid"] for row in result.values()]
-        release_count_result = execute_values(ts_curs, listen_count_query, (tuple(release_mbids),))
+        release_count_result = execute_values(
+            ts_curs, listen_count_query, (tuple(release_mbids),))
 
-        listen_counts = {row["release_mbid"]: row["total_listen_count"] for row in release_count_result} if release_count_result else {}
+        listen_counts = {row["release_mbid"]: row["total_listen_count"]
+                         for row in release_count_result} if release_count_result else {}
 
         covers = get_caa_ids_for_release_mbids(mb_curs, result.keys())
 
@@ -126,7 +137,8 @@ def get_sitewide_fresh_releases(pivot_release_date: date, release_date_window_da
                 row["release_tags"] = []
             row["caa_id"] = covers[mbid]["caa_id"]
             if covers[mbid]["caa_release_mbid"]:
-                row["caa_release_mbid"] = uuid.UUID(covers[mbid]["caa_release_mbid"])
+                row["caa_release_mbid"] = uuid.UUID(
+                    covers[mbid]["caa_release_mbid"])
             else:
                 row["caa_release_mbid"] = None
 
