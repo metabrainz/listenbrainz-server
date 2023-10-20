@@ -1396,7 +1396,13 @@ describe("Fresh Releases", () => {
     });
 
     await expect(
-      apiService.fetchSitewideFreshReleases(2, "2020-12-27")
+      apiService.fetchSitewideFreshReleases(
+        2,
+        undefined,
+        undefined,
+        undefined,
+        "2020-12-27"
+      )
     ).resolves.toEqual(freshReleasesSitewideData);
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/explore/fresh-releases/?days=2&release_date=2020-12-27"
@@ -1418,7 +1424,13 @@ describe("Fresh Releases", () => {
     });
 
     await expect(
-      apiService.fetchSitewideFreshReleases(undefined, "12-31-1988")
+      apiService.fetchSitewideFreshReleases(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        "12-31-1988"
+      )
     ).resolves.toEqual(response);
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/explore/fresh-releases/?release_date=12-31-1988"

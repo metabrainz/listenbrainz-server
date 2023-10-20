@@ -15,6 +15,7 @@ import ReleaseTimeline from "../../src/explore/fresh-releases/ReleaseTimeline";
 import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
 import * as userData from "../__mocks__/freshReleasesUserData.json";
 import * as sitewideFilters from "../__mocks__/freshReleasesSitewideFilters.json";
+import * as userDisplayFilters from "../__mocks__/freshReleasesDisplaySettings.json";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const freshReleasesProps = {
@@ -87,12 +88,24 @@ describe("FreshReleases", () => {
 
   it("renders filters correctly", async () => {
     const setFilteredList = jest.fn();
+    const handleRangeChange = jest.fn();
+    const toggleSettings = jest.fn();
+    const setShowPastReleases = jest.fn();
+    const setShowFutureReleases = jest.fn();
 
     const wrapper = mount(
       <ReleaseFilters
         allFilters={sitewideFilters}
+        displaySettings={userDisplayFilters}
         releases={sitewideData}
         setFilteredList={setFilteredList}
+        range="three_months"
+        handleRangeChange={handleRangeChange}
+        toggleSettings={toggleSettings}
+        showPastReleases
+        setShowPastReleases={setShowPastReleases}
+        showFutureReleases
+        setShowFutureReleases={setShowFutureReleases}
       />
     );
 
