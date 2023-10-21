@@ -208,7 +208,7 @@
       .release-item {
         position: relative;
       }
-      
+
       .release-information {
         display: flex;
         flex-direction: column;
@@ -236,7 +236,7 @@
 
       .cover-art-info {
         width: 100%;
-        background-color: rgba(53, 48, 112, 0.90);
+        background-color: rgba(53, 48, 112, 0.9);
         padding: 0.5rem;
         color: white;
         text-align: center;
@@ -251,8 +251,13 @@
       }
 
       .release-coverart-container:hover .hover-backdrop {
-        background: linear-gradient(18deg, rgba(0, 0, 0, 0.80) -15.26%, rgba(0, 0, 0, 0.16) 119.11%);
+        background: linear-gradient(
+          18deg,
+          rgba(0, 0, 0, 0.8) -15.26%,
+          rgba(0, 0, 0, 0.16) 119.11%
+        );
         border-radius: 8px;
+        opacity: 1;
       }
 
       .hover-backdrop {
@@ -271,14 +276,10 @@
         svg {
           width: 6rem;
           height: 6rem;
-          color: #D9D9D9;
+          color: #d9d9d9;
           opacity: 0.6;
         }
       }
-      
-      .release-coverart-container:hover .hover-backdrop {
-        opacity: 1;
-      }      
 
       .release-date {
         text-transform: uppercase;
@@ -390,7 +391,7 @@
     }
 
     @media (min-width: @screen-lg) and (max-width: 1400px) {
-        grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, 1fr);
     }
 
     @media (min-width: 1400px) {
@@ -448,9 +449,9 @@
 
 .release-card-grid-title::before,
 .release-card-grid-title::after {
-  content: '';
+  content: "";
   flex: 1;
-  border-bottom: 1px solid #D9D9D9;
+  border-bottom: 1px solid #d9d9d9;
 }
 
 .release-card-grid-title:not(:empty)::before {
@@ -470,9 +471,9 @@
 }
 
 .release-filters.open {
-    @media screen and (max-width: @screen-md) {
-        right: 0;
-    }
+  @media screen and (max-width: @screen-md) {
+    right: 0;
+  }
 }
 
 .release-filters {
@@ -497,37 +498,37 @@
 }
 
 .toggle-sidebar-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
-    width: 64px;
-    height: 64px;
-    padding: 10px;
-    border-radius: 50%;
-    border-color: black;
-    cursor: pointer;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  width: 64px;
+  height: 64px;
+  padding: 10px;
+  border-radius: 50%;
+  border-color: black;
+  cursor: pointer;
 
-    @media screen and (min-width: @screen-md) {
-        display: none;
-    }
+  @media screen and (min-width: @screen-md) {
+    display: none;
+  }
 }
 
 #no-release {
-    text-align: center;
+  text-align: center;
 
-    img {
-        width: 350px;
-        height: 350px;
-    }
+  img {
+    width: 350px;
+    height: 350px;
+  }
 }
 
 #sidebar-fresh-release {
-    background: #353070;
-    color: white;
-    
-    p:first-of-type {
-        font-size: 25px;
-        font-weight: 900;
-    }
+  background: #353070;
+  color: white;
+
+  p:first-of-type {
+    font-size: 25px;
+    font-weight: 900;
+  }
 }
