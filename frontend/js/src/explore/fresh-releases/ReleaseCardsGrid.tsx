@@ -52,14 +52,14 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
 
   return (
     <div className="col-xs-12 col-md-11">
-      {Array.from(releaseMapping?.entries()).map(([releaseDate, releases]) => (
-        <>
-          <div className="release-card-grid-title">
+      {Array.from(releaseMapping?.entries()).map(([releaseKey, releases]) => (
+        <React.Fragment key={`${releaseKey}-container`}>
+          <div className="release-card-grid-title" key={`${releaseKey}-title`}>
             {order === "release_date"
-              ? formatReleaseDate(releaseDate)
-              : releaseDate.charAt(0).toUpperCase()}
+              ? formatReleaseDate(releaseKey)
+              : releaseKey.charAt(0).toUpperCase()}
           </div>
-          <div key={releaseDate} id="release-cards-grid">
+          <div key={releaseKey} className="release-cards-grid">
             {releases?.map((release) => (
               <ReleaseCard
                 key={release.release_mbid}
@@ -79,7 +79,7 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
               />
             ))}
           </div>
-        </>
+        </React.Fragment>
       ))}
     </div>
   );

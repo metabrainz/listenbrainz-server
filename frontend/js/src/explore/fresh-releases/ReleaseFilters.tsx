@@ -211,6 +211,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 {allFilters.releaseTypes.map((type, index) => (
                   <Switch
                     id={`filters-item-${index}`}
+                    key={`filters-item-${type}`}
                     value={type}
                     checked={checkedList.includes(type)}
                     onChange={handleFilterChange}
@@ -308,6 +309,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
             {Object.keys(displaySettings).map((setting, index) => (
               <Switch
                 id={`display-item-${index}`}
+                key={`display-item-${setting}`}
                 value={setting}
                 checked={displaySettings[setting]}
                 onChange={(e) => toggleSettings(setting)}
