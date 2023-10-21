@@ -129,8 +129,8 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         );
       const isReleaseTagValid =
         releaseTagsCheckList.length === 0 ||
-        item.release_tags.some((tag) => releaseTagsCheckList.includes(tag));
-      const isReleaseTagExcluded = item.release_tags.some((tag) =>
+        item.release_tags?.some((tag) => releaseTagsCheckList.includes(tag));
+      const isReleaseTagExcluded = item.release_tags?.some((tag) =>
         releaseTagsExcludeCheckList.includes(tag)
       );
 
@@ -208,12 +208,12 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
             {allFilters.releaseTypes.length > 0 && (
               <>
                 <span id="types">Types:</span>
-                {allFilters.releaseTypes.map((type, index) => (
+                {allFilters.releaseTypes?.map((type, index) => (
                   <Switch
                     id={`filters-item-${index}`}
                     key={`filters-item-${type}`}
                     value={type}
-                    checked={checkedList.includes(type)}
+                    checked={checkedList?.includes(type)}
                     onChange={handleFilterChange}
                     switchLabel={type}
                   />
@@ -234,14 +234,14 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                     genre/tag...
                   </option>
                   {allFilters.releaseTags
-                    .filter((tag) => !releaseTagsCheckList.includes(tag))
-                    .map((tag, index) => (
+                    ?.filter((tag) => !releaseTagsCheckList.includes(tag))
+                    ?.map((tag, index) => (
                       <option value={tag}>{tag}</option>
                     ))}
                 </select>
 
                 <div className="release-tags">
-                  {releaseTagsCheckList.map((tag, index) => (
+                  {releaseTagsCheckList?.map((tag, index) => (
                     <div id={`include-tag-item-${index}`} className="tags">
                       <span className="release-tag-name">{tag}</span>
                       <FontAwesomeIcon
@@ -263,14 +263,16 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                     genre/tag...
                   </option>
                   {allFilters.releaseTags
-                    .filter((tag) => !releaseTagsExcludeCheckList.includes(tag))
-                    .map((tag, index) => (
+                    ?.filter(
+                      (tag) => !releaseTagsExcludeCheckList.includes(tag)
+                    )
+                    ?.map((tag, index) => (
                       <option value={tag}>{tag}</option>
                     ))}
                 </select>
 
                 <div className="release-tags">
-                  {releaseTagsExcludeCheckList.map((tag, index) => (
+                  {releaseTagsExcludeCheckList?.map((tag, index) => (
                     <div id={`exclude-tag-item-${index}`} className="tags">
                       <span className="release-tag-name">{tag}</span>
                       <FontAwesomeIcon

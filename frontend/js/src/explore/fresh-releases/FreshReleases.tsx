@@ -136,8 +136,8 @@ export default function FreshReleases() {
           );
 
         const uniqueReleaseTagsSet = new Set<string>();
-        cleanReleases.forEach((item) => {
-          item.release_tags.forEach((tag) => {
+        cleanReleases?.forEach((item) => {
+          item.release_tags?.forEach((tag) => {
             uniqueReleaseTagsSet.add(tag);
           });
         });
