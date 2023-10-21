@@ -14,7 +14,7 @@ from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_dump
 USERS_PER_MESSAGE = 5
 
 
-FRESH_RELEASES_ENDPOINT = "https://api.listenbrainz.org/1/explore/fresh-releases/"
+FRESH_RELEASES_ENDPOINT = "http://localhost:8111/1/explore/fresh-releases/?days=90"
 
 
 def load_all_releases():
@@ -34,7 +34,8 @@ def load_all_releases():
             release_group_secondary_type=release.get("release_group_secondary_type"),
             release_tags=release.get("release_tags"),
             caa_id=release.get("caa_id"),
-            caa_release_mbid=release.get("caa_release_mbid")
+            caa_release_mbid=release.get("caa_release_mbid"),
+            listen_count=release.get("listen_count")
         ))
 
     return listenbrainz_spark.session.createDataFrame(releases, schema=fresh_releases_schema)
@@ -70,6 +71,7 @@ def get_query():
                  , rr.caa_id
                  , rr.caa_release_mbid
                  , rr.release_tags
+                 , rr.listen_count
                  , SUM(partial_confidence) AS confidence
               FROM artist_discovery ad
               JOIN fresh_releases rr
@@ -86,6 +88,7 @@ def get_query():
                  , rr.caa_id
                  , rr.caa_release_mbid
                  , rr.release_tags
+                 , rr.listen_count
         )
         SELECT user_id
              , array_sort(
@@ -102,6 +105,7 @@ def get_query():
                           , caa_id
                           , caa_release_mbid
                           , release_tags
+                          , listen_count
                           , confidence
                         )
                     )
