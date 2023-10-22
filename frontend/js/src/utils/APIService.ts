@@ -1359,11 +1359,11 @@ export default class APIService {
     if (sort) {
       queryParams.push(`sort=${sort}`);
     }
-    if (queryParams.length) {
-      url += `?${queryParams.join("&")}`;
-    }
     if (release_date) {
       queryParams.push(`release_date=${release_date}`);
+    }
+    if (queryParams.length) {
+      url += `?${queryParams.join("&")}`;
     }
 
     const response = await fetch(url);
