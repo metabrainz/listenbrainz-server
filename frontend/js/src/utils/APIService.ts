@@ -1350,13 +1350,10 @@ export default class APIService {
     if (days) {
       queryParams.push(`days=${days}`);
     }
-    if (release_date) {
-      queryParams.push(`release_date=${release_date}`);
-    }
-    if (!past) {
+    if (past === false) {
       queryParams.push(`past=${past}`);
     }
-    if (!future) {
+    if (future === false) {
       queryParams.push(`future=${future}`);
     }
     if (sort) {
@@ -1364,6 +1361,9 @@ export default class APIService {
     }
     if (queryParams.length) {
       url += `?${queryParams.join("&")}`;
+    }
+    if (release_date) {
+      queryParams.push(`release_date=${release_date}`);
     }
 
     const response = await fetch(url);

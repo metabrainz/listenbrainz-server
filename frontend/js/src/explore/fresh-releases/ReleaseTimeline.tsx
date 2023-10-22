@@ -19,7 +19,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const changeHandler = React.useCallback((percent: number | number[]) => {
     setCurrentValue(percent);
     const element: HTMLElement | null = document.getElementById(
-      "release-cards-grid"
+      "release-card-grids"
     )!;
     const scrollHeight = ((percent as number) / 100) * element.scrollHeight;
     const scrollTo = scrollHeight + element.offsetTop;

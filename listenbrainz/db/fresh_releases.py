@@ -17,7 +17,7 @@ def get_sitewide_fresh_releases(
         release_date_window_days: int,
         sort: str,
         past: bool,
-        future: bool) -> List[FreshRelease]:
+        future: bool) -> (List[FreshRelease], int):
     """ Fetch fresh and recent releases from the MusicBrainz DB with a given window that is days number
         of days into the past and days number of days into the future.
 
@@ -29,6 +29,7 @@ def get_sitewide_fresh_releases(
 
         Returns:
             A list of FreshReleases objects
+            The total number of releases in the given window
     """
 
     if release_date_window_days > 90 or release_date_window_days < 1:
@@ -113,6 +114,9 @@ def get_sitewide_fresh_releases(
                 WHERE
                     release_mbid in %s;
     """
+
+    fresh_releases = []
+    total_count = 0
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
             psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
             mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
@@ -130,8 +134,6 @@ def get_sitewide_fresh_releases(
 
         covers = get_caa_ids_for_release_mbids(mb_curs, result.keys())
 
-        fresh_releases = []
-        total_count = 0
         for mbid, row in result.items():
             if row["release_tags"] == [None]:
                 row["release_tags"] = []
@@ -146,7 +148,7 @@ def get_sitewide_fresh_releases(
             fresh_releases.append(FreshRelease(**row))
             total_count = row["total_count"]
 
-        return fresh_releases, total_count
+    return fresh_releases, total_count
 
 
 def insert_fresh_releases(database: str, docs: List[dict]):
