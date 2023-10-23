@@ -105,8 +105,14 @@ function PlaylistMenu({
   };
 
   const exportAsJSPF = async () => {
-    const result = await APIService.getPlaylist(playlistID, auth_token);
-    saveAs(await result.blob(), `${playlistTitle}.jspf`);
+    let playlistJSPFBlob: Blob;
+    if (playlistID) {
+      const result = await APIService.getPlaylist(playlistID, auth_token);
+      playlistJSPFBlob = await result.blob();
+    } else {
+      playlistJSPFBlob = new Blob([JSON.stringify(playlist)]);
+    }
+    saveAs(playlistJSPFBlob, `${playlistTitle}.jspf`);
   };
 
   const exportAsXSPF = async () => {
@@ -152,7 +158,7 @@ function PlaylistMenu({
       { toastId: "export-playlist" }
     );
   };
-  const handlePlaylistExport = async (handler: () => void) => {
+  const handlePlaylistExport = async (handler: () => Promise<void>) => {
     if (!playlist || (disallowEmptyPlaylistExport && !playlist.track.length)) {
       toast.warn(
         <ToastMsg
@@ -164,7 +170,7 @@ function PlaylistMenu({
       return;
     }
     try {
-      handler();
+      await handler();
     } catch (error) {
       handleError(error.error ?? error);
     }
