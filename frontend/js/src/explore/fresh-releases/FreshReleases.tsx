@@ -61,6 +61,8 @@ export default function FreshReleases() {
   );
   const [sort, setSort] = React.useState<string>("release_date");
 
+  const releaseCardGridRef = React.useRef(null);
+
   const handleRangeChange = (childData: string) => {
     setRange(childData);
   };
@@ -228,7 +230,7 @@ export default function FreshReleases() {
               </div>
             </div>
           ) : (
-            <div id="release-card-grids">
+            <div id="release-card-grids" ref={releaseCardGridRef}>
               {filteredList.length === 0 ? (
                 <div id="no-release">
                   <img
@@ -270,6 +272,7 @@ export default function FreshReleases() {
           setShowPastReleases={setShowPastReleases}
           showFutureReleases={showFutureReleases}
           setShowFutureReleases={setShowFutureReleases}
+          releaseCardGridRef={releaseCardGridRef}
         />
       </div>
       <button

@@ -92,6 +92,7 @@ describe("FreshReleases", () => {
     const toggleSettings = jest.fn();
     const setShowPastReleases = jest.fn();
     const setShowFutureReleases = jest.fn();
+    const releaseCardGridRef: React.RefObject<HTMLDivElement> = React.createRef();
 
     const wrapper = mount(
       <ReleaseFilters
@@ -106,6 +107,7 @@ describe("FreshReleases", () => {
         setShowPastReleases={setShowPastReleases}
         showFutureReleases
         setShowFutureReleases={setShowFutureReleases}
+        releaseCardGridRef={releaseCardGridRef}
       />
     );
 

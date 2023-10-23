@@ -21,6 +21,7 @@ type ReleaseFiltersProps = {
   setShowPastReleases: React.Dispatch<React.SetStateAction<boolean>>;
   showFutureReleases: boolean;
   setShowFutureReleases: React.Dispatch<React.SetStateAction<boolean>>;
+  releaseCardGridRef: React.RefObject<HTMLDivElement>;
 };
 
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
@@ -36,6 +37,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     setShowPastReleases,
     showFutureReleases,
     setShowFutureReleases,
+    releaseCardGridRef,
   } = props;
 
   const [checkedList, setCheckedList] = React.useState<
@@ -143,10 +145,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     });
 
     setFilteredList(filteredReleases);
-    window.scrollTo(
-      0,
-      document.getElementById("release-card-grids")!.offsetTop
-    );
+    if (releaseCardGridRef.current) {
+      window.scrollTo(0, releaseCardGridRef.current.offsetTop);
+    }
   }, [
     checkedList,
     releaseTagsCheckList,
