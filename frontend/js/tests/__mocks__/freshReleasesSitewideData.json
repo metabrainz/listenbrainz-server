@@ -1,1400 +1,1435 @@
-[
-    {
-        "artist_credit_name": "MISAMO",
-        "artist_mbids": [
-            "e148e786-f078-49e2-a9fb-fd044bd68905"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-07-26",
-        "release_group_mbid": "bfbed4d8-09a1-4222-a4a9-e10c07e1be62",
-        "release_group_primary_type": "EP",
-        "release_mbid": "2633e526-82cd-40e4-8b48-fc1efadcab57",
-        "release_name": "MISAMO",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Anne‐Marie",
-        "artist_mbids": [
-            "e3d5b5ec-101a-4529-9f2d-01dca64cf44e"
-        ],
-        "caa_id": 35508550067,
-        "caa_release_mbid": "10f8d2ec-a204-4c05-8b62-43416456e5fd",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "f17592e6-d9a9-4303-ab6f-4dce1b256b5a",
-        "release_group_primary_type": "Album",
-        "release_mbid": "10f8d2ec-a204-4c05-8b62-43416456e5fd",
-        "release_name": "UNHEALTHY",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Bethany Cosentino",
-        "artist_mbids": [
-            "20d43d07-00b8-404f-a440-07adf7c257f2"
-        ],
-        "caa_id": 35561893572,
-        "caa_release_mbid": "aa5b8fc9-2418-4f93-90c4-6522514d67b1",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "f286971b-3ef9-4c89-beb2-937a8a33cc5d",
-        "release_group_primary_type": "Album",
-        "release_mbid": "aa5b8fc9-2418-4f93-90c4-6522514d67b1",
-        "release_name": "Natural Disaster",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Bush Tetras",
-        "artist_mbids": [
-            "0fa623ce-9d1a-4b14-b6a3-19c79317a22f"
-        ],
-        "caa_id": 35571328282,
-        "caa_release_mbid": "dbdb93c0-d314-47ab-afe2-045131f70a07",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "4cd2fea0-0bea-4900-a6f9-875bf695b53c",
-        "release_group_primary_type": "Album",
-        "release_mbid": "dbdb93c0-d314-47ab-afe2-045131f70a07",
-        "release_name": "They Live in My Head",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Darlingside",
-        "artist_mbids": [
-            "b7a65497-9fba-46b5-8c4e-0311cf6943b0"
-        ],
-        "caa_id": 35422809710,
-        "caa_release_mbid": "d07ce932-85f9-438e-906d-3582e805bc36",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "20026e81-4b21-40af-a56f-ab63fb2e00f3",
-        "release_group_primary_type": "Album",
-        "release_mbid": "d07ce932-85f9-438e-906d-3582e805bc36",
-        "release_name": "Everything Is Alive",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "From Ashes to New",
-        "artist_mbids": [
-            "66baa549-ec7d-410f-88bf-d4f9bbb21890"
-        ],
-        "caa_id": 35237043273,
-        "caa_release_mbid": "f64ac5df-d769-49f8-a3e3-c7be323e7017",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "76936aa5-4ed2-40cc-a7a4-ad91db52273f",
-        "release_group_primary_type": "Album",
-        "release_mbid": "f64ac5df-d769-49f8-a3e3-c7be323e7017",
-        "release_name": "Blackout",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Georgia",
-        "artist_mbids": [
-            "c9ae836d-3839-42f2-9f8b-edd0d77553a5"
-        ],
-        "caa_id": 35259739558,
-        "caa_release_mbid": "1ef5a1fa-f5d4-4d13-a1a2-ef81dbbc65b7",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "f82de27b-ebfb-4938-bd64-56f9e9826146",
-        "release_group_primary_type": "Album",
-        "release_mbid": "1ef5a1fa-f5d4-4d13-a1a2-ef81dbbc65b7",
-        "release_name": "Euphoric",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "High Pulp",
-        "artist_mbids": [
-            "4ee483e9-2e5a-48f4-886f-8decbd3fc4f9"
-        ],
-        "caa_id": 35583105890,
-        "caa_release_mbid": "3fb359a5-0884-487e-9a91-1ddef1506ed5",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "83539266-c3d6-47b2-8031-5f21b32c4083",
-        "release_group_primary_type": "Album",
-        "release_mbid": "3fb359a5-0884-487e-9a91-1ddef1506ed5",
-        "release_name": "Days in the Desert",
-        "release_tags": [
-            "jazz"
-        ]
-    },
-    {
-        "artist_credit_name": "Jessy Lanza",
-        "artist_mbids": [
-            "0dfb3c3d-e140-4575-baf3-7ff20ae56c9c"
-        ],
-        "caa_id": 35612086993,
-        "caa_release_mbid": "eaed40c6-7ff2-4f36-8da4-6fc4522f8223",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "491501f3-d375-44ba-a303-4c95db45fe9e",
-        "release_group_primary_type": "Album",
-        "release_mbid": "eaed40c6-7ff2-4f36-8da4-6fc4522f8223",
-        "release_name": "Love Hallucination",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Madeline Kenney",
-        "artist_mbids": [
-            "0b863187-e04f-4edb-b04d-260fedd4ceab"
-        ],
-        "caa_id": 35631208058,
-        "caa_release_mbid": "346c0813-501a-449a-a6c7-ffeeca24245b",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "28e857b4-248c-40ad-935b-d37a66f2b803",
-        "release_group_primary_type": "Album",
-        "release_mbid": "346c0813-501a-449a-a6c7-ffeeca24245b",
-        "release_name": "A New Reality Mind",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "PWNT",
-        "artist_mbids": [
-            "26237d60-4ee1-4bb3-8074-63158b6623c3"
-        ],
-        "caa_id": 35612026291,
-        "caa_release_mbid": "d032e747-48ec-4356-8965-a1166f22a301",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "dab7a434-3843-4345-9a2c-05f2c616cc80",
-        "release_group_primary_type": "Album",
-        "release_mbid": "d032e747-48ec-4356-8965-a1166f22a301",
-        "release_name": "Play What’s Not There",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Rainbow Machine Palace",
-        "artist_mbids": [
-            "2d912f98-16f2-4ee2-85b1-0d7a76016878"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "384a95cf-0723-42d6-80a8-4f7f9ddc126b",
-        "release_group_primary_type": "Single",
-        "release_mbid": "cecd8b97-8422-4dac-923a-99fe87035a2c",
-        "release_name": "Gapura Dimensi",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Sevendust",
-        "artist_mbids": [
-            "52b9e109-44a0-45eb-a197-226c4abab232"
-        ],
-        "caa_id": 35393524455,
-        "caa_release_mbid": "102e558b-1c33-4608-b0ab-9631b0b83293",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "331be5c4-5a4a-4568-b29e-f5dec90e798a",
-        "release_group_primary_type": "Album",
-        "release_mbid": "102e558b-1c33-4608-b0ab-9631b0b83293",
-        "release_name": "Truth Killer",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "The Clientele",
-        "artist_mbids": [
-            "6b66dd3a-d88b-4732-bc13-359d8964b7f2"
-        ],
-        "caa_id": 35484459996,
-        "caa_release_mbid": "171a303d-aa98-4bb8-8474-8c83120633fc",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "3feb5eb2-586c-4f86-a6e8-115e2da206b0",
-        "release_group_primary_type": "Album",
-        "release_mbid": "171a303d-aa98-4bb8-8474-8c83120633fc",
-        "release_name": "I Am Not There Anymore",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "The Suns Journey Through The Night",
-        "artist_mbids": [
-            "558d0fda-01d1-4ad0-a2ee-047a841d2240"
-        ],
-        "caa_id": 35574833737,
-        "caa_release_mbid": "4a6a2a63-8a4a-4541-9765-1de6f453e7e2",
-        "listen_count": 0,
-        "release_date": "2023-07-28",
-        "release_group_mbid": "864c1c7f-b4ad-48ab-95b9-5c18a5ceb7cc",
-        "release_group_primary_type": "Album",
-        "release_mbid": "4a6a2a63-8a4a-4541-9765-1de6f453e7e2",
-        "release_name": "Worldless",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Black Stone Cherry",
-        "artist_mbids": [
-            "1801bd47-46ae-49ff-bfcd-6e01b562d880"
-        ],
-        "caa_id": 35619832587,
-        "caa_release_mbid": "9db09135-906e-418e-8a49-2fd741db55d3",
-        "listen_count": 0,
-        "release_date": "2023-07-29",
-        "release_group_mbid": "bafb99e3-8cfa-4c13-af74-3d2857d31946",
-        "release_group_primary_type": "Album",
-        "release_mbid": "9db09135-906e-418e-8a49-2fd741db55d3",
-        "release_name": "Screamin' At The Sky",
-        "release_tags": [
-            "blues rock",
-            "classic rock",
-            "hard rock",
-            "rock",
-            "southern rock"
-        ]
-    },
-    {
-        "artist_credit_name": "光田康典 / ACE(工藤ともり、CHiCO) / 平松建治 / 清田愛未 / マリアム・アボンナサー / 救仁郷裕",
-        "artist_mbids": [
-            "118bf512-9ce9-42a5-95e0-10359bb3e3ea",
-            "16563fb9-c2b5-4ab7-b5b1-7b6592f862a1",
-            "252ea5d7-bc86-4278-9310-fe75910c6eb9",
-            "254c7d5b-72c8-4fdd-85e4-bda08704265e",
-            "4f87137d-4abb-42f0-af17-4e4a7e2f3e63",
-            "59e83bb6-e8b7-44e0-bea2-2275400850e5",
-            "766722db-0d89-43f7-a0a5-c1982dd8edfb",
-            "a2b0affd-963f-46a3-9a8d-5b9d1332ccb3"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-07-29",
-        "release_group_mbid": "cf93ee3a-b2f2-4261-9a13-11a1e5efbef7",
-        "release_group_primary_type": "Album",
-        "release_group_secondary_type": "Soundtrack",
-        "release_mbid": "1471a258-3b9a-4367-a235-ac52a318616e",
-        "release_name": "ゼノブレイド3 オリジナル・サウンドトラック",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "光田康典 / ACE(工藤ともり、CHiCO) / 平松建治 / 清田愛未 / 下村陽子 / マリアム・アボンナサー / 救仁郷裕",
-        "artist_mbids": [
-            "118bf512-9ce9-42a5-95e0-10359bb3e3ea",
-            "16563fb9-c2b5-4ab7-b5b1-7b6592f862a1",
-            "252ea5d7-bc86-4278-9310-fe75910c6eb9",
-            "254c7d5b-72c8-4fdd-85e4-bda08704265e",
-            "4f87137d-4abb-42f0-af17-4e4a7e2f3e63",
-            "59e83bb6-e8b7-44e0-bea2-2275400850e5",
-            "766722db-0d89-43f7-a0a5-c1982dd8edfb",
-            "a2b0affd-963f-46a3-9a8d-5b9d1332ccb3",
-            "b3933fd6-fba9-44b1-992a-1e8128324ca1"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-07-29",
-        "release_group_mbid": "360e5c9f-0938-47c6-ba33-dc9579d78a69",
-        "release_group_primary_type": "Album",
-        "release_group_secondary_type": "Compilation",
-        "release_mbid": "8f4bc93a-9cd9-406e-931e-87a826c2e47f",
-        "release_name": "ゼノブレイド オリジナル・サウンドトラック トリニティBOX",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Egg & Fosh",
-        "artist_mbids": [
-            "5c3e2529-9684-4257-b1f8-6ebe9496c0e9"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-07-30",
-        "release_group_mbid": "281d66f3-45bf-4136-a1dc-2b2438f73c58",
-        "release_group_primary_type": "EP",
-        "release_mbid": "274f4eee-7ead-40d9-a4d7-cb94fee9f366",
-        "release_name": "Background Noize",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "下村陽子 / ACE(工藤ともり、CHiCO) / 平松建治 / 清田愛未 / 光田康典",
-        "artist_mbids": [
-            "118bf512-9ce9-42a5-95e0-10359bb3e3ea",
-            "16563fb9-c2b5-4ab7-b5b1-7b6592f862a1",
-            "252ea5d7-bc86-4278-9310-fe75910c6eb9",
-            "4f87137d-4abb-42f0-af17-4e4a7e2f3e63",
-            "59e83bb6-e8b7-44e0-bea2-2275400850e5",
-            "a2b0affd-963f-46a3-9a8d-5b9d1332ccb3",
-            "b3933fd6-fba9-44b1-992a-1e8128324ca1"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-08-02",
-        "release_group_mbid": "c5bfc3ba-01da-4e53-bd6b-db7aa896a9a0",
-        "release_group_primary_type": "Album",
-        "release_group_secondary_type": "Soundtrack",
-        "release_mbid": "110eecd9-6134-48ee-a998-bbe43e0f7e37",
-        "release_name": "ゼノブレイド ディフィニティブ・エディション オリジナル・サウンドトラック",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Tuck Shop Ladies",
-        "artist_mbids": [
-            "f76a5109-834f-4d39-b24a-1c154ccb2211"
-        ],
-        "caa_id": 35174321956,
-        "caa_release_mbid": "d6cf242b-3ef1-4c19-a525-d482434d2965",
-        "listen_count": 0,
-        "release_date": "2023-08-03",
-        "release_group_mbid": "5b6027ed-98b4-48d0-b150-42ddd490cae2",
-        "release_group_primary_type": "Album",
-        "release_mbid": "d6cf242b-3ef1-4c19-a525-d482434d2965",
-        "release_name": "Tuck Shop Ladies (Again)",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Girl Ray",
-        "artist_mbids": [
-            "ebcf8901-bd0a-486c-bfc9-341b7394c3fa"
-        ],
-        "caa_id": 35370347022,
-        "caa_release_mbid": "12f339a1-0444-4547-8d12-9a8bc39a125a",
-        "listen_count": 0,
-        "release_date": "2023-08-04",
-        "release_group_mbid": "cb87fee7-3399-44bd-8b3a-02f11f6dfd13",
-        "release_group_primary_type": "Album",
-        "release_mbid": "12f339a1-0444-4547-8d12-9a8bc39a125a",
-        "release_name": "Prestige",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Mammoth WVH",
-        "artist_mbids": [
-            "49a6efb9-9b52-44ce-8167-7cb1c21a8c45"
-        ],
-        "caa_id": 35237189952,
-        "caa_release_mbid": "fbad288a-c0d1-432d-8c61-7a5c9abcba7a",
-        "listen_count": 0,
-        "release_date": "2023-08-04",
-        "release_group_mbid": "8da2972b-a5da-4a6f-b215-dab79f87202c",
-        "release_group_primary_type": "Album",
-        "release_mbid": "fbad288a-c0d1-432d-8c61-7a5c9abcba7a",
-        "release_name": "Mammoth II",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Mikaela Davis",
-        "artist_mbids": [
-            "b402c9fb-ed1f-4110-b49c-87187e5e383a"
-        ],
-        "caa_id": 35380444817,
-        "caa_release_mbid": "bbf52149-abfb-4886-9944-1a3a4960e649",
-        "listen_count": 0,
-        "release_date": "2023-08-04",
-        "release_group_mbid": "9f1586ff-2a03-450c-ba64-90688dc08aea",
-        "release_group_primary_type": "Album",
-        "release_mbid": "bbf52149-abfb-4886-9944-1a3a4960e649",
-        "release_name": "And Southern Star",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Miles Kane",
-        "artist_mbids": [
-            "26afaedd-e99c-45b2-b7f9-6c4c2b33d90c"
-        ],
-        "caa_id": 35500212397,
-        "caa_release_mbid": "571fd3fb-0919-469f-a177-de1fd9d74b0b",
-        "listen_count": 0,
-        "release_date": "2023-08-04",
-        "release_group_mbid": "c74b3464-42da-4b94-a122-9b65d60c97f4",
-        "release_group_primary_type": "Album",
-        "release_mbid": "571fd3fb-0919-469f-a177-de1fd9d74b0b",
-        "release_name": "One Man Band",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Skindred",
-        "artist_mbids": [
-            "36e371e9-e76b-4b66-b813-e1d1af6d7128"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-08-04",
-        "release_group_mbid": "0a89c658-e8e4-4302-857b-c460e458a566",
-        "release_group_primary_type": "Album",
-        "release_mbid": "0ec68930-c5b5-4dea-8a63-3314dfbfac10",
-        "release_name": "Smile",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Egg & Fosh",
-        "artist_mbids": [
-            "5c3e2529-9684-4257-b1f8-6ebe9496c0e9"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-08-05",
-        "release_group_mbid": "cbd2e844-866b-42b7-a7ce-a4dbb324797b",
-        "release_group_primary_type": "Album",
-        "release_mbid": "8b205b69-27cf-4023-a8dd-d42d5e7250c2",
-        "release_name": "A Wonderful Day to Die",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Jungle",
-        "artist_mbids": [
-            "6bbb3983-ce8a-4971-96e0-7cae73268fc4"
-        ],
-        "caa_id": 35241999771,
-        "caa_release_mbid": "14fbd2c0-0468-4cd7-9630-6aa655e11d5b",
-        "listen_count": 0,
-        "release_date": "2023-08-11",
-        "release_group_mbid": "07bd527b-afe9-405b-bc92-0766cb280d05",
-        "release_group_primary_type": "Album",
-        "release_mbid": "14fbd2c0-0468-4cd7-9630-6aa655e11d5b",
-        "release_name": "Volcano",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "The Hives",
-        "artist_mbids": [
-            "487bfd74-71bf-46dd-b89c-80b7a0f06f2f"
-        ],
-        "caa_id": 35552623748,
-        "caa_release_mbid": "d59f1873-9aba-40a6-9ab5-809bfedaf897",
-        "listen_count": 0,
-        "release_date": "2023-08-11",
-        "release_group_mbid": "887367f0-fc74-4cb2-a6c6-53e13ff9672a",
-        "release_group_primary_type": "Album",
-        "release_mbid": "d59f1873-9aba-40a6-9ab5-809bfedaf897",
-        "release_name": "The Death of Randy Fitzsimmons",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "The Sherlocks",
-        "artist_mbids": [
-            "840179a0-7dc7-49e2-ae26-4737c2b33ef7"
-        ],
-        "caa_id": 34791121956,
-        "caa_release_mbid": "27d22e33-2865-43f4-976d-11c1dbf71ee3",
-        "listen_count": 0,
-        "release_date": "2023-08-11",
-        "release_group_mbid": "56eccce8-bead-4651-a13e-e10da89ca86b",
-        "release_group_primary_type": "Album",
-        "release_mbid": "27d22e33-2865-43f4-976d-11c1dbf71ee3",
-        "release_name": "People Like Me and You",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Various Artists",
-        "artist_mbids": [
-            "89ad4ac3-39f7-470e-963a-56509c546377"
-        ],
-        "caa_id": 35370980095,
-        "caa_release_mbid": "5d98a33b-da8f-4764-b2bf-d0c97685f14c",
-        "listen_count": 0,
-        "release_date": "2023-08-11",
-        "release_group_mbid": "cf5eef13-aecf-43b5-8934-da4dee56fa10",
-        "release_group_primary_type": "Album",
-        "release_group_secondary_type": "Compilation",
-        "release_mbid": "5d98a33b-da8f-4764-b2bf-d0c97685f14c",
-        "release_name": "Tell Everybody!: 21st Century Juke Joint Blues",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Reformat",
-        "artist_mbids": [
-            "c2a9810a-d46c-446e-b7d9-011d7ca90d1b"
-        ],
-        "caa_id": 35609213613,
-        "caa_release_mbid": "8fde4b53-2005-4e5c-86b7-3012551e330c",
-        "listen_count": 0,
-        "release_date": "2023-08-18",
-        "release_group_mbid": "9b127b9b-3865-4a25-b10b-d7d2907c3d17",
-        "release_group_primary_type": "Album",
-        "release_mbid": "8fde4b53-2005-4e5c-86b7-3012551e330c",
-        "release_name": "Precursed",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Kendrick Lamar",
-        "artist_mbids": [
-            "381086ea-f511-4aba-bdf9-71c753dc5077"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-08-23",
-        "release_group_mbid": "f9674725-2bfd-497b-aa6f-ac6963005709",
-        "release_group_primary_type": "Album",
-        "release_mbid": "3542c89f-5d63-442b-9fcd-6acf88221663",
-        "release_name": "RESILIENT.",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "mewithoutYou",
-        "artist_mbids": [
-            "759b5ff1-91fe-4ec9-b9b7-75b7b2ceb283"
-        ],
-        "caa_id": 35550006596,
-        "caa_release_mbid": "f1072559-3706-4760-909a-02bda30a4bc2",
-        "listen_count": 0,
-        "release_date": "2023-08-23",
-        "release_group_mbid": "cd70aaff-6dda-439b-8f9a-d21b8421a24a",
-        "release_group_primary_type": "Other",
-        "release_group_secondary_type": "Live",
-        "release_mbid": "f1072559-3706-4760-909a-02bda30a4bc2",
-        "release_name": "The End of The End: The Final “Farewell” - Night 1",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Bebel Gilberto",
-        "artist_mbids": [
-            "8777a849-fb4e-4430-9918-170f619c5286"
-        ],
-        "caa_id": 35561850520,
-        "caa_release_mbid": "cd7ee200-67a9-42be-88cc-362a91e4bdc6",
-        "listen_count": 0,
-        "release_date": "2023-08-25",
-        "release_group_mbid": "2e37e7af-c645-4031-a484-29041d80158e",
-        "release_group_primary_type": "Album",
-        "release_mbid": "cd7ee200-67a9-42be-88cc-362a91e4bdc6",
-        "release_name": "João",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Hot Milk",
-        "artist_mbids": [
-            "0b719097-a77d-46aa-b93a-9b28491333c3"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-08-25",
-        "release_group_mbid": "3e9ce222-80b5-426f-afc5-1f7d62f9314d",
-        "release_group_primary_type": "Album",
-        "release_mbid": "3af87884-5fce-41af-9cd0-18b2c2b3d73b",
-        "release_name": "A Call To The Void",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Jack Hammer",
-        "artist_mbids": [
-            "93f0201e-0a2c-4f4a-8a51-0f50ba75521f"
-        ],
-        "caa_id": 35231007281,
-        "caa_release_mbid": "f5032865-0bd0-4812-b1d2-b124813daef2",
-        "listen_count": 0,
-        "release_date": "2023-08-25",
-        "release_group_mbid": "da71d9f3-c268-40bd-b10f-a536f8b4f656",
-        "release_group_primary_type": "Album",
-        "release_mbid": "f5032865-0bd0-4812-b1d2-b124813daef2",
-        "release_name": "Second Chapter",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Orphalis",
-        "artist_mbids": [
-            "b00daeaa-acc0-4496-b472-caf1d5b2c3cd"
-        ],
-        "caa_id": 35576363368,
-        "caa_release_mbid": "9a1b4f98-bf4b-4c57-93d9-8902f3765a32",
-        "listen_count": 0,
-        "release_date": "2023-08-25",
-        "release_group_mbid": "90c8eb52-689c-4b5a-9db7-3a4bd24664d7",
-        "release_group_primary_type": "Album",
-        "release_mbid": "9a1b4f98-bf4b-4c57-93d9-8902f3765a32",
-        "release_name": "As the Ashes Settle",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Turnpike Troubadours",
-        "artist_mbids": [
-            "607edb17-d439-48db-8482-da92167e4a59"
-        ],
-        "caa_id": 35577294143,
-        "caa_release_mbid": "48e1f9b2-449a-4583-9e1d-1b685654674d",
-        "listen_count": 0,
-        "release_date": "2023-08-25",
-        "release_group_mbid": "b86b4cc4-de42-4aaf-a227-5c79135c3ed8",
-        "release_group_primary_type": "Album",
-        "release_mbid": "48e1f9b2-449a-4583-9e1d-1b685654674d",
-        "release_name": "A Cat in the Rain",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "MCqasim",
-        "artist_mbids": [
-            "f2c83a9f-b5f5-44a9-94db-65c9ed1cf2f8"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-08-30",
-        "release_group_mbid": "c91e2005-e529-4c49-81d5-10bb693abb7d",
-        "release_group_primary_type": "EP",
-        "release_mbid": "c80f71c6-bf4e-44df-b15e-94f4fb0f2829",
-        "release_name": "Love & Pain",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Flynn Teal",
-        "artist_mbids": [
-            "0ed14ce9-34fa-4770-965e-93c63ed576ca"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-09-01",
-        "release_group_mbid": "85300fd2-e97e-4f91-aa36-ba39ae64bba1",
-        "release_group_primary_type": "EP",
-        "release_mbid": "1388de55-0773-48b6-82aa-b4fa22468617",
-        "release_name": "Tales from Orchidland",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Pretenders",
-        "artist_mbids": [
-            "e9c832b0-384b-4ee6-aec0-111372784aac"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-09-01",
-        "release_group_mbid": "76f12154-9645-4755-b3d5-2bf7d7414946",
-        "release_group_primary_type": "Album",
-        "release_mbid": "33b6b5b3-88d8-4355-96e2-1027ed3cb24b",
-        "release_name": "Relentless",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Kvelertak",
-        "artist_mbids": [
-            "61fdc79c-df1a-4999-8d2f-668f18c11283"
-        ],
-        "caa_id": 35393800943,
-        "caa_release_mbid": "d3781148-aeee-4b19-8e3e-c31e4c626e13",
-        "listen_count": 0,
-        "release_date": "2023-09-08",
-        "release_group_mbid": "cb366db3-a88c-4d29-a30f-aa24e61c2958",
-        "release_group_primary_type": "Album",
-        "release_mbid": "d3781148-aeee-4b19-8e3e-c31e4c626e13",
-        "release_name": "Endling",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Low Cut Connie",
-        "artist_mbids": [
-            "27d9dfca-2b81-47c6-a06d-56c26229fcd7"
-        ],
-        "caa_id": 35545379120,
-        "caa_release_mbid": "b3a42c55-120c-4830-9dcd-416343da91d6",
-        "listen_count": 0,
-        "release_date": "2023-09-08",
-        "release_group_mbid": "efd64371-2614-423b-ae26-4d0f9446fb0f",
-        "release_group_primary_type": "Album",
-        "release_mbid": "b3a42c55-120c-4830-9dcd-416343da91d6",
-        "release_name": "Art Dealers",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Низам DRedd",
-        "artist_mbids": [
-            "625e26a8-39a1-4c30-a458-efd410ed150b"
-        ],
-        "caa_id": 35345292178,
-        "caa_release_mbid": "b3961c2b-8b49-493c-ba92-f086d1edce4b",
-        "listen_count": 0,
-        "release_date": "2023-09-08",
-        "release_group_mbid": "5aacc797-c216-4726-9eff-a2d9247267a4",
-        "release_group_primary_type": "Single",
-        "release_mbid": "b3961c2b-8b49-493c-ba92-f086d1edce4b",
-        "release_name": "Две тысячи масок",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Hunter Hoak",
-        "artist_mbids": [
-            "29a9b902-50c6-449b-a525-325ff3f2c802"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-09-10",
-        "release_group_mbid": "08687be4-60bd-4c9f-af1a-0a288fa71bc3",
-        "release_group_primary_type": "Album",
-        "release_mbid": "43f1f30f-a549-4666-900d-31f9631ff53b",
-        "release_name": "Reality",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Claudia Catarig",
-        "artist_mbids": [
-            "f833cd6b-da2b-4485-bf8b-43e696eccf7f"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-09-15",
-        "release_group_mbid": "970d6772-6c90-4aee-bb09-549ff3a77843",
-        "release_group_primary_type": "Album",
-        "release_group_secondary_type": "Remix",
-        "release_mbid": "34de2551-0761-45c4-b03b-046971722df0",
-        "release_name": "ALEEA CIOCAN DRIVING HIT'S 3 ~dulci~",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Danko Jones",
-        "artist_mbids": [
-            "ab4721e4-bc37-4bd2-be8c-8f1550152ad6"
-        ],
-        "caa_id": 35432572439,
-        "caa_release_mbid": "ae20cf98-5cdf-4f3d-8450-284258ebc248",
-        "listen_count": 0,
-        "release_date": "2023-09-15",
-        "release_group_mbid": "1fa6d18b-a1af-4da7-927c-4df07fb62f6f",
-        "release_group_primary_type": "Album",
-        "release_mbid": "ae20cf98-5cdf-4f3d-8450-284258ebc248",
-        "release_name": "Electric Sounds",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Margo Cilker",
-        "artist_mbids": [
-            "91e07743-761b-40f4-b4cb-f3dd72b4c26c"
-        ],
-        "caa_id": 35639692040,
-        "caa_release_mbid": "9f98fb05-e1f5-4681-8b62-a4ae2619c5f7",
-        "listen_count": 0,
-        "release_date": "2023-09-15",
-        "release_group_mbid": "ab5cf0ed-792f-4eac-98df-48d967909fd1",
-        "release_group_primary_type": "Album",
-        "release_mbid": "9f98fb05-e1f5-4681-8b62-a4ae2619c5f7",
-        "release_name": "Valley of Heart’s Delight",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Nation of Language",
-        "artist_mbids": [
-            "88927646-0c28-4b1b-a69e-cb33c400d650"
-        ],
-        "caa_id": 35389991511,
-        "caa_release_mbid": "716ebead-475d-4a6c-9393-e58a5a1ac1da",
-        "listen_count": 0,
-        "release_date": "2023-09-15",
-        "release_group_mbid": "af9301be-e8e6-4068-a332-2b92e1bfc95e",
-        "release_group_primary_type": "Album",
-        "release_mbid": "716ebead-475d-4a6c-9393-e58a5a1ac1da",
-        "release_name": "Strange Disciple",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Shade Empire",
-        "artist_mbids": [
-            "66e6a03d-3306-4508-9eaf-40be9527b4f7"
-        ],
-        "caa_id": 35475115294,
-        "caa_release_mbid": "f181c48f-9923-4584-ac23-76fab11e06a4",
-        "listen_count": 0,
-        "release_date": "2023-09-15",
-        "release_group_mbid": "1c5ed0b6-ac54-49bf-b766-8ed7050c132e",
-        "release_group_primary_type": "Album",
-        "release_mbid": "f181c48f-9923-4584-ac23-76fab11e06a4",
-        "release_name": "Sunholy",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Thirty Seconds to Mars",
-        "artist_mbids": [
-            "d8354b38-e942-4c89-ba93-29323432abc3"
-        ],
-        "caa_id": 35604237736,
-        "caa_release_mbid": "fedd9299-2128-45a3-a995-07884942fa39",
-        "listen_count": 0,
-        "release_date": "2023-09-15",
-        "release_group_mbid": "aced1b17-e302-45e5-aea3-86d0b883a206",
-        "release_group_primary_type": "Album",
-        "release_mbid": "fedd9299-2128-45a3-a995-07884942fa39",
-        "release_name": "It’s the End of the World but It’s a Beautiful Day",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Bleach Lab",
-        "artist_mbids": [
-            "6029de13-221f-40f0-bb4a-1d6259e9f5d5"
-        ],
-        "caa_id": 35446750249,
-        "caa_release_mbid": "afdb5d3d-6f5c-4ec6-a478-05bbba1df5a9",
-        "listen_count": 0,
-        "release_date": "2023-09-22",
-        "release_group_mbid": "70e68b3a-ddd3-4e2b-b3bb-aeab7f0f4bc1",
-        "release_group_primary_type": "Album",
-        "release_mbid": "afdb5d3d-6f5c-4ec6-a478-05bbba1df5a9",
-        "release_name": "Lost in a Rush of Emptiness",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Das Koolies",
-        "artist_mbids": [
-            "2ea1bd47-8a2b-458e-b1a3-ded5effc2519"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-09-22",
-        "release_group_mbid": "9d727fba-d13d-47cc-8259-8afbeef213f6",
-        "release_group_primary_type": "Album",
-        "release_mbid": "8228386e-5609-4627-a3d8-cf3e8a3595b5",
-        "release_name": "DK.01",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Kochkraft durch KMA",
-        "artist_mbids": [
-            "3e99d6d6-04b3-4e07-93de-bfa41cfbaa38"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-09-22",
-        "release_group_mbid": "b3326a50-3100-499d-8a6f-78d7d8e5b74f",
-        "release_group_primary_type": "Album",
-        "release_mbid": "d6dac5bc-ff26-4f81-8e0c-be56682faf16",
-        "release_name": "Alle Kinder Sind Tot",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Kylie Minogue",
-        "artist_mbids": [
-            "2fddb92d-24b2-46a5-bf28-3aed46f4684c"
-        ],
-        "caa_id": 35632652601,
-        "caa_release_mbid": "7c88cc10-33b8-4737-b64c-4da9d24c19d5",
-        "listen_count": 0,
-        "release_date": "2023-09-22",
-        "release_group_mbid": "d9c2dbdb-672f-4207-b92c-79aa549cac9f",
-        "release_group_primary_type": "Album",
-        "release_mbid": "7c88cc10-33b8-4737-b64c-4da9d24c19d5",
-        "release_name": "Tension",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Mia Aguilera",
-        "artist_mbids": [
-            "435c3904-354a-43d2-ae5c-074521cf76bc"
-        ],
-        "caa_id": 35020244552,
-        "caa_release_mbid": "17a53805-7339-4720-995a-98562d31efa8",
-        "listen_count": 0,
-        "release_date": "2023-09-23",
-        "release_group_mbid": "f278ce67-7e5b-444b-8910-a5af37771cfe",
-        "release_group_primary_type": "Album",
-        "release_mbid": "17a53805-7339-4720-995a-98562d31efa8",
-        "release_name": "Heart On My Sleeve",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Polyrhythmics",
-        "artist_mbids": [
-            "551946bc-e6db-4d69-b50a-4f3cfb29963f"
-        ],
-        "caa_id": 35623093559,
-        "caa_release_mbid": "d44af827-5097-4434-984f-ca6a14cd90e6",
-        "listen_count": 0,
-        "release_date": "2023-09-29",
-        "release_group_mbid": "5094f05a-19b0-4e2b-bf97-15026fb020cd",
-        "release_group_primary_type": "Album",
-        "release_mbid": "d44af827-5097-4434-984f-ca6a14cd90e6",
-        "release_name": "Filter System",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": ".357 Homicide",
-        "artist_mbids": [
-            "51e954f0-2bc5-40b2-a5b5-c2cded0ca086"
-        ],
-        "caa_id": 35431344371,
-        "caa_release_mbid": "5c0edb94-18a0-49c4-af99-863ce5ac6d1f",
-        "listen_count": 0,
-        "release_date": "2023-10-04",
-        "release_group_mbid": "8dcf453e-8d83-409d-945d-5f109c911dfc",
-        "release_group_primary_type": "EP",
-        "release_group_secondary_type": "Demo",
-        "release_mbid": "5c0edb94-18a0-49c4-af99-863ce5ac6d1f",
-        "release_name": "Promo 2023",
-        "release_tags": [
-            "brutal death metal",
-            "metal"
-        ]
-    },
-    {
-        "artist_credit_name": "Onira Glika",
-        "artist_mbids": [
-            "a4273353-201f-49ad-a262-86d71a12df83"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-10-06",
-        "release_group_mbid": "cd9ef1ba-31d1-4d6e-98d6-b2d258d928de",
-        "release_group_primary_type": "Album",
-        "release_mbid": "75ff4237-65c1-4d2c-904d-45b92ba73fe6",
-        "release_name": "Ça ira !",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Will Sims",
-        "artist_mbids": [
-            "f32d18ce-7855-4c29-9632-d1ef54a9571e"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-10-06",
-        "release_group_mbid": "1e7d58a6-f90b-499f-b2a2-82e6bb14bc3e",
-        "release_group_primary_type": "Album",
-        "release_mbid": "f2b7e145-e12f-44fa-a762-037f5e5cdf01",
-        "release_name": "You Have a Voice...Use It",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Flynn Teal",
-        "artist_mbids": [
-            "0ed14ce9-34fa-4770-965e-93c63ed576ca"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-10-10",
-        "release_group_mbid": "1b72872f-858c-43b3-adcc-cbd4d620a83b",
-        "release_group_primary_type": "Album",
-        "release_mbid": "542f517d-5591-4be3-bea1-f97a3414b89a",
-        "release_name": "Small Poppies",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Trastorned",
-        "artist_mbids": [
-            "2df6f23f-9806-44b2-a8df-26d6c7d3b57d"
-        ],
-        "caa_id": 34377564712,
-        "caa_release_mbid": "f2e98ecd-309f-478f-ae0f-08ca70f24b31",
-        "listen_count": 0,
-        "release_date": "2023-10-11",
-        "release_group_mbid": "e94c83b3-a7ba-47e2-b0ef-64318947e2ce",
-        "release_group_primary_type": "Single",
-        "release_mbid": "f2e98ecd-309f-478f-ae0f-08ca70f24b31",
-        "release_name": "Metal Violence",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Ash Regans",
-        "artist_mbids": [
-            "f05f81ec-62e4-4670-b10a-8513f839df3c"
-        ],
-        "caa_id": 34475369666,
-        "caa_release_mbid": "36f80689-e2cd-47c2-94a9-105255691d34",
-        "listen_count": 0,
-        "release_date": "2023-10-13",
-        "release_group_mbid": "aa9b5f25-72a9-4f81-b14e-8ca91be7af79",
-        "release_group_primary_type": "EP",
-        "release_mbid": "36f80689-e2cd-47c2-94a9-105255691d34",
-        "release_name": "Blood on My Hands",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Mors Subita",
-        "artist_mbids": [
-            "9c8c6e75-1054-4e8b-a19c-a2a76c5fae1b"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-10-13",
-        "release_group_mbid": "0151961b-a2a3-4c45-ae6f-3d48a71f02e9",
-        "release_group_primary_type": "Album",
-        "release_mbid": "90f29ab1-8756-41e9-9e5b-42e95a991f75",
-        "release_name": "Origin of Fire",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Shamblesxo",
-        "artist_mbids": [
-            "4b3d32e3-563d-44d7-a4ef-54f4f4d5746a"
-        ],
-        "caa_id": 35391870418,
-        "caa_release_mbid": "caa38930-df99-408d-b1db-7e51c4dec060",
-        "listen_count": 0,
-        "release_date": "2023-10-23",
-        "release_group_mbid": "0533d730-8c69-409e-87ba-a25e2aa4aa75",
-        "release_group_primary_type": "Single",
-        "release_mbid": "caa38930-df99-408d-b1db-7e51c4dec060",
-        "release_name": "VIRAL",
-        "release_tags": [
-            "alternative hip hop",
-            "alternative punk",
-            "alternative rock"
-        ]
-    },
-    {
-        "artist_credit_name": "Paris Fendi",
-        "artist_mbids": [
-            "80797f4e-4720-4d65-8334-ecc091b64668"
-        ],
-        "caa_id": 35477207886,
-        "caa_release_mbid": "94ea1b84-cbd6-44b6-aafd-83513a1c37e3",
-        "listen_count": 0,
-        "release_date": "2023-10-27",
-        "release_group_mbid": "2d12ac2b-29f9-4a8e-b890-43cc237f546a",
-        "release_group_primary_type": "Album",
-        "release_mbid": "c3aa902c-563f-4bd4-a574-8671a3ebb845",
-        "release_name": "Sing Love Grace, Vol. 1: Sing",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Core of the Coalman/Jorge Boehringer",
-        "artist_mbids": [
-            "56e8de53-535e-4048-bd1e-67a1bfd035d6",
-            "f282c3f5-0eb4-451a-95cd-07336afd109e"
-        ],
-        "caa_id": 34599248841,
-        "caa_release_mbid": "e75b3576-8e88-4b02-9bd4-f6aca67c7ddb",
-        "listen_count": 0,
-        "release_date": "2023-11-01",
-        "release_group_mbid": "675ce239-bfe2-4570-b35e-704a27dea6d4",
-        "release_group_primary_type": "Album",
-        "release_mbid": "e75b3576-8e88-4b02-9bd4-f6aca67c7ddb",
-        "release_name": "Klein Bottles",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Smithson Michael",
-        "artist_mbids": [
-            "c6249e9a-ea37-44c1-a735-2fd4b0dca82c"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-11-03",
-        "release_group_mbid": "a5816204-fe1b-48e6-b9f0-cc78878c57da",
-        "release_group_primary_type": "EP",
-        "release_mbid": "ddf84346-3544-4596-a550-e54a688a2c90",
-        "release_name": "Traction",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Burial Ground",
-        "artist_mbids": [
-            "cf0f1fc2-a9e3-4020-b5dd-413d3df73ce4"
-        ],
-        "caa_id": 34047635378,
-        "caa_release_mbid": "04051215-aeb2-489b-8262-217bdddba274",
-        "listen_count": 0,
-        "release_date": "2023-11-06",
-        "release_group_mbid": "08a70f3b-cb8f-40c9-9677-697eefe90d61",
-        "release_group_primary_type": "EP",
-        "release_mbid": "04051215-aeb2-489b-8262-217bdddba274",
-        "release_name": "Nichts ist es wert",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "xxsangui",
-        "artist_mbids": [
-            "868bec41-6866-4b72-a279-a7bbdce7c50f"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-11-06",
-        "release_group_mbid": "e416609d-eaf4-43ac-b018-b23866d855a4",
-        "release_group_primary_type": "Single",
-        "release_mbid": "54d1993d-8d9c-495f-aabe-1ebc9ade9be0",
-        "release_name": "xxsangui",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Polite Bureaux",
-        "artist_mbids": [
-            "d4b44b5d-b6d2-4ba5-8859-e2ec4b159139"
-        ],
-        "caa_id": 31646049998,
-        "caa_release_mbid": "4c2a8881-8516-43cc-b896-7f5645433155",
-        "listen_count": 0,
-        "release_date": "2023-11-07",
-        "release_group_mbid": "8f1b09a6-0a90-4757-812c-b8f84dcec54b",
-        "release_group_primary_type": "Album",
-        "release_mbid": "4c2a8881-8516-43cc-b896-7f5645433155",
-        "release_name": "WarLetter",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Yemi Alafifuni",
-        "artist_mbids": [
-            "d2e1879c-6cf2-4b8a-bdfb-877052c34420"
-        ],
-        "caa_id": 35664075083,
-        "caa_release_mbid": "cd21e68d-d7b4-4c7b-b683-b05a2d6babea",
-        "listen_count": 0,
-        "release_date": "2023-11-10",
-        "release_group_mbid": "170c6cf5-3ed1-4ea8-adbe-661358da0623",
-        "release_group_primary_type": "Single",
-        "release_mbid": "cd21e68d-d7b4-4c7b-b683-b05a2d6babea",
-        "release_name": "HOME",
-        "release_tags": [
-            "christmas music",
-            "pop"
-        ]
-    },
-    {
-        "artist_credit_name": "Spirit Spell",
-        "artist_mbids": [
-            "58bc01e0-96b9-4dac-a947-ce1503858f6e"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-11-13",
-        "release_group_mbid": "03c87beb-6b05-49ad-89c8-4489152bce2b",
-        "release_group_primary_type": "Album",
-        "release_mbid": "e167556e-cbbe-4e16-9e20-b6e5071b3dff",
-        "release_name": "The Beautiful Spellbook",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Dolly Parton",
-        "artist_mbids": [
-            "1d543e07-d0d2-4834-a8db-d65c50c2a856"
-        ],
-        "caa_id": 35628697320,
-        "caa_release_mbid": "e49c5628-604e-425c-95c0-6fcada9a235d",
-        "listen_count": 0,
-        "release_date": "2023-11-17",
-        "release_group_mbid": "f58199d9-1c73-4922-900c-8e258ee022c7",
-        "release_group_primary_type": "Album",
-        "release_mbid": "e49c5628-604e-425c-95c0-6fcada9a235d",
-        "release_name": "Rockstar",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Roje",
-        "artist_mbids": [
-            "99a6ea02-5497-444d-a02e-60d0ab9e4bf1"
-        ],
-        "caa_id": 34070369910,
-        "caa_release_mbid": "e21c3e34-0600-45f8-a1f9-f6dc6be859ce",
-        "listen_count": 0,
-        "release_date": "2023-11-25",
-        "release_group_mbid": "20a17ef3-3aeb-4c95-9813-c37aafac01d3",
-        "release_group_primary_type": "Album",
-        "release_mbid": "e21c3e34-0600-45f8-a1f9-f6dc6be859ce",
-        "release_name": "Untitled For A Reason",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Submarine FM",
-        "artist_mbids": [
-            "8eb9ba9b-503c-49a1-8a06-e44de58bb143"
-        ],
-        "caa_id": 34599027570,
-        "caa_release_mbid": "2c264322-e590-472c-831f-8f0af6e0ddcc",
-        "listen_count": 0,
-        "release_date": "2023-12-01",
-        "release_group_mbid": "470ffce4-1e85-4148-a796-26cfbc2ae744",
-        "release_group_primary_type": "Single",
-        "release_mbid": "2c264322-e590-472c-831f-8f0af6e0ddcc",
-        "release_name": "Fluide",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Hibou",
-        "artist_mbids": [
-            "8cf14cb0-11c6-425e-a66d-682f0eda40f0"
-        ],
-        "caa_id": 34245730553,
-        "caa_release_mbid": "b04630f0-19cf-4f09-83d6-74d7118752b7",
-        "listen_count": 0,
-        "release_date": "2023-12-02",
-        "release_group_mbid": "95bd11f9-22c8-4040-b363-ce1e4dcfbdec",
-        "release_group_primary_type": "Single",
-        "release_mbid": "b04630f0-19cf-4f09-83d6-74d7118752b7",
-        "release_name": "Night Fell",
-        "release_tags": [
-            "dream pop",
-            "indie",
-            "indie rock",
-            "new wave",
-            "paris",
-            "pop",
-            "rock",
-            "shoegaze",
-            "surf",
-            "surf rock"
-        ]
-    },
-    {
-        "artist_credit_name": "Rowhy",
-        "artist_mbids": [
-            "dfdeac76-087d-44f4-ae8c-2c611279e5a7"
-        ],
-        "caa_id": 34541126578,
-        "caa_release_mbid": "93c1de16-5de6-4588-b247-b9fcbb1118fc",
-        "listen_count": 0,
-        "release_date": "2023-12-05",
-        "release_group_mbid": "c65b90dc-feae-4581-99d8-f34a21455d6c",
-        "release_group_primary_type": "Single",
-        "release_mbid": "93c1de16-5de6-4588-b247-b9fcbb1118fc",
-        "release_name": "Se Pone",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Lucy Dreams feat. Frida Bollani Magoni",
-        "artist_mbids": [
-            "0a6b9a9f-20f3-464b-aa10-3e29d9fe6d04",
-            "bef8f983-0f3c-466f-846b-be532714488c"
-        ],
-        "caa_id": 34270492294,
-        "caa_release_mbid": "ded0e3f6-2da9-4075-aecb-a757b2143da8",
-        "listen_count": 0,
-        "release_date": "2023-12-09",
-        "release_group_mbid": "602e655a-c883-4a4c-b683-35f44aee5b1f",
-        "release_group_primary_type": "Single",
-        "release_mbid": "ded0e3f6-2da9-4075-aecb-a757b2143da8",
-        "release_name": "Levels",
-        "release_tags": [
-            "alt pop",
-            "alt-pop",
-            "art pop",
-            "dream pop",
-            "indie pop",
-            "pop",
-            "synth",
-            "synth-pop",
-            "vienna"
-        ]
-    },
-    {
-        "artist_credit_name": "박제형",
-        "artist_mbids": [
-            "f53e21b8-0806-41ce-a483-b6bce9811d29"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-12-09",
-        "release_group_mbid": "7d612ead-dbe8-4cd1-b0aa-d51eb262f5f3",
-        "release_group_primary_type": "Single",
-        "release_mbid": "36d3237f-a244-471f-862b-2386202c36ad",
-        "release_name": "A Typical Story",
-        "release_tags": [
-            "eaj",
-            "eajpark",
-            "indie pop",
-            "pop",
-            "typicalstory"
-        ]
-    },
-    {
-        "artist_credit_name": "dkalebeatz",
-        "artist_mbids": [
-            "46091aed-c507-4341-be61-e7e441e95709"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-12-15",
-        "release_group_mbid": "dbf59fa3-4f4b-455e-89b5-0010b5ac4480",
-        "release_group_primary_type": "Single",
-        "release_group_secondary_type": "Audio drama",
-        "release_mbid": "d1774c78-2696-4196-99d3-375889bf325a",
-        "release_name": "DeepSoulVol.9 (Official Music Audio)",
-        "release_tags": [
-            "dkalebeatz"
-        ]
-    },
-    {
-        "artist_credit_name": "Daria",
-        "artist_mbids": [
-            "075b120a-6dc7-44b4-8518-7249a536f1cc"
-        ],
-        "caa_id": 34887097126,
-        "caa_release_mbid": "9081d9be-1182-498a-903b-7c368c6f3ab6",
-        "listen_count": 0,
-        "release_date": "2023-12-16",
-        "release_group_mbid": "40b51978-7caa-4cec-9753-20adcb481a83",
-        "release_group_primary_type": "Single",
-        "release_mbid": "9081d9be-1182-498a-903b-7c368c6f3ab6",
-        "release_name": "Water & Sand",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Emperor X",
-        "artist_mbids": [
-            "e79dde40-8b35-4105-89f8-a5b0afbfd43c"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-12-31",
-        "release_group_mbid": "f7a30dbc-6f64-4b1c-839e-ecdee93ae538",
-        "release_group_primary_type": "Album",
-        "release_mbid": "e2154153-a5a2-4105-bbc9-d495494598df",
-        "release_name": "Дуже Чудове Різдво",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Living Arrangement",
-        "artist_mbids": [
-            "38b88d28-daa1-4c2a-8f46-bfefeb1f1134"
-        ],
-        "caa_id": 34844161247,
-        "caa_release_mbid": "3eb363a9-40fe-4646-80e6-5cba18435982",
-        "listen_count": 0,
-        "release_date": "2023-12-31",
-        "release_group_mbid": "e594ba79-1a44-467b-a31c-8e8180727218",
-        "release_group_primary_type": "Album",
-        "release_mbid": "3eb363a9-40fe-4646-80e6-5cba18435982",
-        "release_name": "LA2023",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Nosgov",
-        "artist_mbids": [
-            "aa2e8cde-cc24-4350-a4fc-0673cc007122"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2023-12-31",
-        "release_group_mbid": "c5bc1e4e-b9ef-4e2e-aa27-92b0bb79e946",
-        "release_group_primary_type": "Album",
-        "release_mbid": "75023f81-2485-4a1a-95a7-1a8958d8daab",
-        "release_name": "Fallout New Vegas: Original Game Soundtrack",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Alex Froot",
-        "artist_mbids": [
-            "406c9e54-8676-4f7c-ad75-edccc1e81c16"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2024-01-01",
-        "release_group_mbid": "16c9a805-916f-4a28-83ac-6a35a53fb00d",
-        "release_group_primary_type": "Album",
-        "release_mbid": "6052a84d-4e06-4f22-99ea-ad0f15d941d0",
-        "release_name": "Shapeshifter",
-        "release_tags": []
-    },
-    {
-        "artist_credit_name": "Hunter Hoak",
-        "artist_mbids": [
-            "29a9b902-50c6-449b-a525-325ff3f2c802"
-        ],
-        "caa_id": null,
-        "caa_release_mbid": null,
-        "listen_count": 0,
-        "release_date": "2024-01-05",
-        "release_group_mbid": "a13bb7d8-0e88-4490-b0d0-910ff5e9293f",
-        "release_group_primary_type": "Album",
-        "release_mbid": "2afd775c-cea3-483d-8f9b-1136dbf380bc",
-        "release_name": "Drinkin’",
-        "release_tags": []
+{
+    "payload": {
+        "releases": [
+            {
+                "artist_credit_name": "MISAMO",
+                "artist_mbids": [
+                    "e148e786-f078-49e2-a9fb-fd044bd68905"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-07-26",
+                "release_group_mbid": "bfbed4d8-09a1-4222-a4a9-e10c07e1be62",
+                "release_group_primary_type": "EP",
+                "release_mbid": "2633e526-82cd-40e4-8b48-fc1efadcab57",
+                "release_name": "MISAMO",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Anne\u2010Marie",
+                "artist_mbids": [
+                    "e3d5b5ec-101a-4529-9f2d-01dca64cf44e"
+                ],
+                "caa_id": 35508550067,
+                "caa_release_mbid": "10f8d2ec-a204-4c05-8b62-43416456e5fd",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "f17592e6-d9a9-4303-ab6f-4dce1b256b5a",
+                "release_group_primary_type": "Album",
+                "release_mbid": "10f8d2ec-a204-4c05-8b62-43416456e5fd",
+                "release_name": "UNHEALTHY",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Bethany Cosentino",
+                "artist_mbids": [
+                    "20d43d07-00b8-404f-a440-07adf7c257f2"
+                ],
+                "caa_id": 35561893572,
+                "caa_release_mbid": "aa5b8fc9-2418-4f93-90c4-6522514d67b1",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "f286971b-3ef9-4c89-beb2-937a8a33cc5d",
+                "release_group_primary_type": "Album",
+                "release_mbid": "aa5b8fc9-2418-4f93-90c4-6522514d67b1",
+                "release_name": "Natural Disaster",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Bush Tetras",
+                "artist_mbids": [
+                    "0fa623ce-9d1a-4b14-b6a3-19c79317a22f"
+                ],
+                "caa_id": 35571328282,
+                "caa_release_mbid": "dbdb93c0-d314-47ab-afe2-045131f70a07",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "4cd2fea0-0bea-4900-a6f9-875bf695b53c",
+                "release_group_primary_type": "Album",
+                "release_mbid": "dbdb93c0-d314-47ab-afe2-045131f70a07",
+                "release_name": "They Live in My Head",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Darlingside",
+                "artist_mbids": [
+                    "b7a65497-9fba-46b5-8c4e-0311cf6943b0"
+                ],
+                "caa_id": 35422809710,
+                "caa_release_mbid": "d07ce932-85f9-438e-906d-3582e805bc36",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "20026e81-4b21-40af-a56f-ab63fb2e00f3",
+                "release_group_primary_type": "Album",
+                "release_mbid": "d07ce932-85f9-438e-906d-3582e805bc36",
+                "release_name": "Everything Is Alive",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "From Ashes to New",
+                "artist_mbids": [
+                    "66baa549-ec7d-410f-88bf-d4f9bbb21890"
+                ],
+                "caa_id": 35237043273,
+                "caa_release_mbid": "f64ac5df-d769-49f8-a3e3-c7be323e7017",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "76936aa5-4ed2-40cc-a7a4-ad91db52273f",
+                "release_group_primary_type": "Album",
+                "release_mbid": "f64ac5df-d769-49f8-a3e3-c7be323e7017",
+                "release_name": "Blackout",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Georgia",
+                "artist_mbids": [
+                    "c9ae836d-3839-42f2-9f8b-edd0d77553a5"
+                ],
+                "caa_id": 35259739558,
+                "caa_release_mbid": "1ef5a1fa-f5d4-4d13-a1a2-ef81dbbc65b7",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "f82de27b-ebfb-4938-bd64-56f9e9826146",
+                "release_group_primary_type": "Album",
+                "release_mbid": "1ef5a1fa-f5d4-4d13-a1a2-ef81dbbc65b7",
+                "release_name": "Euphoric",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "High Pulp",
+                "artist_mbids": [
+                    "4ee483e9-2e5a-48f4-886f-8decbd3fc4f9"
+                ],
+                "caa_id": 35583105890,
+                "caa_release_mbid": "3fb359a5-0884-487e-9a91-1ddef1506ed5",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "83539266-c3d6-47b2-8031-5f21b32c4083",
+                "release_group_primary_type": "Album",
+                "release_mbid": "3fb359a5-0884-487e-9a91-1ddef1506ed5",
+                "release_name": "Days in the Desert",
+                "release_tags": [
+                    "jazz"
+                ]
+            },
+            {
+                "artist_credit_name": "Jessy Lanza",
+                "artist_mbids": [
+                    "0dfb3c3d-e140-4575-baf3-7ff20ae56c9c"
+                ],
+                "caa_id": 35612086993,
+                "caa_release_mbid": "eaed40c6-7ff2-4f36-8da4-6fc4522f8223",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "491501f3-d375-44ba-a303-4c95db45fe9e",
+                "release_group_primary_type": "Album",
+                "release_mbid": "eaed40c6-7ff2-4f36-8da4-6fc4522f8223",
+                "release_name": "Love Hallucination",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Madeline Kenney",
+                "artist_mbids": [
+                    "0b863187-e04f-4edb-b04d-260fedd4ceab"
+                ],
+                "caa_id": 35631208058,
+                "caa_release_mbid": "346c0813-501a-449a-a6c7-ffeeca24245b",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "28e857b4-248c-40ad-935b-d37a66f2b803",
+                "release_group_primary_type": "Album",
+                "release_mbid": "346c0813-501a-449a-a6c7-ffeeca24245b",
+                "release_name": "A New Reality Mind",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "PWNT",
+                "artist_mbids": [
+                    "26237d60-4ee1-4bb3-8074-63158b6623c3"
+                ],
+                "caa_id": 35612026291,
+                "caa_release_mbid": "d032e747-48ec-4356-8965-a1166f22a301",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "dab7a434-3843-4345-9a2c-05f2c616cc80",
+                "release_group_primary_type": "Album",
+                "release_mbid": "d032e747-48ec-4356-8965-a1166f22a301",
+                "release_name": "Play What\u2019s Not There",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Rainbow Machine Palace",
+                "artist_mbids": [
+                    "2d912f98-16f2-4ee2-85b1-0d7a76016878"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "384a95cf-0723-42d6-80a8-4f7f9ddc126b",
+                "release_group_primary_type": "Single",
+                "release_mbid": "cecd8b97-8422-4dac-923a-99fe87035a2c",
+                "release_name": "Gapura Dimensi",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Sevendust",
+                "artist_mbids": [
+                    "52b9e109-44a0-45eb-a197-226c4abab232"
+                ],
+                "caa_id": 35393524455,
+                "caa_release_mbid": "102e558b-1c33-4608-b0ab-9631b0b83293",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "331be5c4-5a4a-4568-b29e-f5dec90e798a",
+                "release_group_primary_type": "Album",
+                "release_mbid": "102e558b-1c33-4608-b0ab-9631b0b83293",
+                "release_name": "Truth Killer",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "The Clientele",
+                "artist_mbids": [
+                    "6b66dd3a-d88b-4732-bc13-359d8964b7f2"
+                ],
+                "caa_id": 35484459996,
+                "caa_release_mbid": "171a303d-aa98-4bb8-8474-8c83120633fc",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "3feb5eb2-586c-4f86-a6e8-115e2da206b0",
+                "release_group_primary_type": "Album",
+                "release_mbid": "171a303d-aa98-4bb8-8474-8c83120633fc",
+                "release_name": "I Am Not There Anymore",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "The Suns Journey Through The Night",
+                "artist_mbids": [
+                    "558d0fda-01d1-4ad0-a2ee-047a841d2240"
+                ],
+                "caa_id": 35574833737,
+                "caa_release_mbid": "4a6a2a63-8a4a-4541-9765-1de6f453e7e2",
+                "listen_count": 0,
+                "release_date": "2023-07-28",
+                "release_group_mbid": "864c1c7f-b4ad-48ab-95b9-5c18a5ceb7cc",
+                "release_group_primary_type": "Album",
+                "release_mbid": "4a6a2a63-8a4a-4541-9765-1de6f453e7e2",
+                "release_name": "Worldless",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Black Stone Cherry",
+                "artist_mbids": [
+                    "1801bd47-46ae-49ff-bfcd-6e01b562d880"
+                ],
+                "caa_id": 35619832587,
+                "caa_release_mbid": "9db09135-906e-418e-8a49-2fd741db55d3",
+                "listen_count": 0,
+                "release_date": "2023-07-29",
+                "release_group_mbid": "bafb99e3-8cfa-4c13-af74-3d2857d31946",
+                "release_group_primary_type": "Album",
+                "release_mbid": "9db09135-906e-418e-8a49-2fd741db55d3",
+                "release_name": "Screamin' At The Sky",
+                "release_tags": [
+                    "blues rock",
+                    "classic rock",
+                    "hard rock",
+                    "rock",
+                    "southern rock"
+                ]
+            },
+            {
+                "artist_credit_name": "\u5149\u7530\u5eb7\u5178 / ACE(\u5de5\u85e4\u3068\u3082\u308a\u3001CHiCO) / \u5e73\u677e\u5efa\u6cbb / \u6e05\u7530\u611b\u672a / \u30de\u30ea\u30a2\u30e0\u30fb\u30a2\u30dc\u30f3\u30ca\u30b5\u30fc / \u6551\u4ec1\u90f7\u88d5",
+                "artist_mbids": [
+                    "118bf512-9ce9-42a5-95e0-10359bb3e3ea",
+                    "16563fb9-c2b5-4ab7-b5b1-7b6592f862a1",
+                    "252ea5d7-bc86-4278-9310-fe75910c6eb9",
+                    "254c7d5b-72c8-4fdd-85e4-bda08704265e",
+                    "4f87137d-4abb-42f0-af17-4e4a7e2f3e63",
+                    "59e83bb6-e8b7-44e0-bea2-2275400850e5",
+                    "766722db-0d89-43f7-a0a5-c1982dd8edfb",
+                    "a2b0affd-963f-46a3-9a8d-5b9d1332ccb3"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-07-29",
+                "release_group_mbid": "cf93ee3a-b2f2-4261-9a13-11a1e5efbef7",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Soundtrack",
+                "release_mbid": "1471a258-3b9a-4367-a235-ac52a318616e",
+                "release_name": "\u30bc\u30ce\u30d6\u30ec\u30a4\u30c93 \u30aa\u30ea\u30b8\u30ca\u30eb\u30fb\u30b5\u30a6\u30f3\u30c9\u30c8\u30e9\u30c3\u30af",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "\u5149\u7530\u5eb7\u5178 / ACE(\u5de5\u85e4\u3068\u3082\u308a\u3001CHiCO) / \u5e73\u677e\u5efa\u6cbb / \u6e05\u7530\u611b\u672a / \u4e0b\u6751\u967d\u5b50 / \u30de\u30ea\u30a2\u30e0\u30fb\u30a2\u30dc\u30f3\u30ca\u30b5\u30fc / \u6551\u4ec1\u90f7\u88d5",
+                "artist_mbids": [
+                    "118bf512-9ce9-42a5-95e0-10359bb3e3ea",
+                    "16563fb9-c2b5-4ab7-b5b1-7b6592f862a1",
+                    "252ea5d7-bc86-4278-9310-fe75910c6eb9",
+                    "254c7d5b-72c8-4fdd-85e4-bda08704265e",
+                    "4f87137d-4abb-42f0-af17-4e4a7e2f3e63",
+                    "59e83bb6-e8b7-44e0-bea2-2275400850e5",
+                    "766722db-0d89-43f7-a0a5-c1982dd8edfb",
+                    "a2b0affd-963f-46a3-9a8d-5b9d1332ccb3",
+                    "b3933fd6-fba9-44b1-992a-1e8128324ca1"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-07-29",
+                "release_group_mbid": "360e5c9f-0938-47c6-ba33-dc9579d78a69",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Compilation",
+                "release_mbid": "8f4bc93a-9cd9-406e-931e-87a826c2e47f",
+                "release_name": "\u30bc\u30ce\u30d6\u30ec\u30a4\u30c9 \u30aa\u30ea\u30b8\u30ca\u30eb\u30fb\u30b5\u30a6\u30f3\u30c9\u30c8\u30e9\u30c3\u30af \u30c8\u30ea\u30cb\u30c6\u30a3BOX",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Egg & Fosh",
+                "artist_mbids": [
+                    "5c3e2529-9684-4257-b1f8-6ebe9496c0e9"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-07-30",
+                "release_group_mbid": "281d66f3-45bf-4136-a1dc-2b2438f73c58",
+                "release_group_primary_type": "EP",
+                "release_mbid": "274f4eee-7ead-40d9-a4d7-cb94fee9f366",
+                "release_name": "Background Noize",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "\u4e0b\u6751\u967d\u5b50 / ACE(\u5de5\u85e4\u3068\u3082\u308a\u3001CHiCO) / \u5e73\u677e\u5efa\u6cbb / \u6e05\u7530\u611b\u672a / \u5149\u7530\u5eb7\u5178",
+                "artist_mbids": [
+                    "118bf512-9ce9-42a5-95e0-10359bb3e3ea",
+                    "16563fb9-c2b5-4ab7-b5b1-7b6592f862a1",
+                    "252ea5d7-bc86-4278-9310-fe75910c6eb9",
+                    "4f87137d-4abb-42f0-af17-4e4a7e2f3e63",
+                    "59e83bb6-e8b7-44e0-bea2-2275400850e5",
+                    "a2b0affd-963f-46a3-9a8d-5b9d1332ccb3",
+                    "b3933fd6-fba9-44b1-992a-1e8128324ca1"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-08-02",
+                "release_group_mbid": "c5bfc3ba-01da-4e53-bd6b-db7aa896a9a0",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Soundtrack",
+                "release_mbid": "110eecd9-6134-48ee-a998-bbe43e0f7e37",
+                "release_name": "\u30bc\u30ce\u30d6\u30ec\u30a4\u30c9 \u30c7\u30a3\u30d5\u30a3\u30cb\u30c6\u30a3\u30d6\u30fb\u30a8\u30c7\u30a3\u30b7\u30e7\u30f3 \u30aa\u30ea\u30b8\u30ca\u30eb\u30fb\u30b5\u30a6\u30f3\u30c9\u30c8\u30e9\u30c3\u30af",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Tuck Shop Ladies",
+                "artist_mbids": [
+                    "f76a5109-834f-4d39-b24a-1c154ccb2211"
+                ],
+                "caa_id": 35174321956,
+                "caa_release_mbid": "d6cf242b-3ef1-4c19-a525-d482434d2965",
+                "listen_count": 0,
+                "release_date": "2023-08-03",
+                "release_group_mbid": "5b6027ed-98b4-48d0-b150-42ddd490cae2",
+                "release_group_primary_type": "Album",
+                "release_mbid": "d6cf242b-3ef1-4c19-a525-d482434d2965",
+                "release_name": "Tuck Shop Ladies (Again)",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Girl Ray",
+                "artist_mbids": [
+                    "ebcf8901-bd0a-486c-bfc9-341b7394c3fa"
+                ],
+                "caa_id": 35370347022,
+                "caa_release_mbid": "12f339a1-0444-4547-8d12-9a8bc39a125a",
+                "listen_count": 0,
+                "release_date": "2023-08-04",
+                "release_group_mbid": "cb87fee7-3399-44bd-8b3a-02f11f6dfd13",
+                "release_group_primary_type": "Album",
+                "release_mbid": "12f339a1-0444-4547-8d12-9a8bc39a125a",
+                "release_name": "Prestige",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Mammoth WVH",
+                "artist_mbids": [
+                    "49a6efb9-9b52-44ce-8167-7cb1c21a8c45"
+                ],
+                "caa_id": 35237189952,
+                "caa_release_mbid": "fbad288a-c0d1-432d-8c61-7a5c9abcba7a",
+                "listen_count": 0,
+                "release_date": "2023-08-04",
+                "release_group_mbid": "8da2972b-a5da-4a6f-b215-dab79f87202c",
+                "release_group_primary_type": "Album",
+                "release_mbid": "fbad288a-c0d1-432d-8c61-7a5c9abcba7a",
+                "release_name": "Mammoth II",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Mikaela Davis",
+                "artist_mbids": [
+                    "b402c9fb-ed1f-4110-b49c-87187e5e383a"
+                ],
+                "caa_id": 35380444817,
+                "caa_release_mbid": "bbf52149-abfb-4886-9944-1a3a4960e649",
+                "listen_count": 0,
+                "release_date": "2023-08-04",
+                "release_group_mbid": "9f1586ff-2a03-450c-ba64-90688dc08aea",
+                "release_group_primary_type": "Album",
+                "release_mbid": "bbf52149-abfb-4886-9944-1a3a4960e649",
+                "release_name": "And Southern Star",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Miles Kane",
+                "artist_mbids": [
+                    "26afaedd-e99c-45b2-b7f9-6c4c2b33d90c"
+                ],
+                "caa_id": 35500212397,
+                "caa_release_mbid": "571fd3fb-0919-469f-a177-de1fd9d74b0b",
+                "listen_count": 0,
+                "release_date": "2023-08-04",
+                "release_group_mbid": "c74b3464-42da-4b94-a122-9b65d60c97f4",
+                "release_group_primary_type": "Album",
+                "release_mbid": "571fd3fb-0919-469f-a177-de1fd9d74b0b",
+                "release_name": "One Man Band",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Skindred",
+                "artist_mbids": [
+                    "36e371e9-e76b-4b66-b813-e1d1af6d7128"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-08-04",
+                "release_group_mbid": "0a89c658-e8e4-4302-857b-c460e458a566",
+                "release_group_primary_type": "Album",
+                "release_mbid": "0ec68930-c5b5-4dea-8a63-3314dfbfac10",
+                "release_name": "Smile",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Skindred",
+                "artist_mbids": [
+                    "36e371e9-e76b-4b66-b813-e1d1af6d7128"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-08-04",
+                "release_group_mbid": "64b5bc8a-89ef-4569-88f2-aa087120e2d0",
+                "release_group_primary_type": "Album",
+                "release_mbid": "8f70f635-0c20-48b4-a98b-f435ae7fc123",
+                "release_name": "Smile",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Egg & Fosh",
+                "artist_mbids": [
+                    "5c3e2529-9684-4257-b1f8-6ebe9496c0e9"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-08-05",
+                "release_group_mbid": "cbd2e844-866b-42b7-a7ce-a4dbb324797b",
+                "release_group_primary_type": "Album",
+                "release_mbid": "8b205b69-27cf-4023-a8dd-d42d5e7250c2",
+                "release_name": "A Wonderful Day to Die",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Jungle",
+                "artist_mbids": [
+                    "6bbb3983-ce8a-4971-96e0-7cae73268fc4"
+                ],
+                "caa_id": 35241999771,
+                "caa_release_mbid": "14fbd2c0-0468-4cd7-9630-6aa655e11d5b",
+                "listen_count": 0,
+                "release_date": "2023-08-11",
+                "release_group_mbid": "07bd527b-afe9-405b-bc92-0766cb280d05",
+                "release_group_primary_type": "Album",
+                "release_mbid": "14fbd2c0-0468-4cd7-9630-6aa655e11d5b",
+                "release_name": "Volcano",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "The Hives",
+                "artist_mbids": [
+                    "487bfd74-71bf-46dd-b89c-80b7a0f06f2f"
+                ],
+                "caa_id": 35552623748,
+                "caa_release_mbid": "d59f1873-9aba-40a6-9ab5-809bfedaf897",
+                "listen_count": 0,
+                "release_date": "2023-08-11",
+                "release_group_mbid": "887367f0-fc74-4cb2-a6c6-53e13ff9672a",
+                "release_group_primary_type": "Album",
+                "release_mbid": "d59f1873-9aba-40a6-9ab5-809bfedaf897",
+                "release_name": "The Death of Randy Fitzsimmons",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "The Sherlocks",
+                "artist_mbids": [
+                    "840179a0-7dc7-49e2-ae26-4737c2b33ef7"
+                ],
+                "caa_id": 34791121956,
+                "caa_release_mbid": "27d22e33-2865-43f4-976d-11c1dbf71ee3",
+                "listen_count": 0,
+                "release_date": "2023-08-11",
+                "release_group_mbid": "56eccce8-bead-4651-a13e-e10da89ca86b",
+                "release_group_primary_type": "Album",
+                "release_mbid": "27d22e33-2865-43f4-976d-11c1dbf71ee3",
+                "release_name": "People Like Me and You",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Various Artists",
+                "artist_mbids": [
+                    "89ad4ac3-39f7-470e-963a-56509c546377"
+                ],
+                "caa_id": 35370980095,
+                "caa_release_mbid": "5d98a33b-da8f-4764-b2bf-d0c97685f14c",
+                "listen_count": 0,
+                "release_date": "2023-08-11",
+                "release_group_mbid": "cf5eef13-aecf-43b5-8934-da4dee56fa10",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Compilation",
+                "release_mbid": "5d98a33b-da8f-4764-b2bf-d0c97685f14c",
+                "release_name": "Tell Everybody!: 21st Century Juke Joint Blues",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Reformat",
+                "artist_mbids": [
+                    "c2a9810a-d46c-446e-b7d9-011d7ca90d1b"
+                ],
+                "caa_id": 35609213613,
+                "caa_release_mbid": "8fde4b53-2005-4e5c-86b7-3012551e330c",
+                "listen_count": 0,
+                "release_date": "2023-08-18",
+                "release_group_mbid": "9b127b9b-3865-4a25-b10b-d7d2907c3d17",
+                "release_group_primary_type": "Album",
+                "release_mbid": "8fde4b53-2005-4e5c-86b7-3012551e330c",
+                "release_name": "Precursed",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Kendrick Lamar",
+                "artist_mbids": [
+                    "381086ea-f511-4aba-bdf9-71c753dc5077"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-08-23",
+                "release_group_mbid": "f9674725-2bfd-497b-aa6f-ac6963005709",
+                "release_group_primary_type": "Album",
+                "release_mbid": "3542c89f-5d63-442b-9fcd-6acf88221663",
+                "release_name": "RESILIENT.",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "mewithoutYou",
+                "artist_mbids": [
+                    "759b5ff1-91fe-4ec9-b9b7-75b7b2ceb283"
+                ],
+                "caa_id": 35550006596,
+                "caa_release_mbid": "f1072559-3706-4760-909a-02bda30a4bc2",
+                "listen_count": 0,
+                "release_date": "2023-08-23",
+                "release_group_mbid": "cd70aaff-6dda-439b-8f9a-d21b8421a24a",
+                "release_group_primary_type": "Other",
+                "release_group_secondary_type": "Live",
+                "release_mbid": "f1072559-3706-4760-909a-02bda30a4bc2",
+                "release_name": "The End of The End: The Final \u201cFarewell\u201d - Night 1",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Bebel Gilberto",
+                "artist_mbids": [
+                    "8777a849-fb4e-4430-9918-170f619c5286"
+                ],
+                "caa_id": 35561850520,
+                "caa_release_mbid": "cd7ee200-67a9-42be-88cc-362a91e4bdc6",
+                "listen_count": 0,
+                "release_date": "2023-08-25",
+                "release_group_mbid": "2e37e7af-c645-4031-a484-29041d80158e",
+                "release_group_primary_type": "Album",
+                "release_mbid": "cd7ee200-67a9-42be-88cc-362a91e4bdc6",
+                "release_name": "Jo\u00e3o",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Hot Milk",
+                "artist_mbids": [
+                    "0b719097-a77d-46aa-b93a-9b28491333c3"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-08-25",
+                "release_group_mbid": "3e9ce222-80b5-426f-afc5-1f7d62f9314d",
+                "release_group_primary_type": "Album",
+                "release_mbid": "3af87884-5fce-41af-9cd0-18b2c2b3d73b",
+                "release_name": "A Call To The Void",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Jack Hammer",
+                "artist_mbids": [
+                    "93f0201e-0a2c-4f4a-8a51-0f50ba75521f"
+                ],
+                "caa_id": 35231007281,
+                "caa_release_mbid": "f5032865-0bd0-4812-b1d2-b124813daef2",
+                "listen_count": 0,
+                "release_date": "2023-08-25",
+                "release_group_mbid": "da71d9f3-c268-40bd-b10f-a536f8b4f656",
+                "release_group_primary_type": "Album",
+                "release_mbid": "f5032865-0bd0-4812-b1d2-b124813daef2",
+                "release_name": "Second Chapter",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Orphalis",
+                "artist_mbids": [
+                    "b00daeaa-acc0-4496-b472-caf1d5b2c3cd"
+                ],
+                "caa_id": 35576363368,
+                "caa_release_mbid": "9a1b4f98-bf4b-4c57-93d9-8902f3765a32",
+                "listen_count": 0,
+                "release_date": "2023-08-25",
+                "release_group_mbid": "90c8eb52-689c-4b5a-9db7-3a4bd24664d7",
+                "release_group_primary_type": "Album",
+                "release_mbid": "9a1b4f98-bf4b-4c57-93d9-8902f3765a32",
+                "release_name": "As the Ashes Settle",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Turnpike Troubadours",
+                "artist_mbids": [
+                    "607edb17-d439-48db-8482-da92167e4a59"
+                ],
+                "caa_id": 35577294143,
+                "caa_release_mbid": "48e1f9b2-449a-4583-9e1d-1b685654674d",
+                "listen_count": 0,
+                "release_date": "2023-08-25",
+                "release_group_mbid": "b86b4cc4-de42-4aaf-a227-5c79135c3ed8",
+                "release_group_primary_type": "Album",
+                "release_mbid": "48e1f9b2-449a-4583-9e1d-1b685654674d",
+                "release_name": "A Cat in the Rain",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "MCqasim",
+                "artist_mbids": [
+                    "f2c83a9f-b5f5-44a9-94db-65c9ed1cf2f8"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-08-30",
+                "release_group_mbid": "c91e2005-e529-4c49-81d5-10bb693abb7d",
+                "release_group_primary_type": "EP",
+                "release_mbid": "c80f71c6-bf4e-44df-b15e-94f4fb0f2829",
+                "release_name": "Love & Pain",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Flynn Teal",
+                "artist_mbids": [
+                    "0ed14ce9-34fa-4770-965e-93c63ed576ca"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-09-01",
+                "release_group_mbid": "85300fd2-e97e-4f91-aa36-ba39ae64bba1",
+                "release_group_primary_type": "EP",
+                "release_mbid": "1388de55-0773-48b6-82aa-b4fa22468617",
+                "release_name": "Tales from Orchidland",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Pretenders",
+                "artist_mbids": [
+                    "e9c832b0-384b-4ee6-aec0-111372784aac"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-09-01",
+                "release_group_mbid": "76f12154-9645-4755-b3d5-2bf7d7414946",
+                "release_group_primary_type": "Album",
+                "release_mbid": "33b6b5b3-88d8-4355-96e2-1027ed3cb24b",
+                "release_name": "Relentless",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Kvelertak",
+                "artist_mbids": [
+                    "61fdc79c-df1a-4999-8d2f-668f18c11283"
+                ],
+                "caa_id": 35393800943,
+                "caa_release_mbid": "d3781148-aeee-4b19-8e3e-c31e4c626e13",
+                "listen_count": 0,
+                "release_date": "2023-09-08",
+                "release_group_mbid": "cb366db3-a88c-4d29-a30f-aa24e61c2958",
+                "release_group_primary_type": "Album",
+                "release_mbid": "d3781148-aeee-4b19-8e3e-c31e4c626e13",
+                "release_name": "Endling",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Low Cut Connie",
+                "artist_mbids": [
+                    "27d9dfca-2b81-47c6-a06d-56c26229fcd7"
+                ],
+                "caa_id": 35545379120,
+                "caa_release_mbid": "b3a42c55-120c-4830-9dcd-416343da91d6",
+                "listen_count": 0,
+                "release_date": "2023-09-08",
+                "release_group_mbid": "efd64371-2614-423b-ae26-4d0f9446fb0f",
+                "release_group_primary_type": "Album",
+                "release_mbid": "b3a42c55-120c-4830-9dcd-416343da91d6",
+                "release_name": "Art Dealers",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "\u041d\u0438\u0437\u0430\u043c DRedd",
+                "artist_mbids": [
+                    "625e26a8-39a1-4c30-a458-efd410ed150b"
+                ],
+                "caa_id": 35345292178,
+                "caa_release_mbid": "b3961c2b-8b49-493c-ba92-f086d1edce4b",
+                "listen_count": 0,
+                "release_date": "2023-09-08",
+                "release_group_mbid": "5aacc797-c216-4726-9eff-a2d9247267a4",
+                "release_group_primary_type": "Single",
+                "release_mbid": "b3961c2b-8b49-493c-ba92-f086d1edce4b",
+                "release_name": "\u0414\u0432\u0435 \u0442\u044b\u0441\u044f\u0447\u0438 \u043c\u0430\u0441\u043e\u043a",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Hunter Hoak",
+                "artist_mbids": [
+                    "29a9b902-50c6-449b-a525-325ff3f2c802"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-09-10",
+                "release_group_mbid": "08687be4-60bd-4c9f-af1a-0a288fa71bc3",
+                "release_group_primary_type": "Album",
+                "release_mbid": "43f1f30f-a549-4666-900d-31f9631ff53b",
+                "release_name": "Reality",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Claudia Catarig",
+                "artist_mbids": [
+                    "f833cd6b-da2b-4485-bf8b-43e696eccf7f"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-09-15",
+                "release_group_mbid": "970d6772-6c90-4aee-bb09-549ff3a77843",
+                "release_group_primary_type": "Album",
+                "release_group_secondary_type": "Remix",
+                "release_mbid": "34de2551-0761-45c4-b03b-046971722df0",
+                "release_name": "ALEEA CIOCAN DRIVING HIT'S 3 ~dulci~",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Danko Jones",
+                "artist_mbids": [
+                    "ab4721e4-bc37-4bd2-be8c-8f1550152ad6"
+                ],
+                "caa_id": 35432572439,
+                "caa_release_mbid": "ae20cf98-5cdf-4f3d-8450-284258ebc248",
+                "listen_count": 0,
+                "release_date": "2023-09-15",
+                "release_group_mbid": "1fa6d18b-a1af-4da7-927c-4df07fb62f6f",
+                "release_group_primary_type": "Album",
+                "release_mbid": "ae20cf98-5cdf-4f3d-8450-284258ebc248",
+                "release_name": "Electric Sounds",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Margo Cilker",
+                "artist_mbids": [
+                    "91e07743-761b-40f4-b4cb-f3dd72b4c26c"
+                ],
+                "caa_id": 35639692040,
+                "caa_release_mbid": "9f98fb05-e1f5-4681-8b62-a4ae2619c5f7",
+                "listen_count": 0,
+                "release_date": "2023-09-15",
+                "release_group_mbid": "ab5cf0ed-792f-4eac-98df-48d967909fd1",
+                "release_group_primary_type": "Album",
+                "release_mbid": "9f98fb05-e1f5-4681-8b62-a4ae2619c5f7",
+                "release_name": "Valley of Heart\u2019s Delight",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Nation of Language",
+                "artist_mbids": [
+                    "88927646-0c28-4b1b-a69e-cb33c400d650"
+                ],
+                "caa_id": 35389991511,
+                "caa_release_mbid": "716ebead-475d-4a6c-9393-e58a5a1ac1da",
+                "listen_count": 0,
+                "release_date": "2023-09-15",
+                "release_group_mbid": "af9301be-e8e6-4068-a332-2b92e1bfc95e",
+                "release_group_primary_type": "Album",
+                "release_mbid": "716ebead-475d-4a6c-9393-e58a5a1ac1da",
+                "release_name": "Strange Disciple",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Shade Empire",
+                "artist_mbids": [
+                    "66e6a03d-3306-4508-9eaf-40be9527b4f7"
+                ],
+                "caa_id": 35475115294,
+                "caa_release_mbid": "f181c48f-9923-4584-ac23-76fab11e06a4",
+                "listen_count": 0,
+                "release_date": "2023-09-15",
+                "release_group_mbid": "1c5ed0b6-ac54-49bf-b766-8ed7050c132e",
+                "release_group_primary_type": "Album",
+                "release_mbid": "f181c48f-9923-4584-ac23-76fab11e06a4",
+                "release_name": "Sunholy",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Thirty Seconds to Mars",
+                "artist_mbids": [
+                    "d8354b38-e942-4c89-ba93-29323432abc3"
+                ],
+                "caa_id": 35604237736,
+                "caa_release_mbid": "fedd9299-2128-45a3-a995-07884942fa39",
+                "listen_count": 0,
+                "release_date": "2023-09-15",
+                "release_group_mbid": "aced1b17-e302-45e5-aea3-86d0b883a206",
+                "release_group_primary_type": "Album",
+                "release_mbid": "fedd9299-2128-45a3-a995-07884942fa39",
+                "release_name": "It\u2019s the End of the World but It\u2019s a Beautiful Day",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Bleach Lab",
+                "artist_mbids": [
+                    "6029de13-221f-40f0-bb4a-1d6259e9f5d5"
+                ],
+                "caa_id": 35446750249,
+                "caa_release_mbid": "afdb5d3d-6f5c-4ec6-a478-05bbba1df5a9",
+                "listen_count": 0,
+                "release_date": "2023-09-22",
+                "release_group_mbid": "70e68b3a-ddd3-4e2b-b3bb-aeab7f0f4bc1",
+                "release_group_primary_type": "Album",
+                "release_mbid": "afdb5d3d-6f5c-4ec6-a478-05bbba1df5a9",
+                "release_name": "Lost in a Rush of Emptiness",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Das Koolies",
+                "artist_mbids": [
+                    "2ea1bd47-8a2b-458e-b1a3-ded5effc2519"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-09-22",
+                "release_group_mbid": "9d727fba-d13d-47cc-8259-8afbeef213f6",
+                "release_group_primary_type": "Album",
+                "release_mbid": "8228386e-5609-4627-a3d8-cf3e8a3595b5",
+                "release_name": "DK.01",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Kochkraft durch KMA",
+                "artist_mbids": [
+                    "3e99d6d6-04b3-4e07-93de-bfa41cfbaa38"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-09-22",
+                "release_group_mbid": "b3326a50-3100-499d-8a6f-78d7d8e5b74f",
+                "release_group_primary_type": "Album",
+                "release_mbid": "d6dac5bc-ff26-4f81-8e0c-be56682faf16",
+                "release_name": "Alle Kinder Sind Tot",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Kylie Minogue",
+                "artist_mbids": [
+                    "2fddb92d-24b2-46a5-bf28-3aed46f4684c"
+                ],
+                "caa_id": 35632652601,
+                "caa_release_mbid": "7c88cc10-33b8-4737-b64c-4da9d24c19d5",
+                "listen_count": 0,
+                "release_date": "2023-09-22",
+                "release_group_mbid": "d9c2dbdb-672f-4207-b92c-79aa549cac9f",
+                "release_group_primary_type": "Album",
+                "release_mbid": "7c88cc10-33b8-4737-b64c-4da9d24c19d5",
+                "release_name": "Tension",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Mia Aguilera",
+                "artist_mbids": [
+                    "435c3904-354a-43d2-ae5c-074521cf76bc"
+                ],
+                "caa_id": 35020244552,
+                "caa_release_mbid": "17a53805-7339-4720-995a-98562d31efa8",
+                "listen_count": 0,
+                "release_date": "2023-09-23",
+                "release_group_mbid": "f278ce67-7e5b-444b-8910-a5af37771cfe",
+                "release_group_primary_type": "Album",
+                "release_mbid": "17a53805-7339-4720-995a-98562d31efa8",
+                "release_name": "Heart On My Sleeve",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Polyrhythmics",
+                "artist_mbids": [
+                    "551946bc-e6db-4d69-b50a-4f3cfb29963f"
+                ],
+                "caa_id": 35623093559,
+                "caa_release_mbid": "d44af827-5097-4434-984f-ca6a14cd90e6",
+                "listen_count": 0,
+                "release_date": "2023-09-29",
+                "release_group_mbid": "5094f05a-19b0-4e2b-bf97-15026fb020cd",
+                "release_group_primary_type": "Album",
+                "release_mbid": "d44af827-5097-4434-984f-ca6a14cd90e6",
+                "release_name": "Filter System",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": ".357 Homicide",
+                "artist_mbids": [
+                    "51e954f0-2bc5-40b2-a5b5-c2cded0ca086"
+                ],
+                "caa_id": 35431344371,
+                "caa_release_mbid": "5c0edb94-18a0-49c4-af99-863ce5ac6d1f",
+                "listen_count": 0,
+                "release_date": "2023-10-04",
+                "release_group_mbid": "8dcf453e-8d83-409d-945d-5f109c911dfc",
+                "release_group_primary_type": "EP",
+                "release_group_secondary_type": "Demo",
+                "release_mbid": "5c0edb94-18a0-49c4-af99-863ce5ac6d1f",
+                "release_name": "Promo 2023",
+                "release_tags": [
+                    "brutal death metal",
+                    "metal"
+                ]
+            },
+            {
+                "artist_credit_name": "Onira Glika",
+                "artist_mbids": [
+                    "a4273353-201f-49ad-a262-86d71a12df83"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-10-06",
+                "release_group_mbid": "cd9ef1ba-31d1-4d6e-98d6-b2d258d928de",
+                "release_group_primary_type": "Album",
+                "release_mbid": "75ff4237-65c1-4d2c-904d-45b92ba73fe6",
+                "release_name": "\u00c7a ira !",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Will Sims",
+                "artist_mbids": [
+                    "f32d18ce-7855-4c29-9632-d1ef54a9571e"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-10-06",
+                "release_group_mbid": "1e7d58a6-f90b-499f-b2a2-82e6bb14bc3e",
+                "release_group_primary_type": "Album",
+                "release_mbid": "f2b7e145-e12f-44fa-a762-037f5e5cdf01",
+                "release_name": "You Have a Voice...Use It",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Flynn Teal",
+                "artist_mbids": [
+                    "0ed14ce9-34fa-4770-965e-93c63ed576ca"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-10-10",
+                "release_group_mbid": "1b72872f-858c-43b3-adcc-cbd4d620a83b",
+                "release_group_primary_type": "Album",
+                "release_mbid": "542f517d-5591-4be3-bea1-f97a3414b89a",
+                "release_name": "Small Poppies",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Trastorned",
+                "artist_mbids": [
+                    "2df6f23f-9806-44b2-a8df-26d6c7d3b57d"
+                ],
+                "caa_id": 34377564712,
+                "caa_release_mbid": "f2e98ecd-309f-478f-ae0f-08ca70f24b31",
+                "listen_count": 0,
+                "release_date": "2023-10-11",
+                "release_group_mbid": "e94c83b3-a7ba-47e2-b0ef-64318947e2ce",
+                "release_group_primary_type": "Single",
+                "release_mbid": "f2e98ecd-309f-478f-ae0f-08ca70f24b31",
+                "release_name": "Metal Violence",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Ash Regans",
+                "artist_mbids": [
+                    "f05f81ec-62e4-4670-b10a-8513f839df3c"
+                ],
+                "caa_id": 34475369666,
+                "caa_release_mbid": "36f80689-e2cd-47c2-94a9-105255691d34",
+                "listen_count": 0,
+                "release_date": "2023-10-13",
+                "release_group_mbid": "aa9b5f25-72a9-4f81-b14e-8ca91be7af79",
+                "release_group_primary_type": "EP",
+                "release_mbid": "36f80689-e2cd-47c2-94a9-105255691d34",
+                "release_name": "Blood on My Hands",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Mors Subita",
+                "artist_mbids": [
+                    "9c8c6e75-1054-4e8b-a19c-a2a76c5fae1b"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-10-13",
+                "release_group_mbid": "0151961b-a2a3-4c45-ae6f-3d48a71f02e9",
+                "release_group_primary_type": "Album",
+                "release_mbid": "90f29ab1-8756-41e9-9e5b-42e95a991f75",
+                "release_name": "Origin of Fire",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Shamblesxo",
+                "artist_mbids": [
+                    "4b3d32e3-563d-44d7-a4ef-54f4f4d5746a"
+                ],
+                "caa_id": 35391870418,
+                "caa_release_mbid": "caa38930-df99-408d-b1db-7e51c4dec060",
+                "listen_count": 0,
+                "release_date": "2023-10-23",
+                "release_group_mbid": "0533d730-8c69-409e-87ba-a25e2aa4aa75",
+                "release_group_primary_type": "Single",
+                "release_mbid": "caa38930-df99-408d-b1db-7e51c4dec060",
+                "release_name": "VIRAL",
+                "release_tags": [
+                    "alternative hip hop",
+                    "alternative punk",
+                    "alternative rock"
+                ]
+            },
+            {
+                "artist_credit_name": "Paris Fendi",
+                "artist_mbids": [
+                    "80797f4e-4720-4d65-8334-ecc091b64668"
+                ],
+                "caa_id": 35477207886,
+                "caa_release_mbid": "94ea1b84-cbd6-44b6-aafd-83513a1c37e3",
+                "listen_count": 0,
+                "release_date": "2023-10-27",
+                "release_group_mbid": "2d12ac2b-29f9-4a8e-b890-43cc237f546a",
+                "release_group_primary_type": "Album",
+                "release_mbid": "c3aa902c-563f-4bd4-a574-8671a3ebb845",
+                "release_name": "Sing Love Grace, Vol. 1: Sing",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Core of the Coalman/Jorge Boehringer",
+                "artist_mbids": [
+                    "56e8de53-535e-4048-bd1e-67a1bfd035d6",
+                    "f282c3f5-0eb4-451a-95cd-07336afd109e"
+                ],
+                "caa_id": 34599248841,
+                "caa_release_mbid": "e75b3576-8e88-4b02-9bd4-f6aca67c7ddb",
+                "listen_count": 0,
+                "release_date": "2023-11-01",
+                "release_group_mbid": "675ce239-bfe2-4570-b35e-704a27dea6d4",
+                "release_group_primary_type": "Album",
+                "release_mbid": "e75b3576-8e88-4b02-9bd4-f6aca67c7ddb",
+                "release_name": "Klein Bottles",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Smithson Michael",
+                "artist_mbids": [
+                    "c6249e9a-ea37-44c1-a735-2fd4b0dca82c"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-11-03",
+                "release_group_mbid": "a5816204-fe1b-48e6-b9f0-cc78878c57da",
+                "release_group_primary_type": "EP",
+                "release_mbid": "ddf84346-3544-4596-a550-e54a688a2c90",
+                "release_name": "Traction",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Burial Ground",
+                "artist_mbids": [
+                    "cf0f1fc2-a9e3-4020-b5dd-413d3df73ce4"
+                ],
+                "caa_id": 34047635378,
+                "caa_release_mbid": "04051215-aeb2-489b-8262-217bdddba274",
+                "listen_count": 0,
+                "release_date": "2023-11-06",
+                "release_group_mbid": "08a70f3b-cb8f-40c9-9677-697eefe90d61",
+                "release_group_primary_type": "EP",
+                "release_mbid": "04051215-aeb2-489b-8262-217bdddba274",
+                "release_name": "Nichts ist es wert",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "xxsangui",
+                "artist_mbids": [
+                    "868bec41-6866-4b72-a279-a7bbdce7c50f"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-11-06",
+                "release_group_mbid": "e416609d-eaf4-43ac-b018-b23866d855a4",
+                "release_group_primary_type": "Single",
+                "release_mbid": "54d1993d-8d9c-495f-aabe-1ebc9ade9be0",
+                "release_name": "xxsangui",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Polite Bureaux",
+                "artist_mbids": [
+                    "d4b44b5d-b6d2-4ba5-8859-e2ec4b159139"
+                ],
+                "caa_id": 31646049998,
+                "caa_release_mbid": "4c2a8881-8516-43cc-b896-7f5645433155",
+                "listen_count": 0,
+                "release_date": "2023-11-07",
+                "release_group_mbid": "8f1b09a6-0a90-4757-812c-b8f84dcec54b",
+                "release_group_primary_type": "Album",
+                "release_mbid": "4c2a8881-8516-43cc-b896-7f5645433155",
+                "release_name": "WarLetter",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Yemi Alafifuni",
+                "artist_mbids": [
+                    "d2e1879c-6cf2-4b8a-bdfb-877052c34420"
+                ],
+                "caa_id": 35664075083,
+                "caa_release_mbid": "cd21e68d-d7b4-4c7b-b683-b05a2d6babea",
+                "listen_count": 0,
+                "release_date": "2023-11-10",
+                "release_group_mbid": "170c6cf5-3ed1-4ea8-adbe-661358da0623",
+                "release_group_primary_type": "Single",
+                "release_mbid": "cd21e68d-d7b4-4c7b-b683-b05a2d6babea",
+                "release_name": "HOME",
+                "release_tags": [
+                    "christmas music",
+                    "pop"
+                ]
+            },
+            {
+                "artist_credit_name": "Spirit Spell",
+                "artist_mbids": [
+                    "58bc01e0-96b9-4dac-a947-ce1503858f6e"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-11-13",
+                "release_group_mbid": "03c87beb-6b05-49ad-89c8-4489152bce2b",
+                "release_group_primary_type": "Album",
+                "release_mbid": "e167556e-cbbe-4e16-9e20-b6e5071b3dff",
+                "release_name": "The Beautiful Spellbook",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Dolly Parton",
+                "artist_mbids": [
+                    "1d543e07-d0d2-4834-a8db-d65c50c2a856"
+                ],
+                "caa_id": 35628697320,
+                "caa_release_mbid": "e49c5628-604e-425c-95c0-6fcada9a235d",
+                "listen_count": 0,
+                "release_date": "2023-11-17",
+                "release_group_mbid": "f58199d9-1c73-4922-900c-8e258ee022c7",
+                "release_group_primary_type": "Album",
+                "release_mbid": "e49c5628-604e-425c-95c0-6fcada9a235d",
+                "release_name": "Rockstar",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Roje",
+                "artist_mbids": [
+                    "99a6ea02-5497-444d-a02e-60d0ab9e4bf1"
+                ],
+                "caa_id": 34070369910,
+                "caa_release_mbid": "e21c3e34-0600-45f8-a1f9-f6dc6be859ce",
+                "listen_count": 0,
+                "release_date": "2023-11-25",
+                "release_group_mbid": "20a17ef3-3aeb-4c95-9813-c37aafac01d3",
+                "release_group_primary_type": "Album",
+                "release_mbid": "e21c3e34-0600-45f8-a1f9-f6dc6be859ce",
+                "release_name": "Untitled For A Reason",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Submarine FM",
+                "artist_mbids": [
+                    "8eb9ba9b-503c-49a1-8a06-e44de58bb143"
+                ],
+                "caa_id": 34599027570,
+                "caa_release_mbid": "2c264322-e590-472c-831f-8f0af6e0ddcc",
+                "listen_count": 0,
+                "release_date": "2023-12-01",
+                "release_group_mbid": "470ffce4-1e85-4148-a796-26cfbc2ae744",
+                "release_group_primary_type": "Single",
+                "release_mbid": "2c264322-e590-472c-831f-8f0af6e0ddcc",
+                "release_name": "Fluide",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Hibou",
+                "artist_mbids": [
+                    "8cf14cb0-11c6-425e-a66d-682f0eda40f0"
+                ],
+                "caa_id": 34245730553,
+                "caa_release_mbid": "b04630f0-19cf-4f09-83d6-74d7118752b7",
+                "listen_count": 0,
+                "release_date": "2023-12-02",
+                "release_group_mbid": "95bd11f9-22c8-4040-b363-ce1e4dcfbdec",
+                "release_group_primary_type": "Single",
+                "release_mbid": "b04630f0-19cf-4f09-83d6-74d7118752b7",
+                "release_name": "Night Fell",
+                "release_tags": [
+                    "dream pop",
+                    "indie",
+                    "indie rock",
+                    "new wave",
+                    "paris",
+                    "pop",
+                    "rock",
+                    "shoegaze",
+                    "surf",
+                    "surf rock"
+                ]
+            },
+            {
+                "artist_credit_name": "Rowhy",
+                "artist_mbids": [
+                    "dfdeac76-087d-44f4-ae8c-2c611279e5a7"
+                ],
+                "caa_id": 34541126578,
+                "caa_release_mbid": "93c1de16-5de6-4588-b247-b9fcbb1118fc",
+                "listen_count": 0,
+                "release_date": "2023-12-05",
+                "release_group_mbid": "c65b90dc-feae-4581-99d8-f34a21455d6c",
+                "release_group_primary_type": "Single",
+                "release_mbid": "93c1de16-5de6-4588-b247-b9fcbb1118fc",
+                "release_name": "Se Pone",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Lucy Dreams feat. Frida Bollani Magoni",
+                "artist_mbids": [
+                    "0a6b9a9f-20f3-464b-aa10-3e29d9fe6d04",
+                    "bef8f983-0f3c-466f-846b-be532714488c"
+                ],
+                "caa_id": 34270492294,
+                "caa_release_mbid": "ded0e3f6-2da9-4075-aecb-a757b2143da8",
+                "listen_count": 0,
+                "release_date": "2023-12-09",
+                "release_group_mbid": "602e655a-c883-4a4c-b683-35f44aee5b1f",
+                "release_group_primary_type": "Single",
+                "release_mbid": "ded0e3f6-2da9-4075-aecb-a757b2143da8",
+                "release_name": "Levels",
+                "release_tags": [
+                    "alt pop",
+                    "alt-pop",
+                    "art pop",
+                    "dream pop",
+                    "indie pop",
+                    "pop",
+                    "synth",
+                    "synth-pop",
+                    "vienna"
+                ]
+            },
+            {
+                "artist_credit_name": "\ubc15\uc81c\ud615",
+                "artist_mbids": [
+                    "f53e21b8-0806-41ce-a483-b6bce9811d29"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-12-09",
+                "release_group_mbid": "7d612ead-dbe8-4cd1-b0aa-d51eb262f5f3",
+                "release_group_primary_type": "Single",
+                "release_mbid": "36d3237f-a244-471f-862b-2386202c36ad",
+                "release_name": "A Typical Story",
+                "release_tags": [
+                    "eaj",
+                    "eajpark",
+                    "indie pop",
+                    "pop",
+                    "typicalstory"
+                ]
+            },
+            {
+                "artist_credit_name": "Flynn Teal",
+                "artist_mbids": [
+                    "0ed14ce9-34fa-4770-965e-93c63ed576ca"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-12-10",
+                "release_group_mbid": "d4309afa-5692-49e2-b3e5-1cd46f062f9c",
+                "release_group_primary_type": "Album",
+                "release_mbid": "22c90dc8-5dd7-46b2-9538-c63ab8b3322c",
+                "release_name": "Small Poppies",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "dkalebeatz",
+                "artist_mbids": [
+                    "46091aed-c507-4341-be61-e7e441e95709"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-12-15",
+                "release_group_mbid": "dbf59fa3-4f4b-455e-89b5-0010b5ac4480",
+                "release_group_primary_type": "Single",
+                "release_group_secondary_type": "Audio drama",
+                "release_mbid": "d1774c78-2696-4196-99d3-375889bf325a",
+                "release_name": "DeepSoulVol.9 (Official Music Audio)",
+                "release_tags": [
+                    "dkalebeatz"
+                ]
+            },
+            {
+                "artist_credit_name": "Daria",
+                "artist_mbids": [
+                    "075b120a-6dc7-44b4-8518-7249a536f1cc"
+                ],
+                "caa_id": 34887097126,
+                "caa_release_mbid": "9081d9be-1182-498a-903b-7c368c6f3ab6",
+                "listen_count": 0,
+                "release_date": "2023-12-16",
+                "release_group_mbid": "40b51978-7caa-4cec-9753-20adcb481a83",
+                "release_group_primary_type": "Single",
+                "release_mbid": "9081d9be-1182-498a-903b-7c368c6f3ab6",
+                "release_name": "Water & Sand",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Emperor X",
+                "artist_mbids": [
+                    "e79dde40-8b35-4105-89f8-a5b0afbfd43c"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-12-31",
+                "release_group_mbid": "f7a30dbc-6f64-4b1c-839e-ecdee93ae538",
+                "release_group_primary_type": "Album",
+                "release_mbid": "e2154153-a5a2-4105-bbc9-d495494598df",
+                "release_name": "\u0414\u0443\u0436\u0435 \u0427\u0443\u0434\u043e\u0432\u0435 \u0420\u0456\u0437\u0434\u0432\u043e",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Living Arrangement",
+                "artist_mbids": [
+                    "38b88d28-daa1-4c2a-8f46-bfefeb1f1134"
+                ],
+                "caa_id": 34844161247,
+                "caa_release_mbid": "3eb363a9-40fe-4646-80e6-5cba18435982",
+                "listen_count": 0,
+                "release_date": "2023-12-31",
+                "release_group_mbid": "e594ba79-1a44-467b-a31c-8e8180727218",
+                "release_group_primary_type": "Album",
+                "release_mbid": "3eb363a9-40fe-4646-80e6-5cba18435982",
+                "release_name": "LA2023",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Nosgov",
+                "artist_mbids": [
+                    "aa2e8cde-cc24-4350-a4fc-0673cc007122"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2023-12-31",
+                "release_group_mbid": "c5bc1e4e-b9ef-4e2e-aa27-92b0bb79e946",
+                "release_group_primary_type": "Album",
+                "release_mbid": "75023f81-2485-4a1a-95a7-1a8958d8daab",
+                "release_name": "Fallout New Vegas: Original Game Soundtrack",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Alex Froot",
+                "artist_mbids": [
+                    "406c9e54-8676-4f7c-ad75-edccc1e81c16"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2024-01-01",
+                "release_group_mbid": "16c9a805-916f-4a28-83ac-6a35a53fb00d",
+                "release_group_primary_type": "Album",
+                "release_mbid": "6052a84d-4e06-4f22-99ea-ad0f15d941d0",
+                "release_name": "Shapeshifter",
+                "release_tags": []
+            },
+            {
+                "artist_credit_name": "Hunter Hoak",
+                "artist_mbids": [
+                    "29a9b902-50c6-449b-a525-325ff3f2c802"
+                ],
+                "caa_id": null,
+                "caa_release_mbid": null,
+                "listen_count": 0,
+                "release_date": "2024-01-05",
+                "release_group_mbid": "a13bb7d8-0e88-4490-b0d0-910ff5e9293f",
+                "release_group_primary_type": "Album",
+                "release_mbid": "2afd775c-cea3-483d-8f9b-1136dbf380bc",
+                "release_name": "Drinkin\u2019",
+                "release_tags": []
+            }
+        ],
+        "total_count": 102
     }
-]
+}

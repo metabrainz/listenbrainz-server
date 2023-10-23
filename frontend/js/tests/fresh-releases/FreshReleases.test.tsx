@@ -49,7 +49,24 @@ const mountOptions: { context: GlobalAppContextT } = {
   },
 };
 
+window.scrollTo = jest.fn();
+
 describe("FreshReleases", () => {
+  beforeAll(() => {
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: jest.fn().mockImplementation((query) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(), // Deprecated
+        removeListener: jest.fn(), // Deprecated
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+      })),
+    });
+  });
   it("renders the page correctly", async () => {
     const mockFetchUserFreshReleases = jest.fn().mockResolvedValue({
       json: () => userData,
@@ -66,9 +83,9 @@ describe("FreshReleases", () => {
   });
 
   it("renders sitewide fresh releases page, including timeline component", async () => {
-    const mockFetchSitewideFreshReleases = jest.fn().mockResolvedValue({
-      json: () => sitewideData,
-    });
+    const mockFetchSitewideFreshReleases = jest
+      .fn()
+      .mockResolvedValue(sitewideData);
     mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases;
     const wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
@@ -76,13 +93,18 @@ describe("FreshReleases", () => {
       </GlobalAppContext.Provider>
     );
     await waitForComponentToPaint(wrapper);
-    await act(() => {
+    await act(async () => {
       // click on sitewide-releases button
       wrapper.find("#sitewide-releases").at(0).simulate("click");
     });
     await waitForComponentToPaint(wrapper);
-    expect(mockFetchSitewideFreshReleases).toHaveBeenCalledWith(3);
-    expect(wrapper.find("#release-filters")).toHaveLength(1);
+    expect(mockFetchSitewideFreshReleases).toHaveBeenCalledWith(
+      7,
+      true,
+      true,
+      "release_date"
+    );
+    expect(wrapper.find(".release-filters")).toHaveLength(1);
     expect(wrapper.find(".releases-timeline")).toHaveLength(1);
   });
 
@@ -98,7 +120,7 @@ describe("FreshReleases", () => {
       <ReleaseFilters
         allFilters={sitewideFilters}
         displaySettings={userDisplayFilters}
-        releases={sitewideData}
+        releases={sitewideData.payload.releases}
         setFilteredList={setFilteredList}
         range="three_months"
         handleRangeChange={handleRangeChange}
@@ -112,7 +134,7 @@ describe("FreshReleases", () => {
     );
 
     await waitForComponentToPaint(wrapper);
-    wrapper.find("#filters-item-0").simulate("click");
+    wrapper.find("#filters-item-0").at(0).simulate("click");
     expect(setFilteredList).toBeCalled();
   });
 });
