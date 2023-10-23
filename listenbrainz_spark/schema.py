@@ -35,6 +35,7 @@ fresh_releases_schema = StructType([
     StructField('release_group_primary_type', StringType(), nullable=True),
     StructField('release_group_secondary_type', StringType(), nullable=True),
     StructField('release_tags', ArrayType(StringType()), nullable=True),
+    StructField('listen_count', IntegerType(), nullable=True),
     StructField('caa_id', LongType(), nullable=True),
     StructField('caa_release_mbid', StringType(), nullable=True)
 ])
