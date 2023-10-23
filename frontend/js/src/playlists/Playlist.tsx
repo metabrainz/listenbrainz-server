@@ -358,8 +358,8 @@ export default class PlaylistPage extends React.Component<
                     </button>
                     <PlaylistMenu
                       playlist={playlist}
-                      onPlaylistSave={this.onPlaylistSave}
-                      onPlaylistDelete={this.onDeletePlaylist}
+                      onPlaylistSaved={this.onPlaylistSave}
+                      onPlaylistDeleted={this.onDeletePlaylist}
                       disallowEmptyPlaylistExport
                     />
                   </span>

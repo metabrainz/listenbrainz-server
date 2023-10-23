@@ -22,16 +22,16 @@ import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
 export type PlaylistMenuProps = {
   playlist: JSPFPlaylist;
-  onPlaylistSave?: (playlist: JSPFPlaylist) => void;
-  onPlaylistDelete?: (playlist: JSPFPlaylist) => void;
+  onPlaylistSaved?: (playlist: JSPFPlaylist) => void;
+  onPlaylistDeleted?: (playlist: JSPFPlaylist) => void;
   onPlaylistCopied?: (playlist: JSPFPlaylist) => void;
   disallowEmptyPlaylistExport?: boolean;
 };
 
 function PlaylistMenu({
   playlist,
-  onPlaylistSave,
-  onPlaylistDelete,
+  onPlaylistSaved,
+  onPlaylistDeleted,
   onPlaylistCopied,
   disallowEmptyPlaylistExport,
 }: PlaylistMenuProps) {
@@ -196,8 +196,8 @@ function PlaylistMenu({
                 NiceModal.show(CreateOrEditPlaylistModal, { playlist })
                   // @ts-ignore
                   .then((editedPlaylist: JSPFPlaylist) => {
-                    if (onPlaylistSave) {
-                      onPlaylistSave(editedPlaylist);
+                    if (onPlaylistSaved) {
+                      onPlaylistSaved(editedPlaylist);
                     }
                   });
               }}
@@ -215,8 +215,8 @@ function PlaylistMenu({
                 NiceModal.show(DeletePlaylistConfirmationModal, { playlist })
                   // @ts-ignore
                   .then((deletedPlaylist: JSPFPlaylist) => {
-                    if (onPlaylistDelete) {
-                      onPlaylistDelete(deletedPlaylist);
+                    if (onPlaylistDeleted) {
+                      onPlaylistDeleted(deletedPlaylist);
                     }
                   });
               }}
