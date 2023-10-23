@@ -270,7 +270,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                       (tag) => !releaseTagsExcludeCheckList.includes(tag)
                     )
                     ?.map((tag, index) => (
-                      <option value={tag}>{tag}</option>
+                      <option value={tag} key={tag}>
+                        {tag}
+                      </option>
                     ))}
                 </select>
 
