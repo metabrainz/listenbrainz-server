@@ -360,6 +360,7 @@ export default class PlaylistPage extends React.Component<
                       playlist={playlist}
                       onPlaylistSave={this.onPlaylistSave}
                       onPlaylistDelete={this.onDeletePlaylist}
+                      disallowEmptyPlaylistExport
                     />
                   </span>
                 </div>

@@ -58,7 +58,7 @@ export function Playlist(props: PlaylistProps) {
             <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
             &nbsp;Options
           </button>
-          <PlaylistMenu playlist={playlist} />
+          <PlaylistMenu playlist={playlist} disallowEmptyPlaylistExport />
         </span>
         <div id="title">{playlist?.title}</div>
         <div id="description">{playlist?.annotation}</div>

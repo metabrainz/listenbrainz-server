@@ -24,12 +24,14 @@ export type PlaylistMenuProps = {
   playlist: JSPFPlaylist;
   onPlaylistSave?: (playlist: JSPFPlaylist) => void;
   onPlaylistDelete?: (playlist: JSPFPlaylist) => void;
+  disallowEmptyPlaylistExport?: boolean;
 };
 
 function PlaylistMenu({
   playlist,
   onPlaylistSave,
   onPlaylistDelete,
+  disallowEmptyPlaylistExport,
 }: PlaylistMenuProps) {
   const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
   const { auth_token } = currentUser;
@@ -147,13 +149,11 @@ function PlaylistMenu({
     );
   };
   const handlePlaylistExport = async (handler: () => void) => {
-    if (!playlist || !playlist.track.length) {
+    if (!playlist || (disallowEmptyPlaylistExport && !playlist.track.length)) {
       toast.warn(
         <ToastMsg
           title="Empty playlist"
-          message={
-            "Why don't you fill up the playlist a bit before trying to export it?"
-          }
+          message="Why don't you fill up the playlist a bit before trying to export it?"
         />,
         { toastId: "empty-playlist" }
       );

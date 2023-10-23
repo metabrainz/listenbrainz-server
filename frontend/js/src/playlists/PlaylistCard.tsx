@@ -119,7 +119,11 @@ export default function PlaylistCard({
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options
           </button>
-          <PlaylistMenu playlist={playlist} onPlaylistSave={onPlaylistEdited} onPlaylistDelete={onPlaylistDeleted}/>
+          <PlaylistMenu
+            playlist={playlist}
+            onPlaylistSave={onPlaylistEdited}
+            onPlaylistDelete={onPlaylistDeleted}
+          />
         </div>
       )}
       <a className="info" href={`/playlist/${sanitize(playlistId)}`}>
