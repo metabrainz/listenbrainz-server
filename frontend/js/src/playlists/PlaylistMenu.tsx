@@ -24,6 +24,7 @@ export type PlaylistMenuProps = {
   playlist: JSPFPlaylist;
   onPlaylistSave?: (playlist: JSPFPlaylist) => void;
   onPlaylistDelete?: (playlist: JSPFPlaylist) => void;
+  onPlaylistCopied?: (playlist: JSPFPlaylist) => void;
   disallowEmptyPlaylistExport?: boolean;
 };
 
@@ -31,6 +32,7 @@ function PlaylistMenu({
   playlist,
   onPlaylistSave,
   onPlaylistDelete,
+  onPlaylistCopied,
   disallowEmptyPlaylistExport,
 }: PlaylistMenuProps) {
   const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
@@ -79,7 +81,9 @@ function PlaylistMenu({
         newPlaylistId,
         auth_token
       ).then((res) => res.json());
-
+      if (onPlaylistCopied) {
+        onPlaylistCopied(JSPFObject.playlist);
+      }
       const successTerm = playlistID ? "Duplicated" : "Saved";
       toast.success(
         <ToastMsg

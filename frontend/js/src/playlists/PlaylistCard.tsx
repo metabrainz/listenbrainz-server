@@ -36,7 +36,6 @@ export default function PlaylistCard({
   const playlistId = getPlaylistId(playlist);
   const customFields = getPlaylistExtension(playlist);
 
-
   const onCopyPlaylist = React.useCallback(async (): Promise<void> => {
     if (!currentUser?.auth_token) {
       toast.error(
@@ -123,6 +122,7 @@ export default function PlaylistCard({
             playlist={playlist}
             onPlaylistSave={onPlaylistEdited}
             onPlaylistDelete={onPlaylistDeleted}
+            onPlaylistCopied={onSuccessfulCopy}
           />
         </div>
       )}
