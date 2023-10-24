@@ -30,7 +30,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
     result = run_query(f"""
         WITH gather_release_data AS (
             SELECT user_id
-                 , l.release_mbid
+                 , nullif(l.release_mbid, '')
                  , COALESCE(rel.release_name, l.release_name) AS release_name
                  , COALESCE(rel.album_artist_name, l.artist_name) AS release_artist_name
                  , COALESCE(rel.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
