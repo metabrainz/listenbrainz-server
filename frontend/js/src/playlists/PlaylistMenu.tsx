@@ -22,17 +22,24 @@ import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
 export type PlaylistMenuProps = {
   playlist: JSPFPlaylist;
-  onPlaylistSave?: (playlist: JSPFPlaylist) => void;
-  onPlaylistDelete?: (playlist: JSPFPlaylist) => void;
+  onPlaylistSaved?: (playlist: JSPFPlaylist) => void;
+  onPlaylistDeleted?: (playlist: JSPFPlaylist) => void;
+  onPlaylistCopied?: (playlist: JSPFPlaylist) => void;
+  disallowEmptyPlaylistExport?: boolean;
 };
 
 function PlaylistMenu({
   playlist,
-  onPlaylistSave,
-  onPlaylistDelete,
+  onPlaylistSaved,
+  onPlaylistDeleted,
+  onPlaylistCopied,
+  disallowEmptyPlaylistExport,
 }: PlaylistMenuProps) {
   const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
-  const [loading, setLoading] = React.useState(false);
+  const { auth_token } = currentUser;
+  const playlistID = getPlaylistId(playlist);
+  const playlistTitle = playlist.title;
+
   const alertMustBeLoggedIn = () => {
     toast.error(
       <ToastMsg
@@ -42,13 +49,15 @@ function PlaylistMenu({
       { toastId: "auth-error" }
     );
   };
+
   const handleError = (error: any) => {
     toast.error(<ToastMsg title="Error" message={error.message} />, {
       toastId: "error",
     });
   };
+
   const copyPlaylist = async (): Promise<void> => {
-    if (!currentUser?.auth_token) {
+    if (!auth_token) {
       alertMustBeLoggedIn();
       return;
     }
@@ -59,21 +68,29 @@ function PlaylistMenu({
       return;
     }
     try {
-      const newPlaylistId = await APIService.copyPlaylist(
-        currentUser.auth_token,
-        getPlaylistId(playlist)
-      );
+      let newPlaylistId;
+      if (playlistID) {
+        newPlaylistId = await APIService.copyPlaylist(auth_token, playlistID);
+      } else {
+        newPlaylistId = await APIService.createPlaylist(auth_token, {
+          playlist,
+        });
+      }
       // Fetch the newly created playlist and add it to the state if it's the current user's page
       const JSPFObject: JSPFObject = await APIService.getPlaylist(
         newPlaylistId,
-        currentUser.auth_token
+        auth_token
       ).then((res) => res.json());
+      if (onPlaylistCopied) {
+        onPlaylistCopied(JSPFObject.playlist);
+      }
+      const successTerm = playlistID ? "Duplicated" : "Saved";
       toast.success(
         <ToastMsg
-          title="Duplicated playlist"
+          title={`${successTerm} playlist`}
           message={
             <>
-              Duplicated to playlist&ensp;
+              {successTerm} to playlist&ensp;
               <a href={`/playlist/${newPlaylistId}`}>
                 {JSPFObject.playlist.title}
               </a>
@@ -86,36 +103,44 @@ function PlaylistMenu({
       handleError(error);
     }
   };
-  const exportAsJSPF = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token: string
-  ) => {
-    const result = await APIService.getPlaylist(playlistId, auth_token);
-    saveAs(await result.blob(), `${playlistTitle}.jspf`);
+
+  const exportAsJSPF = async () => {
+    let playlistJSPFBlob: Blob;
+    if (playlistID) {
+      const result = await APIService.getPlaylist(playlistID, auth_token);
+      playlistJSPFBlob = await result.blob();
+    } else {
+      playlistJSPFBlob = new Blob([JSON.stringify(playlist)]);
+    }
+    saveAs(playlistJSPFBlob, `${playlistTitle}.jspf`);
   };
 
-  const exportAsXSPF = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token: string
-  ) => {
+  const exportAsXSPF = async () => {
+    if (!auth_token) {
+      alertMustBeLoggedIn();
+      return;
+    }
     const result = await APIService.exportPlaylistToXSPF(
       auth_token,
-      playlistId
+      playlistID
     );
     saveAs(result, `${playlistTitle}.xspf`);
   };
 
-  const exportToSpotify = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token: string
-  ) => {
-    const result = await APIService.exportPlaylistToSpotify(
-      auth_token,
-      playlistId
-    );
+  const exportToSpotify = async () => {
+    if (!auth_token) {
+      alertMustBeLoggedIn();
+      return;
+    }
+    let result;
+    if (playlistID) {
+      result = await APIService.exportPlaylistToSpotify(auth_token, playlistID);
+    } else {
+      result = await APIService.exportJSPFPlaylistToSpotify(
+        auth_token,
+        playlist
+      );
+    }
     const { external_url } = result;
     toast.success(
       <ToastMsg
@@ -133,36 +158,22 @@ function PlaylistMenu({
       { toastId: "export-playlist" }
     );
   };
-  const handlePlaylistExport = async (
-    handler: (
-      playlistId: string,
-      playlistTitle: string,
-      auth_token: string
-    ) => void
-  ) => {
-    if (!playlist || !currentUser.auth_token) {
-      return;
-    }
-    if (!playlist.track.length) {
+  const handlePlaylistExport = async (handler: () => Promise<void>) => {
+    if (!playlist || (disallowEmptyPlaylistExport && !playlist.track.length)) {
       toast.warn(
         <ToastMsg
           title="Empty playlist"
-          message={
-            "Why don't you fill up the playlist a bit before trying to export it?"
-          }
+          message="Why don't you fill up the playlist a bit before trying to export it?"
         />,
         { toastId: "empty-playlist" }
       );
       return;
     }
-    setLoading(true);
     try {
-      const playlistId = getPlaylistId(playlist);
-      handler(playlistId, playlist.title, currentUser.auth_token);
+      await handler();
     } catch (error) {
       handleError(error.error ?? error);
     }
-    setLoading(false);
   };
   const showSpotifyExportButton = spotifyAuth?.permission?.includes(
     "playlist-modify-public"
@@ -174,7 +185,8 @@ function PlaylistMenu({
     >
       <li>
         <a onClick={copyPlaylist} role="button" href="#">
-          <FontAwesomeIcon icon={faCopy as IconProp} /> Duplicate
+          <FontAwesomeIcon icon={faCopy as IconProp} />{" "}
+          {playlistID ? "Duplicate" : "Save to my playlists"}
         </a>
       </li>
       {isPlaylistOwner(playlist, currentUser) && (
@@ -190,8 +202,8 @@ function PlaylistMenu({
                 NiceModal.show(CreateOrEditPlaylistModal, { playlist })
                   // @ts-ignore
                   .then((editedPlaylist: JSPFPlaylist) => {
-                    if (onPlaylistSave) {
-                      onPlaylistSave(editedPlaylist);
+                    if (onPlaylistSaved) {
+                      onPlaylistSaved(editedPlaylist);
                     }
                   });
               }}
@@ -209,8 +221,8 @@ function PlaylistMenu({
                 NiceModal.show(DeletePlaylistConfirmationModal, { playlist })
                   // @ts-ignore
                   .then((deletedPlaylist: JSPFPlaylist) => {
-                    if (onPlaylistDelete) {
-                      onPlaylistDelete(deletedPlaylist);
+                    if (onPlaylistDeleted) {
+                      onPlaylistDeleted(deletedPlaylist);
                     }
                   });
               }}
