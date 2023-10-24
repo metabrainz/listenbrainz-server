@@ -77,6 +77,14 @@ fetchMock.mockIf(
   }
 );
 describe("Listens page", () => {
+  it("renders correctly on the profile page", () => {
+    const wrapper = mount<Listens>(
+      <GlobalAppContext.Provider value={mountOptions.context}>
+        <Listens {...props} />
+      </GlobalAppContext.Provider>
+    );
+    expect(wrapper.find("#listens")).toHaveLength(1);
+  });
 
   describe("componentDidMount", () => {
     it("calls connectWebsockets", () => {

@@ -23,6 +23,6 @@ const props = {
 describe("BrainzPlayerUI", () => {
   it("renders", () => {
     const wrapper = mount(<BrainzPlayerUI {...props} />);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find("#brainz-player")).toHaveLength(1);
   });
 });

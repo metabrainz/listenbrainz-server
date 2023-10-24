@@ -16,6 +16,8 @@ import * as userListeningActivityProcessedDataMonth from "../__mocks__/userListe
 import * as userListeningActivityProcessedDataYear from "../__mocks__/userListeningActivityProcessDataYear.json";
 import * as userListeningActivityProcessedDataAllTime from "../__mocks__/userListeningActivityProcessDataAllTime.json";
 import { waitForComponentToPaint } from "../test-utils";
+import { ResponsiveBar } from "@nivo/bar";
+import { Context as ResponsiveContext } from 'react-responsive'
 
 const userProps: UserListeningActivityProps = {
   user: {
@@ -37,7 +39,9 @@ describe.each([
   describe("UserListeningActivity", () => {
     it("renders correctly for week", async () => {
       const wrapper = mount<UserListeningActivity>(
-        <UserListeningActivity {...props} />
+        <ResponsiveContext.Provider value={{ width: 700 }}>
+          <UserListeningActivity {...props} />
+        </ResponsiveContext.Provider>
       );
       await act(async () => {
         wrapper.setState({
@@ -49,12 +53,16 @@ describe.each([
         });
       });
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
+      expect(wrapper.getDOMNode()).toHaveTextContent("70 Listens");
+      expect(wrapper.getDOMNode()).toHaveTextContent("10 Listens per day");
     });
 
     it("renders correctly for month", async () => {
       const wrapper = mount<UserListeningActivity>(
-        <UserListeningActivity {...{ ...props, range: "month" }} />
+        <ResponsiveContext.Provider value={{ width: 800 }}>
+          <UserListeningActivity {...{ ...props, range: "month" }} />
+        </ResponsiveContext.Provider>
       );
       await act(async () => {
         wrapper.setState({
@@ -66,12 +74,16 @@ describe.each([
         });
       });
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
+      expect(wrapper.getDOMNode()).toHaveTextContent("70 Listens");
+      expect(wrapper.getDOMNode()).toHaveTextContent("10 Listens per day");
     });
 
     it("renders correctly for year", async () => {
       const wrapper = mount<UserListeningActivity>(
-        <UserListeningActivity {...{ ...props, range: "year" }} />
+        <ResponsiveContext.Provider value={{ width: 800 }}>
+          <UserListeningActivity {...{ ...props, range: "year" }} />
+        </ResponsiveContext.Provider>
       );
       await act(async () => {
         wrapper.setState({
@@ -83,12 +95,16 @@ describe.each([
         });
       });
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
+      expect(wrapper.getDOMNode()).toHaveTextContent("70 Listens");
+      expect(wrapper.getDOMNode()).toHaveTextContent("10 Listens per month");
     });
 
     it("renders correctly for all_time", async () => {
       const wrapper = mount<UserListeningActivity>(
-        <UserListeningActivity {...{ ...props, range: "all_time" }} />
+        <ResponsiveContext.Provider value={{ width: 800 }}>
+          <UserListeningActivity {...{ ...props, range: "all_time" }} />
+        </ResponsiveContext.Provider>
       );
 
       await act(async () => {
@@ -101,19 +117,20 @@ describe.each([
         });
       });
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
+      expect(wrapper.getDOMNode()).toHaveTextContent("70 Listens");
+      expect(wrapper.getDOMNode()).toHaveTextContent("10 Listens per year");
     });
 
     it("renders corectly when range is invalid", async () => {
       const wrapper = mount<UserListeningActivity>(
-        <UserListeningActivity {...props} />
+          <UserListeningActivity {...props} range={"invalid_range" as UserStatsAPIRange } />
       );
-      await act(async () => {
-        wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.state().hasError).toBeTruthy();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(0);
+      expect(wrapper.getDOMNode()).toHaveTextContent("Invalid range: invalid_range");
     });
   });
 

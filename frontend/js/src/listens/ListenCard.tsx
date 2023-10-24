@@ -12,6 +12,7 @@ import {
   faPencilAlt,
   faPlay,
   faPlus,
+  faPlusCircle,
   faSquare,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
@@ -57,6 +58,7 @@ import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import { ToastMsg } from "../notifications/Notifications";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import { millisecondsToStr } from "../playlists/utils";
+import AddToPlaylist from "./AddToPlaylist";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -598,6 +600,19 @@ export default class ListenCard extends React.Component<
                         }}
                         dataToggle="modal"
                         dataTarget="#CBReviewModal"
+                      />
+                    )}
+                    {isLoggedIn && (
+                      <ListenControl
+                        text="Add to playlist"
+                        icon={faPlusCircle}
+                        action={() => {
+                          NiceModal.show(AddToPlaylist, {
+                            listen,
+                          });
+                        }}
+                        dataToggle="modal"
+                        dataTarget="#AddToPlaylistModal"
                       />
                     )}
                     {additionalMenuItems}

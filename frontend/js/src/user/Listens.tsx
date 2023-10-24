@@ -444,7 +444,7 @@ export default class Listens extends React.Component<
             <ToastMsg
               title="Success"
               message={
-                "This listen has not been deleted yet, but is scheduled for deletion," +
+                "This listen has not been deleted yet, but is scheduled for deletion, " +
                 "which usually happens shortly after the hour."
               }
             />,

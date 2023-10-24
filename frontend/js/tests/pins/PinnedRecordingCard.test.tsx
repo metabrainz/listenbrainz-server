@@ -13,6 +13,7 @@ import GlobalAppContext, {
 } from "../../src/utils/GlobalAppContext";
 import { waitForComponentToPaint } from "../test-utils";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import ListenCard from "../../src/listens/ListenCard";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -65,7 +66,7 @@ describe("PinnedRecordingCard", () => {
     const wrapper = mount<PinnedRecordingCard>(
       <PinnedRecordingCard {...props} />
     );
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(ListenCard)).toHaveLength(1);
   });
 
   describe("determineIfCurrentlyPinned", () => {

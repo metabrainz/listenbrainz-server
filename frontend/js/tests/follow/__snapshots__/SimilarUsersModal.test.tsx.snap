@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`<SimilarUsersModal /> renders 1`] = `"<h3 class=\\"text-center\\" style=\\"margin-top: 10px;\\">Similar Users</h3><div class=\\"similar-users-list\\"><div><div><a href=\\"/user/mr_monkey/\\" target=\\"_blank\\" rel=\\"noopener noreferrer\\">mr_monkey</a></div></div></div>"`;

@@ -88,18 +88,12 @@ describe("<UserSocialNetwork />", () => {
     });
   });
 
-  it("renders correctly", () => {
+  it("contains a FollowerFollowingModal and a SimilarUsersModal components", () => {
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
         <UserSocialNetwork {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
-  });
-
-  it("contains a FollowerFollowingModal and a SimilarUsersModal components", () => {
-    const wrapper = mount(<UserSocialNetwork {...props} />);
-    expect(wrapper).toBeTruthy();
     expect(wrapper.find(FollowerFollowingModal)).toHaveLength(1);
     expect(wrapper.find(SimilarUsersModal)).toHaveLength(1);
   });

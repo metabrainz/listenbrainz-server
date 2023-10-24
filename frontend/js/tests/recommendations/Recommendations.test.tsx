@@ -16,6 +16,7 @@ import GlobalAppContext, {
 import APIService from "../../src/utils/APIService";
 import { waitForComponentToPaint } from "../test-utils";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import ListenCard from "../../src/listens/ListenCard";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -80,7 +81,8 @@ describe("Recommendations", () => {
         <Recommendations {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper.find("#recommendations")).toHaveLength(1);
+    expect(wrapper.find(ListenCard)).toHaveLength(25);
   });
   describe("componentDidMount", () => {
     it('calls loadFeedback if user is the currentUser"', async () => {
