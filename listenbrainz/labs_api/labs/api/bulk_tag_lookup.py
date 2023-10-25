@@ -29,7 +29,7 @@ class BulkTagLookup(Query):
         if len(mbids) > 1000:
             raise BadRequest("Cannot lookup more than 1,000 recordings at a time.")
 
-        with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as conn:
+        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 query = '''SELECT recording_mbid
                                 , tag
