@@ -122,6 +122,11 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     handleRangeChange(value);
   };
 
+  const totalListenCount = releases.reduce(
+    (accumulator, currentRelease) => accumulator + currentRelease.listen_count,
+    0
+  );
+
   React.useEffect(() => {
     const filteredReleases = releases.filter((item) => {
       const isCoverArtValid =
@@ -319,16 +324,19 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               switchLabel="Only Releases with artwork"
             />
 
-            {Object.keys(displaySettings).map((setting, index) => (
-              <Switch
-                id={`display-item-${index}`}
-                key={`display-item-${setting}`}
-                value={setting}
-                checked={displaySettings[setting]}
-                onChange={(e) => toggleSettings(setting)}
-                switchLabel={setting}
-              />
-            ))}
+            {Object.keys(displaySettings).map((setting, index) =>
+              (setting === "Tags" && allFilters.releaseTags.length === 0) ||
+              (setting === "Listens" && !totalListenCount) ? null : (
+                <Switch
+                  id={`display-item-${index}`}
+                  key={`display-item-${setting}`}
+                  value={setting}
+                  checked={displaySettings[setting]}
+                  onChange={(e) => toggleSettings(setting)}
+                  switchLabel={setting}
+                />
+              )
+            )}
           </>
         )}
       </div>
