@@ -196,21 +196,23 @@ export default function FreshReleases() {
               </Pill>
             </div>
           ) : null}
-          <div id="fr-row">
-            <span>Sort By:</span>{" "}
-            <div className="input-group">
-              <select
-                id="style"
-                className="form-control"
-                value={sort}
-                onChange={(event) => setSort(event.target.value)}
-              >
-                <option value="release_date">Release Date</option>
-                <option value="artist_credit_name">Artist</option>
-                <option value="release_name">Release Title</option>
-              </select>
+          {pageType === PAGE_TYPE_SITEWIDE ? (
+            <div id="fr-row">
+              <span>Sort By:</span>{" "}
+              <div className="input-group">
+                <select
+                  id="style"
+                  className="form-control"
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value)}
+                >
+                  <option value="release_date">Release Date</option>
+                  <option value="artist_credit_name">Artist</option>
+                  <option value="release_name">Release Title</option>
+                </select>
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
         <div className="releases-page row">
           {isLoading ? (
@@ -273,6 +275,7 @@ export default function FreshReleases() {
           showFutureReleases={showFutureReleases}
           setShowFutureReleases={setShowFutureReleases}
           releaseCardGridRef={releaseCardGridRef}
+          pageType={pageType}
         />
       </div>
       <button

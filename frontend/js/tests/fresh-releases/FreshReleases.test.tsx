@@ -130,6 +130,7 @@ describe("FreshReleases", () => {
         showFutureReleases
         setShowFutureReleases={setShowFutureReleases}
         releaseCardGridRef={releaseCardGridRef}
+        pageType="sitewide"
       />
     );
 

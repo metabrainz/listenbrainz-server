@@ -22,6 +22,7 @@ type ReleaseFiltersProps = {
   showFutureReleases: boolean;
   setShowFutureReleases: React.Dispatch<React.SetStateAction<boolean>>;
   releaseCardGridRef: React.RefObject<HTMLDivElement>;
+  pageType: string;
 };
 
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
@@ -38,6 +39,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     showFutureReleases,
     setShowFutureReleases,
     releaseCardGridRef,
+    pageType,
   } = props;
 
   const [checkedList, setCheckedList] = React.useState<
@@ -178,34 +180,38 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
         {filtersOpen && (
           <>
-            <div id="range">Range: </div>
+            {pageType === "sitewide" ? (
+              <>
+                <div id="range">Range: </div>
 
-            <div className="input-group">
-              <select
-                id="style"
-                className="form-control"
-                value={range}
-                onChange={handleRangeDropdown}
-              >
-                <option value="week">1 Week</option>
-                <option value="month">1 Month</option>
-                <option value="three_months">3 Month</option>
-              </select>
-            </div>
-            <Switch
-              id="date-filter-item-past"
-              value="past"
-              checked={showPastReleases}
-              onChange={(e) => setShowPastReleases(!showPastReleases)}
-              switchLabel="Past"
-            />
-            <Switch
-              id="date-filter-item-future"
-              value="future"
-              checked={showFutureReleases}
-              onChange={(e) => setShowFutureReleases(!showFutureReleases)}
-              switchLabel="Future"
-            />
+                <div className="input-group">
+                  <select
+                    id="style"
+                    className="form-control"
+                    value={range}
+                    onChange={handleRangeDropdown}
+                  >
+                    <option value="week">1 Week</option>
+                    <option value="month">1 Month</option>
+                    <option value="three_months">3 Month</option>
+                  </select>
+                </div>
+                <Switch
+                  id="date-filter-item-past"
+                  value="past"
+                  checked={showPastReleases}
+                  onChange={(e) => setShowPastReleases(!showPastReleases)}
+                  switchLabel="Past"
+                />
+                <Switch
+                  id="date-filter-item-future"
+                  value="future"
+                  checked={showFutureReleases}
+                  onChange={(e) => setShowFutureReleases(!showFutureReleases)}
+                  switchLabel="Future"
+                />
+              </>
+            ) : null}
             {allFilters.releaseTypes.length > 0 && (
               <>
                 <span id="types">Types:</span>
