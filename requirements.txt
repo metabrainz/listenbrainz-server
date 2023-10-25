@@ -33,7 +33,7 @@ pydantic == 1.9.1
 pycountry==22.3.5
 Flask==2.3.2
 Jinja2==3.1.2
-Werkzeug==2.3.3
+Werkzeug==3.0.1
 Flask-DebugToolbar==0.13.1
 Flask-UUID==0.2
 msgpack==0.5.6
