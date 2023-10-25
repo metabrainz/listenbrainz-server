@@ -8,7 +8,7 @@ from datasethoster import Query
 
 class BulkTagLookup(Query):
     '''
-        Look up a tag and popularity data for a list of recordings, based on MBID. 
+        Look up a tag and popularity data for a list of recordings, based on MBID.
     '''
 
     def names(self):
