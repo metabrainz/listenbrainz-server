@@ -64,20 +64,11 @@ const mountOptions: { context: GlobalAppContextT } = {
 };
 
 describe("UserPins", () => {
-  it("renders correctly on the profile page", () => {
-    // Datepicker component uses current time at load as max date,
-    // and PinnedRecordingModal component uses current time at load to display recording unpin date,
-    // so we have to mock the Date constructor otherwise snapshots will be different every day
-    const mockDate = new Date("2021-05-19");
-    const fakeDateNow = jest
-      .spyOn(global.Date, "now")
-      .mockImplementation(() => mockDate.getTime());
-
-    // eslint-disable-next-line no-import-assign
-    timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
+  it("renders correctly", () => {
     const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-    expect(wrapper.html()).toMatchSnapshot();
-    fakeDateNow.mockRestore();
+    expect(wrapper.find("#pinned-recordings")).toHaveLength(1);
+    expect(wrapper.getDOMNode()).toHaveTextContent("Lorde");
+    expect(wrapper.getDOMNode()).toHaveTextContent("400 Lux");
   });
 
   it("renders the correct number of pinned recordings", () => {

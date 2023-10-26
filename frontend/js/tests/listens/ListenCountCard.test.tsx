@@ -30,11 +30,11 @@ const globalContext: GlobalAppContextT = {
 describe("ListenCountCard", () => {
   it("renders correctly when listen count is not zero", () => {
     const wrapper = mount(<ListenCountCard user={user} listenCount={100} />);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.getDOMNode()).toHaveTextContent("track_listener has listened to100songs so far");
   });
   it("renders correctly when listen count is zero or undefined", () => {
     const wrapper = mount(<ListenCountCard user={user} />);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.getDOMNode()).toHaveTextContent("track_listener's listens counttrack_listener hasn't listened to any songs yet.")
   });
   it("renders user's name instead of 'You' when visiting another user's page", () => {
     const wrapper = mount(

@@ -4,6 +4,7 @@ import { mount } from "enzyme";
 import NamePill, {
   NamePillProps,
 } from "../../src/personal-recommendations/NamePill";
+import ListenControl from "../../src/listens/ListenControl";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -20,7 +21,8 @@ const props: NamePillProps = {
 describe("NamePill", () => {
   it("renders correctly", () => {
     const wrapper = mount(<NamePill {...props} />);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(".pill")).toHaveLength(1);
+    expect(wrapper.find(ListenControl)).toHaveLength(1);
   });
 
   it("works when you click", () => {

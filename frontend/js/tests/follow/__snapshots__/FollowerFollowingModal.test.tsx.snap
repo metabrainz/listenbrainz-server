@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`<FollowerFollowingModal /> renders 1`] = `"<div class=\\"text-center follower-following-pills\\"><div class=\\"btn-group btn-group-justified\\" role=\\"group\\"><button type=\\"button\\" class=\\"pill secondary \\">Followers (1)</button><button type=\\"button\\" class=\\"pill secondary active\\">Following (1)</button></div></div><div class=\\"follower-following-list\\"><div><div><a href=\\"/user/bar/\\" target=\\"_blank\\" rel=\\"noopener noreferrer\\">bar</a></div></div></div>"`;

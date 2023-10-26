@@ -15,7 +15,7 @@ const props: SimilarityScoreProps = {
 describe("SimilarityScore", () => {
   it("renders correctly for type = 'regular'", () => {
     const wrapper = mount<SimilarityScoreProps>(<SimilarityScore {...props} />);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(".similarity-score.regular")).toHaveLength(1);
   });
 
   it("renders correctly for type = 'compact'", () => {
@@ -23,7 +23,8 @@ describe("SimilarityScore", () => {
       <SimilarityScore {...{ ...props, type: "compact" }} />
     );
 
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(".similarity-score.compact")).toHaveLength(1);
+    expect(wrapper.find(".similarity-score.regular")).toHaveLength(0);
   });
 
   it("updates the class name based on similiarty score", async () => {

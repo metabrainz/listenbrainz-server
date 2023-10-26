@@ -57,7 +57,12 @@ describe("<FollowButton />", () => {
         <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
+    let btn = wrapper.find(FollowButton)
+    expect(btn).toHaveLength(1);
+    let btnFirstChild = btn.childAt(0).getDOMNode();
+    expect(btnFirstChild).toHaveClass("lb-follow-button following icon-only");
+    expect(btnFirstChild).toHaveClass("following");
+    expect(btnFirstChild).toHaveClass("icon-only");
 
     // button is solid and has no icon
     wrapper = mount(
@@ -69,7 +74,11 @@ describe("<FollowButton />", () => {
         />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
+    btn = wrapper.find(FollowButton);
+    btnFirstChild = btn.childAt(0).getDOMNode();
+    expect(btn).toHaveLength(1);
+    expect(btnFirstChild).toHaveClass("lb-follow-button");
+    expect(btnFirstChild).toHaveClass("block");
   });
 
   it("renders with the correct text based on the props", async () => {

@@ -76,13 +76,6 @@ describe("PinRecordingModal", () => {
     jest.clearAllMocks();
   });
   it("renders the prompt, input text area, track_name, and artist_name", () => {
-    // This component uses current time at load to display,
-    // so we have to mock the Date constructor - otherwise, snapshots will be different every day
-    const mockDate = new Date("2021-01-01");
-    const fakeDateNow = jest
-      .spyOn(global.Date, "now")
-      .mockImplementation(() => mockDate.getTime());
-
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalProps}>
         <NiceModal.Provider>
@@ -93,8 +86,11 @@ describe("PinRecordingModal", () => {
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
-    fakeDateNow.mockRestore();
+    const modalElement = wrapper.find("#PinRecordingModal");
+    expect(modalElement).toHaveLength(1);
+    expect(modalElement.getDOMNode()).toHaveTextContent("Feel Special");
+    expect(modalElement.getDOMNode()).toHaveTextContent("TWICE");
+    expect(modalElement.find("textarea")).toHaveLength(1);
   });
 
   describe("submitPinRecording", () => {

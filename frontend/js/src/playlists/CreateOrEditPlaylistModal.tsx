@@ -15,6 +15,7 @@ import { ToastMsg } from "../notifications/Notifications";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
+  initialTracks?: JSPFTrack[];
 };
 
 export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
@@ -25,7 +26,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   }, [modal]);
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const { playlist } = props;
+  const { playlist, initialTracks } = props;
   const customFields = getPlaylistExtension(props.playlist);
   const playlistId = getPlaylistId(playlist);
   const isEdit = Boolean(playlistId);
@@ -64,8 +65,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
         creator: currentUser?.name,
         identifier: "",
         date: "",
-        track: [],
-
+        track: initialTracks ?? [],
         title: name,
         annotation: description,
         extension: {
@@ -94,7 +94,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
         { toastId: "create-playlist-success" }
       );
       try {
-        // Fetch the newly created playlist and addreturn it
+        // Fetch the newly created playlist and return it
         const response = await APIService.getPlaylist(
           newPlaylistId,
           currentUser.auth_token
@@ -115,7 +115,15 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
       );
       return undefined;
     }
-  }, [currentUser, name, description, isPublic, collaboratorsWithoutOwner]);
+  }, [
+    currentUser,
+    name,
+    description,
+    isPublic,
+    collaboratorsWithoutOwner,
+    initialTracks,
+    APIService,
+  ]);
 
   const editPlaylist = React.useCallback(async (): Promise<
     JSPFPlaylist | undefined
@@ -199,6 +207,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
     description,
     isPublic,
     collaboratorsWithoutOwner,
+    APIService,
   ]);
 
   const onSubmit = async (event: React.SyntheticEvent) => {

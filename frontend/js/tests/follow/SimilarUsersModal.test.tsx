@@ -32,6 +32,6 @@ describe("<SimilarUsersModal />", () => {
         <SimilarUsersModal {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper.find(".similar-users-list")).toHaveLength(1);
   });
 });

@@ -725,7 +725,12 @@ export default class APIService {
     count: number = 25,
     createdFor: boolean = false,
     collaborator: boolean = false
-  ) => {
+  ): Promise<{
+    playlists: JSPFObject[];
+    playlist_count: number;
+    count: string;
+    offset: string;
+  }> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
@@ -1311,6 +1316,26 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportJSPFPlaylistToSpotify = async (
+    userToken: string,
+    playlist: JSPFPlaylist
+  ): Promise<any> => {
+    if (!playlist) {
+      throw new Error("Expected a playlist");
+    }
+    const url = `${this.APIBaseURI}/playlist/export-jspf/spotify`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlist),
     });
     await this.checkStatus(response);
     return response.json();

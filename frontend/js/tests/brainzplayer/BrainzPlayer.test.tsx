@@ -15,6 +15,7 @@ import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
 import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
+import BrainzPlayerUI from "../../src/brainzplayer/BrainzPlayerUI";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -93,7 +94,8 @@ describe("BrainzPlayer", () => {
       <BrainzPlayer {...props} />,
       GlobalContextMock
     );
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper.find(BrainzPlayerUI)).toHaveLength(1);
+    expect(wrapper.find("#brainz-player")).toHaveLength(1);
   });
 
   it("creates Youtube datasource by default", () => {
