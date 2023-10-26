@@ -4,6 +4,7 @@ from listenbrainz import webserver
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.db.metadata import get_metadata_for_artist, get_metadata_for_release_group
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
+from listenbrainz.db.popularity import get_top_entity_for_entity
 import requests
 from werkzeug.exceptions import BadRequest, NotFound
 import orjson
@@ -34,7 +35,7 @@ def artist_entity(artist_mbid):
     if r.status_code != 200:
         popular_recordings = []
     else:
-        popular_recordings = list(r.json())
+        popular_recordings = list(r.json())[:10]
 
     # Fetch similar artists
     r = requests.post("https://labs.api.listenbrainz.org/similar-artists/json",
@@ -53,12 +54,20 @@ def artist_entity(artist_mbid):
     except IndexError:
         artists = []
 
-    current_app.logger.warn(artists)
+
+    top_releases = get_top_entity_for_entity("release", artist_mbid, "release")
+    print(top_releases)
 
     props = {
         "artist_data": item,
         "popular_recordings": popular_recordings,
-        "similar_artists": artists
+        "similar_artists": artists,
+	    "listening_stats": {}, #for that artist,  # DO NOT IMPLEMENT RIGHT NOW. WAIT FOR PROPER CACHING
+            # total plays for artist
+            # total # of listeners for artist
+            # top listeners (10)
+	    "albums": []  #list of albums for that artist if possible with cover art info,
+           # release group: name, release date, type, caa_id, caa_release_mbid, listen_counts
     }
 
     return render_template(
