@@ -37,7 +37,7 @@ def get_releases(user_name):
             "release_tags":null
         }
 
-    :param sort: The sort order of the results. Must be one of "release_date", "artist_credit_name", "release_name", 
+    :param sort: The sort order of the results. Must be one of "release_date", "artist_credit_name", "release_name",
             or "confidence". Default "release_date".
     :param past: Whether to show releases in the past. Default True.
     :param future: Whether to show releases in the future. Default True.
