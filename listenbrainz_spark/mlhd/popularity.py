@@ -72,7 +72,8 @@ def get_release_group_popularity_per_artist_query(mlhd_table, listens_table, rel
               JOIN {rel_cache_table} rel
                 ON i.release_mbid = rel.release_mbid
              WHERE artist_mbid IS NOT NULL
-          GROUP BY rel.release_group_mbid
+          GROUP BY artist_mbid
+                 , rel.release_group_mbid
     """
 
 
@@ -137,13 +138,13 @@ def main():
     read_files_from_HDFS(RELEASE_METADATA_CACHE_DATAFRAME).createOrReplaceTempView(rel_cache_table)
 
     queries = {
-        # "mlhd_popularity_top_recording": get_popularity_per_artist_query("recording", mlhd_table, listens_table),
-        # "mlhd_popularity_recording": get_popularity_query("recording", mlhd_table, listens_table),
-        # "mlhd_popularity_release": get_popularity_query("release", mlhd_table, listens_table),
+        "mlhd_popularity_top_recording": get_popularity_per_artist_query("recording", mlhd_table, listens_table),
+        "mlhd_popularity_recording": get_popularity_query("recording", mlhd_table, listens_table),
+        "mlhd_popularity_release": get_popularity_query("release", mlhd_table, listens_table),
         "mlhd_popularity_release_group": get_release_group_popularity_query(mlhd_table, listens_table, rel_cache_table),
         "mlhd_popularity_top_release_group": get_release_group_popularity_per_artist_query(mlhd_table, listens_table, rel_cache_table),
-        # "mlhd_popularity_artist": get_popularity_per_artist_query("artist", mlhd_table, listens_table),
-        # "mlhd_popularity_top_release": get_popularity_per_artist_query("release", mlhd_table, listens_table)
+        "mlhd_popularity_artist": get_popularity_per_artist_query("artist", mlhd_table, listens_table),
+        "mlhd_popularity_top_release": get_popularity_per_artist_query("release", mlhd_table, listens_table)
     }
 
     for name, query in queries.items():
