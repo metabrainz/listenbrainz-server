@@ -64,16 +64,16 @@ def get_releases(user_name):
 
         if sort == "confidence":
             releases = sorted(
-                releases, key=lambda k: k["confidence"], reverse=True)
+                releases, key=lambda k: k.get("confidence", ""), reverse=True)
         else:
-            releases = sorted(releases, key=lambda k: k[sort])
+            releases = sorted(releases, key=lambda k: k.get(sort, ""))
 
         if not past:
-            releases = [r for r in releases if r["release_date"]
+            releases = [r for r in releases if "release_date" in r and r["release_date"]
                         >= datetime.date.today()]
 
         if not future:
-            releases = [r for r in releases if r["release_date"]
+            releases = [r for r in releases if "release_date" in r and r["release_date"]
                         <= datetime.date.today()]
 
         return jsonify({
