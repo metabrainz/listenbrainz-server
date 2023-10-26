@@ -30,7 +30,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
     result = run_query(f"""
         WITH gather_release_data AS (
             SELECT user_id
-                 , nullif(l.release_mbid, '')
+                 , nullif(l.release_mbid, '') AS any_release_mbid
                  , COALESCE(rel.release_name, l.release_name) AS release_name
                  , COALESCE(rel.album_artist_name, l.artist_name) AS release_artist_name
                  , COALESCE(rel.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
@@ -42,7 +42,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
         ), intermediate_table as (
            SELECT user_id
                 , first(release_name) AS any_release_name
-                , release_mbid
+                , any_release_mbid
                 , first(release_artist_name) AS any_artist_name
                 , artist_credit_mbids
                 , caa_id
@@ -53,7 +53,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                AND release_name IS NOT NULL
           GROUP BY user_id
                  , lower(release_name)
-                 , release_mbid
+                 , any_release_mbid
                  , lower(release_artist_name)
                  , artist_credit_mbids
                  , caa_id
@@ -66,7 +66,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
         ), ranked_stats as (
             SELECT user_id
                  , any_release_name AS release_name
-                 , release_mbid
+                 , any_release_mbid AS release_mbid
                  , any_artist_name AS artist_name
                  , artist_credit_mbids
                  , caa_id
