@@ -1437,8 +1437,8 @@ describe("Fresh Releases", () => {
     );
   });
 
-  it("shows error response if days are not between 1 and 30", async () => {
-    const response = { code: 400, error: "days must be between 1 and 30." };
+  it("shows error response if days are not between 1 and 90", async () => {
+    const response = { code: 400, error: "days must be between 1 and 90." };
 
     window.fetch = jest.fn().mockImplementationOnce(() => {
       return Promise.resolve({
@@ -1448,11 +1448,39 @@ describe("Fresh Releases", () => {
       });
     });
 
-    await expect(apiService.fetchSitewideFreshReleases(50)).resolves.toEqual(
+    await expect(apiService.fetchSitewideFreshReleases(120)).resolves.toEqual(
       response
     );
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/explore/fresh-releases/?days=50"
+      "foobar/1/explore/fresh-releases/?days=120"
+    );
+  });
+
+  it("shows error response if sort order is incorrect", async () => {
+    const response = {
+      code: 400,
+      error:
+        "sort must be one of 'release_date', 'artist_credit_name' or 'release_name'.",
+    };
+
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 400,
+        json: () => response,
+      });
+    });
+
+    await expect(
+      apiService.fetchSitewideFreshReleases(
+        50,
+        undefined,
+        undefined,
+        "hello_there"
+      )
+    ).resolves.toEqual(response);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/explore/fresh-releases/?days=50&sort=hello_there"
     );
   });
 });
