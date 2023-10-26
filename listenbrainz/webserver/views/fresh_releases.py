@@ -37,8 +37,8 @@ def get_releases(user_name):
             "release_tags":null
         }
 
-    :param sort: The sort order of the results. Must be one of "release_date", "artist_credit_name", "release_name", or "confidence".
-                    Default "release_date".
+    :param sort: The sort order of the results. Must be one of "release_date", "artist_credit_name", "release_name", 
+            or "confidence". Default "release_date".
     :param past: Whether to show releases in the past. Default True.
     :param future: Whether to show releases in the future. Default True.
 
@@ -63,15 +63,18 @@ def get_releases(user_name):
         releases = data["releases"] if data else []
 
         if sort == "confidence":
-            releases = sorted(releases, key=lambda k: k["confidence"], reverse=True)
+            releases = sorted(
+                releases, key=lambda k: k["confidence"], reverse=True)
         else:
             releases = sorted(releases, key=lambda k: k[sort])
-        
+
         if not past:
-            releases = [r for r in releases if r["release_date"] >= datetime.date.today()]
-        
+            releases = [r for r in releases if r["release_date"]
+                        >= datetime.date.today()]
+
         if not future:
-            releases = [r for r in releases if r["release_date"] <= datetime.date.today()]
+            releases = [r for r in releases if r["release_date"]
+                        <= datetime.date.today()]
 
         return jsonify({
             "payload": {
