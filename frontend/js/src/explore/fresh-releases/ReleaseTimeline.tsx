@@ -57,7 +57,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         .map((_, index, arr) =>
           arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
         );
-    } else {
+    } else if (order === "release_name") {
       const releaseInitialsCount = countBy(data, (item: FreshReleaseItem) =>
         item.release_name.charAt(0).toUpperCase()
       );
@@ -65,6 +65,19 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       dataArr = Object.keys(releaseInitialsCount).sort();
 
       percentArr = Object.values(releaseInitialsCount)
+        .map((item) => (item / data.length) * 100)
+        .map((_, index, arr) =>
+          arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+        );
+    } else {
+      const confidenceInitialsCount = countBy(
+        data,
+        (item: FreshReleaseItem) => item?.confidence
+      );
+
+      dataArr = Object.keys(confidenceInitialsCount).sort();
+
+      percentArr = Object.values(confidenceInitialsCount)
         .map((item) => (item / data.length) * 100)
         .map((_, index, arr) =>
           arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)

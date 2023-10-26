@@ -106,7 +106,10 @@ export default function FreshReleases() {
           freshReleases = allFreshReleases.payload.releases;
         } else {
           const userFreshReleases = await APIService.fetchUserFreshReleases(
-            currentUser.name
+            currentUser.name,
+            showPastReleases,
+            showFutureReleases,
+            sort
           );
           freshReleases = userFreshReleases.payload.releases;
         }
@@ -180,7 +183,10 @@ export default function FreshReleases() {
             <div id="fr-row">
               <Pill
                 id="sitewide-releases"
-                onClick={() => setPageType(PAGE_TYPE_SITEWIDE)}
+                onClick={() => {
+                  setPageType(PAGE_TYPE_SITEWIDE);
+                  setSort("release_date");
+                }}
                 active={pageType === PAGE_TYPE_SITEWIDE}
                 type="secondary"
               >
@@ -196,23 +202,24 @@ export default function FreshReleases() {
               </Pill>
             </div>
           ) : null}
-          {pageType === PAGE_TYPE_SITEWIDE ? (
-            <div id="fr-row">
-              <span>Sort By:</span>{" "}
-              <div className="input-group">
-                <select
-                  id="style"
-                  className="form-control"
-                  value={sort}
-                  onChange={(event) => setSort(event.target.value)}
-                >
-                  <option value="release_date">Release Date</option>
-                  <option value="artist_credit_name">Artist</option>
-                  <option value="release_name">Release Title</option>
-                </select>
-              </div>
+          <div id="fr-row">
+            <span>Sort By:</span>{" "}
+            <div className="input-group">
+              <select
+                id="style"
+                className="form-control"
+                value={sort}
+                onChange={(event) => setSort(event.target.value)}
+              >
+                <option value="release_date">Release Date</option>
+                <option value="artist_credit_name">Artist</option>
+                <option value="release_name">Release Title</option>
+                {pageType === PAGE_TYPE_USER ? (
+                  <option value="confidence">Confidence</option>
+                ) : null}
+              </select>
             </div>
-          ) : null}
+          </div>
         </div>
         <div className="releases-page row">
           {isLoading ? (

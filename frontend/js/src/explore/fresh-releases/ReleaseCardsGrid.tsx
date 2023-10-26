@@ -34,12 +34,23 @@ const getMapping = (
       return acc;
     }, new Map());
   }
+  if (releaseOrder === "release_name") {
+    return filteredList.reduce((acc, release) => {
+      const { release_name: releaseName } = release;
+      if (acc.has(releaseName.charAt(0).toUpperCase())) {
+        acc.get(releaseName.charAt(0).toUpperCase()).push(release);
+      } else {
+        acc.set(releaseName.charAt(0).toUpperCase(), [release]);
+      }
+      return acc;
+    }, new Map());
+  }
   return filteredList.reduce((acc, release) => {
-    const { release_name: releaseName } = release;
-    if (acc.has(releaseName.charAt(0).toUpperCase())) {
-      acc.get(releaseName.charAt(0).toUpperCase()).push(release);
+    const { confidence } = release;
+    if (acc.has(confidence)) {
+      acc.get(confidence).push(release);
     } else {
-      acc.set(releaseName.charAt(0).toUpperCase(), [release]);
+      acc.set(confidence, [release]);
     }
     return acc;
   }, new Map());
@@ -50,14 +61,28 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
 
   const releaseMapping = getMapping(order, filteredList);
 
+  const getReleaseCardGridTitle = (
+    releaseKey: string,
+    release_order: string
+  ): string => {
+    if (release_order === "release_date") {
+      return formatReleaseDate(releaseKey);
+    }
+    if (
+      release_order === "artist_credit_name" ||
+      release_order === "release_name"
+    ) {
+      return releaseKey.charAt(0).toUpperCase();
+    }
+    return releaseKey;
+  };
+
   return (
     <div className="col-xs-12 col-md-11">
       {Array.from(releaseMapping?.entries()).map(([releaseKey, releases]) => (
         <React.Fragment key={`${releaseKey}-container`}>
           <div className="release-card-grid-title" key={`${releaseKey}-title`}>
-            {order === "release_date"
-              ? formatReleaseDate(releaseKey)
-              : releaseKey.charAt(0).toUpperCase()}
+            {getReleaseCardGridTitle(releaseKey, order)}
           </div>
           <div key={releaseKey} className="release-cards-grid">
             {releases?.map((release) => (

@@ -1371,11 +1371,32 @@ export default class APIService {
     return response.json();
   };
 
-  fetchUserFreshReleases = async (username: string): Promise<any> => {
+  fetchUserFreshReleases = async (
+    username: string,
+    past?: boolean,
+    future?: boolean,
+    sort?: string
+  ): Promise<any> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
-    const url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+    let url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+
+    const queryParams: Array<string> = [];
+    if (sort) {
+      queryParams.push(`sort=${sort}`);
+    }
+
+    if (past === false) {
+      queryParams.push(`past=${past}`);
+    }
+
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (queryParams.length) {
+      url += `?${queryParams.join("&")}`;
+    }
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

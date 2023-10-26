@@ -78,7 +78,12 @@ describe("FreshReleases", () => {
       </GlobalAppContext.Provider>
     );
     await waitForComponentToPaint(wrapper);
-    expect(mockFetchUserFreshReleases).toHaveBeenCalledWith("chinmaykunkikar");
+    expect(mockFetchUserFreshReleases).toHaveBeenCalledWith(
+      "chinmaykunkikar",
+      true,
+      true,
+      "release_date"
+    );
     expect(wrapper.find(FreshReleases)).toHaveLength(1);
   });
 

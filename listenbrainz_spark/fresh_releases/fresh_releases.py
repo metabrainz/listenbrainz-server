@@ -14,7 +14,7 @@ from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_dump
 USERS_PER_MESSAGE = 5
 
 
-FRESH_RELEASES_ENDPOINT = "http://localhost:8111/1/explore/fresh-releases/?days=90"
+FRESH_RELEASES_ENDPOINT = "https://api.listenbrainz.org/1/explore/fresh-releases/?days=90"
 
 
 def load_all_releases():
