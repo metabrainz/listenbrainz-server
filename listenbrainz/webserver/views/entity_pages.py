@@ -83,7 +83,7 @@ def album_entity(release_group_mbid):
         raise NotFound(f"Release group {release_group_mbid} not found in the metadata cache")
     
     props = metadata[release_group_mbid]
-    props.release_group_mbid = release_group_mbid
+    props["release_group_mbid"] = release_group_mbid
     
     return render_template(
         "entities/album.html",
