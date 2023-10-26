@@ -58,6 +58,7 @@ class PopularityTopDataset(DatabaseDataset):
 RecordingPopularityDataset = PopularityDataset("recording")
 ArtistPopularityDataset = PopularityDataset("artist")
 ReleasePopularityDataset = PopularityDataset("release")
+ReleaseGroupPopularityDataset = PopularityDataset("release_group")
 TopRecordingPopularityDataset = PopularityTopDataset("recording")
 TopReleasePopularityDataset = PopularityTopDataset("release")
 
