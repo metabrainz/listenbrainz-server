@@ -33,9 +33,9 @@ def load_all_releases():
             release_group_primary_type=release.get("release_group_primary_type"),
             release_group_secondary_type=release.get("release_group_secondary_type"),
             release_tags=release.get("release_tags"),
+            listen_count=release.get("listen_count"),
             caa_id=release.get("caa_id"),
             caa_release_mbid=release.get("caa_release_mbid"),
-            listen_count=release.get("listen_count")
         ))
 
     return listenbrainz_spark.session.createDataFrame(releases, schema=fresh_releases_schema)
