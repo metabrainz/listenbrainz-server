@@ -47,6 +47,7 @@ def get_release_group_popularity_query(mlhd_table, listens_table, rel_cache_tabl
               FROM intermediate i
               JOIN {rel_cache_table} rel
                 ON i.release_mbid = rel.release_mbid
+               AND rel.release_group_mbid != ''
           GROUP BY rel.release_group_mbid
     """
 
@@ -72,6 +73,7 @@ def get_release_group_popularity_per_artist_query(mlhd_table, listens_table, rel
               JOIN {rel_cache_table} rel
                 ON i.release_mbid = rel.release_mbid
              WHERE artist_mbid IS NOT NULL
+               AND rel.release_group_mbid != ''
           GROUP BY artist_mbid
                  , rel.release_group_mbid
     """
@@ -94,6 +96,7 @@ def get_popularity_query(entity, mlhd_table, listens_table):
                  , count(distinct user_id) AS total_user_count
               FROM intermediate
              WHERE {entity_mbid} IS NOT NULL
+               AND {entity_mbid} != ''
           GROUP BY {entity_mbid}
     """
 
@@ -108,7 +111,7 @@ def get_popularity_per_artist_query(entity, mlhd_table, listens_table):
         entity_mbid = f"{entity}_mbid"
         select_clause = f"artist_mbid, {entity_mbid}"
         explode_clause = f"explode(artist_credit_mbids) AS artist_mbid, {entity_mbid}"
-        where_clause = f"artist_mbid IS NOT NULL AND {entity_mbid} IS NOT NULL"
+        where_clause = f"artist_mbid IS NOT NULL AND {entity_mbid} IS NOT NULL AND {entity_mbid} != ''"
     return f"""
         WITH intermediate AS (
             SELECT {explode_clause}
