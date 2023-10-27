@@ -29,7 +29,7 @@ class ExploreViewsTestCase(IntegrationTestCase):
         resp = self.client.get(url_for('explore.fresh_releases'))
         self.assert200(resp)
 
-    @patch('listenbrainz.db.fresh_releases.get_sitewide_fresh_releases', side_effect=[([], 0), ([], 0)])
+    @patch('listenbrainz.db.fresh_releases.get_sitewide_fresh_releases', side_effect=[([], 0), ([], 0), ([], 0)])
     def test_fresh_releases_api(self, mock_fresh):
         resp = self.client.get(url_for('explore_api_v1.get_fresh_releases'))
         self.assert200(resp)

@@ -424,9 +424,9 @@ def _parse_int_arg(name, default=None):
 def _parse_bool_arg(name, default=None):
     value = request.args.get(name)
     if value:
-        if value == "true":
+        if value.lower() == "true":
             return True
-        elif value == "false":
+        elif value.lower() == "false":
             return False
         else:
             raise APIBadRequest("Invalid %s argument: %s" % (name, value))

@@ -43,7 +43,7 @@ def get_fresh_releases():
 
     :param release_date: Fresh releases will be shown around this pivot date.
                          Must be in YYYY-MM-DD format
-    :param days: The number of days of fresh releases to show. Max 30 days.
+    :param days: The number of days of fresh releases to show. Max 90 days.
     :param sort: The sort order of the results. Must be one of "release_date", "artist_credit_name" or "release_name".
                  Default "release_date".
     :param past: Whether to show releases in the past. Default True.
