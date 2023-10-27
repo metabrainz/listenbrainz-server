@@ -9,10 +9,10 @@ type SwitchProps = {
 };
 
 export default function Switch(props: SwitchProps) {
-  const { id, value, onChange, checked, switchLabel } = props;
+  const { id, value = "", onChange, checked, switchLabel = "" } = props;
 
   return (
-    <label className="toggle">
+    <label className="toggle" htmlFor={id}>
       <input
         id={id}
         className="toggle-checkbox"
