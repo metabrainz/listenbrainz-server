@@ -125,7 +125,8 @@ def artist_entity(artist_mbid):
 
     return render_template(
         "entities/artist.html",
-        props=orjson.dumps(props).decode("utf-8")
+        props=orjson.dumps(props).decode("utf-8"),
+        title=artist_data[0].artist_data["name"]
     )
 
 
