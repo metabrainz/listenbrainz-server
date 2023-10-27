@@ -61,6 +61,7 @@
 		max-width: 400px;
 		.listener {
 			line-height: 2em;
+			position: relative;
 			.pill {
 				line-height: 1em;
 				position: absolute;
@@ -118,8 +119,10 @@
 			flex-wrap: wrap;
 			align-content: flex-start;
 			gap: 3em;
+			flex:0 1;
+			flex-basis: 350px;
 		}
-		.top-listeners,.stats, .reviews {
+		.top-listeners, .reviews {
 			flex:1;
 		    flex-basis: 300px;
 		}
@@ -143,5 +146,18 @@
 				}
 			}
 		}
+	}
+}
+
+.header-with-line {
+	display: flex;
+	width: 100%;
+	&::after{
+		flex: 1;
+		content: ' ';
+		border-top: 1px solid @gray-light;
+		height: 0;
+		align-self: center;
+		margin-left: 0.5em;
 	}
 }

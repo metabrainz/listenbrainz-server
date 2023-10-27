@@ -461,7 +461,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             <h3>Reviews</h3>
             {reviews.slice(0, 3).map(getReviewEventContent)}
             <a
-              href={`critiquebrainz.org/artist/${artist.artist_mbid}`}
+              href={`https://critiquebrainz.org/artist/${artist.artist_mbid}`}
               className="btn btn-link"
             >
               More on CritiqueBrainz…

@@ -283,57 +283,55 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         />
       </div>
       <div className="artist-page-content">
-        {Boolean(listensFromJSPFTracks?.length) && (
-          <div className="tracks">
-            <div className="header">
-              <h3>Popular tracks</h3>
-              <button
-                type="button"
-                className="btn btn-icon btn-info btn-rounded"
-                title="Play popular tracks"
-                onClick={() => {
-                  window.postMessage(
-                    {
-                      brainzplayer_event: "play-listen",
-                      payload: listensFromJSPFTracks,
-                    },
-                    window.location.origin
-                  );
-                }}
-              >
-                <FontAwesomeIcon icon={faPlayCircle} fixedWidth />
-              </button>
-            </div>
-            {listensFromJSPFTracks?.map((listen) => {
-              const recording = popularRecordings?.find(
-                (rec) =>
-                  rec.recording_mbid === listen.track_metadata.recording_mbid
-              );
-              let listenCountComponent;
-              if (recording && Number.isFinite(recording.count)) {
-                listenCountComponent = (
-                  <>
-                    {recording.count} x <FontAwesomeIcon icon={faHeadphones} />
-                  </>
+        <div className="tracks">
+          <div className="header">
+            <h3 className="header-with-line">Tracklist</h3>
+            <button
+              type="button"
+              className="btn btn-icon btn-info btn-rounded"
+              title="Play popular tracks"
+              onClick={() => {
+                window.postMessage(
+                  {
+                    brainzplayer_event: "play-listen",
+                    payload: listensFromJSPFTracks,
+                  },
+                  window.location.origin
                 );
-              }
-              return (
-                <ListenCard
-                  key={listen.track_metadata.track_name}
-                  listen={listen}
-                  showTimestamp={false}
-                  showUsername={false}
-                  additionalActions={listenCountComponent}
-                />
-              );
-            })}
-            <div className="read-more">
-              <button type="button" className="btn btn-outline">
-                See more…
-              </button>
-            </div>
+              }}
+            >
+              <FontAwesomeIcon icon={faPlayCircle} fixedWidth />
+            </button>
           </div>
-        )}
+          {listensFromJSPFTracks?.map((listen) => {
+            const recording = popularRecordings?.find(
+              (rec) =>
+                rec.recording_mbid === listen.track_metadata.recording_mbid
+            );
+            let listenCountComponent;
+            if (recording && Number.isFinite(recording.count)) {
+              listenCountComponent = (
+                <>
+                  {recording.count} x <FontAwesomeIcon icon={faHeadphones} />
+                </>
+              );
+            }
+            return (
+              <ListenCard
+                key={listen.track_metadata.track_name}
+                listen={listen}
+                showTimestamp={false}
+                showUsername={false}
+                additionalActions={listenCountComponent}
+              />
+            );
+          })}
+          <div className="read-more">
+            <button type="button" className="btn btn-outline">
+              See more…
+            </button>
+          </div>
+        </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
             <div className="text-center">
@@ -410,7 +408,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             <h3>Reviews</h3>
             {reviews.slice(0, 3).map(getReviewEventContent)}
             <a
-              href={`critiquebrainz.org/release-group/${release_group_mbid}`}
+              href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
               className="btn btn-link"
             >
               More on CritiqueBrainz…
@@ -418,18 +416,15 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           </div>
         ) : (
           <div>
+            <h3>No reviews for this album (yet…)</h3>
             <a
-              href={`critiquebrainz.org/review/write/release_group/${release_group_mbid}`}
+              href={`https://critiquebrainz.org/review/write/release_group/${release_group_mbid}`}
               className="btn btn-link"
             >
               Review album on CritiqueBrainz
             </a>
           </div>
         )}
-        <div className="similarity">
-          <h3>Similar artists</h3>
-          Artist similarity here
-        </div>
       </div>
       <BrainzPlayer
         listens={listensFromJSPFTracks}
