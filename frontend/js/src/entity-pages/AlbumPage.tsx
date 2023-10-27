@@ -39,24 +39,30 @@ export type AlbumPageProps = {
     count: number;
     recording_mbid: string;
   }>;
-  release_group_tags?: ArtistTag[];
-  release_group: ReleaseGroupMetadataLookup;
   release_group_mbid: string;
+  release_group_metadata: ReleaseGroupMetadataLookup;
 };
 
 export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const {
-    release_group: initialReleaseGroup,
+    release_group_metadata: initialReleaseGroupMetadata,
     release_group_mbid,
     popular_recordings,
-    release_group_tags,
   } = props;
 
-  const [album, setAlbum] = React.useState(initialReleaseGroup);
+  const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
   const [topListeners, setTopListeners] = React.useState([]);
   const [listenCount, setListenCount] = React.useState(0);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
+
+  const {
+    tag,
+    release_group: album,
+    artist,
+    release,
+  } = metadata as ReleaseGroupMetadataLookup;
+  const releaseGroupTags = tag?.release_group;
 
   // Data we get from the back end, doesn't contain metadata
   const [popularRecordings, setPopularRecordings] = React.useState(
@@ -108,17 +114,17 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
       );
       if (recordingMetadataMap) {
         const tracks = Object.entries(recordingMetadataMap).map(
-          ([mbid, metadata]) => {
+          ([mbid, rec_metadata]) => {
             const trackObject: JSPFTrack = {
               identifier: `https://musicbrainz.org/recording/${mbid}`,
-              title: metadata.recording?.name ?? mbid,
-              creator: metadata.artist?.name ?? album.artist?.name,
-              duration: metadata.recording?.length,
+              title: rec_metadata.recording?.name ?? mbid,
+              creator: rec_metadata.artist?.name ?? artist?.name,
+              duration: rec_metadata.recording?.length,
               extension: {
                 [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
                   additional_metadata: {
-                    caa_id: metadata.release?.caa_id,
-                    caa_release_mbid: metadata.release?.caa_release_mbid,
+                    caa_id: rec_metadata.release?.caa_id,
+                    caa_release_mbid: rec_metadata.release?.caa_release_mbid,
                   },
                   added_at: "",
                   added_by: "ListenBrainz",
@@ -132,7 +138,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
       }
     }
     getRecordingMetadata();
-  }, [APIService, album.artist?.name, popularRecordings]);
+  }, [APIService, artist?.name, popularRecordings]);
 
   React.useEffect(() => {
     async function fetchListenerStats() {
@@ -170,11 +176,13 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   }, [APIService.APIBaseURI, release_group_mbid]);
 
   const listensFromJSPFTracks = popularTracks.map(JSPFTrackToListen) ?? [];
-  const filteredTags = chain(album.tag?.release_group)
+  const filteredTags = chain(releaseGroupTags)
     .filter("genre_mbid")
     .sortBy("count")
     .value()
     .reverse();
+
+  const artistName = artist?.name;
 
   return (
     <div
@@ -196,13 +204,13 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           />
         </div>
         <div className="artist-info">
-          <h2>{album.release_group.name}</h2>
+          <h2>{album?.name}</h2>
           <div className="details">FIRST RELEASE DATE HERE</div>
         </div>
         <div className="right-side">
           <div className="artist-rels">
             {Object.entries(
-              album.artist?.artists?.[0].rels
+              artist.artists?.[0].rels
             ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}
           </div>
           <div className="btn-group btn-group-lg lb-radio-button">
@@ -210,7 +218,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               type="button"
               className="btn btn-info"
               href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                album.artist.name
+                artistName
               )})&mode=easy`}
             >
               <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
@@ -231,7 +239,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                   target="_blank"
                   rel="noopener noreferrer"
                   href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    album.artist.name
+                    artistName
                   )})::nosim&mode=easy`}
                 >
                   This artist
@@ -242,7 +250,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                   target="_blank"
                   rel="noopener noreferrer"
                   href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    album.artist.name
+                    artistName
                   )})&mode=easy`}
                 >
                   Similar artists
@@ -451,11 +459,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   const {
-    release_group_data,
     popular_recordings,
     release_group_mbid,
+    ...release_group_data
   } = reactProps;
-  const { tag, ...release_group_metadata } = release_group_data;
 
   const AlbumPageWithAlertNotifications = withAlertNotifications(AlbumPage);
 
@@ -470,8 +477,9 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <AlbumPageWithAlertNotifications
-            release_group={release_group_metadata}
-            release_group_tags={tag?.release_group}
+            release_group_metadata={
+              release_group_data as ReleaseGroupMetadataLookup
+            }
             popular_recordings={popular_recordings}
             release_group_mbid={release_group_mbid}
           />
