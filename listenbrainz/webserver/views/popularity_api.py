@@ -47,7 +47,7 @@ def top_recordings():
     if not is_valid_uuid(artist_mbid):
         raise APIBadRequest(f"artist_mbid: '{artist_mbid}' is not a valid uuid")
 
-    recordings = popularity.get_top_entity_for_artist("recording", artist_mbid)
+    recordings = popularity.get_top_entity_for_entity("recording", artist_mbid, popularity_entity="recording")
     recording_mbids = [str(r["recording_mbid"]) for r in recordings]
 
     try:
