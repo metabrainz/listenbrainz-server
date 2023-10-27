@@ -87,5 +87,6 @@ def album_entity(release_group_mbid):
     
     return render_template(
         "entities/album.html",
-        props=orjson.dumps(props).decode("utf-8")
+        props=orjson.dumps(props).decode("utf-8"),
+        title=metadata[release_group_mbid]["release_group"]["name"]
     )
