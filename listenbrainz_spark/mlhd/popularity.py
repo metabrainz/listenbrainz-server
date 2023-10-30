@@ -43,8 +43,8 @@ def get_popularity_query(entity, mlhd_table, listens_table):
                  , user_id
               FROM {listens_table}
         )   SELECT {entity_mbid}
-                 , count(*) AS listen_count
-                 , count(distinct user_id) AS user_count
+                 , count(*) AS total_listen_count
+                 , count(distinct user_id) AS total_user_count
               FROM intermediate
              WHERE {entity_mbid} IS NOT NULL
           GROUP BY {entity_mbid}
