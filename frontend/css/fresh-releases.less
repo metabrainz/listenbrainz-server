@@ -195,6 +195,15 @@
   }
 
   // CARDS
+  #release-card-grids {
+    display: flex;
+    justify-content: center;
+
+    @media (max-width: 576px) {
+      flex-direction: column;
+    }
+  }
+
   .release-cards-grid {
     display: grid;
     justify-items: center;
