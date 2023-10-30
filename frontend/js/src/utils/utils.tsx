@@ -634,27 +634,27 @@ const getThumbnailFromCAAResponse = (
   return thumbnails[250] ?? thumbnails.small ?? image;
 };
 
+const retryParams = {
+  retries: 4,
+  retryOn: [429],
+  retryDelay(attempt: number) {
+    // Exponential backoff at random interval between maxRetryTime and minRetryTime,
+    // adding minRetryTime for every attempt. `attempt` starts at 0
+    const maxRetryTime = 2500;
+    const minRetryTime = 1800;
+    const clampedRandomTime =
+      Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
+    // Make it exponential
+    return Math.floor(clampedRandomTime) * 2 ** attempt;
+  },
+};
+
 const getAlbumArtFromReleaseMBID = async (
   userSubmittedReleaseMBID: string,
-  useReleaseGroupFallback: boolean = false,
+  useReleaseGroupFallback: boolean | string = false,
   APIService?: APIServiceClass
 ): Promise<string | undefined> => {
   try {
-    const retryParams = {
-      retries: 4,
-      retryOn: [429],
-      retryDelay(attempt: number) {
-        // Exponential backoff at random interval between maxRetryTime and minRetryTime,
-        // adding minRetryTime for every attempt. `attempt` starts at 0
-        const maxRetryTime = 2500;
-        const minRetryTime = 1800;
-        const clampedRandomTime =
-          Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
-        // Make it exponential
-        return Math.floor(clampedRandomTime) * 2 ** attempt;
-      },
-    };
-
     const CAAResponse = await fetchWithRetry(
       `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
       retryParams
@@ -665,10 +665,13 @@ const getAlbumArtFromReleaseMBID = async (
     }
 
     if (CAAResponse.status === 404 && useReleaseGroupFallback && APIService) {
-      const releaseGroupResponse = await APIService.lookupMBRelease(
-        userSubmittedReleaseMBID
-      );
-      const releaseGroupMBID = releaseGroupResponse["release-group"].id;
+      let releaseGroupMBID = useReleaseGroupFallback;
+      if (!_.isString(useReleaseGroupFallback)) {
+        const releaseGroupResponse = await APIService.lookupMBRelease(
+          userSubmittedReleaseMBID
+        );
+        releaseGroupMBID = releaseGroupResponse["release-group"].id;
+      }
 
       const CAAReleaseGroupResponse = await fetchWithRetry(
         `https://coverartarchive.org/release-group/${releaseGroupMBID}`,

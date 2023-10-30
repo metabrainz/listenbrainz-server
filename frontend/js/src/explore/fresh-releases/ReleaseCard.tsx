@@ -9,7 +9,8 @@ import {
 type ReleaseCardProps = {
   releaseDate: string;
   artistMBIDs: Array<string>;
-  releaseMBID: string;
+  releaseMBID?: string;
+  releaseGroupMBID?: string;
   releaseName: string;
   artistCreditName: string;
   releaseTypePrimary?: string | null;
@@ -22,6 +23,7 @@ type ReleaseCardProps = {
 export default function ReleaseCard(props: ReleaseCardProps) {
   const {
     releaseMBID,
+    releaseGroupMBID,
     releaseDate,
     releaseName,
     artistMBIDs,
@@ -67,7 +69,10 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
   React.useEffect(() => {
     async function getCoverArt() {
-      const coverartURL = await getAlbumArtFromReleaseMBID(releaseMBID);
+      const coverartURL = await getAlbumArtFromReleaseMBID(
+        releaseMBID ?? "",
+        releaseGroupMBID ?? true
+      );
       if (coverartURL) {
         setCoverartSrc(coverartURL);
       }
@@ -79,16 +84,14 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     } else {
       getCoverArt();
     }
-  }, [releaseMBID, caaID, caaReleaseMBID, setCoverartSrc]);
-
+  }, [releaseMBID, releaseGroupMBID, caaID, caaReleaseMBID, setCoverartSrc]);
+  const linkToEntity = releaseMBID
+    ? `/player/release/${releaseMBID}`
+    : `/album/${releaseGroupMBID}`;
   return (
     <div className="release-card-container">
       <div className="release-date">{formatReleaseDate(releaseDate)}</div>
-      <a
-        href={`/player/release/${releaseMBID}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a href={linkToEntity} target="_blank" rel="noopener noreferrer">
         <LazyLoadImage
           className="release-coverart"
           src={coverartSrc}
@@ -98,11 +101,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       </a>
       <div className="name-type-container">
         <div className="release-name" title={releaseName}>
-          <a
-            href={`/player/release/${releaseMBID}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href={linkToEntity} target="_blank" rel="noopener noreferrer">
             {releaseName}
           </a>
         </div>
