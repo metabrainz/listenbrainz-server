@@ -456,18 +456,30 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             })}
           </div>
         </div>
-        {Boolean(reviews?.length) && (
-          <div className="reviews">
-            <h3>Reviews</h3>
-            {reviews.slice(0, 3).map(getReviewEventContent)}
-            <a
-              href={`https://critiquebrainz.org/artist/${artist.artist_mbid}`}
-              className="btn btn-link"
-            >
-              More on CritiqueBrainz…
-            </a>
-          </div>
-        )}
+        <div className="reviews">
+          <h3 className="header-with-line">Reviews</h3>
+          {reviews?.length ? (
+            <>
+              {reviews.slice(0, 3).map(getReviewEventContent)}
+              <a
+                href={`https://critiquebrainz.org/artist/${artist.artist_mbid}`}
+                className="btn btn-link"
+              >
+                More on CritiqueBrainz…
+              </a>
+            </>
+          ) : (
+            <>
+              <p>No reviews for this artist (yet…)</p>
+              <a
+                href={`https://critiquebrainz.org/review/write/artist/${artist.artist_mbid}`}
+                className="btn btn-link"
+              >
+                Review album on CritiqueBrainz
+              </a>
+            </>
+          )}
+        </div>
         <div className="similarity">
           <h3>Similar artists</h3>
           Artist similarity here

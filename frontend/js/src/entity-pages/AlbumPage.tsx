@@ -326,11 +326,6 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               />
             );
           })}
-          <div className="read-more">
-            <button type="button" className="btn btn-outline">
-              See more…
-            </button>
-          </div>
         </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
@@ -355,7 +350,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           </div>
           {Boolean(topListeners?.length) && (
             <div className="top-listeners">
-              <h3>Top listeners</h3>
+              <h3 className="header-with-line">Top listeners</h3>
               {topListeners
                 .slice(0, 10)
                 .map(
@@ -385,46 +380,30 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             </div>
           )}
         </div>
-        <div className="tracks">
-          <h3>Tracks</h3>
-          {/* {Array.from(Array(10).keys()).map((number) => {
-			return (
-			// <ReleaseCard
-			//   releaseDate=""
-			//   releaseMBID=""
-			//   releaseName=""
-			//   caaID={null}
-			//   caaReleaseMBID={null}
-			//   artistMBIDs={[album.name]}
-			//   artistCreditName={album.name}
-			// />
-			<ListenCard></ListenCard>
-			);
-		})} */}
-          PENDING
+        <div className="reviews">
+          <h3 className="header-with-line">Reviews</h3>
+          {reviews?.length ? (
+            <>
+              {reviews.slice(0, 3).map(getReviewEventContent)}
+              <a
+                href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
+                className="btn btn-link"
+              >
+                More on CritiqueBrainz…
+              </a>
+            </>
+          ) : (
+            <>
+              <p>No reviews for this album (yet…)</p>
+              <a
+                href={`https://critiquebrainz.org/review/write/release_group/${release_group_mbid}`}
+                className="btn btn-link"
+              >
+                Review album on CritiqueBrainz
+              </a>
+            </>
+          )}
         </div>
-        {reviews?.length ? (
-          <div className="reviews">
-            <h3>Reviews</h3>
-            {reviews.slice(0, 3).map(getReviewEventContent)}
-            <a
-              href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
-              className="btn btn-link"
-            >
-              More on CritiqueBrainz…
-            </a>
-          </div>
-        ) : (
-          <div>
-            <h3>No reviews for this album (yet…)</h3>
-            <a
-              href={`https://critiquebrainz.org/review/write/release_group/${release_group_mbid}`}
-              className="btn btn-link"
-            >
-              Review album on CritiqueBrainz
-            </a>
-          </div>
-        )}
       </div>
       <BrainzPlayer
         listens={listensFromJSPFTracks}

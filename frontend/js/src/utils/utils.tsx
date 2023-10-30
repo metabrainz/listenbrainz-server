@@ -850,16 +850,11 @@ export function getReviewEventContent(
   );
   const reviewID =
     _.get(eventMetadata, "review_mbid") ?? _.get(eventMetadata, "id");
+  const userName =
+    _.get(eventMetadata, "user_name") ??
+    _.get(eventMetadata, "user.display_name");
   return (
-    <>
-      <a
-        href={`https://critiquebrainz.org/review/${reviewID}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="pull-right"
-      >
-        Read on CritiqueBrainz
-      </a>
+    <div className="review">
       {!isUndefined(eventMetadata.rating) && isFinite(eventMetadata.rating) && (
         <div className="rating-container">
           <b>Rating: </b>
@@ -874,8 +869,19 @@ export function getReviewEventContent(
           />
         </div>
       )}
-      {additionalContent}
-    </>
+      <div className="text">{additionalContent}</div>
+      <div className="author read-more">
+        by {userName}
+        <a
+          href={`https://critiquebrainz.org/review/${reviewID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pull-right"
+        >
+          Read on CritiqueBrainz
+        </a>
+      </div>
+    </div>
   );
 }
 
