@@ -1,7 +1,7 @@
 Flask-Admin == 1.6.0
 Flask-Testing == 0.8.1
-Flask-Login == 0.6.2
-Flask-WTF == 1.1.1
+Flask-Login == 0.6.3
+Flask-WTF == 1.2.1
 Flask-SQLAlchemy == 2.5.1
 Flask-UUID == 0.2
 Flask-SocketIO==5.2.0
@@ -33,8 +33,8 @@ pydantic == 1.9.1
 pycountry==22.3.5
 Flask==2.3.2
 Jinja2==3.1.2
-Werkzeug==2.3.3
-Flask-DebugToolbar==0.13.1
+Werkzeug==3.0.1
+Flask-DebugToolbar@git+https://github.com/amCap1712/flask-debugtoolbar.git@f42bb238cd3fbc79c51b93c341164c2be820025e
 Flask-UUID==0.2
 msgpack==0.5.6
 requests==2.31.0
