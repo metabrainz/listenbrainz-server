@@ -30,6 +30,13 @@ def artist_entity(artist_mbid):
     if len(artist_data) == 0:
         raise NotFound(f"artist {artist_mbid} not found in the metadata cache")
 
+    artists_no_uuid = []
+    for artist in artist_data:
+        artist.artist_mbid = str(artist.artist_mbid)
+        artists_no_uuid.append(artist)
+
+    artist_data = artists_no_uuid
+
     item = {"artist_mbid": artist_data[0].artist_mbid}
     item.update(**artist_data[0].artist_data)
     item["tag"] = artist_data[0].tag_data
@@ -61,23 +68,21 @@ def artist_entity(artist_mbid):
     # General note: This whole view function is a disaster, yes. But it is only so that monkey can work on the
     # UI for these pages. The next project will be to collect all this data and store it in couchdb.
 
-#   Monkey: The top release-groups data isnt ready yet. Once it is, we should uncomment the section below 
-#    top_release_groups = get_top_entity_for_entity("release-group", artist_mbid, "release-group")
-#    release_group_mbids = [ k["release_group_mbid"] for k in top_release_groups ] 
-#    current_app.logger.error(str(release_group_mbids))
+    top_release_groups = get_top_entity_for_entity("release-group", artist_mbid, "release-group")
+    release_group_mbids = tuple([ str(k["release_group_mbid"]) for k in top_release_groups ] )
 
     # And remove this dummy line
-    release_group_mbids = ('48140466-cff6-3222-bd55-63c27e43190d', '46b38f09-e90b-39eb-b04f-002da20f7f96', '163339ab-813b-3d29-bba8-e1d5acf63cab')
+#    release_group_mbids = ('48140466-cff6-3222-bd55-63c27e43190d', '46b38f09-e90b-39eb-b04f-002da20f7f96', '163339ab-813b-3d29-bba8-e1d5acf63cab')
 
     query = """SELECT DISTINCT ON (rg.id)
-                   rg.gid AS release_group_mbid
+                   rg.gid::TEXT AS release_group_mbid
                  , rg.name AS release_group_name
                  , (re.date_year::TEXT || '-' || 
                     LPAD(re.date_month::TEXT, 2, '0') || '-' || 
                     LPAD(re.date_day::TEXT, 2, '0')) AS date
                  , rgpt.name AS type
                  , caa.id AS caa_id
-                 , caa_rel.gid AS caa_release_mbid
+                 , caa_rel.gid::TEXT AS caa_release_mbid
               FROM musicbrainz.release_group rg
               JOIN musicbrainz.release_group_primary_type rgpt
                 ON rg.type = rgpt.id
