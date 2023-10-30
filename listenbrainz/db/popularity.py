@@ -73,7 +73,7 @@ def get_top_entity_for_entity(entity, artist_mbid, popularity_entity="recording"
     else:
         entity_mbid = "release_mbid"
     query = """
-        SELECT """ + entity_mbid + """
+        SELECT """ + entity_mbid + """::TEXT
              , total_listen_count
              , total_user_count
           FROM popularity.top_""" + popularity_entity + """
