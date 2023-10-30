@@ -12,7 +12,7 @@ import {
   faUserAstronaut,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain } from "lodash";
+import { chain, sortBy } from "lodash";
 import tinycolor from "tinycolor2";
 import { sanitize } from "dompurify";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
@@ -33,20 +33,46 @@ import {
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../playlists/utils";
 import { getRelIconLink } from "./utils";
+import ReleaseCard from "../explore/fresh-releases/ReleaseCard";
+
+type SimilarArtist = {
+  artist_mbid: string;
+  comment: string;
+  gender: string | null;
+  name: string;
+  reference_mbid: string;
+  score: number;
+  type: "Group" | "Person";
+};
+
+type ReleaseGroup = {
+  caa_id: number;
+  caa_release_mbid: string;
+  date: string;
+  release_group_mbid: string;
+  release_group_name: string;
+  type: string;
+};
 
 export type ArtistPageProps = {
-  popular_recordings?: Array<{
+  popularRecordings: Array<{
     artist_mbid: string;
     count: number;
     recording_mbid: string;
   }>;
-  artist_tags?: ArtistTag[];
   artist: MusicBrainzArtist;
+  releaseGroups: ReleaseGroup[];
+  similarArtists: SimilarArtist[];
 };
 
 export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const { artist: initialArtist, popular_recordings, artist_tags } = props;
+  const {
+    artist: initialArtist,
+    popularRecordings: initialPopularRecordings,
+    releaseGroups,
+    similarArtists,
+  } = props;
 
   const [artist, setArtist] = React.useState(initialArtist);
   const [topListeners, setTopListeners] = React.useState([]);
@@ -57,7 +83,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   >();
   // Data we get from the back end, doesn't contain metadata
   const [popularRecordings, setPopularRecordings] = React.useState(
-    popular_recordings
+    initialPopularRecordings
   );
   // JSPF Tracks fetched using the recording mbids above
   const [popularTracks, setPopularTracks] = React.useState<JSPFTrack[]>([]);
@@ -149,7 +175,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
       }
     }
     getRecordingMetadata();
-  }, [popularRecordings]);
+  }, [popularRecordings, artist.name]);
 
   React.useEffect(() => {
     async function fetchListenerStats() {
@@ -434,26 +460,18 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         <div className="albums full-width scroll-start">
           <h3>Albums</h3>
           <div className="cover-art-container dragscroll">
-            {Array.from(Array(10).keys()).map((number) => {
-              return (
-                // <ReleaseCard
-                //   releaseDate=""
-                //   releaseMBID=""
-                //   releaseName=""
-                //   caaID={null}
-                //   caaReleaseMBID={null}
-                //   artistMBIDs={[artist.name]}
-                //   artistCreditName={artist.name}
-                // />
-                <div
-                  key={number}
-                  className="cover-art"
-                  style={{ background: tinycolor.random().toHexString() }}
-                >
-                  Album cover here
-                </div>
-              );
-            })}
+            {releaseGroups.map((rg) => (
+              <ReleaseCard
+                releaseDate={rg.date}
+                artistCreditName={artist.name}
+                artistMBIDs={[artist.artist_mbid]}
+                caaID={rg.caa_id}
+                caaReleaseMBID={rg.caa_release_mbid}
+                releaseName={rg.release_group_name}
+                releaseTypePrimary={rg.type}
+                releaseGroupMBID={rg.release_group_mbid}
+              />
+            ))}
           </div>
         </div>
         <div className="reviews">
@@ -482,7 +500,15 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         </div>
         <div className="similarity">
           <h3>Similar artists</h3>
-          Artist similarity here
+          {sortBy(similarArtists, "score")
+            .reverse()
+            .map((similarArtist) => (
+              <a
+                href={`https://musicbrainz.org/artist/${similarArtist.artist_mbid}`}
+              >
+                {similarArtist.name}
+              </a>
+            ))}
         </div>
       </div>
       <BrainzPlayer
@@ -512,8 +538,12 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
-  const { artist_data, popular_recordings } = reactProps;
-  const { tag, ...artist_metadata } = artist_data;
+  const {
+    artist_data,
+    popular_recordings,
+    release_groups,
+    similar_artists,
+  } = reactProps;
 
   const ArtistPageWithAlertNotifications = withAlertNotifications(ArtistPage);
 
@@ -528,9 +558,10 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <ArtistPageWithAlertNotifications
-            artist={artist_metadata}
-            artist_tags={tag?.artist}
-            popular_recordings={popular_recordings}
+            artist={artist_data}
+            popularRecordings={popular_recordings}
+            releaseGroups={release_groups}
+            similarArtists={similar_artists}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
