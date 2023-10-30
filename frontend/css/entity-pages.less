@@ -1,6 +1,6 @@
-#artist-page {
+#entity-page {
 	--bg-color: #ebebde99; // default color
-	.artist-page-header {
+	.entity-page-header {
 		// max-height: 500px;
 		padding: 2em;
 		gap: 2em;
@@ -100,18 +100,6 @@
 			position: relative;
 			overflow-y: hidden;
 			border-bottom-style: inset;
-			.read-more {
-				position: absolute;
-				bottom: 0;
-				width: 100%;
-				text-align: center;
-				padding: 100px 0 20px;
-				background-image: linear-gradient(to bottom, transparent, #fff 80%);
-			}
-			.header > *{
-				display: inline-block;
-				margin-right: 1em;
-			}
 		}
 		.stats {
 			margin-top: 4em;
@@ -160,4 +148,25 @@
 		align-self: center;
 		margin-left: 0.5em;
 	}
+}
+
+.review {
+	position: relative;
+	.text {
+		max-height: 10em;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.read-more {
+		text-align: initial;
+	}
+}
+
+.read-more {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	text-align: center;
+	padding: 100px 0 20px;
+	background-image: linear-gradient(to bottom, transparent, #fff 65%);
 }

@@ -186,11 +186,11 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
 
   return (
     <div
-      id="artist-page"
+      id="entity-page"
       style={{ ["--bg-color" as string]: adjustedAlbumColor }}
     >
       <Loader isLoading={loading} />
-      <div className="artist-page-header flex">
+      <div className="entity-page-header flex">
         <div className="cover-art">
           <img
             src={coverArtSrc}
