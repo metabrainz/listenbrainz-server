@@ -56,63 +56,21 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
     rows, cols = matrix.shape
     similar_users = list()
 
-    # Calculate the global similarity scale
-    global_max_similarity = None
-    global_min_similarity = None
     for x in range(rows):
         row = []
 
-        # Calculate the minimum and maximum values for a user
+        # Now apply the scale factor and flatten the results for a user
+        similarity_range = max_similarity - min_similarity
         for y in range(cols):
-
-            # Spark sometimes returns nan values and the way to get rid of them is to
-            # cast to a float and discard values that are non a number
             value = float(matrix[x, y])
             if x == y or math.isnan(value):
                 continue
 
-            if global_max_similarity is None:
-                global_max_similarity = value
-                global_min_similarity = value
+            # scale from [-1, 1] to [0, 1], where closer is more similar
+            value = (value / 2.0) + 0.5
 
-            global_max_similarity = max(value, global_max_similarity)
-            global_min_similarity = min(value, global_min_similarity)
-
-    global_similarity_range = global_max_similarity - global_min_similarity
-
-    for x in range(rows):
-        row = []
-        max_similarity = None
-        min_similarity = None
-
-        # Calculate the minimum and maximum values for a user
-        for y in range(cols):
-
-            # Spark sometimes returns nan values and the way to get rid of them is to
-            # cast to a float and discard values that are non a number
-            value = float(matrix[x, y])
-            if x == y or math.isnan(value):
-                continue
-
-            if max_similarity is None:
-                max_similarity = value
-                min_similarity = value
-
-            max_similarity = max(value, max_similarity)
-            min_similarity = min(value, min_similarity)
-
-        if max_similarity is not None and min_similarity is not None:
-            # Now apply the scale factor and flatten the results for a user
-            similarity_range = max_similarity - min_similarity
-            for y in range(cols):
-                value = float(matrix[x, y])
-                if x == y or math.isnan(value):
-                    continue
-
-                row.append((x,
-                            y,
-                            (value - min_similarity) / similarity_range,
-                            (value - global_min_similarity) / global_similarity_range))
+            # Append to the row, but invert first so that closer is less similar (a percentage)
+            row.append((x, y, 1.0 - value))
 
             similar_users.extend(sorted(row, key = itemgetter(2), reverse = True)[:max_num_users])
 
