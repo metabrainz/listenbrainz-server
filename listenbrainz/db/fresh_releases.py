@@ -26,6 +26,8 @@ def get_sitewide_fresh_releases(
             release_date_window_days: The number of days into the past and future to show releases for. Must be
                                       between 1 and 90 days. If an invalid value is passed, 90 days is used.
             sort: The sort order of the results. Must be one of "release_date", "artist_credit_name" or "release_name".
+            past: Whether to show releases in the past.
+            future: Whether to show releases in the future.
 
         Returns:
             A list of FreshReleases objects
@@ -60,7 +62,6 @@ def get_sitewide_fresh_releases(
                          , rgpt.name AS release_group_primary_type
                          , rgst.name AS release_group_secondary_type
                          , array_agg(distinct t.name) AS release_tags
-                         , COUNT(*) OVER () AS total_count
                       FROM release rl
                       JOIN release_group rg
                         ON rl.release_group = rg.id
@@ -99,9 +100,13 @@ def get_sitewide_fresh_releases(
                          , release_group_secondary_type
                   ORDER BY rg.id
                          , release_date
-                ) SELECT *,
-                         total_count AS total_count
+                ), total_count AS (
+                  SELECT count(*) AS total_count
                     FROM releases
+                ) SELECT releases.*,
+                         tc.total_count AS total_count
+                    FROM releases
+              CROSS JOIN total_count tc
                 ORDER BY {sort_order_str};
         """.format(sort_order_str=sort_order_str)
 
