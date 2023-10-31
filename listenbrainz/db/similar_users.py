@@ -130,7 +130,7 @@ def get_top_similar_users(count: int = 200):
             result = connection.execute(text("""
                 SELECT u.musicbrainz_id AS user_name
                      , ou.musicbrainz_id AS other_user_name
-                     , value->1 AS similarity -- first element of array is similarity, second is global_similarity
+                     , value->0 AS similarity -- first element of array is similarity, second is global_similarity
                   FROM recommendation.similar_user r 
                   JOIN jsonb_each(r.similar_users) j
                     ON TRUE
