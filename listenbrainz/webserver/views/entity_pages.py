@@ -42,7 +42,7 @@ def artist_entity(artist_mbid):
     item["tag"] = artist_data[0].tag_data
 
     # Fetch top recordings for artist
-    r = requests.post("https://datasets.listenbrainz.org/popular-recordings/json?count=15", json=[{"[artist_mbid]": artist_mbid}])
+    r = requests.post("https://api.listenbrainz.org/1/popularity/top-recordings-for-artist/json?count=15", json=[{"[artist_mbid]": artist_mbid}])
     if r.status_code != 200:
         popular_recordings = []
     else:
