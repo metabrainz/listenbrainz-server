@@ -40,6 +40,9 @@
 				text-overflow: ellipsis;
 				max-width: 10em;
 			}
+			.btn {
+				font-size: 1.3em;
+			}
 		}
 		.right-side {
 			flex-grow: 0.8;
@@ -88,7 +91,7 @@
 	.tags {
 		margin-top: 0.5em;
 	}
-	.artist-page-content {
+	.entity-page-content {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 2em;
@@ -116,6 +119,9 @@
 		}
 		.reviews {
 			max-width: 50%;
+			.critiquebrainz-button{
+				margin-top: 2em;
+			}
 		}
 		.albums {
 			width:100%;
@@ -164,9 +170,9 @@
 
 .read-more {
 	position: absolute;
-	bottom: 0;
+	bottom: -10px;
 	width: 100%;
 	text-align: center;
-	padding: 100px 0 20px;
+	padding: 40px 0 0;
 	background-image: linear-gradient(to bottom, transparent, #fff 65%);
 }

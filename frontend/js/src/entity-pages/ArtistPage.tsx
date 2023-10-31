@@ -283,7 +283,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               getRelIconLink(relName, relValue)
             )}
           </div>
-          <div className="btn-group btn-group-lg lb-radio-button">
+          <div className="btn-group lb-radio-button">
             <a
               type="button"
               className="btn btn-info"
@@ -352,7 +352,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           entityMBID={artist.name}
         />
       </div>
-      <div className="artist-page-content">
+      <div className="entity-page-content">
         {Boolean(listensFromJSPFTracks?.length) && (
           <div className="tracks">
             <div className="header">
@@ -481,7 +481,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               {reviews.slice(0, 3).map(getReviewEventContent)}
               <a
                 href={`https://critiquebrainz.org/artist/${artist.artist_mbid}`}
-                className="btn btn-link"
+                className="critiquebrainz-button btn btn-link"
               >
                 More on CritiqueBrainz…
               </a>

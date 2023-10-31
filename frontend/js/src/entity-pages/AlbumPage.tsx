@@ -205,7 +205,10 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         </div>
         <div className="artist-info">
           <h2>{album?.name}</h2>
-          <div className="details">FIRST RELEASE DATE HERE</div>
+          <div className="details">
+            <div>{artist?.name}</div>
+            <small className="help-block">Type - Release date</small>
+          </div>
         </div>
         <div className="right-side">
           <div className="artist-rels">
@@ -213,7 +216,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               artist.artists?.[0].rels
             ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}
           </div>
-          <div className="btn-group btn-group-lg lb-radio-button">
+          <div className="btn-group lb-radio-button">
             <a
               type="button"
               className="btn btn-info"
@@ -282,7 +285,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           entityMBID={release_group_mbid}
         />
       </div>
-      <div className="artist-page-content">
+      <div className="entity-page-content">
         <div className="tracks">
           <div className="header">
             <h3 className="header-with-line">Tracklist</h3>
@@ -387,7 +390,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               {reviews.slice(0, 3).map(getReviewEventContent)}
               <a
                 href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
-                className="btn btn-link"
+                className="critiquebrainz-button btn btn-link"
               >
                 More on CritiqueBrainz…
               </a>
