@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
 export function formatReleaseDate(releaseDate: string) {
+  if (!releaseDate) {
+    return "-";
+  }
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",

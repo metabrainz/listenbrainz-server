@@ -48,7 +48,7 @@ type SimilarArtist = {
 type ReleaseGroup = {
   caa_id: number;
   caa_release_mbid: string;
-  date: string;
+  date: string | null;
   release_group_mbid: string;
   release_group_name: string;
   type: string;
@@ -462,7 +462,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           <div className="cover-art-container dragscroll">
             {releaseGroups.map((rg) => (
               <ReleaseCard
-                releaseDate={rg.date}
+                releaseDate={rg.date ?? ""}
                 artistCreditName={artist.name}
                 artistMBIDs={[artist.artist_mbid]}
                 caaID={rg.caa_id}
