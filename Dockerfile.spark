@@ -1,5 +1,10 @@
 FROM metabrainz/listenbrainz-spark-base:latest
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+                       libcurl4-openssl-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY docker/spark-cluster-config/test/core-site.xml $HADOOP_HOME/etc/hadoop/core-site.xml
 COPY docker/spark-cluster-config/test/hdfs-site.xml $HADOOP_HOME/etc/hadoop/hdfs-site.xml
 COPY docker/spark-cluster-config/test/spark-env.sh $SPARK_HOME/conf/spark-env.sh
