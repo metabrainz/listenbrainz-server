@@ -664,7 +664,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         conn = db.engine.raw_connection()
         with conn.cursor() as curs:
-            data = {self.user2['id']: (.123, 0.01)}
+            data = {self.user2['id']: .123}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
                          (self.user['id'], json.dumps(data)))
         conn.commit()
