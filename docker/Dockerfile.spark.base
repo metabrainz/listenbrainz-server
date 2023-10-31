@@ -1,4 +1,4 @@
-ARG PYTHON_BASE_IMAGE_VERSION=3.8-20210115
+ARG PYTHON_BASE_IMAGE_VERSION=3.9-focal-20220315
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION
 
 ARG PYTHON_BASE_IMAGE_VERSION
@@ -16,6 +16,7 @@ RUN apt-get update \
     bsdmainutils \
     xz-utils \
     zip \
+    libcurl4-openssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV DOCKERIZE_VERSION v0.6.1
