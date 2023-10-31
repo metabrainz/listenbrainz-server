@@ -341,7 +341,12 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                     )})::or&mode=easy`}
                   >
                     Tags (
-                    <span className="tags-list">{filteredTags.join(",")}</span>)
+                    <span className="tags-list">
+                      {filteredTags
+                        .map((filteredTag) => filteredTag.tag)
+                        .join(",")}
+                    </span>
+                    )
                   </a>
                 </li>
               )}
@@ -508,11 +513,13 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           {sortBy(similarArtists, "score")
             .reverse()
             .map((similarArtist) => (
-              <a
-                href={`https://musicbrainz.org/artist/${similarArtist.artist_mbid}`}
-              >
-                {similarArtist.name}
-              </a>
+              <div>
+                <a
+                  href={`https://musicbrainz.org/artist/${similarArtist.artist_mbid}`}
+                >
+                  {similarArtist.name}
+                </a>
+              </div>
             ))}
         </div>
       </div>

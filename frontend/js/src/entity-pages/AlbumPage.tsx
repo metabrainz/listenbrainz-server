@@ -269,7 +269,12 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                     )})::or&mode=easy`}
                   >
                     Tags (
-                    <span className="tags-list">{filteredTags.join(",")}</span>)
+                    <span className="tags-list">
+                      {filteredTags
+                        .map((filteredTag) => filteredTag.tag)
+                        .join(",")}
+                    </span>
+                    )
                   </a>
                 </li>
               )}
@@ -289,22 +294,24 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         <div className="tracks">
           <div className="header">
             <h3 className="header-with-line">Tracklist</h3>
-            <button
-              type="button"
-              className="btn btn-icon btn-info btn-rounded"
-              title="Play popular tracks"
-              onClick={() => {
-                window.postMessage(
-                  {
-                    brainzplayer_event: "play-listen",
-                    payload: listensFromJSPFTracks,
-                  },
-                  window.location.origin
-                );
-              }}
-            >
-              <FontAwesomeIcon icon={faPlayCircle} fixedWidth />
-            </button>
+            {Boolean(listensFromJSPFTracks?.length) && (
+              <button
+                type="button"
+                className="btn btn-icon btn-info btn-rounded"
+                title="Play popular tracks"
+                onClick={() => {
+                  window.postMessage(
+                    {
+                      brainzplayer_event: "play-listen",
+                      payload: listensFromJSPFTracks,
+                    },
+                    window.location.origin
+                  );
+                }}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} fixedWidth />
+              </button>
+            )}
           </div>
           {listensFromJSPFTracks?.map((listen) => {
             const recording = popularRecordings?.find(
