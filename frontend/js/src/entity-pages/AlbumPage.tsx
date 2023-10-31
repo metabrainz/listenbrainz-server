@@ -211,7 +211,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           </div>
         </div>
         <div className="right-side">
-          <div className="artist-rels">
+          <div className="entity-rels">
             {Object.entries(
               artist.artists?.[0].rels
             ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}

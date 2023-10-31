@@ -4,7 +4,8 @@ declare type MusicBrainzArtist = {
   artist_mbid: string;
   join_phrase?: string;
   area: string;
-  begin_year: number;
+  begin_year?: number;
+  end_year?: number;
   rels: { [key: string]: string };
   //   rels: Record<string, string>;
   type: string;

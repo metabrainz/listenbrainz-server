@@ -255,7 +255,12 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         <div className="artist-info">
           <h2>{artist.name}</h2>
           <div className="details">
-            {artist.begin_year} — {artist.area}
+            <small className="help-block">
+              {artist.begin_year}
+              {Boolean(artist.end_year) && ` — ${artist.end_year}`}
+              <br />
+              {artist.area}
+            </small>
           </div>
           {wikipediaExtract && (
             <div className="wikipedia-extract">
@@ -278,7 +283,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           )}
         </div>
         <div className="right-side">
-          <div className="artist-rels">
+          <div className="entity-rels">
             {Object.entries(artist.rels).map(([relName, relValue]) =>
               getRelIconLink(relName, relValue)
             )}
