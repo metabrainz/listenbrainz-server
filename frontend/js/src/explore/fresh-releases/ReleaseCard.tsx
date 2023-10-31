@@ -85,9 +85,9 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       getCoverArt();
     }
   }, [releaseMBID, releaseGroupMBID, caaID, caaReleaseMBID, setCoverartSrc]);
-  const linkToEntity = releaseMBID
-    ? `/player/release/${releaseMBID}`
-    : `/album/${releaseGroupMBID}`;
+  const linkToEntity = releaseGroupMBID
+    ? `/album/${releaseGroupMBID}`
+    : `/player/release/${releaseMBID}`;
   return (
     <div className="release-card-container">
       <div className="release-date">{formatReleaseDate(releaseDate)}</div>
@@ -111,7 +111,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       </div>
       <div className="release-artist" title={artistCreditName}>
         <a
-          href={`https://musicbrainz.org/artist/${artistMBIDs[0]}`}
+          href={`/artist/${artistMBIDs[0]}`}
           target="_blank"
           rel="noopener noreferrer"
         >

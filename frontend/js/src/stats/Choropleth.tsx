@@ -223,7 +223,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
               {artist.listen_count}
             </span>
             <a
-              href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
+              href={`/artist/${artist.artist_mbid}`}
               target="_blank"
               rel="noopener noreferrer"
             >

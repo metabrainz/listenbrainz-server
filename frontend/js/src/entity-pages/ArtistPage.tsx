@@ -514,9 +514,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             .reverse()
             .map((similarArtist) => (
               <div>
-                <a
-                  href={`https://musicbrainz.org/artist/${similarArtist.artist_mbid}`}
-                >
+                <a href={`/artist/${similarArtist.artist_mbid}`}>
                   {similarArtist.name}
                 </a>
               </div>

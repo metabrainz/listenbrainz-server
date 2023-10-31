@@ -196,7 +196,7 @@ export default class ColorPlay extends React.Component<
                         "recordings[0].track_metadata.additional_info.artist_mbids[0]"
                       ) ? (
                         <a
-                          href={`https://musicbrainz.org/artist/${get(
+                          href={`/artist/${get(
                             selectedRelease,
                             "recordings[0].track_metadata.additional_info.artist_mbids[0]"
                           )}`}

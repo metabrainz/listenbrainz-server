@@ -251,7 +251,7 @@ const getArtistLink = (listen: Listen) => {
         {artists.map((artist) => (
           <>
             <a
-              href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
+              href={`/artist/${artist.artist_mbid}`}
               target="_blank"
               rel="noopener noreferrer"
               title={artist.artist_credit_name}
@@ -270,7 +270,7 @@ const getArtistLink = (listen: Listen) => {
   if (firstArtist) {
     return (
       <a
-        href={`https://musicbrainz.org/artist/${firstArtist}`}
+        href={`/artist/${firstArtist}`}
         target="_blank"
         rel="noopener noreferrer"
       >
