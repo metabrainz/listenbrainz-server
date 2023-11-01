@@ -20,6 +20,38 @@ import {
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
 
+export type SimilarArtist = {
+  artist_mbid: string;
+  comment: string;
+  gender: string | null;
+  name: string;
+  reference_mbid: string;
+  score: number;
+  type: "Group" | "Person";
+};
+
+export type ReleaseGroup = {
+  caa_id: number;
+  caa_release_mbid: string;
+  date: string | null;
+  release_group_mbid: string;
+  release_group_name: string;
+  type: string;
+};
+export type PopularRecording = {
+  artist_mbids: string[];
+  artist_name: string;
+  caa_id: number;
+  caa_release_mbid: string;
+  length: number;
+  recording_mbid: string;
+  recording_name: string;
+  release_mbid: string;
+  release_name: string;
+  total_listen_count: number;
+  total_user_count: number;
+};
+
 export function getRelIconLink(relName: string, relValue: string) {
   let icon;
   switch (relName) {
@@ -91,3 +123,27 @@ export function getRelIconLink(relName: string, relValue: string) {
 }
 
 export function noop() {}
+
+export function popularRecordingToListen(recording: PopularRecording): Listen {
+  return {
+    listened_at: 0,
+    track_metadata: {
+      artist_name: recording.artist_name,
+      track_name: recording.recording_name,
+      release_name: recording.release_name,
+      additional_info: {
+        artist_mbids: recording.artist_mbids,
+        recording_mbid: recording.recording_mbid,
+        duration: recording.length,
+        release_mbid: recording.release_mbid,
+      },
+      mbid_mapping: {
+        caa_id: recording.caa_id,
+        caa_release_mbid: recording.caa_release_mbid,
+        recording_mbid: recording.recording_mbid,
+        release_mbid: recording.release_mbid,
+        artist_mbids: recording.artist_mbids,
+      },
+    },
+  };
+}

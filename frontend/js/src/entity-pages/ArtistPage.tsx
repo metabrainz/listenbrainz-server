@@ -28,38 +28,12 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
-import {
-  JSPFTrackToListen,
-  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
-} from "../playlists/utils";
-import { getRelIconLink } from "./utils";
+import { getRelIconLink, popularRecordingToListen } from "./utils";
+import type { PopularRecording, ReleaseGroup, SimilarArtist } from "./utils";
 import ReleaseCard from "../explore/fresh-releases/ReleaseCard";
 
-type SimilarArtist = {
-  artist_mbid: string;
-  comment: string;
-  gender: string | null;
-  name: string;
-  reference_mbid: string;
-  score: number;
-  type: "Group" | "Person";
-};
-
-type ReleaseGroup = {
-  caa_id: number;
-  caa_release_mbid: string;
-  date: string | null;
-  release_group_mbid: string;
-  release_group_name: string;
-  type: string;
-};
-
 export type ArtistPageProps = {
-  popularRecordings: Array<{
-    artist_mbid: string;
-    count: number;
-    recording_mbid: string;
-  }>;
+  popularRecordings: PopularRecording[];
   artist: MusicBrainzArtist;
   releaseGroups: ReleaseGroup[];
   similarArtists: SimilarArtist[];
@@ -81,12 +55,10 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
   >();
-  // Data we get from the back end, doesn't contain metadata
+  // Data we get from the back end
   const [popularRecordings, setPopularRecordings] = React.useState(
     initialPopularRecordings
   );
-  // JSPF Tracks fetched using the recording mbids above
-  const [popularTracks, setPopularTracks] = React.useState<JSPFTrack[]>([]);
   const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
@@ -130,52 +102,13 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   //   }
   //	setArtist(response.artist)
   //  setArtistTags(…)
-  //  setPopularTracks(…)
+  //  setPopularRecordings(…)
   // }
   // catch(err){
   // toast.error(<ToastMsg title={"Could no load similar artist"} message={err.toString()})
   // }
   //     setLoading(false);
   //   };
-  React.useEffect(() => {
-    async function getRecordingMetadata() {
-      const recordingMBIDs = popularRecordings
-        ?.slice(0, 10)
-        ?.map((rec) => rec.recording_mbid);
-      if (!recordingMBIDs?.length) {
-        return;
-      }
-      const recordingMetadataMap = await APIService.getRecordingMetadata(
-        recordingMBIDs,
-        true
-      );
-      if (recordingMetadataMap) {
-        const tracks = Object.entries(recordingMetadataMap).map(
-          ([mbid, metadata]) => {
-            const trackObject: JSPFTrack = {
-              identifier: `https://musicbrainz.org/recording/${mbid}`,
-              title: metadata.recording?.name ?? mbid,
-              creator: metadata.artist?.name ?? artist.name,
-              duration: metadata.recording?.length,
-              extension: {
-                [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
-                  additional_metadata: {
-                    caa_id: metadata.release?.caa_id,
-                    caa_release_mbid: metadata.release?.caa_release_mbid,
-                  },
-                  added_at: "",
-                  added_by: "ListenBrainz",
-                },
-              },
-            };
-            return trackObject;
-          }
-        );
-        setPopularTracks(tracks);
-      }
-    }
-    getRecordingMetadata();
-  }, [popularRecordings, artist.name]);
 
   React.useEffect(() => {
     async function fetchListenerStats() {
@@ -224,14 +157,20 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     fetchListenerStats();
     fetchReviews();
     fetchWikipediaExtract();
-  }, [artist]);
+  }, [artist, APIService.APIBaseURI]);
 
-  const listensFromJSPFTracks = popularTracks.map(JSPFTrackToListen) ?? [];
+  const listensFromPopularRecordings =
+    popularRecordings.map(popularRecordingToListen) ?? [];
+
   const filteredTags = chain(artist.tag?.artist)
     .filter("genre_mbid")
     .sortBy("count")
     .value()
     .reverse();
+
+  const filteredTagsAsString = filteredTags
+    .map((filteredTag) => filteredTag.tag)
+    .join(",");
 
   return (
     <div
@@ -337,16 +276,11 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                     target="_blank"
                     rel="noopener noreferrer"
                     href={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                      filteredTags.join(",")
+                      filteredTagsAsString
                     )})::or&mode=easy`}
                   >
                     Tags (
-                    <span className="tags-list">
-                      {filteredTags
-                        .map((filteredTag) => filteredTag.tag)
-                        .join(",")}
-                    </span>
-                    )
+                    <span className="tags-list">{filteredTagsAsString}</span>)
                   </a>
                 </li>
               )}
@@ -367,7 +301,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           <div className="header">
             <h3 className="header-with-line">
               Popular tracks
-              {Boolean(listensFromJSPFTracks?.length) && (
+              {Boolean(listensFromPopularRecordings?.length) && (
                 <button
                   type="button"
                   className="btn btn-info btn-rounded play-tracks-button"
@@ -376,7 +310,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                     window.postMessage(
                       {
                         brainzplayer_event: "play-listen",
-                        payload: listensFromJSPFTracks,
+                        payload: listensFromPopularRecordings,
                       },
                       window.location.origin
                     );
@@ -387,23 +321,20 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               )}
             </h3>
           </div>
-          {listensFromJSPFTracks?.map((listen) => {
-            const recording = popularRecordings?.find(
-              (rec) =>
-                rec.recording_mbid === listen.track_metadata.recording_mbid
-            );
+          {popularRecordings?.map((recording) => {
             let listenCountComponent;
-            if (recording && Number.isFinite(recording.count)) {
+            if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
                 <>
-                  {recording.count} x <FontAwesomeIcon icon={faHeadphones} />
+                  {Intl.NumberFormat().format(recording.total_listen_count)} x{" "}
+                  <FontAwesomeIcon icon={faHeadphones} />
                 </>
               );
             }
             return (
               <ListenCard
-                key={listen.track_metadata.track_name}
-                listen={listen}
+                key={recording.recording_mbid}
+                listen={popularRecordingToListen(recording)}
                 showTimestamp={false}
                 showUsername={false}
                 additionalActions={listenCountComponent}
@@ -538,7 +469,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                   showUsername={false}
                   additionalActions={
                     <span className="badge badge-info">
-                      {similarArtist.score}
+                      {Intl.NumberFormat().format(similarArtist.score)}
                     </span>
                   }
                   // no thumbnail for artist entities
@@ -553,7 +484,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         </div>
       </div>
       <BrainzPlayer
-        listens={listensFromJSPFTracks}
+        listens={listensFromPopularRecordings}
         listenBrainzAPIBaseURI={APIService.APIBaseURI}
         refreshSpotifyToken={APIService.refreshSpotifyToken}
         refreshYoutubeToken={APIService.refreshYoutubeToken}
