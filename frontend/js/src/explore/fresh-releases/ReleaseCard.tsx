@@ -3,6 +3,7 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 import { formatReleaseDate } from "./utils";
 import {
   generateAlbumArtThumbnailLink,
+  getAlbumArtFromReleaseGroupMBID,
   getAlbumArtFromReleaseMBID,
 } from "../../utils/utils";
 
@@ -69,10 +70,15 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
   React.useEffect(() => {
     async function getCoverArt() {
-      const coverartURL = await getAlbumArtFromReleaseMBID(
-        releaseMBID ?? "",
-        releaseGroupMBID ?? true
-      );
+      let coverartURL;
+      if (releaseMBID) {
+        coverartURL = await getAlbumArtFromReleaseMBID(
+          releaseMBID,
+          releaseGroupMBID ?? true
+        );
+      } else if (releaseGroupMBID) {
+        coverartURL = await getAlbumArtFromReleaseGroupMBID(releaseGroupMBID);
+      }
       if (coverartURL) {
         setCoverartSrc(coverartURL);
       }

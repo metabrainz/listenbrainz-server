@@ -28,7 +28,11 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
-import { getRelIconLink, popularRecordingToListen } from "./utils";
+import {
+  getArtistCoverImage,
+  getRelIconLink,
+  popularRecordingToListen,
+} from "./utils";
 import type { PopularRecording, ReleaseGroup, SimilarArtist } from "./utils";
 import ReleaseCard from "../explore/fresh-releases/ReleaseCard";
 
@@ -62,7 +66,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
-  const coverArtSrc = "/static/img/cover-art-placeholder.jpg";
+  const [coverArtSrc, setCoverArtSrc] = React.useState(
+    "/static/img/cover-art-placeholder.jpg"
+  );
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
     r: 0,
@@ -111,6 +117,26 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   //   };
 
   React.useEffect(() => {
+    async function fetchCoverArt() {
+      try {
+        const fetchedCoverArtSrc = await getArtistCoverImage(
+          chain(releaseGroups)
+            .take(30)
+            .reduce((resultArray, releaseGroup) => {
+              resultArray.push(releaseGroup.caa_release_mbid);
+              return resultArray;
+            }, [] as string[])
+            .value(),
+          APIService.APIBaseURI
+        );
+        if (fetchedCoverArtSrc) {
+          setCoverArtSrc(fetchedCoverArtSrc);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
     async function fetchListenerStats() {
       try {
         const response = await fetch(
@@ -154,6 +180,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         toast.error(error);
       }
     }
+    fetchCoverArt();
     fetchListenerStats();
     fetchReviews();
     fetchWikipediaExtract();
@@ -185,10 +212,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             ref={albumArtRef}
             crossOrigin="anonymous"
             alt="Album art"
-          />
-          <OpenInMusicBrainzButton
-            entityType="artist"
-            entityMBID={artist.artist_mbid}
           />
         </div>
         <div className="artist-info">
@@ -226,6 +249,10 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             {Object.entries(artist.rels).map(([relName, relValue]) =>
               getRelIconLink(relName, relValue)
             )}
+            <OpenInMusicBrainzButton
+              entityType="artist"
+              entityMBID={artist.artist_mbid}
+            />
           </div>
           <div className="btn-group lb-radio-button">
             <a

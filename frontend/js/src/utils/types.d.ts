@@ -668,12 +668,12 @@ type CritiqueBrainzReviewAPI = {
   entity_id: string;
   entity_type: ReviewableEntityType;
   id: string; // id of the review
-  full_name:string; // license
-  info_url:string; // license
+  full_name: string; // license
+  info_url: string; // license
   is_draft: boolean;
   is_hidden: boolean;
   language: string;
-  last_revision: {    
+  last_revision: {
     id: number;
     rating: number;
     review_id: string;

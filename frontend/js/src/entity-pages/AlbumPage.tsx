@@ -20,6 +20,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import {
+  getAlbumArtFromReleaseGroupMBID,
   getAverageRGBOfImage,
   getPageProps,
   getReviewEventContent,
@@ -73,7 +74,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
-  const coverArtSrc = "/static/img/cover-art-placeholder.jpg";
+  const [coverArtSrc, setCoverArtSrc] = React.useState(
+    "/static/img/cover-art-placeholder.jpg"
+  );
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
     r: 0,
@@ -101,46 +104,19 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   adjustedAlbumColor.setAlpha(0.6);
 
   React.useEffect(() => {
-    async function getRecordingMetadata() {
-      const recordingMBIDs = popularRecordings
-        ?.slice(0, 10)
-        ?.map((rec) => rec.recording_mbid);
-      if (!recordingMBIDs?.length) {
-        return;
-      }
-      const recordingMetadataMap = await APIService.getRecordingMetadata(
-        recordingMBIDs,
-        true
-      );
-      if (recordingMetadataMap) {
-        const tracks = Object.entries(recordingMetadataMap).map(
-          ([mbid, rec_metadata]) => {
-            const trackObject: JSPFTrack = {
-              identifier: `https://musicbrainz.org/recording/${mbid}`,
-              title: rec_metadata.recording?.name ?? mbid,
-              creator: rec_metadata.artist?.name ?? artist?.name,
-              duration: rec_metadata.recording?.length,
-              extension: {
-                [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
-                  additional_metadata: {
-                    caa_id: rec_metadata.release?.caa_id,
-                    caa_release_mbid: rec_metadata.release?.caa_release_mbid,
-                  },
-                  added_at: "",
-                  added_by: "ListenBrainz",
-                },
-              },
-            };
-            return trackObject;
-          }
+    async function fetchCoverArt() {
+      try {
+        const fetchedCoverArtSrc = await getAlbumArtFromReleaseGroupMBID(
+          release_group_mbid,
+          500
         );
-        setPopularTracks(tracks);
+        if (fetchedCoverArtSrc?.length) {
+          setCoverArtSrc(fetchedCoverArtSrc);
+        }
+      } catch (error) {
+        console.error(error);
       }
     }
-    getRecordingMetadata();
-  }, [APIService, artist?.name, popularRecordings]);
-
-  React.useEffect(() => {
     async function fetchListenerStats() {
       try {
         const response = await fetch(
@@ -171,9 +147,10 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
       }
     }
 
+    fetchCoverArt();
     fetchListenerStats();
     fetchReviews();
-  }, [APIService.APIBaseURI, release_group_mbid]);
+  }, [APIService, release_group_mbid]);
 
   const listensFromJSPFTracks = popularTracks.map(JSPFTrackToListen) ?? [];
   const filteredTags = chain(releaseGroupTags)
@@ -198,10 +175,6 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             crossOrigin="anonymous"
             alt="Album art"
           />
-          <OpenInMusicBrainzButton
-            entityType="release-group"
-            entityMBID={release_group_mbid}
-          />
         </div>
         <div className="artist-info">
           <h2>{album?.name}</h2>
@@ -215,6 +188,10 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             {Object.entries(
               artist.artists?.[0].rels
             ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}
+            <OpenInMusicBrainzButton
+              entityType="release-group"
+              entityMBID={release_group_mbid}
+            />
           </div>
           <div className="btn-group lb-radio-button">
             <a

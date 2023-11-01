@@ -608,8 +608,11 @@ const generateAlbumArtThumbnailLink = (
   return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb250.jpg`;
 };
 
+export type CAAThumbnailSizes = 250 | 500 | 1200 | "small" | "large";
+
 const getThumbnailFromCAAResponse = (
-  body: CoverArtArchiveResponse
+  body: CoverArtArchiveResponse,
+  size: CAAThumbnailSizes = 250
 ): string | undefined => {
   if (!body.images?.length) {
     return undefined;
@@ -631,7 +634,7 @@ const getThumbnailFromCAAResponse = (
 
   // No front image? Fallback to whatever the first image is
   const { thumbnails, image } = body.images[0];
-  return thumbnails[250] ?? thumbnails.small ?? image;
+  return thumbnails[size] ?? thumbnails.small ?? image;
 };
 
 const retryParams = {
@@ -649,10 +652,34 @@ const retryParams = {
   },
 };
 
+const getAlbumArtFromReleaseGroupMBID = async (
+  releaseGroupMBID: string,
+  optionalSize?: CAAThumbnailSizes
+): Promise<string | undefined> => {
+  try {
+    const CAAResponse = await fetchWithRetry(
+      `https://coverartarchive.org/release-group/${releaseGroupMBID}`,
+      retryParams
+    );
+    if (CAAResponse.ok) {
+      const body: CoverArtArchiveResponse = await CAAResponse.json();
+      return getThumbnailFromCAAResponse(body, optionalSize);
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Couldn't fetch Cover Art Archive entry for ${releaseGroupMBID}`,
+      error
+    );
+  }
+  return undefined;
+};
+
 const getAlbumArtFromReleaseMBID = async (
   userSubmittedReleaseMBID: string,
   useReleaseGroupFallback: boolean | string = false,
-  APIService?: APIServiceClass
+  APIService?: APIServiceClass,
+  optionalSize?: CAAThumbnailSizes
 ): Promise<string | undefined> => {
   try {
     const CAAResponse = await fetchWithRetry(
@@ -661,26 +688,22 @@ const getAlbumArtFromReleaseMBID = async (
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      return getThumbnailFromCAAResponse(body);
+      return getThumbnailFromCAAResponse(body, optionalSize);
     }
 
-    if (CAAResponse.status === 404 && useReleaseGroupFallback && APIService) {
+    if (CAAResponse.status === 404 && useReleaseGroupFallback) {
       let releaseGroupMBID = useReleaseGroupFallback;
-      if (!_.isString(useReleaseGroupFallback)) {
+      if (!_.isString(useReleaseGroupFallback) && APIService) {
         const releaseGroupResponse = await APIService.lookupMBRelease(
           userSubmittedReleaseMBID
         );
         releaseGroupMBID = releaseGroupResponse["release-group"].id;
       }
-
-      const CAAReleaseGroupResponse = await fetchWithRetry(
-        `https://coverartarchive.org/release-group/${releaseGroupMBID}`,
-        retryParams
-      );
-      if (CAAReleaseGroupResponse.ok) {
-        const body: CoverArtArchiveResponse = await CAAReleaseGroupResponse.json();
-        return getThumbnailFromCAAResponse(body);
+      if (!_.isString(releaseGroupMBID)) {
+        return undefined;
       }
+
+      return await getAlbumArtFromReleaseGroupMBID(releaseGroupMBID);
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -932,6 +955,7 @@ export {
   getTrackDurationInMs,
   pinnedRecordingToListen,
   getAlbumArtFromReleaseMBID,
+  getAlbumArtFromReleaseGroupMBID,
   getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,
   getAdditionalContent,

@@ -19,6 +19,7 @@ import {
   faTwitter,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
+import { compact } from "lodash";
 
 export type SimilarArtist = {
   artist_mbid: string;
@@ -146,4 +147,45 @@ export function popularRecordingToListen(recording: PopularRecording): Listen {
       },
     },
   };
+}
+
+export async function getArtistCoverImage(
+  releaseMBIDs: string[],
+  APIURL: string
+): Promise<string | undefined> {
+  try {
+    const payload = {
+      background: "transparent",
+      image_size: 750,
+      dimension: 4,
+      "skip-missing": true,
+      "show-caa": false,
+      tiles: [
+        "0,1,4,5",
+        "10,11,14,15",
+        "2",
+        "3",
+        "6",
+        "7",
+        "8",
+        "9",
+        "12",
+        "13",
+      ],
+      release_mbids: compact(releaseMBIDs),
+    };
+    const response = await fetch(`${APIURL}/art/grid/`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    if (response.ok) {
+      return await response.text();
+    }
+  } catch (error) {
+    console.error("Could not load image art:", error);
+  }
+  return undefined;
 }
