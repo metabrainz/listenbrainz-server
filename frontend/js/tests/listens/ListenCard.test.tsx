@@ -128,9 +128,7 @@ describe("ListenCard", () => {
     expect(
       wrapper.find('[href="https://musicbrainz.org/recording/bar"]')
     ).toHaveLength(2);
-    expect(
-      wrapper.find('[href="https://musicbrainz.org/artist/foobar"]')
-    ).toHaveLength(1);
+    expect(wrapper.find('[href="/artist/foobar"]')).toHaveLength(1);
   });
 
   it("should render a play button", () => {
