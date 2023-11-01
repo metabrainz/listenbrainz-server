@@ -293,25 +293,27 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
       <div className="entity-page-content">
         <div className="tracks">
           <div className="header">
-            <h3 className="header-with-line">Tracklist</h3>
-            {Boolean(listensFromJSPFTracks?.length) && (
-              <button
-                type="button"
-                className="btn btn-icon btn-info btn-rounded"
-                title="Play popular tracks"
-                onClick={() => {
-                  window.postMessage(
-                    {
-                      brainzplayer_event: "play-listen",
-                      payload: listensFromJSPFTracks,
-                    },
-                    window.location.origin
-                  );
-                }}
-              >
-                <FontAwesomeIcon icon={faPlayCircle} fixedWidth />
-              </button>
-            )}
+            <h3 className="header-with-line">
+              Tracklist
+              {Boolean(listensFromJSPFTracks?.length) && (
+                <button
+                  type="button"
+                  className="btn btn-info btn-rounded play-tracks-button"
+                  title="Play album"
+                  onClick={() => {
+                    window.postMessage(
+                      {
+                        brainzplayer_event: "play-listen",
+                        payload: listensFromJSPFTracks,
+                      },
+                      window.location.origin
+                    );
+                  }}
+                >
+                  <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play album
+                </button>
+              )}
+            </h3>
           </div>
           {listensFromJSPFTracks?.map((listen) => {
             const recording = popularRecordings?.find(

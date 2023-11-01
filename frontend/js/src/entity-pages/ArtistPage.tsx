@@ -363,57 +363,59 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         />
       </div>
       <div className="entity-page-content">
-        {Boolean(listensFromJSPFTracks?.length) && (
-          <div className="tracks">
-            <div className="header">
-              <h3>Popular tracks</h3>
-              <button
-                type="button"
-                className="btn btn-icon btn-info btn-rounded"
-                title="Play popular tracks"
-                onClick={() => {
-                  window.postMessage(
-                    {
-                      brainzplayer_event: "play-listen",
-                      payload: listensFromJSPFTracks,
-                    },
-                    window.location.origin
-                  );
-                }}
-              >
-                <FontAwesomeIcon icon={faPlayCircle} fixedWidth />
-              </button>
-            </div>
-            {listensFromJSPFTracks?.map((listen) => {
-              const recording = popularRecordings?.find(
-                (rec) =>
-                  rec.recording_mbid === listen.track_metadata.recording_mbid
-              );
-              let listenCountComponent;
-              if (recording && Number.isFinite(recording.count)) {
-                listenCountComponent = (
-                  <>
-                    {recording.count} x <FontAwesomeIcon icon={faHeadphones} />
-                  </>
-                );
-              }
-              return (
-                <ListenCard
-                  key={listen.track_metadata.track_name}
-                  listen={listen}
-                  showTimestamp={false}
-                  showUsername={false}
-                  additionalActions={listenCountComponent}
-                />
-              );
-            })}
-            <div className="read-more">
-              <button type="button" className="btn btn-outline">
-                See more…
-              </button>
-            </div>
+        <div className="tracks">
+          <div className="header">
+            <h3 className="header-with-line">
+              Popular tracks
+              {Boolean(listensFromJSPFTracks?.length) && (
+                <button
+                  type="button"
+                  className="btn btn-info btn-rounded play-tracks-button"
+                  title="Play popular tracks"
+                  onClick={() => {
+                    window.postMessage(
+                      {
+                        brainzplayer_event: "play-listen",
+                        payload: listensFromJSPFTracks,
+                      },
+                      window.location.origin
+                    );
+                  }}
+                >
+                  <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+                </button>
+              )}
+            </h3>
           </div>
-        )}
+          {listensFromJSPFTracks?.map((listen) => {
+            const recording = popularRecordings?.find(
+              (rec) =>
+                rec.recording_mbid === listen.track_metadata.recording_mbid
+            );
+            let listenCountComponent;
+            if (recording && Number.isFinite(recording.count)) {
+              listenCountComponent = (
+                <>
+                  {recording.count} x <FontAwesomeIcon icon={faHeadphones} />
+                </>
+              );
+            }
+            return (
+              <ListenCard
+                key={listen.track_metadata.track_name}
+                listen={listen}
+                showTimestamp={false}
+                showUsername={false}
+                additionalActions={listenCountComponent}
+              />
+            );
+          })}
+          {/* <div className="read-more">
+            <button type="button" className="btn btn-outline">
+              See more…
+            </button>
+          </div> */}
+        </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
             <div className="text-center">
@@ -437,7 +439,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           </div>
           {Boolean(topListeners?.length) && (
             <div className="top-listeners">
-              <h3>Top listeners</h3>
+              <h3 className="header-with-line">Top listeners</h3>
               {topListeners
                 .slice(0, 10)
                 .map(
@@ -468,7 +470,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           )}
         </div>
         <div className="albums full-width scroll-start">
-          <h3>Albums</h3>
+          <h3 className="header-with-line">Albums</h3>
           <div className="cover-art-container dragscroll">
             {releaseGroups.map((rg) => (
               <ReleaseCard
@@ -509,7 +511,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           )}
         </div>
         <div className="similarity">
-          <h3>Similar artists</h3>
+          <h3 className="header-with-line">Similar artists</h3>
           {sortBy(similarArtists, "score")
             .reverse()
             .map((similarArtist) => (
