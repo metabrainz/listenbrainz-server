@@ -514,13 +514,42 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           <h3 className="header-with-line">Similar artists</h3>
           {sortBy(similarArtists, "score")
             .reverse()
-            .map((similarArtist) => (
-              <div>
-                <a href={`/artist/${similarArtist.artist_mbid}`}>
-                  {similarArtist.name}
-                </a>
-              </div>
-            ))}
+            .map((similarArtist) => {
+              const listenDetails = (
+                <div>
+                  <a href={`/artist/${similarArtist.artist_mbid}`}>
+                    {similarArtist.name}
+                  </a>
+                </div>
+              );
+              const artistAsListen: BaseListenFormat = {
+                listened_at: 0,
+                track_metadata: {
+                  artist_name: similarArtist.name,
+                  track_name: "",
+                },
+              };
+              return (
+                <ListenCard
+                  key={similarArtist.artist_mbid}
+                  listenDetails={listenDetails}
+                  listen={artistAsListen}
+                  showTimestamp={false}
+                  showUsername={false}
+                  additionalActions={
+                    <span className="badge badge-info">
+                      {similarArtist.score}
+                    </span>
+                  }
+                  // no thumbnail for artist entities
+                  // eslint-disable-next-line react/jsx-no-useless-fragment
+                  customThumbnail={<></>}
+                  // eslint-disable-next-line react/jsx-no-useless-fragment
+                  feedbackComponent={<></>}
+                  compact
+                />
+              );
+            })}
         </div>
       </div>
       <BrainzPlayer
