@@ -59,9 +59,9 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(user, following_user['id'], 'follow')
         return following_user
 
-    def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, global_similarity: float, name: str) -> dict:
+    def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, name: str) -> dict:
         similar_user = db_user.get_or_create(mb_row_id, name)
-        self.similar_user_data[similar_user['id']] = (similarity, global_similarity)
+        self.similar_user_data[similar_user['id']] = similarity
         with db.engine.begin() as connection:
             connection.execute(text("""
                 INSERT INTO recommendation.similar_user (user_id, similar_users)
@@ -150,8 +150,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         self.similar_user_data = dict()
-        similar_user_1 = self.create_similar_user(self.main_user['id'], 104, 0.1, 0.1, 'similar_1')
-        similar_user_2 = self.create_similar_user(self.main_user['id'], 105, 0.2, 0.2, 'similar_2')
+        similar_user_1 = self.create_similar_user(self.main_user['id'], 104, 0.1, 'similar_1')
+        similar_user_2 = self.create_similar_user(self.main_user['id'], 105, 0.2, 'similar_2')
 
         ts = int(time.time())
         # Send 3 listens for the following_user_1
