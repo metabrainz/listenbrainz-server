@@ -32,16 +32,13 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
         # remember to keep both in sync.
-        return [("dirty ", "BOOLEAN DEFAULT FALSE"),
-                ("artist_mbid ", "UUID NOT NULL"),
-                ("artist_data ", "JSONB NOT NULL"),
+        return [("dirty ", "BOOLEAN DEFAULT FALSE"), ("artist_mbid ", "UUID NOT NULL"), ("artist_data ", "JSONB NOT NULL"),
                 ("tag_data ", "JSONB NOT NULL")]
 
     def get_insert_queries_test_values(self):
         if config.USE_MINIMAL_DATASET:
-            return [[(uuid.UUID(u),) for u in ('e97f805a-ab48-4c52-855e-07049142113d',
-                                               'e95e5009-99b3-42d2-abdd-477967233b08',
-                                               '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')]]
+            return [[(uuid.UUID(u), ) for u in ('e97f805a-ab48-4c52-855e-07049142113d', 'e95e5009-99b3-42d2-abdd-477967233b08',
+                                                '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')]]
         else:
             return [[]]
 
@@ -69,7 +66,7 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
             recording_data, artist_data, tag_data JSON strings as a tuple.
         """
         artist_mbid = row["artist_mbid"]
-        artist = {"name": row["artist_name"]}
+        artist = {"name": row["artist_name"], "mbid": row["artist_mbid"]}
         if row["begin_date_year"] is not None:
             artist["begin_year"] = row["begin_date_year"]
         if row["end_date_year"] is not None:
@@ -172,7 +169,7 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
         """
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         with conn.cursor() as curs:
-            curs.execute(query, (tuple(artist_mbids),))
+            curs.execute(query, (tuple(artist_mbids), ))
 
     def config_postgres_join_limit(self, curs):
         """
@@ -276,7 +273,7 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
 
                 log("mb metadata update: Running looooong query on dirty items")
                 query = self.get_metadata_cache_query(with_values=True)
-                values = [(mbid,) for mbid in artist_mbids]
+                values = [(mbid, ) for mbid in artist_mbids]
                 execute_values(mb_curs, query, values, page_size=len(values))
 
                 rows = []
