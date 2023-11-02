@@ -133,7 +133,7 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
                              WHERE count > 0
                           GROUP BY a.gid
                    )
-                            SELECT a.gid AS artist_mbid
+                            SELECT a.gid::TEXT AS artist_mbid
                                  , a.name AS artist_name
                                  , a.begin_date_year
                                  , a.end_date_year
