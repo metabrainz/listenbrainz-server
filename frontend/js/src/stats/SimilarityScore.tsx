@@ -21,10 +21,9 @@ const getclassName = (similarityScore: number): string => {
 function SimilarityScore(props: SimilarityScoreProps) {
   const { user, type, similarityScore } = props;
 
-  // We transform the similarity score from a scale 0-1 to 0-10
-  const adjustedSimilarityScore = Number((similarityScore * 10).toFixed(1));
+  // We transform the similarity score from a scale 0-1 to 0-100
+  const percentage = Number((similarityScore * 100).toFixed());
   const className = getclassName(similarityScore);
-  const percentage = adjustedSimilarityScore * 10;
 
   return (
     <div
@@ -49,11 +48,10 @@ function SimilarityScore(props: SimilarityScoreProps) {
       </div>
       {type === "regular" ? (
         <p className="text-muted">
-          Your compatibility with {user?.name} is {adjustedSimilarityScore}
-          /10
+          Your compatibility with {user?.name} is {percentage}%
         </p>
       ) : (
-        <p className="small text-muted">{adjustedSimilarityScore}/10</p>
+        <p className="small text-muted">{percentage}%</p>
       )}
     </div>
   );
