@@ -116,10 +116,12 @@ def artist_entity(artist_mbid):
                  , re.date_day
                  , caa.ordering"""
 
-    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn:
-        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            mb_curs.execute(query, (release_group_mbids,))
-            release_groups = [ dict(row) for row in mb_curs.fetchall() ]
+    release_groups = []
+    if len(release_group_mbids) > 0:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn:
+            with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+                mb_curs.execute(query, (release_group_mbids,))
+                release_groups = [ dict(row) for row in mb_curs.fetchall() ]
 
     props = {
         "artist_data": item,
