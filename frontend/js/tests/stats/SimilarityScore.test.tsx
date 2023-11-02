@@ -30,17 +30,24 @@ describe("SimilarityScore", () => {
   it("updates the class name based on similiarty score", async () => {
     /* sets class red for score 0.2 */
     const wrapper = mount<SimilarityScoreProps>(<SimilarityScore {...props} />);
-    expect(wrapper.find(".progress").childAt(0).hasClass("red")).toEqual(true);
+    expect(wrapper.find(".progress").childAt(0).hasClass("orange")).toEqual(true);
 
-    /* sets class orange for score 0.5 */
-    wrapper.setProps({ similarityScore: 0.57457 });
+    /* sets class orange for score 0.15 */
+    wrapper.setProps({ similarityScore: 0.15 });
+    await waitForComponentToPaint(wrapper);
+    expect(wrapper.find(".progress").childAt(0).hasClass("red")).toEqual(
+      true
+    );
+
+    /* sets class purple for score 0.3 */
+    wrapper.setProps({ similarityScore: 0.3 });
     await waitForComponentToPaint(wrapper);
     expect(wrapper.find(".progress").childAt(0).hasClass("orange")).toEqual(
       true
     );
 
-    /* sets class purple for score 0.9 */
-    wrapper.setProps({ similarityScore: 0.945792 });
+    /* sets class purple for score 0.6 */
+    wrapper.setProps({ similarityScore: 0.6 });
     await waitForComponentToPaint(wrapper);
     expect(wrapper.find(".progress").childAt(0).hasClass("purple")).toEqual(
       true
