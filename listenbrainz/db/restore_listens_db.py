@@ -66,8 +66,12 @@ def process_file(cursor: psycopg2.cursor, file):
         dumped_listens = orjson.loads(text)
 
     listens = messybrainz_lookup(dumped_listens)
-    listens_to_insert = [
-        (datetime.fromtimestamp(l["listened_at"]), l["user_id"], l["recording_msid"], l["track_metadata"])
+    listens_to_insert = [(
+        datetime.fromtimestamp(l["listened_at"]),
+        l["user_id"],
+        l["recording_msid"],
+        orjson.dumps(l["track_metadata"]).decode()
+    )
         for l in listens
     ]
     query = """
