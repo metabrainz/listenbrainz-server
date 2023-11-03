@@ -62,12 +62,17 @@ def messybrainz_lookup(listens):
 def process_file(cursor, file):
     print(f"Processing file {file}.", end=" ")
     start = time.monotonic()
+
+    file_read_start = time.monotonic()
     dumped_listens = []
     with open(os.path.join(root_dir, file)) as f:
         for line in f.readlines():
             temp = orjson.loads(line.strip())
             dumped_listens.append(temp)
+    print(f"Listens: {len(dumped_listens)}")
+    print(f"File Read: {file_read_start - time.monotonic()}s")
 
+    messybrainz_lookup_start = time.monotonic()
     listens = messybrainz_lookup(dumped_listens)
     listens_to_insert = [(
         datetime.fromtimestamp(l["timestamp"]),
@@ -77,6 +82,9 @@ def process_file(cursor, file):
     )
         for l in listens
     ]
+    print(f"MessyBrainz Lookup and dump json: {messybrainz_lookup_start - time.monotonic()}s")
+
+    insert_start = time.monotonic()
     query = """
         INSERT INTO listen_backup (listened_at, created, user_id, recording_msid, data)
              VALUES %s
@@ -86,6 +94,7 @@ def process_file(cursor, file):
                   , data = EXCLUDED.data
     """
     execute_values(cursor, query, listens_to_insert, template="(%s, '2023-11-01 00:00:00+00', %s, %s, %s)")
+    print(f"Insert: {insert_start - time.monotonic()}s")
 
     print(f"Took {time.monotonic() - start}s.")
 
