@@ -7,7 +7,7 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz import webserver
-from listenbrainz.db import timescale as ts, do_not_recommend
+from listenbrainz.db import timescale as ts, do_not_recommend, restore_listens_db
 from listenbrainz.listenstore import timescale_fill_userid, timescale_listens_migrate
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
@@ -347,3 +347,12 @@ def refresh_top_manual_mappings():
         app.logger.info("Starting process to refresh top manual mappings")
         ts_refresh_top_manual_mappings()
         app.logger.info("Completed process to refresh top manual mappings")
+
+
+@cli.command()
+def restore_listen_backup():
+    app = create_app()
+    with app.app_context():
+        print("Starting restore")
+        restore_listens_db.main()
+        print("Restore complete.")
