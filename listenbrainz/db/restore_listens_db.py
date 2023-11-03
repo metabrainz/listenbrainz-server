@@ -13,6 +13,8 @@ from listenbrainz.db import timescale
 pattern = "**/*.listens"
 root_dir = "/data"
 
+msid_lookup_map = {}
+
 
 def get_files():
     def file_key(x):
@@ -37,18 +39,21 @@ def messybrainz_lookup(cursor, listens):
         track_number = listen['track_metadata']['additional_info'].get('track_number')
         if track_number:
             track_number = str(track_number)
+        else:
+            track_number = None
 
         duration = listen['track_metadata']['additional_info'].get('duration')
         if duration:
-            duration = duration * 1000  # convert into ms
+            duration = int(duration * 1000)  # convert into ms
         else:  # try duration_ms field next
             duration_ms = listen['track_metadata']['additional_info'].get('duration_ms')
             if duration:
-                duration = duration_ms
+                duration = int(duration_ms)
 
         key = f"{recording}-{artist}-{release}-{track_number}-{duration}"
         listen["key"] = key
-        msb_listens.append((recording, artist, release, track_number, duration, key))
+        if key not in msid_lookup_map:
+            msb_listens.append((recording, artist, release, track_number, duration, key))
 
     query = """
         WITH intermediate AS (
@@ -61,7 +66,7 @@ def messybrainz_lookup(cursor, listens):
                AND lower(msb.artist_credit) = lower(t.artist_credit)
                AND ((lower(msb.release) = lower(t.release)) OR (msb.release IS NULL AND t.release IS NULL))
                AND ((lower(msb.track_number) = lower(t.track_number)) OR (msb.track_number IS NULL AND t.track_number IS NULL))
-               AND ((msb.duration = t.duration) OR (msb.duration IS NULL AND t.duration IS NULL))
+               AND ((msb.duration = t.duration::integer) OR (msb.duration IS NULL AND t.duration IS NULL))
        ) 
             SELECT recording_msid
                  , key
@@ -70,14 +75,13 @@ def messybrainz_lookup(cursor, listens):
     """
     results = execute_values(cursor, query, msb_listens, template=None, fetch=True, page_size=1000)
 
-    lookup_map = {}
     for row in results:
-        lookup_map[row[1]] = row[0]
+        msid_lookup_map[row[1]] = row[0]
 
     for listen in listens:
-        listen["recording_msid"] = lookup_map[listen["key"]]
+        listen["recording_msid"] = msid_lookup_map[listen["key"]]
 
-    return listen
+    return listens
 
 
 def process_file(cursor, file):
@@ -92,11 +96,11 @@ def process_file(cursor, file):
             temp = orjson.loads(line.strip())
             dumped_listens.append(temp)
     print(f"Listens: {len(dumped_listens)}")
-    print(f"File Read: {time.monotonic() - file_read_start:%d} s")
+    print(f"File Read: {int(time.monotonic() - file_read_start)} s")
 
     messybrainz_lookup_start = time.monotonic()
     listens = messybrainz_lookup(cursor, dumped_listens)
-    print(f"MessyBrainz Lookup: {time.monotonic() - messybrainz_lookup_start:%d} s")
+    print(f"MessyBrainz Lookup: {int(time.monotonic() - messybrainz_lookup_start)} s")
 
     prepare_listens_start = time.monotonic()
     listens_to_insert = [(
@@ -107,7 +111,7 @@ def process_file(cursor, file):
     )
         for l in listens
     ]
-    print(f"Prepare listens: {time.monotonic() - prepare_listens_start:%d} s")
+    print(f"Prepare listens: {int(time.monotonic() - prepare_listens_start)} s")
 
     insert_start = time.monotonic()
     query = """
@@ -119,18 +123,16 @@ def process_file(cursor, file):
                   , data = EXCLUDED.data
     """
     execute_values(cursor, query, listens_to_insert, template="(%s, '2023-11-01 00:00:00+00', %s, %s, %s)")
-    print(f"Insert: {time.monotonic() - insert_start:%d} s")
+    print(f"Insert: {int(time.monotonic() - insert_start)} s")
 
-    print(f"Total time processing file {time.monotonic() - start:%d} s.")
+    print(f"Total time processing file {int(time.monotonic() - start)} s.")
     print("======================================")
     print()
 
 
 def main():
-    with timescale.engine.connect() as connection:
-        raw_connection = connection.connection
-        cursor = raw_connection.cursor()
-
-        for file in get_files():
-            process_file(cursor, file)
-            connection.commit()
+    connection = timescale.engine.raw_connection()
+    cursor = connection.cursor()
+    for file in get_files():
+        process_file(cursor, file)
+        connection.commit()
