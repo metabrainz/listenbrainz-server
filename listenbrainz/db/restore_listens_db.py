@@ -1,4 +1,5 @@
 import glob
+import os.path
 import time
 from datetime import datetime
 
@@ -59,15 +60,17 @@ def messybrainz_lookup(listens):
 
 
 def process_file(cursor, file):
-    print(f"Processing file ${file}.", end=" ")
+    print(f"Processing file {file}.", end=" ")
     start = time.monotonic()
-    with open(file) as f:
-        text = "[" + f.read() + "]"
-        dumped_listens = orjson.loads(text)
+    dumped_listens = []
+    with open(os.path.join(root_dir, file)) as f:
+        for line in f.readlines():
+            temp = orjson.loads(line.strip())
+            dumped_listens.append(temp)
 
     listens = messybrainz_lookup(dumped_listens)
     listens_to_insert = [(
-        datetime.fromtimestamp(l["listened_at"]),
+        datetime.fromtimestamp(l["timestamp"]),
         l["user_id"],
         l["recording_msid"],
         orjson.dumps(l["track_metadata"]).decode()
@@ -78,12 +81,13 @@ def process_file(cursor, file):
         INSERT INTO listen_backup (listened_at, created, user_id, recording_msid, data)
              VALUES %s
         ON CONFLICT (listened_at, user_id, recording_msid)
-          DO UPDATE created = EXCLUDED.created
+          DO UPDATE 
+                SET created = EXCLUDED.created
                   , data = EXCLUDED.data
     """
     execute_values(cursor, query, listens_to_insert, template="(%s, '2023-11-01 00:00:00+00', %s, %s, %s)")
 
-    print(f"Took ${time.monotonic() - start}s.")
+    print(f"Took {time.monotonic() - start}s.")
 
 
 def main():
