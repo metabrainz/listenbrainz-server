@@ -58,7 +58,7 @@ def messybrainz_lookup(listens):
     return augmented_listens
 
 
-def process_file(cursor: psycopg2.cursor, file):
+def process_file(cursor, file):
     print(f"Processing file ${file}.", end=" ")
     start = time.monotonic()
     with open(file) as f:
