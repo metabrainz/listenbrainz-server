@@ -27,40 +27,62 @@ def get_files():
     return files
 
 
-def messybrainz_lookup(listens):
+def messybrainz_lookup(cursor, listens):
     msb_listens = []
     for listen in listens:
-        data = {
-            'artist': listen['track_metadata']['artist_name'],
-            'title': listen['track_metadata']['track_name'],
-            'release': listen['track_metadata'].get('release_name'),
-        }
+        artist = listen['track_metadata']['artist_name']
+        recording = listen['track_metadata']['track_name']
+        release = listen['track_metadata'].get('release_name')
 
         track_number = listen['track_metadata']['additional_info'].get('track_number')
         if track_number:
-            data['track_number'] = str(track_number)
+            track_number = str(track_number)
 
         duration = listen['track_metadata']['additional_info'].get('duration')
         if duration:
-            data['duration'] = duration * 1000  # convert into ms
+            duration = duration * 1000  # convert into ms
         else:  # try duration_ms field next
             duration_ms = listen['track_metadata']['additional_info'].get('duration_ms')
             if duration:
-                data['duration'] = duration_ms
+                duration = duration_ms
 
-        msb_listens.append(data)
+        key = f"{recording}-{artist}-{release}-{track_number}-{duration}"
+        listen["key"] = key
+        msb_listens.append((recording, artist, release, track_number, duration, key))
 
-    msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
+    query = """
+        WITH intermediate AS (
+            SELECT msb.gid::TEXT AS recording_msid
+                 , t.key
+                 , row_number() over (partition by msb.recording, msb.artist_credit, msb.release, msb.track_number, msb.duration ORDER BY msb.submitted) AS rnum
+              FROM messybrainz.submissions msb
+              JOIN (VALUES %s) AS t(recording, artist_credit, release, track_number, duration, key)
+                ON lower(msb.recording) = lower(t.recording)
+               AND lower(msb.artist_credit) = lower(t.artist_credit)
+               AND ((lower(msb.release) = lower(t.release)) OR (msb.release IS NULL AND t.release IS NULL))
+               AND ((lower(msb.track_number) = lower(t.track_number)) OR (msb.track_number IS NULL AND t.track_number IS NULL))
+               AND ((msb.duration = t.duration) OR (msb.duration IS NULL AND t.duration IS NULL))
+       ) 
+            SELECT recording_msid
+                 , key
+              FROM intermediate
+             WHERE rnum = 1
+    """
+    results = execute_values(cursor, query, msb_listens, template=None, fetch=True, page_size=1000)
 
-    augmented_listens = []
-    for listen, msid in zip(listens, msb_responses):
-        listen['recording_msid'] = msid
-        augmented_listens.append(listen)
-    return augmented_listens
+    lookup_map = {}
+    for row in results:
+        lookup_map[row[1]] = row[0]
+
+    for listen in listens:
+        listen["recording_msid"] = lookup_map[listen["key"]]
+
+    return listen
 
 
 def process_file(cursor, file):
-    print(f"Processing file {file}.", end=" ")
+    print("======================================")
+    print(f"Processing file {file}.")
     start = time.monotonic()
 
     file_read_start = time.monotonic()
@@ -70,10 +92,13 @@ def process_file(cursor, file):
             temp = orjson.loads(line.strip())
             dumped_listens.append(temp)
     print(f"Listens: {len(dumped_listens)}")
-    print(f"File Read: {time.monotonic() - file_read_start} s")
+    print(f"File Read: {time.monotonic() - file_read_start:%d} s")
 
     messybrainz_lookup_start = time.monotonic()
-    listens = messybrainz_lookup(dumped_listens)
+    listens = messybrainz_lookup(cursor, dumped_listens)
+    print(f"MessyBrainz Lookup: {time.monotonic() - messybrainz_lookup_start:%d} s")
+
+    prepare_listens_start = time.monotonic()
     listens_to_insert = [(
         datetime.fromtimestamp(l["timestamp"]),
         l["user_id"],
@@ -82,7 +107,7 @@ def process_file(cursor, file):
     )
         for l in listens
     ]
-    print(f"MessyBrainz Lookup and dump json: {time.monotonic() - messybrainz_lookup_start} s")
+    print(f"Prepare listens: {time.monotonic() - prepare_listens_start:%d} s")
 
     insert_start = time.monotonic()
     query = """
@@ -94,17 +119,18 @@ def process_file(cursor, file):
                   , data = EXCLUDED.data
     """
     execute_values(cursor, query, listens_to_insert, template="(%s, '2023-11-01 00:00:00+00', %s, %s, %s)")
-    print(f"Insert: {time.monotonic() - insert_start} s")
+    print(f"Insert: {time.monotonic() - insert_start:%d} s")
 
-    print(f"Took {time.monotonic() - start} s.")
+    print(f"Total time processing file {time.monotonic() - start:%d} s.")
+    print("======================================")
+    print()
 
 
 def main():
-    connection = timescale.engine.raw_connection()
-    cursor = connection.cursor()
+    with timescale.engine.connect() as connection:
+        raw_connection = connection.connection
+        cursor = raw_connection.cursor()
 
-    for file in get_files():
-        process_file(cursor, file)
-        connection.commit()
-
-    connection.close()
+        for file in get_files():
+            process_file(cursor, file)
+            connection.commit()
