@@ -128,7 +128,24 @@ PUBLIC_TABLES_TIMESCALE_DUMP = {
         'recording_mbid',
         'match_type',
         'last_updated'
-    )
+    ),
+    'mbid_manual_mapping': (
+        'id',
+        'recording_msid',
+        'recording_mbid',
+        'user_id',
+        'created',
+    ),
+    'messybrainz.submissions': (
+        'id',
+        'gid',
+        'recording',
+        'artist_credit',
+        'release',
+        'track_number',
+        'duration',
+        'submitted',
+    ),
 }
 
 PUBLIC_TABLES_IMPORT = PUBLIC_TABLES_DUMP.copy()
