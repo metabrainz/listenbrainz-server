@@ -110,6 +110,18 @@ function is_unit_db_exists {
     fi
 }
 
+function is_development_db {
+
+    invoke_docker_compose_run "manage.py get-database-environment"
+    ENVIRONMENT=$?
+    echo "$ENVIRONMENT"
+    if [ "$ENVIRONMENT" == "development" ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
 function unit_stop {
     # Stopping all unit test containers associated with this project
     invoke_docker_compose stop
@@ -248,6 +260,9 @@ is_unit_db_exists
 DB_EXISTS=$?
 is_unit_db_running
 DB_RUNNING=$?
+is_development_db
+DB_IS_DEVELOPMENT=$?
+
 if [ $DB_EXISTS -eq 1 ] && [ $DB_RUNNING -eq 1 ] ; then
     # If no containers, build them, run setup then run tests, then bring down
     build_unit_containers
