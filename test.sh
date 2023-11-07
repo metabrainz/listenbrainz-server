@@ -112,13 +112,17 @@ function is_unit_db_exists {
 
 function is_development_db {
 
-    invoke_docker_compose_run "manage.py get-database-environment"
+    docker_compose_run listenbrainz dockerize \
+                  -wait tcp://lb_db:5432 -timeout 60s \
+                bash -c "python3 manage.py is-development-db"
     ENVIRONMENT=$?
     echo "$ENVIRONMENT"
-    if [ "$ENVIRONMENT" == "development" ]; then
-        return 1
+
+    # Remember: Unix status codes are 0 success, non-zero fail.
+    if [ "$ENVIRONMENT" == 0 ]; then
+        return
     else
-        return 0
+        exit 255
     fi
 }
 
@@ -261,9 +265,8 @@ DB_EXISTS=$?
 is_unit_db_running
 DB_RUNNING=$?
 is_development_db
-DB_IS_DEVELOPMENT=$?
 
-if [ $DB_EXISTS -eq 1 ] && [ $DB_RUNNING -eq 1 ] ; then
+if [ $DB_EXISTS -eq 1 ] && [ $DB_RUNNING -eq 1 ] && [ $DB_IS_DEVELOPMENT -eq 1; then
     # If no containers, build them, run setup then run tests, then bring down
     build_unit_containers
     bring_up_unit_db

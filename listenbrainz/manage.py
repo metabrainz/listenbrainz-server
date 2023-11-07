@@ -1,6 +1,7 @@
 import os
 from datetime import date
 from time import sleep
+import sys
 
 import click
 import sqlalchemy
@@ -19,6 +20,7 @@ from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_ma
 from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
+from listenbrainz.db import is_development_db as is_development_db_imp
 
 
 @click.group()
@@ -173,6 +175,16 @@ def init_ts_db(force, create_db):
 
         print("Done!")
 
+
+@cli.command(name="is-development-db")
+def is_development_db():
+    application = webserver.create_app()
+    with application.app_context():
+        if is_development_db_imp():
+            sys.exit(0)
+        else:
+            sys.exit(-1)
+        
 
 @cli.command(name="update_user_emails")
 def update_user_emails():

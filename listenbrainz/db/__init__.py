@@ -63,3 +63,22 @@ def run_sql_script_without_transaction(sql_file_path):
             connection.close()
         return True
 
+
+def is_development_db():
+
+    with engine.begin() as connection:
+        try:
+            for row in connection.execute(text("SELECT environment FROM database_environment")):
+                if row["environment"] is not None and row["environment"] != "" and row["environment"] == "development":
+                    print("database is a development database.")
+                    return True
+                else:
+                    print("database is NOT a development database.")
+                    return False
+
+            print("Could not fetch row from database_environment table to determine DB environment")
+            return False
+        except sqlalchemy.exc.ProgrammingError as err:
+            # Any exception thrown makes it clear that this isn't a properly setup dev DB
+            print("Could not fetch environment from the database_environment table. Does the table exist?")
+            return False
