@@ -63,3 +63,12 @@ def run_sql_script_without_transaction(sql_file_path):
             connection.close()
         return True
 
+def create_test_database_connect_strings():
+    return ("postgresql://listenbrainz:listenbrainz@lb_db:5432/listenbrainz",
+            "postgresql://postgres:postgres@lb_db/postgres",
+            "postgresql://postgres:postgres@lb_db/listenbrainz")
+
+def create_test_timescale_connect_strings():
+    return ("postgresql://listenbrainz_ts:listenbrainz_ts@lb_db/listenbrainz_ts",
+            "postgresql://postgres:postgres@lb_db/postgres",
+            "postgresql://postgres:postgres@lb_db/listenbrainz_ts")

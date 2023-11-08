@@ -55,7 +55,11 @@ def init_db(force, create_db):
         3. Indexes are created.
     """
     from listenbrainz import config
-    db.init_db_connection(config.POSTGRES_ADMIN_URI)
+    if config.TESTING:
+        db_connect, db_connect_admin, db_connect_admin_lb = db.create_test_database_connect_strings()
+        db.init_db_connection(db_connect_admin)
+    else:
+        db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
         res = db.run_sql_script_without_transaction(
             os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
@@ -71,7 +75,10 @@ def init_db(force, create_db):
             raise Exception(
                 'Failed to create new database and user! Exit code: %i' % res)
 
-        db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
+        if config.TESTING:
+            db.init_db_connection(db_connect_admin_lb)
+        else:
+            db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
         print('PG: Creating database extensions...')
         res = db.run_sql_script_without_transaction(
             os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
@@ -112,7 +119,11 @@ def init_ts_db(force, create_db):
         3. Views are created
     """
     from listenbrainz import config
-    ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
+    if config.TESTING:
+        ts_connect, ts_connect_admin, ts_connect_admin_lb = db.create_test_timescale_connect_strings()
+        ts.init_db_connection(ts_connect_admin)
+    else:
+        ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
     if force:
         res = ts.run_sql_script_without_transaction(
             os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
@@ -140,13 +151,21 @@ def init_ts_db(force, create_db):
             raise Exception(
                 'Failed to create new database and user! Exit code: %i' % res)
 
-        ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
+        if config.TESTING:
+            ts_connect, ts_connect_admin, ts_connect_admin_lb = db.create_test_timescale_connect_strings()
+            ts.init_db_connection(ts_connect_admin_lb)
+        else:
+            ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
         print('TS: Creating database extensions...')
         res = ts.run_sql_script_without_transaction(
             os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
 
-    ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
+    if config.TESTING:
+        ts_connect, ts_connect_admin, ts_connect_admin_lb = db.create_test_timescale_connect_strings()
+        ts.init_db_connection(ts_connect)
+    else:
+        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
     application = webserver.create_app()
     with application.app_context():
         print('TS: Creating Schemas...')
