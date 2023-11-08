@@ -95,7 +95,7 @@ def create_app(debug=None):
     from listenbrainz import db
     from listenbrainz.db import timescale as ts
 
-    # If we're running tests, overwrite the given DB configuration from the config and disregard the 
+    # If we're running tests, overwrite the given DB configuration from the config and disregard the
     # configuration, since that configuration could possibly point a different (production) DB.
     if app.config['TESTING']:
         db_connect, _, _ = create_test_database_connect_strings()
