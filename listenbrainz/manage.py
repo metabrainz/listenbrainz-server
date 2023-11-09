@@ -76,8 +76,7 @@ def init_db(force, create_db):
                 f"CREATE DATABASE {db_connect['DB_NAME']} WITH OWNER = {db_connect['DB_USER']} TEMPLATE template0 ENCODING = 'UNICODE'"
             ])
         else:
-            res = db.run_sql_script_without_transaction(
-                os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
+            res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
@@ -90,10 +89,10 @@ def init_db(force, create_db):
         # Don't raise an exception if the extension already exists
         res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
 
-        res = db.run_sql_query_without_transaction([f"ALTER DATABASE {db_connect['DB_NAME']} SET pg_trgm.word_similarity_threshold = 0.1"])
+        res = db.run_sql_query_without_transaction(
+            [f"ALTER DATABASE {db_connect['DB_NAME']} SET pg_trgm.word_similarity_threshold = 0.1"])
         if not res:
             raise Exception('Failed to create to set pg_trgm.word_similarity_threshold! Exit code: %i' % res)
-
 
     application = webserver.create_app()
     with application.app_context():
@@ -105,7 +104,8 @@ def init_db(force, create_db):
 
         print('PG: Creating tables...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
-        res = db.run_sql_query_without_transaction([f"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {db_connect['DB_NAME']}"])
+        res = db.run_sql_query_without_transaction(
+            [f"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {db_connect['DB_NAME']}"])
         if not res:
             raise Exception('Failed to set table priviledges! Exit code: %i' % res)
 
@@ -137,8 +137,8 @@ def init_ts_db(force, create_db):
     else:
         ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
     if force:
-        res = ts.run_sql_query_without_transaction([f"DROP DATABASE IF EXISTS {ts_connect['DB_NAME']}",
-                                                   f"DROP USER IF EXISTS {ts_connect['DB_USER']}"])
+        res = ts.run_sql_query_without_transaction(
+            [f"DROP DATABASE IF EXISTS {ts_connect['DB_NAME']}", f"DROP USER IF EXISTS {ts_connect['DB_USER']}"])
         if not res:
             raise Exception('Failed to drop existing database/user! Exit code: %i' % res)
 
@@ -149,9 +149,10 @@ def init_ts_db(force, create_db):
             try:
                 if config.TESTING:
                     res = ts.run_sql_query_without_transaction([
-                            f"CREATE USER {ts_connect['DB_USER']} NOCREATEDB NOSUPERUSER",
-                            f"ALTER USER {ts_connect['DB_USER']} WITH PASSWORD 'listenbrainz_ts'",
-                            f"CREATE DATABASE {ts_connect['DB_NAME']} WITH OWNER = {ts_connect['DB_USER']} TEMPLATE template0 ENCODING = 'UNICODE'"])
+                        f"CREATE USER {ts_connect['DB_USER']} NOCREATEDB NOSUPERUSER",
+                        f"ALTER USER {ts_connect['DB_USER']} WITH PASSWORD 'listenbrainz_ts'",
+                        f"CREATE DATABASE {ts_connect['DB_NAME']} WITH OWNER = {ts_connect['DB_USER']} TEMPLATE template0 ENCODING = 'UNICODE'"
+                    ])
                 else:
                     res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
                 break
