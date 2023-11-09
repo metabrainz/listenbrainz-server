@@ -127,7 +127,8 @@ PUBLIC_TABLES_TIMESCALE_DUMP = {
         'recording_msid',
         'recording_mbid',
         'match_type',
-        'last_updated'
+        'last_updated',
+        'check_again',
     ),
     'mbid_manual_mapping': (
         'id',
