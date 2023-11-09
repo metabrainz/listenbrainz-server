@@ -284,7 +284,7 @@ export default function FreshReleases() {
           ) : (
             <div id="release-card-grids" ref={releaseCardGridRef}>
               {filteredList.length === 0 ? (
-                <div id="no-release">
+                <div className="no-release">
                   <img
                     src="/static/img/recommendations/no-freshness.png"
                     alt="No Releases Found"
