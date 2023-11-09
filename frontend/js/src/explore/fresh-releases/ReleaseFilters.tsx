@@ -3,6 +3,12 @@ import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Switch from "../../components/Switch";
+import type {
+  DisplaySettingsPropertiesEnum,
+  DisplaySettings,
+  filterRangeOption,
+} from "./FreshReleases";
+import { filterRangeOptions } from "./FreshReleases";
 
 type ReleaseFiltersProps = {
   allFilters: {
@@ -14,9 +20,9 @@ type ReleaseFiltersProps = {
     React.SetStateAction<Array<FreshReleaseItem>>
   >;
   range: string;
-  handleRangeChange: (childData: string) => void;
-  displaySettings: { [key: string]: boolean };
-  toggleSettings: (setting: string) => void;
+  handleRangeChange: (range: filterRangeOption) => void;
+  displaySettings: DisplaySettings;
+  toggleSettings: (setting: DisplaySettingsPropertiesEnum) => void;
   showPastReleases: boolean;
   setShowPastReleases: React.Dispatch<React.SetStateAction<boolean>>;
   showFutureReleases: boolean;
@@ -118,7 +124,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
   const handleRangeDropdown = (event: React.ChangeEvent<HTMLSelectElement>) => {
     event.persist();
-    const { value } = event.target;
+    const value = event.target.value as filterRangeOption;
     handleRangeChange(value);
   };
 
@@ -126,6 +132,12 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     (accumulator, currentRelease) => accumulator + currentRelease.listen_count,
     0
   );
+
+  React.useEffect(() => {
+    setCoverartOnly(false);
+    setCheckedList([]);
+    setReleaseTagsCheckList([]);
+  }, [allFilters]);
 
   React.useEffect(() => {
     const filteredReleases = releases.filter((item) => {
@@ -194,9 +206,15 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 value={range}
                 onChange={handleRangeDropdown}
               >
-                <option value="week">1 Week</option>
-                <option value="month">1 Month</option>
-                <option value="three_months">3 Month</option>
+                <option value={filterRangeOptions.week.key}>
+                  {filterRangeOptions.week.label}
+                </option>
+                <option value={filterRangeOptions.month.key}>
+                  {filterRangeOptions.month.label}
+                </option>
+                <option value={filterRangeOptions.three_months.key}>
+                  {filterRangeOptions.three_months.label}
+                </option>
               </select>
             </div>
             <Switch
@@ -327,8 +345,12 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                   id={`display-item-${index}`}
                   key={`display-item-${setting}`}
                   value={setting}
-                  checked={displaySettings[setting]}
-                  onChange={(e) => toggleSettings(setting)}
+                  checked={
+                    displaySettings[setting as DisplaySettingsPropertiesEnum]
+                  }
+                  onChange={(e) =>
+                    toggleSettings(setting as DisplaySettingsPropertiesEnum)
+                  }
                   switchLabel={setting}
                 />
               )

@@ -1476,11 +1476,11 @@ describe("Fresh Releases", () => {
         50,
         undefined,
         undefined,
-        "hello_there"
+        "confidence"
       )
     ).resolves.toEqual(response);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/explore/fresh-releases/?days=50&sort=hello_there"
+      "foobar/1/explore/fresh-releases/?days=50&sort=confidence"
     );
   });
 });

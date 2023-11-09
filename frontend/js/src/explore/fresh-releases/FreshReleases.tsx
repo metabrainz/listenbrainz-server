@@ -12,19 +12,71 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";
 import ErrorBoundary from "../../utils/ErrorBoundary";
-import ReleaseCard from "./ReleaseCard";
 import ReleaseFilters from "./ReleaseFilters";
 import ReleaseTimeline from "./ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./ReleaseCardsGrid";
 
-const initialDisplayState = {
-  "Release Title": true,
-  Artist: true,
-  Information: true,
-  Tags: false,
-  Listens: false,
+export enum DisplaySettingsPropertiesEnum {
+  releaseTitle = "Release Title",
+  artist = "Artist",
+  information = "Information",
+  tags = "Tags",
+  listens = "Listens",
+}
+
+export type DisplaySettings = {
+  [key in DisplaySettingsPropertiesEnum]: boolean;
 };
+
+const initialDisplayState: DisplaySettings = {
+  [DisplaySettingsPropertiesEnum.releaseTitle]: true,
+  [DisplaySettingsPropertiesEnum.artist]: true,
+  [DisplaySettingsPropertiesEnum.information]: true,
+  [DisplaySettingsPropertiesEnum.tags]: false,
+  [DisplaySettingsPropertiesEnum.listens]: false,
+};
+
+const SortOptions = {
+  releaseDate: {
+    value: "release_date",
+    label: "Release Date",
+  },
+  artist: {
+    value: "artist_credit_name",
+    label: "Artist",
+  },
+  releaseTitle: {
+    value: "release_name",
+    label: "Release Title",
+  },
+  confidence: {
+    value: "confidence",
+    label: "Confidence",
+  },
+} as const;
+
+export type SortOption = typeof SortOptions[keyof typeof SortOptions]["value"];
+
+export const filterRangeOptions = {
+  week: {
+    value: 7,
+    key: "week",
+    label: "Week",
+  },
+  month: {
+    value: 30,
+    key: "month",
+    label: "Month",
+  },
+  three_months: {
+    value: 90,
+    key: "three_months",
+    label: "3 Months",
+  },
+} as const;
+
+export type filterRangeOption = keyof typeof filterRangeOptions;
 
 export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
@@ -51,23 +103,19 @@ export default function FreshReleases() {
 
   const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);
 
-  const [range, setRange] = React.useState<string>("week");
-  const [displaySettings, setDisplaySettings] = React.useState<{
-    [key: string]: boolean;
-  }>(initialDisplayState);
+  const [range, setRange] = React.useState<filterRangeOption>("week");
+  const [displaySettings, setDisplaySettings] = React.useState<DisplaySettings>(
+    initialDisplayState
+  );
   const [showPastReleases, setShowPastReleases] = React.useState<boolean>(true);
   const [showFutureReleases, setShowFutureReleases] = React.useState<boolean>(
     true
   );
-  const [sort, setSort] = React.useState<string>("release_date");
+  const [sort, setSort] = React.useState<SortOption>("release_date");
 
   const releaseCardGridRef = React.useRef(null);
 
-  const handleRangeChange = (childData: string) => {
-    setRange(childData);
-  };
-
-  const toggleSettings = (setting: string) => {
+  const toggleSettings = (setting: DisplaySettingsPropertiesEnum) => {
     setDisplaySettings({
       ...displaySettings,
       [setting]: !displaySettings[setting],
@@ -78,19 +126,6 @@ export default function FreshReleases() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const convertRangeToDays = (releaseRange: string): number => {
-    switch (releaseRange) {
-      case "week":
-        return 7;
-      case "month":
-        return 30;
-      case "three_months":
-        return 90;
-      default:
-        return 1;
-    }
-  };
-
   React.useEffect(() => {
     const fetchReleases = async () => {
       setIsLoading(true);
@@ -98,7 +133,7 @@ export default function FreshReleases() {
       try {
         if (pageType === PAGE_TYPE_SITEWIDE) {
           const allFreshReleases = await APIService.fetchSitewideFreshReleases(
-            convertRangeToDays(range),
+            filterRangeOptions[range].value,
             showPastReleases,
             showFutureReleases,
             sort
@@ -209,13 +244,21 @@ export default function FreshReleases() {
                 id="style"
                 className="form-control"
                 value={sort}
-                onChange={(event) => setSort(event.target.value)}
+                onChange={(event) => setSort(event.target.value as SortOption)}
               >
-                <option value="release_date">Release Date</option>
-                <option value="artist_credit_name">Artist</option>
-                <option value="release_name">Release Title</option>
+                <option value={SortOptions.releaseDate.value}>
+                  {SortOptions.releaseDate.label}
+                </option>
+                <option value={SortOptions.artist.value}>
+                  {SortOptions.artist.label}
+                </option>
+                <option value={SortOptions.releaseTitle.value}>
+                  {SortOptions.releaseTitle.label}
+                </option>
                 {pageType === PAGE_TYPE_USER ? (
-                  <option value="confidence">Confidence</option>
+                  <option value={SortOptions.confidence.value}>
+                    {SortOptions.confidence.label}
+                  </option>
                 ) : null}
               </select>
             </div>
@@ -255,8 +298,8 @@ export default function FreshReleases() {
                 />
               )}
 
-              {pageType === PAGE_TYPE_SITEWIDE && releases.length > 0 ? (
-                <div className="releases-timeline col-xs-12 col-md-1">
+              {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 ? (
+                <div className="releases-timeline">
                   <ReleaseTimeline releases={filteredList} order={sort} />
                 </div>
               ) : null}
@@ -274,7 +317,7 @@ export default function FreshReleases() {
           releases={releases}
           setFilteredList={setFilteredList}
           range={range}
-          handleRangeChange={handleRangeChange}
+          handleRangeChange={setRange}
           displaySettings={displaySettings}
           toggleSettings={toggleSettings}
           showPastReleases={showPastReleases}

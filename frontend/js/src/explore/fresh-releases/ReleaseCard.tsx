@@ -20,7 +20,11 @@ type ReleaseCardProps = {
   confidence?: number | null;
   caaID: number | null;
   caaReleaseMBID: string | null;
-  displaySettings: { [key: string]: boolean };
+  showReleaseTitle?: boolean;
+  showArtist?: boolean;
+  showInformation?: boolean;
+  showTags?: boolean;
+  showListens?: boolean;
   releaseTags: Array<string>;
   listenCount: number;
 };
@@ -37,7 +41,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     confidence,
     caaID,
     caaReleaseMBID,
-    displaySettings,
+    showReleaseTitle,
+    showArtist,
+    showInformation,
+    showTags,
+    showListens,
     releaseTags,
     listenCount,
   } = props;
@@ -94,7 +102,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   return (
     <div className="release-card-container">
       <div className="release-item">
-        {displaySettings.Listens && listenCount ? (
+        {showListens && listenCount ? (
           <div className="listen-count">
             <Pill title="Listens" type="secondary" active>
               <>
@@ -107,7 +115,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
           </div>
         ) : null}
         <div className="release-information">
-          {displaySettings.Tags && releaseTags && releaseTags.length ? (
+          {showTags && releaseTags && releaseTags.length ? (
             <div className="cover-art-info">
               {releaseTags.join(", ").length > 26 ? (
                 <div className="tags" title={releaseTags.join(", ")}>
@@ -118,7 +126,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
               )}
             </div>
           ) : null}
-          {displaySettings.Information && (
+          {showInformation && (
             <div className="cover-art-info">
               <div className="release-type-chip" title={releaseTypeTooltip()!}>
                 {releaseTypeSecondary ||
@@ -148,7 +156,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
           </div>
         </a>
       </div>
-      {displaySettings["Release Title"] && (
+      {showReleaseTitle && (
         <div className="name-type-container">
           <div className="release-name" title={releaseName}>
             <a
@@ -161,7 +169,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
           </div>
         </div>
       )}
-      {displaySettings.Artist && (
+      {showArtist && (
         <div className="release-artist" title={artistCreditName}>
           <a
             href={`https://musicbrainz.org/artist/${artistMBIDs[0]}`}

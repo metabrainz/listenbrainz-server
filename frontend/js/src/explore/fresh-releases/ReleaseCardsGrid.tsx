@@ -1,10 +1,11 @@
 import * as React from "react";
 import ReleaseCard from "./ReleaseCard";
 import { formatReleaseDate } from "./utils";
+import type { DisplaySettings } from "./FreshReleases";
 
 type ReleaseCardReleaseProps = {
   filteredList: Array<FreshReleaseItem>;
-  displaySettings: { [key: string]: boolean };
+  displaySettings: DisplaySettings;
   order: string;
 };
 
@@ -98,7 +99,11 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
                 confidence={release.confidence}
                 caaID={release.caa_id}
                 caaReleaseMBID={release.caa_release_mbid}
-                displaySettings={displaySettings}
+                showReleaseTitle={displaySettings["Release Title"]}
+                showArtist={displaySettings.Artist}
+                showInformation={displaySettings.Information}
+                showTags={displaySettings.Tags}
+                showListens={displaySettings.Listens}
                 releaseTags={release.release_tags}
                 listenCount={release.listen_count}
               />

@@ -1,5 +1,6 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
+import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -1341,7 +1342,7 @@ export default class APIService {
     days?: number,
     past?: boolean,
     future?: boolean,
-    sort?: string,
+    sort?: SortOption,
     release_date?: string
   ): Promise<any> => {
     let url = `${this.APIBaseURI}/explore/fresh-releases/`;
@@ -1375,7 +1376,7 @@ export default class APIService {
     username: string,
     past?: boolean,
     future?: boolean,
-    sort?: string
+    sort?: SortOption
   ): Promise<any> => {
     if (!username) {
       throw new SyntaxError("Username missing");
