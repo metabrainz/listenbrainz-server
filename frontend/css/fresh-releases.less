@@ -13,7 +13,7 @@
   user-select: none;
 }
 
-#fr-pill-row {
+.fresh-releases-pill-row {
   display: flex;
   justify-content: space-between;
   border-bottom: 1px solid @asphalt;
@@ -21,7 +21,8 @@
   margin-bottom: 1rem;
 }
 
-#fr-row {
+.fresh-releases-row {
+  gap: 0.5rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -517,14 +518,23 @@
   border-radius: 50%;
   border-color: black;
   cursor: pointer;
+  background-color: #fff;
+  color: #353070;
 
   @media screen and (min-width: @screen-md) {
     display: none;
   }
 }
 
+.toggle-sidebar-button.open {
+    background-color: #353070;
+    color: #fff;
+}
+
 #no-release {
   text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 
   img {
     width: 350px;
@@ -539,5 +549,25 @@
   p:first-of-type {
     font-size: 25px;
     font-weight: 900;
+  }
+}
+
+.sidebar {
+  .release-tags {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+  }
+
+  .tags {
+    display: inline-block;
+    margin: 2px 2px 5px;
+    padding: 3px;
+  }
+
+  .release-tag-name {
+    margin-right: 5px;
+    font-weight: 500;
+    font-size: 13px;
   }
 }

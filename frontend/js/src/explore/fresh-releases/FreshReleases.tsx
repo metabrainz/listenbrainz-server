@@ -211,11 +211,11 @@ export default function FreshReleases() {
     <div className="row">
       <div className="col-xs-12 col-md-10">
         <div
-          id="fr-pill-row"
+          className="fresh-releases-pill-row"
           style={!isLoggedIn ? { justifyContent: "flex-end" } : {}}
         >
           {isLoggedIn ? (
-            <div id="fr-row">
+            <div className="fresh-releases-row">
               <Pill
                 id="sitewide-releases"
                 onClick={() => {
@@ -237,11 +237,11 @@ export default function FreshReleases() {
               </Pill>
             </div>
           ) : null}
-          <div id="fr-row">
+          <div className="fresh-releases-row">
             <span>Sort By:</span>{" "}
             <div className="input-group">
               <select
-                id="style"
+                id="fresh-releases-sort-select"
                 className="form-control"
                 value={sort}
                 onChange={(event) => setSort(event.target.value as SortOption)}
@@ -329,11 +329,7 @@ export default function FreshReleases() {
         />
       </div>
       <button
-        className="toggle-sidebar-button"
-        style={{
-          backgroundColor: isSidebarOpen ? "#353070" : "#fff",
-          color: isSidebarOpen ? "#fff" : "#353070",
-        }}
+        className={`toggle-sidebar-button ${isSidebarOpen ? "open" : ""}`}
         onClick={toggleSidebar}
         type="button"
       >
