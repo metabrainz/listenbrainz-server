@@ -83,6 +83,11 @@ if [ -z $DUMP_BASE_DIR ]; then
     exit 1
 fi
 
+if [ -z $PRIVATE_DUMP_BASE_DIR ]; then
+    echo "DUMP_BASE_PRIVATE_DIR isn't set"
+    exit 1
+fi
+
 DUMP_TYPE="${1:-full}"
 # consume dump type argument so that we can pass the remaining arguments to
 # the python dump manager script
@@ -112,8 +117,13 @@ echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
 echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
 mkdir -p "$DUMP_TEMP_DIR"
 
+PRIVATE_DUMP_BASE_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
+echo "DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
+echo "creating PRIVATE_DUMP_BASE_DIR $PRIVATE_DUMP_BASE_DIR"
+mkdir -p "$PRIVATE_DUMP_BASE_DIR"
+
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -lp "$PRIVATE_DUMP_BASE_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
@@ -169,6 +179,34 @@ retry rsync -a "$DUMP_DIR/" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"
 chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"*
 echo "Dumps copied to backup directory!"
 
+HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_BASE_DIR" -empty)
+if [ -z "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
+    # private dumps directory is not empty
+
+    PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_BASE_DIR" -type f -name 'DUMP_ID.txt')
+    if [ -z "$PRIVATE_DUMP_ID_FILE" ]; then
+        echo "DUMP_ID.txt not found, exiting."
+        exit 1
+    fi
+
+    read -r PRIVATE_DUMP_TIMESTAMP PRIVATE_DUMP_ID PRIVATE_DUMP_TYPE < "$PRIVATE_DUMP_ID_FILE"
+    echo "Dump created with timestamp $PRIVATE_DUMP_TIMESTAMP"
+    PRIVATE_DUMP_DIR=$(dirname "$PRIVATE_DUMP_ID_FILE")
+    PRIVATE_DUMP_NAME=$(basename "$PRIVATE_DUMP_DIR")
+
+    # Backup dumps to the backup volume
+    echo "Creating private dumps backup directories..."
+    mkdir -m "$BACKUP_FILE_MODE" -p \
+        "$PRIVATE_BACKUP_DIR/$SUB_DIR" \
+        "$PRIVATE_BACKUP_DIR/$SUB_DIR/$PRIVATE_DUMP_NAME"
+    echo "Private dumps backup directories created!"
+
+    # Copy the files into the backup directory
+    echo "Begin copying private dumps to private backup directory..."
+    retry rsync -a "$PRIVATE_DUMP_DIR/" "$PRIVATE_BACKUP_DIR/$SUB_DIR/$PRIVATE_DUMP_NAME/"
+    chmod "$BACKUP_FILE_MODE" "$PRIVATE_BACKUP_DIR/$SUB_DIR/$PRIVATE_DUMP_NAME/"*
+    echo "Dumps copied to backup directory!"
+fi
 
 # rsync the files into the FTP server
 FTP_CURRENT_DUMP_DIR="$FTP_DIR/$SUB_DIR/$DUMP_NAME"

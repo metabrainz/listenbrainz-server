@@ -23,10 +23,9 @@ import os
 import shutil
 import tempfile
 import time
-from unittest.mock import patch
 
+import pytest
 from click.testing import CliRunner
-from flask import current_app, render_template
 
 import listenbrainz.db.dump as db_dump
 import listenbrainz.db.feedback as db_feedback
@@ -47,6 +46,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         super().setUp()
         self.app = create_app()
         self.tempdir = tempfile.mkdtemp()
+        self.tempdir_private = tempfile.mkdtemp()
         self.runner = CliRunner()
         self.listenstore = timescale_connection._ts
         self.user_id = db_user.create(1, 'iliekcomputers')
@@ -55,6 +55,10 @@ class DumpManagerTestCase(DatabaseTestCase):
     def tearDown(self):
         super().tearDown()
         shutil.rmtree(self.tempdir)
+
+    @pytest.fixture(autouse=True)
+    def inject_fixtures(self, caplog):
+        self._caplog = caplog
 
     def test_cleanup_dumps(self):
         create_path(os.path.join(
@@ -126,17 +130,29 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.listenstore.insert(listens)
 
         # create a full dump
-        self.runner.invoke(dump_manager.create_full, ['--location', self.tempdir])
+        self.runner.invoke(dump_manager.create_full, [
+            '--location',
+            self.tempdir,
+            '--location-private',
+            self.tempdir_private
+        ])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
 
         # make sure that the dump contains a full listens dump, a public and private dump (postgres),
         # a public and private dump (timescale) and a spark dump.
+        # dumps should contain the 7 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
-        self.assertEqual(archive_count, 7)
+        self.assertEqual(archive_count, 5)
+
+        private_archive_count = 0
+        for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+                private_archive_count += 1
+        self.assertEqual(private_archive_count, 2)
 
     def test_create_full_dump_with_id(self):
 
@@ -144,7 +160,13 @@ class DumpManagerTestCase(DatabaseTestCase):
             1, self.user_name, 1500000000, 5))
         # if the dump ID does not exist, it should exit with a -1
         result = self.runner.invoke(dump_manager.create_full, [
-                                    '--location', self.tempdir, '--dump-id', 1000])
+            '--location',
+            self.tempdir,
+            '--location-private',
+            self.tempdir_private,
+            '--dump-id',
+            1000
+        ])
         self.assertEqual(result.exit_code, -1)
         # make sure no directory was created either
         self.assertEqual(len(os.listdir(self.tempdir)), 0)
@@ -152,18 +174,72 @@ class DumpManagerTestCase(DatabaseTestCase):
         # now, add a dump entry to the database and create a dump with that specific dump id
         dump_id = db_dump.add_dump_entry(int(time.time()))
         result = self.runner.invoke(dump_manager.create_full, [
-                                    '--location', self.tempdir, '--dump-id', dump_id])
+            '--location',
+            self.tempdir,
+            '--location-private',
+            self.tempdir_private,
+            '--dump-id',
+            dump_id
+        ])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
         created_dump_id = int(dump_name.split('-')[2])
         self.assertEqual(dump_id, created_dump_id)
 
-        # dump should contain the 6 archives
+        dump_name = os.listdir(self.tempdir_private)[0]
+        created_private_dump_id = int(dump_name.split('-')[2])
+        self.assertEqual(dump_id, created_private_dump_id)
+
+        # dumps should contain the 7 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
                 archive_count += 1
-        self.assertEqual(archive_count, 7)
+        self.assertEqual(archive_count, 5)
+
+        private_archive_count = 0
+        for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
+            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+                private_archive_count += 1
+        self.assertEqual(private_archive_count, 2)
+
+    def test_full_dump_exits_private_location(self):
+        result = self.runner.invoke(dump_manager.create_full, [
+            '--location',
+            self.tempdir
+        ])
+        self.assertEqual(result.exit_code, -1)
+        self.assertIn("No location specified for creating private database and timescale dumps", self._caplog.text)
+
+        self._caplog.clear()
+        result = self.runner.invoke(dump_manager.create_full, [
+            '--location',
+            self.tempdir,
+            '--location-private',
+            self.tempdir
+        ])
+        self.assertEqual(result.exit_code, -1)
+        self.assertIn("Location specified for public and private dumps cannot be same", self._caplog.text)
+
+        self._caplog.clear()
+        result = self.runner.invoke(dump_manager.create_full, [
+            '--location',
+            self.tempdir,
+            '--location-private',
+            os.path.join(self.tempdir, "subdir")
+        ])
+        self.assertEqual(result.exit_code, -1)
+        self.assertIn("Private dumps location cannot be a subdirectory of public dumps location", self._caplog.text)
+
+        self._caplog.clear()
+        # no location for private dupms is required if no private dumps are being made
+        result = self.runner.invoke(dump_manager.create_full, [
+            '--location',
+            self.tempdir,
+            '--no-db',
+            '--no-timescale'
+        ])
+        self.assertEqual(result.exit_code, 0)
 
     def test_create_incremental(self):
         # create a incremental dump, this won't work because the incremental dump does

@@ -1,6 +1,7 @@
 """ This module contains a click group with commands to
 create and import postgres data dumps.
 """
+from pathlib import PurePath
 
 # listenbrainz-server - Server for the ListenBrainz project
 #
@@ -93,8 +94,7 @@ def create_mbcanonical(location, use_lb_conn):
         try:
             write_hashes(dump_path)
         except IOError as e:
-            current_app.logger.error(
-                'Unable to create hash files! Error: %s', str(e), exc_info=True)
+            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             sys.exit(-1)
 
         try:
@@ -110,13 +110,14 @@ def create_mbcanonical(location, use_lb_conn):
             # Mapping dump doesn't have a dump id (second field) as they are standalone
             f.write("%s 0 mbcanonical\n" % (ts, ))
 
-        current_app.logger.info(
-            'Dumps created and hashes written at %s' % dump_path)
+        current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
 
 
 @cli.command(name="create_full")
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
               help="path to the directory where the dump should be made")
+@click.option('--location-private', '-lp', default=None,
+              help="path to the directory where the private dumps should be made")
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
               help="the number of threads to be used while compression")
 @click.option('--dump-id', type=int, default=None,
@@ -126,13 +127,14 @@ def create_mbcanonical(location, use_lb_conn):
 @click.option('--db/--no-db', 'do_db_dump', type=bool, default=True)
 @click.option('--timescale/--no-timescale', 'do_timescale_dump', type=bool, default=True)
 @click.option('--stats/--no-stats', 'do_stats_dump', type=bool, default=True)
-def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump: bool,
-                do_db_dump: bool, do_timescale_dump: bool, do_stats_dump: bool):
+def create_full(location, location_private, threads, dump_id, do_listen_dump: bool,
+                do_spark_dump: bool, do_db_dump: bool, do_timescale_dump: bool, do_stats_dump: bool):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from the listenstore.
 
         Args:
             location (str): path to the directory where the dump should be made
+            location_private (str): path to the directory where the private dumps should be made
             threads (int): the number of threads to be used while compression
             dump_id (int): the ID of the ListenBrainz data dump
             do_listen_dump: If True, make a listens dump
@@ -143,6 +145,15 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
     """
     app = create_app()
     with app.app_context():
+        if not location_private and (do_db_dump or do_timescale_dump):
+            current_app.logger.error("No location specified for creating private database and timescale dumps")
+            sys.exit(-1)
+        if location_private and os.path.normpath(location_private) == os.path.normpath(location):
+            current_app.logger.error("Location specified for public and private dumps cannot be same")
+            sys.exit(-1)
+        if location_private and PurePath(location_private).is_relative_to(PurePath(location)):
+            current_app.logger.error("Private dumps location cannot be a subdirectory of public dumps location")
+            sys.exit(-1)
         ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now()
@@ -154,19 +165,25 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
                 sys.exit(-1)
             end_time = dump_entry['created']
 
-        ts = end_time.strftime('%Y%m%d-%H%M%S')
-        dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(
-            dump_id=dump_id, time=ts)
+        dump_name = f'listenbrainz-dump-{dump_id}-{end_time.strftime("%Y%m%d-%H%M%S")}-full'
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
 
+        private_dump_path = None
+        if location_private:
+            private_dump_path = os.path.join(location_private, dump_name)
+            create_path(private_dump_path)
+
         expected_num_dumps = 0
+        expected_num_private_dumps = 0
         if do_db_dump:
-            db_dump.dump_postgres_db(dump_path, end_time, threads)
-            expected_num_dumps += 2
+            db_dump.dump_postgres_db(dump_path, private_dump_path, end_time, threads)
+            expected_num_dumps += 1
+            expected_num_private_dumps += 1
         if do_timescale_dump:
-            db_dump.dump_timescale_db(dump_path, end_time, threads)
-            expected_num_dumps += 2
+            db_dump.dump_timescale_db(dump_path, private_dump_path, end_time, threads)
+            expected_num_dumps += 1
+            expected_num_private_dumps += 1
         if do_listen_dump:
             ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
             expected_num_dumps += 1
@@ -179,25 +196,34 @@ def create_full(location, threads, dump_id, do_listen_dump: bool, do_spark_dump:
 
         try:
             write_hashes(dump_path)
+            if private_dump_path:
+                write_hashes(private_dump_path)
         except IOError as e:
-            current_app.logger.error(
-                'Unable to create hash files! Error: %s', str(e), exc_info=True)
+            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             sys.exit(-1)
 
         try:
             # 6 types of dumps, archive, md5, sha256 for each
             expected_num_dump_files = expected_num_dumps * 3
+            expected_num_private_dumps = expected_num_private_dumps * 3
             if not sanity_check_dumps(dump_path, expected_num_dump_files):
+                return sys.exit(-1)
+            if private_dump_path and not sanity_check_dumps(private_dump_path, expected_num_private_dumps):
                 return sys.exit(-1)
         except OSError:
             sys.exit(-1)
 
-        current_app.logger.info(
-            'Dumps created and hashes written at %s' % dump_path)
+        current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+        if private_dump_path:
+            current_app.logger.info('Private dumps created and hashes written at %s' % private_dump_path)
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-            f.write("%s %s full\n" % (ts, dump_id))
+            f.write("%s %s full\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+        if private_dump_path:
+            # Write the DUMP_ID file so that the backup sync scripts can be more robust
+            with open(os.path.join(private_dump_path, "DUMP_ID.txt"), "w") as f:
+                f.write("%s %s full\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
         sys.exit(0)
 
@@ -216,22 +242,18 @@ def create_incremental(location, threads, dump_id):
         else:
             dump_entry = db_dump.get_dump_entry(dump_id)
             if dump_entry is None:
-                current_app.logger.error(
-                    "No dump with ID %d found, exiting!", dump_id)
+                current_app.logger.error("No dump with ID %d found, exiting!", dump_id)
                 sys.exit(-1)
             end_time = dump_entry['created']
 
         prev_dump_entry = db_dump.get_dump_entry(dump_id - 1)
         if prev_dump_entry is None:  # incremental dumps must have a previous dump in the series
-            current_app.logger.error(
-                "Invalid dump ID %d, could not find previous dump", dump_id)
+            current_app.logger.error("Invalid dump ID %d, could not find previous dump", dump_id)
             sys.exit(-1)
         start_time = prev_dump_entry['created']
-        current_app.logger.info(
-            "Dumping data from %s to %s", start_time, end_time)
+        current_app.logger.info("Dumping data from %s to %s", start_time, end_time)
 
-        dump_name = 'listenbrainz-dump-{dump_id}-{time}-incremental'.format(
-            dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
+        dump_name = f'listenbrainz-dump-{dump_id}-{end_time.strftime("%Y%m%d-%H%M%S")}-incremental'
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
 
@@ -242,8 +264,7 @@ def create_incremental(location, threads, dump_id):
         try:
             write_hashes(dump_path)
         except IOError as e:
-            current_app.logger.error(
-                'Unable to create hash files! Error: %s', str(e), exc_info=True)
+            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             sys.exit(-1)
 
         try:
@@ -254,11 +275,9 @@ def create_incremental(location, threads, dump_id):
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
-            f.write("%s %s incremental\n" %
-                    (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+            f.write("%s %s incremental\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
-        current_app.logger.info(
-            'Dumps created and hashes written at %s' % dump_path)
+        current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
         sys.exit(0)
 
 
