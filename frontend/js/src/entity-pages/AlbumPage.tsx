@@ -177,7 +177,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           />
         </div>
         <div className="artist-info">
-          <h2>{album?.name}</h2>
+          <h1>{album?.name}</h1>
           <div className="details">
             <div>{artist?.name}</div>
             <small className="help-block">Type - Release date</small>

@@ -12,7 +12,7 @@ import {
   faUserAstronaut,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, sortBy } from "lodash";
+import { chain, isUndefined, sortBy } from "lodash";
 import tinycolor from "tinycolor2";
 import { sanitize } from "dompurify";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
@@ -215,7 +215,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           />
         </div>
         <div className="artist-info">
-          <h2>{artist.name}</h2>
+          <h1>{artist.name}</h1>
           <div className="details">
             <small className="help-block">
               {artist.begin_year}
@@ -246,9 +246,10 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {Object.entries(artist.rels).map(([relName, relValue]) =>
-              getRelIconLink(relName, relValue)
-            )}
+            {Boolean(artist.rels) &&
+              Object.entries(artist.rels).map(([relName, relValue]) =>
+                getRelIconLink(relName, relValue)
+              )}
             <OpenInMusicBrainzButton
               entityType="artist"
               entityMBID={artist.artist_mbid}
