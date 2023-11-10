@@ -58,8 +58,10 @@ class PopularityTopDataset(DatabaseDataset):
 RecordingPopularityDataset = PopularityDataset("recording")
 ArtistPopularityDataset = PopularityDataset("artist")
 ReleasePopularityDataset = PopularityDataset("release")
+ReleaseGroupPopularityDataset = PopularityDataset("release_group")
 TopRecordingPopularityDataset = PopularityTopDataset("recording")
 TopReleasePopularityDataset = PopularityTopDataset("release")
+TopReleaseGroupPopularityDataset = PopularityTopDataset("release_group")
 
 
 def get_top_entity_for_entity(entity, artist_mbid, popularity_entity="recording"):
