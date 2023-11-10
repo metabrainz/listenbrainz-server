@@ -150,43 +150,66 @@ def album_entity(release_group_mbid):
         raise NotFound(f"Release group {release_group_mbid} not found in the metadata cache")
 
     # TODO:
-    #- release_group tracks, with listen count and track position
+    #- release_group tracks with listen count
 
-    query = """SELECT DISTINCT ON (rg.id)
-                   rgpt.name AS type
-                 , (re.date_year::TEXT || '-' || 
-                    LPAD(re.date_month::TEXT, 2, '0') || '-' || 
-                    LPAD(re.date_day::TEXT, 2, '0')) AS date
-                 , caa.id AS caa_id
-                 , caa_rel.gid::TEXT AS caa_release_mbid
-              FROM musicbrainz.release_group rg
-              JOIN musicbrainz.release_group_primary_type rgpt
-                ON rg.type = rgpt.id
-              JOIN musicbrainz.release caa_rel
-                ON rg.id = caa_rel.release_group
-         LEFT JOIN (
-                  SELECT release, date_year, date_month, date_day
-                    FROM musicbrainz.release_country
-               UNION ALL
-                  SELECT release, date_year, date_month, date_day
-                    FROM musicbrainz.release_unknown_country
-                 ) re
-                ON (re.release = caa_rel.id)
-         FULL JOIN cover_art_archive.release_group_cover_art rgca
-                ON rgca.release = caa_rel.id
-         LEFT JOIN cover_art_archive.cover_art caa
-                ON caa.release = caa_rel.id
-         LEFT JOIN cover_art_archive.cover_art_type cat
-                ON cat.id = caa.id
-             WHERE type_id = 1
-               AND mime_type != 'application/pdf'
-               AND rg.gid = %s
-          ORDER BY rg.id
-                 , rgca.release
-                 , re.date_year
-                 , re.date_month
-                 , re.date_day
-                 , caa.ordering"""
+    query = """WITH release_group_data AS (
+                   SELECT DISTINCT ON (rg.id)
+                          rgpt.name AS type
+                        , (re.date_year::TEXT || '-' || 
+                           LPAD(re.date_month::TEXT, 2, '0') || '-' || 
+                           LPAD(re.date_day::TEXT, 2, '0')) AS date
+                        , caa.id AS caa_id
+                        , caa_rel.gid::TEXT AS caa_release_mbid
+                     FROM musicbrainz.release_group rg
+                     JOIN musicbrainz.release_group_primary_type rgpt
+                       ON rg.type = rgpt.id
+                     JOIN musicbrainz.release caa_rel
+                       ON rg.id = caa_rel.release_group
+                LEFT JOIN (
+                         SELECT release, date_year, date_month, date_day
+                           FROM musicbrainz.release_country
+                      UNION ALL
+                         SELECT release, date_year, date_month, date_day
+                           FROM musicbrainz.release_unknown_country
+                        ) re
+                       ON (re.release = caa_rel.id)
+                FULL JOIN cover_art_archive.release_group_cover_art rgca
+                       ON rgca.release = caa_rel.id
+                LEFT JOIN cover_art_archive.cover_art caa
+                       ON caa.release = caa_rel.id
+                LEFT JOIN cover_art_archive.cover_art_type cat
+                       ON cat.id = caa.id
+                    WHERE type_id = 1
+                      AND mime_type != 'application/pdf'
+                      AND rg.gid = %s
+                 ORDER BY rg.id
+                        , rgca.release
+                        , re.date_year
+                        , re.date_month
+                        , re.date_day
+                        , caa.ordering
+                ), recording_data AS (
+                   SELECT rel.gid AS release_mbid
+                        , array_agg(jsonb_build_array(t.position, r.name, r.gid, r.length)) AS recordings
+                     FROM release rel
+                     JOIN medium m
+                       ON m.release = rel.id
+                     JOIN track t
+                       ON t.medium = m.id
+                     JOIN recording r
+                       ON r.id = t.recording
+                     JOIN release_group_data rgd
+                       ON rgd.caa_release_mbid::uuid = rel.gid
+                 GROUP BY rel.gid
+                )
+                   SELECT type
+                        , date
+                        , caa_id
+                        , caa_release_mbid
+                        , recordings
+                    FROM release_group_data rgd
+                    JOIN recording_data rg
+                      ON rgd.caa_release_mbid::uuid = rg.release_mbid"""
 
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
@@ -198,6 +221,7 @@ def album_entity(release_group_mbid):
     props["type"] = release_groups_caa_type["type"]
     props["caa_id"] = release_groups_caa_type["caa_id"]
     props["caa_release_mbid"] = release_groups_caa_type["caa_release_mbid"]
+    props["recordings"] = release_groups_caa_type["recordings"]
 #    import json
 #    current_app.logger.warn(json.dumps(props, indent=4, sort_keys=True))
     
