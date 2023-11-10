@@ -12,7 +12,7 @@ import {
   faUserAstronaut,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, sortBy } from "lodash";
+import { chain, isUndefined, sortBy } from "lodash";
 import tinycolor from "tinycolor2";
 import { sanitize } from "dompurify";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
@@ -66,9 +66,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
-  const [coverArtSrc, setCoverArtSrc] = React.useState(
-    "/static/img/cover-art-placeholder.jpg"
-  );
+  const [coverArtSVG, setCoverArtSVG] = React.useState<string>();
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
     r: 0,
@@ -119,7 +117,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   React.useEffect(() => {
     async function fetchCoverArt() {
       try {
-        const fetchedCoverArtSrc = await getArtistCoverImage(
+        const fetchedCoverArtSVG = await getArtistCoverImage(
           chain(releaseGroups)
             .take(30)
             .reduce((resultArray, releaseGroup) => {
@@ -129,8 +127,8 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             .value(),
           APIService.APIBaseURI
         );
-        if (fetchedCoverArtSrc) {
-          setCoverArtSrc(fetchedCoverArtSrc);
+        if (fetchedCoverArtSVG) {
+          setCoverArtSVG(fetchedCoverArtSVG);
         }
       } catch (error) {
         console.error(error);
@@ -206,16 +204,20 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     >
       <Loader isLoading={loading} />
       <div className="entity-page-header flex">
-        <div className="cover-art">
-          <img
-            src={coverArtSrc}
-            ref={albumArtRef}
-            crossOrigin="anonymous"
-            alt="Album art"
-          />
-        </div>
+        <div
+          className="cover-art"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: sanitize(
+              coverArtSVG ??
+                "<img src='/static/img/cover-art-placeholder.jpg'></img>"
+            ),
+          }}
+          ref={albumArtRef}
+          title={`Album art for ${artist.name}`}
+        />
         <div className="artist-info">
-          <h2>{artist.name}</h2>
+          <h1>{artist.name}</h1>
           <div className="details">
             <small className="help-block">
               {artist.begin_year}
@@ -246,9 +248,10 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {Object.entries(artist.rels).map(([relName, relValue]) =>
-              getRelIconLink(relName, relValue)
-            )}
+            {Boolean(artist.rels) &&
+              Object.entries(artist.rels).map(([relName, relValue]) =>
+                getRelIconLink(relName, relValue)
+              )}
             <OpenInMusicBrainzButton
               entityType="artist"
               entityMBID={artist.artist_mbid}
