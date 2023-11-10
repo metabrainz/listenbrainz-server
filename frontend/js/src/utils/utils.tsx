@@ -603,9 +603,10 @@ const pinnedRecordingToListen = (pinnedRecording: PinnedRecording): Listen => {
 
 const generateAlbumArtThumbnailLink = (
   caaId: number | string,
-  releaseMBID: string
+  releaseMBID: string,
+  size: CAAThumbnailSizes = 250
 ): string => {
-  return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb250.jpg`;
+  return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb${size}.jpg`;
 };
 
 export type CAAThumbnailSizes = 250 | 500 | 1200 | "small" | "large";

@@ -20,6 +20,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import {
+  generateAlbumArtThumbnailLink,
   getAlbumArtFromReleaseGroupMBID,
   getAverageRGBOfImage,
   getPageProps,
@@ -42,6 +43,8 @@ export type AlbumPageProps = {
   }>;
   release_group_mbid: string;
   release_group_metadata: ReleaseGroupMetadataLookup;
+  caa_id?: string;
+  caa_release_mbid?: string;
 };
 
 export default function AlbumPage(props: AlbumPageProps): JSX.Element {
@@ -50,6 +53,8 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     release_group_metadata: initialReleaseGroupMetadata,
     release_group_mbid,
     popular_recordings,
+    caa_id,
+    caa_release_mbid,
   } = props;
 
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
@@ -75,7 +80,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
 
   /** Album art and album color related */
   const [coverArtSrc, setCoverArtSrc] = React.useState(
-    "/static/img/cover-art-placeholder.jpg"
+    caa_id && caa_release_mbid
+      ? generateAlbumArtThumbnailLink(caa_id, caa_release_mbid, 500)
+      : "/static/img/cover-art-placeholder.jpg"
   );
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
@@ -146,11 +153,12 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         toast.error(error);
       }
     }
-
-    fetchCoverArt();
+    if (!caa_id || !caa_release_mbid) {
+      fetchCoverArt();
+    }
     fetchListenerStats();
     fetchReviews();
-  }, [APIService, release_group_mbid]);
+  }, [APIService, release_group_mbid, caa_id, caa_release_mbid]);
 
   const listensFromJSPFTracks = popularTracks.map(JSPFTrackToListen) ?? [];
   const filteredTags = chain(releaseGroupTags)
@@ -424,7 +432,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     popular_recordings,
     release_group_mbid,
-    ...release_group_data
+    ...release_group_data,
+    caa_id,
+    caa_release_mbid,
   } = reactProps;
 
   const AlbumPageWithAlertNotifications = withAlertNotifications(AlbumPage);
@@ -445,6 +455,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             popular_recordings={popular_recordings}
             release_group_mbid={release_group_mbid}
+            caa_id={caa_id}
+            caa_release_mbid={caa_release_mbid}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
