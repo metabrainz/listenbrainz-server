@@ -66,9 +66,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
-  const [coverArtSrc, setCoverArtSrc] = React.useState(
-    "/static/img/cover-art-placeholder.jpg"
-  );
+  const [coverArtSVG, setCoverArtSVG] = React.useState<string>();
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
     r: 0,
@@ -119,7 +117,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   React.useEffect(() => {
     async function fetchCoverArt() {
       try {
-        const fetchedCoverArtSrc = await getArtistCoverImage(
+        const fetchedCoverArtSVG = await getArtistCoverImage(
           chain(releaseGroups)
             .take(30)
             .reduce((resultArray, releaseGroup) => {
@@ -129,8 +127,8 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             .value(),
           APIService.APIBaseURI
         );
-        if (fetchedCoverArtSrc) {
-          setCoverArtSrc(fetchedCoverArtSrc);
+        if (fetchedCoverArtSVG) {
+          setCoverArtSVG(fetchedCoverArtSVG);
         }
       } catch (error) {
         console.error(error);
@@ -207,11 +205,16 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
       <Loader isLoading={loading} />
       <div className="entity-page-header flex">
         <div className="cover-art">
-          <img
-            src={coverArtSrc}
+          <div
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{
+              __html: sanitize(
+                coverArtSVG ??
+                  "<img src='/static/img/cover-art-placeholder.jpg'></img>"
+              ),
+            }}
             ref={albumArtRef}
-            crossOrigin="anonymous"
-            alt="Album art"
+            title={`Album art for ${artist.name}`}
           />
         </div>
         <div className="artist-info">
