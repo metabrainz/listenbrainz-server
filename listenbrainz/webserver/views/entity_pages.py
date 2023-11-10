@@ -16,6 +16,7 @@ import psycopg2.extras
 artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
 
+
 @artist_bp.route("/<artist_mbid>", methods=["GET"])
 @web_listenstore_needed
 def artist_entity(artist_mbid):
@@ -42,10 +43,7 @@ def artist_entity(artist_mbid):
 
     # Fetch top recordings for artist
     params = {"artist_mbid": artist_mbid, 'count': 10}
-    r = requests.get(
-        url="https://api.listenbrainz.org/1/popularity/top-recordings-for-artist",
-        params=params
-    )
+    r = requests.get(url="https://api.listenbrainz.org/1/popularity/top-recordings-for-artist", params=params)
     if r.status_code != 200:
         popular_recordings = []
     else:
@@ -53,12 +51,12 @@ def artist_entity(artist_mbid):
 
     # Fetch similar artists
     r = requests.post("https://labs.api.listenbrainz.org/similar-artists/json",
-                  json=[{
-                      'artist_mbid':
-                      artist_mbid,
-                      'algorithm':
-                      "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30"
-                  }])
+                      json=[{
+                          'artist_mbid':
+                          artist_mbid,
+                          'algorithm':
+                          "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30"
+                      }])
 
     if r.status_code != 200:
         raise RuntimeError(f"Cannot fetch similar artists: {r.status_code} ({r.text})")
@@ -71,7 +69,7 @@ def artist_entity(artist_mbid):
     # General note: This whole view function is a disaster, yes. But it is only so that monkey can work on the
     # UI for these pages. The next project will be to collect all this data and store it in couchdb.
     top_release_groups = get_top_entity_for_entity("release-group", artist_mbid, "release-group")
-    release_group_mbids = tuple([ str(k["release_group_mbid"]) for k in top_release_groups ] )
+    release_group_mbids = tuple([str(k["release_group_mbid"]) for k in top_release_groups])
 
     query = """SELECT DISTINCT ON (rg.id)
                    rg.gid::TEXT AS release_group_mbid
@@ -115,25 +113,23 @@ def artist_entity(artist_mbid):
     if len(release_group_mbids) > 0:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn:
             with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-                mb_curs.execute(query, (release_group_mbids,))
-                release_groups = [ dict(row) for row in mb_curs.fetchall() ]
+                mb_curs.execute(query, (release_group_mbids, ))
+                release_groups = [dict(row) for row in mb_curs.fetchall()]
 
     props = {
         "artist_data": item,
         "popular_recordings": popular_recordings,
         "similar_artists": artists,
-	    "listening_stats": {}, #for that artist,  # DO NOT IMPLEMENT RIGHT NOW. WAIT FOR PROPER CACHING
-            # total plays for artist
-            # total # of listeners for artist
-            # top listeners (10)
+        "listening_stats": {},  #for that artist,  # DO NOT IMPLEMENT RIGHT NOW. WAIT FOR PROPER CACHING
+        # total plays for artist
+        # total # of listeners for artist
+        # top listeners (10)
         "release_groups": release_groups
     }
 
-    return render_template(
-        "entities/artist.html",
-        props=orjson.dumps(props).decode("utf-8"),
-        title=artist_data[0].artist_data["name"]
-    )
+    return render_template("entities/artist.html",
+                           props=orjson.dumps(props).decode("utf-8"),
+                           title=artist_data[0].artist_data["name"])
 
 
 @album_bp.route("/<release_group_mbid>", methods=["GET"])
@@ -145,7 +141,7 @@ def album_entity(release_group_mbid):
         raise BadRequest("Provided release group ID is invalid: %s" % release_group_mbid)
 
     # Fetch the release group cached data
-    metadata = fetch_release_group_metadata([release_group_mbid],["artist", "tag", "release"])
+    metadata = fetch_release_group_metadata([release_group_mbid], ["artist", "tag", "release"])
     if len(metadata) == 0:
         raise NotFound(f"Release group {release_group_mbid} not found in the metadata cache")
 
@@ -190,7 +186,7 @@ def album_entity(release_group_mbid):
                         , caa.ordering
                 ), recording_data AS (
                    SELECT rel.gid AS release_mbid
-                        , array_agg(jsonb_build_array(t.position, r.name, r.gid, r.length)) AS recordings
+                        , array_agg(jsonb_build_array(t.position, r.name, r.gid::TEXT, r.length)) AS recordings
                      FROM release rel
                      JOIN medium m
                        ON m.release = rel.id
@@ -205,28 +201,50 @@ def album_entity(release_group_mbid):
                    SELECT type
                         , date
                         , caa_id
-                        , caa_release_mbid
+                        , caa_release_mbid::TEXT
                         , recordings
                     FROM release_group_data rgd
                     JOIN recording_data rg
                       ON rgd.caa_release_mbid::uuid = rg.release_mbid"""
 
+    pop_query = """SELECT recording_mbid::TEXT
+                        , total_listen_count
+                        , total_user_count
+                     FROM popularity.recording
+                    WHERE recording_mbid in %s"""
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn:
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            mb_curs.execute(query, (release_group_mbid,))
+            mb_curs.execute(query, (release_group_mbid, ))
             release_groups_caa_type = dict(mb_curs.fetchone())
+
+    recording_mbids = [rec[2] for rec in release_groups_caa_type["recordings"]]
+    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as lb_conn:
+        with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
+            lb_curs.execute(pop_query, (tuple(recording_mbids), ))
+            popularity = [dict(row) for row in lb_curs.fetchall()]
+
+    pop_index = {row["recording_mbid"]: (row["total_listen_count"], row["total_user_count"]) for row in popularity}
+
+    recordings = []
+    for rec in release_groups_caa_type["recordings"]:
+        recording = {"position": rec[0], "name": rec[1], "recording_mbid": rec[2], "length": rec[3]}
+        try:
+            recording["total_listen_count"] = pop_index[rec[2]][0]
+            recording["total_user_count"] = pop_index[rec[2]][1]
+        except KeyError:
+            recording["total_listen_count"] = None
+            recording["total_user_count"] = None
+        recordings.append(recording)
 
     props = metadata[release_group_mbid]
     props["release_group_mbid"] = release_group_mbid
     props["type"] = release_groups_caa_type["type"]
     props["caa_id"] = release_groups_caa_type["caa_id"]
     props["caa_release_mbid"] = release_groups_caa_type["caa_release_mbid"]
-    props["recordings"] = release_groups_caa_type["recordings"]
-#    import json
-#    current_app.logger.warn(json.dumps(props, indent=4, sort_keys=True))
-    
-    return render_template(
-        "entities/album.html",
-        props=orjson.dumps(props).decode("utf-8"),
-        title=metadata[release_group_mbid]["release_group"]["name"]
-    )
+    props["recordings"] = recordings
+    #import json
+    #current_app.logger.warn(json.dumps(props, indent=4, sort_keys=True))
+
+    return render_template("entities/album.html",
+                           props=orjson.dumps(props).decode("utf-8"),
+                           title=metadata[release_group_mbid]["release_group"]["name"])
