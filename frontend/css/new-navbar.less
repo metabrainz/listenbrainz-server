@@ -21,6 +21,8 @@
 body {
   display: flex;
   > nav[role="navigation"] {
+    max-width: @sidenav-width;
+
     #side-nav {
       width: @sidenav-width;
       // using important here to override Botostrap 3 collapse plugin setting height
@@ -173,6 +175,7 @@ body {
   @media (max-width: @offscreen-sidenav-breakpoint) {
     display: initial;
     > nav[role="navigation"] {
+      max-width: unset;
       #side-nav {
         transition: transform 0.3s ease-in-out;
         position: fixed;

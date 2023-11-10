@@ -10,6 +10,7 @@ import APIError from "../../src/utils/APIError";
 import * as userDailyActivityResponse from "../__mocks__/userDailyActivity.json";
 import * as userDailyActivityProcessedData from "../__mocks__/userDailyActivityProcessData.json";
 import { waitForComponentToPaint } from "../test-utils";
+import Heatmap from "../../src/stats/HeatMap";
 
 const props: UserDailyActivityProps = {
   user: {
@@ -35,7 +36,7 @@ describe("UserDailyActivity", () => {
       });
     });
 
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(Heatmap)).toHaveLength(1);
   });
 
   it("renders corectly when range is invalid", async () => {
@@ -46,7 +47,8 @@ describe("UserDailyActivity", () => {
     });
     await waitForComponentToPaint(wrapper);
 
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.getDOMNode()).toHaveTextContent("Invalid range: invalid_range");
+    expect(wrapper.find(Heatmap)).toHaveLength(0);
   });
 
   describe("componentDidUpdate", () => {
@@ -119,7 +121,7 @@ describe("UserDailyActivity", () => {
       expect(wrapper.state()).toMatchObject({
         loading: false,
         hasError: true,
-        errorMessage: "Statistics for the user have not been calculated",
+        errorMessage: "There are no statistics available for this user for this period",
       });
     });
 

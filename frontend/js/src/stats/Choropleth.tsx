@@ -9,7 +9,7 @@ import { Chip } from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
 import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
-import { maxBy } from "lodash";
+import { debounce, isFinite, isUndefined, maxBy } from "lodash";
 import * as React from "react";
 import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -18,7 +18,14 @@ import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import * as worldCountries from "./world_countries.json";
 import { COLOR_BLACK } from "../utils/constants";
 
-const { useState, useCallback, useMemo, useEffect, useRef } = React;
+const {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  useLayoutEffect,
+} = React;
 
 export type ChoroplethProps = {
   data: UserArtistMapData;
@@ -88,14 +95,37 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     ChoroplethBoundFeature
   >();
   const refContainer = useRef<HTMLDivElement>(null);
-  const { current: currentRefContainer } = refContainer;
 
-  const [containerWidth, setContainerWidth] = useState<number>();
-  useEffect(() => {
-    if (currentRefContainer) {
-      setContainerWidth(currentRefContainer.clientWidth);
+  // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
+  const [containerWidth, setContainerWidth] = useState<number>(1000);
+  useLayoutEffect(() => {
+    // Set the container width *before* initial render
+    const width = refContainer.current?.getBoundingClientRect().width;
+    if (!isUndefined(width) && isFinite(width)) {
+      setContainerWidth(width);
     }
-  }, [currentRefContainer]);
+
+    // Then observe the target element and update the width when resized (with debounce)
+    const resizeHandler = (entries: ResizeObserverEntry[]) => {
+      // We only observe one element
+      const newWidth = entries[0]?.contentBoxSize?.[0].inlineSize;
+      setContainerWidth(newWidth);
+    };
+    const debouncedResizeHandler = debounce(resizeHandler, 1000, {
+      leading: false,
+      trailing: true,
+    });
+    let resizeObserver: ResizeObserver | undefined;
+    if (refContainer.current && window.ResizeObserver) {
+      resizeObserver = new window.ResizeObserver(debouncedResizeHandler);
+      resizeObserver.observe(refContainer.current);
+    }
+
+    return () => {
+      resizeObserver?.disconnect?.();
+      debouncedResizeHandler.cancel();
+    };
+  }, []);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
@@ -122,8 +152,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   // Create a custom legend component because the default doesn't work with scaleThreshold
   const customLegend = () => (
     <BoxLegendSvg
-      containerHeight={containerWidth ? containerWidth / 2 : 500}
-      containerWidth={containerWidth ?? 1000}
+      containerHeight={containerWidth / 2}
+      containerWidth={containerWidth}
       data={colorScale.range().map((color: string, index: number) => {
         // eslint-disable-next-line prefer-const
         let [start, end] = colorScale.invertExtent(color);
@@ -259,7 +289,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         onClick={showTooltipFromEvent}
         unknownColor="#efefef"
         label="properties.name"
-        projectionScale={containerWidth ? containerWidth / 5.5 : 175}
+        projectionScale={containerWidth / 5.5}
         projectionType="naturalEarth1"
         projectionTranslation={[0.5, 0.53]}
         borderWidth={0.5}

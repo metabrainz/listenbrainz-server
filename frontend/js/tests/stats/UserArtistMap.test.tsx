@@ -11,6 +11,7 @@ import * as userArtistMapResponse from "../__mocks__/userArtistMap.json";
 import * as userArtistMapProcessedDataArtist from "../__mocks__/userArtistMapProcessDataArtist.json";
 import * as userArtistMapProcessedDataListen from "../__mocks__/userArtistMapProcessDataListen.json";
 import { waitForComponentToPaint } from "../test-utils";
+import CustomChoropleth from "../../src/stats/Choropleth";
 
 const userProps: UserArtistMapProps = {
   user: {
@@ -43,7 +44,8 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(".user-stats-card")).toHaveLength(1);
+      expect(wrapper.find(CustomChoropleth)).toHaveLength(1);
     });
 
     it("renders corectly when range is invalid", async () => {
@@ -53,7 +55,8 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.getDOMNode()).toHaveTextContent("Invalid range: invalid_range");
+      expect(wrapper.find(CustomChoropleth)).toHaveLength(0);
     });
   });
 
@@ -120,7 +123,7 @@ describe.each([
       expect(wrapper.state()).toMatchObject({
         loading: false,
         hasError: true,
-        errorMessage: "Statistics for the user have not been calculated",
+        errorMessage: "There are no statistics available for this user for this period",
       });
     });
 

@@ -17,6 +17,7 @@ import * as userRecordingsProcessDataOutput from "../__mocks__/userRecordingsPro
 import * as userReleaseGroupsResponse from "../__mocks__/userReleaseGroups.json";
 import * as userReleaseGroupsProcessDataOutput from "../__mocks__/userReleaseGroupsProcessData.json";
 import { waitForComponentToPaint } from "../test-utils";
+import { ResponsiveBar } from "@nivo/bar";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -51,7 +52,7 @@ const GlobalContextMock = {
 describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
-])("%s", (name, props) => {
+])("%s", (name, props:UserEntityChartProps) => {
   describe("UserEntityChart Page", () => {
     it("renders correctly for artists", async () => {
       // We don't need to call componentDidMount during "mount" because we are
@@ -63,6 +64,8 @@ describe.each([
       const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
       await act(() => {
         wrapper.setState({
+          entity: "artist",
+          terminology: "artist",
           data: userArtistsProcessDataOutput as UserEntityData,
           startDate: new Date(0),
           endDate: new Date(10),
@@ -71,7 +74,8 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
+      expect(wrapper.find("h3").getDOMNode()).toHaveTextContent("Top artists");
       wrapper.unmount();
     });
 
@@ -86,6 +90,8 @@ describe.each([
 
       await act(() => {
         wrapper.setState({
+          entity: "release",
+          terminology: "album",
           data: userReleasesProcessDataOutput as UserEntityData,
           startDate: new Date(0),
           endDate: new Date(10),
@@ -94,7 +100,8 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
+      expect(wrapper.find("h3").getDOMNode()).toHaveTextContent("Top albums");
       wrapper.unmount();
     });
 
@@ -109,6 +116,8 @@ describe.each([
 
       await act(() => {
         wrapper.setState({
+          entity: "release-group",
+          terminology: "album",
           data: userReleaseGroupsProcessDataOutput as UserEntityData,
           startDate: new Date(0),
           endDate: new Date(10),
@@ -117,7 +126,8 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
+      expect(wrapper.find("h3").getDOMNode()).toHaveTextContent("Top albums");
       wrapper.unmount();
     });
 
@@ -132,6 +142,8 @@ describe.each([
 
       await act(() => {
         wrapper.setState({
+          entity: "recording",
+          terminology: "track",
           data: userRecordingsProcessDataOutput as UserEntityData,
           startDate: new Date(0),
           endDate: new Date(10),
@@ -140,7 +152,8 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
+      expect(wrapper.find("h3").getDOMNode()).toHaveTextContent("Top tracks");
       wrapper.unmount();
     });
 
@@ -153,7 +166,7 @@ describe.each([
       await act(() => {
         wrapper.setState({
           hasError: true,
-          errorMessage: "Statistics for the user have not been calculated",
+          errorMessage: "There are no statistics available for this user for this period",
           entity: "artist",
           range: "all_time",
           currPage: 1,
@@ -161,7 +174,7 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.find(ResponsiveBar)).toHaveLength(0);
       wrapper.unmount();
     });
   });
@@ -723,7 +736,7 @@ describe.each([
         loading: false,
         entityCount: 0,
         hasError: true,
-        errorMessage: "Statistics for the user have not been calculated",
+        errorMessage: "There are no statistics available for this user for this period",
       });
       wrapper.unmount();
     });

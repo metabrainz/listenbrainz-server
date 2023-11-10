@@ -1,51 +1,43 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
+import { saveAs } from "file-saver";
+import { findIndex } from "lodash";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { get, findIndex, omit } from "lodash";
-import { saveAs } from "file-saver";
 
-import {
-  faCog,
-  faFileExport,
-  faPen,
-  faPlusCircle,
-  faTrashAlt,
-} from "@fortawesome/free-solid-svg-icons";
-import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { faCog, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { ReactSortable } from "react-sortablejs";
-import { sanitize } from "dompurify";
 import { sanitizeUrl } from "@braintree/sanitize-url";
-import * as Sentry from "@sentry/react";
-import { io, Socket } from "socket.io-client";
-import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as Sentry from "@sentry/react";
+import { Integrations } from "@sentry/tracing";
+import { sanitize } from "dompurify";
+import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { io, Socket } from "socket.io-client";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
-import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
-import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
+import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { ToastMsg } from "../notifications/Notifications";
+import APIServiceClass from "../utils/APIService";
 import ErrorBoundary from "../utils/ErrorBoundary";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
+import { getPageProps } from "../utils/utils";
 import PlaylistItemCard from "./PlaylistItemCard";
+import PlaylistMenu from "./PlaylistMenu";
 import {
-  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
-  PLAYLIST_TRACK_URI_PREFIX,
-  PLAYLIST_URI_PREFIX,
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
+  isPlaylistOwner,
   JSPFTrackToListen,
+  PLAYLIST_TRACK_URI_PREFIX,
+  PLAYLIST_URI_PREFIX,
 } from "./utils";
-import { getPageProps } from "../utils/utils";
-import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
-import { ToastMsg } from "../notifications/Notifications";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject;
@@ -190,96 +182,26 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  copyPlaylist = async (): Promise<void> => {
+  onDeletePlaylist = async (): Promise<void> => {
     const { currentUser } = this.context;
-    const { playlist } = this.state;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    if (!playlist) {
-      toast.error(<ToastMsg title="Error" message="No playlist to copy" />, {
-        toastId: "copy-playlist-error",
-      });
-      return;
-    }
-    try {
-      const newPlaylistId = await this.APIService.copyPlaylist(
-        currentUser.auth_token,
-        getPlaylistId(playlist)
-      );
-      // Fetch the newly created playlist and add it to the state if it's the current user's page
-      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
-        newPlaylistId,
-        currentUser.auth_token
-      ).then((res) => res.json());
-      toast.success(
-        <ToastMsg
-          title="Duplicated playlist"
-          message={
-            <>
-              Duplicated to playlist&ensp;
-              <a href={`/playlist/${newPlaylistId}`}>
-                {JSPFObject.playlist.title}
-              </a>
-            </>
-          }
-        />,
-        { toastId: "copy-playlist-success" }
-      );
-    } catch (error) {
-      this.handleError(error);
-    }
+    // Wait 1.5 second before navigating to user playlists page
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1500);
+    });
+    window.location.href = `${window.location.origin}/user/${currentUser?.name}/playlists`;
   };
 
-  deletePlaylist = async (): Promise<void> => {
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    if (!this.isOwner()) {
-      this.alertNotAuthorized();
-      return;
-    }
-    try {
-      await this.APIService.deletePlaylist(
-        currentUser.auth_token,
-        getPlaylistId(playlist)
-      );
-      // redirect
-      toast.success(
-        <ToastMsg
-          title="Deleted playlist"
-          message={`Deleted playlist ${playlist.title}`}
-        />,
-        { toastId: "delete-playlist-success" }
-      );
-
-      // Wait 1.5 second before navigating to user playlists page
-      await new Promise((resolve) => {
-        setTimeout(resolve, 1500);
-      });
-      window.location.href = `${window.location.origin}/user/${currentUser.name}/playlists`;
-    } catch (error) {
-      this.handleError(error);
-    }
-  };
-
-  isOwner = (): boolean => {
-    const { playlist } = this.state;
-    const { currentUser } = this.context;
-    return Boolean(currentUser) && currentUser?.name === playlist.creator;
+  onPlaylistSave = (playlist: JSPFPlaylist) => {
+    this.setState({ playlist }, this.emitPlaylistChanged);
   };
 
   hasRightToEdit = (): boolean => {
-    if (this.isOwner()) {
-      return true;
-    }
     const { currentUser } = this.context;
     const { playlist } = this.state;
     const collaborators = getPlaylistExtension(playlist)?.collaborators ?? [];
+    if (isPlaylistOwner(playlist, currentUser)) {
+      return true;
+    }
     return (
       collaborators.findIndex(
         (collaborator) => collaborator === currentUser?.name
@@ -359,79 +281,6 @@ export default class PlaylistPage extends React.Component<
     }
   };
 
-  editPlaylist = async (
-    name: string,
-    description: string,
-    isPublic: boolean,
-    collaborators: string[],
-    id?: string
-  ) => {
-    if (!id) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={
-            "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
-          }
-        />,
-        { toastId: "edit-playlist-error" }
-      );
-      return;
-    }
-    if (!this.isOwner()) {
-      this.alertNotAuthorized();
-      return;
-    }
-    const { currentUser } = this.context;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    const { playlist } = this.state;
-    // Owner can't be collaborator
-    const collaboratorsWithoutOwner = collaborators.filter(
-      (username) => username.toLowerCase() !== playlist.creator.toLowerCase()
-    );
-    if (
-      description === playlist.annotation &&
-      name === playlist.title &&
-      isPublic ===
-        playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.public &&
-      collaboratorsWithoutOwner ===
-        playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.collaborators
-    ) {
-      // Nothing changed
-      return;
-    }
-    try {
-      const editedPlaylist: JSPFPlaylist = {
-        ...playlist,
-        annotation: description,
-        title: name,
-        extension: {
-          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-            public: isPublic,
-            collaborators: collaboratorsWithoutOwner,
-          },
-        },
-      };
-
-      await this.APIService.editPlaylist(currentUser.auth_token, id, {
-        playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
-      });
-      this.setState({ playlist: editedPlaylist }, this.emitPlaylistChanged);
-      toast.success(
-        <ToastMsg
-          title="Saved playlist"
-          message={`Saved playlist ${playlist.title}`}
-        />,
-        { toastId: "saved-playlist" }
-      );
-    } catch (error) {
-      this.handleError(error);
-    }
-  };
-
   alertMustBeLoggedIn = () => {
     toast.error(
       <ToastMsg
@@ -458,42 +307,6 @@ export default class PlaylistPage extends React.Component<
     });
   };
 
-  exportToSpotify = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token: string
-  ) => {
-    const result = await this.APIService.exportPlaylistToSpotify(
-      auth_token,
-      playlistId
-    );
-    const { external_url } = result;
-    toast.success(
-      <ToastMsg
-        title="Playlist exported to Spotify"
-        message={
-          <>
-            Successfully exported playlist:{" "}
-            <a href={external_url} target="_blank" rel="noopener noreferrer">
-              {playlistTitle}
-            </a>
-            Heads up: the new playlist is public on Spotify.
-          </>
-        }
-      />,
-      { toastId: "export-playlist" }
-    );
-  };
-
-  exportAsJSPF = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token: string
-  ) => {
-    const result = await this.APIService.getPlaylist(playlistId, auth_token);
-    saveAs(await result.blob(), `${playlistTitle}.jspf`);
-  };
-
   exportAsXSPF = async (
     playlistId: string,
     playlistTitle: string,
@@ -506,51 +319,12 @@ export default class PlaylistPage extends React.Component<
     saveAs(result, `${playlistTitle}.xspf`);
   };
 
-  handlePlaylistExport = async (
-    handler: (
-      playlistId: string,
-      playlistTitle: string,
-      auth_token: string
-    ) => void
-  ) => {
-    const { playlist } = this.state;
-    const { currentUser } = this.context;
-    if (!playlist || !currentUser.auth_token) {
-      return;
-    }
-    if (!playlist.track.length) {
-      toast.warn(
-        <ToastMsg
-          title="Empty playlist"
-          message={
-            "Why don't you fill up the playlist a bit before trying to export it?"
-          }
-        />,
-        { toastId: "empty-playlist" }
-      );
-      return;
-    }
-    this.setState({ loading: true });
-    try {
-      const playlistId = getPlaylistId(playlist);
-      handler(playlistId, playlist.title, currentUser.auth_token);
-    } catch (error) {
-      this.handleError(error.error ?? error);
-    }
-    this.setState({ loading: false });
-  };
-
   render() {
     const { playlist, loading } = this.state;
-    const { APIService, spotifyAuth } = this.context;
+    const { APIService } = this.context;
 
     const { track: tracks } = playlist;
     const hasRightToEdit = this.hasRightToEdit();
-    const isOwner = this.isOwner();
-
-    const showSpotifyExportButton = spotifyAuth?.permission?.includes(
-      "playlist-modify-public"
-    );
 
     const customFields = getPlaylistExtension(playlist);
 
@@ -582,87 +356,12 @@ export default class PlaylistPage extends React.Component<
                       />
                       &nbsp;Options
                     </button>
-                    <ul
-                      className="dropdown-menu dropdown-menu-right"
-                      aria-labelledby="playlistOptionsDropdown"
-                    >
-                      <li>
-                        <a onClick={this.copyPlaylist} role="button" href="#">
-                          Duplicate
-                        </a>
-                      </li>
-                      {isOwner && (
-                        <>
-                          <li role="separator" className="divider" />
-                          <li>
-                            <a
-                              data-toggle="modal"
-                              data-target="#playlistModal"
-                              role="button"
-                              href="#"
-                            >
-                              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              data-toggle="modal"
-                              data-target="#confirmDeleteModal"
-                              role="button"
-                              href="#"
-                            >
-                              <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
-                              Delete
-                            </a>
-                          </li>
-                        </>
-                      )}
-                      {showSpotifyExportButton && (
-                        <>
-                          <li role="separator" className="divider" />
-                          <li>
-                            <a
-                              id="exportPlaylistToSpotify"
-                              role="button"
-                              href="#"
-                              onClick={() =>
-                                this.handlePlaylistExport(this.exportToSpotify)
-                              }
-                            >
-                              <FontAwesomeIcon icon={faSpotify as IconProp} />{" "}
-                              Export to Spotify
-                            </a>
-                          </li>
-                        </>
-                      )}
-                      <li role="separator" className="divider" />
-                      <li>
-                        <a
-                          id="exportPlaylistToJSPF"
-                          role="button"
-                          href="#"
-                          onClick={() =>
-                            this.handlePlaylistExport(this.exportAsJSPF)
-                          }
-                        >
-                          <FontAwesomeIcon icon={faFileExport as IconProp} />{" "}
-                          Export as JSPF
-                        </a>
-                      </li>
-                      {/* <li>
-                        <a
-                          id="exportPlaylistToXSPF"
-                          role="button"
-                          href="#"
-                          onClick={() =>
-                            this.handlePlaylistExport(this.exportAsXSPF)
-                          }
-                        >
-                          <FontAwesomeIcon icon={faFileExport as IconProp} />{" "}
-                          Export as XSPF
-                        </a>
-                      </li> */}
-                    </ul>
+                    <PlaylistMenu
+                      playlist={playlist}
+                      onPlaylistSaved={this.onPlaylistSave}
+                      onPlaylistDeleted={this.onDeletePlaylist}
+                      disallowEmptyPlaylistExport
+                    />
                   </span>
                 </div>
                 <small>
@@ -772,18 +471,6 @@ export default class PlaylistPage extends React.Component<
                 </Card>
               )}
             </div>
-            {isOwner && (
-              <>
-                <CreateOrEditPlaylistModal
-                  onSubmit={this.editPlaylist}
-                  playlist={playlist}
-                />
-                <DeletePlaylistConfirmationModal
-                  onConfirm={this.deletePlaylist}
-                  playlist={playlist}
-                />
-              </>
-            )}
           </div>
           <BrainzPlayer
             listens={tracks.map(JSPFTrackToListen)}

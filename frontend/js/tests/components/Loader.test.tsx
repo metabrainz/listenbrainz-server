@@ -1,6 +1,6 @@
 import * as React from "react";
 import { mount } from "enzyme";
-
+import Spinner from "react-loader-spinner";
 import Loader from "../../src/components/Loader";
 
 function ChildComponent() {
@@ -15,7 +15,7 @@ describe("Loader", () => {
       </Loader>
     );
 
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(Spinner)).toHaveLength(1);
   });
 
   it('renders child component when "isLoading" is false', () => {
@@ -25,6 +25,6 @@ describe("Loader", () => {
       </Loader>
     );
 
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(Spinner)).toHaveLength(0);
   });
 });

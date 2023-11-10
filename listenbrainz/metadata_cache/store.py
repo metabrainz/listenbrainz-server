@@ -8,9 +8,9 @@ from listenbrainz.metadata_cache.models import Album, Artist, Track
 def insert_album(curs, schema, album: Album, last_refresh, expires_at):
     """ Insert album data into normalized album table """
     query = SQL("""
-        INSERT INTO {schema}.album (spotify_id, name, type, release_date, last_refresh, expires_at, data)
-             VALUES (%(spotify_id)s, %(name)s, %(type)s, %(release_date)s, %(last_refresh)s, %(expires_at)s, %(data)s)
-        ON CONFLICT (spotify_id)
+        INSERT INTO {schema}.album (album_id, name, type, release_date, last_refresh, expires_at, data)
+             VALUES (%(album_id)s, %(name)s, %(type)s, %(release_date)s, %(last_refresh)s, %(expires_at)s, %(data)s)
+        ON CONFLICT (album_id)
           DO UPDATE
                 SET name = EXCLUDED.name
                   , type = EXCLUDED.type
@@ -20,7 +20,7 @@ def insert_album(curs, schema, album: Album, last_refresh, expires_at):
                   , data = EXCLUDED.data
     """).format(schema=Identifier(schema))
     curs.execute(query, {
-        "spotify_id": album.id,
+        "album_id": album.id,
         "name": album.name,
         "type": album.type_.value,
         "release_date": album.release_date,
@@ -33,9 +33,9 @@ def insert_album(curs, schema, album: Album, last_refresh, expires_at):
 def insert_artists(curs, schema, artists: list[Artist]):
     """ Insert artist in normalized artist table """
     query = SQL("""
-        INSERT INTO {schema}.artist (spotify_id, name, data)
+        INSERT INTO {schema}.artist (artist_id, name, data)
              VALUES %s
-        ON CONFLICT (spotify_id)
+        ON CONFLICT (artist_id)
           DO UPDATE
                 SET name = EXCLUDED.name
                   , data = EXCLUDED.data
@@ -68,9 +68,9 @@ def insert_album_artists(curs, schema, album_id: str, artists: list[Artist]):
 def insert_tracks(curs, schema, album_id: str, tracks: list[Track]):
     """ Insert track data in normalized track tables """
     query = SQL("""
-        INSERT INTO {schema}.track (spotify_id, name, track_number, album_id, data)
+        INSERT INTO {schema}.track (track_id, name, track_number, album_id, data)
              VALUES %s
-        ON CONFLICT (spotify_id)
+        ON CONFLICT (track_id)
           DO UPDATE
                 SET name = EXCLUDED.name
                   , track_number = EXCLUDED.track_number
@@ -104,7 +104,7 @@ def insert_track_artists(curs, schema, data: dict[str, list[Artist]]):
 
 
 def insert(curs, schema, album: Album, last_refresh, expires_at):
-    """ Main function to insert data in normalized spotify tables """
+    """ Main function to insert data in normalized tables """
     insert_album(curs, schema, album, last_refresh, expires_at)
     insert_artists(curs, schema, album.artists)
     insert_album_artists(curs, schema, album.id, album.artists)

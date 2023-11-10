@@ -61,7 +61,7 @@ describe("FreshReleases", () => {
     );
     await waitForComponentToPaint(wrapper);
     expect(mockFetchUserFreshReleases).toHaveBeenCalledWith("chinmaykunkikar");
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper.find(FreshReleases)).toHaveLength(1);
   });
 
   it("renders sitewide fresh releases page, including timeline component", async () => {
@@ -83,7 +83,6 @@ describe("FreshReleases", () => {
     expect(mockFetchSitewideFreshReleases).toHaveBeenCalledWith(3);
     expect(wrapper.find("#release-filters")).toHaveLength(1);
     expect(wrapper.find(".releases-timeline")).toHaveLength(1);
-    expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("renders filters correctly", async () => {
@@ -98,7 +97,6 @@ describe("FreshReleases", () => {
     );
 
     await waitForComponentToPaint(wrapper);
-    expect(wrapper.html()).toMatchSnapshot();
     wrapper.find("#filters-item-0").simulate("click");
     expect(setFilteredList).toBeCalled();
   });

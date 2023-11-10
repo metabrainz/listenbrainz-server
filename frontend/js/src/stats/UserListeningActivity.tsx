@@ -98,6 +98,7 @@ export default class UserListeningActivity extends React.Component<
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     );
+    const isInvalidRange = isInvalidStatRange(props.range);
 
     this.state = {
       data: [],
@@ -106,8 +107,8 @@ export default class UserListeningActivity extends React.Component<
       totalListens: 0,
       avgListens: 0,
       loading: false,
-      hasError: false,
-      errorMessage: "",
+      hasError: isInvalidRange,
+      errorMessage: isInvalidRange ? `Invalid range: ${props.range}` : "",
     };
   }
 
@@ -136,7 +137,8 @@ export default class UserListeningActivity extends React.Component<
         this.setState({
           loading: false,
           hasError: true,
-          errorMessage: "Statistics for the user have not been calculated",
+          errorMessage:
+            "There are no statistics available for this user for this period",
         });
       } else {
         throw error;

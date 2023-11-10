@@ -1,7 +1,7 @@
 Flask-Admin == 1.6.0
 Flask-Testing == 0.8.1
-Flask-Login == 0.6.2
-Flask-WTF == 1.1.1
+Flask-Login == 0.6.3
+Flask-WTF == 1.2.1
 Flask-SQLAlchemy == 2.5.1
 Flask-UUID == 0.2
 Flask-SocketIO==5.2.0
@@ -22,19 +22,19 @@ pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v2.7.1
 spotipy>=2.22.1
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@a1e12968af93d2f296a42a8094ebff83f3ed33f3
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2023-08-11.1
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2023-10-30.0
 PyYAML==6.0
 eventlet == 0.33.1
 # eventlet fails to patch dnspython >= 2.3 https://github.com/eventlet/eventlet/issues/781
 dnspython==2.2.1
-uWSGI == 2.0.21
+uWSGI == 2.0.22
 sentry-sdk[flask]==1.5.8
 pydantic == 1.9.1
 pycountry==22.3.5
 Flask==2.3.2
 Jinja2==3.1.2
-Werkzeug==2.3.3
-Flask-DebugToolbar==0.13.1
+Werkzeug==3.0.1
+Flask-DebugToolbar@git+https://github.com/amCap1712/flask-debugtoolbar.git@f42bb238cd3fbc79c51b93c341164c2be820025e
 Flask-UUID==0.2
 msgpack==0.5.6
 requests==2.31.0
@@ -52,7 +52,8 @@ more-itertools==8.13.0
 kombu==5.2.4
 itsdangerous==2.1.2
 countryinfo==0.1.2
-urllib3==1.26.9
+urllib3==1.26.18
 orjson==3.8.7
 dnspython==2.2.1
-pyjwt==2.7.0
+pyjwt[crypto]==2.7.0
+packaging~=23.1

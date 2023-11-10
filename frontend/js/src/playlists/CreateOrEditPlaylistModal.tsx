@@ -1,239 +1,363 @@
 import * as React from "react";
-import { getPlaylistExtension, getPlaylistId } from "./utils";
+import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { toast } from "react-toastify";
+import { omit } from "lodash";
+import {
+  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
+  getPlaylistExtension,
+  getPlaylistId,
+  isPlaylistOwner,
+} from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import UserSearch from "./UserSearch";
 import NamePill from "../personal-recommendations/NamePill";
+import { ToastMsg } from "../notifications/Notifications";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
-  onSubmit: (
-    title: string,
-    description: string,
-    isPublic: boolean,
-    collaborators: string[],
-    id?: string,
-    onSuccessCallback?: () => void
-  ) => void;
-  htmlId?: string;
+  initialTracks?: JSPFTrack[];
 };
 
-type CreateOrEditPlaylistModalState = {
-  name: string;
-  description: string;
-  isPublic: boolean;
-  collaborators: string[];
-};
+export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
+  const modal = useModal();
+  const closeModal = React.useCallback(() => {
+    modal.hide();
+    setTimeout(modal.remove, 500);
+  }, [modal]);
 
-export default class CreateOrEditPlaylistModal extends React.Component<
-  CreateOrEditPlaylistModalProps,
-  CreateOrEditPlaylistModalState
-> {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const { playlist, initialTracks } = props;
+  const customFields = getPlaylistExtension(props.playlist);
+  const playlistId = getPlaylistId(playlist);
+  const isEdit = Boolean(playlistId);
 
-  constructor(props: CreateOrEditPlaylistModalProps) {
-    super(props);
-    const customFields = getPlaylistExtension(props.playlist);
-    this.state = {
-      name: props.playlist?.title ?? "",
-      description: props.playlist?.annotation ?? "",
-      isPublic: customFields?.public ?? true,
-      collaborators: customFields?.collaborators ?? [],
-    };
-  }
+  const [name, setName] = React.useState(playlist?.title ?? "");
+  const [description, setDescription] = React.useState(
+    playlist?.annotation ?? ""
+  );
+  const [isPublic, setIsPublic] = React.useState(customFields?.public ?? true);
+  const [collaborators, setCollaborators] = React.useState<string[]>(
+    customFields?.collaborators ?? []
+  );
+  const collaboratorsWithoutOwner = collaborators.filter(
+    (username) => username.toLowerCase() !== currentUser.name
+  );
 
-  // We make the component reusable by updating the state
-  // when props change (when we pass another playlist)
-  componentDidUpdate(prevProps: CreateOrEditPlaylistModalProps) {
-    const { playlist } = this.props;
-
-    if (getPlaylistId(prevProps.playlist) !== getPlaylistId(playlist)) {
-      const customFields = getPlaylistExtension(playlist);
-      this.setState({
-        name: playlist?.title ?? "",
-        description: playlist?.annotation ?? "",
-        isPublic: customFields?.public ?? true,
-        collaborators: customFields?.collaborators ?? [],
-      });
+  const createPlaylist = React.useCallback(async (): Promise<
+    JSPFPlaylist | undefined
+  > => {
+    // Creating a new playlist
+    if (!currentUser?.auth_token) {
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message="You must be logged in for this operation"
+        />,
+        { toastId: "auth-error" }
+      );
+      return undefined;
     }
-  }
+    // Owner can't be collaborator
 
-  clear = () => {
-    this.setState({
-      name: "",
-      description: "",
-      isPublic: true,
-      collaborators: [],
-    });
+    const newPlaylist: JSPFObject = {
+      playlist: {
+        // Th following 4 fields to satisfy TS type
+        creator: currentUser?.name,
+        identifier: "",
+        date: "",
+        track: initialTracks ?? [],
+        title: name,
+        annotation: description,
+        extension: {
+          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+            public: isPublic,
+            collaborators: collaboratorsWithoutOwner,
+          },
+        },
+      },
+    };
+    try {
+      const newPlaylistId = await APIService.createPlaylist(
+        currentUser?.auth_token,
+        newPlaylist
+      );
+      toast.success(
+        <ToastMsg
+          title="Created playlist"
+          message={
+            <>
+              Created new {isPublic ? "public" : "private"} playlist{" "}
+              <a href={`/playlist/${newPlaylistId}`}>{name}</a>
+            </>
+          }
+        />,
+        { toastId: "create-playlist-success" }
+      );
+      try {
+        // Fetch the newly created playlist and return it
+        const response = await APIService.getPlaylist(
+          newPlaylistId,
+          currentUser.auth_token
+        );
+        const JSPFObject: JSPFObject = await response.json();
+        return JSPFObject.playlist;
+      } catch (error) {
+        console.error(error);
+        return newPlaylist.playlist;
+      }
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not create playlist"
+          message={`Something went wrong: ${error.toString()}`}
+        />,
+        { toastId: "create-playlist-error" }
+      );
+      return undefined;
+    }
+  }, [
+    currentUser,
+    name,
+    description,
+    isPublic,
+    collaboratorsWithoutOwner,
+    initialTracks,
+    APIService,
+  ]);
+
+  const editPlaylist = React.useCallback(async (): Promise<
+    JSPFPlaylist | undefined
+  > => {
+    // Editing an existing playlist
+    if (!currentUser?.auth_token) {
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message="You must be logged in for this operation"
+        />,
+        { toastId: "auth-error" }
+      );
+      return undefined;
+    }
+
+    if (!playlist || !playlistId) {
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={
+            "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
+          }
+        />,
+        { toastId: "edit-playlist-error" }
+      );
+      return undefined;
+    }
+
+    if (!isPlaylistOwner(playlist, currentUser)) {
+      toast.error(
+        <ToastMsg
+          title="Not allowed"
+          message="Only the owner of a playlist is allowed to modify it"
+        />,
+        { toastId: "auth-error" }
+      );
+      return undefined;
+    }
+    try {
+      const editedPlaylist: JSPFPlaylist = {
+        ...playlist,
+        annotation: description,
+        title: name,
+        extension: {
+          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+            public: isPublic,
+            collaborators: collaboratorsWithoutOwner,
+          },
+        },
+      };
+
+      await APIService.editPlaylist(currentUser.auth_token, playlistId, {
+        playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
+      });
+
+      toast.success(
+        <ToastMsg
+          title="Saved playlist"
+          message={`Saved playlist ${playlist.title}`}
+        />,
+        { toastId: "saved-playlist" }
+      );
+
+      return editedPlaylist;
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not edit playlist"
+          message={`Something went wrong: ${error.toString()}`}
+        />,
+        { toastId: "create-playlist-error" }
+      );
+      return undefined;
+    }
+  }, [
+    playlist,
+    playlistId,
+    currentUser,
+    name,
+    description,
+    isPublic,
+    collaboratorsWithoutOwner,
+    APIService,
+  ]);
+
+  const onSubmit = async (event: React.SyntheticEvent) => {
+    try {
+      let newPlaylist;
+      if (isEdit) {
+        newPlaylist = await editPlaylist();
+      } else {
+        // Creating a new playlist
+        newPlaylist = await createPlaylist();
+      }
+      modal.resolve(newPlaylist);
+      closeModal();
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Something went wrong"
+          message={<>We could not save your playlist: {error.toString()}</>}
+        />,
+        { toastId: "save-playlist-error" }
+      );
+    }
   };
 
-  submit = (event: React.SyntheticEvent) => {
-    event.preventDefault();
-    const { onSubmit, playlist } = this.props;
-    const { name, description, isPublic, collaborators } = this.state;
-
-    // VALIDATION PLEASE !
-    onSubmit(
-      name,
-      description,
-      isPublic,
-      collaborators,
-      getPlaylistId(playlist),
-      this.clear.bind(this)
+  const removeCollaborator = (username: string): void => {
+    setCollaborators(
+      collaborators.filter((collabName) => collabName !== username)
     );
   };
 
-  handleInputChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { target } = event;
-    const value =
-      target.type === "checkbox"
-        ? (target as HTMLInputElement).checked
-        : target.value;
-    const { name } = target;
-    // @ts-ignore
-    this.setState({
-      [name]: value,
-    });
-  };
-
-  removeCollaborator = (username: string): void => {
-    const { collaborators } = this.state;
-    this.setState({
-      collaborators: collaborators.filter(
-        (collabName) => collabName !== username
-      ),
-    });
-  };
-
-  addCollaborator = (user: string): void => {
-    const { playlist } = this.props;
-    const isEdit = Boolean(getPlaylistId(playlist));
-    const { collaborators } = this.state;
-    const { currentUser } = this.context;
+  const addCollaborator = (user: string): void => {
     const disabled =
       !user ||
       (isEdit
         ? playlist?.creator.toLowerCase() === user.toLowerCase()
         : currentUser.name.toLowerCase() === user.toLowerCase());
-    if (!disabled && collaborators.indexOf(user) === -1) {
-      this.setState({
-        collaborators: [...collaborators, user],
-      });
+    if (!disabled && collaborators.includes(user)) {
+      setCollaborators([...collaborators, user]);
     }
   };
 
-  render() {
-    const { name, description, isPublic, collaborators } = this.state;
-    const { htmlId, playlist } = this.props;
-    const { currentUser } = this.context;
-    const isEdit = Boolean(getPlaylistId(playlist));
-    return (
-      <div
-        className="modal fade"
-        id={htmlId ?? "playlistModal"}
-        tabIndex={-1}
-        role="dialog"
-        aria-labelledby="playlistModalLabel"
-      >
-        <div className="modal-dialog" role="document">
-          <form className="modal-content">
-            <div className="modal-header">
-              <button
-                type="button"
-                className="close"
-                data-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-              <h4 className="modal-title" id="playlistModalLabel">
-                {isEdit ? "Edit" : "Create"} playlist
-              </h4>
+  return (
+    <div
+      className={`modal fade ${modal.visible ? "in" : ""}`}
+      id="CreateOrEditPlaylistModal"
+      tabIndex={-1}
+      role="dialog"
+      aria-labelledby="playlistModalLabel"
+      data-backdrop="static"
+    >
+      <div className="modal-dialog" role="document">
+        <form className="modal-content">
+          <div className="modal-header">
+            <button
+              type="button"
+              className="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 className="modal-title" id="playlistModalLabel">
+              {isEdit ? "Edit" : "Create"} playlist
+            </h4>
+          </div>
+          <div className="modal-body">
+            <div className="form-group">
+              <label htmlFor="playlistName">Name</label>
+              <input
+                type="text"
+                className="form-control"
+                id="playlistName"
+                placeholder="Name"
+                value={name}
+                name="name"
+                onChange={(event) => setName(event.target.value)}
+              />
             </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label htmlFor="playlistName">Name</label>
+
+            <div className="form-group">
+              <label htmlFor="playlistdescription">Description</label>
+              <textarea
+                className="form-control"
+                id="playlistdescription"
+                placeholder="Description"
+                value={description}
+                name="description"
+                onChange={(event) => setDescription(event.target.value)}
+              />
+            </div>
+            <div className="checkbox">
+              <label>
                 <input
-                  type="text"
-                  className="form-control"
-                  id="playlistName"
-                  placeholder="Name"
-                  value={name}
-                  name="name"
-                  onChange={this.handleInputChange}
+                  id="isPublic"
+                  type="checkbox"
+                  checked={isPublic}
+                  name="isPublic"
+                  onChange={(event) => setIsPublic(event.target.checked)}
                 />
-              </div>
+                &nbsp;Make playlist public
+              </label>
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="playlistdescription">Description</label>
-                <textarea
-                  className="form-control"
-                  id="playlistdescription"
-                  placeholder="Description"
-                  value={description}
-                  name="description"
-                  onChange={this.handleInputChange}
-                />
-              </div>
-              <div className="checkbox">
-                <label>
-                  <input
-                    id="isPublic"
-                    type="checkbox"
-                    checked={isPublic}
-                    name="isPublic"
-                    onChange={this.handleInputChange}
-                  />
-                  &nbsp;Make playlist public
+            <div className="form-group">
+              <div>
+                <label style={{ display: "block" }} htmlFor="collaborators">
+                  Collaborators
                 </label>
-              </div>
-
-              <div className="form-group">
-                <div>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                  <label style={{ display: "block" }}>Collaborators</label>
-
+                <div id="collaborators">
                   {collaborators.map((user) => {
                     return (
                       <NamePill
+                        key={user}
                         title={user}
                         // eslint-disable-next-line react/jsx-no-bind
-                        closeAction={this.removeCollaborator.bind(this, user)}
+                        closeAction={removeCollaborator.bind(this, user)}
                       />
                     );
                   })}
                 </div>
-
-                <UserSearch
-                  onSelectUser={this.addCollaborator}
-                  placeholder="Add collaborator"
-                  clearOnSelect
-                />
               </div>
+
+              <UserSearch
+                onSelectUser={addCollaborator}
+                placeholder="Add collaborator"
+                clearOnSelect
+              />
             </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-default"
-                data-dismiss="modal"
-                onClick={this.clear}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                onClick={this.submit}
-                data-dismiss="modal"
-              >
-                {isEdit ? "Save" : "Create"}
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn btn-default"
+              data-dismiss="modal"
+              onClick={closeModal}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              data-dismiss="modal"
+              disabled={!currentUser?.auth_token}
+              onClick={onSubmit}
+            >
+              {isEdit ? "Save" : "Create"}
+            </button>
+          </div>
+        </form>
       </div>
-    );
-  }
-}
+    </div>
+  );
+});

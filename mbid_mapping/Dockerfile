@@ -28,3 +28,6 @@ RUN chmod 0644 /etc/cron.d/mapper
 COPY --chown=listenbrainz:listenbrainz requirements.txt /code/mapper
 RUN python -m pip install --no-cache-dir -r requirements.txt
 COPY --chown=listenbrainz:listenbrainz . /code/mapper
+
+# Ensure we use the right files and folders by removing duplicates
+RUN rm -f /code/mapper/config.py /code/mapper/config.pyc

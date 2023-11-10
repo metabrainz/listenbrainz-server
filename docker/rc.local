@@ -65,3 +65,9 @@ if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-metadata-cache-${DEPLOY_ENV}" ]
 then
     rm -f /etc/service/spotify_metadata_cache/down
 fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-apple-metadata-cache-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/apple_metadata_cache/down
+fi
+

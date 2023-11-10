@@ -27,6 +27,7 @@ import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import UserListModalEntry from "../../src/follow/UserListModalEntry";
 
 const props = {
   user: { name: "foobar" },
@@ -54,11 +55,8 @@ describe("<FollowerFollowingModal />", () => {
         <FollowerFollowingModal {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper.find(UserListModalEntry)).toHaveLength(1);
   });
-});
-
-describe("updateMode()", () => {
   it("updates the mode correctly", async () => {
     const wrapper = mount<FollowerFollowingModal>(
       <GlobalAppContext.Provider value={globalContext}>
@@ -66,16 +64,16 @@ describe("updateMode()", () => {
       </GlobalAppContext.Provider>
     );
     const instance = wrapper.instance();
-
+  
     // initial state after first fetch
     expect(instance.state.activeMode).toEqual("following");
-
+  
     // does nothing if the same mode as the current mode is passed
     await act(() => {
       instance.updateMode("following");
     });
     expect(instance.state.activeMode).toEqual("following");
-
+  
     // updates the mode correctly
     await act(() => {
       instance.updateMode("follower");

@@ -1,27 +1,28 @@
-import * as React from "react";
-import { get as _get } from "lodash";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+/* eslint-disable react/button-has-type */
+/* eslint-disable react/jsx-no-comment-textnodes */
+import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faExchangeAlt,
   faInfoCircle,
   faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
-import Tooltip from "react-tooltip";
-import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as React from "react";
 import { toast } from "react-toastify";
+import Tooltip from "react-tooltip";
+import ListenCard from "../listens/ListenCard";
+import ListenControl from "../listens/ListenControl";
+import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
+import { COLOR_LB_GREEN, COLOR_LB_LIGHT_GRAY } from "../utils/constants";
 import {
   getArtistName,
   getRecordingMBID,
   getRecordingMSID,
   getTrackName,
 } from "../utils/utils";
-import ListenCard from "../listens/ListenCard";
-import ListenControl from "../listens/ListenControl";
-import { COLOR_LB_LIGHT_GRAY, COLOR_LB_GREEN } from "../utils/constants";
-import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
-import { ToastMsg } from "../notifications/Notifications";
 
 export type MBIDMappingModalProps = {
   listenToMap?: Listen;
@@ -42,6 +43,7 @@ function getListenFromSelectedRecording(
 export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   const modal = useModal();
   const { hide, remove, resolve, visible } = modal;
+  const [copyTextClickCounter, setCopyTextClickCounter] = React.useState(0);
   const [selectedRecording, setSelectedRecording] = React.useState<
     TrackMetadata
   >();
@@ -79,6 +81,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const { auth_token } = currentUser;
+  const [defaultValue, setDefaultValue] = React.useState("");
 
   const submitMBIDMapping = React.useCallback(
     async (event: React.FormEvent) => {
@@ -132,6 +135,13 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     ]
   );
 
+  const copyTextToSearchField = React.useCallback(() => {
+    setCopyTextClickCounter((value) => value + 1);
+    setDefaultValue(
+      `${getTrackName(listenToMap)} - ${getArtistName(listenToMap)}`
+    );
+  }, [listenToMap]);
+
   const listenFromSelectedRecording = getListenFromSelectedRecording(
     selectedRecording
   );
@@ -144,7 +154,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
       <div
         className={`modal fade ${visible ? "in" : ""}`}
         style={visible ? { display: "block" } : {}}
-        id="MapToMusicBrainzRecordingModal"
+        id="MBIDMappingModal"
         role="dialog"
         aria-labelledby="MBIDMappingModalLabel"
       >
@@ -207,16 +217,25 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 feedbackComponent={<></>}
                 compact
               />
+
               <div className="text-center mb-10 mt-10">
-                <FontAwesomeIcon
-                  icon={faExchangeAlt}
-                  rotation={90}
-                  size="lg"
-                  color={
-                    selectedRecording ? COLOR_LB_GREEN : COLOR_LB_LIGHT_GRAY
-                  }
-                />
+                <button
+                  className="btn btn-transparent btn-rounded"
+                  disabled={Boolean(selectedRecording)}
+                  onClick={copyTextToSearchField}
+                >
+                  <FontAwesomeIcon
+                    icon={faExchangeAlt}
+                    rotation={90}
+                    size="lg"
+                    color={
+                      selectedRecording ? COLOR_LB_GREEN : COLOR_LB_LIGHT_GRAY
+                    }
+                  />
+                  <div className="text-muted">copy text</div>
+                </button>
               </div>
+
               {listenFromSelectedRecording ? (
                 <>
                   <ListenCard
@@ -250,9 +269,11 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               ) : (
                 <div className="card listen-card">
                   <SearchTrackOrMBID
+                    key={`${defaultValue}-${copyTextClickCounter}`}
                     onSelectRecording={(trackMetadata) => {
                       setSelectedRecording(trackMetadata);
                     }}
+                    defaultValue={defaultValue}
                   />
                 </div>
               )}

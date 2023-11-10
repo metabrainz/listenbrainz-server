@@ -288,6 +288,8 @@ CREATE TABLE recommendation.do_not_recommend (
     created         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
+-- The following line is now executed by the init-db action from manage.py. If you create a DB without the init-db function
+-- you will need to execute the following GRANT in order to complete your DB setup.
+--GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
 COMMIT;
