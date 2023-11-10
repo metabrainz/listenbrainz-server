@@ -113,7 +113,7 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
                 new_sim_value = (value / 2.0) + 0.5
 
                 # Append to the row, but invert first so that closer is less similar (a percentage)
-                new_sim_value = 1.0 - new_sim_value
+                #new_sim_value = 1.0 - new_sim_value
 
                 row.append((x,
                             y,
