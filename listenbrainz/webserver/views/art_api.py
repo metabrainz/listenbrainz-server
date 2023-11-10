@@ -15,7 +15,7 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 art_api_bp = Blueprint('art_api_v1', __name__)
 
 
-@art_api_bp.route("/grid/", methods=["POST"])
+@art_api_bp.route("/grid/", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
 def cover_art_grid_post():
