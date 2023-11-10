@@ -8,7 +8,8 @@ from brainzutils import cache, metrics, sentry
 from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect
 from flask_login import current_user
-
+from listenbrainz.db import create_test_database_connect_strings
+from listenbrainz.db.timescale import create_test_timescale_connect_strings
 from listenbrainz.webserver.utils import get_global_props
 
 API_PREFIX = '/1'
@@ -94,8 +95,17 @@ def create_app(debug=None):
     # Database connections
     from listenbrainz import db
     from listenbrainz.db import timescale as ts
-    db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
-    ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
+
+    # If we're running tests, overwrite the given DB configuration from the config and disregard the
+    # configuration, since that configuration could possibly point a different (production) DB.
+    if app.config['TESTING']:
+        db_connect = create_test_database_connect_strings()
+        ts_connect = create_test_timescale_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT"])
+        ts.init_db_connection(ts_connect["DB_CONNECT"])
+    else:
+        db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
+        ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
 
     # Redis connection
     from listenbrainz.webserver.redis_connection import init_redis_connection

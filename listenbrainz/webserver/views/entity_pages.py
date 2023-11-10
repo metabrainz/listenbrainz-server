@@ -17,7 +17,6 @@ artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
 
 @artist_bp.route("/<artist_mbid>", methods=["GET"])
-# TODO: unsure if this is needed
 @web_listenstore_needed
 def artist_entity(artist_mbid):
     """ Show a artist page with all their relevant information """
@@ -71,12 +70,8 @@ def artist_entity(artist_mbid):
 
     # General note: This whole view function is a disaster, yes. But it is only so that monkey can work on the
     # UI for these pages. The next project will be to collect all this data and store it in couchdb.
-
     top_release_groups = get_top_entity_for_entity("release-group", artist_mbid, "release-group")
     release_group_mbids = tuple([ str(k["release_group_mbid"]) for k in top_release_groups ] )
-
-    # And remove this dummy line
-#    release_group_mbids = ('48140466-cff6-3222-bd55-63c27e43190d', '46b38f09-e90b-39eb-b04f-002da20f7f96', '163339ab-813b-3d29-bba8-e1d5acf63cab')
 
     query = """SELECT DISTINCT ON (rg.id)
                    rg.gid::TEXT AS release_group_mbid
@@ -142,7 +137,6 @@ def artist_entity(artist_mbid):
 
 
 @album_bp.route("/<release_group_mbid>", methods=["GET"])
-# TODO: unsure if this is needed
 @web_listenstore_needed
 def album_entity(release_group_mbid):
     """ Show an album page with all their relevant information """
@@ -157,6 +151,7 @@ def album_entity(release_group_mbid):
     
     props = metadata[release_group_mbid]
     props["release_group_mbid"] = release_group_mbid
+    current_app.logger.warn(props)
     
     return render_template(
         "entities/album.html",
