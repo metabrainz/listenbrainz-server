@@ -36,7 +36,7 @@ import {
 } from "../playlists/utils";
 
 export type AlbumPageProps = {
-  popular_recordings?: Array<{
+  recordings?: Array<{
     artist_mbid: string;
     count: number;
     recording_mbid: string;
@@ -52,7 +52,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const {
     release_group_metadata: initialReleaseGroupMetadata,
     release_group_mbid,
-    popular_recordings,
+    recordings,
     caa_id,
     caa_release_mbid,
   } = props;
@@ -71,9 +71,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const releaseGroupTags = tag?.release_group;
 
   // Data we get from the back end, doesn't contain metadata
-  const [popularRecordings, setPopularRecordings] = React.useState(
-    popular_recordings
-  );
+  const [popularRecordings, setPopularRecordings] = React.useState(recordings);
   // JSPF Tracks fetched using the recording mbids above
   const [popularTracks, setPopularTracks] = React.useState<JSPFTrack[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -430,11 +428,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   const {
-    popular_recordings,
+    recordings,
     release_group_mbid,
-    ...release_group_data,
     caa_id,
     caa_release_mbid,
+    ...release_group_data
   } = reactProps;
 
   const AlbumPageWithAlertNotifications = withAlertNotifications(AlbumPage);
@@ -453,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
             release_group_metadata={
               release_group_data as ReleaseGroupMetadataLookup
             }
-            popular_recordings={popular_recordings}
+            recordings={recordings}
             release_group_mbid={release_group_mbid}
             caa_id={caa_id}
             caa_release_mbid={caa_release_mbid}
