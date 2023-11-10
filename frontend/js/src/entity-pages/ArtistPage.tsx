@@ -352,10 +352,10 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             let listenCountComponent;
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
-                <>
+                <span className="badge badge-info">
                   {Intl.NumberFormat().format(recording.total_listen_count)} x{" "}
                   <FontAwesomeIcon icon={faHeadphones} />
-                </>
+                </span>
               );
             }
             return (
@@ -444,30 +444,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             ))}
           </div>
         </div>
-        <div className="reviews">
-          <h3 className="header-with-line">Reviews</h3>
-          {reviews?.length ? (
-            <>
-              {reviews.slice(0, 3).map(getReviewEventContent)}
-              <a
-                href={`https://critiquebrainz.org/artist/${artist.artist_mbid}`}
-                className="critiquebrainz-button btn btn-link"
-              >
-                More on CritiqueBrainz…
-              </a>
-            </>
-          ) : (
-            <>
-              <p>No reviews for this artist (yet…)</p>
-              <a
-                href={`https://critiquebrainz.org/review/write/artist/${artist.artist_mbid}`}
-                className="btn btn-link"
-              >
-                Review album on CritiqueBrainz
-              </a>
-            </>
-          )}
-        </div>
         <div className="similarity">
           <h3 className="header-with-line">Similar artists</h3>
           {sortBy(similarArtists, "score")
@@ -508,6 +484,30 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 />
               );
             })}
+        </div>
+        <div className="reviews">
+          <h3 className="header-with-line">Reviews</h3>
+          {reviews?.length ? (
+            <>
+              {reviews.slice(0, 3).map(getReviewEventContent)}
+              <a
+                href={`https://critiquebrainz.org/artist/${artist.artist_mbid}`}
+                className="critiquebrainz-button btn btn-link"
+              >
+                More on CritiqueBrainz…
+              </a>
+            </>
+          ) : (
+            <>
+              <p>No reviews for this artist (yet…)</p>
+              <a
+                href={`https://critiquebrainz.org/review/write/artist/${artist.artist_mbid}`}
+                className="btn btn-link"
+              >
+                Review album on CritiqueBrainz
+              </a>
+            </>
+          )}
         </div>
       </div>
       <BrainzPlayer

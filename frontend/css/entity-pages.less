@@ -5,6 +5,7 @@
 		padding: 2em;
 		gap: 2em;
 		background: linear-gradient(45deg, var(--bg-color), transparent);
+		flex-wrap: wrap;
 		.cover-art {
 			aspect-ratio: 1;
 			height: 100%;
@@ -115,7 +116,7 @@
 			flex:0 1;
 			flex-basis: 350px;
 		}
-		.top-listeners, .reviews {
+		.top-listeners, .reviews , .similarity{
 			flex:1;
 		    flex-basis: 300px;
 		}
@@ -128,15 +129,11 @@
 		.albums {
 			width:100%;
 			.cover-art-container {
-				overflow-x: scroll;
-				width: 100%;
 				display: grid;
-				grid-gap: 3em;
-				grid-auto-columns: 200px;
-				grid-auto-flow: column;
-				grid-template-rows: auto auto;
-				overflow-y: hidden;
-				scroll-snap-type: x proximity;
+				grid-gap: 2em;
+				grid-auto-flow: row;
+				justify-items: center;
+				grid-template-columns: repeat(auto-fill, 200px);
 				.cover-art{
 					aspect-ratio: 1;
 					background: lightgrey;
