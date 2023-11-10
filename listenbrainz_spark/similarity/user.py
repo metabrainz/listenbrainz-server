@@ -117,8 +117,8 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
 
                 row.append((x,
                             y,
-                            new_sim_value,
-                            (value - global_min_similarity) / global_similarity_range))
+                            (value - global_min_similarity) / global_similarity_range,
+                            new_sim_value))
 
             similar_users.extend(sorted(row, key = itemgetter(2), reverse = True)[:max_num_users])
 
