@@ -204,19 +204,18 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     >
       <Loader isLoading={loading} />
       <div className="entity-page-header flex">
-        <div className="cover-art">
-          <div
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{
-              __html: sanitize(
-                coverArtSVG ??
-                  "<img src='/static/img/cover-art-placeholder.jpg'></img>"
-              ),
-            }}
-            ref={albumArtRef}
-            title={`Album art for ${artist.name}`}
-          />
-        </div>
+        <div
+          className="cover-art"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: sanitize(
+              coverArtSVG ??
+                "<img src='/static/img/cover-art-placeholder.jpg'></img>"
+            ),
+          }}
+          ref={albumArtRef}
+          title={`Album art for ${artist.name}`}
+        />
         <div className="artist-info">
           <h1>{artist.name}</h1>
           <div className="details">
