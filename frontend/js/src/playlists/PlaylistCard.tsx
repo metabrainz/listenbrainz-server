@@ -120,8 +120,9 @@ export default function PlaylistCard({
           </button>
           <PlaylistMenu
             playlist={playlist}
-            onPlaylistSave={onPlaylistEdited}
-            onPlaylistDelete={onPlaylistDeleted}
+            onPlaylistSaved={onPlaylistEdited}
+            onPlaylistDeleted={onPlaylistDeleted}
+            onPlaylistCopied={onSuccessfulCopy}
           />
         </div>
       )}

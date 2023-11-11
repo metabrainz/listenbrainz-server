@@ -38,7 +38,7 @@ def get_recordings(table: str, cache_tables: List[str], number_of_results: int):
                  , first(l.artist_name) AS any_artist_name
                  , l.artist_credit_mbids
                  , nullif(first(l.release_name), '') as any_release_name
-                 , l.release_mbid
+                 , nullif(l.release_mbid, '') AS any_release_mbid
                  , rel.caa_id
                  , rel.caa_release_mbid
                  , count(*) as listen_count
@@ -64,7 +64,7 @@ def get_recordings(table: str, cache_tables: List[str], number_of_results: int):
                  , any_recording_name AS track_name
                  , any_recording_mbid AS recording_mbid
                  , any_release_name AS release_name
-                 , release_mbid
+                 , any_release_mbid AS release_mbid
                  , any_artist_name AS artist_name
                  , artist_credit_mbids
                  , caa_id

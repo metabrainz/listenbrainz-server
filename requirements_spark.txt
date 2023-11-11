@@ -12,7 +12,7 @@ unidecode == 1.2.0
 more-itertools==8.8.0
 pycountry==22.3.5
 pycurl==7.45.2
-urllib3==1.26.17
+urllib3==1.26.18
 pandas==1.5.3
 zstandard==0.21.0
 pyarrow==11.0.0
