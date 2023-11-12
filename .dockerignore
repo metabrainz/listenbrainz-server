@@ -23,3 +23,6 @@
 
 # Javascript packages
 /node_modules/
+
+# ListenBrainz local dump directory
+/listenbrainz-export

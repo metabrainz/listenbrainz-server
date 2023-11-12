@@ -1,17 +1,16 @@
 from datetime import datetime
+from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
-from unittest import mock
-
-from listenbrainz_spark.ftp import DumpType
-from listenbrainz_spark.request_consumer.jobs import import_dump
+from listenbrainz_spark.dump import DumpType
 from listenbrainz_spark.exceptions import (DumpInvalidException,
                                            DumpNotFoundException)
+from listenbrainz_spark.hdfs.utils import (delete_dir, path_exists)
 from listenbrainz_spark.path import IMPORT_METADATA
+from listenbrainz_spark.request_consumer.jobs import import_dump
 from listenbrainz_spark.tests import SparkNewTestCase
 from listenbrainz_spark.utils import (read_files_from_HDFS)
 
-from listenbrainz_spark.hdfs.utils import (delete_dir, path_exists)
 
 def mock_import_dump_to_hdfs(dump_id: int):
     """ Mock function returning dump name all dump ids less than 210, else raising DumpNotFoundException """
