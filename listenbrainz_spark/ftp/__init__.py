@@ -1,6 +1,7 @@
 import ftplib
 import logging
 import os
+from abc import ABC
 
 from listenbrainz_spark import config
 from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader
@@ -9,7 +10,7 @@ from listenbrainz_spark.exceptions import DumpInvalidException
 logger = logging.getLogger(__name__)
 
 
-class ListenBrainzFTPDownloader(ListenbrainzDumpLoader):
+class ListenBrainzFTPDownloader(ListenbrainzDumpLoader, ABC):
 
     def __init__(self):
         self.connect()
