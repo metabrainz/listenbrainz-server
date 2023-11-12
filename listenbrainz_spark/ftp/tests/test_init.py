@@ -75,7 +75,7 @@ class FTPTestCase(SparkNewTestCase):
         filename = 'fakefile.txt'
         directory = 'fakedir'
 
-        self.assertRaises(DumpInvalidException,TestableListenBrainzFTPDownloader().download_dump, filename, directory)
+        self.assertRaises(DumpInvalidException, TestableListenBrainzFTPDownloader().download_dump, filename, directory)
 
     @patch('ftplib.FTP')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_file_binary')
