@@ -2,8 +2,8 @@ import unittest
 from unittest.mock import patch, call
 
 from listenbrainz_spark import config
+from listenbrainz_spark.dump import DumpType
 from listenbrainz_spark.exceptions import DumpNotFoundException
-from listenbrainz_spark.ftp import DumpType
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 
 
