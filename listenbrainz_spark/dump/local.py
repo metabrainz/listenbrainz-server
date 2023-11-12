@@ -9,7 +9,7 @@ class ListenbrainzLocalDumpLoader(ListenbrainzDumpLoader):
         files = os.listdir('listenbrainz-export')
         return list(filter(lambda x: x.startswith(f'listenbrainz-dump-'), files))
 
-    def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL):
+    def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> (str, str, int):
         dump_directories = self.list_dump_directories(dump_type)
 
         listens_dump_list = sorted(dump_directories, key=lambda x: int(x.split('-')[2]))
