@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
-    def download_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL):
+    def download_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> (str, str, int):
         """ Download listens to dir passed as an argument.
 
             Args:
@@ -50,7 +50,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         self.connection.close()
         return dest_path, listens_file_name, dump_id
 
-    def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL):
+    def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> (str, str, int):
         return self.download_listens(directory, listens_dump_id, dump_type)
 
     def download_artist_relation(self, directory, artist_relation_dump_id=None):
