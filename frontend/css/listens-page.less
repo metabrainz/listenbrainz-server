@@ -297,10 +297,14 @@
       margin: -10px;
       margin-right: 1em;
       width: @cover-art-thumbnail-size;
-      > * {
+      > *:not(.track-position) {
         height: 100%;
         width: inherit;
         aspect-ratio: 1/1;
+      }
+      > .track-position {
+        padding-left: 1.5em;
+        padding-right: 0.5em;
       }
       .add-cover-art,
       .not-mapped,

@@ -37,12 +37,16 @@ import {
 
 export type AlbumPageProps = {
   recordings?: Array<{
-    artist_mbid: string;
-    count: number;
+    length: number;
+    name: string;
+    position: number;
     recording_mbid: string;
+    total_listen_count: number;
+    total_user_count: number;
   }>;
   release_group_mbid: string;
   release_group_metadata: ReleaseGroupMetadataLookup;
+  type: string;
   caa_id?: string;
   caa_release_mbid?: string;
 };
@@ -55,6 +59,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     recordings,
     caa_id,
     caa_release_mbid,
+    type,
   } = props;
 
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
@@ -71,7 +76,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const releaseGroupTags = tag?.release_group;
 
   // Data we get from the back end, doesn't contain metadata
-  const [popularRecordings, setPopularRecordings] = React.useState(recordings);
+  const [trackList, setTrackList] = React.useState(recordings);
   // JSPF Tracks fetched using the recording mbids above
   const [popularTracks, setPopularTracks] = React.useState<JSPFTrack[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -186,7 +191,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           <h1>{album?.name}</h1>
           <div className="details">
             <div>{artist?.name}</div>
-            <small className="help-block">Type - Release date</small>
+            <small className="help-block">{type} - Release date</small>
           </div>
         </div>
         <div className="right-side">
@@ -298,23 +303,40 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               )}
             </h3>
           </div>
-          {listensFromJSPFTracks?.map((listen) => {
-            const recording = popularRecordings?.find(
-              (rec) =>
-                rec.recording_mbid === listen.track_metadata.recording_mbid
-            );
+          {trackList?.map((recording) => {
             let listenCountComponent;
-            if (recording && Number.isFinite(recording.count)) {
+            if (recording && Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
-                <>
-                  {recording.count} x <FontAwesomeIcon icon={faHeadphones} />
-                </>
+                <span className="pill">
+                  {recording.total_listen_count} x{" "}
+                  <FontAwesomeIcon icon={faHeadphones} />
+                </span>
+              );
+            }
+            const listenFromRecording: Listen = {
+              listened_at: 0,
+              track_metadata: {
+                artist_name: artistName,
+                track_name: recording.name,
+                recording_mbid: recording.recording_mbid,
+                additional_info: {
+                  duration_ms: recording.length,
+                  tracknumber: recording.position,
+                  recording_mbid: recording.recording_mbid,
+                },
+              },
+            };
+            let thumbnailReplacement;
+            if (Number.isFinite(recording.position)) {
+              thumbnailReplacement = (
+                <div className="track-position">{recording.position}.</div>
               );
             }
             return (
               <ListenCard
-                key={listen.track_metadata.track_name}
-                listen={listen}
+                key={recording.name}
+                customThumbnail={thumbnailReplacement}
+                listen={listenFromRecording}
                 showTimestamp={false}
                 showUsername={false}
                 additionalActions={listenCountComponent}
@@ -432,6 +454,7 @@ document.addEventListener("DOMContentLoaded", () => {
     release_group_mbid,
     caa_id,
     caa_release_mbid,
+    type,
     ...release_group_data
   } = reactProps;
 
@@ -455,6 +478,7 @@ document.addEventListener("DOMContentLoaded", () => {
             release_group_mbid={release_group_mbid}
             caa_id={caa_id}
             caa_release_mbid={caa_release_mbid}
+            type={type}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

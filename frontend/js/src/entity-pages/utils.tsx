@@ -135,7 +135,7 @@ export function popularRecordingToListen(recording: PopularRecording): Listen {
       additional_info: {
         artist_mbids: recording.artist_mbids,
         recording_mbid: recording.recording_mbid,
-        duration: recording.length,
+        duration_ms: recording.length,
         release_mbid: recording.release_mbid,
       },
       mbid_mapping: {
