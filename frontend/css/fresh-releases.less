@@ -487,7 +487,6 @@
 }
 
 .release-filters {
-  top: 6px;
   position: sticky;
   height: min-content;
   max-height: 100vh;
@@ -497,12 +496,13 @@
   @media screen and (max-width: @screen-md) {
     position: fixed;
     top: 0;
-    right: -80%; /* Initially hidden, adjust as needed */
+    right: -80%;
     height: 100%;
-    width: 80%; /* Adjust as needed */
-    background-color: #fff; /* Background color for the sidebar */
-    overflow-y: auto; /* Enable scrolling within the sidebar */
-    box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2); /* Add shadow to the sidebar */
+    width: 80%;
+    max-width: 400px;
+    background-color: #fff;
+    overflow-y: auto;
+    box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
     transition: right 0.3s ease-in-out;
   }
 }
