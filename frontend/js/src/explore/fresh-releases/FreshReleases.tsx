@@ -115,6 +115,13 @@ export default function FreshReleases() {
 
   const releaseCardGridRef = React.useRef(null);
 
+  const availableSortOptions =
+    pageType === PAGE_TYPE_USER
+      ? Object.values(SortOptions).filter(
+          (option) => option !== SortOptions.confidence
+        )
+      : Object.values(SortOptions);
+
   const toggleSettings = (setting: DisplaySettingsPropertiesEnum) => {
     setDisplaySettings({
       ...displaySettings,
@@ -246,20 +253,11 @@ export default function FreshReleases() {
                 value={sort}
                 onChange={(event) => setSort(event.target.value as SortOption)}
               >
-                <option value={SortOptions.releaseDate.value}>
-                  {SortOptions.releaseDate.label}
-                </option>
-                <option value={SortOptions.artist.value}>
-                  {SortOptions.artist.label}
-                </option>
-                <option value={SortOptions.releaseTitle.value}>
-                  {SortOptions.releaseTitle.label}
-                </option>
-                {pageType === PAGE_TYPE_USER ? (
-                  <option value={SortOptions.confidence.value}>
-                    {SortOptions.confidence.label}
+                {availableSortOptions.map((option) => (
+                  <option value={option.value} key={option.value}>
+                    {option.label}
                   </option>
-                ) : null}
+                ))}
               </select>
             </div>
           </div>
@@ -307,11 +305,7 @@ export default function FreshReleases() {
           )}
         </div>
       </div>
-      <div
-        className={`release-filters ${
-          isSidebarOpen ? "open" : ""
-        } col-xs-12 col-md-2`}
-      >
+      <div className={`release-filters ${isSidebarOpen ? "open" : ""}`}>
         <ReleaseFilters
           allFilters={allFilters}
           releases={releases}
