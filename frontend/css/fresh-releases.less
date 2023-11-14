@@ -397,11 +397,11 @@
       }
     }
 
-    @media (min-width: @screen-lg) and (max-width: 1400px) {
+    @media (min-width: @screen-lg) and (max-width: 1600px) {
       grid-template-columns: repeat(4, 1fr);
     }
 
-    @media (min-width: 1400px) {
+    @media (min-width: 1600px) {
       grid-template-columns: repeat(5, 1fr);
       & > .release-card-container {
         & > .lazy-load-image-background .release-coverart {
@@ -422,7 +422,7 @@
 
 // TIMELINE
 .releases-timeline {
-  flex: 1;
+  flex: 0 0;
   display: flex;
   justify-content: center;
   top: 4rem;
@@ -532,7 +532,7 @@
 		flex: 1;
 	}
 	.sidebar {
-		flex: 0 300px;
+		flex: 0 0 250px
 	}
 }
 
