@@ -101,8 +101,6 @@ export default function FreshReleases() {
     isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
 
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);
-
   const [range, setRange] = React.useState<filterRangeOption>("week");
   const [displaySettings, setDisplaySettings] = React.useState<DisplaySettings>(
     initialDisplayState
@@ -127,10 +125,6 @@ export default function FreshReleases() {
       ...displaySettings,
       [setting]: !displaySettings[setting],
     });
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
   };
 
   React.useEffect(() => {
@@ -215,8 +209,8 @@ export default function FreshReleases() {
   }, [pageType, range, showPastReleases, showFutureReleases, sort]);
 
   return (
-    <div className="row">
-      <div className="col-xs-12 col-md-10">
+    <div className="releases-page-container">
+      <div className="releases-page">
         <div
           className="fresh-releases-pill-row"
           style={!isLoggedIn ? { justifyContent: "flex-end" } : {}}
@@ -262,7 +256,7 @@ export default function FreshReleases() {
             </div>
           </div>
         </div>
-        <div className="releases-page row">
+        <div className="row">
           {isLoading ? (
             <div className="spinner-container">
               <Spinner
@@ -305,30 +299,21 @@ export default function FreshReleases() {
           )}
         </div>
       </div>
-      <div className={`release-filters ${isSidebarOpen ? "open" : ""}`}>
-        <ReleaseFilters
-          allFilters={allFilters}
-          releases={releases}
-          setFilteredList={setFilteredList}
-          range={range}
-          handleRangeChange={setRange}
-          displaySettings={displaySettings}
-          toggleSettings={toggleSettings}
-          showPastReleases={showPastReleases}
-          setShowPastReleases={setShowPastReleases}
-          showFutureReleases={showFutureReleases}
-          setShowFutureReleases={setShowFutureReleases}
-          releaseCardGridRef={releaseCardGridRef}
-          pageType={pageType}
-        />
-      </div>
-      <button
-        className={`toggle-sidebar-button ${isSidebarOpen ? "open" : ""}`}
-        onClick={toggleSidebar}
-        type="button"
-      >
-        <FontAwesomeIcon icon={isSidebarOpen ? faXmark : faGear} size="2x" />
-      </button>
+      <ReleaseFilters
+        allFilters={allFilters}
+        releases={releases}
+        setFilteredList={setFilteredList}
+        range={range}
+        handleRangeChange={setRange}
+        displaySettings={displaySettings}
+        toggleSettings={toggleSettings}
+        showPastReleases={showPastReleases}
+        setShowPastReleases={setShowPastReleases}
+        showFutureReleases={showFutureReleases}
+        setShowFutureReleases={setShowFutureReleases}
+        releaseCardGridRef={releaseCardGridRef}
+        pageType={pageType}
+      />
     </div>
   );
 }

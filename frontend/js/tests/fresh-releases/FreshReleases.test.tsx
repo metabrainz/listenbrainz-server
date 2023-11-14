@@ -109,7 +109,7 @@ describe("FreshReleases", () => {
       true,
       "release_date"
     );
-    expect(wrapper.find(".release-filters")).toHaveLength(1);
+    expect(wrapper.find(".sidebar")).toHaveLength(1);
     expect(wrapper.find(".releases-timeline")).toHaveLength(1);
   });
 
