@@ -119,7 +119,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   }, []);
 
   return (
-    <div className="slider-container">
+    <div className="releases-timeline">
       <Slider
         className={screenMd ? "slider-horizontal" : "slider-vertical"}
         vertical={!screenMd}

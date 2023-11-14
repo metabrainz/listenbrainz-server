@@ -418,31 +418,30 @@
     }
   }
 
-  // TIMELINE
-  .releases-timeline {
-    display: flex;
-    justify-content: center;
-    top: 6rem;
-    position: sticky;
-    height: 68vh;
-    padding-bottom: 6rem;
+}
 
-    .slider-container {
-      width: 100%;
+// TIMELINE
+.releases-timeline {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  top: 4rem;
+  position: sticky;
+  padding: 4rem 1rem;
+  // width: 100%;
+  // height: 100%;
+  max-height: calc(100vh - 8em);
 
-      .slider-vertical {
-        height: 100%;
-      }
-    }
-
-    @media (max-width: @screen-md) {
-      height: unset;
-      position: sticky;
-      bottom: 0;
-      padding: 1rem 2rem 4rem;
-      z-index: 50;
-      background-color: @white;
-    }
+  @media (max-width: @screen-md) {
+    height: unset;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    top: calc(100vh - 100px);
+    padding: 1rem 2rem 4rem;
+    z-index: 50;
+    background-color: @white;
+    padding-right: 120px; // sidebar button on the right
   }
 }
 

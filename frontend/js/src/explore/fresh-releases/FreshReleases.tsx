@@ -286,15 +286,12 @@ export default function FreshReleases() {
                 order={sort}
               />
             )}
-
-            {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 ? (
-              <div className="releases-timeline">
-                <ReleaseTimeline releases={filteredList} order={sort} />
-              </div>
-            ) : null}
           </div>
         )}
       </div>
+      {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 && (
+        <ReleaseTimeline releases={filteredList} order={sort} />
+      )}
       <ReleaseFilters
         allFilters={allFilters}
         releases={releases}
