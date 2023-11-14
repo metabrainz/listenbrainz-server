@@ -79,7 +79,7 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
   };
 
   return (
-    <div className="col-xs-12 col-md-11">
+    <>
       {Array.from(releaseMapping?.entries()).map(([releaseKey, releases]) => (
         <React.Fragment key={`${releaseKey}-container`}>
           <div className="release-card-grid-title" key={`${releaseKey}-title`}>
@@ -111,6 +111,6 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
           </div>
         </React.Fragment>
       ))}
-    </div>
+    </>
   );
 }

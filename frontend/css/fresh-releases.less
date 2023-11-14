@@ -199,10 +199,7 @@
   #release-card-grids {
     display: flex;
     justify-content: center;
-
-    @media (max-width: 576px) {
-      flex-direction: column;
-    }
+    flex-direction: column;
   }
 
   .release-cards-grid {
@@ -523,6 +520,21 @@
     font-size: 25px;
     font-weight: 900;
   }
+}
+
+.releases-page-container{
+	display: flex;
+	gap: 1.5em;
+  @media screen and (min-width: @screen-md) {
+    // make the sidebar flush with the right-hand side on larger sizes
+    margin-right: -15px;
+  }
+	.releases-page{
+		flex: 1;
+	}
+	.sidebar {
+		flex: 0 300px;
+	}
 }
 
 .sidebar {

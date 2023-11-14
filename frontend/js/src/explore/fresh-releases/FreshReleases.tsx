@@ -254,48 +254,46 @@ export default function FreshReleases() {
             </div>
           </div>
         </div>
-        <div className="row">
-          {isLoading ? (
-            <div className="spinner-container">
-              <Spinner
-                type="Grid"
-                color="#eb743b"
-                height={100}
-                width={100}
-                visible
-              />
-              <div
-                className="text-muted"
-                style={{ fontSize: "2rem", margin: "1rem" }}
-              >
-                Loading Fresh Releases&#8230;
-              </div>
+        {isLoading ? (
+          <div className="spinner-container">
+            <Spinner
+              type="Grid"
+              color="#eb743b"
+              height={100}
+              width={100}
+              visible
+            />
+            <div
+              className="text-muted"
+              style={{ fontSize: "2rem", margin: "1rem" }}
+            >
+              Loading Fresh Releases&#8230;
             </div>
-          ) : (
-            <div id="release-card-grids" ref={releaseCardGridRef}>
-              {filteredList.length === 0 ? (
-                <div className="no-release">
-                  <img
-                    src="/static/img/recommendations/no-freshness.png"
-                    alt="No Releases Found"
-                  />
-                </div>
-              ) : (
-                <ReleaseCardsGrid
-                  filteredList={filteredList}
-                  displaySettings={displaySettings}
-                  order={sort}
+          </div>
+        ) : (
+          <div id="release-card-grids" ref={releaseCardGridRef}>
+            {filteredList.length === 0 ? (
+              <div className="no-release">
+                <img
+                  src="/static/img/recommendations/no-freshness.png"
+                  alt="No Releases Found"
                 />
-              )}
+              </div>
+            ) : (
+              <ReleaseCardsGrid
+                filteredList={filteredList}
+                displaySettings={displaySettings}
+                order={sort}
+              />
+            )}
 
-              {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 ? (
-                <div className="releases-timeline">
-                  <ReleaseTimeline releases={filteredList} order={sort} />
-                </div>
-              ) : null}
-            </div>
-          )}
-        </div>
+            {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 ? (
+              <div className="releases-timeline">
+                <ReleaseTimeline releases={filteredList} order={sort} />
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
       <ReleaseFilters
         allFilters={allFilters}
