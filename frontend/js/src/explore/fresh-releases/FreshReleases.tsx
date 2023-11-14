@@ -1,12 +1,10 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
+import { createRoot } from "react-dom/client";
 import { Integrations } from "@sentry/tracing";
 import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
-import { faGear, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -333,12 +331,12 @@ document.addEventListener("DOMContentLoaded", () => {
     FreshReleases
   );
 
-  ReactDOM.render(
+  const renderRoot = createRoot(domContainer!);
+  renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <FreshReleasesPageWithAlertNotifications />
       </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
+    </ErrorBoundary>
   );
 });
