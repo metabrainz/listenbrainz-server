@@ -30,7 +30,6 @@ with gather_data as (
             , release
             , track_number
             , duration
-       having count(*) > 1
 ), copy_to_new_table as (
   insert into messybrainz.submissions_unique as msb (gid, recording, artist_credit, release, track_number, duration, submitted)
        select msids[1]
@@ -49,6 +48,7 @@ with gather_data as (
          from gather_data ctnt
  join lateral unnest(msids[2:]) AS duplicate_msid
            on true
+        where length(msids) > 1
   on conflict (duplicate_msid)
    do nothing;
 
