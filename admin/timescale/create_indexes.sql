@@ -50,6 +50,8 @@ CREATE INDEX messybrainz_release_ndx ON messybrainz.submissions (lower(release))
 CREATE INDEX messybrainz_track_number_ndx ON messybrainz.submissions (lower(track_number));
 CREATE INDEX messybrainz_duration_ndx ON messybrainz.submissions (duration);
 
+CREATE UNIQUE INDEX messybrainz_redirect_gid_ndx ON messybrainz.submissions_redirect (duplicate_msid);
+
 CREATE UNIQUE INDEX spotify_cache_album_spotify_id_idx ON spotify_cache.album (album_id);
 CREATE UNIQUE INDEX spotify_cache_artist_spotify_id_idx ON spotify_cache.artist (artist_id);
 CREATE UNIQUE INDEX spotify_cache_track_spotify_id_idx ON spotify_cache.track (track_id);
