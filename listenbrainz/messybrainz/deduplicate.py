@@ -1,5 +1,5 @@
 """
-Utility tool for migrating listens to new schema table. It can be run multiple times.
+Utility tool for deduplicating listens by copying them to a new listen table without modifying existing data. It can be run multiple times.
 """
 import math
 import time
@@ -9,7 +9,7 @@ from sqlalchemy import text
 
 from listenbrainz.db import timescale
 
-LISTEN_MINIMUM_DATE = datetime(2002, 10, 1)
+LISTEN_MINIMUM_DATE = datetime(2002, 10, 1, tzinfo=timezone.utc)
 CHUNK_SIZE = timedelta(days=30)
 MAX_CREATED_WHEN_ENABLED_ON_TEST = datetime(2023, 11, 13, tzinfo=timezone.utc)
 
@@ -22,7 +22,7 @@ def process_created(created: datetime):
                   , created
                   , user_id
                   , coalesce(r.original_msid, l.recording_msid)
-                  , jsonb_set(data, '{additional_info,recording_msid}'::text[], coalesce(r.original_msid, l.recording_msid)::jsonb)
+                  , jsonb_set(data, '{additional_info,recording_msid}'::text[], to_jsonb((coalesce(r.original_msid, l.recording_msid)::text)))
                from listen l
           left join messybrainz.submissions_redirect r
                  on l.recording_msid = r.duplicate_msid
@@ -50,7 +50,7 @@ def process_chunk(chunk_start_dt):
                   , created
                   , user_id
                   , coalesce(r.original_msid, l.recording_msid)
-                  , jsonb_set(data, '{additional_info,recording_msid}'::text[], coalesce(r.original_msid, l.recording_msid)::jsonb)
+                  , jsonb_set(data, '{additional_info,recording_msid}'::text[], to_jsonb((coalesce(r.original_msid, l.recording_msid)::text)))
                from listen l
           left join messybrainz.submissions_redirect r
                  on l.recording_msid = r.duplicate_msid
