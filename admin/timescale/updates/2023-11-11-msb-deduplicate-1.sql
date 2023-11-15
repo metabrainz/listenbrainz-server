@@ -43,13 +43,12 @@ with gather_data as (
          from gather_data gd
   on conflict (gid)
    do nothing
-    returning gd.msids[2:], msb.gid AS original_msid
 ) insert into messybrainz.submissions_redirect (duplicate_msid, original_msid)
        select duplicate_msid
-            , original_msid
-         from copy_to_new_table ctnt
- join lateral unnest(duplicate_msids) AS duplicate_msid
-          on true
+            , msids[1]
+         from gather_data ctnt
+ join lateral unnest(msids[2:]) AS duplicate_msid
+           on true
   on conflict (duplicate_msid)
    do nothing;
 
