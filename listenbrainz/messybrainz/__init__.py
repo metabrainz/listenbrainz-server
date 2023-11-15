@@ -154,7 +154,6 @@ def load_recordings_from_msids(ts_curs, messybrainz_ids: Iterable[str]) -> dict[
                 ON msid::uuid = duplicate_msid
         )
             SELECT msid
-                 , recording_msid::TEXT AS deduplicated_msid
                  , recording AS title
                  , artist_credit AS artist
                  , release
