@@ -146,15 +146,23 @@ def load_recordings_from_msids(ts_curs, messybrainz_ids: Iterable[str]) -> dict[
         return {}
 
     query = """
-        SELECT gid::TEXT AS msid
-             , recording AS title
-             , artist_credit AS artist
-             , release
-             , track_number
-             , duration
-          FROM (VALUES %s) AS t (msid)
-          JOIN messybrainz.submissions s
-            ON s.gid = t.msid::UUID
+        WITH resolve_redirects AS (
+            SELECT msid
+                 , COALESCE(original_msid, msid::uuid) AS recording_msid
+              FROM (VALUES %s) AS t(msid)
+         LEFT JOIN messybrainz.submissions_redirect
+                ON msid::uuid = duplicate_msid
+        )
+            SELECT msid
+                 , recording_msid::TEXT AS deduplicated_msid
+                 , recording AS title
+                 , artist_credit AS artist
+                 , release
+                 , track_number
+                 , duration
+              FROM resolve_redirects
+              JOIN messybrainz.submissions
+                ON gid = recording_msid
     """
     results = execute_values(ts_curs, query, [(msid,) for msid in messybrainz_ids], fetch=True)
     return {row["msid"]: dict(row) for row in results}
