@@ -48,7 +48,7 @@ with gather_data as (
          from gather_data ctnt
  join lateral unnest(msids[2:]) AS duplicate_msid
            on true
-        where array_length(msids) > 1
+        where array_length(msids, 1) > 1
   on conflict (duplicate_msid)
    do nothing;
 
