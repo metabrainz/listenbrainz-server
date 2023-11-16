@@ -205,12 +205,12 @@
   .release-cards-grid {
     display: grid;
     justify-items: center;
-    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(190px, max-content));
 
     .release-card-container {
       display: flex;
       flex-direction: column;
-      padding: 1rem;
 
       .release-item {
         position: relative;
@@ -349,73 +349,6 @@
       }
     }
 
-    @media (max-width: 576px) {
-      grid-template-columns: repeat(2, 1fr);
-      & > .release-card-container {
-        & > .lazy-load-image-background .release-coverart {
-          width: 11em;
-          height: 11em;
-        }
-        & > .name-type-container {
-          width: 11em;
-        }
-        & > .release-artist {
-          width: 11em;
-        }
-      }
-    }
-
-    @media (min-width: 576px) and (max-width: @screen-md) {
-      grid-template-columns: repeat(3, 1fr);
-      & > .release-card-container {
-        & > .lazy-load-image-background .release-coverart {
-          width: 11.75em;
-          height: 11.75em;
-        }
-        & > .name-type-container {
-          width: 11.75em;
-        }
-        & > .release-artist {
-          width: 11.75em;
-        }
-      }
-    }
-
-    @media (min-width: @screen-md) and (max-width: @screen-lg) {
-      grid-template-columns: repeat(3, 1fr);
-      & > .release-card-container {
-        & > .lazy-load-image-background .release-coverart {
-          width: 12em;
-          height: 12em;
-        }
-        & > .name-type-container {
-          width: 12em;
-        }
-        & > .release-artist {
-          width: 12em;
-        }
-      }
-    }
-
-    @media (min-width: @screen-lg) and (max-width: 1600px) {
-      grid-template-columns: repeat(4, 1fr);
-    }
-
-    @media (min-width: 1600px) {
-      grid-template-columns: repeat(5, 1fr);
-      & > .release-card-container {
-        & > .lazy-load-image-background .release-coverart {
-          width: 11em;
-          height: 11em;
-        }
-        & > .name-type-container {
-          width: 11em;
-        }
-        & > .release-artist {
-          width: 11em;
-        }
-      }
-    }
   }
 
 }
@@ -539,7 +472,7 @@
 .sidebar {
   position: sticky;
 	top: 0;
-	height: 100vh;
+	height: max-content;
 	max-height: 100vh;
 	overflow-y: scroll;
 	z-index: 9998;
