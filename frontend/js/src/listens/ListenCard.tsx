@@ -433,6 +433,7 @@ export default class ListenCard extends React.Component<
         }${additionalContent ? " has-additional-content" : " "} ${
           className || ""
         }`}
+        data-testid="listen"
       >
         <div className="main-content">
           {beforeThumbnailContent}
