@@ -348,9 +348,7 @@
         }
       }
     }
-
   }
-
 }
 
 // TIMELINE
@@ -454,29 +452,29 @@
   }
 }
 
-.releases-page-container{
-	display: flex;
-	gap: 1.5em;
+.releases-page-container {
+  display: flex;
+  gap: 1.5em;
   @media screen and (min-width: @screen-md) {
     // make the sidebar flush with the right-hand side on larger sizes
     margin-right: -15px;
   }
-	.releases-page{
-		flex: 1;
-	}
-	.sidebar {
-		flex: 0 0 250px
-	}
+  .releases-page {
+    flex: 1;
+  }
+  .sidebar {
+    flex: 0 0 250px;
+  }
 }
 
 .sidebar {
   position: sticky;
-	top: 0;
-	height: max-content;
-	max-height: 100vh;
-	overflow-y: scroll;
-	z-index: 9998;
-	right: 0;
+  top: 0;
+  height: max-content;
+  max-height: 100vh;
+  overflow-y: scroll;
+  z-index: 9998;
+  right: 0;
 
   @media screen and (max-width: @screen-md) {
     position: fixed;
@@ -490,10 +488,10 @@
     box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
     transition: right 0.3s ease-in-out;
     &.open {
-        right: 0;
+      right: 0;
     }
   }
-  
+
   .release-tags {
     display: flex;
     flex-wrap: wrap;
