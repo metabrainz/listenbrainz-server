@@ -74,14 +74,15 @@ export const filterRangeOptions = {
   },
 } as const;
 
+export const PAGE_TYPE_USER: string = "user";
+export const PAGE_TYPE_SITEWIDE: string = "sitewide";
+
 export type filterRangeOption = keyof typeof filterRangeOptions;
 
 export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
-  const PAGE_TYPE_USER: string = "user";
-  const PAGE_TYPE_SITEWIDE: string = "sitewide";
 
   const [releases, setReleases] = React.useState<Array<FreshReleaseItem>>([]);
   const [filteredList, setFilteredList] = React.useState<
@@ -112,7 +113,7 @@ export default function FreshReleases() {
   const releaseCardGridRef = React.useRef(null);
 
   const availableSortOptions =
-    pageType === PAGE_TYPE_USER
+    pageType === PAGE_TYPE_SITEWIDE
       ? Object.values(SortOptions).filter(
           (option) => option !== SortOptions.confidence
         )
@@ -182,6 +183,7 @@ export default function FreshReleases() {
         });
 
         const releaseTags = Array.from(uniqueReleaseTagsSet);
+        releaseTags.sort();
 
         setReleases(cleanReleases);
         setFilteredList(cleanReleases);

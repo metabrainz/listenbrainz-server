@@ -13,7 +13,7 @@ import type {
   DisplaySettings,
   filterRangeOption,
 } from "./FreshReleases";
-import { filterRangeOptions } from "./FreshReleases";
+import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "./FreshReleases";
 
 type ReleaseFiltersProps = {
   allFilters: {
@@ -144,6 +144,13 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     0
   );
 
+  const availableRangeOptions =
+    pageType === PAGE_TYPE_SITEWIDE
+      ? Object.values(filterRangeOptions).filter(
+          (option) => option !== filterRangeOptions.three_months
+        )
+      : Object.values(filterRangeOptions);
+
   React.useEffect(() => {
     setCoverartOnly(false);
     setCheckedList([]);
@@ -220,15 +227,11 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                   value={range}
                   onChange={handleRangeDropdown}
                 >
-                  <option value={filterRangeOptions.week.key}>
-                    {filterRangeOptions.week.label}
-                  </option>
-                  <option value={filterRangeOptions.month.key}>
-                    {filterRangeOptions.month.label}
-                  </option>
-                  <option value={filterRangeOptions.three_months.key}>
-                    {filterRangeOptions.three_months.label}
-                  </option>
+                  {availableRangeOptions.map((option) => (
+                    <option value={option.key} key={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <Switch
@@ -271,7 +274,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                     onChange={handleIncludeTagChange}
                   >
                     <option value="" disabled>
-                      genre/tag...
+                      selection genre/tag...
                     </option>
                     {allFilters.releaseTags
                       ?.filter((tag) => !releaseTagsCheckList.includes(tag))
@@ -302,7 +305,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                     onChange={handleExcludeTagChange}
                   >
                     <option value="" disabled>
-                      genre/tag...
+                      selection genre/tag...
                     </option>
                     {allFilters.releaseTags
                       ?.filter(

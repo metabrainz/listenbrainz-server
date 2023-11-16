@@ -54,9 +54,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
 
-  const [coverartSrc, setCoverartSrc] = React.useState<string>(
-    COVERART_PLACEHOLDER
-  );
+  const [coverartSrc, setCoverartSrc] = React.useState<string>();
 
   function releaseTypeTooltip(): string | undefined | null {
     if (
@@ -82,6 +80,13 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
     return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
   }
+
+  const releaseCoverArtIcon = (
+    <FontAwesomeIcon icon={futureRelease ? faHourglass : faPlay} />
+  );
+  const coverArtPlaceholder = (
+    <div className="release-coverart-placeholder">{releaseCoverArtIcon}</div>
+  );
 
   React.useEffect(() => {
     async function getCoverArt() {
@@ -145,15 +150,21 @@ export default function ReleaseCard(props: ReleaseCardProps) {
           rel="noopener noreferrer"
           className="release-coverart-container"
         >
-          <LazyLoadImage
-            className="release-coverart"
-            src={coverartSrc}
-            alt={`${releaseName} by ${artistCreditName}`}
-            placeholderSrc={COVERART_PLACEHOLDER}
-          />
-          <div className="hover-backdrop">
-            <FontAwesomeIcon icon={futureRelease ? faHourglass : faPlay} />
-          </div>
+          {coverartSrc ? (
+            <>
+              <LazyLoadImage
+                className="release-coverart"
+                src={coverartSrc}
+                alt={`${releaseName} by ${artistCreditName}`}
+                placeholder={coverArtPlaceholder}
+              />
+              <div className="hover-backdrop">{releaseCoverArtIcon}</div>
+            </>
+          ) : (
+            <div className="release-coverart release-coverart-placeholder">
+              {releaseCoverArtIcon}
+            </div>
+          )}
         </a>
       </div>
       {showReleaseTitle && (
