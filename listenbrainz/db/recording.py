@@ -144,6 +144,7 @@ def load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids):
                 "release_mbid": data["release_mbid"],
                 "caa_id": data["caa_id"],
                 "caa_release_mbid": data["caa_release_mbid"],
+                "artists": data["artists"],
                 "original_recording_mbid": mbid,
                 "canonical_recording_mbid": canonical_index.get(redirected_mbid, redirected_mbid)
             }
@@ -157,6 +158,9 @@ def load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids):
                 '[artist_credit_mbids]': None,
                 'release_name': None,
                 'release_mbid': None,
+                'caa_id': None,
+                'caa_release_mbid': None,
+                'artists': [],
                 'canonical_recording_mbid': None,
                 'original_recording_mbid': mbid
             }
