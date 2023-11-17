@@ -621,6 +621,7 @@ export default class Listens extends React.Component<
       additionalMenuItems.push(
         <ListenControl
           text="Delete Listen"
+          key="Delete Listen"
           icon={faTrashAlt}
           action={this.deleteListen.bind(this, listen)}
         />
