@@ -234,7 +234,7 @@ export default NiceModal.create(() => {
                           }
                           maxDate={new Date()}
                           clearIcon={null}
-                          format="dd/MM/yyyy h:mm:ss a"
+                          format="yyyy-MM-dd h:mm:ss a"
                           disabled={!customTimestamp}
                         />
                       </div>

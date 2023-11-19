@@ -891,7 +891,7 @@ export default class Listens extends React.Component<
                       calendarIcon={
                         <FontAwesomeIcon icon={faCalendar as IconProp} />
                       }
-                      format="dd/MM/yyyy"
+                      format="yyyy-MM-dd"
                       disableClock
                     />
                   </li>
