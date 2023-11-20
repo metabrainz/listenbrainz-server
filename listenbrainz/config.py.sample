@@ -140,6 +140,7 @@ API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8101/'
 SERVER_ROOT_URL = 'http://localhost:8100'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
+WEBSOCKETS_SERVER_URL = 'http://localhost:8102'
 
 # Flask Debug redirect
 # Set to True if you want Flask-Debug to intercept redirects
