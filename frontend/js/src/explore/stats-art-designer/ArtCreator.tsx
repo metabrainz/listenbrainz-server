@@ -229,32 +229,44 @@ function ArtCreator() {
     try {
       const { current: svgElement } = previewSVGRef;
       const { outerHTML } = svgElement;
-      const svgBlobPromise = svgToBlob(
-        DEFAULT_IMAGE_SIZE,
-        DEFAULT_IMAGE_SIZE,
-        outerHTML,
-        "image/png"
-      );
-      let data: ClipboardItems;
-      if ("ClipboardItem" in navigator) {
-        data = [new ClipboardItem({ "image/png": await svgBlobPromise })];
-      } else {
-        // For browers with no support for ClipboardItem
-        throw new Error(
-          "ClipboardItem is not available. User may be on FireFox with asyncClipboard.clipboardItem disabled"
-        );
+      if (!navigator.clipboard) {
+        throw new Error("No clipboard functionality detected for this browser");
       }
-      // Safari browsers require that we await our promise directly in the ClipboardItem call
-      // rather than await the clipboard() function call
-      // https://stackoverflow.com/questions/66312944/javascript-clipboard-api-write-does-not-work-in-safari*/
-      navigator.clipboard
-        .write(data)
-        .then(() => {
-          toast.success("Copied image to clipboard");
-        })
-        .catch((err) => {
-          throw err;
-        });
+      if ("write" in navigator.clipboard) {
+        const svgBlobPromise = svgToBlob(
+          DEFAULT_IMAGE_SIZE,
+          DEFAULT_IMAGE_SIZE,
+          outerHTML,
+          "image/png"
+        );
+        let data: ClipboardItems;
+        if ("ClipboardItem" in window) {
+          data = [new ClipboardItem({ "image/png": await svgBlobPromise })];
+        } else {
+          // For browers with no support for ClipboardItem
+          throw new Error(
+            "ClipboardItem is not available. User may be on FireFox with asyncClipboard.clipboardItem disabled"
+          );
+        }
+        // Safari browsers require that we await our promise directly in the ClipboardItem call
+        // rather than await the clipboard() function call
+        // https://stackoverflow.com/questions/66312944/javascript-clipboard-api-write-does-not-work-in-safari*/
+        navigator.clipboard
+          .write(data)
+          .then(() => {
+            toast.success("Copied image to clipboard");
+          })
+          .catch((err) => {
+            throw err;
+          });
+        return;
+      }
+      if ("writeText" in navigator.clipboard) {
+        // We can't copy the image directly, but we can fall back to writing the SVG source string to the clipboard
+        await (navigator.clipboard as Clipboard).writeText(outerHTML);
+        toast.success("Copied image SVG to clipboard");
+        return;
+      }
     } catch (error) {
       toast.error(
         <ToastMsg
