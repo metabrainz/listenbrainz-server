@@ -182,7 +182,7 @@ YOUTUBE_API_KEY = 'change me'
 # See https://stackoverflow.com/a/33790196 for more details.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-TESTING = True # this flag is used by the mail module to check if mails need to be sent or not
+TESTING = False # this flag is used by the mail module to check if mails need to be sent or not
 
 # Mail server
 SMTP_SERVER = 'listenbrainz-mail'

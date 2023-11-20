@@ -59,6 +59,7 @@ def init_db(force, create_db):
         db_connect = db.create_test_database_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT_ADMIN"])
     else:
+        db_connect = {"DB_NAME": "listenbrainz", "DB_USER": "listenbrainz"}
         db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
         res = db.run_sql_query_without_transaction(
@@ -135,6 +136,7 @@ def init_ts_db(force, create_db):
         ts_connect = ts.create_test_timescale_connect_strings()
         ts.init_db_connection(ts_connect["DB_CONNECT_ADMIN"])
     else:
+        ts_connect = {"DB_NAME": "listenbrainz_ts", "DB_USER": "listenbrainz_ts"}
         ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
     if force:
         res = ts.run_sql_query_without_transaction(
