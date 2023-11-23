@@ -142,6 +142,7 @@ export default class PinnedRecordingCard extends React.Component<
     if (currentlyPinned) {
       additionalMenuItems.push(
         <ListenControl
+          key="Unpin"
           title="Unpin"
           text="Unpin"
           action={() => this.unpinRecording()}
@@ -150,6 +151,7 @@ export default class PinnedRecordingCard extends React.Component<
     }
     additionalMenuItems.push(
       <ListenControl
+        key="Delete Pin"
         title="Delete Pin"
         text="Delete Pin"
         action={() => this.deletePin(pinnedRecording)}
