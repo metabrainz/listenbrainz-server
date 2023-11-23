@@ -1,3 +1,4 @@
+import { cloneDeep, has } from "lodash";
 import { getArtistName, getRecordingMBID, getTrackName } from "../utils/utils";
 
 export const MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION =
@@ -129,4 +130,20 @@ export function listenToJSPFTrack(listen: Listen): JSPFTrack {
       ? [listen.track_metadata?.additional_info?.origin_url]
       : undefined,
   };
+}
+
+export function listenOrJSPFTrackToQueueItem(
+  track: Listen | JSPFTrack
+): BrainzPlayerQueueItem {
+  let listenTrack: Listen;
+  if (has(track, "title")) {
+    listenTrack = JSPFTrackToListen(track as JSPFTrack);
+  } else {
+    listenTrack = cloneDeep(track as BrainzPlayerQueueItem);
+  }
+  const queueItem = {
+    ...listenTrack,
+    id: `${listenTrack.track_metadata.track_name} - ${Date.now().toString()}`,
+  };
+  return queueItem;
 }

@@ -1,4 +1,5 @@
 import {
+  faBarsStaggered,
   faFastBackward,
   faFastForward,
   faHeart,
@@ -18,6 +19,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
 import MenuOptions from "./MenuOptions";
 import ProgressBar from "./ProgressBar";
+import Queue from "./Queue";
 
 type BrainzPlayerUIProps = {
   currentDataSourceName?: string;
@@ -34,6 +36,11 @@ type BrainzPlayerUIProps = {
   seekToPositionMs: (msTimeCode: number) => void;
   currentListen?: Listen | JSPFTrack;
   listenBrainzAPIBaseURI: string;
+  queue: BrainzPlayerQueue;
+  removeTrackFromQueue: (track: BrainzPlayerQueueItem) => void;
+  moveQueueItem: (evt: any) => void;
+  setQueue: (queue: BrainzPlayerQueue) => void;
+  clearQueue: () => void;
 };
 
 type PlaybackControlButtonProps = {
@@ -70,6 +77,8 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   } = props;
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const { currentUser } = React.useContext(GlobalAppContext);
+  const [showQueue, setShowQueue] = React.useState(false);
+
   // const { currentListenFeedback } = this.state;
   React.useEffect(() => {
     async function getFeedback() {
@@ -158,102 +167,123 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     togglePlay,
     playNextTrack,
     seekToPositionMs,
+    queue,
+    removeTrackFromQueue,
+    moveQueueItem,
+    setQueue,
+    clearQueue,
   } = props;
 
   const isPlayingATrack = Boolean(currentListen);
 
   return (
-    <div id="brainz-player" aria-label="Playback control">
-      <ProgressBar
-        progressMs={progressMs}
-        durationMs={durationMs}
-        seekToPositionMs={seekToPositionMs}
-      />
-      <div className="content">
-        <div className="cover-art">
-          <div className="no-album-art" />
-          {dataSources}
-        </div>
-        <div className={isPlayingATrack ? "currently-playing" : ""}>
-          {trackName && (
-            <div title={trackName} className="ellipsis-2-lines">
-              {trackName}
+    <>
+      {showQueue && (
+        <Queue
+          queue={queue}
+          removeTrackFromQueue={removeTrackFromQueue}
+          moveQueueItem={moveQueueItem}
+          setQueue={setQueue}
+          clearQueue={clearQueue}
+          currentListen={currentListen}
+        />
+      )}
+
+      <div id="brainz-player" aria-label="Playback control">
+        <ProgressBar
+          progressMs={progressMs}
+          durationMs={durationMs}
+          seekToPositionMs={seekToPositionMs}
+        />
+        <div className="content">
+          <div className="cover-art">
+            <div className="no-album-art" />
+            {dataSources}
+          </div>
+          <div className={isPlayingATrack ? "currently-playing" : ""}>
+            {trackName && (
+              <div title={trackName} className="ellipsis-2-lines">
+                {trackName}
+              </div>
+            )}
+            {artistName && (
+              <span className="small text-muted ellipsis" title={artistName}>
+                {artistName}
+              </span>
+            )}
+          </div>
+          {isPlayingATrack && (
+            <div className="elapsed small text-muted">
+              {millisecondsToStr(progressMs)}&#8239;/&#8239;
+              {millisecondsToStr(durationMs)}
             </div>
           )}
-          {artistName && (
-            <span className="small text-muted ellipsis" title={artistName}>
-              {artistName}
-            </span>
-          )}
         </div>
-        {isPlayingATrack && (
-          <div className="elapsed small text-muted">
-            {millisecondsToStr(progressMs)}&#8239;/&#8239;
-            {millisecondsToStr(durationMs)}
-          </div>
-        )}
+        <div className="controls">
+          <PlaybackControlButton
+            className="previous"
+            title="Previous"
+            action={playPreviousTrack}
+            icon={faFastBackward}
+          />
+          <PlaybackControlButton
+            className="play"
+            action={togglePlay}
+            title={`${playerPaused ? "Play" : "Pause"}`}
+            icon={playerPaused ? faPlayCircle : faPauseCircle}
+            size="2x"
+          />
+          <PlaybackControlButton
+            className="next"
+            action={playNextTrack}
+            title="Next"
+            icon={faFastForward}
+          />
+        </div>
+        <div className="actions">
+          {isPlayingATrack && currentDataSourceName && (
+            <a
+              href={trackUrl || "#"}
+              aria-label={`Open in ${currentDataSourceName}`}
+              title={`Open in ${currentDataSourceName}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FontAwesomeIcon icon={currentDataSourceIcon!} />
+            </a>
+          )}
+          <FontAwesomeIcon
+            icon={faBarsStaggered}
+            onClick={() => setShowQueue(!showQueue)}
+          />
+          <FontAwesomeIcon
+            icon={faHeart}
+            title="Love"
+            onClick={
+              isPlayingATrack
+                ? () => submitFeedback(currentListenFeedback === 1 ? 0 : 1)
+                : undefined
+            }
+            className={`${currentListenFeedback === 1 ? " loved" : ""}${
+              !isPlayingATrack ? " disabled" : ""
+            }`}
+          />
+          <FontAwesomeIcon
+            icon={faHeartCrack}
+            title="Hate"
+            onClick={
+              isPlayingATrack
+                ? () => submitFeedback(currentListenFeedback === -1 ? 0 : -1)
+                : undefined
+            }
+            className={`${currentListenFeedback === -1 ? " hated" : ""}${
+              !isPlayingATrack ? " disabled" : ""
+            }`}
+          />
+          <MenuOptions currentListen={currentListen} />
+        </div>
       </div>
-      <div className="controls">
-        <PlaybackControlButton
-          className="previous"
-          title="Previous"
-          action={playPreviousTrack}
-          icon={faFastBackward}
-        />
-        <PlaybackControlButton
-          className="play"
-          action={togglePlay}
-          title={`${playerPaused ? "Play" : "Pause"}`}
-          icon={playerPaused ? faPlayCircle : faPauseCircle}
-          size="2x"
-        />
-        <PlaybackControlButton
-          className="next"
-          action={playNextTrack}
-          title="Next"
-          icon={faFastForward}
-        />
-      </div>
-      <div className="actions">
-        {isPlayingATrack && currentDataSourceName && (
-          <a
-            href={trackUrl || "#"}
-            aria-label={`Open in ${currentDataSourceName}`}
-            title={`Open in ${currentDataSourceName}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FontAwesomeIcon icon={currentDataSourceIcon!} />
-          </a>
-        )}
-        <FontAwesomeIcon
-          icon={faHeart}
-          title="Love"
-          onClick={
-            isPlayingATrack
-              ? () => submitFeedback(currentListenFeedback === 1 ? 0 : 1)
-              : undefined
-          }
-          className={`${currentListenFeedback === 1 ? " loved" : ""}${
-            !isPlayingATrack ? " disabled" : ""
-          }`}
-        />
-        <FontAwesomeIcon
-          icon={faHeartCrack}
-          title="Hate"
-          onClick={
-            isPlayingATrack
-              ? () => submitFeedback(currentListenFeedback === -1 ? 0 : -1)
-              : undefined
-          }
-          className={`${currentListenFeedback === -1 ? " hated" : ""}${
-            !isPlayingATrack ? " disabled" : ""
-          }`}
-        />
-        <MenuOptions currentListen={currentListen} />
-        {/* <FontAwesomeIcon icon={faCog} /> */}
-      </div>
-    </div>
+    </>
   );
 }
 

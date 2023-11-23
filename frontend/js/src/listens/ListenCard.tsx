@@ -116,9 +116,12 @@ export default class ListenCard extends React.Component<
     oldProps: ListenCardProps,
     oldState: ListenCardState
   ) {
-    const { listen: oldListen } = oldState;
-    const { customThumbnail } = this.props;
-    const { listen } = this.state;
+    const { listen: oldListen } = oldProps;
+    const { customThumbnail, listen } = this.props;
+
+    if (Boolean(listen) && !isEqual(listen, oldListen)) {
+      this.setState({ listen });
+    }
     if (!customThumbnail && Boolean(listen) && !isEqual(listen, oldListen)) {
       await this.getCoverArt();
     }
@@ -155,6 +158,28 @@ export default class ListenCard extends React.Component<
       { brainzplayer_event: "play-listen", payload: listen },
       window.location.origin
     );
+  };
+
+  addToQueue = (addToTop: boolean) => {
+    const { listen } = this.state;
+    window.postMessage(
+      {
+        brainzplayer_event: "add-track-to-queue",
+        payload: {
+          track: listen,
+          addToTop,
+        },
+      },
+      window.location.origin
+    );
+  };
+
+  addToTopOfQueue = () => {
+    this.addToQueue(true);
+  };
+
+  addToBottomOfQueue = () => {
+    this.addToQueue(false);
   };
 
   /** React to events sent by BrainzPlayer */
@@ -508,6 +533,18 @@ export default class ListenCard extends React.Component<
                         }}
                       />
                     )}
+                    <ListenControl
+                      text="Play Next"
+                      icon={faPlay}
+                      title="Play Next"
+                      action={this.addToTopOfQueue}
+                    />
+                    <ListenControl
+                      text="Add to Queue"
+                      icon={faPlusCircle}
+                      title="Add to Queue"
+                      action={this.addToBottomOfQueue}
+                    />
                     {spotifyURL && (
                       <ListenControl
                         icon={faSpotify}

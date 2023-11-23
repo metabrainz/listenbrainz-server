@@ -10,6 +10,7 @@ import {
   assign,
   cloneDeep,
   debounce,
+  findIndex,
   omit,
 } from "lodash";
 import * as React from "react";
@@ -29,6 +30,7 @@ import BrainzPlayerUI from "./BrainzPlayerUI";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
+import { listenOrJSPFTrackToQueueItem } from "../playlists/utils";
 
 export type DataSourceType = {
   name: string;
@@ -67,6 +69,7 @@ export type DataSourceProps = {
 };
 
 export type BrainzPlayerProps = {
+  // eslint-disable-next-line react/no-unused-prop-types
   listens: Array<Listen | JSPFTrack>;
   refreshSpotifyToken: () => Promise<string>;
   refreshYoutubeToken: () => Promise<string>;
@@ -88,6 +91,7 @@ export type BrainzPlayerState = {
   updateTime: number;
   listenSubmitted: boolean;
   continuousPlaybackTime: number;
+  queue: BrainzPlayerQueue;
 };
 
 /**
@@ -165,6 +169,7 @@ export default class BrainzPlayer extends React.Component<
       continuousPlaybackTime: 0,
       isActivated: false,
       listenSubmitted: false,
+      queue: [],
     };
 
     this.mediaSessionHandlers = [
@@ -195,6 +200,7 @@ export default class BrainzPlayer extends React.Component<
     }
   }
 
+  // eslint-disable-next-line react/sort-comp
   componentWillUnMount = () => {
     window.removeEventListener("storage", this.onLocalStorageEvent);
     window.removeEventListener("message", this.receiveBrainzPlayerMessage);
@@ -223,10 +229,13 @@ export default class BrainzPlayer extends React.Component<
     const { brainzplayer_event, payload } = event.data;
     switch (brainzplayer_event) {
       case "play-listen":
-        this.playListen(payload);
+        this.playListenEventHandler(payload);
         break;
       case "force-play":
         this.togglePlay();
+        break;
+      case "add-track-to-queue":
+        this.addTrackToQueue(payload?.track, payload?.playNext);
         break;
       default:
       // do nothing
@@ -280,7 +289,7 @@ export default class BrainzPlayer extends React.Component<
   };
 
   playNextTrack = (invert: boolean = false): void => {
-    const { listens } = this.props;
+    const { queue } = this.state;
     const { isActivated } = this.state;
 
     if (!isActivated) {
@@ -289,7 +298,7 @@ export default class BrainzPlayer extends React.Component<
     }
     this.debouncedCheckProgressAndSubmitListen.flush();
 
-    if (listens.length === 0) {
+    if (queue.length === 0) {
       this.handleWarning(
         "You can try loading listens or refreshing the page",
         "No listens to play"
@@ -297,7 +306,7 @@ export default class BrainzPlayer extends React.Component<
       return;
     }
 
-    const currentListenIndex = listens.findIndex(this.isCurrentlyPlaying);
+    const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying);
 
     let nextListenIndex;
     if (currentListenIndex === -1) {
@@ -311,7 +320,7 @@ export default class BrainzPlayer extends React.Component<
       nextListenIndex = currentListenIndex + 1;
     }
 
-    const nextListen = listens[nextListenIndex];
+    const nextListen = queue[nextListenIndex];
     if (!nextListen) {
       this.handleWarning(
         "You can try loading more listens or refreshing the page",
@@ -320,7 +329,7 @@ export default class BrainzPlayer extends React.Component<
       this.reinitializeWindowTitle();
       return;
     }
-    this.playListen(nextListen);
+    this.playListen(nextListen, 0, true);
   };
 
   handleError = (error: BrainzPlayerError, title: string): void => {
@@ -378,13 +387,29 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ isActivated: true }, this.playNextTrack);
   };
 
+  playListenEventHandler(listen: Listen | JSPFTrack) {
+    const newTrack = this.addTrackToQueue(listen);
+    this.playListen(newTrack, 0, true);
+  }
+
   playListen = (
     listen: Listen | JSPFTrack,
-    datasourceIndex: number = 0
+    datasourceIndex: number = 0,
+    playedFromQueue: boolean = false
   ): void => {
+    const { queue } = this.state;
+
+    let newTrack;
+    if (!playedFromQueue) {
+      newTrack = this.addTrackToQueue(listen);
+    } else {
+      const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying);
+      newTrack = queue[currentListenIndex + 1];
+    }
+
     this.setState({
       isActivated: true,
-      currentListen: listen,
+      currentListen: newTrack,
       listenSubmitted: false,
       continuousPlaybackTime: 0,
     });
@@ -421,7 +446,7 @@ export default class BrainzPlayer extends React.Component<
       !isListenFromDatasource(listen, datasource) &&
       !datasource.canSearchAndPlayTracks()
     ) {
-      this.playListen(listen, datasourceIndex + 1);
+      this.playListen(listen, datasourceIndex + 1, playedFromQueue);
       return;
     }
     this.stopOtherBrainzPlayers();
@@ -494,7 +519,7 @@ export default class BrainzPlayer extends React.Component<
 
     if (currentListen && currentDataSourceIndex < this.dataSources.length - 1) {
       // Try playing the listen with the next dataSource
-      this.playListen(currentListen, currentDataSourceIndex + 1);
+      this.playListen(currentListen, currentDataSourceIndex + 1, true);
     } else {
       this.stopPlayerStateTimer();
       this.playNextTrack();
@@ -787,6 +812,60 @@ export default class BrainzPlayer extends React.Component<
     this.playerStateTimerID = undefined;
   };
 
+  addTrackToQueue = (
+    track: Listen | JSPFTrack,
+    addToTopOfQueue: boolean = false
+  ): BrainzPlayerQueueItem => {
+    const { queue } = this.state;
+    const newTrack = listenOrJSPFTrackToQueueItem(track);
+
+    if (addToTopOfQueue) {
+      const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying);
+      const insertionIndex =
+        currentListenIndex === -1 ? 0 : currentListenIndex + 1;
+
+      const updatedQueue = [...queue];
+      updatedQueue.splice(insertionIndex, 0, newTrack);
+
+      this.setQueue(updatedQueue);
+    } else {
+      this.setQueue([...queue, newTrack]);
+    }
+
+    return newTrack;
+  };
+
+  clearQueue = (): void => {
+    // If a song is playing, keep it in the queue, and clear the songs after it
+    // Otherwise, clear the whole queue
+    const { queue } = this.state;
+    const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying);
+    const updatedQueue =
+      currentListenIndex === -1 ? [] : queue.slice(0, currentListenIndex + 1);
+    this.setQueue(updatedQueue);
+  };
+
+  removeTrackFromQueue = (trackToDelete: BrainzPlayerQueueItem): void => {
+    const { queue } = this.state;
+    const trackIndex = findIndex(queue, trackToDelete);
+    queue.splice(trackIndex, 1);
+    this.setState({ queue: [...queue] });
+  };
+
+  moveQueueItem = async (evt: any) => {
+    const { queue } = this.state;
+    const newQueue = [...queue];
+    const toMove = newQueue[evt.newIndex];
+    newQueue[evt.newIndex] = newQueue[evt.oldIndex];
+    newQueue[evt.oldIndex] = toMove;
+
+    this.setState({ queue: newQueue });
+  };
+
+  setQueue = (queue: BrainzPlayerQueue) => {
+    this.setState({ queue });
+  };
+
   render() {
     const {
       currentDataSourceIndex,
@@ -798,6 +877,7 @@ export default class BrainzPlayer extends React.Component<
       durationMs,
       isActivated,
       currentListen,
+      queue,
     } = this.state;
     const {
       refreshSpotifyToken,
@@ -830,6 +910,11 @@ export default class BrainzPlayer extends React.Component<
           currentDataSourceName={
             this.dataSources[currentDataSourceIndex]?.current?.name
           }
+          queue={queue}
+          removeTrackFromQueue={this.removeTrackFromQueue}
+          moveQueueItem={this.moveQueueItem}
+          setQueue={this.setQueue}
+          clearQueue={this.clearQueue}
         >
           <SpotifyPlayer
             show={
