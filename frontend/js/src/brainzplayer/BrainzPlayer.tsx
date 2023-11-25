@@ -100,7 +100,7 @@ export type BrainzPlayerProps = {
 };
 
 export type BrainzPlayerState = {
-  currentListen?: Listen | JSPFTrack;
+  currentListen?: BrainzPlayerQueueItem;
   currentDataSourceIndex: number;
   currentTrackName: string;
   currentTrackArtist?: string;
@@ -227,12 +227,15 @@ export default class BrainzPlayer extends React.Component<
     const savedQueue = localStorage.getItem("BrainzPlayer_queue");
     if (savedQueue) {
       try {
-        const { userId, queue, queueRepeatMode } = JSON.parse(savedQueue);
+        const { userId, queue, queueRepeatMode, currentListen } = JSON.parse(
+          savedQueue
+        );
         const { currentUser } = this.context;
         if (userId === currentUser?.id) {
           this.setState({
             queue,
             queueRepeatMode,
+            currentListen,
           });
         }
       } catch (e) {
@@ -302,12 +305,15 @@ export default class BrainzPlayer extends React.Component<
     }
 
     if (event.key === "BrainzPlayer_queue") {
-      const { userId, queue, queueRepeatMode } = JSON.parse(event.newValue!);
+      const { userId, queue, queueRepeatMode, currentListen } = JSON.parse(
+        event.newValue!
+      );
       const { currentUser } = this.context;
       if (userId === currentUser?.id) {
         this.setState({
           queue,
           queueRepeatMode,
+          currentListen,
         });
       }
     }
@@ -335,7 +341,7 @@ export default class BrainzPlayer extends React.Component<
     }
     if (_has(element, "identifier")) {
       // JSPF Track format
-      return (element as JSPFTrack).id === (currentListen as JSPFTrack).id;
+      return (element as JSPFTrack).id === currentListen.id;
     }
     return _isEqual(element, currentListen);
   };
@@ -467,7 +473,7 @@ export default class BrainzPlayer extends React.Component<
     listen: Listen | JSPFTrack,
     datasourceIndex: number = 0
   ): void => {
-    const { queue } = this.state;
+    const { queue, queueRepeatMode } = this.state;
 
     const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying);
     const newTrack = queue[currentListenIndex + 1];
@@ -478,6 +484,19 @@ export default class BrainzPlayer extends React.Component<
       listenSubmitted: false,
       continuousPlaybackTime: 0,
     });
+
+    const { currentUser } = this.context;
+    if (currentUser?.id) {
+      localStorage.setItem(
+        "BrainzPlayer_queue",
+        JSON.stringify({
+          userId: currentUser.id,
+          queue,
+          queueRepeatMode,
+          currentListen: newTrack,
+        })
+      );
+    }
 
     window.postMessage(
       { brainzplayer_event: "current-listen-change", payload: listen },
@@ -930,7 +949,7 @@ export default class BrainzPlayer extends React.Component<
   };
 
   setQueue = (queue: BrainzPlayerQueue) => {
-    const { queueRepeatMode } = this.state;
+    const { queueRepeatMode, currentListen } = this.state;
     this.setState({ queue });
     const { currentUser } = this.context;
     if (currentUser?.id) {
@@ -940,6 +959,7 @@ export default class BrainzPlayer extends React.Component<
           userId: currentUser.id,
           queue,
           queueRepeatMode,
+          currentListen,
         })
       );
     }

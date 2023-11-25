@@ -35,7 +35,7 @@ type BrainzPlayerUIProps = {
   progressMs: number;
   durationMs: number;
   seekToPositionMs: (msTimeCode: number) => void;
-  currentListen?: Listen | JSPFTrack;
+  currentListen?: BrainzPlayerQueueItem;
   listenBrainzAPIBaseURI: string;
   queue: BrainzPlayerQueue;
   removeTrackFromQueue: (track: BrainzPlayerQueueItem) => void;

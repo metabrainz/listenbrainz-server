@@ -9,7 +9,7 @@ type QueueProps = {
   moveQueueItem: (evt: any) => void;
   setQueue: (queue: BrainzPlayerQueue) => void;
   clearQueue: () => void;
-  currentListen?: Listen | JSPFTrack;
+  currentListen?: BrainzPlayerQueueItem;
 };
 
 function Queue(props: QueueProps) {
@@ -27,7 +27,7 @@ function Queue(props: QueueProps) {
   React.useEffect(() => {
     if (currentListen) {
       const currentListenIndex = queue.findIndex(
-        (track) => track === currentListen
+        (track) => track.id === currentListen.id
       );
 
       if (
