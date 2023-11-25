@@ -222,6 +222,27 @@ export default class BrainzPlayer extends React.Component<
     ) {
       this.invalidateDataSource(this.soundcloudPlayer.current);
     }
+
+    // Fetch user's saved queue from localStorage
+    const savedQueue = localStorage.getItem("BrainzPlayer_queue");
+    if (savedQueue) {
+      try {
+        const { userId, queue, queueRepeatMode } = JSON.parse(savedQueue);
+        const { currentUser } = this.context;
+        if (userId === currentUser?.id) {
+          this.setState({
+            queue,
+            queueRepeatMode,
+          });
+        }
+      } catch (e) {
+        // Do nothing, we just fallback gracefully to an empty queue.
+        this.handleWarning(
+          "Your saved queue could not be loaded. It may be corrupted.",
+          "Error loading saved queue"
+        );
+      }
+    }
   }
 
   // eslint-disable-next-line react/sort-comp
@@ -277,6 +298,17 @@ export default class BrainzPlayer extends React.Component<
       const dataSource = this.dataSources[currentDataSourceIndex]?.current;
       if (dataSource && !playerPaused) {
         await dataSource.togglePlay();
+      }
+    }
+
+    if (event.key === "BrainzPlayer_queue") {
+      const { userId, queue, queueRepeatMode } = JSON.parse(event.newValue!);
+      const { currentUser } = this.context;
+      if (userId === currentUser?.id) {
+        this.setState({
+          queue,
+          queueRepeatMode,
+        });
       }
     }
   };
@@ -863,9 +895,9 @@ export default class BrainzPlayer extends React.Component<
         const updatedQueue = [...queue];
         updatedQueue.splice(insertionIndex, 0, newTrack);
 
-        return { queue: updatedQueue };
+        this.setQueue(updatedQueue);
       }
-      return { queue: [...queue, newTrack] };
+      this.setQueue([...queue, newTrack]);
     }, callback);
 
     return newTrack;
@@ -882,12 +914,9 @@ export default class BrainzPlayer extends React.Component<
   };
 
   removeTrackFromQueue = (trackToDelete: BrainzPlayerQueueItem): void => {
-    this.setState((prevState) => {
-      const { queue } = prevState;
-      const trackIndex = findIndex(queue, trackToDelete);
-      queue.splice(trackIndex, 1);
-      return { queue: [...queue] };
-    });
+    const { queue } = this.state;
+    const updatedQueue = queue.filter((track) => track !== trackToDelete);
+    this.setQueue(updatedQueue);
   };
 
   moveQueueItem = async (evt: any) => {
@@ -897,11 +926,23 @@ export default class BrainzPlayer extends React.Component<
     newQueue[evt.newIndex] = newQueue[evt.oldIndex];
     newQueue[evt.oldIndex] = toMove;
 
-    this.setState({ queue: newQueue });
+    this.setQueue(newQueue);
   };
 
   setQueue = (queue: BrainzPlayerQueue) => {
+    const { queueRepeatMode } = this.state;
     this.setState({ queue });
+    const { currentUser } = this.context;
+    if (currentUser?.id) {
+      localStorage.setItem(
+        "BrainzPlayer_queue",
+        JSON.stringify({
+          userId: currentUser.id,
+          queue,
+          queueRepeatMode,
+        })
+      );
+    }
   };
 
   toggleRepeatMode = () => {
