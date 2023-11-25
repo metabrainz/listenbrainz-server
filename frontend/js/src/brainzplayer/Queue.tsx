@@ -74,7 +74,7 @@ function Queue(props: QueueProps) {
             onEnd={moveQueueItem}
             setList={(newState) => setQueue(newState)}
           >
-            {queue.map((queueItem: BrainzPlayerQueueItem) => {
+            {queueNextUp.map((queueItem: BrainzPlayerQueueItem) => {
               return (
                 <QueueItemCard
                   key={queueItem.id}
@@ -94,4 +94,4 @@ function Queue(props: QueueProps) {
   );
 }
 
-export default Queue;
+export default React.memo(Queue);

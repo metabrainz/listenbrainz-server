@@ -20,6 +20,7 @@ import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
 import MenuOptions from "./MenuOptions";
 import ProgressBar from "./ProgressBar";
 import Queue from "./Queue";
+import { QueueRepeatMode } from "./BrainzPlayer";
 
 type BrainzPlayerUIProps = {
   currentDataSourceName?: string;
@@ -41,6 +42,8 @@ type BrainzPlayerUIProps = {
   moveQueueItem: (evt: any) => void;
   setQueue: (queue: BrainzPlayerQueue) => void;
   clearQueue: () => void;
+  queueRepeatMode: QueueRepeatMode;
+  toggleRepeatMode: () => void;
 };
 
 type PlaybackControlButtonProps = {
@@ -172,6 +175,8 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     moveQueueItem,
     setQueue,
     clearQueue,
+    queueRepeatMode,
+    toggleRepeatMode,
   } = props;
 
   const isPlayingATrack = Boolean(currentListen);
@@ -255,6 +260,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           <FontAwesomeIcon
             icon={faBarsStaggered}
             onClick={() => setShowQueue(!showQueue)}
+          />
+          <FontAwesomeIcon
+            icon={queueRepeatMode.icon}
+            title={queueRepeatMode.title}
+            onClick={toggleRepeatMode}
           />
           <FontAwesomeIcon
             icon={faHeart}
