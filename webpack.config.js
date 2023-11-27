@@ -78,6 +78,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/explore/year-in-music/2022/YearInMusic.tsx"
       ),
+      yearInMusic2023: path.resolve(
+        jsDir,
+        "src/explore/year-in-music/2023/YearInMusic.tsx"
+      ),
       coverArtComposite: path.resolve(
         jsDir,
         "src/explore/year-in-music/2022/CoverArtComposite.tsx"
