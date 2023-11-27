@@ -63,7 +63,7 @@ export default NiceModal.create(
 
     const closeModal = () => {
       modal.hide();
-      setTimeout(modal.remove, 500);
+      setTimeout(modal.remove, 3000);
     };
 
     const submitPinRecording = React.useCallback(
