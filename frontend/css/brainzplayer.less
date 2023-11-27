@@ -342,16 +342,17 @@
 .queue {
   position: fixed;
   bottom: 60px;
-  width: calc(100% - 220px);
+  width: calc(100% - @sidenav-width);
   height: 500px;
   background-color: #f8f8f8;
   border-top: 1px solid #ccc;
   box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
   z-index: 5;
-
-  @media (max-width: @screen-md) {
-    width: calc(100% - 30px);
+  left: @sidenav-width;
+  @media (max-width: @offscreen-sidenav-breakpoint) {
+    width: 100%;
+    left: 0;
   }
 
   h2 {
@@ -360,8 +361,10 @@
     padding: 10px;
     border-bottom: 1px solid #ccc;
     background-color: #fff;
+    position: fixed;
+    width: 100%;
   }
-  
+
   .queue-item {
     display: flex;
     justify-content: space-between;
@@ -369,7 +372,7 @@
     padding: 10px 0;
     border-bottom: 1px solid #ccc;
   }
-  
+
   .queue-item-card .main-content .drag-handle {
     align-items: center;
     cursor: move;
@@ -378,7 +381,7 @@
     align-self: center;
     min-width: 3em;
   }
-  
+
   .queue-headers {
     font-size: 16px;
     padding: 4px;
@@ -386,5 +389,15 @@
     display: flex;
     justify-content: space-between;
   }
-}
 
+  .queue-headers:first-of-type {
+    margin-top: 50px;
+  }
+
+  .queue-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+  }
+}
