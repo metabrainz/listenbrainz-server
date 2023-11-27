@@ -74,7 +74,7 @@ function ExplorePage() {
           <ExploreCard
             name="Top Similar Users"
             desc="Social"
-            img_name="similar-users.jpg"
+            img_name="similar-users(new).png"
             url="/explore/similar-users"
           />
         </div>
