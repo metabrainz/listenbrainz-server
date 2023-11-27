@@ -390,5 +390,20 @@
       color: @cream;
       background-color: var(--selectedColor);
     }
+    .masked-image {
+      display: inline-block;
+      background-color:  var(--selectedColor);
+      mask-size: 98%; /* edges might get cut off if you use 100% */
+      mask-repeat: no-repeat;
+      mask-position: center;
+      -webkit-mask-size: 98%; /* edges might get cut off if you use 100% */
+      -webkit-mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      > img {
+        opacity: 0;
+        display:block;
+      }
+    }
+    
   }
 }

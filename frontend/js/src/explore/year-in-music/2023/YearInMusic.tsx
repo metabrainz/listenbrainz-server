@@ -480,11 +480,19 @@ export default class YearInMusic extends React.Component<
     return (
       <div id="year-in-music" className="yim-2023">
         <div id="main-header" className="flex-center">
-          <img
-            className="img-responsive header-image"
-            src="/static/img/year-in-music-23/yim23-logo.png"
-            alt="Your year in music 2023"
-          />
+          <span
+            className="masked-image"
+            style={{
+              WebkitMaskImage:
+                "url('/static/img/year-in-music-23/yim23-logo.png')",
+            }}
+          >
+            <img
+              className="img-responsive header-image"
+              src="/static/img/year-in-music-23/yim23-logo.png"
+              alt="Your year in music 2023"
+            />
+          </span>
           <div className="arrow-down" />
         </div>
 
