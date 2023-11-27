@@ -144,6 +144,7 @@ describe("Listens page", () => {
       // because contrarily to socket.io it does not allow arbitrary types of messages
       // in our case socket.emit("json",{user:username}) message type
       const returnPromise = new Promise<void>((resolve, reject) => {
+        // @ts-ignore
         websocketServer.on("json", (userJson) => {
           try {
             expect(userJson).toEqual({ user: "iliekcomputers" });

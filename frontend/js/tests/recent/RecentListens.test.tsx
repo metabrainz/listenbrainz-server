@@ -37,12 +37,9 @@ jest.mock("socket.io-client", () => {
 });
 
 const {
-  haveListenCount,
   latestListenTs,
-  listenCount,
   listens,
   oldestListenTs,
-  profileUrl,
   spotify,
   youtube,
   user,
@@ -52,12 +49,9 @@ const {
 } = recentListensProps;
 
 const props = {
-  haveListenCount,
   latestListenTs,
-  listenCount,
   listens,
   oldestListenTs,
-  profileUrl,
   user,
   userPinnedRecording,
   globalListenCount,
