@@ -56,7 +56,6 @@ def init_db(force, create_db):
     """
     from listenbrainz import config
     if "PYTHON_TESTS_RUNNING" in os.environ:
-        print("PYTHON TESTING DETECTED!")
         db_connect = db.create_test_database_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT_ADMIN"])
     else:
@@ -99,7 +98,6 @@ def init_db(force, create_db):
     application = webserver.create_app()
     with application.app_context():
         if "PYTHON_TESTS_RUNNING" in os.environ:
-            print("PYTHON TESTING DETECTED!")
             db_connect = db.create_test_database_connect_strings()
             db.init_db_connection(db_connect["DB_CONNECT"])
         else:
@@ -196,7 +194,6 @@ def init_ts_db(force, create_db):
     application = webserver.create_app()
     with application.app_context():
         if "PYTHON_TESTS_RUNNING" in os.environ:
-            print("PYTHON TESTING DETECTED!")
             ts_connect = ts.create_test_timescale_connect_strings()
             ts.init_db_connection(ts_connect["DB_CONNECT"])
         else:
