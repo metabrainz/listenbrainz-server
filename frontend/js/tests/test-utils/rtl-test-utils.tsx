@@ -19,6 +19,7 @@ jest.requireActual("react-toastify");
 const testAPIService = new APIService("");
 const defaultGlobalContext: GlobalAppContextT = {
   APIService: testAPIService,
+  websocketsUrl: "",
   currentUser: {
     id: 1,
     name: "FNORD",

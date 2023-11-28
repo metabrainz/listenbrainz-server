@@ -62,6 +62,7 @@ def get_global_props():
 
     props = {
         "api_url": current_app.config["API_URL"],
+        "websockets_url": current_app.config["WEBSOCKETS_SERVER_URL"],
         "sentry_dsn": sentry_config.get("dsn"),
         "current_user": current_user_data,
         "spotify": get_current_spotify_user(),

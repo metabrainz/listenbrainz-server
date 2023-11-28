@@ -52,6 +52,7 @@ const props: RecommendationFeedbackComponentProps = {
 
 const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
+  websocketsUrl: "",
   currentUser: { auth_token: "baz", name: "test" },
   spotifyAuth: {},
   youtubeAuth: {},
