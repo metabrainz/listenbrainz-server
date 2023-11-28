@@ -60,6 +60,7 @@ def init_db(force, create_db):
         db_connect = db.create_test_database_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT_ADMIN"])
     else:
+        db_connect = {"DB_NAME": "listenbrainz", "DB_USER": "listenbrainz"}
         db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
         res = db.run_sql_query_without_transaction(
@@ -100,9 +101,10 @@ def init_db(force, create_db):
         if "PYTHON_TESTS_RUNNING" in os.environ:
             print("PYTHON TESTING DETECTED!")
             db_connect = db.create_test_database_connect_strings()
-            db.init_db_connection(db_connect["DB_CONNECT_ADMIN_LB"])
+            db.init_db_connection(db_connect["DB_CONNECT"])
         else:
-            db.init_db_connection(config.POSTGRES_ADMIN_URI)
+            db_connect = {"DB_NAME": "listenbrainz", "DB_USER": "listenbrainz"}
+            db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
 
         print('PG: Creating schema...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
@@ -113,12 +115,6 @@ def init_db(force, create_db):
         print('PG: Creating tables...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
 
-        print('PG: Grant privs...')
-        res = db.run_sql_query_without_transaction(
-            [f"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {db_connect['DB_NAME']}"])
-        if not res:
-            raise Exception('Failed to set table priviledges! Exit code: %i' % res)
-
         print('PG: Creating primary and foreign keys...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
@@ -126,6 +122,8 @@ def init_db(force, create_db):
         print('PG: Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
+        if not res:
+            raise Exception('Failed to set table priviledges! Exit code: %i' % res)
         print("Done!")
 
 
@@ -145,6 +143,7 @@ def init_ts_db(force, create_db):
         ts_connect = ts.create_test_timescale_connect_strings()
         ts.init_db_connection(ts_connect["DB_CONNECT_ADMIN"])
     else:
+        ts_connect = {"DB_NAME": "listenbrainz_ts", "DB_USER": "listenbrainz_ts"}
         ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
     if force:
         res = ts.run_sql_query_without_transaction(
@@ -199,9 +198,10 @@ def init_ts_db(force, create_db):
         if "PYTHON_TESTS_RUNNING" in os.environ:
             print("PYTHON TESTING DETECTED!")
             ts_connect = ts.create_test_timescale_connect_strings()
-            ts.init_db_connection(ts_connect["DB_CONNECT_ADMIN_LB"])
+            ts.init_db_connection(ts_connect["DB_CONNECT"])
         else:
-            ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
+            ts_connect = {"DB_NAME": "listenbrainz_ts", "DB_USER": "listenbrainz_ts"}
+            ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
 
         print('TS: Creating Schemas...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
