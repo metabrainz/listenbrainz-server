@@ -83,6 +83,7 @@ def init_db(force, create_db):
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
         if "PYTHON_TESTS_RUNNING" in os.environ:
+            print( "TESTS RUNNING:")
             db.init_db_connection(db_connect["DB_CONNECT_ADMIN_LB"])
         else:
             db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
