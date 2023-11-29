@@ -11,6 +11,7 @@ def init_timescale_connection(app):
     global _ts
 
     if not timescale.engine:
+        app.logger.error("Cannot create TimescaleListenStore instance, timescale database engine not initialized")
         return
 
     while True:
