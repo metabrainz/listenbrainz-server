@@ -21,6 +21,11 @@ class ConvertListensTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(ConvertListensTestCase, self).setUp()
+
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            db_connect = db_user.db.create_test_database_connect_strings()
+            db_user.db.init_db_connection(db_connect["DB_CONNECT"])
+
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
         self.DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
@@ -103,6 +108,9 @@ class ConvertListensTestCase(DatabaseTestCase):
         app = listenbrainz.webserver.create_app()
         app.config['SERVER_NAME'] = "test"
         with app.app_context():
+            if "PYTHON_TESTS_RUNNING" in os.environ:
+                db_connect = db_user.db.create_test_database_connect_strings()
+                db_user.db.init_db_connection(db_connect["DB_CONNECT"])
             spotify_read_listens.notify_error(musicbrainz_id="two", error='some random error')
         mock_send_mail.assert_called_once()
         self.assertListEqual(mock_send_mail.call_args[1]['recipients'], ['one@two.one'])
@@ -115,6 +123,9 @@ class ConvertListensTestCase(DatabaseTestCase):
         app = listenbrainz.webserver.create_app()
         app.config['TESTING'] = False
         with app.app_context():
+            if "PYTHON_TESTS_RUNNING" in os.environ:
+                db_connect = db_user.db.create_test_database_connect_strings()
+                db_user.db.init_db_connection(db_connect["DB_CONNECT"])
             spotify_read_listens.process_all_spotify_users()
             mock_notify_error.assert_called_once_with(self.user['musicbrainz_id'], 'api borked')
             mock_update.assert_called_once()
@@ -124,6 +135,9 @@ class ConvertListensTestCase(DatabaseTestCase):
         mock_spotipy.return_value.current_user_playing_track.return_value = None
 
         with listenbrainz.webserver.create_app().app_context():
+            if "PYTHON_TESTS_RUNNING" in os.environ:
+                db_connect = db_user.db.create_test_database_connect_strings()
+                db_user.db.init_db_connection(db_connect["DB_CONNECT"])
             SpotifyService().update_latest_listen_ts(self.user['id'],
                                                      int(datetime(2014, 5, 13, 16, 53, 20).timestamp()))
             spotify_read_listens.process_all_spotify_users()
@@ -137,6 +151,9 @@ class ConvertListensTestCase(DatabaseTestCase):
         mock_current_user_recently_played.return_value = None
 
         with listenbrainz.webserver.create_app().app_context():
+            if "PYTHON_TESTS_RUNNING" in os.environ:
+                db_connect = db_user.db.create_test_database_connect_strings()
+                db_user.db.init_db_connection(db_connect["DB_CONNECT"])
             spotify_read_listens.process_all_spotify_users()
             mock_current_user_playing_track.assert_called_once()
             mock_current_user_recently_played.assert_called_once_with(limit=50, after=0)

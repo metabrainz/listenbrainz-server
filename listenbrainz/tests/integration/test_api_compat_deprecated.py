@@ -18,7 +18,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-
+import os
 import logging
 import time
 from datetime import datetime
@@ -27,6 +27,7 @@ from flask import url_for
 from werkzeug.exceptions import BadRequest
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db import timescale
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
@@ -39,6 +40,13 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def setUp(self):
         super(APICompatDeprecatedTestCase, self).setUp()
+
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            db_connect = db_user.db.create_test_database_connect_strings()
+            db_user.db.init_db_connection(db_connect["DB_CONNECT"])
+            ts_connect = timescale.create_test_timescale_connect_strings()
+            timescale.init_db_connection(ts_connect["DB_CONNECT"])
+
         self.user = db_user.get_or_create(1, 'apicompatoldtestuser')
 
         self.log = logging.getLogger(__name__)

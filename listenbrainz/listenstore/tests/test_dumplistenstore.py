@@ -26,9 +26,17 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.app = create_app()
         self.logstore = TimescaleListenStore(self.app.logger)
         self.dumpstore = DumpListenStore(self.app)
+
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            db_connect = db_user.db.create_test_database_connect_strings()
+            db_user.db.init_db_connection(db_connect["DB_CONNECT"])
+            ts_connect = timescale.create_test_timescale_connect_strings()
+            timescale.init_db_connection(ts_connect["DB_CONNECT"])
+
         self.testuser = db_user.get_or_create(1, "test")
         self.testuser_name = self.testuser["musicbrainz_id"]
         self.testuser_id = self.testuser["id"]
+
 
     def tearDown(self):
         self.logstore = None

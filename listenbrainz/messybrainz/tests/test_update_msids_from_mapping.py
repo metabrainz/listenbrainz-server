@@ -1,3 +1,4 @@
+import os
 import json
 from datetime import datetime
 
@@ -16,6 +17,10 @@ class MsidUpdaterTestCase(IntegrationTestCase):
     def setUp(self):
         IntegrationTestCase.setUp(self)
         self.user = db_user.get_or_create(1111, "msid-updater-user")
+
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            ts_connect = timescale.create_test_timescale_connect_strings()
+            timescale.init_db_connection(ts_connect["DB_CONNECT"])
 
     def create_dummy_data(self):
         mapping = [

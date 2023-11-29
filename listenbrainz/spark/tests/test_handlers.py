@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from unittest import mock
 from unittest.mock import call
@@ -32,7 +33,12 @@ class HandlersTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(HandlersTestCase, self).setUp()
+
         self.app = create_app()
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            db_connect = db_user.db.create_test_database_connect_strings()
+            db_user.db.init_db_connection(db_connect["DB_CONNECT"])
+
         self.user1 = db_user.get_or_create(1, 'iliekcomputers')
         self.user2 = db_user.get_or_create(2, 'lucifer')
 

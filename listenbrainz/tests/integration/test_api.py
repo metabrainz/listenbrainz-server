@@ -1,3 +1,4 @@
+import os
 import json
 import time
 from unittest.mock import patch
@@ -18,6 +19,11 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APITestCase, self).setUp()
+
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            db_connect = db_user.db.create_test_database_connect_strings()
+            db_user.db.init_db_connection(db_connect["DB_CONNECT"])
+
         self.followed_user = db_user.get_or_create(3, 'followed_user')
         self.follow_user_url = url_for("social_api_v1.follow_user", user_name=self.followed_user["musicbrainz_id"])
         self.follow_user_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}

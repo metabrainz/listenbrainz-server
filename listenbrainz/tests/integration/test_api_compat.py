@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+import os
 import json
 import logging
 import time
@@ -25,6 +26,7 @@ import xmltodict
 from flask import url_for
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db import timescale
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
@@ -37,6 +39,13 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APICompatTestCase, self).setUp()
+
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            db_connect = db_user.db.create_test_database_connect_strings()
+            db_user.db.init_db_connection(db_connect["DB_CONNECT"])
+            ts_connect = timescale.create_test_timescale_connect_strings()
+            timescale.init_db_connection(ts_connect["DB_CONNECT"])
+
         self.lb_user = db_user.get_or_create(1, 'apicompattestuser')
         self.lfm_user = User(
             self.lb_user['id'],
