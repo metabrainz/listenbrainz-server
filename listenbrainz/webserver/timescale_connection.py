@@ -1,6 +1,7 @@
 import time
 from typing import Optional
 
+from listenbrainz.db import timescale
 from listenbrainz.listenstore import TimescaleListenStore
 
 _ts: Optional[TimescaleListenStore] = None
@@ -9,7 +10,7 @@ _ts: Optional[TimescaleListenStore] = None
 def init_timescale_connection(app):
     global _ts
 
-    if not app.config.get("SQLALCHEMY_TIMESCALE_URI"):
+    if not timescale.engine:
         return
 
     while True:
