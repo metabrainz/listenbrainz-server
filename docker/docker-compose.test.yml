@@ -50,6 +50,8 @@ services:
       - redis
       - lb_db
       - rabbitmq
+    environment:
+      PYTHON_TESTS_RUNNING: 1
 
   frontend_tester:
     build:
