@@ -65,7 +65,6 @@ export type YearInMusicProps = {
       caa_id?: number;
       caa_release_mbid?: string;
     }>;
-    top_releases_coverart: { [key: string]: string };
     top_recordings: Array<{
       artist_name: string;
       artist_mbids: string[];
@@ -84,6 +83,7 @@ export type YearInMusicProps = {
     }>;
     most_listened_year: { [key: string]: number };
     total_listen_count: number;
+    total_artists_count: number;
     new_releases_of_top_artists: Array<{
       title: string;
       release_group_mbid: string;
@@ -100,10 +100,18 @@ export type YearInMusicProps = {
     }>;
   };
 };
+enum YIM2023Color {
+  green = "#4C6C52",
+  red = "#BE4A55",
+  blue = "#567276",
+  brown = "#4C4442",
+}
+const YIM2023ColorStrings = Object.values(YIM2023Color);
 
 export type YearInMusicState = {
   followingList: Array<string>;
   selectedMetric: "artist" | "listen";
+  selectedColor: YIM2023Color;
 };
 
 export default class YearInMusic extends React.Component<
@@ -118,6 +126,7 @@ export default class YearInMusic extends React.Component<
     this.state = {
       followingList: [],
       selectedMetric: "listen",
+      selectedColor: YIM2023Color.green,
     };
   }
 
@@ -322,9 +331,16 @@ export default class YearInMusic extends React.Component<
     );
   };
 
+  selectColor = (event: React.MouseEvent | React.KeyboardEvent) => {
+    const color = (event.currentTarget.getAttribute(
+      "data-color"
+    ) as unknown) as YIM2023Color;
+    this.setState({ selectedColor: color });
+  };
+
   render() {
     const { user, yearInMusicData } = this.props;
-    const { selectedMetric } = this.state;
+    const { selectedMetric, selectedColor } = this.state;
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
 
@@ -478,8 +494,29 @@ export default class YearInMusic extends React.Component<
     );
     const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2023`;
     return (
-      <div id="year-in-music" className="yim-2023">
+      <div
+        id="year-in-music"
+        className="yim-2023"
+        style={{ ["--selectedColor" as any]: selectedColor }}
+      >
         <div id="main-header" className="flex-center">
+          <div className="color-picker">
+            {YIM2023ColorStrings.map((color) => {
+              return (
+                <div
+                  aria-label={`Select color ${color}`}
+                  role="button"
+                  tabIndex={0}
+                  className="color-selector"
+                  style={{ backgroundColor: color }}
+                  onClick={this.selectColor}
+                  onKeyDown={this.selectColor}
+                  data-color={color}
+                />
+              );
+            })}
+          </div>
+          <div className="hashtag">#YearInMusic</div>
           <span
             className="masked-image"
             style={{
@@ -493,10 +530,11 @@ export default class YearInMusic extends React.Component<
               alt="Your year in music 2023"
             />
           </span>
+          <div className="user-name">{user.name}</div>
           <div className="arrow-down" />
         </div>
 
-        <div className="link-section flex-center">
+        <div className="card content-card link-section flex-center">
           <div>
             Share <b>{yourOrUsersName}</b> year
             <div className="input-group">
@@ -533,98 +571,105 @@ export default class YearInMusic extends React.Component<
           </div>
         )}
 
-        <div className="container">
+        <div className="section">
           <div className="card content-card" id="top-releases">
-            <h3>Top albums of 2023</h3>
+            <h3 className="flex-center">Top albums of 2023</h3>
             {yearInMusicData.top_releases ? (
-              <div id="top-albums">
-                <Swiper
-                  modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
-                  spaceBetween={15}
-                  slidesPerView={2}
-                  initialSlide={0}
-                  centeredSlides
-                  lazy={{
-                    enabled: true,
-                    loadPrevNext: true,
-                    loadPrevNextAmount: 4,
-                  }}
-                  watchSlidesProgress
-                  navigation
-                  effect="coverflow"
-                  coverflowEffect={{
-                    rotate: 40,
-                    depth: 100,
-                    slideShadows: false,
-                  }}
-                  breakpoints={{
-                    700: {
-                      initialSlide: 2,
-                      spaceBetween: 100,
-                      slidesPerView: 3,
-                      coverflowEffect: {
-                        rotate: 20,
-                        depth: 300,
-                        slideShadows: false,
+              <>
+                <div id="top-albums">
+                  <Swiper
+                    modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
+                    spaceBetween={15}
+                    slidesPerView={2}
+                    initialSlide={0}
+                    centeredSlides
+                    lazy={{
+                      enabled: true,
+                      loadPrevNext: true,
+                      loadPrevNextAmount: 4,
+                    }}
+                    watchSlidesProgress
+                    navigation
+                    effect="coverflow"
+                    coverflowEffect={{
+                      rotate: 40,
+                      depth: 100,
+                      slideShadows: false,
+                    }}
+                    breakpoints={{
+                      700: {
+                        initialSlide: 2,
+                        spaceBetween: 100,
+                        slidesPerView: 3,
+                        coverflowEffect: {
+                          rotate: 20,
+                          depth: 300,
+                          slideShadows: false,
+                        },
                       },
-                    },
-                  }}
-                >
-                  {yearInMusicData.top_releases.slice(0, 50).map((release) => {
-                    if (!release.caa_id || !release.caa_release_mbid) {
-                      return null;
-                    }
-                    const coverArt = generateAlbumArtThumbnailLink(
-                      release.caa_id,
-                      release.caa_release_mbid
-                    );
-                    return (
-                      <SwiperSlide key={`coverflow-${release.release_name}`}>
-                        <img
-                          data-src={
-                            coverArt ?? "/static/img/cover-art-placeholder.jpg"
-                          }
-                          alt={release.release_name}
-                          className="swiper-lazy"
-                        />
-                        <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
-                        <div title={release.release_name}>
-                          <a
-                            href={
-                              release.release_mbid
-                                ? `https://musicbrainz.org/release/${release.release_mbid}/`
-                                : undefined
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
+                    }}
+                  >
+                    {yearInMusicData.top_releases
+                      .slice(0, 50)
+                      .map((release) => {
+                        if (!release.caa_id || !release.caa_release_mbid) {
+                          return null;
+                        }
+                        const coverArt = generateAlbumArtThumbnailLink(
+                          release.caa_id,
+                          release.caa_release_mbid
+                        );
+                        return (
+                          <SwiperSlide
+                            key={`coverflow-${release.release_name}`}
                           >
-                            {release.release_name}
-                          </a>
-                          <div className="small text-muted">
-                            {release.artist_name}
-                          </div>
-                        </div>
-                      </SwiperSlide>
-                    );
-                  })}
-                </Swiper>
-              </div>
+                            <img
+                              data-src={
+                                coverArt ??
+                                "/static/img/cover-art-placeholder.jpg"
+                              }
+                              alt={release.release_name}
+                              className="swiper-lazy"
+                            />
+                            <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
+                            <div title={release.release_name}>
+                              <a
+                                href={
+                                  release.release_mbid
+                                    ? `https://musicbrainz.org/release/${release.release_mbid}/`
+                                    : undefined
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {release.release_name}
+                              </a>
+                              <div className="small text-muted">
+                                {release.artist_name}
+                              </div>
+                            </div>
+                          </SwiperSlide>
+                        );
+                      })}
+                  </Swiper>
+                </div>
+                <div className="yim-share-button-container">
+                  <MagicShareButton
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=albums`}
+                    shareUrl={`${linkToThisPage}#top-albums`}
+                    // shareText="Check out my"
+                    shareTitle="My top albums of 2023"
+                    fileName={`${user.name}-top-albums-2023`}
+                  />
+                </div>
+              </>
             ) : (
               noDataText
             )}
           </div>
-          <div className="yim-share-button-container">
-            <MagicShareButton
-              svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=albums`}
-              shareUrl={`${linkToThisPage}#top-albums`}
-              // shareText="Check out my"
-              shareTitle="My top albums of 2023"
-              fileName={`${user.name}-top-albums-2023`}
-            />
-          </div>
         </div>
 
-        <div className="container">
+        <div className="section">
           <div className="header">
             Charts
             <div className="subheader">
@@ -634,7 +679,7 @@ export default class YearInMusic extends React.Component<
           <div className="flex flex-wrap">
             <div style={{ display: "table" }}>
               <div className="card content-card" id="top-tracks">
-                <div className="center-p">
+                <div className="heading">
                   <img
                     className="img-header"
                     src="/static/img/year-in-music-23/peep.png"
@@ -643,52 +688,54 @@ export default class YearInMusic extends React.Component<
                   <h4>Top songs of 2023</h4>
                 </div>
                 {yearInMusicData.top_recordings ? (
-                  <div className="scrollable-area">
-                    {yearInMusicData.top_recordings
-                      .slice(0, 50)
-                      .map((recording) => {
-                        const listenHere = {
-                          listened_at: 0,
-                          track_metadata: {
-                            artist_name: recording.artist_name,
-                            track_name: recording.track_name,
-                            release_name: recording.release_name,
-                            additional_info: {
-                              recording_mbid: recording.recording_mbid,
-                              release_mbid: recording.release_mbid,
-                              artist_mbids: recording.artist_mbids,
+                  <>
+                    <div className="scrollable-area">
+                      {yearInMusicData.top_recordings
+                        .slice(0, 50)
+                        .map((recording) => {
+                          const listenHere = {
+                            listened_at: 0,
+                            track_metadata: {
+                              artist_name: recording.artist_name,
+                              track_name: recording.track_name,
+                              release_name: recording.release_name,
+                              additional_info: {
+                                recording_mbid: recording.recording_mbid,
+                                release_mbid: recording.release_mbid,
+                                artist_mbids: recording.artist_mbids,
+                              },
                             },
-                          },
-                        };
-                        listens.push(listenHere);
-                        return (
-                          <ListenCard
-                            compact
-                            key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
-                            listen={listenHere}
-                            showTimestamp={false}
-                            showUsername={false}
-                          />
-                        );
-                      })}
-                  </div>
+                          };
+                          listens.push(listenHere);
+                          return (
+                            <ListenCard
+                              compact
+                              key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
+                              listen={listenHere}
+                              showTimestamp={false}
+                              showUsername={false}
+                            />
+                          );
+                        })}
+                    </div>
+                    <div className="yim-share-button-container">
+                      <MagicShareButton
+                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=tracks`}
+                        shareUrl={`${linkToThisPage}#top-tracks`}
+                        // shareText="Check out my"
+                        shareTitle="My top tracks of 2023"
+                        fileName={`${user.name}-top-tracks-2023`}
+                      />
+                    </div>
+                  </>
                 ) : (
                   noDataText
                 )}
               </div>
-              <div className="yim-share-button-container">
-                <MagicShareButton
-                  svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=tracks`}
-                  shareUrl={`${linkToThisPage}#top-tracks`}
-                  // shareText="Check out my"
-                  shareTitle="My top tracks of 2023"
-                  fileName={`${user.name}-top-tracks-2023`}
-                />
-              </div>
             </div>
             <div style={{ display: "table" }}>
               <div className="card content-card" id="top-artists">
-                <div className="center-p">
+                <div className="heading">
                   <img
                     className="img-header"
                     src="/static/img/year-in-music-23/heart.png"
@@ -697,63 +744,67 @@ export default class YearInMusic extends React.Component<
                   <h4>Top artists of 2023</h4>
                 </div>
                 {yearInMusicData.top_artists ? (
-                  <div className="scrollable-area">
-                    {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
-                      const details = getEntityLink(
-                        "artist",
-                        artist.artist_name,
-                        artist.artist_mbid
-                      );
-                      const thumbnail = (
-                        <span className="badge badge-info">
-                          <FontAwesomeIcon
-                            style={{ marginRight: "4px" }}
-                            icon={faHeadphones}
-                          />{" "}
-                          {artist.listen_count}
-                        </span>
-                      );
-                      const listenHere = {
-                        listened_at: 0,
-                        track_metadata: {
-                          track_name: "",
-                          artist_name: artist.artist_name,
-                          additional_info: {
-                            artist_mbids: [artist.artist_mbid],
-                          },
-                        },
-                      };
-                      listens.push(listenHere);
-                      return (
-                        <ListenCard
-                          compact
-                          key={`top-artists-${artist.artist_name}-${artist.artist_mbid}`}
-                          listen={listenHere}
-                          customThumbnail={thumbnail}
-                          listenDetails={details}
-                          showTimestamp={false}
-                          showUsername={false}
-                        />
-                      );
-                    })}
-                  </div>
+                  <>
+                    <div className="scrollable-area">
+                      {yearInMusicData.top_artists
+                        .slice(0, 50)
+                        .map((artist) => {
+                          const details = getEntityLink(
+                            "artist",
+                            artist.artist_name,
+                            artist.artist_mbid
+                          );
+                          const thumbnail = (
+                            <span className="badge badge-info">
+                              <FontAwesomeIcon
+                                style={{ marginRight: "4px" }}
+                                icon={faHeadphones}
+                              />{" "}
+                              {artist.listen_count}
+                            </span>
+                          );
+                          const listenHere = {
+                            listened_at: 0,
+                            track_metadata: {
+                              track_name: "",
+                              artist_name: artist.artist_name,
+                              additional_info: {
+                                artist_mbids: [artist.artist_mbid],
+                              },
+                            },
+                          };
+                          listens.push(listenHere);
+                          return (
+                            <ListenCard
+                              compact
+                              key={`top-artists-${artist.artist_name}-${artist.artist_mbid}`}
+                              listen={listenHere}
+                              customThumbnail={thumbnail}
+                              listenDetails={details}
+                              showTimestamp={false}
+                              showUsername={false}
+                            />
+                          );
+                        })}
+                    </div>
+                    <div className="yim-share-button-container">
+                      <MagicShareButton
+                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=artists`}
+                        shareUrl={`${linkToThisPage}#top-artists`}
+                        // shareText="Check out my"
+                        shareTitle="My top artists of 2023"
+                        fileName={`${user.name}-top-artists-2023`}
+                      />
+                    </div>
+                  </>
                 ) : (
                   noDataText
                 )}
               </div>
-              <div className="yim-share-button-container">
-                <MagicShareButton
-                  svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=artists`}
-                  shareUrl={`${linkToThisPage}#top-artists`}
-                  // shareText="Check out my"
-                  shareTitle="My top artists of 2023"
-                  fileName={`${user.name}-top-artists-2023`}
-                />
-              </div>
             </div>
           </div>
         </div>
-        <div className="container" id="stats">
+        <div className="section" id="stats">
           <div className="header">
             Statistics
             <div className="subheader">You are a wonderful human being</div>
@@ -766,209 +817,210 @@ export default class YearInMusic extends React.Component<
               fileName={`${user.name}-stats-2023`}
             />
           </div> */}
-          <div className="flex flex-wrap small-cards-container">
-            {yearInMusicData.total_listen_count && (
-              <div className="">
+          <div className="card content-card">
+            <div className="small-stats">
+              {yearInMusicData.total_listen_count && (
                 <div className="text-center">
-                  <div className="accent">
+                  <div className="value">
                     {yearInMusicData.total_listen_count}
                   </div>
                   songs graced {yourOrUsersName} ears
                 </div>
-              </div>
-            )}
-            {yearInMusicData.day_of_week && (
-              <div className="">
+              )}
+              {yearInMusicData.day_of_week && (
                 <div className="text-center">
-                  <div className="accent">{yearInMusicData.day_of_week}</div>
+                  <div className="value">{yearInMusicData.day_of_week}</div>
                   was {yourOrUsersName} music day
                 </div>
-              </div>
-            )}
-            {yearInMusicData.total_artist_count && (
-              <div className="">
+              )}
+              {yearInMusicData.total_artists_count && (
                 <div className="text-center">
-                  <div className="accent">
-                    {yearInMusicData.total_artist_count}
+                  <div className="value">
+                    {yearInMusicData.total_artists_count}
                   </div>
                   artists got {yourOrUsersName} attention
                 </div>
-              </div>
-            )}
-          </div>
-          <div className="" id="calendar">
-            <h3 className="text-center">
-              {capitalize(yourOrUsersName)} listening activity{" "}
-              <FontAwesomeIcon
-                icon={faQuestionCircle}
-                data-tip
-                data-for="listening-activity"
-                size="xs"
-              />
-              <Tooltip id="listening-activity">
-                How many tracks did {youOrUsername} listen to each day of the
-                year?
-              </Tooltip>
-            </h3>
-            {listensPerDayForGraph ? (
-              <div className="graph-container">
-                <div className="graph">
-                  <ResponsiveCalendar
-                    from="2023-01-01"
-                    to="2023-12-31"
-                    data={listensPerDayForGraph as CalendarDatum[]}
-                    emptyColor="#eeeeee"
-                    colors={["#f9e5b3", "#ffcc49", COLOR_LB_ORANGE, "#ff0e25"]}
-                    monthBorderColor="#eeeeee"
-                    dayBorderWidth={1}
-                    dayBorderColor="#ffffff"
-                    legends={[
-                      {
-                        anchor: "bottom-left",
-                        direction: "row",
-                        itemCount: 4,
-                        itemWidth: 42,
-                        itemHeight: 36,
-                        itemsSpacing: 14,
-                        itemDirection: "right-to-left",
-                      },
-                    ]}
-                  />
-                </div>
-              </div>
-            ) : (
-              noDataText
-            )}
-          </div>
-          <div className="" id="most-listened-year">
-            <h3 className="text-center">
-              What year are {yourOrUsersName} favorite songs from?{" "}
-              <FontAwesomeIcon
-                icon={faQuestionCircle}
-                data-tip
-                data-for="most-listened-year-helptext"
-                size="xs"
-              />
-              <Tooltip id="most-listened-year-helptext">
-                How much {isCurrentUser ? "were you" : `was ${user.name}`} on
-                the lookout for new music this year? Not that we&apos;re
-                judging.
-              </Tooltip>
-            </h3>
-            {mostListenedYearDataForGraph ? (
-              <div className="graph-container">
-                <div className="graph">
-                  <ResponsiveBar
-                    margin={{ left: 50, bottom: 30 }}
-                    data={mostListenedYearDataForGraph}
-                    padding={0.1}
-                    layout="vertical"
-                    keys={["songs"]}
-                    indexBy="year"
-                    colors="#ff0e25"
-                    enableLabel={false}
-                    axisBottom={{
-                      tickValues: mostListenedYearTicks,
-                    }}
-                    axisLeft={{
-                      legend: "Number of listens",
-                      legendOffset: -40,
-                      legendPosition: "middle",
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              noDataText
-            )}
-          </div>
-          <div
-            className="card content-card"
-            id="user-artist-map"
-            style={{ marginTop: "1.5em" }}
-          >
-            <h3 className="text-center">
-              What countries are {yourOrUsersName} favorite artists from?{" "}
-              <FontAwesomeIcon
-                icon={faQuestionCircle}
-                data-tip
-                data-for="user-artist-map-helptext"
-                size="xs"
-              />
-              <Tooltip id="user-artist-map-helptext">
-                Click on a country to see more details
-              </Tooltip>
-            </h3>
-            {artistMapDataForGraph ? (
-              <div className="graph-container">
-                <div className="graph">
-                  <div style={{ paddingLeft: "3em" }}>
-                    <span>Rank by number of</span>
-                    <span className="dropdown">
-                      <button
-                        className="dropdown-toggle btn-transparent capitalize-bold"
-                        data-toggle="dropdown"
-                        type="button"
-                      >
-                        {selectedMetric}s
-                        <span className="caret" />
-                      </button>
-                      <ul className="dropdown-menu" role="menu">
-                        <li
-                          className={
-                            selectedMetric === "listen" ? "active" : undefined
-                          }
-                        >
-                          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                          <a
-                            href=""
-                            role="button"
-                            onClick={(event) =>
-                              this.changeSelectedMetric("listen", event)
-                            }
-                          >
-                            Listens
-                          </a>
-                        </li>
-                        <li
-                          className={
-                            selectedMetric === "artist" ? "active" : undefined
-                          }
-                        >
-                          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                          <a
-                            href=""
-                            role="button"
-                            onClick={(event) =>
-                              this.changeSelectedMetric("artist", event)
-                            }
-                          >
-                            Artists
-                          </a>
-                        </li>
-                      </ul>
-                    </span>
+              )}
+            </div>
+            <div className="" id="calendar">
+              <h3 className="text-center">
+                {capitalize(yourOrUsersName)} listening activity{" "}
+                <FontAwesomeIcon
+                  icon={faQuestionCircle}
+                  data-tip
+                  data-for="listening-activity"
+                  size="xs"
+                />
+                <Tooltip id="listening-activity">
+                  How many tracks did {youOrUsername} listen to each day of the
+                  year?
+                </Tooltip>
+              </h3>
+              {listensPerDayForGraph ? (
+                <div className="graph-container">
+                  <div className="graph">
+                    <ResponsiveCalendar
+                      from="2023-01-01"
+                      to="2023-12-31"
+                      data={listensPerDayForGraph as CalendarDatum[]}
+                      emptyColor="#eeeeee"
+                      colors={[
+                        "#f9e5b3",
+                        "#ffcc49",
+                        COLOR_LB_ORANGE,
+                        "#ff0e25",
+                      ]}
+                      monthBorderColor="#eeeeee"
+                      dayBorderWidth={1}
+                      dayBorderColor="#ffffff"
+                      legends={[
+                        {
+                          anchor: "bottom-left",
+                          direction: "row",
+                          itemCount: 4,
+                          itemWidth: 42,
+                          itemHeight: 36,
+                          itemsSpacing: 14,
+                          itemDirection: "right-to-left",
+                        },
+                      ]}
+                    />
                   </div>
-                  <CustomChoropleth
-                    data={artistMapDataForGraph}
-                    selectedMetric={selectedMetric}
-                    colorScaleRange={[
-                      "#ffeec2",
-                      "#ffdb80",
-                      "#ffcc49",
-                      "#ff9c40",
-                      "#ff6b36",
-                      "#ff0a23",
-                    ]}
-                  />
                 </div>
-              </div>
-            ) : (
-              noDataText
-            )}
+              ) : (
+                noDataText
+              )}
+            </div>
+            <div className="" id="most-listened-year">
+              <h3 className="text-center">
+                What year are {yourOrUsersName} favorite songs from?{" "}
+                <FontAwesomeIcon
+                  icon={faQuestionCircle}
+                  data-tip
+                  data-for="most-listened-year-helptext"
+                  size="xs"
+                />
+                <Tooltip id="most-listened-year-helptext">
+                  How much {isCurrentUser ? "were you" : `was ${user.name}`} on
+                  the lookout for new music this year? Not that we&apos;re
+                  judging.
+                </Tooltip>
+              </h3>
+              {mostListenedYearDataForGraph ? (
+                <div className="graph-container">
+                  <div className="graph">
+                    <ResponsiveBar
+                      margin={{ left: 50, bottom: 30 }}
+                      data={mostListenedYearDataForGraph}
+                      padding={0.1}
+                      layout="vertical"
+                      keys={["songs"]}
+                      indexBy="year"
+                      colors="#ff0e25"
+                      enableLabel={false}
+                      axisBottom={{
+                        tickValues: mostListenedYearTicks,
+                      }}
+                      axisLeft={{
+                        legend: "Number of listens",
+                        legendOffset: -40,
+                        legendPosition: "middle",
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                noDataText
+              )}
+            </div>
+            <div
+              className=""
+              id="user-artist-map"
+              style={{ marginTop: "1.5em" }}
+            >
+              <h3 className="text-center">
+                What countries are {yourOrUsersName} favorite artists from?{" "}
+                <FontAwesomeIcon
+                  icon={faQuestionCircle}
+                  data-tip
+                  data-for="user-artist-map-helptext"
+                  size="xs"
+                />
+                <Tooltip id="user-artist-map-helptext">
+                  Click on a country to see more details
+                </Tooltip>
+              </h3>
+              {artistMapDataForGraph ? (
+                <div className="graph-container">
+                  <div className="graph">
+                    <div style={{ paddingLeft: "3em" }}>
+                      <span>Rank by number of</span>
+                      <span className="dropdown">
+                        <button
+                          className="dropdown-toggle btn-transparent capitalize-bold"
+                          data-toggle="dropdown"
+                          type="button"
+                        >
+                          {selectedMetric}s
+                          <span className="caret" />
+                        </button>
+                        <ul className="dropdown-menu" role="menu">
+                          <li
+                            className={
+                              selectedMetric === "listen" ? "active" : undefined
+                            }
+                          >
+                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                            <a
+                              href=""
+                              role="button"
+                              onClick={(event) =>
+                                this.changeSelectedMetric("listen", event)
+                              }
+                            >
+                              Listens
+                            </a>
+                          </li>
+                          <li
+                            className={
+                              selectedMetric === "artist" ? "active" : undefined
+                            }
+                          >
+                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                            <a
+                              href=""
+                              role="button"
+                              onClick={(event) =>
+                                this.changeSelectedMetric("artist", event)
+                              }
+                            >
+                              Artists
+                            </a>
+                          </li>
+                        </ul>
+                      </span>
+                    </div>
+                    <CustomChoropleth
+                      data={artistMapDataForGraph}
+                      selectedMetric={selectedMetric}
+                      colorScaleRange={[
+                        "#ffeec2",
+                        "#ffdb80",
+                        "#ffcc49",
+                        "#ff9c40",
+                        "#ff6b36",
+                        "#ff0a23",
+                      ]}
+                    />
+                  </div>
+                </div>
+              ) : (
+                noDataText
+              )}
+            </div>
           </div>
         </div>
-        <div className="container">
+        <div className="section">
           <div className="header">
             2023 Playlists
             <div className="subheader">
@@ -994,7 +1046,7 @@ export default class YearInMusic extends React.Component<
             {hasNoPlaylists && noDataText}
           </div>
         </div>
-        <div className="container">
+        <div className="section">
           <div className="header">
             Discover
             <div className="subheader">
@@ -1007,7 +1059,7 @@ export default class YearInMusic extends React.Component<
               id="new-releases"
               style={{ marginBottom: "2.5em" }}
             >
-              <div className="center-p">
+              <div className="heading">
                 <img
                   className="img-header"
                   src="/static/img/year-in-music-23/ghost-square.png"
@@ -1098,7 +1150,7 @@ export default class YearInMusic extends React.Component<
               id="similar-users"
               style={{ marginBottom: "2.5em" }}
             >
-              <div className="center-p">
+              <div className="heading">
                 <img
                   className="img-header"
                   src="/static/img/year-in-music-23/buddies-square.png"
@@ -1146,15 +1198,15 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
         </div>
-        <div className="container">
+        <div className="section">
           <div className="header">
             Friends
-            <div className="subheader">View {yourOrUsersName} buds</div>
+            <div className="subheader">visit {yourOrUsersName} buds</div>
           </div>
-          <div className="flex flex-wrap">PLACEHOLDER</div>
+          <div className="flex flex-wrap flex-center">PLACEHOLDER</div>
         </div>
         <div className="cover-art-composite">
-          <div className="container">
+          <div className="section">
             <div className="header">
               2023 Releases
               <div className="subheader">
@@ -1178,14 +1230,14 @@ export default class YearInMusic extends React.Component<
               />
             </a>
           </div>
-          <div className="container closing-remarks">
+          <div className="section closing-remarks">
             <span className="bold">
-              Wishing you a wonderful 2023, from the ListenBrainz team.
+              Wishing you a restful 2024, from the ListenBrainz team.
             </span>
             <br />
             If you have questions or feedback don&apos;t hesitate to contact us
             <br />
-            on{" "}
+            on&nbsp;
             <a
               target="_blank"
               href="https://community.metabrainz.org/c/listenbrainz/18"
@@ -1193,7 +1245,7 @@ export default class YearInMusic extends React.Component<
             >
               our forums
             </a>
-            ,{" "}
+            ,&nbsp;
             <a
               target="_blank"
               href="mailto:listenbrainz@metabrainz.org"
@@ -1201,7 +1253,7 @@ export default class YearInMusic extends React.Component<
             >
               by email
             </a>
-            ,{" "}
+            ,&nbsp;
             <a
               target="_blank"
               href="https://web.libera.chat/#metabrainz"
@@ -1209,22 +1261,35 @@ export default class YearInMusic extends React.Component<
             >
               IRC
             </a>
-            , or{" "}
+            ,&nbsp;
             <a
               target="_blank"
               href="https://twitter.com/listenbrainz"
               rel="noopener noreferrer"
             >
-              on twitter
-            </a>{" "}
+              X
+            </a>
+            ,&nbsp;
+            <a
+              target="_blank"
+              href="https://bsky.app/profile/metabrainz.bsky.social"
+              rel="noopener noreferrer"
+            >
+              Bluesky
+            </a>
+            &nbsp;or&nbsp;
+            <a
+              target="_blank"
+              href="https://mastodon.social/@metabrainz"
+              rel="noopener noreferrer"
+            >
+              Mastodon
+            </a>
+            .
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <a href={`/user/${user.name}/year-in-music/2021`}>2021</a>
-          </div>
-          <div className="thanks-kc-green">
-            With thanks to KC Green for the original &apos;this is fine&apos;
-            cartoon.
+            <a href={`/user/${user.name}/year-in-music/2022`}>2022</a>
           </div>
         </div>
         <BrainzPlayer
