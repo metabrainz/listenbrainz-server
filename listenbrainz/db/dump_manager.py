@@ -48,8 +48,15 @@ NUMBER_OF_CANONICAL_DUMPS_TO_KEEP = 2
 
 cli = click.Group()
 
+# Scratchpad
+#    if "PYTHON_TESTS_RUNNING" in os.environ:
+#        db_connect = db.create_test_database_connect_strings()
+#        db.init_db_connection(db_connect["DB_CONNECT"])
+#        ts_connect = timescale.create_test_timescale_connect_strings()
+#        timescale.init_db_connection(ts_connect["DB_CONNECT"])
 
 def send_dump_creation_notification(dump_name, dump_type):
+
     if not current_app.config['TESTING']:
         dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/{}/{}'.format(
             dump_type, dump_name)

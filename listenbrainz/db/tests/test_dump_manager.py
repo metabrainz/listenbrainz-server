@@ -36,6 +36,7 @@ from listenbrainz.db import dump_manager
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
 from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db import timescale
 from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app, timescale_connection
@@ -49,6 +50,13 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.tempdir = tempfile.mkdtemp()
         self.runner = CliRunner()
         self.listenstore = timescale_connection._ts
+
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            db_connect = db_user.db.create_test_database_connect_strings()
+            db_user.db.init_db_connection(db_connect["DB_CONNECT"])
+            ts_connect = timescale.create_test_timescale_connect_strings()
+            timescale.init_db_connection(ts_connect["DB_CONNECT"])
+
         self.user_id = db_user.create(1, 'iliekcomputers')
         self.user_name = db_user.get(self.user_id)['musicbrainz_id']
 
