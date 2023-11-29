@@ -25,6 +25,8 @@ class DatabaseTestCase(unittest.TestCase):
         self.reset_db()
 
     def reset_db(self):
+        db_connect = create_test_database_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT"])
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'reset_tables.sql'))
 
     @classmethod
@@ -62,4 +64,6 @@ class TimescaleTestCase(unittest.TestCase):
         self.reset_timescale_db()
 
     def reset_timescale_db(self):
+        ts_connect = create_test_timescale_connect_strings()
+        ts.init_db_connection(ts_connect["DB_CONNECT"])
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'reset_tables.sql'))

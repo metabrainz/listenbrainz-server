@@ -22,7 +22,6 @@ https://listenbrainz.readthedocs.io/en/production/dev/listenbrainz-dumps.html
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
 import os
 import shutil
 import subprocess
@@ -103,13 +102,7 @@ PUBLIC_TABLES_DUMP = {
         'listen_count',
         'last_updated',
     ),
-    'recording_feedback': (
-        'id',
-        'user_id',
-        'recording_msid',
-        'score',
-        'created'
-    ),
+    'recording_feedback': ('id', 'user_id', 'recording_msid', 'score', 'created'),
 }
 
 PUBLIC_TABLES_TIMESCALE_DUMP = {
@@ -153,14 +146,14 @@ PUBLIC_TABLES_IMPORT = PUBLIC_TABLES_DUMP.copy()
 # When importing fields with COPY we need to use the names of the fields, rather
 # than the placeholders that we set for the export
 PUBLIC_TABLES_IMPORT['user'] = (
-        'id',
-        'created',
-        'musicbrainz_id',
-        'musicbrainz_row_id',
-        'auth_token',
-        'last_login',
-        'latest_import',
-    )
+    'id',
+    'created',
+    'musicbrainz_id',
+    'musicbrainz_row_id',
+    'auth_token',
+    'last_login',
+    'latest_import',
+)
 
 # this dict contains the tables dumped in the private dump as keys
 # and a tuple of columns that should be dumped as values
@@ -176,25 +169,10 @@ PRIVATE_TABLES = {
         'gdpr_agreed',
         'email',
     ),
-    'external_service_oauth': (
-        'id',
-        'user_id',
-        'service',
-        'access_token',
-        'refresh_token',
-        'token_expires',
-        'last_updated',
-        'scopes'
-    ),
-    'listens_importer': (
-        'id',
-        'external_service_oauth_id',
-        'user_id',
-        'service',
-        'last_updated',
-        'latest_listened_at',
-        'error_message'
-    ),
+    'external_service_oauth':
+    ('id', 'user_id', 'service', 'access_token', 'refresh_token', 'token_expires', 'last_updated', 'scopes'),
+    'listens_importer':
+    ('id', 'external_service_oauth_id', 'user_id', 'service', 'last_updated', 'latest_listened_at', 'error_message'),
     'api_compat.token': (
         'id',
         'user_id',
@@ -225,18 +203,8 @@ PRIVATE_TABLES_TIMESCALE = {
         'created_for_id',
         'additional_metadata',
     ),
-    'playlist.playlist_recording': (
-        'id',
-        'playlist_id',
-        'position',
-        'mbid',
-        'added_by_id',
-        'created'
-    ),
-    'playlist.playlist_collaborator': (
-        'playlist_id',
-        'collaborator_id'
-    )
+    'playlist.playlist_recording': ('id', 'playlist_id', 'position', 'mbid', 'added_by_id', 'created'),
+    'playlist.playlist_collaborator': ('playlist_id', 'collaborator_id')
 }
 
 
@@ -277,7 +245,8 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_
     return private_dump, public_dump
 
 
-def dump_timescale_db(location: str, dump_time: datetime = datetime.today(),
+def dump_timescale_db(location: str,
+                      dump_time: datetime = datetime.today(),
                       threads: int = DUMP_DEFAULT_THREAD_COUNT) -> Optional[Tuple[str, str]]:
     """ Create timescale database (excluding listens) dump in the specified location
 
@@ -299,8 +268,7 @@ def dump_timescale_db(location: str, dump_time: datetime = datetime.today(),
         current_app.logger.info('Removing created files and giving up...')
         shutil.rmtree(location)
         return
-    current_app.logger.info(
-        'Dump of private timescale data created at %s!', private_timescale_dump)
+    current_app.logger.info('Dump of private timescale data created at %s!', private_timescale_dump)
 
     current_app.logger.info('Creating dump of timescale public data...')
     try:
@@ -358,8 +326,13 @@ def dump_statistics(location: str):
             couchdb.dump_database(stat, fp)
 
 
-def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], dump_type: str, tables: Optional[dict],
-                 schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+def _create_dump(location: str,
+                 db_engine: Optional[sqlalchemy.engine.Engine],
+                 dump_type: str,
+                 tables: Optional[dict],
+                 schema_version: int,
+                 dump_time: datetime,
+                 threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
@@ -376,13 +349,8 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
             the path to the archive file created
     """
 
-    archive_name = 'listenbrainz-{dump_type}-dump-{time}'.format(
-        dump_type=dump_type,
-        time=dump_time.strftime('%Y%m%d-%H%M%S')
-    )
-    archive_path = os.path.join(location, '{archive_name}.tar.xz'.format(
-        archive_name=archive_name,
-    ))
+    archive_name = 'listenbrainz-{dump_type}-dump-{time}'.format(dump_type=dump_type, time=dump_time.strftime('%Y%m%d-%H%M%S'))
+    archive_path = os.path.join(location, '{archive_name}.tar.xz'.format(archive_name=archive_name, ))
 
     with open(archive_path, 'w') as archive:
 
@@ -397,15 +365,12 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
                 schema_seq_path = os.path.join(temp_dir, "SCHEMA_SEQUENCE")
                 with open(schema_seq_path, "w") as f:
                     f.write(str(schema_version))
-                tar.add(schema_seq_path,
-                        arcname=os.path.join(archive_name, "SCHEMA_SEQUENCE"))
+                tar.add(schema_seq_path, arcname=os.path.join(archive_name, "SCHEMA_SEQUENCE"))
                 timestamp_path = os.path.join(temp_dir, "TIMESTAMP")
                 with open(timestamp_path, "w") as f:
                     f.write(dump_time.isoformat(" "))
-                tar.add(timestamp_path,
-                        arcname=os.path.join(archive_name, "TIMESTAMP"))
-                tar.add(DUMP_LICENSE_FILE_PATH,
-                        arcname=os.path.join(archive_name, "COPYING"))
+                tar.add(timestamp_path, arcname=os.path.join(archive_name, "TIMESTAMP"))
+                tar.add(DUMP_LICENSE_FILE_PATH, arcname=os.path.join(archive_name, "COPYING"))
             except Exception:
                 current_app.logger.error('Exception while adding dump metadata: ', exc_info=True)
                 raise
@@ -444,8 +409,7 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
                 # This is so that when imported into a db with FK constraints added, we import dependent
                 # tables first
                 for table in tables:
-                    tar.add(os.path.join(archive_tables_dir, table),
-                            arcname=os.path.join(archive_name, 'lbdump', table))
+                    tar.add(os.path.join(archive_tables_dir, table), arcname=os.path.join(archive_name, 'lbdump', table))
 
             shutil.rmtree(temp_dir)
 
@@ -462,6 +426,11 @@ def create_private_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT
             api_compat.token,
             api_compat.session
     """
+
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        db_connect = db.create_test_database_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT"])
+
     return _create_dump(
         location=location,
         db_engine=db.engine,
@@ -476,6 +445,10 @@ def create_private_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT
 def create_private_timescale_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create timescale database dump for private data in db.
     """
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        ts_connect = timescale.create_test_database_connect_strings()
+        timescale.init_db_connection(ts_connect["DB_CONNECT"])
+
     return _create_dump(
         location=location,
         db_engine=timescale.engine,
@@ -496,6 +469,10 @@ def create_public_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_
             statistics.release
             statistics.recording
     """
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        db_connect = db.create_test_database_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT"])
+
     return _create_dump(
         location=location,
         db_engine=db.engine,
@@ -511,6 +488,10 @@ def create_public_timescale_dump(location: str, dump_time: datetime, threads=DUM
     """ Create postgres database dump for public info in the timescale database.
         This includes the MBID mapping table
     """
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        ts_connect = ts.create_test_timescale_connect_strings()
+        ts.init_db_connection(ts_connect["DB_CONNECT"])
+
     return _create_dump(
         location=location,
         db_engine=timescale.engine,
@@ -525,6 +506,11 @@ def create_public_timescale_dump(location: str, dump_time: datetime, threads=DUM
 def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create a spark format dump of user listen and user recommendation feedback.
     """
+
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        db_connect = db.create_test_database_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT"])
+
     return _create_dump(
         location=location,
         db_engine=db.engine,
@@ -556,7 +542,8 @@ def dump_user_feedback(connection, location):
     with connection.begin() as transaction:
 
         # First dump the user feedback
-        result = connection.execute(sqlalchemy.text("""
+        result = connection.execute(
+            sqlalchemy.text("""
             SELECT musicbrainz_id, recording_msid, score, r.created,
                    EXTRACT(YEAR FROM r.created) AS year,
                    EXTRACT(MONTH FROM r.created) AS month,
@@ -573,8 +560,8 @@ def dump_user_feedback(connection, location):
             row = result.fetchone()
             today = (row[4], row[5], row[6]) if row else ()
             if (not row or today != last_day) and len(todays_items) > 0:
-                full_path = os.path.join(location, "feedback", "listens", "%02d" % int(last_day[0]),
-                                         "%02d" % int(last_day[1]), "%02d" % int(last_day[2]))
+                full_path = os.path.join(location, "feedback", "listens", "%02d" % int(last_day[0]), "%02d" % int(last_day[1]),
+                                         "%02d" % int(last_day[2]))
                 os.makedirs(full_path)
                 with open(os.path.join(full_path, "data.json"), "wb") as f:
                     for item in todays_items:
@@ -585,14 +572,17 @@ def dump_user_feedback(connection, location):
             if not row:
                 break
 
-            todays_items.append({'user_name': row[0],
-                                 'recording_msid': str(row[1]),
-                                 'feedback': row[2],
-                                 'created': row[3].isoformat()})
+            todays_items.append({
+                'user_name': row[0],
+                'recording_msid': str(row[1]),
+                'feedback': row[2],
+                'created': row[3].isoformat()
+            })
             last_day = today
 
         # Now dump the recommendation feedback
-        result = connection.execute(sqlalchemy.text("""
+        result = connection.execute(
+            sqlalchemy.text("""
             SELECT musicbrainz_id, recording_mbid, rating, r.created,
                    EXTRACT(YEAR FROM r.created) AS year,
                    EXTRACT(MONTH FROM r.created) AS month,
@@ -620,10 +610,12 @@ def dump_user_feedback(connection, location):
             if not row:
                 break
 
-            todays_items.append({'user_name': row[0],
-                                 'mb_recording_mbid': str(row[1]),
-                                 'feedback': row[2],
-                                 'created': row[3].isoformat()})
+            todays_items.append({
+                'user_name': row[0],
+                'mb_recording_mbid': str(row[1]),
+                'feedback': row[2],
+                'created': row[3].isoformat()
+            })
             last_day = today
         transaction.rollback()
 
@@ -656,13 +648,14 @@ def add_dump_entry(timestamp):
     """
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("""
+        result = connection.execute(
+            sqlalchemy.text("""
                 INSERT INTO data_dump (created)
                      VALUES (TO_TIMESTAMP(:ts))
                   RETURNING id
             """), {
-            'ts': timestamp,
-        })
+                'ts': timestamp,
+            })
         return result.fetchone().id
 
 
@@ -671,7 +664,8 @@ def get_dump_entries():
     """
 
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
+        result = connection.execute(
+            sqlalchemy.text("""
                 SELECT id, created
                   FROM data_dump
               ORDER BY created DESC
@@ -682,13 +676,14 @@ def get_dump_entries():
 
 def get_dump_entry(dump_id):
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
+        result = connection.execute(
+            sqlalchemy.text("""
             SELECT id, created
               FROM data_dump
              WHERE id = :dump_id
         """), {
-            'dump_id': dump_id,
-        })
+                'dump_id': dump_id,
+            })
         if result.rowcount > 0:
             return result.mappings().first()
         return None
@@ -709,6 +704,12 @@ def import_postgres_dump(private_dump_archive_path=None,
             threads: the number of threads to use while decompressing the archives, defaults to
                      db.DUMP_DEFAULT_THREAD_COUNT
     """
+
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        db_connect = db.create_test_database_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT"])
+        ts_connect = timescale.create_test_timescale_connect_strings()
+        timescale.init_db_connection(ts_connect["DB_CONNECT"])
 
     if private_dump_archive_path:
         current_app.logger.info('Importing private dump %s...', private_dump_archive_path)
@@ -779,8 +780,7 @@ def _escape_table_columns(table: str, columns: list[str | Composable]) \
     return escaped_table_name, joined_fields
 
 
-def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
-                 tables, schema_version: int, threads=DUMP_DEFAULT_THREAD_COUNT):
+def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine, tables, schema_version: int, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
@@ -808,8 +808,7 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                     schema_seq = int(tar.extractfile(member).read().strip())
                     if schema_seq != schema_version:
                         raise SchemaMismatchException('Incorrect schema version! Expected: %d, got: %d.'
-                                                      'Please, get the latest version of the dump.'
-                                                      % (schema_version, schema_seq))
+                                                      'Please, get the latest version of the dump.' % (schema_version, schema_seq))
                     else:
                         current_app.logger.info('Schema version verified.')
 
@@ -839,7 +838,8 @@ def _update_sequence(db_engine: sqlalchemy.engine.Engine, seq_name, table_name):
         table_name (str): the name of the table from which the maximum value is to be retrieved
     """
     with db_engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
+        connection.execute(
+            sqlalchemy.text("""
             SELECT setval('{seq_name}', max(id))
               FROM {table_name}
         """.format(seq_name=seq_name, table_name=table_name)))
@@ -997,13 +997,11 @@ def check_ftp_dump_ages():
     app = create_app()
     with app.app_context():
         if not current_app.config['TESTING'] and msg:
-            send_mail(
-                subject="ListenBrainz outdated dumps!",
-                text=render_template('emails/data_dump_outdated.txt', msg=msg),
-                recipients=['listenbrainz-exceptions@metabrainz.org'],
-                from_name='ListenBrainz',
-                from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN']
-            )
+            send_mail(subject="ListenBrainz outdated dumps!",
+                      text=render_template('emails/data_dump_outdated.txt', msg=msg),
+                      recipients=['listenbrainz-exceptions@metabrainz.org'],
+                      from_name='ListenBrainz',
+                      from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN'])
         elif msg:
             print(msg)
 

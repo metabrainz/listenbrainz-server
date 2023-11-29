@@ -50,6 +50,10 @@ class DumpTestCase(DatabaseTestCase):
         self.tempdir = tempfile.mkdtemp()
         self.app = create_app()
 
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            db_connect = db_user.db.create_test_database_connect_strings()
+            db_user.db.init_db_connection(db_connect["DB_CONNECT"])
+
     def tearDown(self):
         super().tearDown()
         shutil.rmtree(self.tempdir)
