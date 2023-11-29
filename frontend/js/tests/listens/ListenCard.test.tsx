@@ -49,6 +49,7 @@ const props: ListenCardProps = {
 
 const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
+  websocketsUrl: "",
   currentUser: { auth_token: "baz", name: "test" },
   spotifyAuth: {},
   youtubeAuth: {},

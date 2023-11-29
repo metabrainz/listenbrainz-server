@@ -2,6 +2,7 @@
 import * as React from "react";
 import { RenderOptions, render } from "@testing-library/react";
 import { ToastContainer } from "react-toastify";
+import { isString } from "lodash";
 import APIService from "../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -18,6 +19,7 @@ jest.requireActual("react-toastify");
 const testAPIService = new APIService("");
 const defaultGlobalContext: GlobalAppContextT = {
   APIService: testAPIService,
+  websocketsUrl: "",
   currentUser: {
     id: 1,
     name: "FNORD",
@@ -44,7 +46,7 @@ export const renderWithProviders = (
         ...defaultGlobalContext,
         ...globalContext,
       }),
-      [globalContext]
+      []
     );
 
     return (
@@ -56,3 +58,39 @@ export const renderWithProviders = (
   }
   return render(ui, { wrapper: WithProviders, ...renderOptions });
 };
+
+/**
+ * Getting the deepest element that contain string / match regex even when it split between multiple elements
+ * Based on  https://github.com/testing-library/dom-testing-library/issues/410#issuecomment-1060917305
+ *
+ * @example
+ * For:
+ * <div>
+ *   <span>Hello</span><span> World</span>
+ * </div>
+ *
+ * screen.getByText('Hello World') // ❌ Fail
+ * screen.getByText(textContentMatcher('Hello World')) // ✅ pass
+ */
+export function textContentMatcher(textMatch: string | RegExp) {
+  const hasText =
+    typeof textMatch === "string"
+      ? (node: Element) => node.textContent === textMatch
+      : (node: Element) =>
+          isString(node?.textContent) && textMatch.test(node.textContent);
+
+  const matcher = (_content: string, node: Element | null) => {
+    if (node === null || !hasText(node)) {
+      return false;
+    }
+
+    const childrenDontHaveText = Array.from(node?.children || []).every(
+      (child) => !hasText(child)
+    );
+
+    return childrenDontHaveText;
+  };
+  matcher.toString = () => `textContentMatcher(${textMatch})`;
+
+  return matcher;
+}

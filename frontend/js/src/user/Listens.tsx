@@ -196,7 +196,10 @@ export default class Listens extends React.Component<
     // if modifying the uri or path, lookup socket.io namespace vs paths.
     // tl;dr io("https://listenbrainz.org/socket.io/") and
     // io("https://listenbrainz.org", { path: "/socket.io" }); are not equivalent
-    this.socket = io(`${window.location.origin}`, { path: "/socket.io/" });
+    const { websocketsUrl } = this.context;
+    this.socket = io(websocketsUrl || window.location.origin, {
+      path: "/socket.io/",
+    });
   };
 
   addWebsocketsHandlers = (): void => {
@@ -621,6 +624,7 @@ export default class Listens extends React.Component<
       additionalMenuItems.push(
         <ListenControl
           text="Delete Listen"
+          key="Delete Listen"
           icon={faTrashAlt}
           action={this.deleteListen.bind(this, listen)}
         />
@@ -748,7 +752,7 @@ export default class Listens extends React.Component<
             {webSocketListens.length > 0 && (
               <div className="webSocket-box">
                 <h4>New listens since you arrived</h4>
-                <div id="webSocketListens">
+                <div id="webSocketListens" data-testid="webSocketListens">
                   {webSocketListens.map((listen) => this.getListenCard(listen))}
                 </div>
                 <div className="read-more">
@@ -830,6 +834,7 @@ export default class Listens extends React.Component<
                 </div>
                 <div
                   id="listens"
+                  data-testid="listens"
                   ref={this.listensTable}
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
@@ -846,11 +851,13 @@ export default class Listens extends React.Component<
                   >
                     <a
                       role="button"
+                      aria-label="Navigate to most recent listens"
                       onClick={this.handleClickNewest}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") this.handleClickNewest();
                       }}
                       tabIndex={0}
+                      aria-disabled={isNewestButtonDisabled}
                       href={window.location.pathname}
                     >
                       &#x21E4;
@@ -863,11 +870,13 @@ export default class Listens extends React.Component<
                   >
                     <a
                       role="button"
+                      aria-label="Navigate to more recent listens"
                       onClick={this.handleClickNewer}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") this.handleClickNewer();
                       }}
                       tabIndex={0}
+                      aria-disabled={isNewerButtonDisabled}
                       href={
                         isNewerButtonDisabled
                           ? undefined
@@ -902,11 +911,13 @@ export default class Listens extends React.Component<
                     style={{ marginLeft: "auto" }}
                   >
                     <a
+                      aria-label="Navigate to older listens"
                       role="button"
                       onClick={this.handleClickOlder}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") this.handleClickOlder();
                       }}
+                      aria-disabled={isOlderButtonDisabled}
                       tabIndex={0}
                       href={
                         isOlderButtonDisabled
@@ -923,12 +934,14 @@ export default class Listens extends React.Component<
                     }`}
                   >
                     <a
+                      aria-label="Navigate to oldest listens"
                       role="button"
                       onClick={this.handleClickOldest}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") this.handleClickOldest();
                       }}
                       tabIndex={0}
+                      aria-disabled={isOldestButtonDisabled}
                       href={
                         isOldestButtonDisabled
                           ? undefined

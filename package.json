@@ -152,6 +152,7 @@
     "jest-fetch-mock": "^3.0.3",
     "jest-junit": "^12.3.0",
     "jest-location-mock": "^1.0.9",
+    "jest-websocket-mock": "^2.5.0",
     "less-loader": "^11.1.0",
     "network-information-types": "^0.1.1",
     "postcss-less": "^6.0.0",

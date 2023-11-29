@@ -194,7 +194,12 @@ export default class UserFeedback extends React.Component<
             >
               <Loader isLoading={loading} />
             </div>
-            <div id="listens" style={{ opacity: loading ? "0.4" : "1" }}>
+            <div
+              id="listens"
+              role="list"
+              data-testid="userfeedback-listens"
+              style={{ opacity: loading ? "0.4" : "1" }}
+            >
               {listensFromFeedback.map((listen) => {
                 const recording_msid = getRecordingMSID(listen);
                 const recording_mbid = getRecordingMBID(listen);

@@ -40,6 +40,7 @@ const loggedInUser = {
 
 const globalContext: GlobalAppContextT = {
   APIService: new APIService("foo"),
+  websocketsUrl: "",
   youtubeAuth: {},
   spotifyAuth: {},
   currentUser: loggedInUser,

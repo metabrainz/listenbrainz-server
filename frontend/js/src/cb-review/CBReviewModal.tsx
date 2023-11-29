@@ -43,7 +43,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
 
   const closeModal = React.useCallback(() => {
     modal.hide();
-    setTimeout(modal.remove, 500);
+    setTimeout(modal.remove, 3000);
   }, [modal]);
 
   const { APIService, currentUser, critiquebrainzAuth } = React.useContext(
@@ -539,7 +539,11 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           </label>
         </div>
         {!reviewValid && (
-          <div id="text-too-short-alert" className="alert alert-danger">
+          <div
+            id="text-too-short-alert"
+            className="alert alert-danger"
+            role="alert"
+          >
             Your review needs to be longer than {minTextLength} characters.
           </div>
         )}
