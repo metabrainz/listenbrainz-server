@@ -91,7 +91,6 @@ export const QueueRepeatModes = {
 export type QueueRepeatMode = typeof QueueRepeatModes[keyof typeof QueueRepeatModes];
 
 export type BrainzPlayerProps = {
-  // eslint-disable-next-line react/no-unused-prop-types
   listens: Array<Listen | JSPFTrack>;
   refreshSpotifyToken: () => Promise<string>;
   refreshYoutubeToken: () => Promise<string>;
@@ -115,6 +114,18 @@ export type BrainzPlayerState = {
   continuousPlaybackTime: number;
   queue: BrainzPlayerQueue;
   queueRepeatMode: QueueRepeatMode;
+};
+
+type BrainzPlayerQueueLocalStorage = {
+  userId: number;
+  queue: BrainzPlayerQueue;
+  queueRepeatMode: QueueRepeatMode;
+  currentListen?: BrainzPlayerQueueItem;
+  currentDataSourceIndex: number;
+  currentTrackName: string;
+  currentTrackArtist?: string;
+  currentTrackAlbum?: string;
+  currentTrackURL?: string;
 };
 
 /**
@@ -227,23 +238,34 @@ export default class BrainzPlayer extends React.Component<
     const savedQueue = localStorage.getItem("BrainzPlayer_queue");
     if (savedQueue) {
       try {
-        const { userId, queue, queueRepeatMode, currentListen } = JSON.parse(
-          savedQueue
-        );
+        const {
+          userId,
+          queue,
+          queueRepeatMode,
+          currentListen,
+          currentDataSourceIndex,
+          currentTrackName,
+          currentTrackArtist,
+          currentTrackAlbum,
+          currentTrackURL,
+        } = JSON.parse(savedQueue) as BrainzPlayerQueueLocalStorage;
         const { currentUser } = this.context;
         if (userId === currentUser?.id) {
           this.setState({
             queue,
             queueRepeatMode,
             currentListen,
+            currentDataSourceIndex,
+            currentTrackName,
+            currentTrackArtist,
+            currentTrackAlbum,
+            currentTrackURL,
           });
         }
       } catch (e) {
-        // Do nothing, we just fallback gracefully to an empty queue.
-        this.handleWarning(
-          "Your saved queue could not be loaded. It may be corrupted.",
-          "Error loading saved queue"
-        );
+        // Do nothing, we just fallback gracefully to the default queue.
+        const { listens } = this.props;
+        this.replaceQueue(listens);
       }
     }
   }
@@ -305,15 +327,33 @@ export default class BrainzPlayer extends React.Component<
     }
 
     if (event.key === "BrainzPlayer_queue") {
-      const { userId, queue, queueRepeatMode, currentListen } = JSON.parse(
-        event.newValue!
-      );
+      if (event.newValue === null) {
+        // The queue was cleared, reset to default queue
+        this.setQueue([]);
+        return;
+      }
+      const {
+        userId,
+        queue,
+        queueRepeatMode,
+        currentListen,
+        currentDataSourceIndex: newDataSourceIndex,
+        currentTrackName,
+        currentTrackArtist,
+        currentTrackAlbum,
+        currentTrackURL,
+      } = JSON.parse(event.newValue!) as BrainzPlayerQueueLocalStorage;
       const { currentUser } = this.context;
       if (userId === currentUser?.id) {
         this.setState({
           queue,
           queueRepeatMode,
           currentListen,
+          currentDataSourceIndex: newDataSourceIndex,
+          currentTrackName,
+          currentTrackArtist,
+          currentTrackAlbum,
+          currentTrackURL,
         });
       }
     }
@@ -334,16 +374,12 @@ export default class BrainzPlayer extends React.Component<
     window?.localStorage?.setItem("BrainzPlayer_stop", Date.now().toString());
   };
 
-  isCurrentlyPlaying = (element: Listen | JSPFTrack): boolean => {
+  isCurrentlyPlaying = (element: BrainzPlayerQueueItem): boolean => {
     const { currentListen } = this.state;
     if (_isNil(currentListen)) {
       return false;
     }
-    if (_has(element, "identifier")) {
-      // JSPF Track format
-      return (element as JSPFTrack).id === currentListen.id;
-    }
-    return _isEqual(element, currentListen);
+    return _isEqual(element.id, currentListen.id);
   };
 
   playPreviousTrack = (): void => {
@@ -473,7 +509,7 @@ export default class BrainzPlayer extends React.Component<
     listen: Listen | JSPFTrack,
     datasourceIndex: number = 0
   ): void => {
-    const { queue, queueRepeatMode } = this.state;
+    const { queue } = this.state;
 
     const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying);
     const newTrack = queue[currentListenIndex + 1];
@@ -485,21 +521,8 @@ export default class BrainzPlayer extends React.Component<
       continuousPlaybackTime: 0,
     });
 
-    const { currentUser } = this.context;
-    if (currentUser?.id) {
-      localStorage.setItem(
-        "BrainzPlayer_queue",
-        JSON.stringify({
-          userId: currentUser.id,
-          queue,
-          queueRepeatMode,
-          currentListen: newTrack,
-        })
-      );
-    }
-
     window.postMessage(
-      { brainzplayer_event: "current-listen-change", payload: listen },
+      { brainzplayer_event: "current-listen-change", payload: newTrack },
       window.location.origin
     );
 
@@ -536,6 +559,7 @@ export default class BrainzPlayer extends React.Component<
     this.stopOtherBrainzPlayers();
     this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
       datasource.playListen(listen);
+      this.updateBrainzPlayerQueueLocalStorage();
     });
   };
 
@@ -680,7 +704,10 @@ export default class BrainzPlayer extends React.Component<
         currentTrackURL: trackURL,
         currentTrackAlbum: album,
       },
-      this.updateWindowTitle
+      () => {
+        this.updateWindowTitle();
+        this.updateBrainzPlayerQueueLocalStorage();
+      }
     );
     const { playerPaused } = this.state;
     if (playerPaused) {
@@ -922,6 +949,11 @@ export default class BrainzPlayer extends React.Component<
     return newTrack;
   };
 
+  replaceQueue = (listens: Array<Listen | JSPFTrack>): void => {
+    const newQueue = listens.map(listenOrJSPFTrackToQueueItem);
+    this.setQueue(newQueue);
+  };
+
   clearQueue = (): void => {
     // If a song is playing, keep it in the queue, and clear the songs after it
     // Otherwise, clear the whole queue
@@ -949,9 +981,22 @@ export default class BrainzPlayer extends React.Component<
   };
 
   setQueue = (queue: BrainzPlayerQueue) => {
-    const { queueRepeatMode, currentListen } = this.state;
-    this.setState({ queue });
+    this.setState({ queue }, () => this.updateBrainzPlayerQueueLocalStorage());
+  };
+
+  updateBrainzPlayerQueueLocalStorage = (): void => {
     const { currentUser } = this.context;
+    const {
+      queue,
+      queueRepeatMode,
+      currentListen,
+      currentDataSourceIndex,
+      currentTrackName,
+      currentTrackArtist,
+      currentTrackAlbum,
+      currentTrackURL,
+    } = this.state;
+
     if (currentUser?.id) {
       localStorage.setItem(
         "BrainzPlayer_queue",
@@ -960,7 +1005,12 @@ export default class BrainzPlayer extends React.Component<
           queue,
           queueRepeatMode,
           currentListen,
-        })
+          currentDataSourceIndex,
+          currentTrackName,
+          currentTrackArtist,
+          currentTrackAlbum,
+          currentTrackURL,
+        } as BrainzPlayerQueueLocalStorage)
       );
     }
   };

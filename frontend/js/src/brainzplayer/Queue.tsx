@@ -1,7 +1,10 @@
 import React from "react";
 import { ReactSortable } from "react-sortablejs";
+import NiceModal from "@ebay/nice-modal-react";
 import QueueItemCard from "./QueueItemCard";
 import ListenCard from "../listens/ListenCard";
+import CreateOrEditPlaylistModal from "../playlists/CreateOrEditPlaylistModal";
+import { listenToJSPFTrack } from "../playlists/utils";
 
 type QueueProps = {
   queue: BrainzPlayerQueue;
@@ -23,6 +26,16 @@ function Queue(props: QueueProps) {
   } = props;
 
   const [queueNextUp, setQueueNextUp] = React.useState<BrainzPlayerQueue>([]);
+
+  const addQueueToPlaylist = () => {
+    const jspfTrackQueue = queue.map((track) => {
+      return listenToJSPFTrack(track);
+    });
+
+    NiceModal.show(CreateOrEditPlaylistModal, {
+      initialTracks: jspfTrackQueue,
+    });
+  };
 
   React.useEffect(() => {
     if (currentListen) {
@@ -62,9 +75,20 @@ function Queue(props: QueueProps) {
       )}
       <div className="queue-headers">
         <p>Next Up:</p>
-        <button className="btn btn-info" onClick={clearQueue} type="button">
-          Clear Queue
-        </button>
+        <div className="queue-buttons">
+          <button
+            className="btn btn-info"
+            data-toggle="modal"
+            data-target="#CreateOrEditPlaylistModal"
+            onClick={addQueueToPlaylist}
+            type="button"
+          >
+            Save to Playlist
+          </button>
+          <button className="btn btn-info" onClick={clearQueue} type="button">
+            Clear Queue
+          </button>
+        </div>
       </div>
       <div className="queue-list">
         {queueNextUp.length > 0 ? (
