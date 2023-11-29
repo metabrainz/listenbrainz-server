@@ -52,7 +52,7 @@ export default NiceModal.create(() => {
 
   const closeModal = useCallback(() => {
     modal.hide();
-    setTimeout(modal.remove, 500);
+    setTimeout(modal.remove, 3000);
   }, [modal]);
 
   const handleError = useCallback(
@@ -234,7 +234,7 @@ export default NiceModal.create(() => {
                           }
                           maxDate={new Date()}
                           clearIcon={null}
-                          format="dd/MM/yyyy h:mm:ss a"
+                          format="yyyy-MM-dd h:mm:ss a"
                           disabled={!customTimestamp}
                         />
                       </div>

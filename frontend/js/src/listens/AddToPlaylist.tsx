@@ -31,7 +31,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
 
   const closeModal = React.useCallback(() => {
     modal.hide();
-    setTimeout(modal.remove, 500);
+    setTimeout(modal.remove, 3000);
   }, [modal]);
 
   const { listen } = props;

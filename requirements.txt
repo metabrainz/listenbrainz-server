@@ -47,7 +47,7 @@ Levenshtein==0.20.8
 google_auth_oauthlib==0.4.4
 google-auth==1.30.0
 pandas==1.5.2
-pyarrow==10.0.1
+pyarrow==14.0.1
 more-itertools==8.13.0
 kombu==5.2.4
 itsdangerous==2.1.2

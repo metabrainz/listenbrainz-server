@@ -458,6 +458,7 @@ export default class ListenCard extends React.Component<
         }${additionalContent ? " has-additional-content" : " "} ${
           className || ""
         }`}
+        data-testid="listen"
       >
         <div className="main-content">
           {beforeThumbnailContent}
@@ -526,6 +527,7 @@ export default class ListenCard extends React.Component<
                         icon={faExternalLinkAlt}
                         title="Open in MusicBrainz"
                         text="Open in MusicBrainz"
+                        key="Open in MusicBrainz"
                         link={`https://musicbrainz.org/recording/${recordingMBID}`}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -550,6 +552,7 @@ export default class ListenCard extends React.Component<
                         icon={faSpotify}
                         title="Open in Spotify"
                         text="Open in Spotify"
+                        key="Open in Spotify"
                         link={spotifyURL}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -562,6 +565,7 @@ export default class ListenCard extends React.Component<
                         icon={faYoutube}
                         title="Open in YouTube"
                         text="Open in YouTube"
+                        key="Open in YouTube"
                         link={youtubeURL}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -574,6 +578,7 @@ export default class ListenCard extends React.Component<
                         icon={faSoundcloud}
                         title="Open in Soundcloud"
                         text="Open in Soundcloud"
+                        key="Open in Soundcloud"
                         link={soundcloudURL}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -584,6 +589,7 @@ export default class ListenCard extends React.Component<
                     {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         text="Pin this track"
+                        key="Pin this track"
                         icon={faThumbtack}
                         action={() => {
                           NiceModal.show(PinRecordingModal, {
@@ -599,12 +605,14 @@ export default class ListenCard extends React.Component<
                         icon={faCommentDots}
                         title="Recommend to my followers"
                         text="Recommend to my followers"
+                        key="Recommend to my followers"
                         action={this.recommendListenToFollowers}
                       />
                     )}
                     {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         text="Personally recommend"
+                        key="Personally recommend"
                         icon={faPaperPlane}
                         action={() => {
                           NiceModal.show(PersonalRecommendationModal, {
@@ -618,6 +626,7 @@ export default class ListenCard extends React.Component<
                     {isLoggedIn && Boolean(recordingMSID) && (
                       <ListenControl
                         text="Link with MusicBrainz"
+                        key="Link with MusicBrainz"
                         icon={faLink}
                         action={() => {
                           NiceModal.show(MBIDMappingModal, {
@@ -629,6 +638,7 @@ export default class ListenCard extends React.Component<
                     {isLoggedIn && isListenReviewable && (
                       <ListenControl
                         text="Write a review"
+                        key="Write a review"
                         icon={faPencilAlt}
                         action={() => {
                           NiceModal.show(CBReviewModal, {
@@ -642,6 +652,7 @@ export default class ListenCard extends React.Component<
                     {isLoggedIn && (
                       <ListenControl
                         text="Add to playlist"
+                        key="Add to playlist"
                         icon={faPlusCircle}
                         action={() => {
                           NiceModal.show(AddToPlaylist, {
@@ -655,6 +666,7 @@ export default class ListenCard extends React.Component<
                     {additionalMenuItems}
                     <ListenControl
                       text="Inspect listen"
+                      key="Inspect listen"
                       icon={faCode}
                       action={() => {
                         NiceModal.show(ListenPayloadModal, {

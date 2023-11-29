@@ -44,6 +44,7 @@ const soundcloudPermissions = {
 const GlobalContextMock: { context: GlobalAppContextT } = {
   context: {
     APIService: new APIService("base-uri"),
+    websocketsUrl: "",
     spotifyAuth: {
       access_token: "heyo",
       permission: [
