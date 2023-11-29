@@ -37,6 +37,7 @@ services:
     environment:
       PYTHONDONTWRITEBYTECODE: 1
       SQLALCHEMY_WARN_20: 1
+      PYTHON_TESTS_RUNNING: 1
     depends_on:
       - redis
       - lb_db

@@ -98,7 +98,7 @@ def create_app(debug=None):
 
     # If we're running tests, overwrite the given DB configuration from the config and disregard the
     # configuration, since that configuration could possibly point a different (production) DB.
-    if app.config['TESTING']:
+    if 'PYTHON_TESTS_RUNNING' in app.config:
         db_connect = create_test_database_connect_strings()
         ts_connect = create_test_timescale_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
