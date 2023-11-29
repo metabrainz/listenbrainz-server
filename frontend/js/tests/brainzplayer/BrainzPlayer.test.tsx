@@ -16,6 +16,7 @@ import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
 import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
 import BrainzPlayerUI from "../../src/brainzplayer/BrainzPlayerUI";
+import { listenOrJSPFTrackToQueueItem } from "../../src/playlists/utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -81,6 +82,9 @@ const listen2: Listen = {
     track_name: "Never Gonna Give You Up",
   },
 };
+
+const listenQueueItem = listenOrJSPFTrackToQueueItem(listen);
+const listen2QueueItem = listenOrJSPFTrackToQueueItem(listen2);
 
 describe("BrainzPlayer", () => {
   beforeAll(() => {
@@ -418,10 +422,10 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper.setState({ currentListen: listen });
+        wrapper.setState({ currentListen: listenQueueItem });
       });
 
-      expect(instance.isCurrentlyPlaying(listen)).toBe(true);
+      expect(instance.isCurrentlyPlaying(listenQueueItem)).toBe(true);
     });
 
     it("returns false if currentListen is not set", async () => {
@@ -434,7 +438,7 @@ describe("BrainzPlayer", () => {
         wrapper.setState({ currentListen: undefined });
       });
 
-      expect(instance.isCurrentlyPlaying({} as Listen)).toBeFalsy();
+      expect(instance.isCurrentlyPlaying({} as BrainzPlayerQueueItem)).toBeFalsy();
     });
   });
 
@@ -446,7 +450,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper.setState({ currentListen: listen });
+        wrapper.setState({ currentListen: listenQueueItem });
       });
 
       expect(instance.getCurrentTrackName()).toEqual("Bird's Lament");
@@ -474,7 +478,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper.setState({ currentListen: listen });
+        wrapper.setState({ currentListen: listenQueueItem });
       });
 
       expect(instance.getCurrentTrackArtists()).toEqual("Moondog");
@@ -608,7 +612,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
       await act(async () => {
-        wrapper.setState({ isActivated: true, currentListen: listen });
+        wrapper.setState({ isActivated: true, currentListen: listenQueueItem });
       });
       expect(instance.dataSources.length).toBeGreaterThan(1);
       instance.playNextTrack = jest.fn();
@@ -634,7 +638,7 @@ describe("BrainzPlayer", () => {
         wrapper.setState({
           isActivated: true,
           currentDataSourceIndex: instance.dataSources.length - 1,
-          currentListen: listen,
+          currentListen: listenQueueItem,
         });
       });
       const playNextTrackSpy = jest.spyOn(instance, "playNextTrack");
@@ -731,7 +735,7 @@ describe("BrainzPlayer", () => {
       const instance = wrapper.instance();
       await act(async () => {
         instance.setState({
-          currentListen: listen2,
+          currentListen: listen2QueueItem,
           currentTrackName: "Never Gonna Give You Up",
           currentTrackArtist: "Rick Astley",
           currentTrackURL:
@@ -802,7 +806,7 @@ describe("BrainzPlayer", () => {
       const instance = wrapper.instance();
       await act(async () => {
         instance.setState({
-          currentListen: listen2,
+          currentListen: listen2QueueItem,
           currentTrackName: "Never Gonna Give You Up",
           currentTrackArtist: "Rick Astley",
           currentTrackURL:
