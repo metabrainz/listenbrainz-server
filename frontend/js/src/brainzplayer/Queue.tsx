@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { ReactSortable } from "react-sortablejs";
 import NiceModal from "@ebay/nice-modal-react";
 import QueueItemCard from "./QueueItemCard";

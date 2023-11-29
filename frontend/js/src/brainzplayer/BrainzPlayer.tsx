@@ -267,6 +267,9 @@ export default class BrainzPlayer extends React.Component<
         const { listens } = this.props;
         this.replaceQueue(listens);
       }
+    } else {
+      const { listens } = this.props;
+      this.replaceQueue(listens);
     }
   }
 

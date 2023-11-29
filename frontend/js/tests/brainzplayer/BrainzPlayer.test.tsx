@@ -5,6 +5,7 @@ import fetchMock from "jest-fetch-mock";
 import { mount } from "enzyme";
 import BrainzPlayer, {
   DataSourceType,
+  QueueRepeatModes,
 } from "../../src/brainzplayer/BrainzPlayer";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -439,7 +440,9 @@ describe("BrainzPlayer", () => {
         wrapper.setState({ currentListen: undefined });
       });
 
-      expect(instance.isCurrentlyPlaying({} as BrainzPlayerQueueItem)).toBeFalsy();
+      expect(
+        instance.isCurrentlyPlaying({} as BrainzPlayerQueueItem)
+      ).toBeFalsy();
     });
   });
 
@@ -622,7 +625,7 @@ describe("BrainzPlayer", () => {
         instance.failedToPlayTrack();
       });
       expect(instance.playNextTrack).not.toHaveBeenCalled();
-      expect(instance.playListen).toHaveBeenCalledWith(listen, 1);
+      expect(instance.playListen).toHaveBeenCalledWith(listenQueueItem, 1);
     });
 
     it("calls playNextTrack if we ran out of datasources", async () => {
@@ -639,7 +642,8 @@ describe("BrainzPlayer", () => {
         wrapper.setState({
           isActivated: true,
           currentDataSourceIndex: instance.dataSources.length - 1,
-          currentListen: listenQueueItem,
+          currentListen: instance.state.queue[0],
+          queueRepeatMode: QueueRepeatModes.all,
         });
       });
       const playNextTrackSpy = jest.spyOn(instance, "playNextTrack");
@@ -651,12 +655,15 @@ describe("BrainzPlayer", () => {
       expect(instance.handleWarning).not.toHaveBeenCalled();
       expect(playNextTrackSpy).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledTimes(1);
-      expect(instance.playListen).toHaveBeenCalledWith(listen2);
+      expect(instance.playListen).toHaveBeenCalledWith(
+        instance.state.queue[1],
+        0
+      );
     });
   });
   describe("submitListenToListenBrainz", () => {
     beforeAll(() => {
-      jest.useFakeTimers({advanceTimers: true});
+      jest.useFakeTimers({ advanceTimers: true });
     });
     afterAll(() => {
       jest.useRealTimers();
