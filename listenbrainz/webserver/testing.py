@@ -22,6 +22,7 @@ class ServerTestCase(unittest.TestCase):
     @classmethod
     def create_app(cls):
         app = create_web_app(debug=False)
+        app.config['TESTING'] = True
         return app
 
     def temporary_login(self, user_login_id):
