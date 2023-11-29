@@ -239,5 +239,5 @@ class APICompatServerTestCase(ServerTestCase):
     @classmethod
     def create_app(cls):
         app = create_api_compat_app()
-        app.config['TESTING'] = True
+        app.config['PYTHON_TESTS_RUNNING'] = True
         return app

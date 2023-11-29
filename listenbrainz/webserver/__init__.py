@@ -103,7 +103,9 @@ def create_app(debug=None):
         ts_connect = create_test_timescale_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
         ts.init_db_connection(ts_connect["DB_CONNECT"])
+        print("RUNNING IN TESTS: %s" % db_connect["DB_CONNECT"])
     else:
+        print("NOT RUNNING IN TESTS")
         db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
         ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
 
