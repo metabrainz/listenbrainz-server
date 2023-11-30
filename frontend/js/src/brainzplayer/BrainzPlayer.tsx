@@ -180,6 +180,8 @@ export default class BrainzPlayer extends React.Component<
   // Check if it's time to submit the listen every X milliseconds
   private SUBMIT_LISTEN_UPDATE_INTERVAL = 5000;
 
+  private SAVE_QUEUE_TO_LOCALSTORAGE_INTERVAL = 2000;
+
   constructor(props: BrainzPlayerProps) {
     super(props);
 
@@ -273,6 +275,34 @@ export default class BrainzPlayer extends React.Component<
     }
   }
 
+  componentDidUpdate(
+    prevProps: BrainzPlayerProps,
+    prevState: BrainzPlayerState
+  ) {
+    const {
+      queue,
+      queueRepeatMode,
+      currentListen,
+      currentDataSourceIndex,
+      currentTrackName,
+      currentTrackArtist,
+      currentTrackAlbum,
+      currentTrackURL,
+    } = this.state;
+    if (
+      queue !== prevState.queue ||
+      queueRepeatMode !== prevState.queueRepeatMode ||
+      currentListen !== prevState.currentListen ||
+      currentDataSourceIndex !== prevState.currentDataSourceIndex ||
+      currentTrackName !== prevState.currentTrackName ||
+      currentTrackArtist !== prevState.currentTrackArtist ||
+      currentTrackAlbum !== prevState.currentTrackAlbum ||
+      currentTrackURL !== prevState.currentTrackURL
+    ) {
+      this.debounceBrainzPlayerQueueUpdate();
+    }
+  }
+
   // eslint-disable-next-line react/sort-comp
   componentWillUnMount = () => {
     window.removeEventListener("storage", this.onLocalStorageEvent);
@@ -308,7 +338,7 @@ export default class BrainzPlayer extends React.Component<
         this.togglePlay();
         break;
       case "add-track-to-queue":
-        this.addTrackToQueue(payload?.track, payload?.playNext);
+        this.addTrackToQueue(payload?.track, payload?.addToTop);
         break;
       default:
       // do nothing
@@ -562,7 +592,6 @@ export default class BrainzPlayer extends React.Component<
     this.stopOtherBrainzPlayers();
     this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
       datasource.playListen(listen);
-      this.updateBrainzPlayerQueueLocalStorage();
     });
   };
 
@@ -709,7 +738,6 @@ export default class BrainzPlayer extends React.Component<
       },
       () => {
         this.updateWindowTitle();
-        this.updateBrainzPlayerQueueLocalStorage();
       }
     );
     const { playerPaused } = this.state;
@@ -944,9 +972,9 @@ export default class BrainzPlayer extends React.Component<
         const updatedQueue = [...queue];
         updatedQueue.splice(insertionIndex, 0, newTrack);
 
-        this.setQueue(updatedQueue);
+        return { queue: updatedQueue };
       }
-      this.setQueue([...queue, newTrack]);
+      return { queue: [...queue, newTrack] };
     }, callback);
 
     return newTrack;
@@ -975,16 +1003,21 @@ export default class BrainzPlayer extends React.Component<
 
   moveQueueItem = async (evt: any) => {
     const { queue } = this.state;
+    const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying) + 1;
+
     const newQueue = [...queue];
-    const toMove = newQueue[evt.newIndex];
-    newQueue[evt.newIndex] = newQueue[evt.oldIndex];
-    newQueue[evt.oldIndex] = toMove;
+    const newIndex = evt.newIndex + currentListenIndex;
+    const oldIndex = evt.oldIndex + currentListenIndex;
+
+    const toMove = newQueue[newIndex];
+    newQueue[newIndex] = newQueue[oldIndex];
+    newQueue[oldIndex] = toMove;
 
     this.setQueue(newQueue);
   };
 
   setQueue = (queue: BrainzPlayerQueue) => {
-    this.setState({ queue }, () => this.updateBrainzPlayerQueueLocalStorage());
+    this.setState({ queue });
   };
 
   updateBrainzPlayerQueueLocalStorage = (): void => {
@@ -1017,6 +1050,16 @@ export default class BrainzPlayer extends React.Component<
       );
     }
   };
+
+  debounceBrainzPlayerQueueUpdate = debounce(
+    this.updateBrainzPlayerQueueLocalStorage,
+    2000,
+    {
+      leading: false,
+      maxWait: this.SAVE_QUEUE_TO_LOCALSTORAGE_INTERVAL,
+      trailing: true,
+    }
+  );
 
   toggleRepeatMode = () => {
     const repeatModes = [

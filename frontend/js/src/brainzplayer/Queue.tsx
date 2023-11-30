@@ -94,9 +94,9 @@ function Queue(props: QueueProps) {
         {queueNextUp.length > 0 ? (
           <ReactSortable
             handle=".drag-handle"
-            list={queue}
+            list={queueNextUp}
             onEnd={moveQueueItem}
-            setList={(newState) => setQueue(newState)}
+            setList={() => {}}
           >
             {queueNextUp.map((queueItem: BrainzPlayerQueueItem) => {
               return (
