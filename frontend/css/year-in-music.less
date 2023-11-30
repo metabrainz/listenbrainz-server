@@ -230,12 +230,6 @@
       font-family: "Roboto", sans-serif;
       font-weight: 300;
       font-size: 1.6em;
-      > div {
-        max-width: 500px;
-      }
-      .input-group {
-        margin-top: 0.7em;
-      }
     }
     .button {
       width: 2em;
@@ -251,7 +245,7 @@
       border: none;
       width: 2em;
       height: 2em;
-      line-height: 2em;
+      line-height: normal;
       font-size: 1.5em;
     }
     .flex > .content-card {
@@ -337,6 +331,12 @@
     }
     .link-section {
       color: @2022yellow;
+      > div {
+        max-width: 500px;
+      }
+      .input-group {
+        margin-top: 0.7em;
+      }
     }
     .red-section,
     .yellow-section {
@@ -391,17 +391,34 @@
     color: var(--selectedColor);
     #main-header {
       background: unset;
-      .img-header {
+      .header-image {
         width: 500px;
         margin: 3em 0;
       }
     }
+    #discovery-playlist, #missed-playlist {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .link-section{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5em;
+    }
     .header .subheader {
       margin-top: 1rem;
     }
-    .yim-share-button {
+    .yim-share-button, .btn-info {
       color: @text-color;
-      background-color: fade(@black,50%);
+      background-color: fade(@black,60%);
+      &:hover{
+        background-color: fade(@black,40%);
+      }
+    }
+    .lb-follow-button{
+      border-color: none;
     }
     .user-name, .hashtag {
       text-transform: uppercase;
@@ -464,7 +481,8 @@
       }
     }
     .section {
-      margin-top: 6em;
+      margin-top: 4em;
+      margin-bottom: 2em;
     }
     .closing-remarks{
       color: var(--selectedColor);
@@ -477,26 +495,29 @@
     .small-stats {
       display: flex;
       flex-wrap: wrap;
-      > * {
+      > .small-stat {
         flex: 1 33%;
-        font-size: 1.8rem;
-        font-weight: lighter;
-        font-family: 'Roboto', sans-serif;
-        .value {
-          position: relative;
-          font-size: 3.5em;
-          font-weight: 600;
-          line-height: 1.8;
-          margin-bottom: 0.4em;
-          &::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: calc(50% - 1.5em);
-            width: 3em;
-            height:1px;
-            border-bottom: 1px solid @cream;
-          }
+      }
+    }
+    .small-stat {
+      font-size: 1.8rem;
+      text-align: center;
+      font-weight: lighter;
+      font-family: 'Roboto', sans-serif;
+      .value {
+        position: relative;
+        font-size: 2.5em;
+        font-weight: 600;
+        line-height: 1.5;
+        margin-bottom: 0.2em;
+        &::after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: calc(50% - 1.5em);
+          width: 3em;
+          height:1px;
+          border-bottom: 1px solid @cream;
         }
       }
     }

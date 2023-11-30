@@ -46,6 +46,8 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../../stats/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
+import FollowButton from "../../../follow/FollowButton";
+
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -340,7 +342,7 @@ export default class YearInMusic extends React.Component<
 
   render() {
     const { user, yearInMusicData } = this.props;
-    const { selectedMetric, selectedColor } = this.state;
+    const { selectedMetric, selectedColor, followingList } = this.state;
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
 
@@ -492,7 +494,8 @@ export default class YearInMusic extends React.Component<
         We were not able to calculate this data for {youOrUsername}
       </div>
     );
-    const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2023`;
+    const linkToUserProfile = `https://listenbrainz.org/user/${user.name}`;
+    const linkToThisPage = `${linkToUserProfile}/year-in-music/2023`;
     return (
       <div
         id="year-in-music"
@@ -534,9 +537,16 @@ export default class YearInMusic extends React.Component<
           <div className="arrow-down" />
         </div>
 
-        <div className="card content-card link-section flex-center">
-          <div>
-            Share <b>{yourOrUsersName}</b> year
+        <div className="card content-card">
+          <div className="link-section">
+            <FollowButton
+              type="icon-only btn-info"
+              user={user}
+              loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
+            />
+            <a href={linkToUserProfile} role="button" className="btn btn-info">
+              ListenBrainz Profile
+            </a>
             <div className="input-group">
               <input
                 type="text"
@@ -545,7 +555,7 @@ export default class YearInMusic extends React.Component<
                 size={linkToThisPage.length - 5}
                 value={linkToThisPage}
               />
-              <span className="input-group-addon">
+              <span className="btn btn-info input-group-addon">
                 <FontAwesomeIcon
                   icon={faCopy}
                   onClick={async () => {
@@ -553,11 +563,11 @@ export default class YearInMusic extends React.Component<
                   }}
                 />
               </span>
-              {!isUndefined(navigator.canShare) ? (
-                <span className="input-group-addon">
+              {!isUndefined(navigator.canShare) && (
+                <span className="btn btn-info input-group-addon">
                   <FontAwesomeIcon icon={faShareAlt} onClick={this.sharePage} />
                 </span>
-              ) : null}
+              )}
             </div>
           </div>
         </div>
@@ -820,7 +830,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card">
             <div className="small-stats">
               {yearInMusicData.total_listen_count && (
-                <div className="text-center">
+                <div className="small-stat text-center">
                   <div className="value">
                     {yearInMusicData.total_listen_count}
                   </div>
@@ -828,13 +838,13 @@ export default class YearInMusic extends React.Component<
                 </div>
               )}
               {yearInMusicData.day_of_week && (
-                <div className="text-center">
+                <div className="small-stat text-center">
                   <div className="value">{yearInMusicData.day_of_week}</div>
                   was {yourOrUsersName} music day
                 </div>
               )}
               {yearInMusicData.total_artists_count && (
-                <div className="text-center">
+                <div className="small-stat text-center">
                   <div className="value">
                     {yearInMusicData.total_artists_count}
                   </div>
