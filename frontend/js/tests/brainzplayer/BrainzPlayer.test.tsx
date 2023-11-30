@@ -877,4 +877,74 @@ describe("BrainzPlayer", () => {
       expect(parsedFetchbody.payload[0]).toEqual(expectedListen);
     });
   });
+
+  describe("brainzplayer_queue", () => {
+    beforeAll(() => {
+      localStorage.clear();
+    });
+    it("initializes with an empty queue", () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      expect(wrapper.state("queue")).toEqual([]);
+    });
+    it("if the localstorage queue is empty then add listen to queue", () => {
+      const mockProps = {
+        ...props,
+        listens: [listen, listen2],
+      };
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...mockProps} />,
+        GlobalContextMock
+      );
+      expect(wrapper.state("queue")).toHaveLength(2);
+    });
+    it("on recieving a play message, adds it to the queue", async () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+
+      const instance = wrapper.instance();
+      const spy = jest.spyOn(instance, "addTrackToQueue");
+      instance.playListen = jest.fn();
+      await act(async () => {
+        instance.playListenEventHandler(listen);
+      });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(instance.playListen).toHaveBeenCalledTimes(1);
+      expect(instance.state.queue).toHaveLength(1);
+    });
+    it("add listen to next up queue if there is a current listen", async () => {
+      const mockProps = {
+        ...props,
+        listens: [listen, listen2],
+      };
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...mockProps} />,
+        GlobalContextMock
+      );
+
+      const instance = wrapper.instance();
+      const spy = jest.spyOn(instance, "addTrackToQueue");
+      await act(async () => {
+        instance.addTrackToQueue(listen, false);
+      });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(instance.state.queue).toHaveLength(3);
+      expect(instance.state.queue[2].track_metadata).toEqual(
+        listen.track_metadata
+      );
+
+      await act(async () => {
+        instance.addTrackToQueue(listen2, true);
+      });
+
+      expect(instance.state.queue).toHaveLength(4);
+      expect(instance.state.queue[0].track_metadata).toEqual(
+        listen2.track_metadata
+      );
+    });
+  });
 });
