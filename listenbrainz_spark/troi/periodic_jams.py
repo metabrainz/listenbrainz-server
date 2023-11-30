@@ -22,6 +22,9 @@ def main(slug, users):
     else:
         return []
 
+    if not users:
+        return []
+
     table = "users_periodic_jams"
     users_df = listenbrainz_spark.session.createDataFrame(users)
     users_df.createOrReplaceTempView(table)

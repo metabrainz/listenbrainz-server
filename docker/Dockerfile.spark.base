@@ -1,4 +1,4 @@
-ARG PYTHON_BASE_IMAGE_VERSION=3.8-20210115
+ARG PYTHON_BASE_IMAGE_VERSION=3.9-focal-20220315
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION
 
 ARG PYTHON_BASE_IMAGE_VERSION
@@ -16,6 +16,7 @@ RUN apt-get update \
     bsdmainutils \
     xz-utils \
     zip \
+    libcurl4-openssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV DOCKERIZE_VERSION v0.6.1
@@ -25,9 +26,9 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 
 WORKDIR /usr/local
 
-ENV JAVA_VERSION 17.0.7
-ENV JAVA_MAJOR_VERSION 17
-ENV JAVA_BUILD_VERSION 7
+ENV JAVA_VERSION 11.0.21
+ENV JAVA_MAJOR_VERSION 11
+ENV JAVA_BUILD_VERSION 9
 RUN wget https://github.com/adoptium/temurin${JAVA_MAJOR_VERSION}-binaries/releases/download/jdk-${JAVA_VERSION}%2B${JAVA_BUILD_VERSION}/OpenJDK${JAVA_MAJOR_VERSION}U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
     && tar xzf OpenJDK${JAVA_MAJOR_VERSION}U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
     && mv jdk-${JAVA_VERSION}+${JAVA_BUILD_VERSION} /usr/local/jdk \

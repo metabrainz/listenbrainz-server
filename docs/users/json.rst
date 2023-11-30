@@ -156,7 +156,8 @@ A minimal payload must include
 ``artist_name`` and ``track_name`` elements must be simple strings.
 
 The payload should also include the ``listened_at`` element, which must be an integer
-representing the Unix time when the track was listened to. The minimum accepted
+representing the Unix time when the track was listened to. This should be set to
+playback start time of the submitted track. The minimum accepted
 value for this field is :data:`~listenbrainz.webserver.views.api_tools.LISTEN_MINIMUM_TS`.
 playing_now requests should not have a ``listened_at`` field
 

@@ -461,6 +461,7 @@ type SentryProps = {
 };
 type GlobalAppProps = {
   api_url: string;
+  websockets_url: string;
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
@@ -507,6 +508,7 @@ const getPageProps = (): {
     const {
       current_user,
       api_url,
+      websockets_url,
       spotify,
       youtube,
       soundcloud,
@@ -532,6 +534,7 @@ const getPageProps = (): {
     );
     globalAppContext = {
       APIService: apiService,
+      websocketsUrl: websockets_url,
       currentUser: current_user,
       spotifyAuth: spotify,
       youtubeAuth: youtube,

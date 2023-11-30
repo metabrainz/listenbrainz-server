@@ -3,11 +3,13 @@ import json
 import time
 
 import orjson
+import sentry_sdk
 from kombu import Connection, Message, Consumer, Exchange, Queue
 from kombu.mixins import ConsumerMixin
 
 from listenbrainz.db.popularity import RecordingPopularityDataset, ReleasePopularityDataset, \
-    TopRecordingPopularityDataset, ArtistPopularityDataset, TopReleasePopularityDataset
+    TopRecordingPopularityDataset, ArtistPopularityDataset, TopReleasePopularityDataset, ReleaseGroupPopularityDataset, \
+    TopReleaseGroupPopularityDataset
 from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset
 from listenbrainz.db.tags import TagsDataset
 from listenbrainz.spark.handlers import (
@@ -67,8 +69,10 @@ class SparkReader(ConsumerMixin):
             RecordingPopularityDataset,
             ReleasePopularityDataset,
             ArtistPopularityDataset,
+            ReleaseGroupPopularityDataset,
             TopRecordingPopularityDataset,
             TopReleasePopularityDataset,
+            TopReleaseGroupPopularityDataset
         ]
         for dataset in datasets:
             self.response_handlers.update(dataset.get_handlers())
@@ -125,9 +129,10 @@ class SparkReader(ConsumerMixin):
 
         try:
             response_handler(response)
-        except Exception:
+        except Exception as e:
             self.app.logger.error("Error in the spark reader response handler: data: %s",
                                   json.dumps(response, indent=4), exc_info=True)
+            sentry_sdk.capture_exception(e)
             return
 
     def callback(self, message: Message):

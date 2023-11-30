@@ -37,12 +37,9 @@ jest.mock("socket.io-client", () => {
 });
 
 const {
-  haveListenCount,
   latestListenTs,
-  listenCount,
   listens,
   oldestListenTs,
-  profileUrl,
   spotify,
   youtube,
   user,
@@ -52,12 +49,9 @@ const {
 } = recentListensProps;
 
 const props = {
-  haveListenCount,
   latestListenTs,
-  listenCount,
   listens,
   oldestListenTs,
-  profileUrl,
   user,
   userPinnedRecording,
   globalListenCount,
@@ -68,6 +62,7 @@ const props = {
 const mountOptions: { context: GlobalAppContextT } = {
   context: {
     APIService: new APIServiceClass("foo"),
+    websocketsUrl: "",
     youtubeAuth: youtube as YoutubeUser,
     spotifyAuth: spotify as SpotifyUser,
     currentUser: { id: 1, name: "iliekcomputers", auth_token: "fnord" },

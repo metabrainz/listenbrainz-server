@@ -1,6 +1,8 @@
+/* eslint-disable no-console */
 import * as React from "react";
-import { mount } from "enzyme";
+import { render, screen } from "@testing-library/react";
 
+import userEvent from "@testing-library/user-event";
 import ErrorBoundary from "../../src/utils/ErrorBoundary";
 
 function ChildComponent() {
@@ -8,48 +10,65 @@ function ChildComponent() {
 }
 
 describe("ErrorBoundary", () => {
-  it("renders error page correctly if child component throws error", () => {
-    const wrapper = mount(
-      <ErrorBoundary>
-        <ChildComponent />
-      </ErrorBoundary>
-    );
+  const user = userEvent.setup();
+  // Test component that throws an error
+  const ThrowError = () => {
+    throw new Error("Test error message");
+  };
 
-    wrapper.find(ChildComponent).simulateError(Error("Test Error"));
-
-    expect(wrapper.state()).toMatchObject({ hasError: true });
-    expect(wrapper.getDOMNode()).toHaveTextContent("Reload the page");
+  // Temporarily suppress console errors so we don't clog the logs
+  const realError = console.error;
+  beforeEach(() => {
+    jest.spyOn(global.console, "error");
+    console.error = jest.fn();
+  });
+  afterEach(() => {
+    console.error = realError;
   });
 
-  it("reloads page when button is clicked", () => {
-    const wrapper = mount(
+  it("renders error page correctly if child component throws error", () => {
+    render(
       <ErrorBoundary>
-        <ChildComponent />
+        <ThrowError />
       </ErrorBoundary>
     );
 
-    wrapper.find(ChildComponent).simulateError(Error("Test Error"));
+    expect(screen.getByText(/Test error message/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reload the page/i)).toBeInTheDocument();
+  });
+
+  it("reloads page when button is clicked", async () => {
+    render(
+      <ErrorBoundary>
+        <ThrowError />
+      </ErrorBoundary>
+    );
+    const reloadSpy = jest.fn();
+
     // Mock the reload function
     Object.defineProperty(window, "location", {
       value: {
-        reload: jest.fn(),
+        reload: reloadSpy,
       },
       writable: true,
     });
-    wrapper.find("button").simulate("click");
 
-    expect(window.location.reload).toHaveBeenCalledTimes(1);
+    const reloadButton = await screen.findByRole("button", {
+      name: /reload the page/i,
+    });
+    await user.click(reloadButton);
+
+    expect(reloadSpy).toHaveBeenCalledTimes(1);
   });
 
   it("renders the child component if error is not thrown", () => {
-    const wrapper = mount(
+    render(
       <ErrorBoundary>
         <ChildComponent />
       </ErrorBoundary>
     );
 
-    expect(wrapper.state()).toMatchObject({ hasError: false });
-    expect(wrapper.getDOMNode()).not.toHaveTextContent("Reload the page");
-    expect(wrapper.find(ChildComponent)).toHaveLength(1);
+    expect(screen.getByText(/Child Component/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Reload the page/i)).toBeNull();
   });
 });

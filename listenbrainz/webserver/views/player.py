@@ -164,7 +164,7 @@ def load_release(release_mbid):
                 for recording in medium.get("track-list", []):
                     rec = WritablePlaylistRecording(
                         title=recording["name"],
-                        artist_credit=release["artist-credit-phrase"],
+                        artist_credit=recording["artist-credit-phrase"],
                         artist_mbids=[a["artist"]["mbid"] for a in recording["artist-credit"]],
                         release_name=release["name"],
                         release_mbid=release["mbid"],
