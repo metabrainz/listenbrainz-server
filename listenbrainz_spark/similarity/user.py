@@ -110,8 +110,8 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
                     continue
 
                 # scale from [-1, 1] to [0, 1]
-                new_sim_value = (value / 2.0) + 0.5
-
+#                new_sim_value = (value / 2.0) + 0.5
+                new_sim_value = value
                 row.append((x,
                             y,
                             (value - global_min_similarity) / global_similarity_range,

@@ -8,9 +8,9 @@ export type SimilarityScoreProps = {
 
 const getclassName = (similarityScore: number): string => {
   let className = "";
-  if (similarityScore <= 0.2) {
+  if (similarityScore <= 0.25) {
     className = "red";
-  } else if (similarityScore <= 0.4) {
+  } else if (similarityScore <= 0.5) {
     className = "orange";
   } else {
     className = "purple";
