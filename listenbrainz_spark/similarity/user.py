@@ -109,16 +109,13 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
                 if x == y or math.isnan(value):
                     continue
 
-                # scale from [-1, 1] to [0, 1], where closer is more similar
+                # scale from [-1, 1] to [0, 1]
                 new_sim_value = (value / 2.0) + 0.5
-
-                # Append to the row, but invert first so that closer is less similar (a percentage)
-                #new_sim_value = 1.0 - new_sim_value
 
                 row.append((x,
                             y,
-                            (value - global_min_similarity) / global_similarity_range,
-                            new_sim_value))
+                            new_sim_value,
+                            (value - global_min_similarity) / global_similarity_range))
 
             similar_users.extend(sorted(row, key = itemgetter(2), reverse = True)[:max_num_users])
 
