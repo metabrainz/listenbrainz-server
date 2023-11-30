@@ -22,7 +22,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   const modal = useModal();
   const closeModal = React.useCallback(() => {
     modal.hide();
-    setTimeout(modal.remove, 500);
+    setTimeout(modal.remove, 3000);
   }, [modal]);
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);

@@ -260,7 +260,7 @@ export default class BrainzPlayer extends React.Component<
   stopOtherBrainzPlayers = (): void => {
     // Tell all other BrainzPlayer instances to please STFU
     // Using timestamp to ensure a new value each time
-    window.localStorage.setItem("BrainzPlayer_stop", Date.now().toString());
+    window?.localStorage?.setItem("BrainzPlayer_stop", Date.now().toString());
   };
 
   isCurrentlyPlaying = (element: Listen | JSPFTrack): boolean => {
