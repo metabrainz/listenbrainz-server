@@ -291,7 +291,7 @@ export default class BrainzPlayer extends React.Component<
     } = this.state;
     if (
       queue !== prevState.queue ||
-      queueRepeatMode !== prevState.queueRepeatMode ||
+      !_isEqual(queueRepeatMode, prevState.queueRepeatMode) ||
       currentListen !== prevState.currentListen ||
       currentDataSourceIndex !== prevState.currentDataSourceIndex ||
       currentTrackName !== prevState.currentTrackName ||
@@ -444,7 +444,7 @@ export default class BrainzPlayer extends React.Component<
       // No current listen index found, default to first item
       nextListenIndex = 0;
     } else {
-      if (queueRepeatMode === QueueRepeatModes.one) {
+      if (_isEqual(queueRepeatMode, QueueRepeatModes.one)) {
         nextListenIndex = currentListenIndex;
       } else if (invert === true) {
         // Invert means "play previous track" instead of next track
@@ -465,7 +465,7 @@ export default class BrainzPlayer extends React.Component<
     const nextListen = queue[nextListenIndex];
     if (
       !nextListen ||
-      (queueRepeatMode === QueueRepeatModes.off && nextListenIndex === 0)
+      (_isEqual(queueRepeatMode, QueueRepeatModes.off) && nextListenIndex === 0)
     ) {
       this.handleWarning(
         "You can try loading more listens or refreshing the page",
@@ -534,28 +534,23 @@ export default class BrainzPlayer extends React.Component<
 
   playListenEventHandler(listen: Listen | JSPFTrack) {
     const newTrack = this.addTrackToQueue(listen, true, () => {
-      this.playListen(newTrack, 0);
+      this.playNextListenFromQueue(0);
     });
   }
 
   playListen = (
-    listen: Listen | JSPFTrack,
+    listen: BrainzPlayerQueueItem,
     datasourceIndex: number = 0
   ): void => {
-    const { queue } = this.state;
-
-    const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying);
-    const newTrack = queue[currentListenIndex + 1];
-
     this.setState({
       isActivated: true,
-      currentListen: newTrack,
+      currentListen: listen,
       listenSubmitted: false,
       continuousPlaybackTime: 0,
     });
 
     window.postMessage(
-      { brainzplayer_event: "current-listen-change", payload: newTrack },
+      { brainzplayer_event: "current-listen-change", payload: listen },
       window.location.origin
     );
 
@@ -593,6 +588,15 @@ export default class BrainzPlayer extends React.Component<
     this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
       datasource.playListen(listen);
     });
+  };
+
+  playNextListenFromQueue = (datasourceIndex: number = 0): void => {
+    const { queue } = this.state;
+
+    const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying);
+    const nextTrack = queue[currentListenIndex + 1];
+
+    this.playListen(nextTrack, datasourceIndex);
   };
 
   togglePlay = async (): Promise<void> => {
@@ -1069,8 +1073,8 @@ export default class BrainzPlayer extends React.Component<
     ];
 
     this.setState((prevState) => {
-      const repeatMode = repeatModes.find(
-        (mode) => mode.title === prevState.queueRepeatMode.title
+      const repeatMode = repeatModes.find((mode) =>
+        _isEqual(mode, prevState.queueRepeatMode)
       );
       const currentIndex = repeatModes.indexOf(repeatMode!);
       const nextIndex = (currentIndex + 1) % repeatModes.length;

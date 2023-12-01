@@ -181,7 +181,7 @@ describe("BrainzPlayer", () => {
     };
     // if origin_url is a youtube link, it should play it with YoutubePlayer instead of Spotify
     await act(() => {
-      instance.playListen(youtubeListen);
+      instance.playListenEventHandler(youtubeListen);
     });
     expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
@@ -215,7 +215,7 @@ describe("BrainzPlayer", () => {
     // Try to play, should select spotify instead of first in list
     expect(instance.state.currentDataSourceIndex).toEqual(0);
     await act(() => {
-      instance.playListen(spotifyListen);
+      instance.playListenEventHandler(spotifyListen);
     });
     expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
@@ -249,7 +249,7 @@ describe("BrainzPlayer", () => {
     // Try to play, should select spotify instead of first in list
     expect(instance.state.currentDataSourceIndex).toEqual(0);
     await act(() => {
-      instance.playListen(spotifyListen);
+      instance.playListenEventHandler(spotifyListen);
     });
     expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
@@ -281,7 +281,7 @@ describe("BrainzPlayer", () => {
     };
     // if origin_url is a soundcloud link, it should play it with SoundcloudPlayer instead of Spotify
     await act(() => {
-      instance.playListen(soundcloudListen);
+      instance.playListenEventHandler(soundcloudListen);
     });
     expect(instance.state.currentDataSourceIndex).toEqual(1);
   });
@@ -310,7 +310,7 @@ describe("BrainzPlayer", () => {
 
       // Initial play
       await act(() => {
-        instance.playListen(youtubeListen);
+        instance.playListenEventHandler(youtubeListen);
       });
       expect(spy).toHaveBeenCalled();
 
@@ -908,12 +908,12 @@ describe("BrainzPlayer", () => {
 
       const instance = wrapper.instance();
       const spy = jest.spyOn(instance, "addTrackToQueue");
-      instance.playListen = jest.fn();
+      instance.playNextListenFromQueue = jest.fn();
       await act(async () => {
         instance.playListenEventHandler(listen);
       });
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(instance.playListen).toHaveBeenCalledTimes(1);
+      expect(instance.playNextListenFromQueue).toHaveBeenCalledTimes(1);
       expect(instance.state.queue).toHaveLength(1);
     });
     it("add listen to next up queue if there is a current listen", async () => {
