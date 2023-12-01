@@ -324,8 +324,16 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
         caa_id = row.get("caa_id")
         caa_release_mbid = row.get("caa_release_mbid")
+        additional_metadata = {}
         if caa_id and caa_release_mbid:
-            rec.additional_metadata = {"caa_id": caa_id, "caa_release_mbid": caa_release_mbid}
+            additional_metadata["caa_id"] = caa_id
+            additional_metadata["caa_release_mbid"] = caa_release_mbid
+
+        if row.get("artists"):
+            additional_metadata["artists"] = row["artists"]
+
+        if additional_metadata:
+            rec.additional_metadata = additional_metadata
 
 
 @playlist_api_bp.route("/create", methods=["POST", "OPTIONS"])

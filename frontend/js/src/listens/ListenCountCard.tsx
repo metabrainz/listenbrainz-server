@@ -39,7 +39,11 @@ function ListenCountCard(props: ListenCountCardProps) {
     );
   }
 
-  return <Card id="listen-count-card">{content}</Card>;
+  return (
+    <Card id="listen-count-card" data-testid="listen-count-card">
+      {content}
+    </Card>
+  );
 }
 
 export default ListenCountCard;

@@ -55,10 +55,12 @@ def init_db(force, create_db):
         3. Indexes are created.
     """
     from listenbrainz import config
-    if config.TESTING:
+    if "PYTHON_TESTS_RUNNING" in os.environ:
         db_connect = db.create_test_database_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT_ADMIN"])
+        config.PYTHON_TESTS_RUNNING = True
     else:
+        db_connect = {"DB_NAME": "listenbrainz", "DB_USER": "listenbrainz"}
         db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
         res = db.run_sql_query_without_transaction(
@@ -69,7 +71,7 @@ def init_db(force, create_db):
     if create_db or force:
         print('PG: Creating user and a database...')
 
-        if config.TESTING:
+        if "PYTHON_TESTS_RUNNING" in os.environ:
             res = db.run_sql_query_without_transaction([
                 f"CREATE USER {db_connect['DB_USER']} NOCREATEDB NOSUPERUSER",
                 f"ALTER USER {db_connect['DB_USER']} WITH PASSWORD 'listenbrainz'",
@@ -80,7 +82,7 @@ def init_db(force, create_db):
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
-        if config.TESTING:
+        if "PYTHON_TESTS_RUNNING" in os.environ:
             db.init_db_connection(db_connect["DB_CONNECT_ADMIN_LB"])
         else:
             db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
@@ -131,10 +133,12 @@ def init_ts_db(force, create_db):
         3. Views are created
     """
     from listenbrainz import config
-    if config.TESTING:
+    if "PYTHON_TESTS_RUNNING" in os.environ:
         ts_connect = ts.create_test_timescale_connect_strings()
         ts.init_db_connection(ts_connect["DB_CONNECT_ADMIN"])
+        config.PYTHON_TESTS_RUNNING = True
     else:
+        ts_connect = {"DB_NAME": "listenbrainz_ts", "DB_USER": "listenbrainz_ts"}
         ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
     if force:
         res = ts.run_sql_query_without_transaction(
@@ -147,7 +151,7 @@ def init_ts_db(force, create_db):
         retries = 0
         while True:
             try:
-                if config.TESTING:
+                if "PYTHON_TESTS_RUNNING" in os.environ:
                     res = ts.run_sql_query_without_transaction([
                         f"CREATE USER {ts_connect['DB_USER']} NOCREATEDB NOSUPERUSER",
                         f"ALTER USER {ts_connect['DB_USER']} WITH PASSWORD 'listenbrainz_ts'",
@@ -167,7 +171,7 @@ def init_ts_db(force, create_db):
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
-        if config.TESTING:
+        if "PYTHON_TESTS_RUNNING" in os.environ:
             ts.init_db_connection(ts_connect["DB_CONNECT_ADMIN_LB"])
         else:
             ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
@@ -179,7 +183,7 @@ def init_ts_db(force, create_db):
         if not res:
             raise Exception('Failed to create ts extension! Exit code: %i' % res)
 
-    if config.TESTING:
+    if "PYTHON_TESTS_RUNNING" in os.environ:
         ts.init_db_connection(ts_connect["DB_CONNECT"])
     else:
         ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
