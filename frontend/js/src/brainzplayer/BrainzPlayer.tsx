@@ -1069,7 +1069,10 @@ export default class BrainzPlayer extends React.Component<
     ];
 
     this.setState((prevState) => {
-      const currentIndex = repeatModes.indexOf(prevState.queueRepeatMode);
+      const repeatMode = repeatModes.find(
+        (mode) => mode.title === prevState.queueRepeatMode.title
+      );
+      const currentIndex = repeatModes.indexOf(repeatMode!);
       const nextIndex = (currentIndex + 1) % repeatModes.length;
       return { queueRepeatMode: repeatModes[nextIndex] };
     });
