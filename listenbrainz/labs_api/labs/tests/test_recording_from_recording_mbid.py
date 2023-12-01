@@ -60,6 +60,13 @@ metadata_db_response = {
         "title": "Sour Times",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
         "release": "Dummy",
+        "artists": [
+            {
+                "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+                "artist_credit_name": "Portishead",
+                "join_phrase": ""
+            }
+        ],
         "caa_id": None,
         "caa_release_mbid": None
     },
@@ -74,6 +81,13 @@ metadata_db_response = {
         "title": "Strange Ways",
         "release_mbid": "94c77483-c110-42d5-8d70-db496dc3deef",
         "release": "Madvillainy",
+        "artists": [
+            {
+                "artist_mbid": "4e024037-14b7-4aea-99ad-c6ace63b9620",
+                "artist_credit_name": "Madvillain",
+                "join_phrase": ""
+            }
+        ],
         "caa_id": None,
         "caa_release_mbid": None
     },
@@ -88,6 +102,13 @@ metadata_db_response = {
         "release_mbid": "86b869c6-4a5b-4131-aff1-0edc25e18581",
         "release": "Erna 20: Swing und Blues",
         "title": "Blue Angel",
+        "artists": [
+            {
+                "artist_mbid": "31810c40-932a-4f2d-8cfd-17849844e2a6",
+                "artist_credit_name": "Squirrel Nut Zippers",
+                "join_phrase": ""
+            }
+        ],
         "caa_id": None,
         "caa_release_mbid": None
     }
@@ -106,6 +127,13 @@ json_response = [
         "recording_name": "Sour Times",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
         "release_name": "Dummy",
+        "artists": [
+            {
+                "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+                "artist_credit_name": "Portishead",
+                "join_phrase": ""
+            }
+        ],
         "original_recording_mbid": "a96bf3b6-651d-49f4-9a89-eee27cecc18e"
     },
     {
@@ -119,6 +147,13 @@ json_response = [
         "canonical_recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
         "recording_name": "Blue Angel",
         "release_mbid": "86b869c6-4a5b-4131-aff1-0edc25e18581",
+        "artists": [
+            {
+                "artist_mbid": "31810c40-932a-4f2d-8cfd-17849844e2a6",
+                "artist_credit_name": "Squirrel Nut Zippers",
+                "join_phrase": ""
+            }
+        ],
         "release_name": "Erna 20: Swing und Blues",
         "original_recording_mbid": "8fa0023e-1268-4d32-8341-83bb7506086e"
     },
@@ -133,6 +168,13 @@ json_response = [
         "canonical_recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
         "recording_name": "Strange Ways",
         "release_mbid": "94c77483-c110-42d5-8d70-db496dc3deef",
+        "artists": [
+            {
+                "artist_mbid": "4e024037-14b7-4aea-99ad-c6ace63b9620",
+                "artist_credit_name": "Madvillain",
+                "join_phrase": ""
+            }
+        ],
         "release_name": "Madvillainy",
         "original_recording_mbid": "5948f779-0b96-4eba-b6a7-d1f0f6c7cf9f"
     },
@@ -146,6 +188,7 @@ json_response = [
         "recording_name": None,
         "release_mbid": None,
         "release_name": None,
+        "artists": [],
         "original_recording_mbid": "a1e97901-7ddf-4a0d-87ff-7f601ad3ccd3"
     }
 ]
