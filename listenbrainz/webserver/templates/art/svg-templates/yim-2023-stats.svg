@@ -8,7 +8,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
         text {
-          fill: #FF0E25;
+          fill: #4C6C52;
           font-family: Inter, sans-serif;
           font-weight: 900;
         }
@@ -22,6 +22,7 @@
           font-weight: 900;
         }
         .branding {
+		  fill: #F0EEE2;
           font-size: 20px;
           letter-spacing: 0em;
         }
@@ -33,17 +34,14 @@
     </style>
     <g>
         <g>
-            <g style="mix-blend-mode:multiply">
-                <rect width="924" height="924" fill="#FFC93D"/>
-                <image id="bg" width="924" height="924" xlink:href="{{ bg_image_url }}" style="mix-blend-mode:overlay"/>
-            </g>
+            <rect class="background" width="924" height="924" fill="#4C6C52"/>
             <text class="branding" x="750" y="897">LISTENBRAINZ</text>
             <text class="branding" x="26" y="43">{{user_name}}</text>
             <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
-            <text class="branding" x="844" y="43">2022</text>
+            <text class="branding" x="844" y="43">2023</text>
             <text class="subtitle">
                 <tspan x="50%" y="754">AND GOT THROUGH</tspan>
-                <tspan x="50%" y="792">2022</tspan>
+                <tspan x="50%" y="792">2023</tspan>
             </text>
         </g>
         <rect x="110.5" y="206.5" width="684" height="462" fill="#FFC93D" stroke="#FF0E25"/>

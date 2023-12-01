@@ -275,15 +275,27 @@ def _cover_art_yim_stats_2023(user_name, stats):
         stats.get("total_artists_count") is None:
         return None
 
+    match stats["day_of_week"]:
+        case "Monday": most_played_day_message = 'I SURVIVED <tspan class="user-stat">MONDAYS</tspan> WITH MUSIC'
+        case "Tuesday": most_played_day_message = 'I CHILLED WITH MUSIC ON <tspan class="user-stat">TUESDAY</tspan>'
+        case "Wednesday": most_played_day_message = 'I GOT THROUGH <tspan class="user-stat">WEDNESDAYS</tspan> WITH MUSIC'
+        case "Thursday": most_played_day_message = 'I SPENT TIME WITH MY TUNES ON <tspan class="user-stat">THURSDAYS</tspan>'
+        case "Friday": most_played_day_message = 'I CELEBRATED <tspan class="user-stat">FRIDAYS</tspan> WITH MUSIC'
+        case "Saturday": most_played_day_message = 'I PARTIED HARD (OR HARDLY!) ON <tspan class="user-stat">SATURDAYS</tspan>'
+        case "Sunday": most_played_day_message = 'I LOVED SPENDING <tspan class="user-stat">SUNDAYS</tspan> WITH MUSIC'
+        case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
+
+
     most_listened_year = max(stats["most_listened_year"], key=stats["most_listened_year"].get)
     return render_template(
         "art/svg-templates/yim-2023-stats.svg",
         user_name=user_name,
+        most_played_day_message=most_played_day_message,
         most_listened_year=most_listened_year,
         total_listen_count=stats["total_listen_count"],
         total_new_artists_discovered=stats["total_new_artists_discovered"],
         total_artists_count=stats["total_artists_count"],
-        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+        image_url_root=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/year-in-music-23'
     )
 
 
