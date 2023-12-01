@@ -18,6 +18,8 @@ import {
 } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faCircleChevronLeft,
+  faCircleChevronRight,
   faCopy,
   faHeadphones,
   faQuestionCircle,
@@ -25,6 +27,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import NiceModal from "@ebay/nice-modal-react";
+import tinycolor from "tinycolor2";
 import ErrorBoundary from "../../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -38,12 +41,11 @@ import {
   getPageProps,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../../stats/utils";
-import MagicShareButton from "../2022/MagicShareButton";
+import ImageShareButtons from "./ImageShareButtons";
 
 import ListenCard from "../../../listens/ListenCard";
 import UserListModalEntry from "../../../follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
-import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../../stats/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../../follow/FollowButton";
@@ -110,6 +112,16 @@ enum YIM2023Color {
 }
 const YIM2023ColorStrings = Object.values(YIM2023Color);
 
+const buddiesImages = [
+  "/static/img/year-in-music-23/fish.png",
+  "/static/img/year-in-music-23/dog.png",
+  "/static/img/year-in-music-23/worm.png",
+  "/static/img/year-in-music-23/cat.png",
+  "/static/img/year-in-music-23/trunk.png",
+  "/static/img/year-in-music-23/dog-tall.png",
+  "/static/img/year-in-music-23/ghost-square.png",
+];
+
 export type YearInMusicState = {
   followingList: Array<string>;
   selectedMetric: "artist" | "listen";
@@ -122,6 +134,7 @@ export default class YearInMusic extends React.Component<
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
+  private buddiesScrollContainer: React.RefObject<HTMLDivElement>;
 
   constructor(props: YearInMusicProps) {
     super(props);
@@ -130,6 +143,7 @@ export default class YearInMusic extends React.Component<
       selectedMetric: "listen",
       selectedColor: YIM2023Color.green,
     };
+    this.buddiesScrollContainer = React.createRef();
   }
 
   async componentDidMount() {
@@ -338,6 +352,25 @@ export default class YearInMusic extends React.Component<
       "data-color"
     ) as unknown) as YIM2023Color;
     this.setState({ selectedColor: color });
+  };
+
+  manualScroll: React.ReactEventHandler<HTMLElement> = (event) => {
+    if (!this.buddiesScrollContainer?.current) {
+      return;
+    }
+    if (event?.currentTarget.classList.contains("forward")) {
+      this.buddiesScrollContainer.current.scrollBy({
+        left: 330,
+        top: 0,
+        behavior: "smooth",
+      });
+    } else {
+      this.buddiesScrollContainer.current.scrollBy({
+        left: -330,
+        top: 0,
+        behavior: "smooth",
+      });
+    }
   };
 
   render() {
@@ -608,7 +641,7 @@ export default class YearInMusic extends React.Component<
                     }}
                     breakpoints={{
                       700: {
-                        initialSlide: 2,
+                        initialSlide: 1,
                         spaceBetween: 100,
                         slidesPerView: 3,
                         coverflowEffect: {
@@ -664,7 +697,7 @@ export default class YearInMusic extends React.Component<
                   </Swiper>
                 </div>
                 <div className="yim-share-button-container">
-                  <MagicShareButton
+                  <ImageShareButtons
                     svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=albums`}
                     shareUrl={`${linkToThisPage}#top-albums`}
                     // shareText="Check out my"
@@ -729,7 +762,7 @@ export default class YearInMusic extends React.Component<
                         })}
                     </div>
                     <div className="yim-share-button-container">
-                      <MagicShareButton
+                      <ImageShareButtons
                         svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=tracks`}
                         shareUrl={`${linkToThisPage}#top-tracks`}
                         // shareText="Check out my"
@@ -798,7 +831,7 @@ export default class YearInMusic extends React.Component<
                         })}
                     </div>
                     <div className="yim-share-button-container">
-                      <MagicShareButton
+                      <ImageShareButtons
                         svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=artists`}
                         shareUrl={`${linkToThisPage}#top-artists`}
                         // shareText="Check out my"
@@ -875,10 +908,14 @@ export default class YearInMusic extends React.Component<
                       data={listensPerDayForGraph as CalendarDatum[]}
                       emptyColor="#eeeeee"
                       colors={[
-                        "#f9e5b3",
-                        "#ffcc49",
-                        COLOR_LB_ORANGE,
-                        "#ff0e25",
+                        ...[1, 2, 3]
+                          .map((multiplier) =>
+                            tinycolor(selectedColor)
+                              .lighten(15 * multiplier)
+                              .toHexString()
+                          )
+                          .reverse(),
+                        selectedColor,
                       ]}
                       monthBorderColor="#eeeeee"
                       dayBorderWidth={1}
@@ -926,7 +963,7 @@ export default class YearInMusic extends React.Component<
                       layout="vertical"
                       keys={["songs"]}
                       indexBy="year"
-                      colors="#ff0e25"
+                      colors={selectedColor}
                       enableLabel={false}
                       axisBottom={{
                         tickValues: mostListenedYearTicks,
@@ -1014,12 +1051,19 @@ export default class YearInMusic extends React.Component<
                       data={artistMapDataForGraph}
                       selectedMetric={selectedMetric}
                       colorScaleRange={[
-                        "#ffeec2",
-                        "#ffdb80",
-                        "#ffcc49",
-                        "#ff9c40",
-                        "#ff6b36",
-                        "#ff0a23",
+                        ...[1, 2, 3]
+                          .map((index) =>
+                            tinycolor(selectedColor)
+                              .lighten(15 * index)
+                              .toHexString()
+                          )
+                          .reverse(),
+                        selectedColor,
+                        ...[1, 2].map((index) =>
+                          tinycolor(selectedColor)
+                            .darken(15 * index)
+                            .toHexString()
+                        ),
                       ]}
                     />
                   </div>
@@ -1213,7 +1257,46 @@ export default class YearInMusic extends React.Component<
             Friends
             <div className="subheader">visit {yourOrUsersName} buds</div>
           </div>
-          <div className="flex flex-wrap flex-center">PLACEHOLDER</div>
+          <div id="buddies">
+            <button
+              className="btn-icon btn-transparent backward"
+              type="button"
+              onClick={this.manualScroll}
+            >
+              <FontAwesomeIcon icon={faCircleChevronLeft} />
+            </button>
+            <div
+              className="flex card-container dragscroll"
+              ref={this.buddiesScrollContainer}
+            >
+              {followingList.slice(0, 15).map((followedUser, index) => {
+                return (
+                  <div className="buddy content-card card">
+                    <div className="img-container">
+                      <a href={`/user/${followedUser}`}>
+                        <img
+                          src={buddiesImages[index % 7]}
+                          alt="Music buddies"
+                        />
+                      </a>
+                    </div>
+                    <a href={`/user/${followedUser}`}>
+                      <div className="small-stat">
+                        <div className="value">{followedUser}</div>
+                      </div>
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+            <button
+              className="btn-icon btn-transparent forward"
+              type="button"
+              onClick={this.manualScroll}
+            >
+              <FontAwesomeIcon icon={faCircleChevronRight} />
+            </button>
+          </div>
         </div>
         <div className="cover-art-composite">
           <div className="section">
@@ -1302,6 +1385,16 @@ export default class YearInMusic extends React.Component<
             <a href={`/user/${user.name}/year-in-music/2022`}>2022</a>
           </div>
         </div>
+        {/* Trick to load the font files for use with the SVG render */}
+        <span
+          style={{
+            fontFamily: "Inter, sans-serif",
+            opacity: 0,
+            position: "fixed",
+          }}
+        >
+          x
+        </span>
         <BrainzPlayer
           listens={listens}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}

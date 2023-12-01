@@ -243,10 +243,8 @@
     }
     .yim-share-button {
       border: none;
-      width: 2em;
-      height: 2em;
-      line-height: normal;
-      font-size: 1.5em;
+      width: 2.2em;
+      height: 2.2em;
     }
     .flex > .content-card {
       min-width: 300px;
@@ -389,6 +387,9 @@
     @content-background-color: #e0e5de;
     background-color: @cream;
     color: var(--selectedColor);
+    .btn {
+      border-radius: 5px;
+    }
     #main-header {
       background: unset;
       .header-image {
@@ -400,6 +401,31 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+    }
+    #buddies {
+      display: flex;
+      justify-items: center;
+      align-items: center;
+      .card-container {
+        flex:1; 
+        scroll-snap-type: x mandatory;
+      }
+      .buddy {
+        scroll-snap-align: start;
+        text-align: center;
+        .value{
+          overflow-wrap: anywhere;
+          font-size: 1.5em;
+        }
+        .img-container{
+          aspect-ratio:1;
+          display: flex;
+          width: 270px;
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+        }
+      }
     }
     .link-section{
       display: flex;
@@ -418,7 +444,7 @@
       }
     }
     .lb-follow-button{
-      border-color: none;
+      border: none;
     }
     .user-name, .hashtag {
       text-transform: uppercase;
@@ -462,6 +488,10 @@
     }
     .graph-container {
       border-radius: 8px;
+      overflow: hidden;
+      .graph {
+        color: var(--selectedColor);
+      }
     }
     .swiper, .similar-users-list, .graph-container{
       background-color: @content-background-color;
@@ -500,6 +530,7 @@
       }
     }
     .small-stat {
+      color: @text-color;
       font-size: 1.8rem;
       text-align: center;
       font-weight: lighter;
