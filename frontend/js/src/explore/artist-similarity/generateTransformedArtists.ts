@@ -1,5 +1,4 @@
 import tinycolor from "tinycolor2";
-import { ArtistType, GraphDataType, LinkType } from "./Data";
 
 // Serves as the maximum distance between nodes
 const LINK_DIST_MULTIPLIER = 250;

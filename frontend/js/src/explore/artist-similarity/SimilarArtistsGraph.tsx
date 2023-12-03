@@ -6,7 +6,7 @@ import {
   NetworkSvgProps,
 } from "@nivo/network";
 import { animated, to } from "@react-spring/web";
-import type { NodeType, LinkType, GraphDataType } from "./Data";
+import { isFinite, throttle } from "lodash";
 
 interface GraphProps {
   data: GraphDataType;
@@ -105,7 +105,7 @@ function CustomNodeTooltipComponent({ node }: NodeTooltipProps<NodeType>) {
     >
       <strong>{node.data.artist_name}</strong>
       <br />
-      {node.data.score !== Infinity && <>Score: {node.data.score}</>}
+      {isFinite(node.data.score) && <>Score: {node.data.score}</>}
     </div>
   );
 }
@@ -117,20 +117,22 @@ function SimilarArtistsGraph({ data, onArtistChange, background }: GraphProps) {
     bottom: 0,
     left: 0,
   });
+
   useEffect(() => {
-    const handleResize = () => {
+    const handleResize = throttle(() => {
       setGraphMargin({
         top: 0,
         right: window.innerWidth / 5,
         bottom: 0,
         left: 0,
       });
-    };
+    });
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
   const chartProperties: OmitHeightWidth<NetworkSvgProps<
     NodeType,
     LinkType

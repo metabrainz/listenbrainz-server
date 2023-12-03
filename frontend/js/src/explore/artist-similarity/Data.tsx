@@ -9,54 +9,6 @@ import generateTransformedArtists from "./generateTransformedArtists";
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
-type ArtistType = {
-  artist_mbid: string;
-  name: string;
-  comment?: string;
-  type?: string;
-  gender?: string;
-  score?: number;
-  reference_mbid?: string;
-};
-
-type MarkupResponseType = {
-  data: string;
-  type: "markup";
-};
-
-type DatasetResponseType = {
-  columns: Array<string>;
-  data: Array<ArtistType>;
-  type: "dataset";
-};
-
-type ApiResponseType = Array<MarkupResponseType | DatasetResponseType>;
-
-type NodeType = {
-  id: string;
-  artist_mbid: string;
-  artist_name: string;
-  size: number;
-  color: string;
-  score: number;
-};
-
-type LinkType = {
-  source: string;
-  target: string;
-  distance: number;
-};
-
-type GraphDataType = {
-  nodes: Array<NodeType>;
-  links: Array<LinkType>;
-};
-
-const colorGenerator = (): [tinycolor.Instance, tinycolor.Instance] => {
-  const initialColor = tinycolor(`hsv(${Math.random() * 360}, 100%, 90%)`);
-  return [initialColor, initialColor.clone().tetrad()[1]];
-};
-
 const ARTIST_MBID = "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11";
 const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
 const BASE_URL =
@@ -64,7 +16,14 @@ const BASE_URL =
 // Apha value of the background color of the graph
 const BACKGROUND_ALPHA = 0.2;
 
+const colorGenerator = (): [tinycolor.Instance, tinycolor.Instance] => {
+  const initialColor = tinycolor(`hsv(${Math.random() * 360}, 100%, 90%)`);
+  return [initialColor, initialColor.clone().tetrad()[1]];
+};
+
 function Data() {
+  const { APIService } = useContext(GlobalAppContext);
+
   const [similarArtistsList, setSimilarArtistsList] = useState<
     Array<ArtistType>
   >([]);
@@ -91,16 +50,11 @@ function Data() {
     const artistsData = dataResponse.filter(isDatasetResponse);
     if (artistsData.length) {
       // Get the main artist from the first dataset
-      setMainArtist(artistsData[0].data[0]);
+      setMainArtist(artistsData[0]?.data[0]);
+
       // Get the similar artists from the second dataset
       const similarArtistsResponse = artistsData[1];
-      if (similarArtistsResponse.data.length) {
-        setCompleteSimilarArtistsList(similarArtistsResponse.data);
-      }
-      // In case no similar artists are found
-      else {
-        setCompleteSimilarArtistsList([]);
-      }
+      setCompleteSimilarArtistsList(similarArtistsResponse?.data ?? []);
     }
     setColors((prevColors) => [prevColors[1], prevColors[1].tetrad()[1]]);
   }, []);
@@ -142,6 +96,7 @@ function Data() {
   useEffect(() => {
     fetchData(artistMBID);
   }, [artistMBID, fetchData]);
+
   // Update the graph when limit changes by only changing the data and not making a new request to server
   useEffect(() => {
     const newSimilarArtistsList = completeSimilarArtistsList.slice(
@@ -151,35 +106,26 @@ function Data() {
     setSimilarArtistsList(newSimilarArtistsList);
   }, [completeSimilarArtistsList, similarArtistsLimit]);
 
-  useEffect(() => {
-    window.postMessage(
-      { brainzplayer_event: "current-listen-change", payload: currentTracks },
-      window.location.origin
-    );
-    window.postMessage(
-      { brainzplayer_event: "play-listen", payload: currentTracks },
-      window.location.origin
-    );
-  }, [currentTracks]);
-
   const backgroundColor1 = colors[0]
     .clone()
     .setAlpha(BACKGROUND_ALPHA)
     .toRgbString();
+
   const backgroundColor2 = colors[1]
     .clone()
     .setAlpha(BACKGROUND_ALPHA)
     .toRgbString();
+
   const backgroundGradient = `linear-gradient(${
     Math.random() * 360
   }deg ,${backgroundColor1},${backgroundColor2})`;
-  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+
   return (
     <div className="artist-similarity-main-container">
       <SearchBox
         onArtistChange={setArtistMBID}
         onSimilarArtistsLimitChange={setSimilarArtistsLimit}
-        currentsimilarArtistsLimit={similarArtistsLimit}
+        currentSimilarArtistsLimit={similarArtistsLimit}
       />
       <div className="artist-similarity-graph-panel-container">
         <SimilarArtistsGraph
@@ -191,18 +137,15 @@ function Data() {
           <Panel artist={mainArtist} onTrackChange={setCurrentTracks} />
         )}
       </div>
-      {currentTracks && (
-        <BrainzPlayer
-          listens={currentTracks}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
-      )}
+      <BrainzPlayer
+        listens={currentTracks ?? []}
+        listenBrainzAPIBaseURI={APIService.APIBaseURI}
+        refreshSpotifyToken={APIService.refreshSpotifyToken}
+        refreshYoutubeToken={APIService.refreshYoutubeToken}
+        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
+      />
     </div>
   );
 }
 
 export default Data;
-export type { GraphDataType, NodeType, LinkType, ArtistType };

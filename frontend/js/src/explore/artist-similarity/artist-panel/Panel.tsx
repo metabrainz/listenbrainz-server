@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
-import { ArtistType } from "../Data";
 import infoLookup from "./infoLookup";
 import ReleaseCard from "./ReleaseCard";
 import { ToastMsg } from "../../../notifications/Notifications";
@@ -38,11 +37,7 @@ function Panel({ artist, onTrackChange }: PanelProps) {
   const [artistInfo, setArtistInfo] = useState<ArtistInfoType | null>(null);
 
   const handleTrackChange = () => {
-    if (
-      artistInfo &&
-      artistInfo.topTrack &&
-      artistInfo.topTrack.recording_name
-    ) {
+    if (artistInfo?.topTrack?.recording_name) {
       const newTrack: Array<Listen> = [
         {
           listened_at: 0,
