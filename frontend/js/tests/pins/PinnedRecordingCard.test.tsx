@@ -28,6 +28,7 @@ const user = {
 
 const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
+  websocketsUrl: "",
   currentUser: user,
   spotifyAuth: {},
   youtubeAuth: {},

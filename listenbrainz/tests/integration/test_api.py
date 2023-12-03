@@ -88,8 +88,9 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # make sure that artist msid, release msid and recording msid are present in data
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
 
-        # check for latest listen timestamp
+        # check for latest and oldest  listen timestamp
         self.assertEqual(data['latest_listen_ts'], ts)
+        self.assertEqual(data['oldest_listen_ts'], ts)
 
         # request with min_ts should work
         response = self.client.get(
@@ -102,6 +103,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertListEqual(response.json['payload']['listens'], [])
         self.assertEqual(response.json['payload']['latest_listen_ts'], ts)
+        self.assertEqual(response.json['payload']['oldest_listen_ts'], ts)
 
         # test request with both max_ts and min_ts is working
         url = url_for('api_v1.get_listens',

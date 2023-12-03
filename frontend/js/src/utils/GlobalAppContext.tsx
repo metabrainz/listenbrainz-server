@@ -4,6 +4,7 @@ import RecordingFeedbackManager from "./RecordingFeedbackManager";
 
 export type GlobalAppContextT = {
   APIService: APIService;
+  websocketsUrl: string;
   currentUser: ListenBrainzUser;
   spotifyAuth?: SpotifyUser;
   youtubeAuth?: YoutubeUser;
@@ -18,6 +19,7 @@ const apiService = new APIService(`${window.location.origin}/1`);
 
 const GlobalAppContext = createContext<GlobalAppContextT>({
   APIService: apiService,
+  websocketsUrl: "",
   currentUser: {} as ListenBrainzUser,
   spotifyAuth: {},
   youtubeAuth: {},

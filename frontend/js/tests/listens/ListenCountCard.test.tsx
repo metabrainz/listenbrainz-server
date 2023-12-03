@@ -20,6 +20,7 @@ const loggedInUser = {
 
 const globalContext: GlobalAppContextT = {
   APIService: new APIService("foo"),
+  websocketsUrl: "",
   currentUser: loggedInUser,
   recordingFeedbackManager: new RecordingFeedbackManager(
     new APIService("foo"),

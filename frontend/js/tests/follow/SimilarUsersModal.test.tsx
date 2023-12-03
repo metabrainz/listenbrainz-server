@@ -16,6 +16,7 @@ const props = {
 };
 const globalContext: GlobalAppContextT = {
   APIService: new APIService("foo"),
+  websocketsUrl: "",
   youtubeAuth: {},
   spotifyAuth: {},
   currentUser: {} as ListenBrainzUser,
