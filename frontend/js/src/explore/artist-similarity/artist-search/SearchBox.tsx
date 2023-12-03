@@ -1,67 +1,81 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { faSearch, faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
 import { toast } from "react-toastify";
-import artistLookup, { ArtistType } from "./artistLookup";
 import { ToastMsg } from "../../../notifications/Notifications";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 interface SearchBoxProps {
-  currentsimilarArtistsLimit: number;
+  currentSimilarArtistsLimit: number;
   onSimilarArtistsLimitChange: (similarArtistsLimit: number) => void;
   onArtistChange: (artist_mbid: string) => void;
 }
 
+type ArtistTypeSearchResult = {
+  name: string;
+  id: string;
+  type?: string;
+  country?: string;
+};
+
 function SearchBox({
-  currentsimilarArtistsLimit,
+  currentSimilarArtistsLimit,
   onSimilarArtistsLimitChange,
   onArtistChange,
 }: SearchBoxProps) {
+  const { APIService } = React.useContext(GlobalAppContext);
   // State to store the search results (list of artists)
-  const [searchResults, setSearchResults] = useState<Array<ArtistType>>([]);
+  const [searchResults, setSearchResults] = useState<
+    Array<ArtistTypeSearchResult>
+  >([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  // State to toggle the dropdown menu for search
   const [openDropdown, setOpenDropdown] = useState<boolean>(false);
 
-  const getArtists = useCallback(async (query: string) => {
-    if (query.length && query.trim().length) {
-      try {
-        const results = await artistLookup(query);
-        setSearchResults(results);
-        setOpenDropdown(true);
-      } catch (error) {
-        setSearchResults([]);
-        toast.error(
-          <ToastMsg
-            title="Search Error"
-            message={typeof error === "object" ? error.message : error}
-          />,
-          { toastId: "error" }
-        );
-      }
-    }
+  const getArtists = useMemo(() => {
+    return throttle(
+      async (query: string) => {
+        if (query.length && query.trim().length) {
+          try {
+            const results = await APIService.artistLookup(query);
+            const { artists } = results;
+            setSearchResults(artists);
+            setOpenDropdown(true);
+          } catch (error) {
+            setSearchResults([]);
+            toast.error(
+              <ToastMsg
+                title="Search Error"
+                message={typeof error === "object" ? error.message : error}
+              />,
+              { toastId: "error" }
+            );
+          }
+        }
+      },
+      800,
+      { leading: false, trailing: true }
+    );
   }, []);
-
-  const throttledGetArtists = useMemo(() => {
-    return throttle(getArtists, 800, { leading: false, trailing: true });
-  }, [getArtists]);
 
   // Lookup the artist based on the query
   const handleQueryChange = async (query: string) => {
     setSearchQuery(query);
-    await throttledGetArtists(query);
+    await getArtists(query);
   };
 
   // Handle button click on an artist in the dropdown list
-  const handleButtonClick = (artist: ArtistType) => {
+  const handleButtonClick = (artist: ArtistTypeSearchResult) => {
     onArtistChange(artist.id);
+    setSearchQuery(artist.name);
   };
   const increment = () => {
-    onSimilarArtistsLimitChange(currentsimilarArtistsLimit + 1);
+    onSimilarArtistsLimitChange(currentSimilarArtistsLimit + 1);
   };
   const decrement = () => {
-    onSimilarArtistsLimitChange(currentsimilarArtistsLimit - 1);
+    onSimilarArtistsLimitChange(currentSimilarArtistsLimit - 1);
   };
+
   return (
     <form className="user-inputs-container" autoComplete="off">
       <div
@@ -93,7 +107,7 @@ function SearchBox({
                     key={artist.id}
                     onClick={() => handleButtonClick(artist)}
                   >
-                    {artist.name} - {artist.country ?? "Unknown"}
+                    {`${artist.name} - ${artist.country ?? "Unknown"}`}
                   </button>
                 );
               })}
@@ -119,7 +133,7 @@ function SearchBox({
           placeholder="Graph size"
           size={2}
           onChange={(e) => onSimilarArtistsLimitChange(e.target.valueAsNumber)}
-          value={currentsimilarArtistsLimit}
+          value={currentSimilarArtistsLimit}
           required
         />
         <span id="graph-size-input-warning" className="validity" />

@@ -1474,4 +1474,11 @@ export default class APIService {
       return false;
     }
   };
+
+  artistLookup = async (searchQuery: string): Promise<any> => {
+    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
 }
