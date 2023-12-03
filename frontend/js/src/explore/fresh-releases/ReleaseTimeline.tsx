@@ -30,18 +30,20 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   function createMarks(data: Array<FreshReleaseItem>) {
     let dataArr: Array<string> = [];
     let percentArr: Array<number> = [];
+    // We want to filter out the keys that have less than 1.5% of the total releases
+    const minReleasesThreshold = Math.floor(data.length * 0.015);
     if (order === "release_date") {
       const releasesPerDate = countBy(
         releases,
         (item: FreshReleaseItem) => item.release_date
       );
-
-      dataArr = Object.keys(releasesPerDate).map((item) =>
-        formatReleaseDate(item)
+      const filteredDates = Object.keys(releasesPerDate).filter(
+        (date) => releasesPerDate[date] >= minReleasesThreshold
       );
 
-      percentArr = Object.values(releasesPerDate)
-        .map((item) => (item / data.length) * 100)
+      dataArr = filteredDates.map((item) => formatReleaseDate(item));
+      percentArr = filteredDates
+        .map((item) => (releasesPerDate[item] / data.length) * 100)
         .map((_, index, arr) =>
           arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
         );
@@ -49,11 +51,14 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       const artistInitialsCount = countBy(data, (item: FreshReleaseItem) =>
         item.artist_credit_name.charAt(0).toUpperCase()
       );
+      const filteredInitials = Object.keys(artistInitialsCount).filter(
+        (initial) => artistInitialsCount[initial] >= minReleasesThreshold
+      );
 
-      dataArr = Object.keys(artistInitialsCount).sort();
+      dataArr = filteredInitials.sort();
 
-      percentArr = Object.values(artistInitialsCount)
-        .map((item) => (item / data.length) * 100)
+      percentArr = filteredInitials
+        .map((item) => (artistInitialsCount[item] / data.length) * 100)
         .map((_, index, arr) =>
           arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
         );
@@ -61,11 +66,14 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       const releaseInitialsCount = countBy(data, (item: FreshReleaseItem) =>
         item.release_name.charAt(0).toUpperCase()
       );
+      const filteredInitials = Object.keys(releaseInitialsCount).filter(
+        (initial) => releaseInitialsCount[initial] >= minReleasesThreshold
+      );
 
-      dataArr = Object.keys(releaseInitialsCount).sort();
+      dataArr = filteredInitials.sort();
 
-      percentArr = Object.values(releaseInitialsCount)
-        .map((item) => (item / data.length) * 100)
+      percentArr = filteredInitials
+        .map((item) => (releaseInitialsCount[item] / data.length) * 100)
         .map((_, index, arr) =>
           arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
         );

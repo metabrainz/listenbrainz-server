@@ -16,7 +16,6 @@
 .fresh-releases-pill-row {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid @asphalt;
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
 }
@@ -309,12 +308,20 @@
         }
       }
 
+      .release-coverart-placeholder.hide-placeholder {
+        display: none;
+      }
+
       .release-date {
         text-transform: uppercase;
         text-align: right;
         font-weight: 500;
         font-size: smaller;
         cursor: default;
+      }
+
+      .release-coverart.hide-image {
+        display: none;
       }
 
       .release-coverart {
@@ -500,7 +507,8 @@
 
 .sidebar {
   position: sticky;
-  top: 0;
+  top: 10px;
+  border-radius: 10px;
   height: max-content;
   max-height: 100vh;
   overflow-y: scroll;
@@ -540,4 +548,14 @@
     font-weight: 500;
     font-size: 13px;
   }
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 1;
 }

@@ -154,7 +154,6 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   React.useEffect(() => {
     setCoverartOnly(false);
     setCheckedList([]);
-    setReleaseTagsCheckList([]);
   }, [allFilters]);
 
   React.useEffect(() => {
@@ -383,6 +382,15 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
       >
         <FontAwesomeIcon icon={isSidebarOpen ? faXmark : faGear} size="2x" />
       </button>
+      {isSidebarOpen && (
+        <button
+          className="sidebar-overlay"
+          onClick={toggleSidebar}
+          type="button"
+        >
+          {}
+        </button>
+      )}
     </>
   );
 }

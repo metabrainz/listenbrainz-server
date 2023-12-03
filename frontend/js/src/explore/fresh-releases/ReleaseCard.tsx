@@ -50,6 +50,8 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     listenCount,
   } = props;
 
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+
   const futureRelease = new Date(releaseDate) > new Date();
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
@@ -85,8 +87,18 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     <FontAwesomeIcon icon={futureRelease ? faHourglass : faPlay} />
   );
   const coverArtPlaceholder = (
-    <div className="release-coverart-placeholder">{releaseCoverArtIcon}</div>
+    <div
+      className={`release-coverart-placeholder release-coverart ${
+        imageLoaded ? "hide-placeholder" : ""
+      }`}
+    >
+      {releaseCoverArtIcon}
+    </div>
   );
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
 
   React.useEffect(() => {
     async function getCoverArt() {
@@ -152,11 +164,14 @@ export default function ReleaseCard(props: ReleaseCardProps) {
         >
           {coverartSrc ? (
             <>
+              {coverArtPlaceholder}
               <LazyLoadImage
-                className="release-coverart"
+                className={`release-coverart ${
+                  imageLoaded ? "" : "hide-image"
+                }`}
                 src={coverartSrc}
                 alt={`${releaseName} by ${artistCreditName}`}
-                placeholder={coverArtPlaceholder}
+                onLoad={handleImageLoad}
               />
               <div className="hover-backdrop">{releaseCoverArtIcon}</div>
             </>
