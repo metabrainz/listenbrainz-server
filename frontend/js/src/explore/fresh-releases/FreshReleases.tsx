@@ -278,8 +278,17 @@ export default function FreshReleases() {
               <div className="no-release">
                 <img
                   src="/static/img/recommendations/no-freshness.png"
-                  alt="No Releases Found"
+                  alt={
+                    releases.length === 0
+                      ? "No releases"
+                      : "No filtered releases"
+                  }
                 />
+                <div className="text-muted">
+                  {releases.length === 0
+                    ? "No releases"
+                    : `0/${releases.length} releases match your filters.`}
+                </div>
               </div>
             ) : (
               <ReleaseCardsGrid

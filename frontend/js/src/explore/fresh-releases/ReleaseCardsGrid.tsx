@@ -9,49 +9,33 @@ type ReleaseCardReleaseProps = {
   order: string;
 };
 
+const getKeyForOrder = (
+  releaseOrder: string,
+  release: FreshReleaseItem
+): string | number => {
+  switch (releaseOrder) {
+    case "release_date":
+      return formatReleaseDate(release.release_date);
+    case "artist_credit_name":
+    case "release_name":
+      return release[releaseOrder].charAt(0).toUpperCase();
+    case "confidence":
+      return release[releaseOrder]!;
+    default:
+      return "";
+  }
+};
+
 const getMapping = (
   releaseOrder: string,
   filteredList: Array<FreshReleaseItem>
 ): Map<string, Array<FreshReleaseItem>> => {
-  if (releaseOrder === "release_date") {
-    return filteredList.reduce((acc, release) => {
-      const { release_date: releaseDate } = release;
-      if (acc.has(releaseDate)) {
-        acc.get(releaseDate).push(release);
-      } else {
-        acc.set(releaseDate, [release]);
-      }
-      return acc;
-    }, new Map());
-  }
-  if (releaseOrder === "artist_credit_name") {
-    return filteredList.reduce((acc, release) => {
-      const { artist_credit_name: artistCreditName } = release;
-      if (acc.has(artistCreditName.charAt(0).toUpperCase())) {
-        acc.get(artistCreditName.charAt(0).toUpperCase()).push(release);
-      } else {
-        acc.set(artistCreditName.charAt(0).toUpperCase(), [release]);
-      }
-      return acc;
-    }, new Map());
-  }
-  if (releaseOrder === "release_name") {
-    return filteredList.reduce((acc, release) => {
-      const { release_name: releaseName } = release;
-      if (acc.has(releaseName.charAt(0).toUpperCase())) {
-        acc.get(releaseName.charAt(0).toUpperCase()).push(release);
-      } else {
-        acc.set(releaseName.charAt(0).toUpperCase(), [release]);
-      }
-      return acc;
-    }, new Map());
-  }
   return filteredList.reduce((acc, release) => {
-    const { confidence } = release;
-    if (acc.has(confidence)) {
-      acc.get(confidence).push(release);
+    const key = getKeyForOrder(releaseOrder, release);
+    if (acc.has(key)) {
+      acc.get(key).push(release);
     } else {
-      acc.set(confidence, [release]);
+      acc.set(key, [release]);
     }
     return acc;
   }, new Map());
@@ -60,7 +44,10 @@ const getMapping = (
 export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
   const { filteredList, displaySettings, order } = props;
 
-  const releaseMapping = getMapping(order, filteredList);
+  const releaseMapping = React.useMemo(() => getMapping(order, filteredList), [
+    order,
+    filteredList,
+  ]);
 
   const getReleaseCardGridTitle = (
     releaseKey: string,
