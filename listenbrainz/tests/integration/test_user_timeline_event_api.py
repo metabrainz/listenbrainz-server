@@ -52,12 +52,6 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "language": "en",
             "text": "Review text goes here ...",
         }
-
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
-            count=1,
-        )
-        self.assertListEqual([], events)
         # by default this is True, we set to False so that the Flask handler to automatically
         # catch uncaught exceptions works and wraps those in a 500.
         self.app.config["TESTING"] = False
@@ -71,8 +65,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(r)
 
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            user_ids=[self.user['id']],
+            min_ts=0,
+            max_ts=int(time.time()) + 1000,
             count=1,
         )
         self.assertEqual(1, len(events))
@@ -88,8 +84,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(r)
 
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            user_ids=[self.user['id']],
+            min_ts=0,
+            max_ts=int(time.time()) + 1000,
             count=1,
         )
         self.assertEqual(1, len(events))
@@ -118,8 +116,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert401(r)
 
         # check that no events were created in the database
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            user_ids=[self.user['id']],
+            min_ts=0,
+            max_ts=int(time.time()) + 1000,
             count=1,
         )
         self.assertListEqual([], events)
@@ -195,16 +195,19 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_get_notification_event(self):
         metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
         approved_user = db_user.get_or_create(11, "troi-bot")
-        self.client.post(
+        r = self.client.post(
             url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
+        self.assert200(r)
+        time.sleep(1)
+
         r = self.client.get(
             url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
-
+        self.assert200(r)
         payload = r.json['payload']
         self.assertEqual(1, payload['count'])
         self.assertEqual(self.user['musicbrainz_id'], payload['user_id'])
