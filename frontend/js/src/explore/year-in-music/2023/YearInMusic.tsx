@@ -50,7 +50,6 @@ import CustomChoropleth from "../../../stats/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../../follow/FollowButton";
 
-
 export type YearInMusicProps = {
   user: ListenBrainzUser;
   yearInMusicData: {
@@ -379,38 +378,10 @@ export default class YearInMusic extends React.Component<
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
 
-    if (!yearInMusicData || isEmpty(yearInMusicData)) {
-      return (
-        <div id="year-in-music" className="yim-2023 container">
-          <div id="main-header" className="flex-center">
-            <img
-              className="img-responsive header-image"
-              src="/static/img/year-in-music-23/yim23-logo.png"
-              alt="Your year in music 2023"
-            />
-          </div>
-          <div>
-            <h3 className="center-p">
-              We don&apos;t have enough listening data for {user.name} to
-              produce any statistics or playlists.
-            </h3>
-            <p className="center-p">
-              Check out how you can submit listens by{" "}
-              <a href="/profile/music-services/details/">
-                connecting a music service
-              </a>{" "}
-              or <a href="/profile/import/">importing your listening history</a>
-              , and come back next year!
-            </p>
-          </div>
-        </div>
-      );
-    }
-
     // Some data might not have been calculated for some users
     // This boolean lets us warn them of that
     let missingSomeData = false;
-
+    const hasSomeData = !!yearInMusicData && !isEmpty(yearInMusicData);
     if (
       !yearInMusicData.top_releases ||
       !yearInMusicData.top_recordings ||
@@ -553,19 +524,45 @@ export default class YearInMusic extends React.Component<
             })}
           </div>
           <div className="hashtag">#YearInMusic</div>
-          <span
-            className="masked-image"
-            style={{
-              WebkitMaskImage:
-                "url('/static/img/year-in-music-23/yim23-logo.png')",
-            }}
-          >
-            <img
-              className="img-responsive header-image"
-              src="/static/img/year-in-music-23/yim23-logo.png"
-              alt="Your year in music 2023"
-            />
-          </span>
+          {hasSomeData ? (
+            <span
+              className="masked-image"
+              style={{
+                WebkitMaskImage:
+                  "url('/static/img/year-in-music-23/yim23-logo.png')",
+              }}
+            >
+              <img
+                className="img-responsive header-image"
+                src="/static/img/year-in-music-23/yim23-logo.png"
+                alt="Your year in music 2023"
+              />
+            </span>
+          ) : (
+            <>
+              <span
+                className="masked-image"
+                style={{
+                  WebkitMaskImage:
+                    "url('/static/img/year-in-music-23/flower.png')",
+                }}
+              >
+                <img
+                  src="/static/img/year-in-music-23/flower.png"
+                  alt="Your year in music 2023"
+                />
+              </span>
+              <p className="center-p">Oh no!</p>
+              <p className="center-p">
+                We don&apos;t have enough 2023 statistics for {user.name}.
+              </p>
+              <p className="center-p">
+                <a href="/profile/music-services/details/">Submit</a> enough
+                listens before the end of December to generate your #yearinmusic
+                next year.
+              </p>
+            </>
+          )}
           <div className="user-name">{user.name}</div>
           <div className="arrow-down" />
         </div>
@@ -1252,52 +1249,54 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
         </div>
-        <div className="section">
-          <div className="header">
-            Friends
-            <div className="subheader">visit {yourOrUsersName} buds</div>
-          </div>
-          <div id="buddies">
-            <button
-              className="btn-icon btn-transparent backward"
-              type="button"
-              onClick={this.manualScroll}
-            >
-              <FontAwesomeIcon icon={faCircleChevronLeft} />
-            </button>
-            <div
-              className="flex card-container dragscroll"
-              ref={this.buddiesScrollContainer}
-            >
-              {followingList.slice(0, 15).map((followedUser, index) => {
-                return (
-                  <div className="buddy content-card card">
-                    <div className="img-container">
+        {Boolean(followingList.length) && (
+          <div className="section">
+            <div className="header">
+              Friends
+              <div className="subheader">visit {yourOrUsersName} buds</div>
+            </div>
+            <div id="buddies">
+              <button
+                className="btn-icon btn-transparent backward"
+                type="button"
+                onClick={this.manualScroll}
+              >
+                <FontAwesomeIcon icon={faCircleChevronLeft} />
+              </button>
+              <div
+                className="flex card-container dragscroll"
+                ref={this.buddiesScrollContainer}
+              >
+                {followingList.slice(0, 15).map((followedUser, index) => {
+                  return (
+                    <div className="buddy content-card card">
+                      <div className="img-container">
+                        <a href={`/user/${followedUser}`}>
+                          <img
+                            src={buddiesImages[index % 7]}
+                            alt="Music buddies"
+                          />
+                        </a>
+                      </div>
                       <a href={`/user/${followedUser}`}>
-                        <img
-                          src={buddiesImages[index % 7]}
-                          alt="Music buddies"
-                        />
+                        <div className="small-stat">
+                          <div className="value">{followedUser}</div>
+                        </div>
                       </a>
                     </div>
-                    <a href={`/user/${followedUser}`}>
-                      <div className="small-stat">
-                        <div className="value">{followedUser}</div>
-                      </div>
-                    </a>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              <button
+                className="btn-icon btn-transparent forward"
+                type="button"
+                onClick={this.manualScroll}
+              >
+                <FontAwesomeIcon icon={faCircleChevronRight} />
+              </button>
             </div>
-            <button
-              className="btn-icon btn-transparent forward"
-              type="button"
-              onClick={this.manualScroll}
-            >
-              <FontAwesomeIcon icon={faCircleChevronRight} />
-            </button>
           </div>
-        </div>
+        )}
         <div className="cover-art-composite">
           <div className="section">
             <div className="header">
