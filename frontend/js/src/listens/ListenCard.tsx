@@ -37,6 +37,7 @@ import {
   getRecordingMSID,
   getReleaseGroupMBID,
   getReleaseMBID,
+  getReleaseName,
   getTrackDurationInMs,
   getTrackLink,
   getTrackName,
@@ -327,21 +328,29 @@ export default class ListenCard extends React.Component<
     if (customThumbnail) {
       thumbnail = customThumbnail;
     } else if (thumbnailSrc) {
+      let thumbnailLink;
+      let thumbnailTitle;
+      if (releaseMBID) {
+        thumbnailLink = `https://musicbrainz.org/release/${releaseMBID}`;
+        thumbnailTitle = getReleaseName(listen);
+      } else if (releaseGroupMBID) {
+        thumbnailLink = `https://musicbrainz.org/release-group/${releaseGroupMBID}`;
+        thumbnailTitle = get(listen, "track_metadata.mbid_mapping.release_group_name");
+      } else {
+        thumbnailLink = spotifyURL || youtubeURL || soundcloudURL;
+        thumbnailTitle = "Cover art";
+      }
       thumbnail = (
         <div className="listen-thumbnail">
           <a
-            href={
-              releaseMBID
-                ? `https://musicbrainz.org/release/${releaseMBID}`
-                : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
-            }
-            title={listen.track_metadata?.release_name ?? "Cover art"}
+            href={thumbnailLink}
+            title={thumbnailTitle}
             target="_blank"
             rel="noopener noreferrer"
           >
             <CoverArtWithFallback
               imgSrc={thumbnailSrc}
-              altText={listen.track_metadata?.release_name}
+              altText={thumbnailTitle}
             />
           </a>
         </div>

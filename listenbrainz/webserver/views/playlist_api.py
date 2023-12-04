@@ -321,6 +321,8 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
         if "[artist_credit_mbids]" in row and row["[artist_credit_mbids]"] is not None:
             rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"]]
         rec.title = row.get("recording_name", "")
+        rec.release_name = row.get("release_name", "")
+        rec.duration_ms = row.get("length", "")
 
         caa_id = row.get("caa_id")
         caa_release_mbid = row.get("caa_release_mbid")
