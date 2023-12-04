@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Integrations } from "@sentry/tracing";
-import { cloneDeep, get, isEqual } from "lodash";
+import {cloneDeep, get, isEmpty, isEqual, isNil} from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
@@ -689,13 +689,14 @@ export default class Listens extends React.Component<
     const isOldestButtonDisabled =
       listens?.length > 0 &&
       listens[listens.length - 1]?.listened_at <= oldestListenTs;
+    const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
     const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
       <div role="main">
         <div className="row">
           <div className="col-md-4 col-md-push-8 mt-15">
             <div className="mb-15">
-              {!isCurrentUsersPage && (
+              {isUserLoggedIn && !isCurrentUsersPage && (
                 <FollowButton
                   type="icon-only"
                   user={user}
