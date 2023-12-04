@@ -1,6 +1,6 @@
 from more_itertools import chunked
 
-from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.postgres import create_release_metadata_cache
 from listenbrainz_spark.utils import read_files_from_HDFS
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
@@ -13,7 +13,7 @@ def get_most_listened_year(year):
     setup_listens_for_year(year)
 
     create_release_metadata_cache()
-    read_files_from_HDFS(RELEASE_GROUP_METADATA_CACHE_DATAFRAME).createOrReplaceTempView("releases_all")
+    read_files_from_HDFS(RELEASE_METADATA_CACHE_DATAFRAME).createOrReplaceTempView("releases_all")
 
     data = run_query(_get_releases_with_date()).collect()
     for entries in chunked(data, USERS_PER_MESSAGE):
