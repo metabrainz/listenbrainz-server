@@ -54,6 +54,28 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
+    messages = get_entity_stats_for_range(
+        entity,
+        stats_range,
+        from_date,
+        to_date,
+        message_type,
+        database
+    )
+
+    logger.debug("Done!")
+    return messages
+
+
+def get_entity_stats_for_range(
+    entity: str,
+    stats_range: str,
+    from_date: datetime,
+    to_date: datetime,
+    message_type: str,
+    database: str = None
+):
+    """ Calculate entity stats for all users' listens between the start and the end datetime. """
     listens_df = get_listens_from_dump(from_date, to_date)
     table = f"user_{entity}_{stats_range}"
     listens_df.createOrReplaceTempView(table)
@@ -64,13 +86,9 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
         cache_dfs.append(df_name)
         read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
 
-    messages = calculate_entity_stats(
+    return calculate_entity_stats(
         from_date, to_date, table, cache_dfs, entity, stats_range, message_type, database
     )
-
-    logger.debug("Done!")
-
-    return messages
 
 
 def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, cache_tables: List[str],
