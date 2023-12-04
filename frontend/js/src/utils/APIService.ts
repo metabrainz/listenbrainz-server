@@ -7,6 +7,7 @@ export default class APIService {
 
   MBBaseURI: string = "https://musicbrainz.org/ws/2";
   CBBaseURI: string = "https://critiquebrainz.org/ws/1";
+  TestAPIBaseURI: string = "https://test-api.listenbrainz.org/1";
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 
@@ -1091,6 +1092,16 @@ export default class APIService {
     return response.json();
   };
 
+  lookupMBArtist = async (
+    artistMBID: string,
+    inc = "releases"
+  ): Promise<MusicBrainzArtist> => {
+    const url = `${this.MBBaseURI}/artist/${artistMBID}?fmt=json&inc=${inc}`;
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"
@@ -1477,6 +1488,32 @@ export default class APIService {
 
   artistLookup = async (searchQuery: string): Promise<any> => {
     const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getArtistWikipediaExtract = async (artistMBID: string): Promise<string> => {
+    const url = `https://musicbrainz.org/artist/${artistMBID}/wikipedia-extract`;
+    const response = await fetch(url);
+    const { wikipediaExtract } = await response.json();
+
+    if (!wikipediaExtract || !wikipediaExtract.content) {
+      return "No wiki data found.";
+    }
+
+    const htmlParser = new DOMParser();
+    const htmlData = htmlParser.parseFromString(
+      wikipediaExtract.content,
+      "text/html"
+    );
+    const htmlParagraphs = htmlData.querySelector("p:not(.mw-empty-elt)");
+
+    return htmlParagraphs?.textContent || "No wiki data found.";
+  };
+
+  getTopTracksForArtist = async (artistMBID: string): Promise<any> => {
+    const url = `${this.TestAPIBaseURI}/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

@@ -2,11 +2,12 @@
 declare type MusicBrainzArtist = {
   name: string;
   join_phrase: string;
-  area: string;
+  area: { [key: string]: string };
   begin_year: number;
   rels: { [key: string]: string };
   //   rels: Record<string, string>;
   type: string;
+  "life-span": { [key: string]: string };
 };
 
 declare type MusicBrainzArtistCredit = {

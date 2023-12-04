@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
-import infoLookup from "./infoLookup";
 import ReleaseCard from "./ReleaseCard";
 import { ToastMsg } from "../../../notifications/Notifications";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 interface PanelProps {
   artist: ArtistType;
@@ -33,8 +33,10 @@ type RecordingType = {
   caa_id: number;
   caa_release_mbid: string;
 };
+
 function Panel({ artist, onTrackChange }: PanelProps) {
   const [artistInfo, setArtistInfo] = useState<ArtistInfoType | null>(null);
+  const { APIService } = useContext(GlobalAppContext);
 
   const handleTrackChange = () => {
     if (artistInfo?.topTrack?.recording_name) {
@@ -55,15 +57,41 @@ function Panel({ artist, onTrackChange }: PanelProps) {
   };
 
   useEffect(() => {
+    const fetchArtistInfo = async (
+      artistMBID: string,
+      artistData: ArtistType
+    ) => {
+      const artistInformation = await APIService.lookupMBArtist(artistMBID, "");
+      const birthAreaData = {
+        born: artistInformation?.["life-span"]?.begin || "Unknown",
+        area: artistInformation?.area?.name || "Unknown",
+      };
+
+      const wikipediaData = await APIService.getArtistWikipediaExtract(
+        artistMBID
+      );
+
+      const topTracksForArtist = await APIService.getTopTracksForArtist(
+        artistMBID
+      );
+
+      return {
+        name: artistData.name,
+        type: artistData.type,
+        ...birthAreaData,
+        wiki: wikipediaData,
+        mbLink: `https://musicbrainz.org/artist/${artistMBID}`,
+        topTrack: topTracksForArtist?.[0] ?? null,
+      };
+    };
+
     const getArtistInfo = async () => {
       try {
-        const artistApiInfo = await infoLookup(artist.artist_mbid);
-        const MB_URL = `https://musicbrainz.org/artist/${artist.artist_mbid}`;
-        const newArtistInfo = artistApiInfo;
-        // Adding name & type properties to artist info.
-        newArtistInfo.name = artist.name;
-        newArtistInfo.type = artist.type;
-        setArtistInfo(newArtistInfo);
+        const artistFetchedInformation = await fetchArtistInfo(
+          artist.artist_mbid,
+          artist
+        );
+        setArtistInfo(artistFetchedInformation);
       } catch (error) {
         toast.error(
           <ToastMsg
@@ -75,7 +103,7 @@ function Panel({ artist, onTrackChange }: PanelProps) {
       }
     };
     getArtistInfo();
-  }, [artist]);
+  }, [APIService, artist]);
 
   return (
     artistInfo && (
@@ -153,4 +181,3 @@ function Panel({ artist, onTrackChange }: PanelProps) {
 }
 
 export default Panel;
-export type { ArtistInfoType, RecordingType };
