@@ -3,7 +3,7 @@ from listenbrainz_spark.postgres.utils import save_pg_table_to_hdfs
 
 
 def create_release_group_metadata_cache():
-    """ Import release groups which were released in the given year from postgres to HDFS """
+    """ Import release groups with cover art data from postgres to HDFS """
     query = f"""
         WITH rg_cover_art AS (
             SELECT DISTINCT ON (rg.id)
