@@ -611,103 +611,94 @@ export default class YearInMusic extends React.Component<
           </div>
         )}
 
-        <div className="section">
-          <div className="card content-card" id="top-releases">
-            <h3 className="flex-center">Top albums of 2023</h3>
-            {yearInMusicData.top_releases ? (
-              <>
-                <div id="top-albums">
-                  <Swiper
-                    modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
-                    spaceBetween={15}
-                    slidesPerView={2}
-                    initialSlide={0}
-                    centeredSlides
-                    lazy={{
-                      enabled: true,
-                      loadPrevNext: true,
-                      loadPrevNextAmount: 4,
-                    }}
-                    watchSlidesProgress
-                    navigation
-                    effect="coverflow"
-                    coverflowEffect={{
-                      rotate: 40,
-                      depth: 100,
-                      slideShadows: false,
-                    }}
-                    breakpoints={{
-                      700: {
-                        initialSlide: 1,
-                        spaceBetween: 100,
-                        slidesPerView: 3,
-                        coverflowEffect: {
-                          rotate: 20,
-                          depth: 300,
-                          slideShadows: false,
-                        },
+        {yearInMusicData.top_releases && (
+          <div className="section">
+            <div className="card content-card" id="top-releases">
+              <h3 className="flex-center">Top albums of 2023</h3>
+              <div id="top-albums">
+                <Swiper
+                  modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
+                  spaceBetween={15}
+                  slidesPerView={2}
+                  initialSlide={0}
+                  centeredSlides
+                  lazy={{
+                    enabled: true,
+                    loadPrevNext: true,
+                    loadPrevNextAmount: 4,
+                  }}
+                  watchSlidesProgress
+                  navigation
+                  effect="coverflow"
+                  coverflowEffect={{
+                    rotate: 40,
+                    depth: 100,
+                    slideShadows: false,
+                  }}
+                  breakpoints={{
+                    700: {
+                      initialSlide: 1,
+                      spaceBetween: 100,
+                      slidesPerView: 3,
+                      coverflowEffect: {
+                        rotate: 20,
+                        depth: 300,
+                        slideShadows: false,
                       },
-                    }}
-                  >
-                    {yearInMusicData.top_releases
-                      .slice(0, 50)
-                      .map((release) => {
-                        if (!release.caa_id || !release.caa_release_mbid) {
-                          return null;
-                        }
-                        const coverArt = generateAlbumArtThumbnailLink(
-                          release.caa_id,
-                          release.caa_release_mbid
-                        );
-                        return (
-                          <SwiperSlide
-                            key={`coverflow-${release.release_name}`}
+                    },
+                  }}
+                >
+                  {yearInMusicData.top_releases.slice(0, 50).map((release) => {
+                    if (!release.caa_id || !release.caa_release_mbid) {
+                      return null;
+                    }
+                    const coverArt = generateAlbumArtThumbnailLink(
+                      release.caa_id,
+                      release.caa_release_mbid
+                    );
+                    return (
+                      <SwiperSlide key={`coverflow-${release.release_name}`}>
+                        <img
+                          data-src={
+                            coverArt ?? "/static/img/cover-art-placeholder.jpg"
+                          }
+                          alt={release.release_name}
+                          className="swiper-lazy"
+                        />
+                        <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
+                        <div title={release.release_name}>
+                          <a
+                            href={
+                              release.release_mbid
+                                ? `https://musicbrainz.org/release/${release.release_mbid}/`
+                                : undefined
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
                           >
-                            <img
-                              data-src={
-                                coverArt ??
-                                "/static/img/cover-art-placeholder.jpg"
-                              }
-                              alt={release.release_name}
-                              className="swiper-lazy"
-                            />
-                            <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
-                            <div title={release.release_name}>
-                              <a
-                                href={
-                                  release.release_mbid
-                                    ? `https://musicbrainz.org/release/${release.release_mbid}/`
-                                    : undefined
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {release.release_name}
-                              </a>
-                              <div className="small text-muted">
-                                {release.artist_name}
-                              </div>
-                            </div>
-                          </SwiperSlide>
-                        );
-                      })}
-                  </Swiper>
-                </div>
-                <div className="yim-share-button-container">
-                  <ImageShareButtons
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=albums`}
-                    shareUrl={`${linkToThisPage}#top-albums`}
-                    // shareText="Check out my"
-                    shareTitle="My top albums of 2023"
-                    fileName={`${user.name}-top-albums-2023`}
-                  />
-                </div>
-              </>
-            ) : (
-              noDataText
-            )}
+                            {release.release_name}
+                          </a>
+                          <div className="small text-muted">
+                            {release.artist_name}
+                          </div>
+                        </div>
+                      </SwiperSlide>
+                    );
+                  })}
+                </Swiper>
+              </div>
+              <div className="yim-share-button-container">
+                <ImageShareButtons
+                  svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=albums`}
+                  shareUrl={`${linkToThisPage}#top-albums`}
+                  // shareText="Check out my"
+                  shareTitle="My top albums of 2023"
+                  fileName={`${user.name}-top-albums-2023`}
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="section">
           <div className="header">
@@ -717,131 +708,121 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="flex flex-wrap">
-            <div style={{ display: "table" }}>
-              <div className="card content-card" id="top-tracks">
-                <div className="heading">
-                  <img
-                    className="img-header"
-                    src="/static/img/year-in-music-23/peep.png"
-                    alt="Top songs of 2023"
-                  />
-                  <h4>Top songs of 2023</h4>
-                </div>
-                {yearInMusicData.top_recordings ? (
-                  <>
-                    <div className="scrollable-area">
-                      {yearInMusicData.top_recordings
-                        .slice(0, 50)
-                        .map((recording) => {
-                          const listenHere = {
-                            listened_at: 0,
-                            track_metadata: {
-                              artist_name: recording.artist_name,
-                              track_name: recording.track_name,
-                              release_name: recording.release_name,
-                              additional_info: {
-                                recording_mbid: recording.recording_mbid,
-                                release_mbid: recording.release_mbid,
-                                artist_mbids: recording.artist_mbids,
-                              },
+            {yearInMusicData.top_recordings && (
+              <div style={{ display: "table" }}>
+                <div className="card content-card" id="top-tracks">
+                  <div className="heading">
+                    <img
+                      className="img-header"
+                      src="/static/img/year-in-music-23/peep.png"
+                      alt="Top songs of 2023"
+                    />
+                    <h4>Top songs of 2023</h4>
+                  </div>
+                  <div className="scrollable-area">
+                    {yearInMusicData.top_recordings
+                      .slice(0, 50)
+                      .map((recording) => {
+                        const listenHere = {
+                          listened_at: 0,
+                          track_metadata: {
+                            artist_name: recording.artist_name,
+                            track_name: recording.track_name,
+                            release_name: recording.release_name,
+                            additional_info: {
+                              recording_mbid: recording.recording_mbid,
+                              release_mbid: recording.release_mbid,
+                              artist_mbids: recording.artist_mbids,
                             },
-                          };
-                          listens.push(listenHere);
-                          return (
-                            <ListenCard
-                              compact
-                              key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
-                              listen={listenHere}
-                              showTimestamp={false}
-                              showUsername={false}
-                            />
-                          );
-                        })}
-                    </div>
-                    <div className="yim-share-button-container">
-                      <ImageShareButtons
-                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=tracks`}
-                        shareUrl={`${linkToThisPage}#top-tracks`}
-                        // shareText="Check out my"
-                        shareTitle="My top tracks of 2023"
-                        fileName={`${user.name}-top-tracks-2023`}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  noDataText
-                )}
-              </div>
-            </div>
-            <div style={{ display: "table" }}>
-              <div className="card content-card" id="top-artists">
-                <div className="heading">
-                  <img
-                    className="img-header"
-                    src="/static/img/year-in-music-23/heart.png"
-                    alt="Top artists of 2023"
-                  />
-                  <h4>Top artists of 2023</h4>
+                          },
+                        };
+                        listens.push(listenHere);
+                        return (
+                          <ListenCard
+                            compact
+                            key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
+                            listen={listenHere}
+                            showTimestamp={false}
+                            showUsername={false}
+                          />
+                        );
+                      })}
+                  </div>
+                  <div className="yim-share-button-container">
+                    <ImageShareButtons
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=tracks`}
+                      shareUrl={`${linkToThisPage}#top-tracks`}
+                      // shareText="Check out my"
+                      shareTitle="My top tracks of 2023"
+                      fileName={`${user.name}-top-tracks-2023`}
+                    />
+                  </div>
                 </div>
-                {yearInMusicData.top_artists ? (
-                  <>
-                    <div className="scrollable-area">
-                      {yearInMusicData.top_artists
-                        .slice(0, 50)
-                        .map((artist) => {
-                          const details = getEntityLink(
-                            "artist",
-                            artist.artist_name,
-                            artist.artist_mbid
-                          );
-                          const thumbnail = (
-                            <span className="badge badge-info">
-                              <FontAwesomeIcon
-                                style={{ marginRight: "4px" }}
-                                icon={faHeadphones}
-                              />{" "}
-                              {artist.listen_count}
-                            </span>
-                          );
-                          const listenHere = {
-                            listened_at: 0,
-                            track_metadata: {
-                              track_name: "",
-                              artist_name: artist.artist_name,
-                              additional_info: {
-                                artist_mbids: [artist.artist_mbid],
-                              },
-                            },
-                          };
-                          listens.push(listenHere);
-                          return (
-                            <ListenCard
-                              compact
-                              key={`top-artists-${artist.artist_name}-${artist.artist_mbid}`}
-                              listen={listenHere}
-                              customThumbnail={thumbnail}
-                              listenDetails={details}
-                              showTimestamp={false}
-                              showUsername={false}
-                            />
-                          );
-                        })}
-                    </div>
-                    <div className="yim-share-button-container">
-                      <ImageShareButtons
-                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=artists`}
-                        shareUrl={`${linkToThisPage}#top-artists`}
-                        // shareText="Check out my"
-                        shareTitle="My top artists of 2023"
-                        fileName={`${user.name}-top-artists-2023`}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  noDataText
-                )}
               </div>
-            </div>
+            )}
+            {yearInMusicData.top_artists && (
+              <div style={{ display: "table" }}>
+                <div className="card content-card" id="top-artists">
+                  <div className="heading">
+                    <img
+                      className="img-header"
+                      src="/static/img/year-in-music-23/heart.png"
+                      alt="Top artists of 2023"
+                    />
+                    <h4>Top artists of 2023</h4>
+                  </div>
+                  <div className="scrollable-area">
+                    {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
+                      const details = getEntityLink(
+                        "artist",
+                        artist.artist_name,
+                        artist.artist_mbid
+                      );
+                      const thumbnail = (
+                        <span className="badge badge-info">
+                          <FontAwesomeIcon
+                            style={{ marginRight: "4px" }}
+                            icon={faHeadphones}
+                          />{" "}
+                          {artist.listen_count}
+                        </span>
+                      );
+                      const listenHere = {
+                        listened_at: 0,
+                        track_metadata: {
+                          track_name: "",
+                          artist_name: artist.artist_name,
+                          additional_info: {
+                            artist_mbids: [artist.artist_mbid],
+                          },
+                        },
+                      };
+                      listens.push(listenHere);
+                      return (
+                        <ListenCard
+                          compact
+                          key={`top-artists-${artist.artist_name}-${artist.artist_mbid}`}
+                          listen={listenHere}
+                          customThumbnail={thumbnail}
+                          listenDetails={details}
+                          showTimestamp={false}
+                          showUsername={false}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="yim-share-button-container">
+                    <ImageShareButtons
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=artists`}
+                      shareUrl={`${linkToThisPage}#top-artists`}
+                      // shareText="Check out my"
+                      shareTitle="My top artists of 2023"
+                      fileName={`${user.name}-top-artists-2023`}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="section" id="stats">
@@ -882,21 +863,22 @@ export default class YearInMusic extends React.Component<
                 </div>
               )}
             </div>
-            <div className="" id="calendar">
-              <h3 className="text-center">
-                {capitalize(yourOrUsersName)} listening activity{" "}
-                <FontAwesomeIcon
-                  icon={faQuestionCircle}
-                  data-tip
-                  data-for="listening-activity"
-                  size="xs"
-                />
-                <Tooltip id="listening-activity">
-                  How many tracks did {youOrUsername} listen to each day of the
-                  year?
-                </Tooltip>
-              </h3>
-              {listensPerDayForGraph ? (
+            {listensPerDayForGraph && (
+              <div className="" id="calendar">
+                <h3 className="text-center">
+                  {capitalize(yourOrUsersName)} listening activity{" "}
+                  <FontAwesomeIcon
+                    icon={faQuestionCircle}
+                    data-tip
+                    data-for="listening-activity"
+                    size="xs"
+                  />
+                  <Tooltip id="listening-activity">
+                    How many tracks did {youOrUsername} listen to each day of
+                    the year?
+                  </Tooltip>
+                </h3>
+
                 <div className="graph-container">
                   <div className="graph">
                     <ResponsiveCalendar
@@ -931,26 +913,24 @@ export default class YearInMusic extends React.Component<
                     />
                   </div>
                 </div>
-              ) : (
-                noDataText
-              )}
-            </div>
-            <div className="" id="most-listened-year">
-              <h3 className="text-center">
-                What year are {yourOrUsersName} favorite songs from?{" "}
-                <FontAwesomeIcon
-                  icon={faQuestionCircle}
-                  data-tip
-                  data-for="most-listened-year-helptext"
-                  size="xs"
-                />
-                <Tooltip id="most-listened-year-helptext">
-                  How much {isCurrentUser ? "were you" : `was ${user.name}`} on
-                  the lookout for new music this year? Not that we&apos;re
-                  judging.
-                </Tooltip>
-              </h3>
-              {mostListenedYearDataForGraph ? (
+              </div>
+            )}
+            {mostListenedYearDataForGraph && (
+              <div className="" id="most-listened-year">
+                <h3 className="text-center">
+                  What year are {yourOrUsersName} favorite songs from?{" "}
+                  <FontAwesomeIcon
+                    icon={faQuestionCircle}
+                    data-tip
+                    data-for="most-listened-year-helptext"
+                    size="xs"
+                  />
+                  <Tooltip id="most-listened-year-helptext">
+                    How much {isCurrentUser ? "were you" : `was ${user.name}`}{" "}
+                    on the lookout for new music this year? Not that we&apos;re
+                    judging.
+                  </Tooltip>
+                </h3>
                 <div className="graph-container">
                   <div className="graph">
                     <ResponsiveBar
@@ -973,28 +953,26 @@ export default class YearInMusic extends React.Component<
                     />
                   </div>
                 </div>
-              ) : (
-                noDataText
-              )}
-            </div>
-            <div
-              className=""
-              id="user-artist-map"
-              style={{ marginTop: "1.5em" }}
-            >
-              <h3 className="text-center">
-                What countries are {yourOrUsersName} favorite artists from?{" "}
-                <FontAwesomeIcon
-                  icon={faQuestionCircle}
-                  data-tip
-                  data-for="user-artist-map-helptext"
-                  size="xs"
-                />
-                <Tooltip id="user-artist-map-helptext">
-                  Click on a country to see more details
-                </Tooltip>
-              </h3>
-              {artistMapDataForGraph ? (
+              </div>
+            )}
+            {artistMapDataForGraph && (
+              <div
+                className=""
+                id="user-artist-map"
+                style={{ marginTop: "1.5em" }}
+              >
+                <h3 className="text-center">
+                  What countries are {yourOrUsersName} favorite artists from?{" "}
+                  <FontAwesomeIcon
+                    icon={faQuestionCircle}
+                    data-tip
+                    data-for="user-artist-map-helptext"
+                    size="xs"
+                  />
+                  <Tooltip id="user-artist-map-helptext">
+                    Click on a country to see more details
+                  </Tooltip>
+                </h3>
                 <div className="graph-container">
                   <div className="graph">
                     <div style={{ paddingLeft: "3em" }}>
@@ -1065,38 +1043,39 @@ export default class YearInMusic extends React.Component<
                     />
                   </div>
                 </div>
-              ) : (
-                noDataText
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
-        <div className="section">
-          <div className="header">
-            2023 Playlists
-            <div className="subheader">
-              {capitalize(youOrUsername)} {isCurrentUser ? "have" : "has"}{" "}
-              earned these
+        {(Boolean(topDiscoveriesPlaylist) ||
+          Boolean(topMissedRecordingsPlaylist)) && (
+          <div className="section">
+            <div className="header">
+              2023 Playlists
+              <div className="subheader">
+                {capitalize(youOrUsername)} {isCurrentUser ? "have" : "has"}{" "}
+                earned these
+              </div>
+            </div>
+            <div className="row flex flex-wrap" id="playlists">
+              {Boolean(topDiscoveriesPlaylist) &&
+                this.showTopLevelPlaylist(
+                  0,
+                  topDiscoveriesPlaylist,
+                  "discovery-playlist",
+                  listens
+                )}
+              {Boolean(topMissedRecordingsPlaylist) &&
+                this.showTopLevelPlaylist(
+                  1,
+                  topMissedRecordingsPlaylist,
+                  "missed-playlist",
+                  listens
+                )}
+              {hasNoPlaylists && noDataText}
             </div>
           </div>
-          <div className="row flex flex-wrap" id="playlists">
-            {Boolean(topDiscoveriesPlaylist) &&
-              this.showTopLevelPlaylist(
-                0,
-                topDiscoveriesPlaylist,
-                "discovery-playlist",
-                listens
-              )}
-            {Boolean(topMissedRecordingsPlaylist) &&
-              this.showTopLevelPlaylist(
-                1,
-                topMissedRecordingsPlaylist,
-                "missed-playlist",
-                listens
-              )}
-            {hasNoPlaylists && noDataText}
-          </div>
-        </div>
+        )}
         <div className="section">
           <div className="header">
             Discover
@@ -1105,148 +1084,149 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="flex flex-wrap">
-            <div
-              className="card content-card"
-              id="new-releases"
-              style={{ marginBottom: "2.5em" }}
-            >
-              <div className="heading">
-                <img
-                  className="img-header"
-                  src="/static/img/year-in-music-23/ghost-square.png"
-                  alt={`New albums from ${yourOrUsersName} top artists`}
-                />
-                <h4>
-                  New albums from {yourOrUsersName} top artists{" "}
-                  <FontAwesomeIcon
-                    icon={faQuestionCircle}
-                    data-tip
-                    data-for="new-albums-helptext"
-                    size="xs"
+            {yearInMusicData.new_releases_of_top_artists && (
+              <div
+                className="card content-card"
+                id="new-releases"
+                style={{ marginBottom: "2.5em" }}
+              >
+                <div className="heading">
+                  <img
+                    className="img-header"
+                    src="/static/img/year-in-music-23/ghost-square.png"
+                    alt={`New albums from ${yourOrUsersName} top artists`}
                   />
-                  <Tooltip id="new-albums-helptext">
-                    Albums and singles released in 2023 from artists{" "}
-                    {youOrUsername} listened to.
-                    <br />
-                    Missed anything?
-                  </Tooltip>
-                </h4>
-              </div>
-              <div className="scrollable-area">
-                {yearInMusicData.new_releases_of_top_artists
-                  ? yearInMusicData.new_releases_of_top_artists.map(
-                      (release) => {
-                        const details = (
-                          <>
-                            <div
-                              title={release.title}
-                              className="ellipsis-2-lines"
-                            >
-                              {getEntityLink(
-                                "release-group",
-                                release.title,
-                                release.release_group_mbid
-                              )}
-                            </div>
-                            <span
-                              className="small text-muted ellipsis"
-                              title={release.artist_credit_name}
-                            >
-                              {getEntityLink(
-                                "artist",
-                                release.artist_credit_name,
-                                release.artist_credit_mbids[0]
-                              )}
-                            </span>
-                          </>
-                        );
-                        const listenHere: Listen = {
-                          listened_at: 0,
-                          track_metadata: {
-                            artist_name: release.artist_credit_name,
-                            track_name: release.title,
-                            release_name: release.title,
-                            additional_info: {
-                              release_group_mbid: release.release_group_mbid,
-                              artist_mbids: release.artist_credit_mbids,
-                            },
-                            mbid_mapping: {
-                              recording_mbid: "",
-                              release_mbid: "",
-                              artist_mbids: [],
-                              caa_id: release.caa_id,
-                              caa_release_mbid: release.caa_release_mbid,
-                            },
-                          },
-                        };
-                        listens.push(listenHere);
-                        return (
-                          <ListenCard
-                            listenDetails={details}
-                            key={release.release_group_mbid}
-                            compact
-                            listen={listenHere}
-                            showTimestamp={false}
-                            showUsername={false}
-                          />
-                        );
-                      }
-                    )
-                  : noDataText}
-              </div>
-            </div>
-
-            <div
-              className="card content-card"
-              id="similar-users"
-              style={{ marginBottom: "2.5em" }}
-            >
-              <div className="heading">
-                <img
-                  className="img-header"
-                  src="/static/img/year-in-music-23/buddies-square.png"
-                  alt="Music buddies"
-                />
-                <h4>
-                  Music buddies{" "}
-                  <FontAwesomeIcon
-                    icon={faQuestionCircle}
-                    data-tip
-                    data-for="music-buddies-helptext"
-                    size="xs"
-                  />
-                  <Tooltip id="music-buddies-helptext">
-                    Here are the users with the most similar taste to{" "}
-                    {youOrUsername} this year.
-                    <br />
-                    Maybe check them out and follow them?
-                  </Tooltip>
-                </h4>
-              </div>
-              <div className="scrollable-area similar-users-list">
-                {sortedSimilarUsers && sortedSimilarUsers.length
-                  ? sortedSimilarUsers.map((userFromList) => {
-                      const [name, similarityScore] = userFromList;
-                      const similarUser: SimilarUser = {
-                        name,
-                        similarityScore,
-                      };
-                      const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
-                        similarUser
+                  <h4>
+                    New albums from {yourOrUsersName} top artists{" "}
+                    <FontAwesomeIcon
+                      icon={faQuestionCircle}
+                      data-tip
+                      data-for="new-albums-helptext"
+                      size="xs"
+                    />
+                    <Tooltip id="new-albums-helptext">
+                      Albums and singles released in 2023 from artists{" "}
+                      {youOrUsername} listened to.
+                      <br />
+                      Missed anything?
+                    </Tooltip>
+                  </h4>
+                </div>
+                <div className="scrollable-area">
+                  {yearInMusicData.new_releases_of_top_artists.map(
+                    (release) => {
+                      const details = (
+                        <>
+                          <div
+                            title={release.title}
+                            className="ellipsis-2-lines"
+                          >
+                            {getEntityLink(
+                              "release-group",
+                              release.title,
+                              release.release_group_mbid
+                            )}
+                          </div>
+                          <span
+                            className="small text-muted ellipsis"
+                            title={release.artist_credit_name}
+                          >
+                            {getEntityLink(
+                              "artist",
+                              release.artist_credit_name,
+                              release.artist_credit_mbids[0]
+                            )}
+                          </span>
+                        </>
                       );
+                      const listenHere: Listen = {
+                        listened_at: 0,
+                        track_metadata: {
+                          artist_name: release.artist_credit_name,
+                          track_name: release.title,
+                          release_name: release.title,
+                          additional_info: {
+                            release_group_mbid: release.release_group_mbid,
+                            artist_mbids: release.artist_credit_mbids,
+                          },
+                          mbid_mapping: {
+                            recording_mbid: "",
+                            release_mbid: "",
+                            artist_mbids: [],
+                            caa_id: release.caa_id,
+                            caa_release_mbid: release.caa_release_mbid,
+                          },
+                        },
+                      };
+                      listens.push(listenHere);
                       return (
-                        <UserListModalEntry
-                          mode="similar-users"
-                          key={name}
-                          user={similarUser}
-                          loggedInUserFollowsUser={loggedInUserFollowsUser}
-                          updateFollowingList={this.updateFollowingList}
+                        <ListenCard
+                          listenDetails={details}
+                          key={release.release_group_mbid}
+                          compact
+                          listen={listenHere}
+                          showTimestamp={false}
+                          showUsername={false}
                         />
                       );
-                    })
-                  : noDataText}
+                    }
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+            {sortedSimilarUsers && (
+              <div
+                className="card content-card"
+                id="similar-users"
+                style={{ marginBottom: "2.5em" }}
+              >
+                <div className="heading">
+                  <img
+                    className="img-header"
+                    src="/static/img/year-in-music-23/buddies-square.png"
+                    alt="Music buddies"
+                  />
+                  <h4>
+                    Music buddies{" "}
+                    <FontAwesomeIcon
+                      icon={faQuestionCircle}
+                      data-tip
+                      data-for="music-buddies-helptext"
+                      size="xs"
+                    />
+                    <Tooltip id="music-buddies-helptext">
+                      Here are the users with the most similar taste to{" "}
+                      {youOrUsername} this year.
+                      <br />
+                      Maybe check them out and follow them?
+                    </Tooltip>
+                  </h4>
+                </div>
+                <div className="scrollable-area similar-users-list">
+                  {sortedSimilarUsers.length
+                    ? sortedSimilarUsers.map((userFromList) => {
+                        const [name, similarityScore] = userFromList;
+                        const similarUser: SimilarUser = {
+                          name,
+                          similarityScore,
+                        };
+                        const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
+                          similarUser
+                        );
+                        return (
+                          <UserListModalEntry
+                            mode="similar-users"
+                            key={name}
+                            user={similarUser}
+                            loggedInUserFollowsUser={loggedInUserFollowsUser}
+                            updateFollowingList={this.updateFollowingList}
+                          />
+                        );
+                      })
+                    : noDataText}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         {Boolean(followingList.length) && (
