@@ -372,7 +372,7 @@ export default class ListenCard extends React.Component<
           </div>
         </a>
       );
-    } else if (!recordingMBID) {
+    } else if (isLoggedIn && Boolean(recordingMSID)) {
       const openModal = () => {
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
@@ -400,12 +400,19 @@ export default class ListenCard extends React.Component<
           </div>
         </div>
       );
-    } else {
-      // Edge case: has no thumbnail, has a recording_mbid
-      // but no release_mbid for some reason
+    } else if (recordingMBID || releaseGroupMBID) {
+      let entity;
+      let entityMBID;
+      if (recordingMBID) {
+        entity = "recording";
+        entityMBID = recordingMBID;
+      } else {
+        entity = "release-group";
+        entityMBID = releaseGroupMBID;
+      }
       thumbnail = (
         <a
-          href={`https://musicbrainz.org/recording/${recordingMBID}`}
+          href={`https://musicbrainz.org/${entity}/${entityMBID}`}
           title="Could not load cover art. Open in MusicBrainz"
           target="_blank"
           rel="noopener noreferrer"
@@ -422,6 +429,9 @@ export default class ListenCard extends React.Component<
           </div>
         </a>
       );
+    } else {
+      // eslint-disable-next-line react/jsx-no-useless-fragment
+      thumbnail = <></>;
     }
 
     return (
