@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Integrations } from "@sentry/tracing";
-import { get, isEqual } from "lodash";
+import { cloneDeep, get, isEqual } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
@@ -36,6 +36,7 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import {
   formatWSMessageToListen,
   getListenablePin,
+  getListenCardKey,
   getPageProps,
   getRecordingMSID,
   getTrackName,
@@ -247,7 +248,7 @@ export default class Listens extends React.Component<
   };
 
   receiveNewPlayingNow = async (newPlayingNow: Listen): Promise<void> => {
-    const playingNow = newPlayingNow;
+    let playingNow = newPlayingNow;
     const { APIService } = this.context;
     try {
       const response = await APIService.lookupRecordingMetadata(
@@ -262,6 +263,10 @@ export default class Listens extends React.Component<
           release_mbid,
           artist_mbids,
         } = response;
+        // ListenCard does not deepcopy the listen passed to it in props, therefore modifying the object here would
+        // change the object stored inside ListenCard's state even before react can propagate updates. therefore, clone
+        // first
+        playingNow = cloneDeep(playingNow);
         playingNow.track_metadata.mbid_mapping = {
           recording_mbid,
           release_mbid,
@@ -634,9 +639,7 @@ export default class Listens extends React.Component<
     /* eslint-enable react/jsx-no-bind */
     return (
       <ListenCard
-        key={`${listen.listened_at}-${getTrackName(listen)}-${
-          listen.track_metadata?.additional_info?.recording_msid
-        }-${listen.user_name}`}
+        key={getListenCardKey(listen)}
         showTimestamp
         showUsername={false}
         listen={listen}
