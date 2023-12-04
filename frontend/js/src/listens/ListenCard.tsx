@@ -335,7 +335,10 @@ export default class ListenCard extends React.Component<
         thumbnailTitle = getReleaseName(listen);
       } else if (releaseGroupMBID) {
         thumbnailLink = `https://musicbrainz.org/release-group/${releaseGroupMBID}`;
-        thumbnailTitle = get(listen, "track_metadata.mbid_mapping.release_group_name");
+        thumbnailTitle = get(
+          listen,
+          "track_metadata.mbid_mapping.release_group_name"
+        );
       } else {
         thumbnailLink = spotifyURL || youtubeURL || soundcloudURL;
         thumbnailTitle = "Cover art";
