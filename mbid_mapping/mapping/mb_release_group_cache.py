@@ -318,7 +318,13 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                  , rac.name AS album_artist_name
                                  , rgca.caa_id
                                  , rgca.caa_release_mbid
+                                 , rgpt.name AS type
+                                 , rgm.first_release_date_year
                               FROM musicbrainz.release_group r
+                              JOIN release_group_primary_type rgpt
+                                ON r.id = rgpt.id
+                              JOIN musicbrainz.release_group_meta rgm
+                                ON rgm.id = r.id
                               JOIN musicbrainz.artist_credit rac
                                 ON rac.id = r.artist_credit  
                          LEFT JOIN rg_cover_art rgca
@@ -337,6 +343,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                  , rd.album_artist_name
                                  , rd.caa_id
                                  , rd.caa_release_mbid
+                                 , rd.first_release_date_year
                               FROM musicbrainz.release_group r
                               JOIN musicbrainz.artist_credit ac
                                 ON r.artist_credit = ac.id
@@ -356,6 +363,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                  , r.artist_credit
                                  , ac.name
                                  , rd.name
+                                 , rd.first_release_date_year
                                  , release_group_links
                                  , release_group_tags
                                  , rd.release_group_mbid

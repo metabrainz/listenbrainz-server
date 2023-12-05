@@ -80,7 +80,7 @@ def artist_entity(artist_mbid):
                  , rgpt.name AS type
                  , caa.id AS caa_id
                  , caa_rel.gid::TEXT AS caa_release_mbid
-                 , array_agg(a.gid::TEXT ORDER BY acn.position) AS release_group_artist_credit_mbids
+                 , json_agg(json_build_array(a.gid::TEXT, a.name) ORDER BY acn.position) AS release_group_artist_credit_mbids
               FROM musicbrainz.release_group rg
               JOIN musicbrainz.release_group_primary_type rgpt
                 ON rg.type = rgpt.id
