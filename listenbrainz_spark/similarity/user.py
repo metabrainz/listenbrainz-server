@@ -120,11 +120,11 @@ def get_similar_users_df(max_num_users: int):
 
     similar_users_df = listenbrainz_spark.session.createDataFrame(
         similar_users,
-        ['spark_user_id', 'other_spark_user_id', 'similarity', 'global_similarity']
+        ['spark_user_id', 'other_spark_user_id', 'similarity']
     )\
         .join(users_df, 'spark_user_id', 'inner')\
         .join(other_users_df, 'other_spark_user_id', 'inner')\
-        .select('user_id', struct('other_user_id', 'similarity', 'global_similarity').alias('similar_user'))\
+        .select('user_id', struct('other_user_id', 'similarity').alias('similar_user'))\
         .groupBy('user_id')\
         .agg(collect_list('similar_user').alias('similar_users'))
 

@@ -666,7 +666,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         conn = db.engine.raw_connection()
         with conn.cursor() as curs:
-            data = {self.user2['id']: (.123, 0.01)}
+            data = {self.user2['id']: 0.123}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
                          (self.user['id'], json.dumps(data)))
         conn.commit()
@@ -676,7 +676,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data[0]['user_name'], self.user2['musicbrainz_id'])
-        self.assertEqual(data[0]['similarity'], .123)
+        self.assertEqual(data[0]['similarity'], 0.123)
 
         response = self.client.get(url_for(
             'api_v1.get_similar_to_user', user_name=self.user['musicbrainz_id'], other_user_name="muppet"))
