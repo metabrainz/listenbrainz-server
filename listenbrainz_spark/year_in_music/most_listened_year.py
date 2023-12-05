@@ -33,6 +33,7 @@ def _get_releases_with_date():
           FROM listens_of_year l
           JOIN releases_all rel
             ON l.release_mbid = rel.release_mbid
+         WHERE first_release_date_year IS NOT NULL
       GROUP BY user_id
              , rel.first_release_date_year
         )
