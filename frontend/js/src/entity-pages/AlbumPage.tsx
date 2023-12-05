@@ -10,7 +10,6 @@ import {
   faHeadphones,
   faPlayCircle,
   faUserAstronaut,
-  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { chain } from "lodash";
 import tinycolor from "tinycolor2";
@@ -30,10 +29,7 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
-import {
-  JSPFTrackToListen,
-  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
-} from "../playlists/utils";
+import { JSPFTrackToListen } from "../playlists/utils";
 
 export type AlbumPageProps = {
   recordings?: Array<{
@@ -313,8 +309,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             let listenCountComponent;
             if (recording && Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
-                <span className="pill">
-                  {bigNumberFormatter.format(recording.total_listen_count)} x{" "}
+                <span className="badge badge-info">
+                  {bigNumberFormatter.format(recording.total_listen_count)}
+                  &nbsp;
                   <FontAwesomeIcon icon={faHeadphones} />
                 </span>
               );
@@ -357,7 +354,6 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                 {bigNumberFormatter.format(listenCount)}
               </div>
               <div className="text-muted small">
-                {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
                 <FontAwesomeIcon icon={faHeadphones} /> plays
               </div>
             </div>
@@ -366,7 +362,6 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                 {bigNumberFormatter.format(topListeners.length)}
               </div>
               <div className="text-muted small">
-                {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
                 <FontAwesomeIcon icon={faUserAstronaut} /> listeners
               </div>
             </div>
@@ -387,8 +382,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                         >
                           {listener.user_name}
                         </a>
-                        <span className="badge badge-info">
+                        <span className="badge pull-right">
                           {bigNumberFormatter.format(listener.listen_count)}
+                          &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
                         </span>
                       </div>

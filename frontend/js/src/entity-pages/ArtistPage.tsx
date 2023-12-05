@@ -10,20 +10,14 @@ import {
   faHeadphones,
   faPlayCircle,
   faUserAstronaut,
-  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isUndefined, partition, sortBy } from "lodash";
-import tinycolor from "tinycolor2";
+import { chain, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import {
-  getAverageRGBOfImage,
-  getPageProps,
-  getReviewEventContent,
-} from "../utils/utils";
+import { getPageProps, getReviewEventContent } from "../utils/utils";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../listens/ListenCard";
@@ -44,7 +38,7 @@ export type ArtistPageProps = {
 };
 
 export default function ArtistPage(props: ArtistPageProps): JSX.Element {
-  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const { APIService } = React.useContext(GlobalAppContext);
   const {
     artist: initialArtist,
     popularRecordings: initialPopularRecordings,
@@ -337,6 +331,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               listenCountComponent = (
                 <span className="badge badge-info">
                   {bigNumberFormatter.format(recording.total_listen_count)}
+                  &nbsp;
                   <FontAwesomeIcon icon={faHeadphones} />
                 </span>
               );
@@ -364,7 +359,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 {bigNumberFormatter.format(listenCount)}
               </div>
               <div className="text-muted small">
-                {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
                 <FontAwesomeIcon icon={faHeadphones} /> plays
               </div>
             </div>
@@ -374,7 +368,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 {bigNumberFormatter.format(topListeners.length)}
               </div>
               <div className="text-muted small">
-                {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
                 <FontAwesomeIcon icon={faUserAstronaut} /> listeners
               </div>
             </div>
@@ -395,13 +388,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                         >
                           {listener.user_name}
                         </a>
-                        <span className="pill">
+                        <span className="badge pull-right">
                           {bigNumberFormatter.format(listener.listen_count)}
-                          <FontAwesomeIcon
-                            icon={faXmark}
-                            fixedWidth
-                            size="xs"
-                          />
+                          &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
                         </span>
                       </div>
