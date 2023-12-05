@@ -403,8 +403,10 @@ def handle_similar_artists(message):
 
 
 def handle_troi_playlists(message):
-    batch_process_playlists(message["slug"], message["data"])
+    # batch_process_playlists(message["slug"], message["data"])
+    pass
 
 
 def handle_troi_playlists_end(message):
-    batch_process_playlists_end(message["slug"])
+    # batch_process_playlists_end(message["slug"])
+    pass
