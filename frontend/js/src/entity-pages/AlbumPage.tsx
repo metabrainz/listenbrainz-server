@@ -323,6 +323,8 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                 track_name: recording.name,
                 recording_mbid: recording.recording_mbid,
                 additional_info: {
+                  artist_mbids: artist.artists.map((ar) => ar.artist_mbid),
+                  release_artist_names: artist.artists.map((ar) => ar.name),
                   duration_ms: recording.length,
                   tracknumber: recording.position,
                   recording_mbid: recording.recording_mbid,
@@ -382,7 +384,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                         >
                           {listener.user_name}
                         </a>
-                        <span className="badge pull-right">
+                        <span className="badge">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />

@@ -388,7 +388,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                         >
                           {listener.user_name}
                         </a>
-                        <span className="badge pull-right">
+                        <span className="badge">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
