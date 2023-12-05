@@ -359,6 +359,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                 <FontAwesomeIcon icon={faHeadphones} /> plays
               </div>
             </div>
+            <div className="separator" />
             <div className="text-center">
               <div className="number">
                 {bigNumberFormatter.format(topListeners.length)}
@@ -384,7 +385,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                         >
                           {listener.user_name}
                         </a>
-                        <span className="badge">
+                        <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />

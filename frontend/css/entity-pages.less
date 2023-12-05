@@ -110,18 +110,20 @@
 		
 		.tracks {
 			flex:3 400px;
-			max-height: 520px;
 			min-height: 150px;
-			position: relative;
-			overflow-y: hidden;
-			border-bottom-style: inset;
-			.artist-page&::after{
-				content: "";
-				background-image: @white-gradient;
-				position: absolute;
-				bottom: 0;
-				height: 8em;
-				width: 100%;
+			.artist-page& {
+				max-height: 520px;
+				overflow-y: hidden;
+				border-bottom-style: inset;
+				position: relative;
+				&::after{
+					content: "";
+					background-image: @white-gradient;
+					position: absolute;
+					bottom: 0;
+					height: 8em;
+					width: 100%;
+				}
 			}
 			.album-page& .listen-card .track-position {
 				flex: 0 3em;

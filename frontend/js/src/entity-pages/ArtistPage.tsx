@@ -388,7 +388,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                         >
                           {listener.user_name}
                         </a>
-                        <span className="badge">
+                        <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
@@ -497,12 +497,12 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             </>
           ) : (
             <>
-              <p>No reviews for this artist (yet…)</p>
+              <p>Be the first to review this album on CritiqueBrainz</p>
               <a
                 href={`https://critiquebrainz.org/review/write/artist/${artist.artist_mbid}`}
-                className="btn btn-link"
+                className="btn btn-outline"
               >
-                Review album on CritiqueBrainz
+                Add my review
               </a>
             </>
           )}
