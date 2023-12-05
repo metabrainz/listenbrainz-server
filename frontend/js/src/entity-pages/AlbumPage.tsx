@@ -201,9 +201,10 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {Object.entries(
-              artist.artists?.[0].rels
-            ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}
+            {Boolean(artist.artists?.[0]?.rels?.length) &&
+              Object.entries(
+                artist.artists?.[0].rels
+              ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}
             <OpenInMusicBrainzButton
               entityType="release-group"
               entityMBID={release_group_mbid}
