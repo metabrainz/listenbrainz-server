@@ -58,7 +58,7 @@ def _get_query():
            SELECT user_id
                 , genre
                 , genre_count
-                , float((genre_count * 100.0) / SUM(genre_count) OVER(PARTITION BY user_id), 2) AS genre_count_percent
+                , float((genre_count * 100.0) / SUM(genre_count) OVER(PARTITION BY user_id)) AS genre_count_percent
                 , RANK() OVER (PARTITION BY user_id ORDER BY genre_count DESC) AS ranking
              FROM together
         )
