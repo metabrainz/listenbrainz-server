@@ -6,6 +6,7 @@ import {
   getAlbumArtFromReleaseGroupMBID,
   getAlbumArtFromReleaseMBID,
 } from "../../utils/utils";
+import type { ReleaseGroupArtist } from "../../entity-pages/utils";
 
 type ReleaseCardProps = {
   releaseDate: string;
@@ -19,6 +20,7 @@ type ReleaseCardProps = {
   confidence?: number | null;
   caaID: number | null;
   caaReleaseMBID: string | null;
+  artistCredits?: ReleaseGroupArtist[];
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -34,6 +36,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     confidence,
     caaID,
     caaReleaseMBID,
+    artistCredits,
   } = props;
 
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
@@ -115,15 +118,37 @@ export default function ReleaseCard(props: ReleaseCardProps) {
           {releaseTypeSecondary || releaseTypePrimary || RELEASE_TYPE_UNKNOWN}
         </div>
       </div>
-      <div className="release-artist" title={artistCreditName}>
-        <a
-          href={`/artist/${artistMBIDs[0]}`}
-          target="_blank"
-          rel="noopener noreferrer"
+      {artistCredits && artistCredits.length ? (
+        <div
+          className="release-artist"
+          title={artistCredits
+            .map((ac) => ac.artist_credit_name + ac.join_phrase)
+            .join("")}
         >
-          {artistCreditName}
-        </a>
-      </div>
+          {artistCredits.map((ac) => (
+            <>
+              <a
+                href={`/artist/${ac.artist_mbid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {ac.artist_credit_name}
+              </a>
+              {ac.join_phrase}
+            </>
+          ))}
+        </div>
+      ) : (
+        <div className="release-artist" title={artistCreditName}>
+          <a
+            href={`/artist/${artistMBIDs[0]}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {artistCreditName}
+          </a>
+        </div>
+      )}
     </div>
   );
 }

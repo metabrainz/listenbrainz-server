@@ -412,10 +412,12 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             {releaseGroups.map((rg) => (
               <ReleaseCard
                 releaseDate={rg.date ?? ""}
-                artistCreditName={artist.name}
-                artistMBIDs={
-                  rg.release_group_artist_credit_mbids ?? [artist.artist_mbid]
+                artistCreditName={
+                  rg.release_group_artists[0].artist_credit_name
                 }
+                artistMBIDs={rg.release_group_artists.map(
+                  (credit) => credit.artist_mbid
+                )}
                 caaID={rg.caa_id}
                 caaReleaseMBID={rg.caa_release_mbid}
                 releaseName={rg.release_group_name}
