@@ -13,7 +13,7 @@ USERS_PER_MESSAGE = 1000
 def get_top_genres(year):
     """ Get top genres for the user for top genre and cover art shareable image """
     setup_listens_for_year(year)
-    create_genre_cache()
+    # create_genre_cache()
 
     data = run_query(_get_query()).collect()
     for entries in chunked(data, USERS_PER_MESSAGE):
@@ -58,7 +58,7 @@ def _get_query():
            SELECT user_id
                 , genre
                 , genre_count
-                , ROUND((genre_count * 100.0) / SUM(genre_count) OVER(PARTITION BY user_id), 2) AS genre_count_percent
+                , float((genre_count * 100.0) / SUM(genre_count) OVER(PARTITION BY user_id), 2) AS genre_count_percent
                 , RANK() OVER (PARTITION BY user_id ORDER BY genre_count DESC) AS ranking
              FROM together
         )
