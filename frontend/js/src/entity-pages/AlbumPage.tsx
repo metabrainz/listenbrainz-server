@@ -189,7 +189,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         </div>
         <div className="artist-info">
           <h1>{album?.name}</h1>
-          <div className="details">
+          <div className="details h3">
             <div>{artist?.name}</div>
             <small className="help-block">{type} - Release date</small>
           </div>
@@ -411,12 +411,12 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             </>
           ) : (
             <>
-              <p>No reviews for this album (yet…)</p>
+              <p>Be the first to review this album on CritiqueBrainz</p>
               <a
                 href={`https://critiquebrainz.org/review/write/release_group/${release_group_mbid}`}
-                className="btn btn-link"
+                className="btn btn-outline"
               >
-                Review album on CritiqueBrainz
+                Add my review
               </a>
             </>
           )}

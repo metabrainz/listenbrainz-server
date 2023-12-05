@@ -67,31 +67,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
 
   /** Album art and album color related */
   const [coverArtSVG, setCoverArtSVG] = React.useState<string>();
-  const albumArtRef = React.useRef<HTMLImageElement>(null);
-  const [albumArtColor, setAlbumArtColor] = React.useState({
-    r: 0,
-    g: 0,
-    b: 0,
-  });
-  React.useEffect(() => {
-    const setAverageColor = () => {
-      const averageColor = getAverageRGBOfImage(albumArtRef?.current);
-      setAlbumArtColor(averageColor);
-    };
-    const currentAlbumArtRef = albumArtRef.current;
-    if (currentAlbumArtRef) {
-      currentAlbumArtRef.addEventListener("load", setAverageColor);
-    }
-    return () => {
-      if (currentAlbumArtRef) {
-        currentAlbumArtRef.removeEventListener("load", setAverageColor);
-      }
-    };
-  }, [setAlbumArtColor]);
-
-  const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
-  adjustedAlbumColor.saturate(20);
-  adjustedAlbumColor.setAlpha(0.6);
 
   /** Navigation from one artist to a similar artist */
   //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
@@ -182,7 +157,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     fetchListenerStats();
     fetchReviews();
     fetchWikipediaExtract();
-  }, [artist, APIService.APIBaseURI]);
+  }, [artist, releaseGroups, APIService.APIBaseURI]);
 
   const listensFromPopularRecordings =
     popularRecordings.map(popularRecordingToListen) ?? [];
@@ -198,10 +173,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     .join(",");
 
   return (
-    <div
-      id="entity-page"
-      style={{ ["--bg-color" as string]: adjustedAlbumColor }}
-    >
+    <div id="entity-page">
       <Loader isLoading={loading} />
       <div className="entity-page-header flex">
         <div
@@ -213,7 +185,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
           }}
-          ref={albumArtRef}
           title={`Album art for ${artist.name}`}
         />
         <div className="artist-info">

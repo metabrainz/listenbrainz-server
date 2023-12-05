@@ -156,7 +156,8 @@ export async function getArtistCoverImage(
   try {
     const payload = {
       background: "transparent",
-      image_size: 750,
+      image_size: 400,
+      cover_art_size: 250,
       dimension: 4,
       "skip-missing": true,
       "show-caa": false,
