@@ -5,6 +5,7 @@ from psycopg2.extras import DictCursor
 
 from listenbrainz.db import popularity
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.db.release import load_releases_from_mbids_with_redirects
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
@@ -72,3 +73,61 @@ def top_recordings():
         })
 
     return recordings_data
+
+@popularity_api_bp.get("/top-releases-for-artist")
+@crossdomain
+@ratelimit()
+def top_releases():
+    """ Get the top releases by listen count for a given artist. The response is of the following format:
+
+    .. code:: json
+
+        [
+          {
+            "artist_mbids": [
+              "06de7d6b-72fc-43a6-88b4-dc4c495e5607"
+            ],
+            "artist_name": "Lucky Ali",
+            "caa_id": 11793910395,
+            "caa_release_mbid": "d52fd102-1c87-465e-b4b9-22334e7a10ee",
+            "release_name": "Tamasha",
+            "release_mbid": "d52fd102-1c87-465e-b4b9-22334e7a10ee",
+            "total_listen_count": 140,
+            "total_user_count": 3421
+          }
+        ]
+
+    :param artist_mbid: the mbid of the artist to get top releases for
+    :type artist_mbid: ``str``
+    :statuscode 200: you have data!
+    :statuscode 400: invalid artist_mbid argument
+    """
+    artist_mbid = request.args.get("artist_mbid")
+    if not is_valid_uuid(artist_mbid):
+        raise APIBadRequest(f"artist_mbid: '{artist_mbid}' is not a valid uuid")
+
+    releases = popularity.get_top_entity_for_artist("release", artist_mbid)
+    release_mbids = [str(r["release_mbid"]) for r in releases]
+
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+            releases_data = load_releases_from_mbids_with_redirects(mb_curs, ts_curs, release_mbids)
+    except Exception:
+        current_app.logger.error("Error while fetching metadata for releases: ", exc_info=True)
+        raise APIInternalServerError("Failed to fetch metadata for releases. Please try again.")
+
+    for release, data in zip(releases, releases_data):
+        data.pop("artist_credit_id", None)
+        data.pop("canonical_release_mbid", None)
+        data.pop("original_release_mbid", None)
+        data.update({
+            "artist_name": data.pop("artist_credit_name"),
+            "artist_mbids": data.pop("[artist_credit_mbids]"),
+            "total_listen_count": release["total_listen_count"],
+            "total_user_count": release["total_user_count"]
+        })
+
+    return releases_data

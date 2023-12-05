@@ -68,13 +68,15 @@ def get_top_entity_for_artist(entity, artist_mbid):
     """ Get the top recordings or releases for a given artist mbid """
     if entity == "recording":
         entity_mbid = "recording_mbid"
+        table_name = "top_recording"
     else:
         entity_mbid = "release_mbid"
+        table_name = "top_release"
     query = """
         SELECT """ + entity_mbid + """
              , total_listen_count
              , total_user_count
-          FROM popularity.top_recording
+          FROM popularity.""" + table_name + """
          WHERE artist_mbid = :artist_mbid
       ORDER BY total_listen_count DESC
     """
