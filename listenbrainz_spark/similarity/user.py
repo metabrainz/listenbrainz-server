@@ -39,7 +39,7 @@ def create_messages(similar_users_df: DataFrame) -> dict:
     message = {}
     for row in itr:
         message[row.user_id] = {
-            user.other_user_id: (user.similarity, user.global_similarity)
+            user.other_user_id: user.similarity
             for user in row.similar_users
         }
     yield {
@@ -56,68 +56,14 @@ def threshold_similar_users(matrix: ndarray, max_num_users: int) -> List[Tuple[i
     rows, cols = matrix.shape
     similar_users = list()
 
-    # Calculate the global similarity scale
-    global_max_similarity = None
-    global_min_similarity = None
     for x in range(rows):
         row = []
-
-        # Calculate the minimum and maximum values for a user
         for y in range(cols):
-
-            # Spark sometimes returns nan values and the way to get rid of them is to
-            # cast to a float and discard values that are non a number
             value = float(matrix[x, y])
-            if x == y or math.isnan(value):
+            if x == y or math.isnan(value) or value < 0:
                 continue
-
-            if global_max_similarity is None:
-                global_max_similarity = value
-                global_min_similarity = value
-
-            global_max_similarity = max(value, global_max_similarity)
-            global_min_similarity = min(value, global_min_similarity)
-
-    global_similarity_range = global_max_similarity - global_min_similarity
-
-    for x in range(rows):
-        row = []
-        max_similarity = None
-        min_similarity = None
-
-        # Calculate the minimum and maximum values for a user
-        for y in range(cols):
-
-            # Spark sometimes returns nan values and the way to get rid of them is to
-            # cast to a float and discard values that are non a number
-            value = float(matrix[x, y])
-            if x == y or math.isnan(value):
-                continue
-
-            if max_similarity is None:
-                max_similarity = value
-                min_similarity = value
-
-            max_similarity = max(value, max_similarity)
-            min_similarity = min(value, min_similarity)
-
-        if max_similarity is not None and min_similarity is not None:
-            # Now apply the scale factor and flatten the results for a user
-            similarity_range = max_similarity - min_similarity
-            for y in range(cols):
-                value = float(matrix[x, y])
-                if x == y or math.isnan(value):
-                    continue
-
-                # scale from [-1, 1] to [0, 1]
-#                new_sim_value = (value / 2.0) + 0.5
-                new_sim_value = value
-                row.append((x,
-                            y,
-                            (value - global_min_similarity) / global_similarity_range,
-                            new_sim_value))
-
-            similar_users.extend(sorted(row, key = itemgetter(2), reverse = True)[:max_num_users])
+            row.append((x, y, value))
+        similar_users.extend(sorted(row, key=itemgetter(2), reverse=True)[:max_num_users])
 
     return similar_users
 
