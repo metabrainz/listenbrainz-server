@@ -31,6 +31,12 @@ export type SimilarArtist = {
   type: "Group" | "Person";
 };
 
+export type ReleaseGroupArtist = {
+  artist_mbid: string;
+  artist_credit_name: string;
+  join_phrase: string;
+};
+
 export type ReleaseGroup = {
   caa_id: number;
   caa_release_mbid: string;
@@ -38,7 +44,7 @@ export type ReleaseGroup = {
   release_group_mbid: string;
   release_group_name: string;
   type: string;
-  release_group_artist_credit_mbids?: string[];
+  release_group_artists: Array<ReleaseGroupArtist>;
 };
 export type PopularRecording = {
   artist_mbids: string[];

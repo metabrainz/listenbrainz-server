@@ -10,20 +10,14 @@ import {
   faHeadphones,
   faPlayCircle,
   faUserAstronaut,
-  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isUndefined, sortBy } from "lodash";
-import tinycolor from "tinycolor2";
+import { chain, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import {
-  getAverageRGBOfImage,
-  getPageProps,
-  getReviewEventContent,
-} from "../utils/utils";
+import { getPageProps, getReviewEventContent } from "../utils/utils";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../listens/ListenCard";
@@ -44,7 +38,7 @@ export type ArtistPageProps = {
 };
 
 export default function ArtistPage(props: ArtistPageProps): JSX.Element {
-  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const { APIService } = React.useContext(GlobalAppContext);
   const {
     artist: initialArtist,
     popularRecordings: initialPopularRecordings,
@@ -68,6 +62,11 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   /** Album art and album color related */
   const [coverArtSVG, setCoverArtSVG] = React.useState<string>();
 
+  const [albumsByThisArtist, alsoAppearsOn] = partition(releaseGroups, (rg) =>
+    rg.release_group_artists.find(
+      (rga) => rga.artist_mbid === artist.artist_mbid
+    )
+  );
   /** Navigation from one artist to a similar artist */
   //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
   //     event
@@ -177,7 +176,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   });
 
   return (
-    <div id="entity-page">
+    <div id="entity-page" className="artist-page">
       <Loader isLoading={loading} />
       <div className="entity-page-header flex">
         <div
@@ -223,7 +222,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {Boolean(artist.rels) &&
+            {Boolean(artist.rels?.length) &&
               Object.entries(artist.rels).map(([relName, relValue]) =>
                 getRelIconLink(relName, relValue)
               )}
@@ -331,7 +330,8 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
                 <span className="badge badge-info">
-                  {bigNumberFormatter.format(recording.total_listen_count)} x{" "}
+                  {bigNumberFormatter.format(recording.total_listen_count)}
+                  &nbsp;
                   <FontAwesomeIcon icon={faHeadphones} />
                 </span>
               );
@@ -359,16 +359,15 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 {bigNumberFormatter.format(listenCount)}
               </div>
               <div className="text-muted small">
-                {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
                 <FontAwesomeIcon icon={faHeadphones} /> plays
               </div>
             </div>
+            <div className="separator" />
             <div className="text-center">
               <div className="number">
                 {bigNumberFormatter.format(topListeners.length)}
               </div>
               <div className="text-muted small">
-                {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
                 <FontAwesomeIcon icon={faUserAstronaut} /> listeners
               </div>
             </div>
@@ -389,13 +388,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                         >
                           {listener.user_name}
                         </a>
-                        <span className="pill">
+                        <span className="badge pull-right">
                           {bigNumberFormatter.format(listener.listen_count)}
-                          <FontAwesomeIcon
-                            icon={faXmark}
-                            fixedWidth
-                            size="xs"
-                          />
+                          &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
                         </span>
                       </div>
@@ -408,13 +403,15 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         <div className="albums full-width scroll-start">
           <h3 className="header-with-line">Albums</h3>
           <div className="cover-art-container dragscroll">
-            {releaseGroups.map((rg) => (
+            {albumsByThisArtist.map((rg) => (
               <ReleaseCard
                 releaseDate={rg.date ?? ""}
-                artistCreditName={artist.name}
-                artistMBIDs={
-                  rg.release_group_artist_credit_mbids ?? [artist.artist_mbid]
+                artistCreditName={
+                  rg.release_group_artists[0].artist_credit_name
                 }
+                artistMBIDs={rg.release_group_artists.map(
+                  (credit) => credit.artist_mbid
+                )}
                 caaID={rg.caa_id}
                 caaReleaseMBID={rg.caa_release_mbid}
                 releaseName={rg.release_group_name}
@@ -424,41 +421,67 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             ))}
           </div>
         </div>
+        {Boolean(alsoAppearsOn?.length) && (
+          <div className="albums full-width scroll-start">
+            <h3 className="header-with-line">Also appears on</h3>
+            <div className="cover-art-container dragscroll">
+              {alsoAppearsOn.map((rg) => (
+                <ReleaseCard
+                  releaseDate={rg.date ?? ""}
+                  artistCredits={rg.release_group_artists}
+                  artistCreditName={rg.release_group_artists
+                    .map((rga) => rga.artist_credit_name + rga.join_phrase)
+                    .join("")}
+                  artistMBIDs={rg.release_group_artists.map(
+                    (credit) => credit.artist_mbid
+                  )}
+                  caaID={rg.caa_id}
+                  caaReleaseMBID={rg.caa_release_mbid}
+                  releaseName={rg.release_group_name}
+                  releaseTypePrimary={rg.type}
+                  releaseGroupMBID={rg.release_group_mbid}
+                />
+              ))}
+            </div>
+          </div>
+        )}
         <div className="similarity">
           <h3 className="header-with-line">Similar artists</h3>
-          {sortBy(similarArtists, "score")
-            .reverse()
-            .map((similarArtist) => {
-              const listenDetails = (
-                <div>
-                  <a href={`/artist/${similarArtist.artist_mbid}`}>
-                    {similarArtist.name}
-                  </a>
-                </div>
-              );
-              const artistAsListen: BaseListenFormat = {
-                listened_at: 0,
-                track_metadata: {
-                  artist_name: similarArtist.name,
-                  track_name: "",
-                },
-              };
-              return (
-                <ListenCard
-                  key={similarArtist.artist_mbid}
-                  listenDetails={listenDetails}
-                  listen={artistAsListen}
-                  showTimestamp={false}
-                  showUsername={false}
-                  // no thumbnail for artist entities
-                  // eslint-disable-next-line react/jsx-no-useless-fragment
-                  customThumbnail={<></>}
-                  // eslint-disable-next-line react/jsx-no-useless-fragment
-                  feedbackComponent={<></>}
-                  compact
-                />
-              );
-            })}
+          <div className="artists">
+            {sortBy(similarArtists, "score")
+              .reverse()
+              .map((similarArtist) => {
+                const listenDetails = (
+                  <div>
+                    <a href={`/artist/${similarArtist.artist_mbid}`}>
+                      {similarArtist.name}
+                    </a>
+                  </div>
+                );
+                const artistAsListen: BaseListenFormat = {
+                  listened_at: 0,
+                  track_metadata: {
+                    artist_name: similarArtist.name,
+                    track_name: "",
+                  },
+                };
+                return (
+                  <ListenCard
+                    key={similarArtist.artist_mbid}
+                    listenDetails={listenDetails}
+                    listen={artistAsListen}
+                    showTimestamp={false}
+                    showUsername={false}
+                    // no thumbnail for artist entities
+                    // eslint-disable-next-line react/jsx-no-useless-fragment
+                    customThumbnail={<></>}
+                    // eslint-disable-next-line react/jsx-no-useless-fragment
+                    feedbackComponent={<></>}
+                    compact
+                  />
+                );
+              })}
+          </div>
         </div>
         <div className="reviews">
           <h3 className="header-with-line">Reviews</h3>
