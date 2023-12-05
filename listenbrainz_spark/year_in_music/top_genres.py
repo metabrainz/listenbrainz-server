@@ -13,7 +13,7 @@ USERS_PER_MESSAGE = 1000
 def get_top_genres(year):
     """ Get top genres for the user for top genre and cover art shareable image """
     setup_listens_for_year(year)
-    # create_genre_cache()
+    create_genre_cache()
 
     data = run_query(_get_query()).collect()
     for entries in chunked(data, USERS_PER_MESSAGE):
