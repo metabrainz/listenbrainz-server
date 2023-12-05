@@ -38,6 +38,7 @@ export type ReleaseGroup = {
   release_group_mbid: string;
   release_group_name: string;
   type: string;
+  release_group_artist_credit_mbids?: string[];
 };
 export type PopularRecording = {
   artist_mbids: string[];
