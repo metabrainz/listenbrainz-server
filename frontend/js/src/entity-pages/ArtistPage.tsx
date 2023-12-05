@@ -432,28 +432,30 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             ))}
           </div>
         </div>
-        <div className="albums full-width scroll-start">
-          <h3 className="header-with-line">Also appears on</h3>
-          <div className="cover-art-container dragscroll">
-            {alsoAppearsOn.map((rg) => (
-              <ReleaseCard
-                releaseDate={rg.date ?? ""}
-                artistCredits={rg.release_group_artists}
-                artistCreditName={rg.release_group_artists
-                  .map((rga) => rga.artist_credit_name + rga.join_phrase)
-                  .join("")}
-                artistMBIDs={rg.release_group_artists.map(
-                  (credit) => credit.artist_mbid
-                )}
-                caaID={rg.caa_id}
-                caaReleaseMBID={rg.caa_release_mbid}
-                releaseName={rg.release_group_name}
-                releaseTypePrimary={rg.type}
-                releaseGroupMBID={rg.release_group_mbid}
-              />
-            ))}
+        {Boolean(alsoAppearsOn?.length) && (
+          <div className="albums full-width scroll-start">
+            <h3 className="header-with-line">Also appears on</h3>
+            <div className="cover-art-container dragscroll">
+              {alsoAppearsOn.map((rg) => (
+                <ReleaseCard
+                  releaseDate={rg.date ?? ""}
+                  artistCredits={rg.release_group_artists}
+                  artistCreditName={rg.release_group_artists
+                    .map((rga) => rga.artist_credit_name + rga.join_phrase)
+                    .join("")}
+                  artistMBIDs={rg.release_group_artists.map(
+                    (credit) => credit.artist_mbid
+                  )}
+                  caaID={rg.caa_id}
+                  caaReleaseMBID={rg.caa_release_mbid}
+                  releaseName={rg.release_group_name}
+                  releaseTypePrimary={rg.type}
+                  releaseGroupMBID={rg.release_group_mbid}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <div className="similarity">
           <h3 className="header-with-line">Similar artists</h3>
           <div className="artists">
