@@ -390,8 +390,9 @@ def handle_yim_tracks_of_the_year_data(message):
 
 def handle_yim_tracks_of_the_year_end(message):
     # all of the tracks data has been inserted, now we can generate the playlists
-    year_in_music.finalise_tracks_of_the_year(message["year"])
-    yim_patch_runner(message["year"])
+    # year_in_music.finalise_tracks_of_the_year(message["year"])
+    # yim_patch_runner(message["year"])
+    pass
 
 
 def handle_similar_recordings(message):
@@ -403,10 +404,8 @@ def handle_similar_artists(message):
 
 
 def handle_troi_playlists(message):
-    # batch_process_playlists(message["slug"], message["data"])
-    pass
+    batch_process_playlists(message["slug"], message["data"])
 
 
 def handle_troi_playlists_end(message):
-    # batch_process_playlists_end(message["slug"])
-    pass
+    batch_process_playlists_end(message["slug"])
