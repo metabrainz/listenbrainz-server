@@ -372,8 +372,12 @@ def handle_yim_artist_map(message):
     year_in_music.handle_multi_large_insert("artist_map", message["year"], message["data"])
 
 
-def handle_new_artists_discovered_count(message):
+def handle_yim_new_artists_discovered_count(message):
     year_in_music.insert("total_new_artists_discovered", message["year"], message["data"])
+
+
+def handle_yim_top_genres(message):
+    year_in_music.handle_multi_large_insert("top_genres", message["year"], message["data"])
 
 
 def handle_yim_tracks_of_the_year_start(message):
