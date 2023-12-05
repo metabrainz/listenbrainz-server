@@ -67,31 +67,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
 
   /** Album art and album color related */
   const [coverArtSVG, setCoverArtSVG] = React.useState<string>();
-  const albumArtRef = React.useRef<HTMLImageElement>(null);
-  const [albumArtColor, setAlbumArtColor] = React.useState({
-    r: 0,
-    g: 0,
-    b: 0,
-  });
-  React.useEffect(() => {
-    const setAverageColor = () => {
-      const averageColor = getAverageRGBOfImage(albumArtRef?.current);
-      setAlbumArtColor(averageColor);
-    };
-    const currentAlbumArtRef = albumArtRef.current;
-    if (currentAlbumArtRef) {
-      currentAlbumArtRef.addEventListener("load", setAverageColor);
-    }
-    return () => {
-      if (currentAlbumArtRef) {
-        currentAlbumArtRef.removeEventListener("load", setAverageColor);
-      }
-    };
-  }, [setAlbumArtColor]);
-
-  const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
-  adjustedAlbumColor.saturate(20);
-  adjustedAlbumColor.setAlpha(0.6);
 
   /** Navigation from one artist to a similar artist */
   //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
@@ -182,7 +157,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     fetchListenerStats();
     fetchReviews();
     fetchWikipediaExtract();
-  }, [artist, APIService.APIBaseURI]);
+  }, [artist, releaseGroups, APIService.APIBaseURI]);
 
   const listensFromPopularRecordings =
     popularRecordings.map(popularRecordingToListen) ?? [];
@@ -197,11 +172,12 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     .map((filteredTag) => filteredTag.tag)
     .join(",");
 
+  const bigNumberFormatter = Intl.NumberFormat(undefined, {
+    notation: "compact",
+  });
+
   return (
-    <div
-      id="entity-page"
-      style={{ ["--bg-color" as string]: adjustedAlbumColor }}
-    >
+    <div id="entity-page">
       <Loader isLoading={loading} />
       <div className="entity-page-header flex">
         <div
@@ -213,7 +189,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
           }}
-          ref={albumArtRef}
           title={`Album art for ${artist.name}`}
         />
         <div className="artist-info">
@@ -356,7 +331,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
                 <span className="badge badge-info">
-                  {Intl.NumberFormat().format(recording.total_listen_count)} x{" "}
+                  {bigNumberFormatter.format(recording.total_listen_count)} x{" "}
                   <FontAwesomeIcon icon={faHeadphones} />
                 </span>
               );
@@ -381,7 +356,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           <div className="listening-stats card flex-center">
             <div className="text-center">
               <div className="number">
-                {Intl.NumberFormat().format(listenCount)}
+                {bigNumberFormatter.format(listenCount)}
               </div>
               <div className="text-muted small">
                 {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
@@ -390,7 +365,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             </div>
             <div className="text-center">
               <div className="number">
-                {Intl.NumberFormat().format(topListeners.length)}
+                {bigNumberFormatter.format(topListeners.length)}
               </div>
               <div className="text-muted small">
                 {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
@@ -415,7 +390,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                           {listener.user_name}
                         </a>
                         <span className="pill">
-                          {Intl.NumberFormat().format(listener.listen_count)}
+                          {bigNumberFormatter.format(listener.listen_count)}
                           <FontAwesomeIcon
                             icon={faXmark}
                             fixedWidth
@@ -437,7 +412,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               <ReleaseCard
                 releaseDate={rg.date ?? ""}
                 artistCreditName={artist.name}
-                artistMBIDs={[artist.artist_mbid]}
+                artistMBIDs={
+                  rg.release_group_artist_credit_mbids ?? [artist.artist_mbid]
+                }
                 caaID={rg.caa_id}
                 caaReleaseMBID={rg.caa_release_mbid}
                 releaseName={rg.release_group_name}
@@ -473,11 +450,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                   listen={artistAsListen}
                   showTimestamp={false}
                   showUsername={false}
-                  additionalActions={
-                    <span className="badge badge-info">
-                      {Intl.NumberFormat().format(similarArtist.score)}
-                    </span>
-                  }
                   // no thumbnail for artist entities
                   // eslint-disable-next-line react/jsx-no-useless-fragment
                   customThumbnail={<></>}

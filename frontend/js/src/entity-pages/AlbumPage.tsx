@@ -172,6 +172,10 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
 
   const artistName = artist?.name;
 
+  const bigNumberFormatter = Intl.NumberFormat(undefined, {
+    notation: "compact",
+  });
+
   return (
     <div
       id="entity-page"
@@ -189,7 +193,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         </div>
         <div className="artist-info">
           <h1>{album?.name}</h1>
-          <div className="details">
+          <div className="details h3">
             <div>{artist?.name}</div>
             <small className="help-block">{type} - Release date</small>
           </div>
@@ -348,7 +352,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           <div className="listening-stats card flex-center">
             <div className="text-center">
               <div className="number">
-                {Intl.NumberFormat().format(listenCount)}
+                {bigNumberFormatter.format(listenCount)}
               </div>
               <div className="text-muted small">
                 {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
@@ -357,7 +361,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             </div>
             <div className="text-center">
               <div className="number">
-                {Intl.NumberFormat().format(topListeners.length)}
+                {bigNumberFormatter.format(topListeners.length)}
               </div>
               <div className="text-muted small">
                 {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
@@ -382,7 +386,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                           {listener.user_name}
                         </a>
                         <span className="pill">
-                          {Intl.NumberFormat().format(listener.listen_count)}
+                          {bigNumberFormatter.format(listener.listen_count)}
                           <FontAwesomeIcon
                             icon={faXmark}
                             fixedWidth
@@ -411,12 +415,12 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             </>
           ) : (
             <>
-              <p>No reviews for this album (yet…)</p>
+              <p>Be the first to review this album on CritiqueBrainz</p>
               <a
                 href={`https://critiquebrainz.org/review/write/release_group/${release_group_mbid}`}
-                className="btn btn-link"
+                className="btn btn-outline"
               >
-                Review album on CritiqueBrainz
+                Add my review
               </a>
             </>
           )}

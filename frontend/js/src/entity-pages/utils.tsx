@@ -38,6 +38,7 @@ export type ReleaseGroup = {
   release_group_mbid: string;
   release_group_name: string;
   type: string;
+  release_group_artist_credit_mbids?: string[];
 };
 export type PopularRecording = {
   artist_mbids: string[];
@@ -156,7 +157,8 @@ export async function getArtistCoverImage(
   try {
     const payload = {
       background: "transparent",
-      image_size: 750,
+      image_size: 400,
+      cover_art_size: 250,
       dimension: 4,
       "skip-missing": true,
       "show-caa": false,

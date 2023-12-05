@@ -303,6 +303,19 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
   return trackName;
 };
 
+const getListenCardKey = (listen: Listen): string =>
+  `${listen.listened_at}-${listen.user_name}-${getRecordingMSID(
+    listen
+  )}-${getTrackName(listen)}-${getArtistName(listen)}-${getReleaseName(
+    listen
+  )}-${
+    listen.track_metadata?.mbid_mapping?.release_group_name
+  }-${getRecordingMBID(listen)}-${getArtistMBIDs(listen)?.join(
+    ","
+  )}-${getReleaseMBID(listen)}-${getReleaseGroupMBID(listen)}-${
+    listen.track_metadata?.mbid_mapping?.caa_id
+  }-${listen.track_metadata?.mbid_mapping?.caa_release_mbid}`;
+
 const formatWSMessageToListen = (wsMsg: any): Listen | null => {
   const json = wsMsg;
   try {
@@ -962,6 +975,7 @@ export {
   getTrackName,
   getReleaseName,
   getTrackDurationInMs,
+  getListenCardKey,
   pinnedRecordingToListen,
   getAlbumArtFromReleaseMBID,
   getAlbumArtFromReleaseGroupMBID,

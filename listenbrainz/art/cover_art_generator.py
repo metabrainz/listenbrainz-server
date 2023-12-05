@@ -202,7 +202,7 @@ class CoverArtGenerator:
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             return get_caa_ids_for_release_mbids(curs, release_mbids)
 
-    def load_images(self, mbids, tile_addrs=None, layout=None):
+    def load_images(self, mbids, tile_addrs=None, layout=None, cover_art_size=500):
         """ Given a list of MBIDs and optional tile addresses, resolve all the cover art design, all the
             cover art to be used and then return the list of images and locations where they should be
             placed. Return an array of dicts containing the image coordinates and the URL of the image. """
@@ -241,7 +241,7 @@ class CoverArtGenerator:
                         else:
                             url = None
                     else:
-                        url = self.resolve_cover_art(covers[mbid]["caa_id"], covers[mbid]["caa_release_mbid"])
+                        url = self.resolve_cover_art(covers[mbid]["caa_id"], covers[mbid]["caa_release_mbid"],cover_art_size)
 
                     break
                 except IndexError:

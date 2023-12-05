@@ -1,12 +1,12 @@
 @white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
 
 #entity-page {
-	--bg-color: #ebebde99; // default color
+	--bg-color: #e7e4e4; // default color
 	.entity-page-header {
 		// max-height: 500px;
 		padding: 2em;
 		gap: 2em;
-		background: linear-gradient(45deg, var(--bg-color), transparent);
+		background: linear-gradient(45deg, var(--bg-color), transparent 60%);
 		flex-wrap: wrap;
 		justify-content: center;
 		.cover-art {
@@ -37,6 +37,9 @@
 					mask-image: linear-gradient(180deg, #000 60%, transparent);
 					-webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
 				}
+			}
+			.details {
+				margin-top: 0;
 			}
 		}
 		.lb-radio-button {
@@ -119,6 +122,11 @@
 				bottom: 0;
 				height: 8em;
 				width: 100%;
+			}
+			.listen-card .track-position {
+				flex: 0 3em;
+				align-self: center;
+				color: @light-grey;
 			}
 		}
 		.stats {
