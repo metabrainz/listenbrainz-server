@@ -172,6 +172,10 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     .map((filteredTag) => filteredTag.tag)
     .join(",");
 
+  const bigNumberFormatter = Intl.NumberFormat(undefined, {
+    notation: "compact",
+  });
+
   return (
     <div id="entity-page">
       <Loader isLoading={loading} />
@@ -327,7 +331,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
                 <span className="badge badge-info">
-                  {Intl.NumberFormat().format(recording.total_listen_count)} x{" "}
+                  {bigNumberFormatter.format(recording.total_listen_count)} x{" "}
                   <FontAwesomeIcon icon={faHeadphones} />
                 </span>
               );
@@ -352,7 +356,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           <div className="listening-stats card flex-center">
             <div className="text-center">
               <div className="number">
-                {Intl.NumberFormat().format(listenCount)}
+                {bigNumberFormatter.format(listenCount)}
               </div>
               <div className="text-muted small">
                 {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
@@ -361,7 +365,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             </div>
             <div className="text-center">
               <div className="number">
-                {Intl.NumberFormat().format(topListeners.length)}
+                {bigNumberFormatter.format(topListeners.length)}
               </div>
               <div className="text-muted small">
                 {/* <FontAwesomeIcon icon={faXmark} fixedWidth size="xs" /> */}
@@ -386,7 +390,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                           {listener.user_name}
                         </a>
                         <span className="pill">
-                          {Intl.NumberFormat().format(listener.listen_count)}
+                          {bigNumberFormatter.format(listener.listen_count)}
                           <FontAwesomeIcon
                             icon={faXmark}
                             fixedWidth
@@ -444,11 +448,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                   listen={artistAsListen}
                   showTimestamp={false}
                   showUsername={false}
-                  additionalActions={
-                    <span className="badge badge-info">
-                      {Intl.NumberFormat().format(similarArtist.score)}
-                    </span>
-                  }
                   // no thumbnail for artist entities
                   // eslint-disable-next-line react/jsx-no-useless-fragment
                   customThumbnail={<></>}
