@@ -53,6 +53,7 @@ const APIPinsPageTwo = {
 const mountOptions: { context: GlobalAppContextT } = {
   context: {
     APIService: new APIService("foo"),
+    websocketsUrl: "",
     youtubeAuth: pinsPageProps.youtube as YoutubeUser,
     spotifyAuth: pinsPageProps.spotify as SpotifyUser,
     currentUser: pinsPageProps.user,

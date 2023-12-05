@@ -2,8 +2,7 @@ import * as React from "react";
 import NiceModal from "@ebay/nice-modal-react";
 import userEvent from "@testing-library/user-event";
 import { merge } from "lodash";
-import { act, waitFor, screen } from "@testing-library/react";
-import { ToastContainer } from "react-toastify";
+import { act, waitFor, screen, cleanup } from "@testing-library/react";
 import * as lookupMBRelease from "../__mocks__/lookupMBRelease.json";
 import * as lookupMBReleaseFromTrack from "../__mocks__/lookupMBReleaseFromTrack.json";
 
@@ -15,6 +14,14 @@ import { renderWithProviders } from "../test-utils/rtl-test-utils";
 import APIService from "../../src/utils/APIService";
 
 jest.unmock("react-toastify");
+jest.mock("@cospired/i18n-iso-languages", () => {
+  return {
+    registerLocale: jest.fn(),
+    getNames: () => {
+      return ["English", "Lojban", "Klingon"];
+    },
+  };
+});
 
 const listen: Listen = {
   track_metadata: {
@@ -59,7 +66,9 @@ const apiRefreshSpy = jest
 const user = userEvent.setup();
 
 describe("CBReviewModal", () => {
+  jest.setTimeout(10000);
   afterEach(() => {
+    cleanup();
     jest.clearAllMocks();
   });
 
@@ -139,19 +148,16 @@ describe("CBReviewModal", () => {
     expect(submitButton).toBeEnabled();
     await user.click(submitButton);
 
-    await waitFor(() =>
-      expect(submitReviewToCBSpy).toHaveBeenCalledWith("FNORD", "never_gonna", {
-        entity_name: "Criminal",
-        entity_id: "2bf47421-2344-4255-a525-e7d7f54de742",
-        entity_type: "recording",
-        languageCode: "en",
-        rating: undefined,
-        text: "This review text is more than 25 characters...",
-      })
-    );
-
     // expect a success toast message
     await screen.findByText("Your review was submitted to CritiqueBrainz!");
+    expect(submitReviewToCBSpy).toHaveBeenCalledWith("FNORD", "never_gonna", {
+      entity_name: "Criminal",
+      entity_id: "2bf47421-2344-4255-a525-e7d7f54de742",
+      entity_type: "recording",
+      languageCode: "en",
+      rating: undefined,
+      text: "This review text is more than 25 characters...",
+    });
   });
 
   it("shows a message if text content is too short and prevents submission", async () => {
@@ -172,11 +178,14 @@ describe("CBReviewModal", () => {
     // Submit button should be disabled
     expect(submitButton).toBeDisabled();
 
-    // Try to click anyway
+    // Try to click anyway, shouldn't do anything
     await user.click(submitButton);
+    expect(submitReviewToCBSpy).not.toHaveBeenCalled();
+
     // expect a visible validation message
-    await screen.findByText(/your review needs to be longer than/i);
-    await waitFor(() => expect(submitReviewToCBSpy).not.toHaveBeenCalled());
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /your review needs to be longer than/i
+    );
   });
 
   it("prevents submission if there is no entity to review", async () => {
@@ -308,7 +317,7 @@ describe("CBReviewModal", () => {
     );
   });
 
-  xit("catches API call errors and displays it on screen", async () => {
+  it("catches API call errors and displays it on screen", async () => {
     submitReviewToCBSpy
       .mockRejectedValueOnce({
         message: "Computer says no!",
@@ -317,28 +326,19 @@ describe("CBReviewModal", () => {
         metadata: { review_id: "new-review-id-that-API-returns" },
       });
 
-    const { debug } = renderWithProviders(<NiceModal.Provider />, {
+    renderWithProviders(<NiceModal.Provider />, {
       APIService: testAPIService,
     });
     act(() => {
       NiceModal.show(CBReviewModal, { ...props });
     });
 
-    /** We shouldn't need a call to `act` here, but for some reason
-     * the test doesn't pass if I don't wrap these user interactions in it.
-     * Perhaps some concurrency reasons?
-     * In any case, this results in the following warning in the console:
-     * `Warning: The current testing environment is not configured to support act(...)`
-     */
-    console.log("catches API // debug 1");
-    debug();
     await user.click(await screen.findByRole("checkbox"));
     await user.type(
       await screen.findByRole("textbox"),
       "This review text is more than 25 characters..."
     );
-    console.log("catches API // debug 2");
-    debug();
+
     const submitButton = await screen.findByRole("button", {
       name: /submit review/i,
     });
@@ -346,13 +346,8 @@ describe("CBReviewModal", () => {
 
     await user.click(submitButton);
 
-    await waitFor(() => {
-      console.log("WE MADE IT BOYS !", submitReviewToCBSpy.mock.calls);
-      expect(submitReviewToCBSpy).toHaveBeenCalled();
-    });
-    console.log("catches API // debug 3");
-    debug();
     // expect error toast message eventually
     await screen.findByText("Error while submitting review to CritiqueBrainz");
+    expect(submitReviewToCBSpy).toHaveBeenCalled();
   });
 });

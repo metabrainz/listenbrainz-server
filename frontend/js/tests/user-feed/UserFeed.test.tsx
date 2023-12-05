@@ -45,6 +45,7 @@ const props = {
 
 const GlobalContextMock: GlobalAppContextT = {
   APIService: new APIService("base-uri"),
+  websocketsUrl: "",
   spotifyAuth: timelineProps.spotify as SpotifyUser,
   youtubeAuth: timelineProps.youtube as YoutubeUser,
   currentUser: timelineProps.currentUser,

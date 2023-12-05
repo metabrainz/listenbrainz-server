@@ -37,6 +37,7 @@ import {
   getRecordingMSID,
   getReleaseGroupMBID,
   getReleaseMBID,
+  getReleaseName,
   getTrackDurationInMs,
   getTrackLink,
   getTrackName,
@@ -327,21 +328,32 @@ export default class ListenCard extends React.Component<
     if (customThumbnail) {
       thumbnail = customThumbnail;
     } else if (thumbnailSrc) {
+      let thumbnailLink;
+      let thumbnailTitle;
+      if (releaseMBID) {
+        thumbnailLink = `https://musicbrainz.org/release/${releaseMBID}`;
+        thumbnailTitle = getReleaseName(listen);
+      } else if (releaseGroupMBID) {
+        thumbnailLink = `https://musicbrainz.org/release-group/${releaseGroupMBID}`;
+        thumbnailTitle = get(
+          listen,
+          "track_metadata.mbid_mapping.release_group_name"
+        );
+      } else {
+        thumbnailLink = spotifyURL || youtubeURL || soundcloudURL;
+        thumbnailTitle = "Cover art";
+      }
       thumbnail = (
         <div className="listen-thumbnail">
           <a
-            href={
-              releaseMBID
-                ? `https://musicbrainz.org/release/${releaseMBID}`
-                : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
-            }
-            title={listen.track_metadata?.release_name ?? "Cover art"}
+            href={thumbnailLink}
+            title={thumbnailTitle}
             target="_blank"
             rel="noopener noreferrer"
           >
             <CoverArtWithFallback
               imgSrc={thumbnailSrc}
-              altText={listen.track_metadata?.release_name}
+              altText={thumbnailTitle}
             />
           </a>
         </div>
@@ -372,7 +384,7 @@ export default class ListenCard extends React.Component<
           </div>
         </a>
       );
-    } else if (!recordingMBID) {
+    } else if (isLoggedIn && Boolean(recordingMSID)) {
       const openModal = () => {
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
@@ -400,12 +412,19 @@ export default class ListenCard extends React.Component<
           </div>
         </div>
       );
-    } else {
-      // Edge case: has no thumbnail, has a recording_mbid
-      // but no release_mbid for some reason
+    } else if (recordingMBID || releaseGroupMBID) {
+      let entity;
+      let entityMBID;
+      if (recordingMBID) {
+        entity = "recording";
+        entityMBID = recordingMBID;
+      } else {
+        entity = "release-group";
+        entityMBID = releaseGroupMBID;
+      }
       thumbnail = (
         <a
-          href={`https://musicbrainz.org/recording/${recordingMBID}`}
+          href={`https://musicbrainz.org/${entity}/${entityMBID}`}
           title="Could not load cover art. Open in MusicBrainz"
           target="_blank"
           rel="noopener noreferrer"
@@ -422,6 +441,9 @@ export default class ListenCard extends React.Component<
           </div>
         </a>
       );
+    } else {
+      // eslint-disable-next-line react/jsx-no-useless-fragment
+      thumbnail = <></>;
     }
 
     return (
@@ -433,6 +455,7 @@ export default class ListenCard extends React.Component<
         }${additionalContent ? " has-additional-content" : " "} ${
           className || ""
         }`}
+        data-testid="listen"
       >
         <div className="main-content">
           {beforeThumbnailContent}
@@ -501,6 +524,7 @@ export default class ListenCard extends React.Component<
                         icon={faExternalLinkAlt}
                         title="Open in MusicBrainz"
                         text="Open in MusicBrainz"
+                        key="Open in MusicBrainz"
                         link={`https://musicbrainz.org/recording/${recordingMBID}`}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -513,6 +537,7 @@ export default class ListenCard extends React.Component<
                         icon={faSpotify}
                         title="Open in Spotify"
                         text="Open in Spotify"
+                        key="Open in Spotify"
                         link={spotifyURL}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -525,6 +550,7 @@ export default class ListenCard extends React.Component<
                         icon={faYoutube}
                         title="Open in YouTube"
                         text="Open in YouTube"
+                        key="Open in YouTube"
                         link={youtubeURL}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -537,6 +563,7 @@ export default class ListenCard extends React.Component<
                         icon={faSoundcloud}
                         title="Open in Soundcloud"
                         text="Open in Soundcloud"
+                        key="Open in Soundcloud"
                         link={soundcloudURL}
                         anchorTagAttributes={{
                           target: "_blank",
@@ -547,6 +574,7 @@ export default class ListenCard extends React.Component<
                     {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         text="Pin this track"
+                        key="Pin this track"
                         icon={faThumbtack}
                         action={() => {
                           NiceModal.show(PinRecordingModal, {
@@ -562,12 +590,14 @@ export default class ListenCard extends React.Component<
                         icon={faCommentDots}
                         title="Recommend to my followers"
                         text="Recommend to my followers"
+                        key="Recommend to my followers"
                         action={this.recommendListenToFollowers}
                       />
                     )}
                     {isLoggedIn && hasInfoAndMBID && (
                       <ListenControl
                         text="Personally recommend"
+                        key="Personally recommend"
                         icon={faPaperPlane}
                         action={() => {
                           NiceModal.show(PersonalRecommendationModal, {
@@ -581,6 +611,7 @@ export default class ListenCard extends React.Component<
                     {isLoggedIn && Boolean(recordingMSID) && (
                       <ListenControl
                         text="Link with MusicBrainz"
+                        key="Link with MusicBrainz"
                         icon={faLink}
                         action={() => {
                           NiceModal.show(MBIDMappingModal, {
@@ -592,6 +623,7 @@ export default class ListenCard extends React.Component<
                     {isLoggedIn && isListenReviewable && (
                       <ListenControl
                         text="Write a review"
+                        key="Write a review"
                         icon={faPencilAlt}
                         action={() => {
                           NiceModal.show(CBReviewModal, {
@@ -605,6 +637,7 @@ export default class ListenCard extends React.Component<
                     {isLoggedIn && (
                       <ListenControl
                         text="Add to playlist"
+                        key="Add to playlist"
                         icon={faPlusCircle}
                         action={() => {
                           NiceModal.show(AddToPlaylist, {
@@ -618,6 +651,7 @@ export default class ListenCard extends React.Component<
                     {additionalMenuItems}
                     <ListenControl
                       text="Inspect listen"
+                      key="Inspect listen"
                       icon={faCode}
                       action={() => {
                         NiceModal.show(ListenPayloadModal, {

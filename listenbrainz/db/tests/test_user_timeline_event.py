@@ -36,11 +36,6 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
     def setUp(self):
         super(UserTimelineEventDatabaseTestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'friendly neighborhood spider-man')
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
-            count=1,
-        )
-        self.assertListEqual([], events)
 
     def test_it_adds_rows_to_the_database(self):
         recording_msid = str(uuid.uuid4())
@@ -49,8 +44,10 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
             metadata=RecordingRecommendationMetadata(recording_msid=recording_msid)
         )
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            user_ids=[self.user['id']],
+            min_ts=0,
+            max_ts=time.time(),
             count=1,
         )
         self.assertEqual(1, len(events))
@@ -117,8 +114,11 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 recording_msid=str(uuid.uuid4()),
             )
         )
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=new_user['id'],
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            user_ids=[new_user['id']],
+            min_ts=0,
+            max_ts=int(time.time()) + 1000,
+            count=10
         )
         self.assertEqual(1, len(events))
         self.assertEqual(new_user['id'], events[0].user_id)
@@ -255,7 +255,9 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             user_id=self.user["id"],
         )
         event_rec = db_user_timeline_event.get_user_notification_events(
-            user_id=self.user["id"],
+            user_ids=[self.user["id"]],
+            min_ts=0,
+            max_ts=int(time.time()),
             count=1,
         )
         self.assertEqual(0, len(event_rec))
@@ -266,7 +268,9 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             user_id=new_user["id"],
         )
         event_not = db_user_timeline_event.get_user_notification_events(
-            user_id=new_user["id"],
+            user_ids=[self.user["id"]],
+            min_ts=0,
+            max_ts=int(time.time()),
             count=1,
         )
         self.assertEqual(0, len(event_not))

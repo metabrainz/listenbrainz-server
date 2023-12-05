@@ -31,6 +31,7 @@ const props = {
 
 const GlobalContextMock: GlobalAppContextT = {
   APIService: new APIService("foo"),
+  websocketsUrl: "",
   youtubeAuth: {
     api_key: "fake-api-key",
   },
