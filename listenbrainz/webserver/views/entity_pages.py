@@ -80,6 +80,7 @@ def artist_entity(artist_mbid):
                  , rgpt.name AS type
                  , caa.id AS caa_id
                  , caa_rel.gid::TEXT AS caa_release_mbid
+                 , array_agg(a.gid::TEXT ORDER BY acn.position) AS release_group_artist_credit_mbids
               FROM musicbrainz.release_group rg
               JOIN musicbrainz.release_group_primary_type rgpt
                 ON rg.type = rgpt.id
@@ -99,9 +100,25 @@ def artist_entity(artist_mbid):
                 ON caa.release = caa_rel.id
          LEFT JOIN cover_art_archive.cover_art_type cat
                 ON cat.id = caa.id
+              JOIN musicbrainz.artist_credit ac
+                ON rg.artist_credit = ac.id
+              JOIN musicbrainz.artist_credit_name acn
+                ON ac.id = acn.artist_credit
+              JOIN musicbrainz.artist a
+                ON acn.artist = a.id
              WHERE type_id = 1
                AND mime_type != 'application/pdf'
                AND rg.gid in %s
+          GROUP BY rg.id
+                 , rg.gid
+                 , rg.name
+                 , rgca.release
+                 , re.date_year
+                 , re.date_month
+                 , re.date_day
+                 , rgpt.name
+                 , caa.id
+                 , caa_rel.gid
           ORDER BY rg.id
                  , rgca.release
                  , re.date_year
@@ -115,6 +132,9 @@ def artist_entity(artist_mbid):
             with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
                 mb_curs.execute(query, (release_group_mbids, ))
                 release_groups = [dict(row) for row in mb_curs.fetchall()]
+
+    import json
+    current_app.logger.warn(json.dumps(release_groups, indent=4, sort_keys=True))
 
     props = {
         "artist_data": item,
