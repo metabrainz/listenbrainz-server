@@ -3,7 +3,7 @@ from listenbrainz_spark.postgres.utils import save_pg_table_to_hdfs
 
 
 def create_recording_length_cache():
-    """ Import recording lengths from postgres to HDFS for use in artist map stats calculation. """
+    """ Import recording lengths from postgres to HDFS for use in year in music and similar entity calculation. """
     query = """
         SELECT r.gid AS recording_mbid
              , r.length
@@ -14,7 +14,7 @@ def create_recording_length_cache():
 
 
 def create_recording_artist_cache():
-    """ Import recording artists from postgres to HDFS for use in artist map stats calculation. """
+    """ Import recording artists from postgres to HDFS for use in periodic jams calculation. """
     query = """
         SELECT r.gid AS recording_mbid
              , array_agg(a.gid ORDER BY acn.position) AS artist_mbids
