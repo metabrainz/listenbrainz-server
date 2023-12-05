@@ -3,6 +3,7 @@ from typing import Iterable
 from psycopg2.extras import execute_values
 from musicbrainz_entity import _resolve_mbids_helper, resolve_redirect_mbids
 
+
 def resolve_canonical_mbids(curs, mbids):
     """ Check the list of mbids for canonical redirects and return list of canonical mbids.
 
@@ -22,6 +23,7 @@ def resolve_canonical_mbids(curs, mbids):
             ON release_mbid = gid::UUID
     """
     return _resolve_mbids_helper(curs, query, mbids)
+
 
 def load_releases_from_mbids(ts_curs, mbids: Iterable[str]) -> dict:
     """ Given a list of mbids return a map with mbid as key and the release info as value.
@@ -76,6 +78,7 @@ def load_releases_from_mbids(ts_curs, mbids: Iterable[str]) -> dict:
         rows[release_mbid] = data
 
     return rows
+
 
 def load_releases_from_mbids_with_redirects(mb_curs, ts_curs, mbids):
     """ Given a list of release mbids, resolve redirects if any and return metadata for all releases """

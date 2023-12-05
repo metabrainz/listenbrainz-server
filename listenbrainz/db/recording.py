@@ -1,8 +1,8 @@
 from typing import Iterable
 
 from psycopg2.extras import execute_values
-from psycopg2.sql import SQL, Identifier
 from musicbrainz_entity import _resolve_mbids_helper, resolve_redirect_mbids
+
 
 def resolve_canonical_mbids(curs, mbids):
     """ Check the list of mbids for canonical redirects and return list of canonical mbids.

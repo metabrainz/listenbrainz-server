@@ -19,6 +19,7 @@ def _resolve_mbids_helper(curs, query, mbids):
 
     return new_mbids, index, inverse_index
 
+
 def resolve_redirect_mbids(curs, table, mbids):
     """ Given a list of mbids, resolve redirects if any and return the list of new mbids, a dict of
     redirected mbids and a reverse index of the same.
@@ -35,4 +36,3 @@ def resolve_redirect_mbids(curs, table, mbids):
             ON target.id = redirect.new_id
     """).format(target_table=Identifier("musicbrainz", table), redirect_table=Identifier("musicbrainz", redirect_table))
     return _resolve_mbids_helper(curs, query, mbids)
-
