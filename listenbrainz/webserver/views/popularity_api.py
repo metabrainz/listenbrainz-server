@@ -74,6 +74,7 @@ def top_recordings():
 
     return recordings_data
 
+
 @popularity_api_bp.get("/top-releases-for-artist")
 @crossdomain
 @ratelimit()
