@@ -75,5 +75,5 @@ def _get_query():
                   ) AS data
              FROM percentage
             WHERE ranking <= {TOP_GENRES_COUNT}
-         GROUP BY user_id  
+         GROUP BY user_id
     """

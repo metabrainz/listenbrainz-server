@@ -34,7 +34,6 @@ def _create_cache_base(only_genres, save_paths):
         genre_join = ""
         name_alias = "tag"
 
-
     query = f"""
         SELECT r.gid AS recording_mbid
              , t.name AS {name_alias}
@@ -122,4 +121,3 @@ def _create_cache_base(only_genres, save_paths):
            , {name_alias}
     """
     save_pg_table_to_hdfs(query, save_paths["release_group"])
-
