@@ -42,17 +42,14 @@ def import_user_similarities(data):
                 values.append((user, orjson.dumps(similar).decode("utf-8")))
                 user_count += 1
                 target_user_count += len(similar.keys())
-                if len(values) == ROWS_PER_BATCH:
-                    execute_values(curs, query, values, template=None)
-                    values = []
-            execute_values(curs, query, values, template=None)
+            execute_values(curs, query, values, page_size=ROWS_PER_BATCH, template=None)
+
         conn.commit()
 
     except psycopg2.errors.OperationalError as err:
         conn.rollback()
-        current_app.logger.error(
-            "Error: Cannot import user similarites: %s" % str(err))
-        return (0, 0.0, "Error: Cannot import user similarites: %s" % str(err))
+        current_app.logger.error("Error: Cannot import user similarites: %s" % str(err))
+        return 0, 0.0, "Error: Cannot import user similarites: %s" % str(err)
 
     # Next lookup user names and insert them into the new similar_users table
     try:
@@ -84,9 +81,8 @@ def import_user_similarities(data):
 
     except psycopg2.errors.OperationalError as err:
         conn.rollback()
-        current_app.logger.error(
-            "Error: Cannot correlate user similarity user name: %s" % str(err))
-        return (0, 0.0, "Error: Cannot correlate user similarity user name: %s" % str(err))
+        current_app.logger.error("Error: Cannot correlate user similarity user name: %s" % str(err))
+        return 0, 0.0, "Error: Cannot correlate user similarity user name: %s" % str(err)
 
     # Finally rotate the table into place
     try:
@@ -98,24 +94,21 @@ def import_user_similarities(data):
         conn.commit()
     except psycopg2.errors.OperationalError as err:
         conn.rollback()
-        current_app.logger.error(
-            "Error: Failed to rotate similar_users table into place: %s" % str(err))
-        return (0, 0.0, "Error: Failed to rotate similar_users table into place: %s" % str(err))
+        current_app.logger.error("Error: Failed to rotate similar_users table into place: %s" % str(err))
+        return 0, 0.0, "Error: Failed to rotate similar_users table into place: %s" % str(err)
 
     # Last, delete the old table
     try:
         with conn.cursor() as curs:
-            curs.execute(
-                """DROP TABLE recommendation.delete_similar_user CASCADE""")
+            curs.execute("""DROP TABLE recommendation.delete_similar_user CASCADE""")
         conn.commit()
 
     except psycopg2.errors.OperationalError as err:
         conn.rollback()
-        current_app.logger.error(
-            "Error: Failed to clean up old similar user table: %s" % str(err))
-        return (0, 0.0, "Error: Failed to clean up old similar user table: %s" % str(err))
+        current_app.logger.error("Error: Failed to clean up old similar user table: %s" % str(err))
+        return 0, 0.0, "Error: Failed to clean up old similar user table: %s" % str(err)
 
-    return (user_count, target_user_count / user_count, "")
+    return user_count, target_user_count / user_count, ""
 
 
 def get_top_similar_users(count: int = 200):
@@ -130,7 +123,7 @@ def get_top_similar_users(count: int = 200):
             result = connection.execute(text("""
                 SELECT u.musicbrainz_id AS user_name
                      , ou.musicbrainz_id AS other_user_name
-                     , value->0 AS similarity -- first element of array is similarity, second is global_similarity
+                     , value AS similarity -- first element of array is similarity, second is global_similarity
                   FROM recommendation.similar_user r 
                   JOIN jsonb_each(r.similar_users) j
                     ON TRUE

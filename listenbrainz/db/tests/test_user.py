@@ -164,9 +164,9 @@ class UserTestCase(DatabaseTestCase):
         user_id_22 = db_user.create(22, "twenty_two")
         user_id_23 = db_user.create(23, "twenty_three")
 
-        similar_users_21 = {str(user_id_22): [0.4, .4], str(user_id_23): [0.7,.07]}
-        similar_users_22 = {str(user_id_21): [0.4, .4]}
-        similar_users_23 = {str(user_id_21): [0.7, .07]}
+        similar_users_21 = {str(user_id_22): 0.4, str(user_id_23): 0.7}
+        similar_users_22 = {str(user_id_21): 0.4}
+        similar_users_23 = {str(user_id_21): 0.7}
 
         similar_users = {
             str(user_id_21): similar_users_21,

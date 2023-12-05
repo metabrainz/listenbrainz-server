@@ -169,7 +169,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assertEqual(response.json['status'], 'ok')
 
         from datetime import timedelta
-        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(seconds=1))
+        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW / timedelta(seconds=1))
 
         # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
         payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
