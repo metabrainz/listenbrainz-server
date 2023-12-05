@@ -386,13 +386,8 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                         >
                           {listener.user_name}
                         </a>
-                        <span className="pill">
+                        <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
-                          <FontAwesomeIcon
-                            icon={faXmark}
-                            fixedWidth
-                            size="xs"
-                          />
                           <FontAwesomeIcon icon={faHeadphones} />
                         </span>
                       </div>

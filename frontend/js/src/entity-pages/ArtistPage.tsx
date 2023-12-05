@@ -12,7 +12,7 @@ import {
   faUserAstronaut,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isUndefined, sortBy } from "lodash";
+import { chain, isUndefined, partition, sortBy } from "lodash";
 import tinycolor from "tinycolor2";
 import { sanitize } from "dompurify";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
@@ -68,6 +68,11 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   /** Album art and album color related */
   const [coverArtSVG, setCoverArtSVG] = React.useState<string>();
 
+  const [albumsByThisArtist, alsoAppearsOn] = partition(releaseGroups, (rg) =>
+    rg.release_group_artists.find(
+      (rga) => rga.artist_mbid === artist.artist_mbid
+    )
+  );
   /** Navigation from one artist to a similar artist */
   //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
   //     event
@@ -331,7 +336,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
                 <span className="badge badge-info">
-                  {bigNumberFormatter.format(recording.total_listen_count)} x{" "}
+                  {bigNumberFormatter.format(recording.total_listen_count)}
                   <FontAwesomeIcon icon={faHeadphones} />
                 </span>
               );
@@ -409,12 +414,34 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         <div className="albums full-width scroll-start">
           <h3 className="header-with-line">Albums</h3>
           <div className="cover-art-container dragscroll">
-            {releaseGroups.map((rg) => (
+            {albumsByThisArtist.map((rg) => (
               <ReleaseCard
                 releaseDate={rg.date ?? ""}
                 artistCreditName={
                   rg.release_group_artists[0].artist_credit_name
                 }
+                artistMBIDs={rg.release_group_artists.map(
+                  (credit) => credit.artist_mbid
+                )}
+                caaID={rg.caa_id}
+                caaReleaseMBID={rg.caa_release_mbid}
+                releaseName={rg.release_group_name}
+                releaseTypePrimary={rg.type}
+                releaseGroupMBID={rg.release_group_mbid}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="albums full-width scroll-start">
+          <h3 className="header-with-line">Also appears on</h3>
+          <div className="cover-art-container dragscroll">
+            {alsoAppearsOn.map((rg) => (
+              <ReleaseCard
+                releaseDate={rg.date ?? ""}
+                artistCredits={rg.release_group_artists}
+                artistCreditName={rg.release_group_artists
+                  .map((rga) => rga.artist_credit_name + rga.join_phrase)
+                  .join("")}
                 artistMBIDs={rg.release_group_artists.map(
                   (credit) => credit.artist_mbid
                 )}
