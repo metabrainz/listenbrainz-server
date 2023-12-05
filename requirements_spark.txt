@@ -15,4 +15,4 @@ pycurl==7.45.2
 urllib3==1.26.18
 pandas==1.5.3
 zstandard==0.21.0
-pyarrow==11.0.0
+pyarrow==14.0.1

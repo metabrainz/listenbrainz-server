@@ -136,6 +136,11 @@ CREATE TABLE messybrainz.submissions (
     submitted       TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE messybrainz.submissions_redirect (
+    duplicate_msid UUID NOT NULL,
+    original_msid UUID NOT NULL
+);
+
 CREATE TABLE spotify_cache.album (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
     album_id                TEXT   NOT NULL,

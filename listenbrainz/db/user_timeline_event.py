@@ -81,11 +81,9 @@ def create_user_notification_event(user_id: int, metadata: NotificationMetadata)
         metadata=metadata
     )
 
-def delete_user_timeline_event(
-        id: int,
-        user_id:int
-) -> bool:
-    ''' Deletes recommendation and notification event using id'''
+
+def delete_user_timeline_event(id: int, user_id: int) -> bool:
+    """ Deletes recommendation and notification event using id """
     try:
         with db.engine.begin() as connection:
             result = connection.execute(sqlalchemy.text('''
@@ -111,8 +109,8 @@ def create_user_cb_review_event(user_id: int, metadata: CBReviewTimelineMetadata
     )
 
 
-def create_personal_recommendation_event(user_id: int, metadata:
-    PersonalRecordingRecommendationMetadata) -> UserTimelineEvent:
+def create_personal_recommendation_event(user_id: int, metadata: PersonalRecordingRecommendationMetadata)\
+        -> UserTimelineEvent:
     """ Creates a personal recommendation event in the database and returns it.
         The User ID in the table is the recommender, meanwhile the users in the
         metadata key are the recommendee
@@ -151,45 +149,17 @@ def create_personal_recommendation_event(user_id: int, metadata:
         raise DatabaseException(str(e))
 
 
-def get_user_timeline_events(user_id: int, event_type: UserTimelineEventType, count: int = 50) -> List[UserTimelineEvent]:
+def get_user_timeline_events(
+    user_ids: Iterable[int],
+    event_type: UserTimelineEventType,
+    min_ts: float,
+    max_ts: float,
+    count: int = 50
+) -> List[UserTimelineEvent]:
     """ Gets user timeline events of the specified type associated with the specified user.
 
-    The optional `count` parameter can be used to control the number of events being returned.
-    """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT id, user_id, event_type, metadata, created
-              FROM user_timeline_event
-             WHERE user_id = :user_id
-               AND event_type = :event_type
-          ORDER BY created
-             LIMIT :count
-        """), {
-            'user_id': user_id,
-            'event_type': event_type.value,
-            'count': count,
-        })
-
-        return [UserTimelineEvent(**row,) for row in result.mappings()]
-
-
-def get_user_track_recommendation_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
-    """ Gets track recommendation events created by the specified user.
-
-    The optional `count` parameter can be used to control the number of events being returned.
-    """
-    return get_user_timeline_events(
-        user_id=user_id,
-        event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
-        count=count,
-    )
-
-
-def get_recording_recommendation_events_for_feed(user_ids: Iterable[int], min_ts: float, max_ts: float, count: int) \
-        -> List[UserTimelineEvent]:
-    """ Gets a list of recording_recommendation events for specified users.
-
-    user_ids is a tuple of user row IDs.
+    The optional `count` parameter can be used to control the number of events being returned. The min_ts and max_ts
+    can be used to influence the time period during which the events should be returned.
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -205,17 +175,26 @@ def get_recording_recommendation_events_for_feed(user_ids: Iterable[int], min_ts
             "user_ids": tuple(user_ids),
             "min_ts": datetime.utcfromtimestamp(min_ts),
             "max_ts": datetime.utcfromtimestamp(max_ts),
+            "event_type": event_type.value,
             "count": count,
-            "event_type": UserTimelineEventType.RECORDING_RECOMMENDATION.value,
         })
 
-        return [UserTimelineEvent(
-            id=row.id,
-            user_id=row.user_id,
-            event_type=row.event_type,
-            metadata=RecordingRecommendationMetadata(**row.metadata),
-            created=row.created
-        ) for row in result]
+        return [UserTimelineEvent(**row) for row in result.mappings()]
+
+
+def get_recording_recommendation_events_for_feed(user_ids: Iterable[int], min_ts: int, max_ts: int, count: int) \
+        -> List[UserTimelineEvent]:
+    """ Gets a list of recording_recommendation events for specified users.
+
+    user_ids is a tuple of user row IDs.
+    """
+    return get_user_timeline_events(
+        user_ids=user_ids,
+        event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
+        min_ts=min_ts,
+        max_ts=max_ts,
+        count=count
+    )
 
 
 def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
@@ -228,18 +207,17 @@ def get_personal_recommendation_events_for_feed(user_id: int, min_ts: int, max_t
             SELECT user_timeline_event.id
                  , user_timeline_event.user_id
                  , user_timeline_event.event_type
-                 ,
-                 (
+                 , (
                     SELECT jsonb_build_object(
-                        'recording_mbid', user_timeline_event.metadata -> 'recording_mbid',
-                        'recording_msid', user_timeline_event.metadata -> 'recording_msid',
-                        'users', jsonb_agg("user".musicbrainz_id),
-                        'blurb_content', user_timeline_event.metadata -> 'blurb_content'
-                    ) AS metadata
-                      FROM jsonb_array_elements_text(user_timeline_event.metadata -> 'users') AS arr
+                                'recording_mbid', user_timeline_event.metadata->'recording_mbid',
+                                'recording_msid', user_timeline_event.metadata->'recording_msid',
+                                'users', jsonb_agg("user".musicbrainz_id ORDER BY idx),
+                                'blurb_content', user_timeline_event.metadata->'blurb_content'
+                            ) AS metadata
+                      FROM jsonb_array_elements_text(user_timeline_event.metadata->'users') WITH ORDINALITY AS arr (value, idx)
                 INNER JOIN "user" 
                         ON arr.value::int = "user".id
-                 )
+                   )
                  , user_timeline_event.created
                  , "user".musicbrainz_id as user_name
               FROM user_timeline_event
@@ -275,25 +253,13 @@ def get_cb_review_events(user_ids: List[int], min_ts: int, max_ts: int, count: i
 
     user_ids is a tuple of user row IDs.
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT id, user_id, event_type, metadata, created
-              FROM user_timeline_event
-             WHERE user_id IN :user_ids
-               AND created > :min_ts
-               AND created < :max_ts
-               AND event_type = :event_type
-          ORDER BY created DESC
-             LIMIT :count
-        """), {
-            "user_ids": tuple(user_ids),
-            "min_ts": datetime.utcfromtimestamp(min_ts),
-            "max_ts": datetime.utcfromtimestamp(max_ts),
-            "count": count,
-            "event_type": UserTimelineEventType.CRITIQUEBRAINZ_REVIEW.value,
-        })
-
-        return [UserTimelineEvent(**row) for row in result.mappings()]
+    return get_user_timeline_events(
+        user_ids=user_ids,
+        event_type=UserTimelineEventType.CRITIQUEBRAINZ_REVIEW,
+        min_ts=min_ts,
+        max_ts=max_ts,
+        count=count
+    )
 
 
 def get_user_timeline_event_by_id(id: int) -> UserTimelineEvent:
@@ -313,14 +279,17 @@ def get_user_timeline_event_by_id(id: int) -> UserTimelineEvent:
         return UserTimelineEvent(**row) if row else None
 
 
-def get_user_notification_events(user_id: int, count: int = 50) -> List[UserTimelineEvent]:
+def get_user_notification_events(user_ids: Iterable[int], min_ts: int, max_ts: int, count: int)\
+        -> List[UserTimelineEvent]:
     """ Gets notification posted on the user's timeline.
 
     The optional `count` parameter can be used to control the number of events being returned.
     """
     return get_user_timeline_events(
-        user_id=user_id,
+        user_ids=user_ids,
         event_type=UserTimelineEventType.NOTIFICATION,
+        min_ts=min_ts,
+        max_ts=max_ts,
         count=count
     )
 

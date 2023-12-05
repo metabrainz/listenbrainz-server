@@ -1,5 +1,7 @@
-from flask import Blueprint, request, redirect, render_template, url_for, session, current_app, Markup
+from flask import Blueprint, request, redirect, render_template, url_for, session, current_app
 from flask_login import login_user, logout_user, login_required
+from markupsafe import Markup
+
 from listenbrainz.webserver.decorators import web_listenstore_needed, web_musicbrainz_needed
 from listenbrainz.webserver.login import login_forbidden, provider, User
 from listenbrainz.webserver import flash

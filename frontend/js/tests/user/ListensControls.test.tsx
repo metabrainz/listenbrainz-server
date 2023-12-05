@@ -1,53 +1,32 @@
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 
-import { act } from "react-dom/test-utils";
+import {
+  screen,
+  waitForElementToBeRemoved,
+  within,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "../test-utils/rtl-test-utils";
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsThreeListens from "../__mocks__/recentListensPropsThreeListens.json";
 import * as getFeedbackByMsidResponse from "../__mocks__/getFeedbackByMsidResponse.json";
 import * as getMultipleFeedbackResponse from "../__mocks__/getMultipleFeedbackResponse.json";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
-import APIService from "../../src/utils/APIService";
-import Listens, { ListensProps, ListensState } from "../../src/user/Listens";
-import { waitForComponentToPaint } from "../test-utils";
-import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import Listens, { ListensProps } from "../../src/user/Listens";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
-const GlobalContextMock = {
-  context: {
-    APIBaseURI: "base-uri",
-    APIService: new APIService("base-uri"),
-    spotifyAuth: {
-      access_token: "heyo",
-      permission: [
-        "user-read-currently-playing",
-        "user-read-recently-played",
-      ] as Array<SpotifyPermission>,
-    },
-    youtubeAuth: {
-      api_key: "fake-api-key",
-    },
-    currentUser: {
-      name: "Gulab Jamun",
-      auth_token: "IHaveSeenTheFnords",
-    },
-    recordingFeedbackManager: new RecordingFeedbackManager(
-      new APIService("foo"),
-      { name: "Fnord" }
-    ),
-  },
-};
+jest.unmock("react-toastify");
 
 const {
   latestListenTs,
   listens,
   oldestListenTs,
   user,
+  currentUser,
 } = recentListensPropsOneListen;
 
 const props: ListensProps = {
@@ -63,23 +42,37 @@ fetchMock.mockIf(
     return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
   }
 );
+
+fetchMock.mockIf(
+  (input) => input.url.endsWith("/delete-listen"),
+  () => Promise.resolve({ status: 200, statusText: "ok" })
+);
+
+const userEventSession = userEvent.setup();
+
 describe("ListensControls", () => {
   describe("removeListenFromListenList", () => {
+    beforeAll(() => {
+      fetchMock.doMock();
+    });
     it("updates the listens state for particular recording", async () => {
-      const wrapper = mount<Listens>(
-        <GlobalAppContext.Provider value={GlobalContextMock.context}>
-          <Listens {...props} />
-        </GlobalAppContext.Provider>
-      );
+      renderWithProviders(<Listens {...props} />, {
+        currentUser: {
+          id: 1,
+          name: "iliekcomputers",
+          auth_token: "never_gonna",
+        },
+      });
 
-      const instance = wrapper.instance();
-      await act(async () => {
-        wrapper.setState({ listens: props.listens as Listen[] });
-      });
-      await act(async () => {
-        instance.removeListenFromListenList(props.listens?.[0] as Listen);
-      });
-      expect(wrapper.state("listens")).toMatchObject([]);
+      const listenCards = screen.getAllByTestId("listen");
+      expect(listenCards).toHaveLength(1);
+
+      const removeListenButton = await within(listenCards[0]).findByLabelText(
+        "Delete Listen"
+      );
+      expect(removeListenButton).toBeInTheDocument();
+      await userEventSession.click(removeListenButton);
+      await waitForElementToBeRemoved(listenCards);
     });
   });
 });

@@ -321,11 +321,21 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
         if "[artist_credit_mbids]" in row and row["[artist_credit_mbids]"] is not None:
             rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"]]
         rec.title = row.get("recording_name", "")
+        rec.release_name = row.get("release_name", "")
+        rec.duration_ms = row.get("length", "")
 
         caa_id = row.get("caa_id")
         caa_release_mbid = row.get("caa_release_mbid")
+        additional_metadata = {}
         if caa_id and caa_release_mbid:
-            rec.additional_metadata = {"caa_id": caa_id, "caa_release_mbid": caa_release_mbid}
+            additional_metadata["caa_id"] = caa_id
+            additional_metadata["caa_release_mbid"] = caa_release_mbid
+
+        if row.get("artists"):
+            additional_metadata["artists"] = row["artists"]
+
+        if additional_metadata:
+            rec.additional_metadata = additional_metadata
 
 
 @playlist_api_bp.route("/create", methods=["POST", "OPTIONS"])
