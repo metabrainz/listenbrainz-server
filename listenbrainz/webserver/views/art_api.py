@@ -53,6 +53,8 @@ def cover_art_grid_post():
                           in the order that this list is in. The cover art for the release_mbids will be placed
                           on the tiles defined by the tiles parameter.
     :type release_mbids: ``list``
+    :param cover_art_size: Size in pixels of each cover art in the composited image. Can be either 250 or 500
+    :type cover_art_size: ``int``
 
     :statuscode 200: cover art created successfully.
     :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
@@ -89,7 +91,14 @@ def cover_art_grid_post():
         except ValueError:
             raise APIBadRequest(f"Invalid release_mbid {mbid} specified.")
 
-    images = cac.load_images(r["release_mbids"], tile_addrs=tiles, layout=layout)
+    if "cover_art_size" in r:
+        cover_art_size = r["cover_art_size"]
+    elif image_size < 1000:
+        cover_art_size = 250
+    else:
+        cover_art_size = 500
+
+    images = cac.load_images(r["release_mbids"], tile_addrs=tiles, layout=layout, cover_art_size=cover_art_size)
     if images is None:
         raise APIInternalServerError("Failed to grid cover art SVG")
 
