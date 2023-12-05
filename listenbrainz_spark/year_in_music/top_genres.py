@@ -6,7 +6,7 @@ from listenbrainz_spark.postgres.tag import create_genre_cache
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
-TOP_GENRES_COUNT = 5
+TOP_GENRES_COUNT = 25
 USERS_PER_MESSAGE = 1000
 
 
@@ -74,6 +74,6 @@ def _get_query():
                     false
                   ) AS data
              FROM percentage
-            WHERE ranking < {TOP_GENRES_COUNT}
+            WHERE ranking <= {TOP_GENRES_COUNT}
          GROUP BY user_id  
     """
