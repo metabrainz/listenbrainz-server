@@ -115,11 +115,11 @@ def _create_cache_base(only_genres, save_paths):
       GROUP BY r.gid
              , t.name
     ) SELECT recording_mbid
-           , tag
+           , {name_alias}
            , CAST(SUM({name_alias}_count) AS BIGINT) AS {name_alias}_count
         FROM intermediate
     GROUP BY recording_mbid
-           , tag
+           , {name_alias}
     """
     save_pg_table_to_hdfs(query, save_paths["release_group"])
 

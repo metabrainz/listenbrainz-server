@@ -245,7 +245,7 @@ def request_yim_new_artists_discovered(year: int):
 @cli.command(name="request_yim_top_genres")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
-def request_yim_new_artists_discovered(year: int):
+def request_yim_top_genres(year: int):
     """ Send request to calculate top genres each user listened to this year. """
     send_request_to_spark_cluster("year_in_music.top_genres", year=year)
 
@@ -507,6 +507,7 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_new_release_stats, year=year)
     ctx.invoke(request_yim_day_of_week, year=year)
     ctx.invoke(request_yim_most_listened_year, year=year)
+    ctx.invoke(request_yim_top_genres, year=year)
     ctx.invoke(request_yim_top_stats, year=year)
     ctx.invoke(request_yim_listens_per_day, year=year)
     ctx.invoke(request_yim_listen_count, year=year)
