@@ -165,6 +165,8 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
 
         release_group = {
             "name": row["release_group_name"],
+            "date": row['first_release_date_year'],
+            "type": row['type'],
             "rels": release_group_rels
         }
 
@@ -344,6 +346,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                  , rd.caa_id
                                  , rd.caa_release_mbid
                                  , rd.first_release_date_year
+                                 , rd.type
                               FROM musicbrainz.release_group r
                               JOIN musicbrainz.artist_credit ac
                                 ON r.artist_credit = ac.id
@@ -363,6 +366,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                  , r.artist_credit
                                  , ac.name
                                  , rd.name
+                                 , rd.type
                                  , rd.first_release_date_year
                                  , release_group_links
                                  , release_group_tags
