@@ -179,6 +179,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   return (
     <div
       id="entity-page"
+      className="album-page"
       style={{ ["--bg-color" as string]: adjustedAlbumColor }}
     >
       <Loader isLoading={loading} />
@@ -312,7 +313,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             if (recording && Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
                 <span className="pill">
-                  {recording.total_listen_count} x{" "}
+                  {bigNumberFormatter.format(recording.total_listen_count)} x{" "}
                   <FontAwesomeIcon icon={faHeadphones} />
                 </span>
               );
