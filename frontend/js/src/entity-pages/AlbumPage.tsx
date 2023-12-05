@@ -11,7 +11,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain } from "lodash";
+import { chain, isEmpty } from "lodash";
 import tinycolor from "tinycolor2";
 import { getRelIconLink } from "./utils";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
@@ -197,7 +197,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {Boolean(artist.artists?.[0]?.rels?.length) &&
+            {!isEmpty(artist.artists?.[0]?.rels) &&
               Object.entries(
                 artist.artists?.[0].rels
               ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}

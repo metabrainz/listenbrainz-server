@@ -11,7 +11,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, partition, sortBy } from "lodash";
+import { chain, isEmpty, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -222,7 +222,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {Boolean(artist.rels?.length) &&
+            {!isEmpty(artist.rels) &&
               Object.entries(artist.rels).map(([relName, relValue]) =>
                 getRelIconLink(relName, relValue)
               )}
