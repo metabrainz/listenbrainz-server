@@ -46,7 +46,7 @@ def get(user_id, year):
             SELECT data FROM statistics.year_in_music WHERE user_id = :user_id AND year = :year
         """), {"user_id": user_id, "year": year})
         row = result.fetchone()
-        return row["data"] if row else None
+        return row.data if row else None
 
 
 def insert(key, year, data):

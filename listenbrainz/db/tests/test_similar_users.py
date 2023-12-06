@@ -14,8 +14,8 @@ class SimilarUserTestCase(DatabaseTestCase):
         user_id_1 = db_user.create(1, "tom")
         user_id_2 = db_user.create(2, "jerry")
 
-        similar_users_1 = {user_id_2: [0.42, 0.01]}
-        similar_users_2 = {user_id_1: [0.42, 0.02]}
+        similar_users_1 = {user_id_2: 0.42}
+        similar_users_2 = {user_id_1: 0.02}
 
         with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text("""
@@ -30,6 +30,6 @@ class SimilarUserTestCase(DatabaseTestCase):
 
         similar_users = get_top_similar_users()
         assert len(similar_users) == 1
-        assert similar_users[0][0] == 'jerry'
-        assert similar_users[0][1] == 'tom'
+        assert similar_users[0][0] == "jerry"
+        assert similar_users[0][1] == "tom"
         assert similar_users[0][2] == "0.020"

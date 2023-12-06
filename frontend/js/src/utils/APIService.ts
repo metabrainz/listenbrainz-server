@@ -1,5 +1,6 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
+import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -1370,6 +1371,9 @@ export default class APIService {
 
   fetchSitewideFreshReleases = async (
     days?: number,
+    past?: boolean,
+    future?: boolean,
+    sort?: SortOption,
     release_date?: string
   ): Promise<any> => {
     let url = `${this.APIBaseURI}/explore/fresh-releases/`;
@@ -1377,6 +1381,15 @@ export default class APIService {
     const queryParams: Array<string> = [];
     if (days) {
       queryParams.push(`days=${days}`);
+    }
+    if (past === false) {
+      queryParams.push(`past=${past}`);
+    }
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (sort) {
+      queryParams.push(`sort=${sort}`);
     }
     if (release_date) {
       queryParams.push(`release_date=${release_date}`);
@@ -1390,11 +1403,32 @@ export default class APIService {
     return response.json();
   };
 
-  fetchUserFreshReleases = async (username: string): Promise<any> => {
+  fetchUserFreshReleases = async (
+    username: string,
+    past?: boolean,
+    future?: boolean,
+    sort?: SortOption
+  ): Promise<any> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
-    const url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+    let url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+
+    const queryParams: Array<string> = [];
+    if (sort) {
+      queryParams.push(`sort=${sort}`);
+    }
+
+    if (past === false) {
+      queryParams.push(`past=${past}`);
+    }
+
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (queryParams.length) {
+      url += `?${queryParams.join("&")}`;
+    }
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

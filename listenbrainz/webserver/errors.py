@@ -1,5 +1,5 @@
-from flask import render_template, make_response, jsonify, request, has_request_context, _request_ctx_stack, \
-    current_app, Response
+from flask import render_template, make_response, jsonify, request, has_request_context, \
+    current_app, Response, g
 from yattag import Doc
 import yattag
 import orjson
@@ -121,8 +121,8 @@ def init_error_handlers(app):
             # flask-login will do a query to add `current_user` to the template if it's not
             # already in the request context, so we override it with AnonymousUser to prevent it from doing so
             # Ideally we wouldn't do this, and we would catch and roll back all database exceptions
-            if has_request_context() and not hasattr(_request_ctx_stack.top, 'user'):
-                _request_ctx_stack.top.user = current_app.login_manager.anonymous_user()
+            if has_request_context() and not hasattr(g, '_login_user'):
+                g._login_user = current_app.login_manager.anonymous_user()
             hide_navbar_user_menu = True
 
         resp = make_response(render_template(template,

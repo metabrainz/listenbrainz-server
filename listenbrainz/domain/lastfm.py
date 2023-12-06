@@ -52,7 +52,7 @@ def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:
 def fetch_lfm_feedback(lfm_user: str):
     """ Retrieve the loved tracks of a user from Last.FM api """
     session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, method_whitelist=["GET"])))
+    session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, allowed_methods=["GET"])))
 
     params = {
         "method": "user.getlovedtracks",
