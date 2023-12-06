@@ -76,12 +76,19 @@ def generate_top_missed_recordings(year):
              WHERE per_artist_position <= {MAX_ARTIST_OCCURRENCE}
           GROUP BY user_id
                  , recording_mbid
-        )
+        ), playlists AS (
             SELECT user_id
                  , collect_list(recording_mbid) AS recordings
               FROM artist_limiting
              WHERE ranking <= {MAX_TRACKS_PER_PLAYLIST}
           GROUP BY user_id
+        )
+            SELECT p.user_id
+                 , recordings
+                 , collect_list(s.other_user_id) AS similar_users
+              FROM playlists p
+              JOIN similar_users_for_missed_recordings s
+                ON p.user_id = s.user_id
     """
 
     data = run_query(query).toLocalIterator()

@@ -22,8 +22,16 @@ def exclude_playlists_from_deleted_users(slug, year, jam_name, description, all_
         if user["username"] not in ["rob", "lucifer", "mr_monkey", "aerozol"]:
             continue
 
+        similar_users = ""
+        if playlist.get("similar_users"):
+            usernames = []
+            for other_user_id in playlist["similar_users"]:
+                other_username = user_details[other_user_id]["username"]
+                usernames.append(other_username)
+            similar_users = ", ".join(usernames)
+
         playlist["name"] = jam_name.format(year=year, user=user["username"])
-        playlist["description"] = description.format(user=user["username"])
+        playlist["description"] = description.format(year=year, user=user["username"], similar_users=similar_users)
         playlist["existing_url"] = user["existing_url"]
         playlist["additional_metadata"] = {"algorithm_metadata": {"source_patch": slug}}
 
@@ -40,7 +48,7 @@ def process_yim_playlists(slug, year, playlists):
         playlist_name = "Top Discoveries of {year} for {user}"
         playlist_description = """
             <p>
-                This playlist contains the top tracks for %s that were first listened to in {year}.
+                This playlist contains the top tracks for {user} that were first listened to in {year}.
             </p>
             <p>
                 For more information on how this playlist is generated, please see our
@@ -51,16 +59,16 @@ def process_yim_playlists(slug, year, playlists):
         playlist_name = "Top Missed Recordings of {year} for {user}"
         playlist_description = """
             <p>
-                This playlist features recordings that were listened to by users similar to %s in {year}.
+                This playlist features recordings that were listened to by users similar to {user} in {year}.
                 It is a discovery playlist that aims to introduce you to new music that other similar users
                 enjoy. It may require more active listening and may contain tracks that are not to your taste.
             </p>
             <p>
-                The users similar to you who contributed to this playlist: %s.
+                The users similar to you who contributed to this playlist: {similar_users}.
             </p>
             <p>
                 For more information on how this playlist is generated, please see our
-                <a href="https://musicbrainz.org/doc/YIM{year}Playlists">Year in Music 2022 Playlists</a> page.
+                <a href="https://musicbrainz.org/doc/YIM{year}Playlists">Year in Music {year} Playlists</a> page.
             </p>
         """
     else:
