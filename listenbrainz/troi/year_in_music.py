@@ -26,8 +26,9 @@ def exclude_playlists_from_deleted_users(slug, year, jam_name, description, all_
         if playlist.get("similar_users"):
             usernames = []
             for other_user_id in playlist["similar_users"]:
-                other_username = user_details[other_user_id]["username"]
-                usernames.append(other_username)
+                if other_user_id in user_details:
+                    other_username = user_details[other_user_id]["username"]
+                    usernames.append(other_username)
             similar_users = ", ".join(usernames)
 
         playlist["name"] = jam_name.format(year=year, user=user["username"])
