@@ -89,6 +89,8 @@ def generate_top_missed_recordings(year):
               FROM playlists p
               JOIN similar_users_for_missed_recordings s
                 ON p.user_id = s.user_id
+          GROUP BY p.user_id
+                 , recordings    
     """
 
     data = run_query(query).toLocalIterator()
