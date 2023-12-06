@@ -92,9 +92,11 @@ def generate_top_missed_recordings(year):
             "slug": "top-missed-recordings",
             "year": year,
             "data": playlists,
-            "type": "yim_top_missed_recordings"
+            "type": "year_in_music_playlists"
         }
 
     yield {
-        "type": "yim_top_missed_recordings_end"
+        "slug": "top-missed-recordings",
+        "year": year,
+        "type": "year_in_music_playlists_end"
     }
