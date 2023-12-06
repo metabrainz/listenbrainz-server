@@ -335,22 +335,31 @@ export default class UserListeningActivity extends React.Component<
     const { dateFormat } = this.rangeMap.all_time;
     let totalListens = 0;
     let totalYears = 0;
-
     const allTimeData = [];
     const currYear = new Date().getFullYear();
     for (let i = 2002; i <= currYear; i += 1) {
       const yearData = data.payload.listening_activity.filter(
         (year) => year.time_range === String(i)
       )[0];
-
       totalYears += 1;
       if (yearData) {
         const date = new Date(yearData.from_ts * 1000);
-        allTimeData.push({
-          id: date.toLocaleString("en-us", dateFormat),
-          thisRangeCount: yearData.listen_count,
-          thisRangeTs: yearData.from_ts,
-        });
+        if (yearData.listen_count > 0) {
+          allTimeData.push({
+            id: date.toLocaleString("en-us", dateFormat),
+            thisRangeCount: yearData.listen_count,
+            thisRangeTs: yearData.from_ts,
+          });
+        } else if (
+          yearData.time_range === String(currYear - 1) &&
+          yearData.listen_count === 0
+        ) {
+          allTimeData.push({
+            id: date.toLocaleString("en-us", dateFormat),
+            thisRangeCount: yearData.listen_count,
+            thisRangeTs: yearData.from_ts,
+          });
+        }
         totalListens += yearData.listen_count;
       } else {
         const date = new Date(`${i}-01-01T00:00:00.000+00:00`);
