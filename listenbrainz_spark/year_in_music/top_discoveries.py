@@ -15,7 +15,7 @@ def generate_top_discoveries(year):
     query = f"""
         WITH intermediate AS (
             SELECT user_id
-                 , recording_mbid
+                 , t.recording_mbid
                  , score
                  , explode(ra.artist_mbids) AS artist_mbid
               FROM tracks_of_year t

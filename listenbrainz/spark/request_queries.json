@@ -203,7 +203,7 @@
     "params": ["year"]
   },
   "year_in_music.top_missed_recordings": {
-    "name": "year_in_music.top_genres",
+    "name": "year_in_music.top_missed_recordings",
     "description": "Calculate the top missed recordings playlists the given year",
     "params": ["year"]
   },
