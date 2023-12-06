@@ -17,9 +17,9 @@ TOP_MISSED_TRACKS_COUNT = 200
 
 
 def get_similar_users(year):
-    from_date = datetime(year, 1, 1)
-    to_date = datetime.combine(date(year, 12, 31), time.max)
-    calculate_dataframes(from_date, to_date, "similar_users", 50)
+    # from_date = datetime(year, 1, 1)
+    # to_date = datetime.combine(date(year, 12, 31), time.max)
+    # calculate_dataframes(from_date, to_date, "similar_users", 50)
     similar_users_df = get_similar_users_df(3)
 
     users = []
