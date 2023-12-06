@@ -53,9 +53,11 @@ def generate_top_discoveries(year):
             "slug": "top-discoveries",
             "year": year,
             "data": playlists,
-            "type": "yim_top_discoveries"
+            "type": "year_in_music_playlists"
         }
 
     yield {
-        "type": "yim_top_discoveries_end"
+        "slug": "top-discoveries",
+        "year": year,
+        "type": "year_in_music_playlists_end"
     }
