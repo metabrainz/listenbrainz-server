@@ -24,7 +24,7 @@ def get_similar_users(year):
     users = []
     for row in similar_users_df.toLocalIterator():
         for other_user in row.similar_users:
-            row.append(row.user_id, other_user.other_user_id)
+            users.append((row.user_id, other_user.other_user_id))
 
     df = listenbrainz_spark.session.createDataFrame(users, schema=StructType([
         StructField("user_id", IntegerType(), nullable=False),

@@ -7,7 +7,7 @@ import orjson
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
-from listenbrainz.troi.spark import get_users_for_weekly_playlists
+from listenbrainz.troi.weekly_playlists import get_users_for_weekly_playlists
 from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app

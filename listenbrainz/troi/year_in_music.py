@@ -19,6 +19,9 @@ def exclude_playlists_from_deleted_users(slug, year, jam_name, description, all_
             continue
 
         user = user_details[user_id]
+        if user["username"] not in ["rob", "lucifer", "mr_monkey", "aerozol"]:
+            continue
+
         playlist["name"] = jam_name.format(year=year, user=user["username"])
         playlist["description"] = description.format(user=user["username"])
         playlist["existing_url"] = user["existing_url"]
