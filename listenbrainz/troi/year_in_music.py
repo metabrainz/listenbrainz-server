@@ -4,11 +4,18 @@ USERS_PER_BATCH = 25
 NUMBER_OF_OLD_YIM_PLAYLISTS_TO_KEEP = 1
 
 
-def exclude_playlists_from_deleted_users(slug, year, jam_name, description, all_playlists):
-    """ Remove playlists for users who have deleted their accounts. Also, add more metadata to remaining playlists """
-    user_ids = [p["user_id"] for p in all_playlists]
-    user_details = get_user_details(slug, user_ids)
+def get_similar_usernames_part(user_details, similar_users):
+    """ Generate html formatted links to similar users part for top-missed-recordings playlist """
+    usernames = []
+    for other_user_id in similar_users:
+        if other_user_id in user_details:
+            other_username = user_details[other_user_id]["username"]
+            usernames.append(f'<a href="https://listenbrainz.org/user/{other_username}">{other_username}</a>')
+    return ", ".join(usernames)
 
+
+def exclude_playlists_from_deleted_users(slug, year, jam_name, description, user_details, all_playlists):
+    """ Remove playlists for users who have deleted their accounts. Also, add more metadata to remaining playlists """
     # after removing playlists for users who have been deleted but their
     # data has completely not been removed from spark cluster yet
     playlists = []
@@ -23,18 +30,13 @@ def exclude_playlists_from_deleted_users(slug, year, jam_name, description, all_
             continue
 
         similar_users = ""
-        if playlist.get("similar_users"):
-            usernames = []
-            for other_user_id in playlist["similar_users"]:
-                if other_user_id in user_details:
-                    other_username = user_details[other_user_id]["username"]
-                    usernames.append(other_username)
-            similar_users = ", ".join(usernames)
+        if slug == "top-missed-recordings":
+            similar_users = get_similar_usernames_part(user_details, playlist["similar_users"])
 
         playlist["name"] = jam_name.format(year=year, user=user["username"])
         playlist["description"] = description.format(year=year, user=user["username"], similar_users=similar_users)
         playlist["existing_url"] = user["existing_url"]
-        playlist["additional_metadata"] = {"algorithm_metadata": {"source_patch": slug}}
+        playlist["additional_metadata"] = {"algorithm_metadata": {"source_patch": f"{slug}-of-{year}"}}
 
         playlists.append(playlist)
         if user["export_to_spotify"]:
@@ -56,6 +58,7 @@ def process_yim_playlists(slug, year, playlists):
                 <a href="https://musicbrainz.org/doc/YIM{year}Playlists">Year in Music {year} Playlists</a> page.
             </p>
         """
+        user_ids = [p["user_id"] for p in playlists]
     elif slug == "top-missed-recordings":
         playlist_name = "Top Missed Recordings of {year} for {user}"
         playlist_description = """
@@ -72,15 +75,22 @@ def process_yim_playlists(slug, year, playlists):
                 <a href="https://musicbrainz.org/doc/YIM{year}Playlists">Year in Music {year} Playlists</a> page.
             </p>
         """
+        user_ids = set()
+        for playlist in playlists:
+            user_ids.add(playlist["user_id"])
+            user_ids.update(playlist["similar_users"])
+        user_ids = list(user_ids)
     else:
         return
-    playlist_slug = f"{slug}-of-{year}"
+
+    user_details = get_user_details(slug, user_ids)
 
     all_playlists, playlists_to_export = exclude_playlists_from_deleted_users(
-        playlist_slug,
+        slug,
         year,
         playlist_name,
         playlist_description,
+        user_details,
         playlists
     )
     batch_process_playlists(all_playlists, playlists_to_export)
