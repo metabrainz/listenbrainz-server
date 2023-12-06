@@ -8,6 +8,7 @@ from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME
 from listenbrainz_spark.recommendations.recording.create_dataframes import calculate_dataframes
 from listenbrainz_spark.similarity.user import get_similar_users_df
 from listenbrainz_spark.stats import run_query
+from listenbrainz_spark.utils import get_listens_from_dump
 from listenbrainz_spark.year_in_music.utils import create_tracks_of_the_year
 
 USERS_PER_MESSAGE = 1000
@@ -35,6 +36,7 @@ def get_similar_users(year):
 
 
 def generate_top_missed_recordings(year):
+    get_listens_from_dump().createOrReplaceTempView("all_listens")
     create_tracks_of_the_year(year)
     get_similar_users(year)
 
@@ -52,7 +54,7 @@ def generate_top_missed_recordings(year):
                  , i.score
                  , rank() OVER (PARTITION BY user_id ORDER BY i.score DESC) AS ranking
               FROM intermediate i
-             WHERE i.recording_mbid NOT IN (SELECT t.recording_mbid FROM tracks_of_year t WHERE t.user_id = i.user_id)
+             WHERE i.recording_mbid NOT IN (SELECT l.recording_mbid FROM all_listens l WHERE l.user_id = i.user_id)
         ), keep_top_tracks_only AS (
             SELECT user_id
                  , rl.recording_mbid
@@ -92,7 +94,7 @@ def generate_top_missed_recordings(year):
               JOIN similar_users_for_missed_recordings s
                 ON p.user_id = s.user_id
           GROUP BY p.user_id
-                 , recordings    
+                 , recordings
     """
 
     data = run_query(query).toLocalIterator()
