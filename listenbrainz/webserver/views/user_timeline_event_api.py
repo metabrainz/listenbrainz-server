@@ -275,7 +275,7 @@ def user_feed(user_name: str):
     # their own events as well
     users_for_feed_events = users_following + [user]
     follow_events = get_follow_events(
-        user_ids=tuple(user['id'] for user in users_for_feed_events),
+        users_for_events=users_for_feed_events,
         min_ts=min_ts or 0,
         max_ts=max_ts or int(time.time()),
         count=count,
@@ -302,7 +302,12 @@ def user_feed(user_name: str):
         count=count,
     )
 
-    notification_events = get_notification_events(user, count)
+    notification_events = get_notification_events(
+        user=user,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
 
     recording_pin_events = get_recording_pin_events(
         users_for_events=users_for_feed_events,
@@ -796,11 +801,11 @@ def get_all_listen_events(
     return events
 
 
-def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
+def get_follow_events(users_for_events: Iterable[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets all follow events in the feed.
     """
     follow_events_db = db_user_relationship.get_follow_events(
-        user_ids=user_ids,
+        user_ids=(user['id'] for user in users_for_events),
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
@@ -828,9 +833,15 @@ def get_follow_events(user_ids: Tuple[int], min_ts: int, max_ts: int, count: int
     return events
 
 
-def get_notification_events(user: dict, count: int) -> List[APITimelineEvent]:
+def get_notification_events(user: dict, min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets notification events for the user in the feed."""
-    notification_events_db = db_user_timeline_event.get_user_notification_events(user_id=user['id'], count=count)
+    notification_events_db = db_user_timeline_event.get_user_notification_events(
+        user_ids=[user["id"]],
+        min_ts=min_ts,
+        max_ts=max_ts,
+        count=count
+    )
+
     events = []
     for event in notification_events_db:
         events.append(APITimelineEvent(
@@ -859,7 +870,7 @@ def get_recording_recommendation_events(
         max_ts=max_ts,
         count=count,
     )
-    events_metadata_db = fetch_track_metadata_for_items([e.metadata for e in recording_recommendation_events_db])
+    _ = fetch_track_metadata_for_items([e.metadata for e in recording_recommendation_events_db])
 
     events = []
     for event in recording_recommendation_events_db:
@@ -988,7 +999,7 @@ def get_personal_recording_recommendation_events(
         max_ts=max_ts,
         count=count,
     )
-    events_metadata_db = fetch_track_metadata_for_items([e.metadata for e in personal_recording_recommendation_events_db])
+    _ = fetch_track_metadata_for_items([e.metadata for e in personal_recording_recommendation_events_db])
 
     events = []
     for event in personal_recording_recommendation_events_db:

@@ -15,7 +15,7 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data a
     delete_listens as ts_delete_listens, \
     refresh_top_manual_mappings as ts_refresh_top_manual_mappings
 from listenbrainz.domain import spotify_fill_user_id
-from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
+from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping, deduplicate, replace_duplicates
 from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
@@ -335,6 +335,22 @@ def listen_migrate():
     app = create_app()
     with app.app_context():
         timescale_listens_migrate.migrate_listens()
+
+
+@cli.command()
+def deduplicate_msb_listens():
+    """ Migrate the listens table to new schema. """
+    app = create_app()
+    with app.app_context():
+        deduplicate.deduplicate_listens()
+
+
+@cli.command()
+def fixup_recording_msid_tables():
+    """ Migrate the listens table to new schema. """
+    app = create_app()
+    with app.app_context():
+        replace_duplicates.main()
 
 
 @cli.command()

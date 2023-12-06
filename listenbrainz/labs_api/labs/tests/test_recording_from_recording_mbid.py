@@ -236,7 +236,7 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(q.inputs(), ['[recording_mbid]'])
         self.assertEqual(q.outputs(), [
             'recording_mbid', 'recording_name', 'length', 'artist_credit_id', 'artist_credit_name',
-            '[artist_credit_mbids]', 'canonical_recording_mbid', 'original_recording_mbid'])
+            '[artist_credit_mbids]', 'canonical_recording_mbid', 'original_recording_mbid', 'release_name', 'release_mbid'])
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):

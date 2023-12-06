@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Iterable
 
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
@@ -136,14 +136,13 @@ def get_following_for_user(user: int) -> List[dict]:
                 ON "user".id = user_1
              WHERE user_0 = :user
                AND relationship_type = 'follow'
-
         """), {
             "user": user,
         })
         return result.mappings().all()
 
 
-def get_follow_events(user_ids: Tuple[int], min_ts: float, max_ts: float, count: int) -> List[dict]:
+def get_follow_events(user_ids: Iterable[int], min_ts: float, max_ts: float, count: int) -> List[dict]:
     """ Gets a list of follow events for specified users.
 
     Args:
