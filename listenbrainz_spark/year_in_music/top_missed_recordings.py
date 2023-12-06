@@ -8,6 +8,7 @@ from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME
 from listenbrainz_spark.recommendations.recording.create_dataframes import calculate_dataframes
 from listenbrainz_spark.similarity.user import get_similar_users_df
 from listenbrainz_spark.stats import run_query
+from listenbrainz_spark.year_in_music.utils import create_tracks_of_the_year
 
 USERS_PER_MESSAGE = 1000
 MAX_ARTIST_OCCURRENCE = 2
@@ -34,6 +35,7 @@ def get_similar_users(year):
 
 
 def generate_top_missed_recordings(year):
+    create_tracks_of_the_year(year)
     get_similar_users(year)
 
     query = f"""
