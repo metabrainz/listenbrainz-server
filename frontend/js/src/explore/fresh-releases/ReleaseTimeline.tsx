@@ -5,10 +5,11 @@ import { formatReleaseDate, useMediaQuery } from "./utils";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
+  order: string;
 };
 
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
-  const { releases } = props;
+  const { releases, order } = props;
 
   const [currentValue, setCurrentValue] = React.useState<number | number[]>();
   const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
@@ -18,7 +19,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const changeHandler = React.useCallback((percent: number | number[]) => {
     setCurrentValue(percent);
     const element: HTMLElement | null = document.getElementById(
-      "release-cards-grid"
+      "release-card-grids"
     )!;
     const scrollHeight = ((percent as number) / 100) * element.scrollHeight;
     const scrollTo = scrollHeight + element.offsetTop;
@@ -27,18 +28,69 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   }, []);
 
   function createMarks(data: Array<FreshReleaseItem>) {
-    const releasesPerDate = countBy(
-      releases,
-      (item: FreshReleaseItem) => item.release_date
-    );
-    const datesArr = Object.keys(releasesPerDate).map((item) =>
-      formatReleaseDate(item)
-    );
-    const percentArr = Object.values(releasesPerDate)
-      .map((item) => (item / data.length) * 100)
-      .map((_, index, arr) =>
-        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+    let dataArr: Array<string> = [];
+    let percentArr: Array<number> = [];
+    // We want to filter out the keys that have less than 1.5% of the total releases
+    const minReleasesThreshold = Math.floor(data.length * 0.015);
+    if (order === "release_date") {
+      const releasesPerDate = countBy(
+        releases,
+        (item: FreshReleaseItem) => item.release_date
       );
+      const filteredDates = Object.keys(releasesPerDate).filter(
+        (date) => releasesPerDate[date] >= minReleasesThreshold
+      );
+
+      dataArr = filteredDates.map((item) => formatReleaseDate(item));
+      percentArr = filteredDates
+        .map((item) => (releasesPerDate[item] / data.length) * 100)
+        .map((_, index, arr) =>
+          arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+        );
+    } else if (order === "artist_credit_name") {
+      const artistInitialsCount = countBy(data, (item: FreshReleaseItem) =>
+        item.artist_credit_name.charAt(0).toUpperCase()
+      );
+      const filteredInitials = Object.keys(artistInitialsCount).filter(
+        (initial) => artistInitialsCount[initial] >= minReleasesThreshold
+      );
+
+      dataArr = filteredInitials.sort();
+
+      percentArr = filteredInitials
+        .map((item) => (artistInitialsCount[item] / data.length) * 100)
+        .map((_, index, arr) =>
+          arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+        );
+    } else if (order === "release_name") {
+      const releaseInitialsCount = countBy(data, (item: FreshReleaseItem) =>
+        item.release_name.charAt(0).toUpperCase()
+      );
+      const filteredInitials = Object.keys(releaseInitialsCount).filter(
+        (initial) => releaseInitialsCount[initial] >= minReleasesThreshold
+      );
+
+      dataArr = filteredInitials.sort();
+
+      percentArr = filteredInitials
+        .map((item) => (releaseInitialsCount[item] / data.length) * 100)
+        .map((_, index, arr) =>
+          arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+        );
+    } else {
+      const confidenceInitialsCount = countBy(
+        data,
+        (item: FreshReleaseItem) => item?.confidence
+      );
+
+      dataArr = Object.keys(confidenceInitialsCount).sort();
+
+      percentArr = Object.values(confidenceInitialsCount)
+        .map((item) => (item / data.length) * 100)
+        .map((_, index, arr) =>
+          arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+        );
+    }
 
     /**
      * We want the timeline dates or marks to start where the grid starts.
@@ -50,7 +102,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     percentArr.unshift(0);
     percentArr.pop();
 
-    return zipObject(percentArr, datesArr);
+    return zipObject(percentArr, dataArr);
   }
 
   const handleScroll = React.useCallback(
@@ -75,7 +127,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   }, []);
 
   return (
-    <div className="slider-container">
+    <div className="releases-timeline">
       <Slider
         className={screenMd ? "slider-horizontal" : "slider-vertical"}
         vertical={!screenMd}

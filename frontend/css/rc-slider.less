@@ -56,10 +56,6 @@
   height: 6px;
   background-color: @slider_base_color;
   border-radius: 6px;
-
-  &:hover ~ .rc-slider-handle {
-    border: solid 5px lighten(@orange, 10%);
-  }
 }
 .rc-slider-track {
   position: absolute;
@@ -72,7 +68,7 @@
   width: 3rem;
   height: 3rem;
   margin-top: -12px;
-  background-color: @orange;
+  background-color: @purple;
   border-radius: 50%;
   cursor: pointer;
   cursor: -webkit-grab;
@@ -87,12 +83,8 @@
     border-color: lighten(@purple, 10%);
     box-shadow: 0 0 3px @purple;
   }
-  &:hover {
-    border: solid 5px lighten(@orange, 10%);
-  }
   &:active {
     border-color: @purple;
-    box-shadow: 0 0 8px darken(@purple, 10%);
     cursor: -webkit-grabbing;
     cursor: grabbing;
   }
@@ -188,9 +180,6 @@
   .rc-slider-rail {
     width: 0.7rem;
     height: 100%;
-    &:hover ~ .rc-slider-handle {
-      border: solid 5px lighten(@orange, 10%);
-    }
   }
   .rc-slider-track {
     bottom: 0;
