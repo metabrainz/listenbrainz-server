@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from psycopg2.extras import execute_values
-from musicbrainz_entity import _resolve_mbids_helper, resolve_redirect_mbids
+from listenbrainz.db.musicbrainz_entity import _resolve_mbids_helper, resolve_redirect_mbids
 
 
 def resolve_canonical_mbids(curs, mbids):
