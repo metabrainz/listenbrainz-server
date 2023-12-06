@@ -1,60 +1,78 @@
-from flask import current_app
-from more_itertools import chunked
-from sqlalchemy import text
-from troi.core import generate_playlist
-from troi.patches.top_discoveries_for_year import TopDiscoveries
-from troi.patches.top_missed_recordings_for_year import TopMissedTracksPatch
-from troi.playlist import _serialize_to_jspf
-
-from listenbrainz import db
-from listenbrainz.db.year_in_music import insert_playlists, insert_playlists_cover_art
+from listenbrainz.troi.spark import remove_old_playlists, get_user_details, batch_process_playlists
 
 USERS_PER_BATCH = 25
+NUMBER_OF_OLD_YIM_PLAYLISTS_TO_KEEP = 1
 
 
-def get_all_users():
-    query = """SELECT musicbrainz_id, id FROM "user" """
-    with db.engine.connect() as conn:
-        return conn.execute(text(query)).mappings().all()
+def exclude_playlists_from_deleted_users(slug, year, jam_name, description, all_playlists):
+    """ Remove playlists for users who have deleted their accounts. Also, add more metadata to remaining playlists """
+    user_ids = [p["user_id"] for p in all_playlists]
+    user_details = get_user_details(slug, user_ids)
+
+    # after removing playlists for users who have been deleted but their
+    # data has completely not been removed from spark cluster yet
+    playlists = []
+    playlists_to_export = []
+    for playlist in all_playlists:
+        user_id = playlist["user_id"]
+        if user_id not in user_details:
+            continue
+
+        user = user_details[user_id]
+        playlist["name"] = jam_name.format(year=year, user=user["username"])
+        playlist["description"] = description.format(user=user["username"])
+        playlist["existing_url"] = user["existing_url"]
+        playlist["additional_metadata"] = {"algorithm_metadata": {"source_patch": slug}}
+
+        playlists.append(playlist)
+        if user["export_to_spotify"]:
+            playlists_to_export.append(playlist)
+
+    return playlists, playlists_to_export
 
 
-def get_all_patches():
-    return [TopMissedTracksPatch(), TopDiscoveries()]
-
-
-def yim_patch_runner(year):
-    """ Run troi bot to generate playlists for all users """
-    users = get_all_users()
-    patches = get_all_patches()
-    batches = chunked(users, USERS_PER_BATCH)
-    for batch in batches:
-        playlists = generate_playlists_for_batch(batch, patches)
-        insert_playlists(year, playlists)
-        insert_playlists_cover_art(year, playlists)
-
-
-def generate_playlists_for_batch(batch, patches):
+def process_yim_playlists(slug, year, playlists):
     """ Generate playlists for a batch of users """
-    yim_playlists = []
-    for user in batch:
-        args = {
-            "user_name": user["musicbrainz_id"],
-            "user_id": user["id"],
-            "token": current_app.config["WHITELISTED_AUTH_TOKENS"][0],
-            "created_for": user["musicbrainz_id"],
-            "mb_db_connect_str": current_app.config["SQLALCHEMY_DATABASE_URI"],
-            "lb_db_connect_str": current_app.config["SQLALCHEMY_TIMESCALE_URI"],
-            "upload": True
-        }
-        for patch in patches:
-            try:
-                playlist_element = generate_playlist(patch, args)
-                if playlist_element is not None:
-                    playlist = playlist_element.playlists[0]
-                    data = _serialize_to_jspf(playlist)
-                    data["playlist"]["identifier"] = "https://listenbrainz.org/playlist/" + playlist.mbid + "/"
-                    yim_playlists.append((user["id"], f"playlist-{patch.slug()}", data["playlist"]))
-            except Exception:
-                current_app.logger.error("Error while generate YIM playlist:", exc_info=True)
+    if slug == "top-discoveries":
+        playlist_name = "Top Discoveries of {year} for {user}"
+        playlist_description = """
+            <p>
+                This playlist contains the top tracks for %s that were first listened to in {year}.
+            </p>
+            <p>
+                For more information on how this playlist is generated, please see our
+                <a href="https://musicbrainz.org/doc/YIM{year}Playlists">Year in Music {year} Playlists</a> page.
+            </p>
+        """
+    elif slug == "top-missed-recordings":
+        playlist_name = "Top Missed Recordings of {year} for {user}"
+        playlist_description = """
+            <p>
+                This playlist features recordings that were listened to by users similar to %s in {year}.
+                It is a discovery playlist that aims to introduce you to new music that other similar users
+                enjoy. It may require more active listening and may contain tracks that are not to your taste.
+            </p>
+            <p>
+                The users similar to you who contributed to this playlist: %s.
+            </p>
+            <p>
+                For more information on how this playlist is generated, please see our
+                <a href="https://musicbrainz.org/doc/YIM{year}Playlists">Year in Music 2022 Playlists</a> page.
+            </p>
+        """
+    else:
+        return
+    playlist_slug = f"{slug}-of-{year}"
 
-    return yim_playlists
+    all_playlists, playlists_to_export = exclude_playlists_from_deleted_users(
+        playlist_slug,
+        year,
+        playlist_name,
+        playlist_description,
+        playlists
+    )
+    batch_process_playlists(all_playlists, playlists_to_export)
+
+
+def process_yim_playlists_end(slug, year):
+    remove_old_playlists(f"{slug}-of-{year}", NUMBER_OF_OLD_YIM_PLAYLISTS_TO_KEEP)

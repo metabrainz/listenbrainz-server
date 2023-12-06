@@ -7,7 +7,7 @@ import orjson
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
-from listenbrainz.troi.weekly_playlists import get_users_for_weekly_playlists
+from listenbrainz.troi.spark import get_users_for_weekly_playlists
 from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
@@ -479,13 +479,22 @@ def request_yim_similar_users(year: int):
     send_request_to_spark_cluster('year_in_music.similar_users', year=year)
 
 
-@cli.command(name="request_yim_playlists")
+@cli.command(name="request_yim_top_missed_recordings")
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
-def request_yim_playlists(year: int):
+def request_yim_top_missed_recordings(year: int):
     """ Send the cluster a request to generate tracks of the year data and then
      once the data has been imported generate YIM playlists. """
-    send_request_to_spark_cluster("year_in_music.tracks_of_the_year", year=year)
+    send_request_to_spark_cluster("year_in_music.top_missed_recordings", year=year)
+
+
+@cli.command(name="request_yim_top_discoveries")
+@click.option("--year", type=int, help="Year for which to generate the playlists",
+              default=date.today().year)
+def request_yim_top_discoveries(year: int):
+    """ Send the cluster a request to generate tracks of the year data and then
+     once the data has been imported generate YIM playlists. """
+    send_request_to_spark_cluster("year_in_music.top_discoveries", year=year)
 
 
 @cli.command(name="request_yim_artist_map")
@@ -515,7 +524,8 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_new_artists_discovered, year=year)
     ctx.invoke(request_yim_listening_time, year=year)
     ctx.invoke(request_yim_artist_map, year=year)
-    ctx.invoke(request_yim_playlists, year=year)
+    ctx.invoke(request_yim_top_missed_recordings, year=year)
+    ctx.invoke(request_yim_top_discoveries, year=year)
 
 
 @cli.command(name="request_troi_playlists")

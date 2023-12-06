@@ -34,7 +34,6 @@ from brainzutils.mail import send_mail
 import listenbrainz.db.dump as db_dump
 from listenbrainz.db import mapping_dump
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
-from listenbrainz.db.year_in_music import insert_playlists
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
