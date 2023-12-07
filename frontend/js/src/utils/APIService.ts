@@ -1546,8 +1546,15 @@ export default class APIService {
     return htmlParagraphs?.textContent || "No wiki data found.";
   };
 
-  getTopTracksForArtist = async (artistMBID: string): Promise<any> => {
+  getTopRecordingsForArtist = async (artistMBID: string): Promise<any> => {
     const url = `${this.TestAPIBaseURI}/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getTopReleasesForArtist = async (artistMBID: string): Promise<any> => {
+    const url = `${this.TestAPIBaseURI}/popularity/top-releases-for-artist?artist_mbid=${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
