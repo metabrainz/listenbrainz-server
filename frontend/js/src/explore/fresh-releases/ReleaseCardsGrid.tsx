@@ -54,7 +54,7 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     release_order: string
   ): string => {
     if (release_order === "release_date") {
-      return formatReleaseDate(releaseKey);
+      return releaseKey;
     }
     if (
       release_order === "artist_credit_name" ||
