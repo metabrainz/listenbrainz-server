@@ -6,13 +6,13 @@ from brainzutils import cache
 import listenbrainz.db.fresh_releases
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
-from listenbrainz.webserver.views.api_tools import _parse_int_arg
+from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg
 from listenbrainz.db.color import get_releases_for_color
 from troi.patches.lb_radio import LBRadioPatch
 from troi.core import generate_playlist
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
-MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 30
+MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
 DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
 DEFAULT_CACHE_EXPIRE_TIME = 3600 * 24  # 1 day
 HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
@@ -43,7 +43,11 @@ def get_fresh_releases():
 
     :param release_date: Fresh releases will be shown around this pivot date.
                          Must be in YYYY-MM-DD format
-    :param days: The number of days of fresh releases to show. Max 30 days.
+    :param days: The number of days of fresh releases to show. Max 90 days.
+    :param sort: The sort order of the results. Must be one of "release_date", "artist_credit_name" or "release_name".
+                 Default "release_date".
+    :param past: Whether to show releases in the past. Default True.
+    :param future: Whether to show releases in the future. Default True.
     :statuscode 200: fetch succeeded
     :statuscode 400: invalid date or number of days passed.
     :resheader Content-Type: *application/json*
@@ -51,24 +55,42 @@ def get_fresh_releases():
 
     days = _parse_int_arg("days", DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS)
     if days < 1 or days > MAX_NUMBER_OF_FRESH_RELEASE_DAYS:
-        raise APIBadRequest(f"days must be between 1 and {MAX_NUMBER_OF_FRESH_RELEASE_DAYS}.")
+        raise APIBadRequest(
+            f"days must be between 1 and {MAX_NUMBER_OF_FRESH_RELEASE_DAYS}.")
+
+    sort = request.args.get("sort", "release_date")
+    if sort not in ("release_date", "artist_credit_name", "release_name"):
+        raise APIBadRequest(
+            "sort must be one of 'release_date', 'artist_credit_name' or 'release_name'.")
+
+    past = _parse_bool_arg("past", True)
+    future = _parse_bool_arg("future", True)
 
     release_date = request.args.get("release_date", "")
     if release_date != "":
         try:
-            release_date = datetime.datetime.strptime(release_date, "%Y-%m-%d").date()
+            release_date = datetime.datetime.strptime(
+                release_date, "%Y-%m-%d").date()
         except ValueError as err:
-            raise APIBadRequest("Cannot parse date. Must be in YYYY-MM-DD format.")
+            raise APIBadRequest(
+                "Cannot parse date. Must be in YYYY-MM-DD format.")
     else:
         release_date = datetime.date.today()
 
     try:
-        db_releases = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(release_date, days)
+        db_releases, total_count = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(
+            release_date, days, sort, past, future)
     except Exception as e:
-        current_app.logger.error("Server failed to get latest release: {}".format(e))
+        current_app.logger.error(
+            "Server failed to get latest release: {}".format(e))
         raise APIInternalServerError("Server failed to get latest release")
 
-    return jsonify([r.to_dict() for r in db_releases])
+    return jsonify({
+        "payload": {
+            "releases": [r.to_dict() for r in db_releases],
+            "total_count": total_count,
+        }
+    })
 
 
 @explore_api_bp.route("/color/<color>", methods=["GET", "OPTIONS"])
@@ -152,15 +174,22 @@ def lb_radio():
 
     mode = request.args.get("mode", None)
     if mode is None or mode not in ("easy", "medium", "hard"):
-        raise APIBadRequest(f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
+        raise APIBadRequest(
+            f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
 
     patch = LBRadioPatch()
     try:
-        playlist = generate_playlist(patch, args={"mode": mode, "prompt": prompt, "echo": False})
+        playlist = generate_playlist(
+            patch,
+            args={
+                "mode": mode,
+                "prompt": prompt,
+                "echo": False})
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
 
-    jspf = playlist.get_jspf() if playlist is not None else {"playlist": { "tracks": [] } }
+    jspf = playlist.get_jspf() if playlist is not None else {
+        "playlist": {"tracks": []}}
     feedback = patch.user_feedback()
 
     return jsonify({"payload": {"jspf": jspf, "feedback": feedback}})

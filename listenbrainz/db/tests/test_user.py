@@ -164,9 +164,9 @@ class UserTestCase(DatabaseTestCase):
         user_id_22 = db_user.create(22, "twenty_two")
         user_id_23 = db_user.create(23, "twenty_three")
 
-        similar_users_21 = {str(user_id_22): [0.4, .01], str(user_id_23): [0.7, 0.001]}
-        similar_users_22 = {str(user_id_21): [0.4, .01]}
-        similar_users_23 = {str(user_id_21): [0.7, .02]}
+        similar_users_21 = {str(user_id_22): 0.4, str(user_id_23): 0.7}
+        similar_users_22 = {str(user_id_21): 0.4}
+        similar_users_23 = {str(user_id_21): 0.7}
 
         similar_users = {
             str(user_id_21): similar_users_21,
@@ -230,9 +230,9 @@ class UserTestCase(DatabaseTestCase):
                 {
                     "user_id": searcher_id,
                     "similar_users": json.dumps({
-                        str(user_id_c): [0.42, 0.20],
-                        str(user_id_l): [0.61, 0.25],
-                        str(user_id_r): [0.87, 0.43]
+                        str(user_id_c): 0.42,
+                        str(user_id_l): 0.61,
+                        str(user_id_r): 0.87
                     })
                 }
             )

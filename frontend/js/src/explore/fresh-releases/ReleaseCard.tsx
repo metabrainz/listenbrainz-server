@@ -1,12 +1,18 @@
 import * as React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { formatReleaseDate } from "./utils";
+import { faPlay, faHourglass } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { formatListenCount, formatReleaseDate } from "./utils";
 import {
   generateAlbumArtThumbnailLink,
   getAlbumArtFromReleaseGroupMBID,
   getAlbumArtFromReleaseMBID,
 } from "../../utils/utils";
+<<<<<<< HEAD
 import type { ReleaseGroupArtist } from "../../entity-pages/utils";
+=======
+import Pill from "../../components/Pill";
+>>>>>>> master
 
 type ReleaseCardProps = {
   releaseDate: string;
@@ -20,7 +26,17 @@ type ReleaseCardProps = {
   confidence?: number | null;
   caaID: number | null;
   caaReleaseMBID: string | null;
+<<<<<<< HEAD
   artistCredits?: ReleaseGroupArtist[];
+=======
+  showReleaseTitle?: boolean;
+  showArtist?: boolean;
+  showInformation?: boolean;
+  showTags?: boolean;
+  showListens?: boolean;
+  releaseTags: Array<string>;
+  listenCount: number;
+>>>>>>> master
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -36,15 +52,26 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     confidence,
     caaID,
     caaReleaseMBID,
+<<<<<<< HEAD
     artistCredits,
+=======
+    showReleaseTitle,
+    showArtist,
+    showInformation,
+    showTags,
+    showListens,
+    releaseTags,
+    listenCount,
+>>>>>>> master
   } = props;
 
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+
+  const futureRelease = new Date(releaseDate) > new Date();
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
 
-  const [coverartSrc, setCoverartSrc] = React.useState<string>(
-    COVERART_PLACEHOLDER
-  );
+  const [coverartSrc, setCoverartSrc] = React.useState<string>();
 
   function releaseTypeTooltip(): string | undefined | null {
     if (
@@ -70,6 +97,23 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
     return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
   }
+
+  const releaseCoverArtIcon = (
+    <FontAwesomeIcon icon={futureRelease ? faHourglass : faPlay} />
+  );
+  const coverArtPlaceholder = (
+    <div
+      className={`release-coverart-placeholder release-coverart ${
+        imageLoaded ? "hide-placeholder" : ""
+      }`}
+    >
+      {releaseCoverArtIcon}
+    </div>
+  );
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
 
   React.useEffect(() => {
     async function getCoverArt() {
@@ -99,6 +143,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     : `/player/release/${releaseMBID}`;
   return (
     <div className="release-card-container">
+<<<<<<< HEAD
       <div className="release-date">{formatReleaseDate(releaseDate)}</div>
       <a href={linkToEntity} target="_blank" rel="noopener noreferrer">
         <LazyLoadImage
@@ -142,6 +187,89 @@ export default function ReleaseCard(props: ReleaseCardProps) {
         <div className="release-artist" title={artistCreditName}>
           <a
             href={`/artist/${artistMBIDs[0]}`}
+=======
+      <div className="release-item">
+        {showListens && listenCount ? (
+          <div className="listen-count">
+            <Pill title="Listens" type="secondary" active>
+              <>
+                <FontAwesomeIcon icon={faPlay} />
+                <span className="listen-count-number">
+                  {formatListenCount(listenCount)}
+                </span>
+              </>
+            </Pill>
+          </div>
+        ) : null}
+        <div className="release-information">
+          {showTags && releaseTags && releaseTags.length ? (
+            <div className="cover-art-info">
+              {releaseTags.join(", ").length > 26 ? (
+                <div className="tags" title={releaseTags.join(", ")}>
+                  {releaseTags.join(", ").substring(0, 23)}...
+                </div>
+              ) : (
+                <div className="tags">{releaseTags.join(", ")}</div>
+              )}
+            </div>
+          ) : null}
+          {showInformation && (
+            <div className="cover-art-info">
+              <div className="release-type-chip" title={releaseTypeTooltip()!}>
+                {releaseTypeSecondary ||
+                  releaseTypePrimary ||
+                  RELEASE_TYPE_UNKNOWN}
+              </div>
+              <div className="release-date">
+                {formatReleaseDate(releaseDate)}
+              </div>
+            </div>
+          )}
+        </div>
+        <a
+          href={`/player/release/${releaseMBID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="release-coverart-container"
+        >
+          {coverartSrc ? (
+            <>
+              {coverArtPlaceholder}
+              <LazyLoadImage
+                className={`release-coverart ${
+                  imageLoaded ? "" : "hide-image"
+                }`}
+                src={coverartSrc}
+                alt={`${releaseName} by ${artistCreditName}`}
+                onLoad={handleImageLoad}
+              />
+              <div className="hover-backdrop">{releaseCoverArtIcon}</div>
+            </>
+          ) : (
+            <div className="release-coverart release-coverart-placeholder">
+              {releaseCoverArtIcon}
+            </div>
+          )}
+        </a>
+      </div>
+      {showReleaseTitle && (
+        <div className="name-type-container">
+          <div className="release-name" title={releaseName}>
+            <a
+              href={`/player/release/${releaseMBID}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {releaseName}
+            </a>
+          </div>
+        </div>
+      )}
+      {showArtist && (
+        <div className="release-artist" title={artistCreditName}>
+          <a
+            href={`https://musicbrainz.org/artist/${artistMBIDs[0]}`}
+>>>>>>> master
             target="_blank"
             rel="noopener noreferrer"
           >
