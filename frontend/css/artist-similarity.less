@@ -131,41 +131,28 @@
     }
   }
   .artist-similarity-graph-panel-container {
-    position: relative;
+    display: flex;
+    justify-content: space-between;
 
-    .artist-panel {
-      //font-size: 15px;
-      color: #000;
-      display: flex;
-      flex-flow: column;
-      position: absolute;
-      top: 1%;
-      right: 5%;
-      width: 250px;
-      height: 98%;
-      background-color: @white;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-      > div {
-        padding: 0.25em 0.75em;
-      }
-      .artist-panel-header {
-        height: 15%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        background-color: @blue;
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
+    .sidebar {
+      width: max(20%, 225px);
+      z-index: 2;
 
-        #artist-name {
-          color: @white;
-          font-weight: bolder;
+      .sidebar-header {
+        background: #353070;
+        color: white;
+        padding-top: 20px;
+
+        p:first-of-type {
+          font-size: 25px;
+          font-weight: 900;
         }
-        #artist-type {
-          color: @white;
+
+        p {
+          margin-bottom: 5px;
         }
       }
+
       .artist-panel-info {
         height: 25%;
         #artist-wiki {
@@ -194,7 +181,6 @@
 
       .artist-top-album-container,
       .artist-top-track-container {
-        height: 30%;
         > h5 {
           font-weight: bolder;
           color: inherit;
@@ -223,29 +209,16 @@
           }
         }
       }
-      .release-card-container {
-        text-align: center;
-      }
-      .release-coverart {
-        width: 70%;
-        height: auto;
-        aspect-ratio: 1 / 1;
-        border-radius: 14px;
-      }
-      .release-name {
-        padding-left: 15%;
-        text-align: left;
-        > a,
-        p {
-          font-weight: normal;
-          color: @blue;
-          text-decoration: inherit;
-          display: block;
-          width: 90%;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
-        }
+    }
+
+    .artist-similarity-graph-container {
+      height: 100vh;
+      width: 75%;
+    }
+
+    @media (max-width: @screen-md) {
+      .artist-similarity-graph-container {
+        width: 100%;
       }
     }
   }

@@ -1,8 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowUpRightFromSquare,
+  faGear,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
-import ReleaseCard from "./ReleaseCard";
+import ReleaseCard from "../../fresh-releases/ReleaseCard";
 import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
@@ -32,11 +36,18 @@ type RecordingType = {
   recording_name?: string;
   caa_id: number;
   caa_release_mbid: string;
+  artist_mbids: Array<string>;
+  artist_name: string;
 };
 
 function Panel({ artist, onTrackChange }: PanelProps) {
   const [artistInfo, setArtistInfo] = useState<ArtistInfoType | null>(null);
   const { APIService } = useContext(GlobalAppContext);
+
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const handleTrackChange = () => {
     if (artistInfo?.topTrack?.recording_name) {
@@ -71,7 +82,7 @@ function Panel({ artist, onTrackChange }: PanelProps) {
         artistMBID
       );
 
-      const topTracksForArtist = await APIService.getTopTracksForArtist(
+      const topRecordingsForArtist = await APIService.getTopRecordingsForArtist(
         artistMBID
       );
 
@@ -81,7 +92,7 @@ function Panel({ artist, onTrackChange }: PanelProps) {
         ...birthAreaData,
         wiki: wikipediaData,
         mbLink: `https://musicbrainz.org/artist/${artistMBID}`,
-        topTrack: topTracksForArtist?.[0] ?? null,
+        topTrack: topRecordingsForArtist?.[0] ?? null,
       };
     };
 
@@ -107,75 +118,106 @@ function Panel({ artist, onTrackChange }: PanelProps) {
 
   return (
     artistInfo && (
-      <div className="artist-panel">
-        <div className="artist-panel-header">
-          <h2 id="artist-name">{artistInfo.name}</h2>
-          <p id="artist-type">{artistInfo.type}</p>
-        </div>
-        <div className="artist-panel-info">
-          <div className="artist-birth-area">
-            <strong>Born: </strong>
-            {artistInfo.born}
-            <br />
-            <strong>Area: </strong>
-            {artistInfo.area}
+      <>
+        <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+          <div className="sidebar-header">
+            <p id="artist-name">{artistInfo.name}</p>
+            <p id="artist-type">{artistInfo.type}</p>
           </div>
-          <div id="artist-wiki">{artistInfo.wiki}</div>
-          <div className="artist-mb-link">
-            <a
-              id="artist-mb-link-button"
-              href={artistInfo.mbLink}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <strong>More </strong>
-              <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-            </a>
-          </div>
-        </div>
-        {artistInfo.topTrack && (
-          <div className="artist-top-album-container">
-            <h5>Top Album</h5>
-            {/**
-             * Needs to be replaced with top album when endpoint is available.
-             */}
-            {artistInfo.topTrack && (
-              <button
-                type="button"
-                id="artist-top-album"
-                onClick={handleTrackChange}
+          <div className="artist-panel-info">
+            <div className="artist-birth-area">
+              <strong>Born: </strong>
+              {artistInfo.born}
+              <br />
+              <strong>Area: </strong>
+              {artistInfo.area}
+            </div>
+            <div id="artist-wiki">{artistInfo.wiki}</div>
+            <div className="artist-mb-link">
+              <a
+                id="artist-mb-link-button"
+                href={artistInfo.mbLink}
+                target="_blank"
+                rel="noreferrer"
               >
+                <strong>More </strong>
+                <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+              </a>
+            </div>
+          </div>
+          {artistInfo.topTrack && (
+            <div className="artist-top-album-container">
+              <h5>Top Album</h5>
+              {/**
+               * Needs to be replaced with top album when endpoint is available.
+               */}
+              {artistInfo.topTrack && (
                 <ReleaseCard
                   releaseMBID={artistInfo.topTrack.release_mbid}
+                  // TODO: Replace with actual release date when endpoint is available.
+                  releaseDate="2023-11-23"
                   releaseName={artistInfo.topTrack.release_name}
+                  artistMBIDs={artistInfo.topTrack.artist_mbids}
+                  artistCreditName={artistInfo.topTrack.artist_name}
+                  releaseTypePrimary="Album"
+                  releaseTypeSecondary={undefined}
                   caaID={artistInfo.topTrack.caa_id}
                   caaReleaseMBID={artistInfo.topTrack.caa_release_mbid}
+                  showReleaseTitle
+                  showArtist={false}
+                  showInformation={false}
+                  showTags={false}
+                  showListens={false}
+                  releaseTags={[]}
+                  listenCount={0}
                 />
-              </button>
-            )}
-          </div>
-        )}
-        {artistInfo.topTrack && (
-          <div className="artist-top-track-container">
-            <h5>Top Track</h5>
-            {artistInfo.topTrack && (
-              <button
-                type="button"
-                id="artist-top-track"
-                onClick={handleTrackChange}
-              >
+              )}
+            </div>
+          )}
+          {artistInfo.topTrack && (
+            <div className="artist-top-track-container">
+              <h5>Top Track</h5>
+              {artistInfo.topTrack && (
                 <ReleaseCard
                   releaseMBID={artistInfo.topTrack.release_mbid}
+                  // TODO: Replace with actual release date when endpoint is available.
+                  releaseDate="2023-11-23"
                   releaseName={artistInfo.topTrack.recording_name ?? "Unknown"}
+                  artistMBIDs={artistInfo.topTrack.artist_mbids}
+                  artistCreditName={artistInfo.topTrack.artist_name}
+                  releaseTypePrimary="Recording"
+                  releaseTypeSecondary={undefined}
                   caaID={artistInfo.topTrack.caa_id}
                   caaReleaseMBID={artistInfo.topTrack.caa_release_mbid}
-                  recordingMBID={artistInfo.topTrack.recording_mbid}
+                  showReleaseTitle
+                  showArtist={false}
+                  showInformation={false}
+                  showTags={false}
+                  showListens={false}
+                  releaseTags={[]}
+                  listenCount={0}
                 />
-              </button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
+        </div>
+        <button
+          className={`toggle-sidebar-button ${isSidebarOpen ? "open" : ""}`}
+          onClick={toggleSidebar}
+          type="button"
+        >
+          <FontAwesomeIcon icon={isSidebarOpen ? faXmark : faGear} size="2x" />
+        </button>
+        {isSidebarOpen && (
+          <button
+            className="sidebar-overlay"
+            onClick={toggleSidebar}
+            type="button"
+          >
+            {}
+          </button>
         )}
-      </div>
+      </>
     )
   );
 }
