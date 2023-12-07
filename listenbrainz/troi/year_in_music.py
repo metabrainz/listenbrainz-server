@@ -30,13 +30,13 @@ def exclude_playlists_from_deleted_users(slug, year, jam_name, description, user
             continue
 
         similar_users = ""
-        if slug == "top-missed-recordings":
+        if slug.startswith("top-missed-recordings"):
             similar_users = get_similar_usernames_part(user_details, playlist["similar_users"])
 
         playlist["name"] = jam_name.format(year=year, user=user["username"])
         playlist["description"] = description.format(year=year, user=user["username"], similar_users=similar_users)
         playlist["existing_url"] = user["existing_url"]
-        playlist["additional_metadata"] = {"algorithm_metadata": {"source_patch": f"{slug}-of-{year}"}}
+        playlist["additional_metadata"] = {"algorithm_metadata": {"source_patch": slug}}
 
         playlists.append(playlist)
         if user["export_to_spotify"]:
@@ -83,10 +83,11 @@ def process_yim_playlists(slug, year, playlists):
     else:
         return
 
-    user_details = get_user_details(slug, user_ids)
+    slug_with_year = f"{slug}-of-{year}"
+    user_details = get_user_details(slug_with_year, user_ids)
 
     all_playlists, playlists_to_export = exclude_playlists_from_deleted_users(
-        slug,
+        slug_with_year,
         year,
         playlist_name,
         playlist_description,
