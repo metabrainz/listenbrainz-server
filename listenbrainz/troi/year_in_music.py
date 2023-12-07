@@ -26,8 +26,6 @@ def exclude_playlists_from_deleted_users(slug, year, jam_name, description, user
             continue
 
         user = user_details[user_id]
-        if user["username"] not in ["rob", "lucifer", "mr_monkey", "aerozol"]:
-            continue
 
         similar_users = ""
         if slug.startswith("top-missed-recordings"):
