@@ -9,7 +9,6 @@ from listenbrainz_spark.recommendations.recording.create_dataframes import calcu
 from listenbrainz_spark.similarity.user import get_similar_users_df
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_dump
-from listenbrainz_spark.year_in_music.utils import create_tracks_of_the_year
 
 USERS_PER_MESSAGE = 1000
 MAX_ARTIST_OCCURRENCE = 2
@@ -18,9 +17,9 @@ TOP_MISSED_TRACKS_COUNT = 200
 
 
 def get_similar_users(year):
-    # from_date = datetime(year, 1, 1)
-    # to_date = datetime.combine(date(year, 12, 31), time.max)
-    # calculate_dataframes(from_date, to_date, "similar_users", 50)
+    from_date = datetime(year, 1, 1)
+    to_date = datetime.combine(date(year, 12, 31), time.max)
+    calculate_dataframes(from_date, to_date, "similar_users", 50)
     similar_users_df = get_similar_users_df(3)
 
     users = []
