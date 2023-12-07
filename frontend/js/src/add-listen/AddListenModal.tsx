@@ -164,11 +164,13 @@ export default NiceModal.create(() => {
             </div>
             {listenOption === SubmitListenType.track && (
               <div>
-                <SearchTrackOrMBID
-                  onSelectRecording={(newSelectedTrackMetadata) => {
-                    setSelectedTrack(newSelectedTrackMetadata);
-                  }}
-                />
+                {!selectedTrack && (
+                  <SearchTrackOrMBID
+                    onSelectRecording={(newSelectedTrackMetadata) => {
+                      setSelectedTrack(newSelectedTrackMetadata);
+                    }}
+                  />
+                )}
                 <div className="track-info">
                   <div>
                     {listenFromSelectedTrack && (
