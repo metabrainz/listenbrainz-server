@@ -36,25 +36,30 @@ def get_similar_users(year):
 
 
 def generate_top_missed_recordings(year):
+    time_filter = datetime(year, 1, 1)
     get_listens_from_dump().createOrReplaceTempView("all_listens")
-    create_tracks_of_the_year(year)
     get_similar_users(year)
 
     query = f"""
         WITH intermediate AS (
             SELECT s.user_id
-                 , t.recording_mbid
-                 , t.score
+                 , l.recording_mbid
+                 , count(*) AS score
               FROM similar_users_for_missed_recordings s
-              JOIN tracks_of_year t
-                ON s.other_user_id = t.user_id
+              JOIN all_listens l
+                ON s.other_user_id = l.user_id
+             WHERE l.listened_at >= to_timestamp('{time_filter}')
+          GROUP BY s.user_id
+                 , l.recording_mbid
         ), remove_listened AS (
             SELECT i.user_id
                  , i.recording_mbid
                  , i.score
                  , rank() OVER (PARTITION BY user_id ORDER BY i.score DESC) AS ranking
               FROM intermediate i
-             WHERE i.recording_mbid NOT IN (SELECT l.recording_mbid FROM all_listens l WHERE l.user_id = i.user_id)
+         ANTI JOIN all_listens l
+                ON i.recording_mbid = l.recording_mbid
+               AND i.user_id = l.user_id
         ), keep_top_tracks_only AS (
             SELECT user_id
                  , rl.recording_mbid
