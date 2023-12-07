@@ -78,6 +78,14 @@ function ExplorePage() {
             url="/explore/similar-users"
           />
         </div>
+        <div>
+          <ExploreCard
+            name="Music Web"
+            desc="Visualisation"
+            img_name="music-web.jpg"
+            url="/explore/artist-similarity"
+          />
+        </div>
         {currentUser?.name && (
           <div>
             <ExploreCard
