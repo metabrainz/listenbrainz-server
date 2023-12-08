@@ -180,6 +180,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
       <ReleaseCard
         key={rg.release_group_mbid}
         releaseDate={rg.date ?? undefined}
+        dateFormatOptions={{ year: "numeric", month: "short" }}
         releaseGroupMBID={rg.release_group_mbid}
         releaseName={rg.release_group_name}
         releaseTypePrimary={rg.type}

@@ -32,6 +32,7 @@ type ReleaseCardProps = {
   showListens?: boolean;
   releaseTags?: Array<string>;
   listenCount?: number;
+  dateFormatOptions?: Intl.DateTimeFormatOptions;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -39,6 +40,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     releaseMBID,
     releaseGroupMBID,
     releaseDate,
+    dateFormatOptions,
     releaseName,
     artistMBIDs,
     artistCreditName,
@@ -173,8 +175,15 @@ export default function ReleaseCard(props: ReleaseCardProps) {
                   RELEASE_TYPE_UNKNOWN}
               </div>
               {hasReleaseDate && (
-                <div className="release-date">
-                  {formatReleaseDate(releaseDate)}
+                <div
+                  className="release-date"
+                  title={formatReleaseDate(releaseDate, {
+                    year: "numeric",
+                    month: "long",
+                    day: "2-digit",
+                  })}
+                >
+                  {formatReleaseDate(releaseDate, dateFormatOptions)}
                 </div>
               )}
             </div>
