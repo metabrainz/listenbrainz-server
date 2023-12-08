@@ -166,6 +166,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
         release_group = {
             "name": row["release_group_name"],
             "date": row['date'],
+            "type": row['type'],
             "rels": release_group_rels
         }
 
