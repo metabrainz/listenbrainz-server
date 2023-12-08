@@ -2,6 +2,7 @@ import * as React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { faPlay, faHourglass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { isArray, isString, isUndefined } from "lodash";
 import { formatListenCount, formatReleaseDate } from "./utils";
 import {
   generateAlbumArtThumbnailLink,
@@ -9,14 +10,16 @@ import {
   getAlbumArtFromReleaseMBID,
 } from "../../utils/utils";
 import Pill from "../../components/Pill";
+import type { ReleaseGroupArtist } from "../../entity-pages/utils";
 
 type ReleaseCardProps = {
-  releaseDate: string;
+  releaseDate?: string;
   artistMBIDs: Array<string>;
   releaseMBID?: string;
   releaseGroupMBID?: string;
   releaseName: string;
   artistCreditName: string;
+  artistCredits?: Array<ReleaseGroupArtist>;
   releaseTypePrimary?: string | null;
   releaseTypeSecondary?: string | null;
   confidence?: number | null;
@@ -27,8 +30,8 @@ type ReleaseCardProps = {
   showInformation?: boolean;
   showTags?: boolean;
   showListens?: boolean;
-  releaseTags: Array<string>;
-  listenCount: number;
+  releaseTags?: Array<string>;
+  listenCount?: number;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -39,6 +42,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     releaseName,
     artistMBIDs,
     artistCreditName,
+    artistCredits,
     releaseTypePrimary,
     releaseTypeSecondary,
     confidence,
@@ -55,7 +59,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
   const [imageLoaded, setImageLoaded] = React.useState(false);
 
-  const futureRelease = new Date(releaseDate) > new Date();
+  const hasReleaseDate =
+    !isUndefined(releaseDate) &&
+    isString(releaseDate) &&
+    Boolean(releaseDate.length);
+  const futureRelease = hasReleaseDate && new Date(releaseDate) > new Date();
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
 
@@ -126,6 +134,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       getCoverArt();
     }
   }, [releaseMBID, releaseGroupMBID, caaID, caaReleaseMBID, setCoverartSrc]);
+
   const linkToEntity = releaseGroupMBID
     ? `/album/${releaseGroupMBID}`
     : `/player/release/${releaseMBID}`;
@@ -163,14 +172,16 @@ export default function ReleaseCard(props: ReleaseCardProps) {
                   releaseTypePrimary ||
                   RELEASE_TYPE_UNKNOWN}
               </div>
-              <div className="release-date">
-                {formatReleaseDate(releaseDate)}
-              </div>
+              {hasReleaseDate && (
+                <div className="release-date">
+                  {formatReleaseDate(releaseDate)}
+                </div>
+              )}
             </div>
           )}
         </div>
         <a
-          href={`/player/release/${releaseMBID}`}
+          href={linkToEntity}
           target="_blank"
           rel="noopener noreferrer"
           className="release-coverart-container"
@@ -198,20 +209,32 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       {showReleaseTitle && (
         <div className="name-type-container">
           <div className="release-name" title={releaseName}>
-            <a
-              href={`/player/release/${releaseMBID}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href={linkToEntity} target="_blank" rel="noopener noreferrer">
               {releaseName}
             </a>
           </div>
         </div>
       )}
-      {showArtist && (
+      {showArtist && isArray(artistCredits) && (
+        <div className="release-artist" title={artistCreditName}>
+          {artistCredits.map((ac) => (
+            <>
+              <a
+                href={`/artist/${ac.artist_mbid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {ac.artist_credit_name}
+              </a>
+              {ac.join_phrase}
+            </>
+          ))}
+        </div>
+      )}
+      {showArtist && !isArray(artistCredits) && (
         <div className="release-artist" title={artistCreditName}>
           <a
-            href={`https://musicbrainz.org/artist/${artistMBIDs[0]}`}
+            href={`/artist/${artistMBIDs[0]}`}
             target="_blank"
             rel="noopener noreferrer"
           >
