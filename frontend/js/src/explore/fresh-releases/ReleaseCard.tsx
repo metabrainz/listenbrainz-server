@@ -8,11 +8,7 @@ import {
   getAlbumArtFromReleaseGroupMBID,
   getAlbumArtFromReleaseMBID,
 } from "../../utils/utils";
-<<<<<<< HEAD
-import type { ReleaseGroupArtist } from "../../entity-pages/utils";
-=======
 import Pill from "../../components/Pill";
->>>>>>> master
 
 type ReleaseCardProps = {
   releaseDate: string;
@@ -26,9 +22,6 @@ type ReleaseCardProps = {
   confidence?: number | null;
   caaID: number | null;
   caaReleaseMBID: string | null;
-<<<<<<< HEAD
-  artistCredits?: ReleaseGroupArtist[];
-=======
   showReleaseTitle?: boolean;
   showArtist?: boolean;
   showInformation?: boolean;
@@ -36,7 +29,6 @@ type ReleaseCardProps = {
   showListens?: boolean;
   releaseTags: Array<string>;
   listenCount: number;
->>>>>>> master
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -52,9 +44,6 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     confidence,
     caaID,
     caaReleaseMBID,
-<<<<<<< HEAD
-    artistCredits,
-=======
     showReleaseTitle,
     showArtist,
     showInformation,
@@ -62,7 +51,6 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     showListens,
     releaseTags,
     listenCount,
->>>>>>> master
   } = props;
 
   const [imageLoaded, setImageLoaded] = React.useState(false);
@@ -143,51 +131,6 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     : `/player/release/${releaseMBID}`;
   return (
     <div className="release-card-container">
-<<<<<<< HEAD
-      <div className="release-date">{formatReleaseDate(releaseDate)}</div>
-      <a href={linkToEntity} target="_blank" rel="noopener noreferrer">
-        <LazyLoadImage
-          className="release-coverart"
-          src={coverartSrc}
-          alt={`${releaseName} by ${artistCreditName}`}
-          placeholderSrc={COVERART_PLACEHOLDER}
-        />
-      </a>
-      <div className="name-type-container">
-        <div className="release-name" title={releaseName}>
-          <a href={linkToEntity} target="_blank" rel="noopener noreferrer">
-            {releaseName}
-          </a>
-        </div>
-        <div className="release-type-chip" title={releaseTypeTooltip()!}>
-          {releaseTypeSecondary || releaseTypePrimary || RELEASE_TYPE_UNKNOWN}
-        </div>
-      </div>
-      {artistCredits && artistCredits.length ? (
-        <div
-          className="release-artist"
-          title={artistCredits
-            .map((ac) => ac.artist_credit_name + ac.join_phrase)
-            .join("")}
-        >
-          {artistCredits.map((ac) => (
-            <>
-              <a
-                href={`/artist/${ac.artist_mbid}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {ac.artist_credit_name}
-              </a>
-              {ac.join_phrase}
-            </>
-          ))}
-        </div>
-      ) : (
-        <div className="release-artist" title={artistCreditName}>
-          <a
-            href={`/artist/${artistMBIDs[0]}`}
-=======
       <div className="release-item">
         {showListens && listenCount ? (
           <div className="listen-count">
@@ -269,7 +212,6 @@ export default function ReleaseCard(props: ReleaseCardProps) {
         <div className="release-artist" title={artistCreditName}>
           <a
             href={`https://musicbrainz.org/artist/${artistMBIDs[0]}`}
->>>>>>> master
             target="_blank"
             rel="noopener noreferrer"
           >
