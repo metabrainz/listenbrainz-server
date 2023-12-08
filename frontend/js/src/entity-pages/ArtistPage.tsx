@@ -190,6 +190,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         artistMBIDs={rg.release_group_artists.map((ar) => ar.artist_mbid)}
         caaID={rg.caa_id}
         caaReleaseMBID={rg.caa_release_mbid}
+        showInformation
+        showReleaseTitle
+        showListens
       />
     );
   };
