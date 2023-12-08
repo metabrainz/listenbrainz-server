@@ -3,12 +3,13 @@ from datetime import datetime, timedelta
 from more_itertools import chunked
 
 import listenbrainz_spark
-from listenbrainz_spark.path import RECORDING_FEEDBACK_DATAFRAME, RAW_RECOMMENDATIONS
+from listenbrainz_spark.path import RECORDING_FEEDBACK_DATAFRAME, RAW_RECOMMENDATIONS, RECORDING_ARTIST_DATAFRAME
 from listenbrainz_spark.stats import run_query
 
 DAYS_OF_RECENT_LISTENS_TO_EXCLUDE = 60
 USERS_PER_MESSAGE = 100
 MAX_TRACKS_PER_PLAYLIST = 50
+MAX_ARTIST_OCCURRENCE = 2
 
 
 def main(slug, users):
@@ -33,41 +34,50 @@ def main(slug, users):
         WITH recommendations AS (
             SELECT user_id
                  , jam_date
-                 , recording_mbid
-                 , rank() OVER (PARTITION BY user_id ORDER BY score DESC) AS ranking
+                 , rr.recording_mbid
+                 , score
+                 , explode(ra.artist_mbids) AS artist_mbid
               FROM {table}
-              JOIN parquet.`{RAW_RECOMMENDATIONS}`
+              JOIN parquet.`{RAW_RECOMMENDATIONS}` rr
              USING (user_id)
-         LEFT JOIN parquet.`{RECORDING_FEEDBACK_DATAFRAME}`
+         LEFT JOIN parquet.`{RECORDING_FEEDBACK_DATAFRAME}` rf
              USING (user_id, recording_mbid)
+              JOIN parquet.`{RECORDING_ARTIST_DATAFRAME}` ra
+                ON rr.recording_mbid = ra.recording_mbid
              WHERE {time_filter}
                AND (feedback IS NULL OR feedback != -1)
-        ), randomized AS (
+        ), artist_ranking AS (
             SELECT user_id
                  , jam_date
                  , recording_mbid
-                 , rank() over (PARTITION BY user_id ORDER BY RANDOM()) AS position
+                 , score
+                 , rank() OVER (PARTITION BY user_id, artist_mbid ORDER BY score DESC) AS per_artist_position
               FROM recommendations
-             WHERE ranking <= {MAX_TRACKS_PER_PLAYLIST}
-        )   SELECT user_id
+        ), artist_limiting AS (
+            -- need a group by to eliminate duplicate recording mbids in a playlist
+            --, can happen when there are multiple artists for a recording
+            SELECT user_id
                  , jam_date
-                 , array_sort(collect_list(struct(position, recording_mbid))) AS recordings
-              FROM randomized
+                 , recording_mbid
+                 , rank() over (PARTITION BY user_id ORDER BY RANDOM()) AS ranking
+              FROM artist_ranking
+             WHERE per_artist_position <= {MAX_ARTIST_OCCURRENCE}
+          GROUP BY user_id
+                 , jam_date
+                 , recording_mbid
+        )
+            SELECT user_id
+                 , jam_date
+                 , collect_list(recording_mbid) AS recordings
+              FROM artist_limiting
+             WHERE ranking <= {MAX_TRACKS_PER_PLAYLIST}
           GROUP BY user_id
                  , jam_date
     """
     data = run_query(query).toLocalIterator()
 
     for entry in chunked(data, USERS_PER_MESSAGE):
-        raw_playlists = [row.asDict(recursive=True) for row in entry]
-        playlists = []
-        for playlist in raw_playlists:
-            playlists.append({
-                "user_id": playlist["user_id"],
-                "jam_date": playlist["jam_date"],
-                "recordings": [r["recording_mbid"] for r in playlist["recordings"]]
-            })
-
+        playlists = [row.asDict(recursive=True) for row in entry]
         yield {
             "slug": slug,
             "data": playlists,

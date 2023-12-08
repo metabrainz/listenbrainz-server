@@ -48,13 +48,13 @@ def get_once(connection, query, count_query, params, results, counts):
     """ One pass over the lb radio tags dataset to retrieve matching recordings """
     rows = connection.execute(text(query), params)
     for row in rows:
-        source = row["source"]
-        results[source].extend(row["recordings"])
+        source = row.source
+        results[source].extend(row.recordings)
 
     rows = connection.execute(text(count_query), params)
     for row in rows:
-        source = row["source"]
-        counts[source] += row["total_count"]
+        source = row.source
+        counts[source] += row.total_count
 
 
 def get(query, count_query, more_query, more_count_query, params):

@@ -175,6 +175,30 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     notation: "compact",
   });
 
+  const getReleaseCard = (rg: ReleaseGroup) => {
+    return (
+      <ReleaseCard
+        key={rg.release_group_mbid}
+        releaseDate={rg.date ?? undefined}
+        dateFormatOptions={{ year: "numeric", month: "short" }}
+        releaseGroupMBID={rg.release_group_mbid}
+        releaseName={rg.release_group_name}
+        releaseTypePrimary={rg.type}
+        artistCredits={rg.release_group_artists}
+        artistCreditName={rg.release_group_artists
+          .map((ar) => ar.artist_credit_name + ar.join_phrase)
+          .join("")}
+        artistMBIDs={rg.release_group_artists.map((ar) => ar.artist_mbid)}
+        caaID={rg.caa_id}
+        caaReleaseMBID={rg.caa_release_mbid}
+        showInformation
+        showArtist
+        showReleaseTitle
+        showListens
+      />
+    );
+  };
+
   return (
     <div id="entity-page" className="artist-page">
       <Loader isLoading={loading} />
@@ -403,45 +427,14 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         <div className="albums full-width scroll-start">
           <h3 className="header-with-line">Albums</h3>
           <div className="cover-art-container dragscroll">
-            {albumsByThisArtist.map((rg) => (
-              <ReleaseCard
-                releaseDate={rg.date ?? ""}
-                artistCreditName={
-                  rg.release_group_artists[0].artist_credit_name
-                }
-                artistMBIDs={rg.release_group_artists.map(
-                  (credit) => credit.artist_mbid
-                )}
-                caaID={rg.caa_id}
-                caaReleaseMBID={rg.caa_release_mbid}
-                releaseName={rg.release_group_name}
-                releaseTypePrimary={rg.type}
-                releaseGroupMBID={rg.release_group_mbid}
-              />
-            ))}
+            {albumsByThisArtist.map(getReleaseCard)}
           </div>
         </div>
         {Boolean(alsoAppearsOn?.length) && (
           <div className="albums full-width scroll-start">
             <h3 className="header-with-line">Also appears on</h3>
             <div className="cover-art-container dragscroll">
-              {alsoAppearsOn.map((rg) => (
-                <ReleaseCard
-                  releaseDate={rg.date ?? ""}
-                  artistCredits={rg.release_group_artists}
-                  artistCreditName={rg.release_group_artists
-                    .map((rga) => rga.artist_credit_name + rga.join_phrase)
-                    .join("")}
-                  artistMBIDs={rg.release_group_artists.map(
-                    (credit) => credit.artist_mbid
-                  )}
-                  caaID={rg.caa_id}
-                  caaReleaseMBID={rg.caa_release_mbid}
-                  releaseName={rg.release_group_name}
-                  releaseTypePrimary={rg.type}
-                  releaseGroupMBID={rg.release_group_mbid}
-                />
-              ))}
+              {alsoAppearsOn.map(getReleaseCard)}
             </div>
           </div>
         )}
