@@ -91,7 +91,7 @@ def create_release_metadata_cache():
                             'join_phrase', ac_joinphrase,
                             'artist_mbid', artist_mbid
                         )
-                        ORDER BY acn.position
+                        ORDER BY position
                        ) AS artists
                   FROM intermediate
               GROUP BY release_mbid
