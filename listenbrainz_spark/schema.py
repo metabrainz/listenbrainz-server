@@ -25,6 +25,12 @@ listens_new_schema = StructType([
     StructField('artist_credit_mbids', ArrayType(StringType()), nullable=True),
 ])
 
+artists_column_schema = ArrayType(StructType([
+    StructField('artist_credit_name', StringType(), nullable=False),
+    StructField('join_phrase', StringType(), nullable=False),
+    StructField('artist_mbid', StringType(), nullable=False),
+]))
+
 fresh_releases_schema = StructType([
     StructField('release_date', StringType(), nullable=False),
     StructField('artist_credit_name', StringType(), nullable=False),
