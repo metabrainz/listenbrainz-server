@@ -29,7 +29,8 @@ def get_recordings(table: str, cache_tables: List[str], number_of_results: int):
                     'user2' : [{...}],
                 }
     """
-    cache_table = cache_tables[0]
+    rec_cache_table = cache_tables[0]
+    rel_cache_table = cache_tables[1]
     result = run_query(f"""
         WITH intermediate_table as (
             SELECT user_id
@@ -39,11 +40,14 @@ def get_recordings(table: str, cache_tables: List[str], number_of_results: int):
                  , l.artist_credit_mbids
                  , nullif(first(l.release_name), '') as any_release_name
                  , nullif(l.release_mbid, '') AS any_release_mbid
+                 , rec.artists
                  , rel.caa_id
                  , rel.caa_release_mbid
                  , count(*) as listen_count
               FROM {table} l
-         LEFT JOIN {cache_table} rel
+         LEFT JOIN {rec_cache_table} rec
+                ON rec.recording_mbid = l.recording_mbid
+         LEFT JOIN {rel_cache_table} rel
                 ON rel.release_mbid = l.release_mbid
           GROUP BY l.user_id
                  , lower(l.recording_name)
@@ -52,13 +56,14 @@ def get_recordings(table: str, cache_tables: List[str], number_of_results: int):
                  , l.artist_credit_mbids
                  , lower(l.release_name)
                  , l.release_mbid
+                 , rec.artists
                  , rel.caa_id
                  , rel.caa_release_mbid
         ), entity_count as (
             SELECT user_id
                  , count(*) as recordings_count
               FROM intermediate_table
-          GROUP BY user_id      
+          GROUP BY user_id
         ), ranked_stats as (
             SELECT user_id
                  , any_recording_name AS track_name
@@ -67,6 +72,7 @@ def get_recordings(table: str, cache_tables: List[str], number_of_results: int):
                  , any_release_mbid AS release_mbid
                  , any_artist_name AS artist_name
                  , artist_credit_mbids
+                 , artists
                  , caa_id
                  , caa_release_mbid
                  , listen_count
@@ -84,6 +90,7 @@ def get_recordings(table: str, cache_tables: List[str], number_of_results: int):
                               , coalesce(artist_credit_mbids, array()) AS artist_mbids
                               , release_name
                               , release_mbid
+                              , artists
                               , caa_id
                               , caa_release_mbid
                             )

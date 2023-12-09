@@ -18,6 +18,14 @@ def create_recording_artist_cache():
     query = """
         SELECT r.gid AS recording_mbid
              , array_agg(a.gid ORDER BY acn.position) AS artist_mbids
+             , jsonb_agg(
+                    jsonb_build_object(
+                        'artist_credit_name', acn.name,
+                        'join_phrase', acn.join_phrase,
+                        'artist_mbid', a.gid::TEXT
+                    )
+                    ORDER BY acn.position
+               ) AS artists
           FROM musicbrainz.recording r
           JOIN musicbrainz.artist_credit_name acn
             ON acn.artist_credit = r.artist_credit
@@ -26,4 +34,4 @@ def create_recording_artist_cache():
       GROUP BY r.gid
     """
 
-    save_pg_table_to_hdfs(query, RECORDING_ARTIST_DATAFRAME)
+    save_pg_table_to_hdfs(query, RECORDING_ARTIST_DATAFRAME, process_artists_column=True)

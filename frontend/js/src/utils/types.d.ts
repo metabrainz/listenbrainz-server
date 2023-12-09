@@ -262,6 +262,7 @@ declare type UserReleasesResponse = {
       listen_count: number;
       caa_id?: number;
       caa_release_mbid?: string;
+      artists?: Array<MBIDMappingArtist>;
     }>;
     count: number;
     last_updated: number;
@@ -286,6 +287,7 @@ declare type UserRecordingsResponse = {
       recording_msid?: string;
       caa_id?: number;
       caa_release_mbid?: string;
+      artists?: Array<MBIDMappingArtist>;
       listen_count: number;
     }>;
     count: number;
@@ -309,6 +311,7 @@ declare type UserReleaseGroupsResponse = {
       listen_count: number;
       caa_id?: number;
       caa_release_mbid?: string;
+      artists?: Array<MBIDMappingArtist>;
     }>;
     count: number;
     last_updated: number;
@@ -351,6 +354,7 @@ declare type UserEntityDatum = {
   count: number;
   caaID?: number;
   caaReleaseMBID?: string;
+  artists?: Array<MBIDMappingArtist>;
 };
 
 declare type UserEntityData = Array<UserEntityDatum>;
