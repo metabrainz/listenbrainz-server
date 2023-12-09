@@ -58,6 +58,8 @@ def create_release_metadata_cache():
                      , COALESCE(rac.caa_id, rgac.caa_id) AS caa_id
                      , COALESCE(rac.caa_release_mbid, rgac.caa_release_mbid) AS caa_release_mbid
                      , a.gid AS artist_mbid
+                     , acn.name AS ac_name
+                     , acn.join_phrase AS ac_joinphrase
                      , acn.position
                   FROM musicbrainz.release rel
                   JOIN musicbrainz.release_group rg
