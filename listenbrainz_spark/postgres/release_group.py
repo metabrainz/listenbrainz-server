@@ -44,8 +44,8 @@ def create_release_group_metadata_cache():
                  , array_agg(a.gid ORDER BY acn.position) AS artist_credit_mbids
                  , jsonb_agg(
                         jsonb_build_object(
-                            'artist_credit_name', ac_name,
-                            'join_phrase', ac_joinphrase,
+                            'artist_credit_name', acn.name,
+                            'join_phrase', acn.join_phrase,
                             'artist_mbid', a.gid::TEXT
                         )
                         ORDER BY acn.position
