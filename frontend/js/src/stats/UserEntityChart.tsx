@@ -275,6 +275,7 @@ export default class UserEntityChart extends React.Component<
             count: elem.listen_count,
             caaID: elem.caa_id,
             caaReleaseMBID: elem.caa_release_mbid,
+            artists: elem.artists
           };
         })
         .reverse();

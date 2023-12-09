@@ -85,6 +85,14 @@ def create_release_metadata_cache():
                      , caa_id
                      , caa_release_mbid
                      , array_agg(artist_mbid ORDER BY position) AS artist_credit_mbids
+                     , jsonb_agg(
+                        jsonb_build_object(
+                            'artist_credit_name', ac_name,
+                            'join_phrase', ac_joinphrase,
+                            'artist_mbid', artist_mbid
+                        )
+                        ORDER BY acn.position
+                       ) AS artists
                   FROM intermediate
               GROUP BY release_mbid
                      , release_group_mbid
@@ -95,4 +103,4 @@ def create_release_metadata_cache():
                      , caa_release_mbid
     """
 
-    save_pg_table_to_hdfs(query, RELEASE_METADATA_CACHE_DATAFRAME)
+    save_pg_table_to_hdfs(query, RELEASE_METADATA_CACHE_DATAFRAME, process_artists_column=True)

@@ -12,7 +12,7 @@ from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME, \
-    RELEASE_GROUP_METADATA_CACHE_DATAFRAME
+    RELEASE_GROUP_METADATA_CACHE_DATAFRAME, RECORDING_ARTIST_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.stats.user.artist import get_artists
@@ -40,7 +40,7 @@ entity_model_map = {
 entity_cache_map = {
     "artists": [ARTIST_COUNTRY_CODE_DATAFRAME],
     "releases": [RELEASE_METADATA_CACHE_DATAFRAME],
-    "recordings": [RELEASE_METADATA_CACHE_DATAFRAME],
+    "recordings": [RECORDING_ARTIST_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME],
     "release_groups": [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 }
 
