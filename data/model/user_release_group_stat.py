@@ -14,6 +14,7 @@ class ReleaseGroupRecord(BaseModel):
     artist_name: str
     caa_id: Optional[NonNegativeInt]
     caa_release_mbid: Optional[str]
+    artists: Optional[list[dict]]
 
     _validate_uuids: classmethod = validator("release_group_mbid", allow_reuse=True)(check_valid_uuid)
     _validate_artist_mbids: classmethod = validator("artist_mbids", each_item=True, allow_reuse=True)(check_valid_uuid)

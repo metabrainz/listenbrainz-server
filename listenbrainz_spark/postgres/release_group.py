@@ -42,6 +42,14 @@ def create_release_group_metadata_cache():
                  , rgca.caa_id AS caa_id
                  , rgca.caa_release_mbid AS caa_release_mbid
                  , array_agg(a.gid ORDER BY acn.position) AS artist_credit_mbids
+                 , jsonb_agg(
+                        jsonb_build_object(
+                            'artist_credit_name', ac_name,
+                            'join_phrase', ac_joinphrase,
+                            'artist_mbid', a.gid::TEXT
+                        )
+                        ORDER BY acn.position
+                    ) AS artists
                  , rgm.first_release_date_year
               FROM musicbrainz.release_group rg
               JOIN musicbrainz.release_group_meta rgm
