@@ -15,7 +15,27 @@ import psycopg2.extras
 
 artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
+release_bp = Blueprint("release", __name__)
 
+# Problems / TODO / Goals
+# - These view functions need to be cleaned up so that for each artist / release group page,
+#   we only make two DB accesses: the cached MB data and the populartity data. This far from the
+#   case right now, since we build the caches with what we thought we inittially needed. However,
+#   all the things that are tacked onto this module are all the things we forgot about, so now those
+#   need to get moved to a proper home in the cached data.
+# - Need to find the canonical release 
+# - Need to have popularity data
+# - MB data doesnt change very often. Popularity data, constantly
+
+# Test cases
+# with cover art: 48140466-cff6-3222-bd55-63c27e43190d
+# without : 061e2733-aa87-3ca6-bbec-3303ca1a2760
+
+@release_bp.route("/<release_group_mbid>", methods=["GET"])
+@web_listenstore_needed
+def release_redirect(release_group_mbid):
+    # TODO: Load release_group and redirect to it
+    pass
 
 @artist_bp.route("/<artist_mbid>", methods=["GET"])
 @web_listenstore_needed
@@ -151,7 +171,8 @@ def artist_entity(artist_mbid):
         "artist_data": item,
         "popular_recordings": popular_recordings,
         "similar_artists": artists,
-        "listening_stats": {},  #for that artist,  # DO NOT IMPLEMENT RIGHT NOW. WAIT FOR PROPER CACHING
+        "listening_stats": {},
+        # TODO: These stats need to be moved into its own cached data set.
         # total plays for artist
         # total # of listeners for artist
         # top listeners (10)
@@ -176,9 +197,8 @@ def album_entity(release_group_mbid):
     if len(metadata) == 0:
         raise NotFound(f"Release group {release_group_mbid} not found in the metadata cache")
 
-    # TODO:
-    #- release_group tracks with listen count
-
+    # This query is buggy, since if a release(-group) has no cover art, no data at all is returned
+    # The correct solution is to split the lookup of the date/type and the CAA info into two steps.
     query = """WITH release_group_data AS (
                    SELECT DISTINCT ON (rg.id)
                           rgpt.name AS type
@@ -273,8 +293,6 @@ def album_entity(release_group_mbid):
     props["caa_id"] = release_groups_caa_type["caa_id"]
     props["caa_release_mbid"] = release_groups_caa_type["caa_release_mbid"]
     props["recordings"] = recordings
-    #import json
-    #current_app.logger.warn(json.dumps(props, indent=4, sort_keys=True))
 
     return render_template("entities/album.html",
                            props=orjson.dumps(props).decode("utf-8"),
