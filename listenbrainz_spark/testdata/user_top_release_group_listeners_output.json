@@ -23,6 +23,40 @@
         ]
       },
       {
+        "total_listen_count": 5,
+        "listeners": [
+          {
+            "user_id": 1,
+            "listen_count": 5
+          }
+        ],
+        "release_group_mbid": "ded46e46-788d-3c1f-b21b-9f5e9c37b1bc",
+        "release_group_name": "Protection",
+        "artist_name": "Massive Attack",
+        "caa_id": 19647449808,
+        "caa_release_mbid": "50d1ca93-f6ef-4692-b18d-3e3cc29aba1e",
+        "artist_mbids": [
+          "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+        ]
+      },
+      {
+        "total_listen_count": 4,
+        "listeners": [
+          {
+            "user_id": 1,
+            "listen_count": 4
+          }
+        ],
+        "release_group_mbid": "f53bf269-4601-35a4-8aa7-ed54a1d58eed",
+        "release_group_name": "Mickey Mouse Operation",
+        "artist_name": "Little People",
+        "caa_id": 27037140096,
+        "caa_release_mbid": "85655611-5af0-436c-b00f-6609afa502ff",
+        "artist_mbids": [
+          "78c94cba-761f-4212-8508-a24bda2e57dc"
+        ]
+      },
+      {
         "total_listen_count": 4,
         "listeners": [
           {
@@ -40,20 +74,37 @@
         ]
       },
       {
-        "total_listen_count": 5,
+        "total_listen_count": 4,
         "listeners": [
           {
-            "user_id": 2,
-            "listen_count": 5
+            "user_id": 1,
+            "listen_count": 4
           }
         ],
-        "release_group_mbid": "3f8ff223-304e-4345-928c-59eec91908e5",
-        "release_group_name": "And so it Begins",
-        "artist_name": "Klergy",
-        "caa_id": 27620887370,
-        "caa_release_mbid": "834d8732-8e2d-42b6-9496-55b067d0748f",
+        "release_group_mbid": "b609c28e-5b7c-4b19-8d43-8d3c7323f7d0",
+        "release_group_name": "Projections",
+        "artist_name": "Romare",
+        "caa_id": 9018227739,
+        "caa_release_mbid": "95b93c79-f4b0-4f3e-b726-7d3dd51c1054",
         "artist_mbids": [
-          "5586fc31-7c41-4a2d-97a2-d358b58b250d"
+          "b014d579-b549-4b21-b90d-5264e0433988"
+        ]
+      },
+      {
+        "total_listen_count": 3,
+        "listeners": [
+          {
+            "user_id": 1,
+            "listen_count": 3
+          }
+        ],
+        "release_group_mbid": "df9e8d11-9d68-3e49-b348-8454cfbaa692",
+        "release_group_name": "Brazilian Girls",
+        "artist_name": "Brazilian Girls",
+        "caa_id": 11778363663,
+        "caa_release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+        "artist_mbids": [
+          "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
         ]
       },
       {
@@ -89,19 +140,54 @@
         ]
       },
       {
-        "total_listen_count": 6,
+        "total_listen_count": 5,
         "listeners": [
           {
             "user_id": 2,
-            "listen_count": 6
+            "listen_count": 5
+          }
+        ],
+        "release_group_mbid": "3f8ff223-304e-4345-928c-59eec91908e5",
+        "release_group_name": "And so it Begins",
+        "artist_name": "Klergy",
+        "caa_id": 27620887370,
+        "caa_release_mbid": "834d8732-8e2d-42b6-9496-55b067d0748f",
+        "artist_mbids": [
+          "5586fc31-7c41-4a2d-97a2-d358b58b250d"
+        ]
+      },
+      {
+        "total_listen_count": 3,
+        "listeners": [
+          {
+            "user_id": 2,
+            "listen_count": 3
+          }
+        ],
+        "release_group_mbid": "b453c9ce-cf94-429d-98a4-289d3bd79bd1",
+        "release_group_name": "Food & Liquor II: The Great American Rap Album, Part 1",
+        "artist_name": "Lupe Fiasco",
+        "caa_id": 4199784147,
+        "caa_release_mbid": "b0d805e3-2afe-4e3a-a8a5-3f4f8dfde2bb",
+        "artist_mbids": [
+          "cf15719f-51f9-4db8-a15d-5eed9664ce69"
+        ]
+      },
+      {
+        "total_listen_count": 3,
+        "listeners": [
+          {
+            "user_id": 2,
+            "listen_count": 3
           }
         ],
         "release_group_mbid": "6f8e8119-de1b-39f0-85ca-b5252cb9211d",
         "release_group_name": "I Am\u2026 Sasha Fierce",
         "artist_name": "Beyonc\u00e9",
-        "caa_id": 11244279619,
-        "caa_release_mbid": "cc011639-f606-46ee-887c-87ee12677d80",
+        "caa_id": 35907722669,
+        "caa_release_mbid": "c55502f4-8c53-4e80-92e7-38cbae32f6c2",
         "artist_mbids": [
+          "859d0860-d480-4efd-970c-c05d5f1776b8",
           "859d0860-d480-4efd-970c-c05d5f1776b8"
         ]
       },
@@ -116,112 +202,27 @@
         "release_group_mbid": "75f30bf9-2ccd-47c1-851d-e56963695504",
         "release_group_name": "The Human Condition",
         "artist_name": "Jon Bellion",
-        "caa_id": 27950849585,
-        "caa_release_mbid": "9521f8d0-1a81-4c8c-af17-117f2df0c10a",
+        "caa_id": 14254382904,
+        "caa_release_mbid": "0fea0f58-f0ea-4ff0-964a-78c1b1e74396",
         "artist_mbids": [
           "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
         ]
       },
       {
-        "total_listen_count": 4,
+        "total_listen_count": 2,
         "listeners": [
           {
             "user_id": 2,
-            "listen_count": 4
+            "listen_count": 2
           }
         ],
-        "release_group_mbid": "aa366795-92d7-4d67-91fa-6741f82a4858",
-        "release_group_name": "Future Nostalgia",
-        "artist_name": "Dua Lipa",
-        "caa_id": 25806517352,
-        "caa_release_mbid": "315bbc48-dea9-463c-bfa9-a6ccab78b990",
+        "release_group_mbid": "2ae2e504-7116-4b4f-b632-9748bb18ccd2",
+        "release_group_name": "SOUR",
+        "artist_name": "Olivia Rodrigo",
+        "caa_id": 32201040812,
+        "caa_release_mbid": "6dd75bce-0194-4737-810c-d389689b4759",
         "artist_mbids": [
-          "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
-        ]
-      },
-      {
-        "total_listen_count": 3,
-        "listeners": [
-          {
-            "user_id": 2,
-            "listen_count": 3
-          }
-        ],
-        "release_group_mbid": "b453c9ce-cf94-429d-98a4-289d3bd79bd1",
-        "release_group_name": "Food & Liquor II: The Great American Rap Album, Part 1",
-        "artist_name": "Lupe Fiasco",
-        "caa_id": 24568197148,
-        "caa_release_mbid": "00e661dc-4b95-4fe6-9605-455f9321d199",
-        "artist_mbids": [
-          "cf15719f-51f9-4db8-a15d-5eed9664ce69"
-        ]
-      },
-      {
-        "total_listen_count": 4,
-        "listeners": [
-          {
-            "user_id": 1,
-            "listen_count": 4
-          }
-        ],
-        "release_group_mbid": "b609c28e-5b7c-4b19-8d43-8d3c7323f7d0",
-        "release_group_name": "Projections",
-        "artist_name": "Romare",
-        "caa_id": 9018227739,
-        "caa_release_mbid": "95b93c79-f4b0-4f3e-b726-7d3dd51c1054",
-        "artist_mbids": [
-          "b014d579-b549-4b21-b90d-5264e0433988"
-        ]
-      },
-      {
-        "total_listen_count": 5,
-        "listeners": [
-          {
-            "user_id": 1,
-            "listen_count": 5
-          }
-        ],
-        "release_group_mbid": "ded46e46-788d-3c1f-b21b-9f5e9c37b1bc",
-        "release_group_name": "Protection",
-        "artist_name": "Massive Attack",
-        "caa_id": 19647449808,
-        "caa_release_mbid": "50d1ca93-f6ef-4692-b18d-3e3cc29aba1e",
-        "artist_mbids": [
-          "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
-        ]
-      },
-      {
-        "total_listen_count": 3,
-        "listeners": [
-          {
-            "user_id": 1,
-            "listen_count": 3
-          }
-        ],
-        "release_group_mbid": "df9e8d11-9d68-3e49-b348-8454cfbaa692",
-        "release_group_name": "Brazilian Girls",
-        "artist_name": "Brazilian Girls",
-        "caa_id": 11778363663,
-        "caa_release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
-        "artist_mbids": [
-          "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
-        ]
-      },
-      {
-        "total_listen_count": 4,
-        "listeners": [
-          {
-            "user_id": 1,
-            "listen_count": 4
-          }
-        ],
-        "release_group_mbid": "f53bf269-4601-35a4-8aa7-ed54a1d58eed",
-        "release_group_name": "Mickey Mouse Operation",
-        "artist_name": "Little People",
-        "caa_id": 27037140096,
-        "caa_release_mbid": "85655611-5af0-436c-b00f-6609afa502ff",
-        "artist_mbids": [
-          "78c94cba-761f-4212-8508-a24bda2e57dc"
+          "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
         ]
       }
     ],
