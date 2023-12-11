@@ -39,3 +39,4 @@ class StatsTestCase(SparkNewTestCase):
         delete_dir(RELEASE_METADATA_CACHE_DATAFRAME)
         delete_dir(ARTIST_COUNTRY_CODE_DATAFRAME)
         delete_dir(ARTIST_CREDIT_MBID_DATAFRAME)
+        delete_dir(RECORDING_ARTIST_DATAFRAME)
