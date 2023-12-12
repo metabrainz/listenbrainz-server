@@ -166,7 +166,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     .value()
     .reverse();
 
-  const artistName = artist?.name;
+  const artistName = artist?.name ?? "";
 
   const bigNumberFormatter = Intl.NumberFormat(undefined, {
     notation: "compact",
@@ -192,14 +192,14 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           <h1>{album?.name}</h1>
           <div className="details h3">
             <div>{artist?.name}</div>
-            <small className="help-block">{type} - Release date</small>
+            <small className="help-block">{type} - {album?.date}</small>
           </div>
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {!isEmpty(artist.artists?.[0]?.rels) &&
+            {!isEmpty(artist?.artists?.[0]?.rels) &&
               Object.entries(
-                artist.artists?.[0].rels
+                artist?.artists?.[0]?.rels ?? {}
               ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}
             <OpenInMusicBrainzButton
               entityType="release-group"
@@ -255,7 +255,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                     target="_blank"
                     rel="noopener noreferrer"
                     href={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                      filteredTags.join(",")
+                      filteredTags
+                        .map((filteredTag) => filteredTag.tag)
+                        .join(",")
                     )})::or&mode=easy`}
                   >
                     Tags (
@@ -323,8 +325,8 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                 track_name: recording.name,
                 recording_mbid: recording.recording_mbid,
                 additional_info: {
-                  artist_mbids: artist.artists.map((ar) => ar.artist_mbid),
-                  release_artist_names: artist.artists.map((ar) => ar.name),
+                  artist_mbids: artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
+                  release_artist_names: artist?.artists?.map((ar) => ar.name),
                   duration_ms: recording.length,
                   tracknumber: recording.position,
                   recording_mbid: recording.recording_mbid,
@@ -455,7 +457,7 @@ document.addEventListener("DOMContentLoaded", () => {
     caa_id,
     caa_release_mbid,
     type,
-    ...release_group_data
+    release_group_metadata
   } = reactProps;
 
   const AlbumPageWithAlertNotifications = withAlertNotifications(AlbumPage);
@@ -471,9 +473,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <AlbumPageWithAlertNotifications
-            release_group_metadata={
-              release_group_data as ReleaseGroupMetadataLookup
-            }
+            release_group_metadata={release_group_metadata as ReleaseGroupMetadataLookup}
             recordings={recordings}
             release_group_mbid={release_group_mbid}
             caa_id={caa_id}

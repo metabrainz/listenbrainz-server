@@ -169,6 +169,8 @@ declare type ReleaseGroupMetadataLookup = {
   };
   release_group: {
     name: string;
+    date: string;
+    type: string;
     rels: { [key: string]: string };
   };
   tag?: {
