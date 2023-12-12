@@ -734,7 +734,7 @@ def create_mb_metadata_cache(use_lb_conn: bool):
     psycopg2.extras.register_uuid()
 
     if use_lb_conn:
-        mb_uri = config.MB_DATABASE_STANDBY_URI or config.MBID_MAPPING_DATABASE_URI
+        mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
     else:
         mb_uri = config.MBID_MAPPING_DATABASE_URI
 
@@ -759,7 +759,7 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
     psycopg2.extras.register_uuid()
 
     if use_lb_conn:
-        mb_uri = config.MB_DATABASE_STANDBY_URI or config.MBID_MAPPING_DATABASE_URI
+        mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
     else:
         mb_uri = config.MBID_MAPPING_DATABASE_URI
 
