@@ -78,6 +78,16 @@ function ExplorePage() {
             url="/explore/similar-users"
           />
         </div>
+        {/* {currentUser?.name && (
+          <div>
+            <ExploreCard
+              name="Your Year in Music 2023"
+              desc="Review"
+              img_name="year-in-music-2023.jpg"
+              url={`/user/${currentUser.name}/year-in-music/2023`}
+            />
+          </div>
+        )} */}
         {currentUser?.name && (
           <div>
             <ExploreCard
