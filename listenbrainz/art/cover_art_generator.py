@@ -241,7 +241,7 @@ class CoverArtGenerator:
                         else:
                             url = None
                     else:
-                        url = self.resolve_cover_art(covers[mbid]["caa_id"], covers[mbid]["caa_release_mbid"],cover_art_size)
+                        url = self.resolve_cover_art(covers[mbid]["caa_id"], covers[mbid]["caa_release_mbid"], cover_art_size)
 
                     break
                 except IndexError:

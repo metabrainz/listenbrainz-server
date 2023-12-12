@@ -23,7 +23,7 @@ release_bp = Blueprint("release", __name__)
 #   case right now, since we build the caches with what we thought we inittially needed. However,
 #   all the things that are tacked onto this module are all the things we forgot about, so now those
 #   need to get moved to a proper home in the cached data.
-# - Need to find the canonical release 
+# - Need to find the canonical release
 # - Need to have popularity data
 # - MB data doesnt change very often. Popularity data, constantly
 
@@ -126,12 +126,12 @@ def artist_entity(artist_mbid):
                         , caa.ordering
                )
                    SELECT rg.gid::TEXT AS release_group_mbid
-                        , rg.name AS release_group_name 
+                        , rg.name AS release_group_name
                         , ac.name AS artist_credit_name
                         , rgca.caa_id AS caa_id
                         , rgca.caa_release_mbid::TEXT AS caa_release_mbid
-                        , (rgm.first_release_date_year::TEXT || '-' || 
-                            LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' || 
+                        , (rgm.first_release_date_year::TEXT || '-' ||
+                            LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
                             LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
                         , rgpt.name AS type
                         , json_agg(json_build_object('artist_mbid', a.gid::TEXT,

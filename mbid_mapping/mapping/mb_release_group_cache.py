@@ -352,7 +352,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                ON t.medium = m.id
                              JOIN musicbrainz.recording r
                                ON r.id = t.recording
-                              {values_join} 
+                              {values_join}
                          GROUP BY release_group_mbid
                                 , rel.gid
                    )
@@ -367,8 +367,8 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                  , rgca.caa_id
                                  , rgca.caa_release_mbid
                                  , rgpt.name AS type
-                                 , (rgm.first_release_date_year::TEXT || '-' || 
-                                    LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' || 
+                                 , (rgm.first_release_date_year::TEXT || '-' ||
+                                    LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
                                     LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
                                  , rec_data.recordings
                                  , rec_data.recordings_release_mbid
@@ -504,7 +504,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
             JOIN musicbrainz.artist_credit_name acn
            USING (artist_credit)
             JOIN artist_mbids am
-              ON acn.artist = am.id          
+              ON acn.artist = am.id
         """
 
         # 2. recording_rels, recording_tags, recording
@@ -769,7 +769,7 @@ def cleanup_mbid_mapping_table():
            AND NOT EXISTS(
                 SELECT 1
                   FROM mapping.mb_metadata_cache mbc
-                 WHERE mbc.recording_mbid = mm.recording_mbid 
+                 WHERE mbc.recording_mbid = mm.recording_mbid
                )
     """
     with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn, lb_conn.cursor() as lb_curs:

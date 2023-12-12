@@ -242,7 +242,7 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
         UNION
             SELECT a.gid
               FROM musicbrainz.artist a
-             WHERE a.last_updated > %(timestamp)s       
+             WHERE a.last_updated > %(timestamp)s
         """
 
         try:
