@@ -407,7 +407,7 @@
       justify-items: center;
       align-items: center;
       .card-container {
-        flex:1; 
+        flex:1;
         scroll-snap-type: x mandatory;
       }
       .buddy {
@@ -454,10 +454,18 @@
       font-family: 'Inter', 'Roboto', sans-serif;
       text-align: center;
     }
-    .color-selector {
-      width: 2em;
-      height: 2em;
-      border-radius: 50%;
+    .color-picker{
+      position: relative;
+      .pick-color-caption {
+        position: absolute;
+        left: -180px;
+        top: -15px;
+      }
+      .color-selector {
+        width: 2em;
+        height: 2em;
+        border-radius: 50%;
+      }
     }
     .content-card {
       color: @cream;

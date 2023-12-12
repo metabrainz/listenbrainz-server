@@ -390,7 +390,10 @@ export default class YearInMusic extends React.Component<
       !yearInMusicData.total_listen_count ||
       !yearInMusicData.day_of_week ||
       !yearInMusicData.new_releases_of_top_artists ||
-      !yearInMusicData.artist_map
+      !yearInMusicData.artist_map ||
+      !yearInMusicData.total_artists_count ||
+      !yearInMusicData.similar_users ||
+      isEmpty(yearInMusicData.most_listened_year)
     ) {
       missingSomeData = true;
     }
@@ -403,9 +406,7 @@ export default class YearInMusic extends React.Component<
     /* Most listened years */
     let mostListenedYearDataForGraph;
     let mostListenedYearTicks;
-    if (isEmpty(yearInMusicData.most_listened_year)) {
-      missingSomeData = true;
-    } else {
+    if (!isEmpty(yearInMusicData.most_listened_year)) {
       const mostListenedYears = Object.keys(yearInMusicData.most_listened_year);
       // Ensure there are no holes between years
       const filledYears = range(
@@ -434,9 +435,7 @@ export default class YearInMusic extends React.Component<
 
     /* Users artist map */
     let artistMapDataForGraph;
-    if (isEmpty(yearInMusicData.artist_map)) {
-      missingSomeData = true;
-    } else {
+    if (!isEmpty(yearInMusicData.artist_map)) {
       artistMapDataForGraph = yearInMusicData.artist_map.map((country) => ({
         id: country.country,
         value:
@@ -449,9 +448,7 @@ export default class YearInMusic extends React.Component<
 
     /* Similar users sorted by similarity score */
     let sortedSimilarUsers;
-    if (isEmpty(yearInMusicData.similar_users)) {
-      missingSomeData = true;
-    } else {
+    if (!isEmpty(yearInMusicData.similar_users)) {
       sortedSimilarUsers = toPairs(yearInMusicData.similar_users).sort(
         (a, b) => b[1] - a[1]
       );
@@ -459,9 +456,7 @@ export default class YearInMusic extends React.Component<
 
     /* Listening history calendar graph */
     let listensPerDayForGraph;
-    if (isEmpty(yearInMusicData.listens_per_day)) {
-      missingSomeData = true;
-    } else {
+    if (!isEmpty(yearInMusicData.listens_per_day)) {
       listensPerDayForGraph = yearInMusicData.listens_per_day
         .map((datum) =>
           datum.listen_count > 0
@@ -477,7 +472,6 @@ export default class YearInMusic extends React.Component<
     }
 
     /* Playlists */
-    let hasNoPlaylists = false;
     const topDiscoveriesPlaylist = this.getPlaylistByName(
       "playlist-top-discoveries-for-year",
       `Highlights songs that ${user.name} first listened to (more than once) in 2023`
@@ -489,15 +483,7 @@ export default class YearInMusic extends React.Component<
     if (!topDiscoveriesPlaylist || !topMissedRecordingsPlaylist) {
       missingSomeData = true;
     }
-    if (!topDiscoveriesPlaylist && !topMissedRecordingsPlaylist) {
-      hasNoPlaylists = true;
-    }
 
-    const noDataText = (
-      <div className="center-p no-data">
-        We were not able to calculate this data for {youOrUsername}
-      </div>
-    );
     const linkToUserProfile = `https://listenbrainz.org/user/${user.name}`;
     const linkToThisPage = `${linkToUserProfile}/year-in-music/2023`;
     return (
@@ -508,6 +494,11 @@ export default class YearInMusic extends React.Component<
       >
         <div id="main-header" className="flex-center">
           <div className="color-picker">
+            <img
+              className="pick-color-caption"
+              src="/static/img/year-in-music-23/pick-color.png"
+              alt="Pick a color"
+            />
             {YIM2023ColorStrings.map((color) => {
               return (
                 <div
@@ -825,6 +816,7 @@ export default class YearInMusic extends React.Component<
             )}
           </div>
         </div>
+
         <div className="section" id="stats">
           <div className="header">
             Statistics
@@ -1072,7 +1064,6 @@ export default class YearInMusic extends React.Component<
                   "missed-playlist",
                   listens
                 )}
-              {hasNoPlaylists && noDataText}
             </div>
           </div>
         )}
@@ -1174,7 +1165,7 @@ export default class YearInMusic extends React.Component<
                 </div>
               </div>
             )}
-            {sortedSimilarUsers && (
+            {sortedSimilarUsers && sortedSimilarUsers.length && (
               <div
                 className="card content-card"
                 id="similar-users"
@@ -1203,27 +1194,25 @@ export default class YearInMusic extends React.Component<
                   </h4>
                 </div>
                 <div className="scrollable-area similar-users-list">
-                  {sortedSimilarUsers.length
-                    ? sortedSimilarUsers.map((userFromList) => {
-                        const [name, similarityScore] = userFromList;
-                        const similarUser: SimilarUser = {
-                          name,
-                          similarityScore,
-                        };
-                        const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
-                          similarUser
-                        );
-                        return (
-                          <UserListModalEntry
-                            mode="similar-users"
-                            key={name}
-                            user={similarUser}
-                            loggedInUserFollowsUser={loggedInUserFollowsUser}
-                            updateFollowingList={this.updateFollowingList}
-                          />
-                        );
-                      })
-                    : noDataText}
+                  {sortedSimilarUsers.map((userFromList) => {
+                    const [name, similarityScore] = userFromList;
+                    const similarUser: SimilarUser = {
+                      name,
+                      similarityScore,
+                    };
+                    const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
+                      similarUser
+                    );
+                    return (
+                      <UserListModalEntry
+                        mode="similar-users"
+                        key={name}
+                        user={similarUser}
+                        loggedInUserFollowsUser={loggedInUserFollowsUser}
+                        updateFollowingList={this.updateFollowingList}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}
