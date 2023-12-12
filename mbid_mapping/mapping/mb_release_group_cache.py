@@ -62,7 +62,8 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                 ("artist_mbids ",              "UUID[] NOT NULL"),
                 ("artist_data ",               "JSONB NOT NULL"),
                 ("tag_data ",                  "JSONB NOT NULL"),
-                ("release_group_data",         "JSONB NOT NULL")]
+                ("release_group_data",         "JSONB NOT NULL"),
+                ("recording_data",             "JSONB NOT NULL")]
 
     def get_insert_queries_test_values(self):
         if config.USE_MINIMAL_DATASET:
@@ -165,16 +166,28 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
 
         release_group = {
             "name": row["release_group_name"],
-            "date": row['date'],
-            "type": row['type'],
+            "date": row["date"],
+            "type": row["type"],
+            "caa_id": row["caa_id"],
+            "caa_release_mbid": row["caa_release_mbid"],
             "rels": release_group_rels
         }
+
+        recordings = []
+        for position, name, recording_mbid, length in row["recordings"] or []:
+            recordings.append({
+                "recording_mbid": recording_mbid,
+                "name": name,
+                "position": position,
+                "length": length
+            })
 
         return (row["release_group_mbid"],
                 artist_mbids,
                 ujson.dumps(artist),
                 ujson.dumps({"artist": artist_tags, "release_group": release_group_tags}),
-                ujson.dumps(release_group))
+                ujson.dumps(release_group),
+                ujson.dumps({"release_mbid": str(row["recordings_release_mbid"]), "recordings": recordings}))
 
     def get_metadata_cache_query(self, with_values=False):
         values_cte = ""
@@ -314,26 +327,34 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                  , re.date_month
                                  , re.date_day
                                  , caa.ordering
-                   ), release_data AS (
-                            SELECT r.gid AS release_group_mbid
-                                 , r.name     
-                                 , rac.name AS album_artist_name
-                                 , rgca.caa_id
-                                 , rgca.caa_release_mbid
-                                 , rgpt.name AS type
-                                 , (rgm.first_release_date_year::TEXT || '-' || 
-                                    LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' || 
-                                    LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
-                              FROM musicbrainz.release_group r
-                              JOIN musicbrainz.release_group_meta rgm
-                                ON rgm.id = r.id
-                              JOIN musicbrainz.artist_credit rac
-                                ON rac.id = r.artist_credit  
-                              JOIN release_group_primary_type rgpt
-                                ON r.type = rgpt.id
-                         LEFT JOIN rg_cover_art rgca
-                                ON rgca.release_group = r.id  
+                   ), canonical_release_selection AS (
+                            SELECT DISTINCT ON (rg.gid)
+                                   rg.gid AS release_group_mbid
+                                 , rel.id AS release_id
+                              FROM musicbrainz.release_group rg
+                              JOIN musicbrainz.release rel
+                                ON rel.release_group = rg.id
+                              JOIN mapping.canonical_release crl
+                                ON rel.id = crl.release
                               {values_join}
+                          ORDER BY rg.gid
+                                 , crl.id
+                   ), recording_data AS (
+                           SELECT release_group_mbid
+                                , rel.gid AS recordings_release_mbid
+                                , array_agg(jsonb_build_array(t.position, r.name, r.gid::TEXT, r.length) ORDER BY t.position) AS recordings
+                             FROM canonical_release_selection crs
+                             JOIN musicbrainz.release rel
+                               ON rel.id = crs.release_id
+                             JOIN musicbrainz.medium m
+                               ON m.release = rel.id
+                             JOIN musicbrainz.track t
+                               ON t.medium = m.id
+                             JOIN musicbrainz.recording r
+                               ON r.id = t.recording
+                              {values_join} 
+                         GROUP BY release_group_mbid
+                                , rel.gid
                    )
                             SELECT release_group_links
                                  , r.name AS release_group_name
@@ -342,16 +363,22 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                  , artist_data
                                  , artist_tags
                                  , release_group_tags
-                                 , rd.name AS release_name
                                  , r.gid::TEXT AS release_group_mbid
-                                 , rd.album_artist_name
-                                 , rd.caa_id
-                                 , rd.caa_release_mbid
-                                 , rd.type
-                                 , rd.date
+                                 , rgca.caa_id
+                                 , rgca.caa_release_mbid
+                                 , rgpt.name AS type
+                                 , (rgm.first_release_date_year::TEXT || '-' || 
+                                    LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' || 
+                                    LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
+                                 , rec_data.recordings
+                                 , rec_data.recordings_release_mbid
                               FROM musicbrainz.release_group r
                               JOIN musicbrainz.artist_credit ac
                                 ON r.artist_credit = ac.id
+                         LEFT JOIN musicbrainz.release_group_primary_type rgpt
+                                ON r.type = rgpt.id
+                         LEFT JOIN musicbrainz.release_group_meta rgm
+                                ON rgm.id = r.id
                          LEFT JOIN artist_data ard
                                 ON ard.gid = r.gid
                          LEFT JOIN release_group_rels rrl
@@ -360,25 +387,28 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                 ON rt.release_group_mbid = r.gid
                          LEFT JOIN artist_tags ats
                                 ON ats.release_group_mbid = r.gid
-                         LEFT JOIN release_data rd
-                                ON rd.release_group_mbid = r.gid
+                         LEFT JOIN rg_cover_art rgca
+                                ON rgca.release_group = r.id
+                         LEFT JOIN recording_data rec_data
+                                ON rec_data.release_group_mbid = r.gid
                               {values_join}
                           GROUP BY r.gid
                                  , r.name
                                  , r.artist_credit
                                  , ac.name
-                                 , rd.name
-                                 , rd.type
-                                 , rd.date
+                                 , rgpt.name
+                                 , rgm.first_release_date_year
+                                 , rgm.first_release_date_month
+                                 , rgm.first_release_date_day
                                  , release_group_links
                                  , release_group_tags
-                                 , rd.release_group_mbid
                                  , artist_data
                                  , artist_tags
-                                 , rd.release_group_mbid
-                                 , rd.album_artist_name
-                                 , rd.caa_id
-                                 , rd.caa_release_mbid"""
+                                 , rgca.caa_id
+                                 , rgca.caa_release_mbid
+                                 , rec_data.recordings
+                                 , rec_data.recordings_release_mbid
+                   """
         return query
 
     def delete_rows(self, release_group_mbids: List[uuid.UUID]):

@@ -53,6 +53,9 @@ class ReleaseGroupMetadata(BaseModel):
     # JSON which contains metadata about the release_group
     release_group_data: Dict
 
+    # JSON which contains metadata about the recordings in the canonical release of this release group
+    recording_data: Dict
+
 
 class ArtistMetadata(BaseModel):
     """Metadata for an artist that is cached in LB to reduce the impact on MB."""

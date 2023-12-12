@@ -19,7 +19,7 @@ metadata_bp = Blueprint('metadata', __name__)
 
 
 def parse_incs():
-    allowed_incs = ("artist", "tag", "release")
+    allowed_incs = ("artist", "tag", "release", "recording")
 
     incs = request.args.get("inc")
     if not incs:
@@ -65,9 +65,13 @@ def fetch_release_group_metadata(release_group_mbids, incs):
         if "release" in incs:
             data["release"] = entry.release_group_data
 
+        if "recording" in incs:
+            data["recording"] = entry.recording_data
+
         result[str(entry.release_group_mbid)] = data
 
     return result
+
 
 @metadata_bp.route("/recording/", methods=["GET", "OPTIONS"])
 @crossdomain

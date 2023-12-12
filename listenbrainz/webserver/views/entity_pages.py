@@ -31,11 +31,13 @@ release_bp = Blueprint("release", __name__)
 # with cover art: 48140466-cff6-3222-bd55-63c27e43190d
 # without : 061e2733-aa87-3ca6-bbec-3303ca1a2760
 
+
 @release_bp.route("/<release_group_mbid>", methods=["GET"])
 @web_listenstore_needed
 def release_redirect(release_group_mbid):
     # TODO: Load release_group and redirect to it
     pass
+
 
 @artist_bp.route("/<artist_mbid>", methods=["GET"])
 @web_listenstore_needed
@@ -193,82 +195,22 @@ def album_entity(release_group_mbid):
         raise BadRequest("Provided release group ID is invalid: %s" % release_group_mbid)
 
     # Fetch the release group cached data
-    metadata = fetch_release_group_metadata([release_group_mbid], ["artist", "tag", "release"])
+    metadata = fetch_release_group_metadata(
+        [release_group_mbid],
+        ["artist", "tag", "release", "recording"]
+    )
     if len(metadata) == 0:
         raise NotFound(f"Release group {release_group_mbid} not found in the metadata cache")
-
-    # This query is buggy, since if a release(-group) has no cover art, no data at all is returned
-    # The correct solution is to split the lookup of the date/type and the CAA info into two steps.
-    query = """WITH release_group_data AS (
-                   SELECT DISTINCT ON (rg.id)
-                          rgpt.name AS type
-                        , (re.date_year::TEXT || '-' || 
-                           LPAD(re.date_month::TEXT, 2, '0') || '-' || 
-                           LPAD(re.date_day::TEXT, 2, '0')) AS date
-                        , caa.id AS caa_id
-                        , caa_rel.gid::TEXT AS caa_release_mbid
-                     FROM musicbrainz.release_group rg
-                     JOIN musicbrainz.release_group_primary_type rgpt
-                       ON rg.type = rgpt.id
-                     JOIN musicbrainz.release caa_rel
-                       ON rg.id = caa_rel.release_group
-                LEFT JOIN (
-                         SELECT release, date_year, date_month, date_day
-                           FROM musicbrainz.release_country
-                      UNION ALL
-                         SELECT release, date_year, date_month, date_day
-                           FROM musicbrainz.release_unknown_country
-                        ) re
-                       ON (re.release = caa_rel.id)
-                FULL JOIN cover_art_archive.release_group_cover_art rgca
-                       ON rgca.release = caa_rel.id
-                LEFT JOIN cover_art_archive.cover_art caa
-                       ON caa.release = caa_rel.id
-                LEFT JOIN cover_art_archive.cover_art_type cat
-                       ON cat.id = caa.id
-                    WHERE type_id = 1
-                      AND mime_type != 'application/pdf'
-                      AND rg.gid = %s
-                 ORDER BY rg.id
-                        , rgca.release
-                        , re.date_year
-                        , re.date_month
-                        , re.date_day
-                        , caa.ordering
-                ), recording_data AS (
-                   SELECT rel.gid AS release_mbid
-                        , array_agg(jsonb_build_array(t.position, r.name, r.gid::TEXT, r.length)) AS recordings
-                     FROM release rel
-                     JOIN medium m
-                       ON m.release = rel.id
-                     JOIN track t
-                       ON t.medium = m.id
-                     JOIN recording r
-                       ON r.id = t.recording
-                     JOIN release_group_data rgd
-                       ON rgd.caa_release_mbid::uuid = rel.gid
-                 GROUP BY rel.gid
-                )
-                   SELECT type
-                        , date
-                        , caa_id
-                        , caa_release_mbid::TEXT
-                        , recordings
-                    FROM release_group_data rgd
-                    JOIN recording_data rg
-                      ON rgd.caa_release_mbid::uuid = rg.release_mbid"""
+    release_group = metadata[release_group_mbid]
 
     pop_query = """SELECT recording_mbid::TEXT
                         , total_listen_count
                         , total_user_count
                      FROM popularity.recording
                     WHERE recording_mbid in %s"""
-    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn:
-        with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-            mb_curs.execute(query, (release_group_mbid, ))
-            release_groups_caa_type = dict(mb_curs.fetchone())
 
-    recording_mbids = [rec[2] for rec in release_groups_caa_type["recordings"]]
+    recording_data = release_group.pop("recording").get("recordings", [])
+    recording_mbids = [rec["recording_mbid"] for rec in recording_data]
     with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as lb_conn:
         with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
             lb_curs.execute(pop_query, (tuple(recording_mbids), ))
@@ -277,8 +219,8 @@ def album_entity(release_group_mbid):
     pop_index = {row["recording_mbid"]: (row["total_listen_count"], row["total_user_count"]) for row in popularity}
 
     recordings = []
-    for rec in release_groups_caa_type["recordings"]:
-        recording = {"position": rec[0], "name": rec[1], "recording_mbid": rec[2], "length": rec[3]}
+    for rec in recording_data:
+        recording = dict(rec)
         try:
             recording["total_listen_count"] = pop_index[rec[2]][0]
             recording["total_user_count"] = pop_index[rec[2]][1]
@@ -287,13 +229,15 @@ def album_entity(release_group_mbid):
             recording["total_user_count"] = None
         recordings.append(recording)
 
-    props = metadata[release_group_mbid]
-    props["release_group_mbid"] = release_group_mbid
-    props["type"] = release_groups_caa_type["type"]
-    props["caa_id"] = release_groups_caa_type["caa_id"]
-    props["caa_release_mbid"] = release_groups_caa_type["caa_release_mbid"]
-    props["recordings"] = recordings
+    props = {
+        "release_group_mbid": release_group_mbid,
+        "release_group_metadata": release_group,
+        "recordings": recordings,
+        "caa_id": release_group["release_group"]["caa_id"],
+        "caa_release_mbid": release_group["release_group"]["caa_release_mbid"],
+        "type": release_group["release_group"].get("type")
+    }
 
     return render_template("entities/album.html",
                            props=orjson.dumps(props).decode("utf-8"),
-                           title=metadata[release_group_mbid]["release_group"]["name"])
+                           title=release_group["release_group"]["name"])
