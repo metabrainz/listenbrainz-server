@@ -233,6 +233,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                     ON l.link_type = lt.id
                                   {values_join}
                                  WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
+                                   AND NOT l.ended
                               GROUP BY a.gid
                    ), recording_rels AS (
                                 SELECT r.gid
@@ -252,6 +253,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                     ON la.attribute_type = lat.id
                                   {values_join}
                                  WHERE lt.gid IN ({RECORDING_LINK_GIDS_SQL})
+                                   AND NOT l.ended
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
