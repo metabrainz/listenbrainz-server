@@ -58,6 +58,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
         # remember to keep both in sync.
         # TODO: DO this.
         return [("dirty ",                     "BOOLEAN DEFAULT FALSE"),
+                ("last_updated",               "TIMESTAMPTZ NOT NULL DEFAULT NOW()"),
                 ("release_group_mbid ",        "UUID NOT NULL"),
                 ("artist_mbids ",              "UUID[] NOT NULL"),
                 ("artist_data ",               "JSONB NOT NULL"),
@@ -92,7 +93,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                 ("mb_release_group_cache_idx_dirty",              "dirty",                   False)]
 
     def process_row(self, row):
-        return [("false", *self.create_json_data(row))]
+        return [("false", datetime.now(), *self.create_json_data(row))]
 
     def process_row_complete(self):
         return []
@@ -215,6 +216,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                     ON l.link_type = lt.id
                                   {values_join}
                                  WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
+                                   AND NOT l.ended
                               GROUP BY a.gid
                    ), release_group_rels AS (
                                 SELECT r.gid
@@ -234,6 +236,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                                     ON la.attribute_type = lat.id
                                   {values_join}
                                  WHERE lt.gid IN ({RELEASE_GROUP_LINK_GIDS_SQL})
+                                   AND NOT l.ended
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
