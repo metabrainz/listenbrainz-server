@@ -94,6 +94,7 @@ ALTER TABLE mbid_mapping_metadata
 -- there. this definition is only for tests and local development. remember to keep both in sync.
 CREATE TABLE mapping.mb_metadata_cache (
     dirty               BOOLEAN DEFAULT FALSE,
+    last_updated        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     recording_mbid      UUID NOT NULL,
     artist_mbids        UUID[] NOT NULL,
     release_mbid        UUID,

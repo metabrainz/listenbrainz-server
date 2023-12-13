@@ -64,6 +64,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
         # remember to keep both in sync.
         return [("dirty ",                     "BOOLEAN DEFAULT FALSE"),
+                ("last_updated",               "TIMESTAMPTZ NOT NULL DEFAULT NOW()"),
                 ("recording_mbid ",            "UUID NOT NULL"),
                 ("artist_mbids ",              "UUID[] NOT NULL"),
                 ("release_mbid ",              "UUID"),
@@ -99,7 +100,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 ("mb_metadata_cache_idx_dirty",          "dirty",                   False)]
 
     def process_row(self, row):
-        return [("false", *self.create_json_data(row))]
+        return [("false", datetime.now(), *self.create_json_data(row))]
 
     def process_row_complete(self):
         return []
