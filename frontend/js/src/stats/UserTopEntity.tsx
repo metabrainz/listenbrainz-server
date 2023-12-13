@@ -182,6 +182,7 @@ export default class UserTopEntity extends React.Component<
                     count: release.listen_count,
                     caaID: release.caa_id,
                     caaReleaseMBID: release.caa_release_mbid,
+                    artists: release.artists,
                   };
                   const listenDetails = getChartEntityDetails(
                     interchangeFormat
@@ -220,6 +221,7 @@ export default class UserTopEntity extends React.Component<
                     caa_release_mbid,
                     artist_mbids,
                     listen_count,
+                    artists,
                   } = recording;
                   const listenFromRecording: Listen = {
                     listened_at: 0,
@@ -235,6 +237,7 @@ export default class UserTopEntity extends React.Component<
                         recording_mbid: recording_mbid ?? "",
                         release_mbid: release_mbid ?? "",
                         artist_mbids: artist_mbids ?? [],
+                        artists
                       },
                     },
                   };
@@ -270,6 +273,7 @@ export default class UserTopEntity extends React.Component<
                     count: releaseGroup.listen_count,
                     caaID: releaseGroup.caa_id,
                     caaReleaseMBID: releaseGroup.caa_release_mbid,
+                    artists: releaseGroup.artists,
                   };
                   const listenDetails = getChartEntityDetails(
                     interchangeFormat

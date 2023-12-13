@@ -1,9 +1,8 @@
+from itertools import cycle
 from random import sample
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.year_in_music as db_yim
-
-from uuid import UUID
 
 from brainzutils.ratelimit import ratelimit
 from flask import request, render_template, Blueprint, current_app
@@ -11,6 +10,7 @@ from flask import request, render_template, Blueprint, current_app
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
+from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 art_api_bp = Blueprint('art_api_v1', __name__)
 
@@ -73,8 +73,14 @@ def cover_art_grid_post():
     else:
         layout = None
 
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"], r["background"],
-                            r["skip-missing"], r["show-caa"])
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"],
+        r.get("dimension"),
+        r.get("image_size"),
+        r.get("background"),
+        r.get("skip-missing"),
+        r.get("show-caa")
+    )
 
     err = cac.validate_parameters()
     if err is not None:
@@ -84,9 +90,7 @@ def cover_art_grid_post():
         raise APIBadRequest("release_mbids must be a list of strings specifying release_mbids")
 
     for mbid in r["release_mbids"]:
-        try:
-            UUID(mbid)
-        except ValueError:
+        if not is_valid_uuid(mbid):
             raise APIBadRequest(f"Invalid release_mbid {mbid} specified.")
 
     images = cac.load_images(r["release_mbids"], tile_addrs=tiles, layout=layout)
@@ -206,6 +210,10 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
             images, releases, metadata = cac.create_release_stats_cover(user_name, time_range)
             if images is None:
                 raise APIInternalServerError("Failed to release cover art SVG")
+            if custom_name == "lps-on-the-floor":
+                repeater = cycle(images)
+                while len(images) < 5:
+                    images.append(next(repeater))
         except ValueError as error:
             raise APIBadRequest(str(error))
 
@@ -270,10 +278,14 @@ def _cover_art_yim_albums(user_name, stats):
                 selected_urls.add(url)
                 image_urls.append(url)
 
+    if len(image_urls) == 0:
+        return None
+
     if len(image_urls) < 9:
-        # fill up the remaining slots with random repeated images
-        more_image_urls = sample(image_urls, 9 - len(image_urls))
-        image_urls.extend(more_image_urls)
+        repeater = cycle(image_urls)
+        # fill up the remaining slots with repeated images
+        while len(image_urls) < 9:
+            image_urls.append(next(repeater))
 
     return render_template(
         "art/svg-templates/yim-2022-albums.svg",
@@ -327,10 +339,14 @@ def _cover_art_yim_playlist(user_name, stats, key):
             image_urls.append(all_cover_arts[mbid])
             selected_urls.add(all_cover_arts[mbid])
 
+    if len(image_urls) == 0:
+        return None
+
     if len(image_urls) < 9:
-        # fill up the remaining slots with random repeated images
-        more_image_urls = sample(image_urls, 9 - len(image_urls))
-        image_urls.extend(more_image_urls)
+        repeater = cycle(image_urls)
+        # fill up the remaining slots with repeated images
+        while len(image_urls) < 9:
+            image_urls.append(next(repeater))
 
     return render_template(
         "art/svg-templates/yim-2022-playlists.svg",

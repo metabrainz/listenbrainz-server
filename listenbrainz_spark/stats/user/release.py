@@ -34,6 +34,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                  , COALESCE(rel.release_name, l.release_name) AS release_name
                  , COALESCE(rel.album_artist_name, l.artist_name) AS release_artist_name
                  , COALESCE(rel.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
+                 , rel.artists
                  , rel.caa_id
                  , rel.caa_release_mbid
               FROM {table} l
@@ -45,6 +46,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                 , any_release_mbid
                 , first(release_artist_name) AS any_artist_name
                 , artist_credit_mbids
+                , artists
                 , caa_id
                 , caa_release_mbid
                 , count(*) as listen_count
@@ -56,6 +58,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                  , any_release_mbid
                  , lower(release_artist_name)
                  , artist_credit_mbids
+                 , artists
                  , caa_id
                  , caa_release_mbid
         ), entity_count as (
@@ -69,6 +72,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                  , any_release_mbid AS release_mbid
                  , any_artist_name AS artist_name
                  , artist_credit_mbids
+                 , artists
                  , caa_id
                  , caa_release_mbid
                  , listen_count
@@ -84,6 +88,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                               , release_mbid
                               , artist_name
                               , coalesce(artist_credit_mbids, array()) AS artist_mbids
+                              , artists
                               , caa_id
                               , caa_release_mbid
                             )

@@ -37,6 +37,7 @@ def get_release_groups(table: str, cache_tables: List[str], number_of_results: i
                  , COALESCE(rg.title, l.release_name) AS release_group_name
                  , COALESCE(rg.artist_credit_name, l.artist_name) AS release_group_artist_name
                  , COALESCE(rg.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
+                 , rg.artists
                  , rg.caa_id
                  , rg.caa_release_mbid
               FROM {table} l
@@ -52,6 +53,7 @@ def get_release_groups(table: str, cache_tables: List[str], number_of_results: i
                  , artist_credit_mbids
                  , caa_id
                  , caa_release_mbid
+                 , artists
                  , count(*) as listen_count
               FROM gather_release_data
              WHERE release_group_name != ''
@@ -63,6 +65,7 @@ def get_release_groups(table: str, cache_tables: List[str], number_of_results: i
                  , artist_credit_mbids
                  , caa_id
                  , caa_release_mbid
+                 , artists
         ), entity_count as (
             SELECT user_id
                  , count(*) as release_groups_count
@@ -76,6 +79,7 @@ def get_release_groups(table: str, cache_tables: List[str], number_of_results: i
                  , artist_credit_mbids
                  , caa_id
                  , caa_release_mbid
+                 , artists
                  , listen_count
                  , row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rank
               FROM intermediate_table
@@ -91,6 +95,7 @@ def get_release_groups(table: str, cache_tables: List[str], number_of_results: i
                               , coalesce(artist_credit_mbids, array()) AS artist_mbids
                               , caa_id
                               , caa_release_mbid
+                              , artists
                             )
                         )
                        , false

@@ -51,56 +51,23 @@
             </text>
         </g>
         <g>
+            {% set y_start = 240 %}
+            {% set gap = 45 %}
+            {% for track in tracks[:10] %}
             <text>
-                <tspan class="track-name" x="100" y="240">1</tspan>
-                <tspan class="track-name" x="125" y="240">{{ tracks[0].track_name|upper|e }}</tspan>
+                <tspan class="track-name" x="100" y="{{ y_start + loop.index0 * gap }}">
+                    {% if loop.index == 10 %}
+                        X
+                    {% else %}
+                        {{ loop.index }}
+                    {% endif %}
+                </tspan>
+                <tspan class="track-name" x="125" y="{{ y_start + loop.index0 * gap }}">
+                    {{ track.track_name|upper|e }}
+                </tspan>
                 <tspan class="artist-name" x="125" dy="20">{{ tracks[0].artist_name|upper|e }}</tspan>
             </text>
-            <text>
-                <tspan class="track-name" x="100" y="285">2</tspan>
-                <tspan class="track-name" x="125" y="285">{{ tracks[1].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[1].artist_name|upper|e }}</tspan>
-            </text>
-            <text>
-                <tspan class="track-name" x="100" y="330">3</tspan>
-                <tspan class="track-name" x="125" y="330">{{ tracks[2].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[2].artist_name|upper|e }}</tspan>
-            </text>
-            <text>
-                <tspan class="track-name" x="100" y="375">4</tspan>
-                <tspan class="track-name" x="125" y="375">{{ tracks[3].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[3].artist_name|upper|e }}</tspan>
-            </text>
-            <text>
-                <tspan class="track-name" x="100" y="420">5</tspan>
-                <tspan class="track-name" x="125" y="420">{{ tracks[4].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[4].artist_name|upper|e }}</tspan>
-            </text>
-            <text>
-                <tspan class="track-name" x="100" y="465">6</tspan>
-                <tspan class="track-name" x="125" y="465">{{ tracks[5].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[5].artist_name|upper|e }}</tspan>
-            </text>
-            <text>
-                <tspan class="track-name" x="100" y="510">7</tspan>
-                <tspan class="track-name" x="125" y="510">{{ tracks[6].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[6].artist_name|upper|e }}</tspan>
-            </text>
-            <text>
-                <tspan class="track-name" x="100" y="555">8</tspan>
-                <tspan class="track-name" x="125" y="555">{{ tracks[7].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[7].artist_name|upper|e }}</tspan>
-            </text>
-            <text>
-                <tspan class="track-name" x="100" y="600">9</tspan>
-                <tspan class="track-name" x="125" y="600">{{ tracks[8].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[8].artist_name|upper|e }}</tspan>
-            </text>
-            <text>
-                <tspan class="track-name" x="100" y="645">X</tspan>
-                <tspan class="track-name" x="125" y="645">{{ tracks[9].track_name|upper|e }}</tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[9].artist_name|upper|e }}</tspan>
-            </text>
+            {% endfor %}
         </g>
     </g>
 </svg>

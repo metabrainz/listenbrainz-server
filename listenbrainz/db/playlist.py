@@ -19,7 +19,15 @@ TROI_BOT_DEBUG_USER_ID = 19055
 LISTENBRAINZ_USER_ID = 23944
 
 # These are the recommendation troi patches that we showcase on the recommendations page for each user
-RECOMMENDATION_PATCHES = ('daily-jams', 'weekly-jams', 'weekly-exploration', 'top-discoveries-for-year', 'top-missed-recordings-for-year')
+RECOMMENDATION_PATCHES = (
+    'daily-jams',
+    'weekly-jams',
+    'weekly-exploration',
+    'top-discoveries-for-year',
+    'top-missed-recordings-for-year',
+    'top-discoveries-of-2023',
+    'top-missed-recordings-of-2023'
+)
 
 
 def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
