@@ -107,19 +107,19 @@ class CoverArtGenerator:
         except ValueError:
             return None
 
-        return (r, g, b)
+        return r, g, b
 
     def validate_parameters(self):
         """ Validate the parameters for the cover art designs. """
 
         if self.dimension not in list(range(MIN_DIMENSION, MAX_DIMENSION + 1)):
-            return "dimmension must be between {MIN_DIMENSION} and {MAX_DIMENSION}, inclusive."
+            return "dimension must be between {MIN_DIMENSION} and {MAX_DIMENSION}, inclusive."
 
         bg_color = self.parse_color_code(self.background)
         if self.background not in ("transparent", "white", "black") and bg_color is None:
             return f"background must be one of transparent, white, black or a color code #rrggbb, not {self.background}"
 
-        if self.image_size < MIN_IMAGE_SIZE or self.image_size > MAX_IMAGE_SIZE:
+        if self.image_size < MIN_IMAGE_SIZE or self.image_size > MAX_IMAGE_SIZE or self.image_size is None:
             return f"image size must be between {MIN_IMAGE_SIZE} and {MAX_IMAGE_SIZE}, inclusive."
 
         if not isinstance(self.skip_missing, bool):
@@ -157,11 +157,11 @@ class CoverArtGenerator:
         """ Given a cell 'address' return its bounding box. An address is a list of comma separeated
             grid cells, which taken collectively present a bounding box for a cover art image."""
 
-        tiles = address.split(",")
         try:
+            tiles = address.split(",")
             for i in range(len(tiles)):
                 tiles[i] = int(tiles[i].strip())
-        except ValueError:
+        except (ValueError, TypeError):
             return None, None, None, None
 
         for tile in tiles:
