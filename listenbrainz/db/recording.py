@@ -3,6 +3,7 @@ from typing import Iterable
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Identifier
 
+
 def _resolve_mbids_helper(curs, query, mbids):
     """ Helper to extract common code for resolving redirect and canonical mbids """
     result = execute_values(curs, query, [(mbid,) for mbid in mbids], fetch=True)

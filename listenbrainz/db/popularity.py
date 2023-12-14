@@ -4,6 +4,7 @@ from psycopg2.sql import SQL, Identifier
 from sqlalchemy import text
 
 from listenbrainz.db import timescale
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset
 
 import psycopg2
@@ -69,26 +70,35 @@ TopReleasePopularityDataset = PopularityTopDataset("release")
 TopReleaseGroupPopularityDataset = PopularityTopDataset("release_group")
 
 
-def get_top_entity_for_entity(entity, artist_mbid, popularity_entity="recording"):
-    """ Get the top recordings or releases for a given artist mbid """
+def get_top_entity_for_artist(entity, artist_mbid, count=None):
+    """ Get the top 'count' recordings, releases or release-groups for a given artist mbid
+
+        By default running all recordings (entities) of the artist returned.
+    """
     if entity == "recording":
         entity_mbid = "recording_mbid"
-    elif entity == "release-group":
+    elif entity == "release_group":
         entity_mbid = "release_group_mbid"
-        entity = "release_group"
-        popularity_entity = "release_group"
-    else:
+    elif entity == "release":
         entity_mbid = "release_mbid"
+    else:
+        return []
+
+    if count is None:
+        limit = ""
+    else:
+        limit = "LIMIT :count"
+
     query = """
         SELECT """ + entity_mbid + """::TEXT
              , total_listen_count
              , total_user_count
-          FROM popularity.top_""" + popularity_entity + """
+          FROM popularity.top_""" + entity + """
          WHERE artist_mbid = :artist_mbid
       ORDER BY total_listen_count DESC
-    """
+    """ + limit
     with timescale.engine.begin() as connection:
-        results = connection.execute(text(query), {"artist_mbid": artist_mbid})
+        results = connection.execute(text(query), {"artist_mbid": artist_mbid, "count": count})
         return results.mappings().all()
 
 
@@ -126,3 +136,27 @@ def get_counts(entity, mbids):
             "total_user_count": total_user_count
         })
     return entity_data
+
+
+def get_top_recordings_for_artist(artist_mbid, count=None):
+    """ Get the top recordings for a given artist mbid """
+    recordings = get_top_entity_for_artist("recording", artist_mbid, count)
+    recording_mbids = [str(r["recording_mbid"]) for r in recordings]
+    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+            ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+        recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, recording_mbids)
+
+        for recording, data in zip(recordings, recordings_data):
+            data.pop("artist_credit_id", None)
+            data.pop("canonical_recording_mbid", None)
+            data.pop("original_recording_mbid", None)
+            data.update({
+                "artist_name": data.pop("artist_credit_name"),
+                "artist_mbids": data.pop("[artist_credit_mbids]"),
+                "total_listen_count": recording["total_listen_count"],
+                "total_user_count": recording["total_user_count"]
+            })
+
+        return recordings_data

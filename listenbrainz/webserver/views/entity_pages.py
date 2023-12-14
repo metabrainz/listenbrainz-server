@@ -3,17 +3,15 @@ from datetime import datetime
 from flask import Blueprint, render_template, current_app
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
+from listenbrainz.db import popularity, similarity
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.db import timescale
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
-from listenbrainz.db.popularity import get_top_entity_for_entity
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
-import requests
 from werkzeug.exceptions import BadRequest, NotFound
 import orjson
 import psycopg2
-import psycopg2.extras
+from psycopg2.extras import DictCursor
 
 artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
@@ -103,29 +101,36 @@ def artist_entity(artist_mbid):
         "tag": artist_data[0].tag_data,
     }
 
-    # Fetch top recordings for artist
-    params = {"artist_mbid": artist_mbid, 'count': 10}
-    r = requests.get(url="https://api.listenbrainz.org/1/popularity/top-recordings-for-artist", params=params)
-    if r.status_code != 200:
-        popular_recordings = []
-    else:
-        popular_recordings = list(r.json())[:10]
-
     popular_recordings = popularity.get_top_recordings_for_artist(artist_mbid, 10)
 
     try:
-        artists = r.json()[3]["data"][:15]
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+
+            similar_artists = similarity.get_artists(
+                mb_curs,
+                ts_curs,
+                [artist_mbid],
+                "session_based_days_7500_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30",
+                15
+            )
     except IndexError:
-        artists = []
+        similar_artists = []
 
     release_group_data = artist_data[0].release_group_data
     release_group_mbids = [rg["mbid"] for rg in release_group_data]
     popularity_data = popularity.get_counts("release_group", release_group_mbids)
 
-    # General note: This whole view function is a disaster, yes. But it is only so that monkey can work on the
-    # UI for these pages. The next project will be to collect all this data and store it in couchdb.
-    top_release_groups = get_top_entity_for_entity("release-group", artist_mbid, "release-group")
-    release_group_mbids = tuple([str(k["release_group_mbid"]) for k in top_release_groups])
+    release_groups = []
+    for release_group, pop in zip(release_group_data, popularity_data):
+        release_group["total_listen_count"] = pop["total_listen_count"]
+        release_group["total_user_count"] = pop["total_user_count"]
+        release_groups.append(release_group)
+
+    release_groups.sort(key=get_release_group_sort_key, reverse=True)
+
 
     try:
         cover_art = get_cover_art_for_artist(release_groups)
@@ -134,14 +139,10 @@ def artist_entity(artist_mbid):
         cover_art = None
 
     props = {
-        "artist_data": item,
+        "artist_data": artist,
         "popular_recordings": popular_recordings,
-        "similar_artists": artists,
-        "listening_stats": {},
-        # TODO: These stats need to be moved into its own cached data set.
-        # total plays for artist
-        # total # of listeners for artist
-        # top listeners (10)
+        "similar_artists": similar_artists,
+        "listening_stats": listening_stats,
         "release_groups": release_groups,
         "cover_art": cover_art
     }
@@ -168,30 +169,15 @@ def album_entity(release_group_mbid):
         raise NotFound(f"Release group {release_group_mbid} not found in the metadata cache")
     release_group = metadata[release_group_mbid]
 
-    pop_query = """SELECT recording_mbid::TEXT
-                        , total_listen_count
-                        , total_user_count
-                     FROM popularity.recording
-                    WHERE recording_mbid in %s"""
-
     recording_data = release_group.pop("recording").get("recordings", [])
     recording_mbids = [rec["recording_mbid"] for rec in recording_data]
-    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as lb_conn:
-        with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
-            lb_curs.execute(pop_query, (tuple(recording_mbids), ))
-            popularity = [dict(row) for row in lb_curs.fetchall()]
-
-    pop_index = {row["recording_mbid"]: (row["total_listen_count"], row["total_user_count"]) for row in popularity}
+    popularity_data = popularity.get_counts("recording", recording_mbids)
 
     recordings = []
-    for rec in recording_data:
+    for rec, pop in zip(recording_data, popularity_data):
         recording = dict(rec)
-        try:
-            recording["total_listen_count"] = pop_index[rec[2]][0]
-            recording["total_user_count"] = pop_index[rec[2]][1]
-        except KeyError:
-            recording["total_listen_count"] = None
-            recording["total_user_count"] = None
+        recording["total_listen_count"] = pop["total_listen_count"]
+        recording["total_user_count"] = pop["total_user_count"]
         recordings.append(recording)
 
     props = {
