@@ -28,15 +28,19 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.mb_artist_metadata_cache", mb_conn, lb_conn, batch_size)
+        self.last_updated = None
 
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
         # remember to keep both in sync.
-        return [("dirty ", "BOOLEAN DEFAULT FALSE"),
-                ("last_updated", "TIMESTAMPTZ NOT NULL DEFAULT NOW()"),
-                ("artist_mbid ", "UUID NOT NULL"),
-                ("artist_data ", "JSONB NOT NULL"),
-                ("tag_data ", "JSONB NOT NULL")]
+        return [
+            ("dirty ", "BOOLEAN DEFAULT FALSE"),
+            ("last_updated ", "TIMESTAMPTZ NOT NULL DEFAULT NOW()"),
+            ("artist_mbid ", "UUID NOT NULL"),
+            ("artist_data ", "JSONB NOT NULL"),
+            ("tag_data ", "JSONB NOT NULL"),
+            ("release_group_data ", "JSONB NOT NULL"),
+        ]
 
     def get_insert_queries_test_values(self):
         if config.USE_MINIMAL_DATASET:
@@ -50,6 +54,7 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
 
     def pre_insert_queries_db_setup(self, curs):
         self.config_postgres_join_limit(curs)
+        self.last_updated = datetime.now()
 
     def get_post_process_queries(self):
         return []
@@ -59,7 +64,7 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
                 ("mb_artist_metadata_cache_idx_dirty", "dirty", False)]
 
     def process_row(self, row):
-        return [("false", datetime.now(), *self.create_json_data(row))]
+        return [("false", self.last_updated, *self.create_json_data(row))]
 
     def process_row_complete(self):
         return []

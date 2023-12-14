@@ -52,13 +52,14 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.mb_release_group_cache", mb_conn, lb_conn, batch_size)
+        self.last_updated = None
 
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
         # remember to keep both in sync.
         # TODO: DO this.
         return [("dirty ",                     "BOOLEAN DEFAULT FALSE"),
-                ("last_updated",               "TIMESTAMPTZ NOT NULL DEFAULT NOW()"),
+                ("last_updated ",               "TIMESTAMPTZ NOT NULL DEFAULT NOW()"),
                 ("release_group_mbid ",        "UUID NOT NULL"),
                 ("artist_mbids ",              "UUID[] NOT NULL"),
                 ("artist_data ",               "JSONB NOT NULL"),
@@ -79,6 +80,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
 
     def pre_insert_queries_db_setup(self, curs):
         self.config_postgres_join_limit(curs)
+        self.last_updated = datetime.now()
 
     def get_post_process_queries(self):
         return ["""
@@ -93,7 +95,7 @@ class MusicBrainzReleaseGroupCache(BulkInsertTable):
                 ("mb_release_group_cache_idx_dirty",              "dirty",                   False)]
 
     def process_row(self, row):
-        return [("false", datetime.now(), *self.create_json_data(row))]
+        return [("false", self.last_updated, *self.create_json_data(row))]
 
     def process_row_complete(self):
         return []
