@@ -4,7 +4,6 @@ from typing import List, Set
 import uuid
 
 import psycopg2
-from psycopg2.errors import OperationalError
 import psycopg2.extras
 import ujson
 from psycopg2.extras import execute_values
@@ -96,6 +95,25 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
             if filtered:
                 artist["rels"] = filtered
 
+        release_groups = []
+        if row["release_groups"]:
+            for release_group_mbid, release_group_name, artist_credit_name, date, type, release_group_artists, caa_id, caa_release_mbid in row["release_groups"]:
+                release_group = {
+                    "name": release_group_name,
+                    "mbid": release_group_mbid,
+                    "artist_credit_name": artist_credit_name,
+                    "artists": release_group_artists
+                }
+                if date is not None:
+                    release_group["date"] = date
+                if type is not None:
+                    release_group["type"] = type
+                if caa_id is not None:
+                    release_group["caa_id"] = caa_id
+                if caa_release_mbid is not None:
+                    release_group["caa_release_mbid"] = caa_release_mbid
+                release_groups.append(release_group)
+
         artist_tags = []
         for tag, count, artist_mbid, genre_mbid in row["artist_tags"] or []:
             tag = {"tag": tag, "count": count, "artist_mbid": artist_mbid}
@@ -103,7 +121,7 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
                 tag["genre_mbid"] = genre_mbid
             artist_tags.append(tag)
 
-        return artist_mbid, ujson.dumps(artist), ujson.dumps({"artist": artist_tags})
+        return artist_mbid, ujson.dumps(artist), ujson.dumps({"artist": artist_tags}), ujson.dumps(release_groups)
 
     def get_metadata_cache_query(self, with_values=False):
         values_cte = ""
@@ -140,6 +158,86 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
                               {values_join}
                              WHERE count > 0
                           GROUP BY a.gid
+                   ), rg_cover_art AS (
+                            SELECT DISTINCT ON(rg.id)
+                                   rg.id AS release_group
+                                 , caa_rel.gid::TEXT AS caa_release_mbid
+                                 , caa.id AS caa_id
+                              FROM musicbrainz.artist a
+                              JOIN musicbrainz.artist_credit_name acn
+                                ON a.id = acn.artist
+                              JOIN musicbrainz.release_group rg
+                                ON acn.artist_credit = rg.artist_credit
+                              JOIN musicbrainz.release caa_rel
+                                ON rg.id = caa_rel.release_group
+                         LEFT JOIN (
+                                  SELECT release, date_year, date_month, date_day
+                                    FROM musicbrainz.release_country
+                               UNION ALL
+                                  SELECT release, date_year, date_month, date_day
+                                    FROM musicbrainz.release_unknown_country
+                                 ) re
+                                ON (re.release = caa_rel.id)
+                         FULL JOIN cover_art_archive.release_group_cover_art rgca
+                                ON rgca.release = caa_rel.id
+                         LEFT JOIN cover_art_archive.cover_art caa
+                                ON caa.release = caa_rel.id
+                         LEFT JOIN cover_art_archive.cover_art_type cat
+                                ON cat.id = caa.id
+                              {values_join}
+                             WHERE type_id = 1
+                               AND mime_type != 'application/pdf'
+                          ORDER BY rg.id
+                                 , rgca.release
+                                 , re.date_year
+                                 , re.date_month
+                                 , re.date_day
+                                 , caa.ordering
+                   ), release_group_data AS (
+                            SELECT a.gid AS artist_mbid
+                                 , rg.gid::TEXT AS release_group_mbid
+                                 , rg.name AS release_group_name
+                                 , ac.name AS artist_credit_name
+                                 , rgca.caa_id AS caa_id
+                                 , rgca.caa_release_mbid::TEXT AS caa_release_mbid
+                                 , (rgm.first_release_date_year::TEXT || '-' ||
+                                     LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
+                                     LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
+                                 , rgpt.name AS type
+                                 , jsonb_agg(jsonb_build_object(
+                                        'artist_mbid', a2.gid::TEXT,
+                                        'artist_credit_name', a2.name,
+                                        'join_phrase', acn2.join_phrase
+                                   ) ORDER BY acn2.position) AS release_group_artists
+                              FROM musicbrainz.artist a
+                              JOIN musicbrainz.artist_credit_name acn
+                                ON a.id = acn.artist
+                              JOIN musicbrainz.artist_credit ac
+                                ON acn.artist_credit = ac.id
+                              JOIN musicbrainz.release_group rg
+                                ON ac.id = rg.artist_credit
+                              JOIN musicbrainz.release_group_meta rgm
+                                ON rgm.id = rg.id
+                         LEFT JOIN musicbrainz.release_group_primary_type rgpt
+                                ON rg.type = rgpt.id
+                         LEFT JOIN rg_cover_art rgca
+                                ON rgca.release_group = rg.id
+                        -- need a second join to artist_credit_name/artist to gather other release group artists' names
+                              JOIN musicbrainz.artist_credit_name acn2
+                                ON rg.artist_credit = acn2.artist_credit
+                              JOIN musicbrainz.artist a2
+                                ON acn2.artist = a2.id
+                              {values_join}
+                          GROUP BY a.gid
+                                 , rg.gid
+                                 , rg.name
+                                 , ac.name
+                                 , rgca.caa_id
+                                 , rgca.caa_release_mbid
+                                 , rgpt.name
+                                 , rgm.first_release_date_year
+                                 , rgm.first_release_date_month
+                                 , rgm.first_release_date_day
                    )
                             SELECT a.gid::TEXT AS artist_mbid
                                  , a.name AS artist_name
@@ -150,6 +248,18 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
                                  , ar.name AS area
                                  , artist_links
                                  , artist_tags
+                                 , array_agg(
+                                        jsonb_build_array(
+                                            rgd.release_group_mbid,
+                                            rgd.release_group_name,
+                                            rgd.artist_credit_name, 
+                                            rgd.date,
+                                            rgd.type,
+                                            rgd.release_group_artists,
+                                            rgd.caa_id,
+                                            rgd.caa_release_mbid
+                                        ) ORDER BY rgd.date
+                                   ) AS release_groups
                               FROM musicbrainz.artist a
                          LEFT JOIN musicbrainz.artist_type at
                                 ON a.type = at.id
@@ -161,7 +271,18 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
                                 ON arl.artist_mbid = a.gid
                          LEFT JOIN artist_tags ats
                                 ON ats.artist_mbid = a.gid
+                         LEFT JOIN release_group_data rgd
+                                ON rgd.artist_mbid = a.gid
                               {values_join}
+                          GROUP BY a.gid
+                                 , a.name
+                                 , a.begin_date_year
+                                 , a.end_date_year
+                                 , at.name
+                                 , ag.name
+                                 , ar.name
+                                 , artist_links
+                                 , artist_tags
         """
         return query
 
