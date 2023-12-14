@@ -3,25 +3,33 @@ import * as React from "react";
 type PillProps = {
   active?: boolean;
   type?: "primary" | "secondary";
+  href?: string;
   style?: React.CSSProperties;
   className?: string;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
   [key: string]: any;
 };
 
 export default function Pill(props: React.PropsWithChildren<PillProps>) {
-  const { active, children, type, style: propStyle, ...buttonProps } = props;
+  const {
+    active,
+    children,
+    type,
+    href,
+    style: propStyle,
+    ...linkProps
+  } = props;
 
   return (
-    <button
-      type="button"
+    <a
       style={propStyle}
-      {...buttonProps}
+      href={href || "#"}
+      {...linkProps}
       className={`pill ${type === "secondary" ? "secondary" : ""} ${
         active ? "active" : ""
       }`}
     >
       {children}
-    </button>
+    </a>
   );
 }
