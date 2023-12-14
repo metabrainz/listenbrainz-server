@@ -13,7 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty } from "lodash";
 import tinycolor from "tinycolor2";
-import { getRelIconLink } from "./utils";
+import {getRelIconLink, ListeningStats} from "./utils";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
@@ -45,6 +45,7 @@ export type AlbumPageProps = {
   type: string;
   caa_id?: string;
   caa_release_mbid?: string;
+  listening_stats: ListeningStats;
 };
 
 export default function AlbumPage(props: AlbumPageProps): JSX.Element {
@@ -56,11 +57,11 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     caa_id,
     caa_release_mbid,
     type,
+    listening_stats,
   } = props;
+  const { total_listen_count: listenCount, listeners: topListeners } = listening_stats;
 
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
-  const [topListeners, setTopListeners] = React.useState([]);
-  const [listenCount, setListenCount] = React.useState(0);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
 
   const {
@@ -123,21 +124,6 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         console.error(error);
       }
     }
-    async function fetchListenerStats() {
-      try {
-        const response = await fetch(
-          `${APIService.APIBaseURI}/stats/release-group/${release_group_mbid}/listeners`
-        );
-        const body = await response.json();
-        if (!response.ok) {
-          throw body?.message ?? response.statusText;
-        }
-        setTopListeners(body.payload.listeners);
-        setListenCount(body.payload.total_listen_count);
-      } catch (error) {
-        toast.error(error);
-      }
-    }
     async function fetchReviews() {
       try {
         const response = await fetch(
@@ -155,7 +141,6 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     if (!caa_id || !caa_release_mbid) {
       fetchCoverArt();
     }
-    fetchListenerStats();
     fetchReviews();
   }, [APIService, release_group_mbid, caa_id, caa_release_mbid]);
 
@@ -457,7 +442,8 @@ document.addEventListener("DOMContentLoaded", () => {
     caa_id,
     caa_release_mbid,
     type,
-    release_group_metadata
+    release_group_metadata,
+    listening_stats
   } = reactProps;
 
   const AlbumPageWithAlertNotifications = withAlertNotifications(AlbumPage);
@@ -479,6 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
             caa_id={caa_id}
             caa_release_mbid={caa_release_mbid}
             type={type}
+            listening_stats={listening_stats}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

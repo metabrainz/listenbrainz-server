@@ -59,11 +59,13 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.mb_metadata_cache", mb_conn, lb_conn, batch_size)
+        self.last_updated = None
 
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
         # remember to keep both in sync.
         return [("dirty ",                     "BOOLEAN DEFAULT FALSE"),
+                ("last_updated",               "TIMESTAMPTZ NOT NULL DEFAULT NOW()"),
                 ("recording_mbid ",            "UUID NOT NULL"),
                 ("artist_mbids ",              "UUID[] NOT NULL"),
                 ("release_mbid ",              "UUID"),
@@ -85,6 +87,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
 
     def pre_insert_queries_db_setup(self, curs):
         self.config_postgres_join_limit(curs)
+        self.last_updated = datetime.now()
 
     def get_post_process_queries(self):
         return ["""
@@ -99,7 +102,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                 ("mb_metadata_cache_idx_dirty",          "dirty",                   False)]
 
     def process_row(self, row):
-        return [("false", *self.create_json_data(row))]
+        return [("false", datetime.now(), *self.create_json_data(row))]
 
     def process_row_complete(self):
         return []
@@ -232,6 +235,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                     ON l.link_type = lt.id
                                   {values_join}
                                  WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
+                                   AND NOT l.ended
                               GROUP BY a.gid
                    ), recording_rels AS (
                                 SELECT r.gid
@@ -251,6 +255,7 @@ class MusicBrainzMetadataCache(BulkInsertTable):
                                     ON la.attribute_type = lat.id
                                   {values_join}
                                  WHERE lt.gid IN ({RECORDING_LINK_GIDS_SQL})
+                                   AND NOT l.ended
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
@@ -734,7 +739,7 @@ def create_mb_metadata_cache(use_lb_conn: bool):
     psycopg2.extras.register_uuid()
 
     if use_lb_conn:
-        mb_uri = config.MB_DATABASE_STANDBY_URI or config.MBID_MAPPING_DATABASE_URI
+        mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
     else:
         mb_uri = config.MBID_MAPPING_DATABASE_URI
 
@@ -759,7 +764,7 @@ def incremental_update_mb_metadata_cache(use_lb_conn: bool):
     psycopg2.extras.register_uuid()
 
     if use_lb_conn:
-        mb_uri = config.MB_DATABASE_STANDBY_URI or config.MBID_MAPPING_DATABASE_URI
+        mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
     else:
         mb_uri = config.MBID_MAPPING_DATABASE_URI
 

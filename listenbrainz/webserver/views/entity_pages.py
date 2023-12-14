@@ -187,13 +187,21 @@ def album_entity(release_group_mbid):
         recording["total_user_count"] = pop["total_user_count"]
         recordings.append(recording)
 
+    listening_stats = get_entity_listener("release_groups", release_group_mbid, "all_time")
+    if listening_stats is None:
+        listening_stats = {
+            "total_listen_count": 0,
+            "listeners": []
+        }
+
     props = {
         "release_group_mbid": release_group_mbid,
         "release_group_metadata": release_group,
         "recordings": recordings,
         "caa_id": release_group["release_group"]["caa_id"],
         "caa_release_mbid": release_group["release_group"]["caa_release_mbid"],
-        "type": release_group["release_group"].get("type")
+        "type": release_group["release_group"].get("type"),
+        "listening_stats": listening_stats
     }
 
     return render_template("entities/album.html",
