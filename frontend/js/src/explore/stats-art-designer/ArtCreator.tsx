@@ -1,4 +1,6 @@
 import {
+  faChevronDown,
+  faChevronUp,
   faCircleQuestion,
   faCloudArrowUp,
 } from "@fortawesome/free-solid-svg-icons";
@@ -147,6 +149,21 @@ function ArtCreator() {
     defaultStyleOnLoad.defaultColors[2]
   );
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
+
+  const [basicSettingsOpen, setBasicSettingsOpen] = React.useState<boolean>(
+    true
+  );
+  const [advancedSettingsOpen, setAdvancedSettingsOpen] = React.useState<
+    boolean
+  >(true);
+
+  const toggleBasicSettings = useCallback(() => {
+    setBasicSettingsOpen(!basicSettingsOpen);
+  }, [basicSettingsOpen]);
+
+  const toggleAdvancedSettings = useCallback(() => {
+    setAdvancedSettingsOpen(!advancedSettingsOpen);
+  }, [advancedSettingsOpen]);
 
   const updateStyleButtonCallback = useCallback(
     (name: TemplateNameEnum) => {
@@ -390,190 +407,261 @@ function ArtCreator() {
         />
       </div>
       <Sidebar>
-        <div className="basic-settings-container">
-          <div className="sidenav-content-grid">
-            <h4>Settings</h4>
-            <div className="input-group">
-              <label className="input-group-addon" htmlFor="user-name">
-                Username
-              </label>
-              <UserSearch
-                initialValue={userName}
-                onSelectUser={setUserName}
-                placeholder="Search for a user…"
-              />
-            </div>
-            <div className="input-group">
-              <label className="input-group-addon" htmlFor="style">
-                Template
-              </label>
-              <select
-                id="style"
-                className="form-control"
-                value={style.name}
-                onChange={updateStyleCallback}
-              >
-                {templatesArray.map((opt) => (
-                  <option key={opt.name} value={opt.name}>
-                    {opt.displayName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="input-group">
-              <label className="input-group-addon" htmlFor="time-range">
-                Time range
-              </label>
-              <select
-                id="time-range"
-                className="form-control"
-                value={timeRange}
-                onChange={updateTimeRangeCallback}
-              >
-                {Object.entries(TimeRangeOptions).map((opt) => (
-                  <option key={opt[0]} value={opt[0]}>
-                    {opt[1]}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="sidenav-content-grid" id="basic-settings-container">
+          <div
+            onClick={toggleBasicSettings}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                toggleBasicSettings();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            <h4>
+              {basicSettingsOpen ? (
+                <FontAwesomeIcon icon={faChevronDown} />
+              ) : (
+                <FontAwesomeIcon icon={faChevronUp} />
+              )}
+              {"  "}
+              <b>Settings</b>
+            </h4>
           </div>
+
+          {basicSettingsOpen && (
+            <>
+              <div className="input-group">
+                <label className="input-group-addon" htmlFor="user-name">
+                  Username
+                </label>
+                <UserSearch
+                  initialValue={userName}
+                  onSelectUser={setUserName}
+                  placeholder="Search for a user…"
+                />
+              </div>
+              <div className="input-group">
+                <label className="input-group-addon" htmlFor="style">
+                  Template
+                </label>
+                <select
+                  id="style"
+                  className="form-control"
+                  value={style.name}
+                  onChange={updateStyleCallback}
+                >
+                  {templatesArray.map((opt) => (
+                    <option key={opt.name} value={opt.name}>
+                      {opt.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="input-group">
+                <label className="input-group-addon" htmlFor="time-range">
+                  Time range
+                </label>
+                <select
+                  id="time-range"
+                  className="form-control"
+                  value={timeRange}
+                  onChange={updateTimeRangeCallback}
+                >
+                  {Object.entries(TimeRangeOptions).map((opt) => (
+                    <option key={opt[0]} value={opt[0]}>
+                      {opt[1]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
         </div>
-        <div className="advanced-settings-container">
-          <div className="sidenav-content-grid">
-            <h4>Advanced</h4>
-            {style.type === "grid" && (
-              <>
-                <small>
-                  You can customize the grid size and select one of our advanced
-                  layouts
-                </small>
-                <div className="input-group">
-                  <label className="input-group-addon" htmlFor="albums-per-row">
-                    Albums per row
-                  </label>
-                  <input
-                    id="albums-per-row"
-                    className="form-control"
-                    type="number"
-                    min={2}
-                    max={5}
-                    value={gridSize}
-                    onChange={(event) => {
-                      setGridSize(event.target.valueAsNumber);
-                      setGridLayout(0);
-                    }}
-                  />
-                </div>
-                <div className="input-group">
-                  <label className="input-group-addon" htmlFor="grid-layout">
-                    Grid layout
-                  </label>
-                  <select
-                    id="grid-layout"
-                    className="form-control"
-                    value={gridLayout + 1}
-                    onChange={(event) => {
-                      setGridLayout(Number(event.target.value) - 1);
-                    }}
-                  >
-                    {[...Array(layoutsPerGridDimensionArr[gridSize])].map(
-                      (val, index) => {
-                        return (
-                          <option key={`option-${index + 1}`} value={index + 1}>
-                            Option {index + 1}
-                          </option>
-                        );
-                      }
-                    )}
-                  </select>
-                </div>
-              </>
-            )}
-            {style.type === "text" && (
-              <>
-                <div>
-                  <label htmlFor="color-presets">Color presets:</label>
-                  <div className="color-picker-panel" id="color-presets">
-                    <ColorPicker
-                      firstColor="#6b4078"
-                      secondColor="#33234c"
-                      onClick={() => {
-                        setTextColor("#e5cdc8");
-                        setFirstBgColor("#6b4078");
-                        setSecondBgColor("#33234c");
-                      }}
-                    />
-                    <ColorPicker
-                      firstColor="#ff2f6e"
-                      secondColor="#e8ff2c"
-                      onClick={() => {
-                        setTextColor("#8a1515");
-                        setFirstBgColor("#ff2f6e");
-                        setSecondBgColor("#e8ff2c");
-                      }}
-                    />
-                    <ColorPicker
-                      firstColor="#786aba"
-                      secondColor="#ff0000"
-                      onClick={() => {
-                        setTextColor("#1f2170");
-                        setFirstBgColor("#786aba");
-                        setSecondBgColor("#ff0000");
-                      }}
-                    />
-                    <ColorPicker
-                      firstColor="#083023"
-                      secondColor="#0fc26c"
-                      onClick={() => {
-                        setTextColor("#dde2bb");
-                        setFirstBgColor("#083023");
-                        setSecondBgColor("#0fc26c");
-                      }}
-                    />
-                    <ColorPicker
-                      firstColor="#ffffff"
-                      secondColor="#006d39"
-                      onClick={() => {
-                        setTextColor("#006d39");
-                        setFirstBgColor("#ffffff");
-                        setSecondBgColor("#006d39");
+
+        <div className="sidenav-content-grid" id="advanced-settings-container">
+          <div
+            onClick={toggleAdvancedSettings}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                toggleAdvancedSettings();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            <h4>
+              {advancedSettingsOpen ? (
+                <FontAwesomeIcon icon={faChevronDown} />
+              ) : (
+                <FontAwesomeIcon icon={faChevronUp} />
+              )}
+              {"  "}
+              <b>Advanced</b>
+            </h4>
+          </div>
+
+          {advancedSettingsOpen && (
+            <>
+              {style.type === "grid" && (
+                <>
+                  <small>
+                    You can customize the grid size and select one of our
+                    advanced layouts
+                  </small>
+                  <div className="input-group">
+                    <label
+                      className="input-group-addon"
+                      htmlFor="albums-per-row"
+                    >
+                      Albums per row
+                    </label>
+                    <input
+                      id="albums-per-row"
+                      className="form-control"
+                      type="number"
+                      min={2}
+                      max={5}
+                      value={gridSize}
+                      onChange={(event) => {
+                        setGridSize(event.target.valueAsNumber);
+                        setGridLayout(0);
                       }}
                     />
                   </div>
-                </div>
-                <div>
-                  <label htmlFor="text-color-input">Text color:</label>
                   <div className="input-group">
-                    <span className="input-group-btn">
+                    <label className="input-group-addon" htmlFor="grid-layout">
+                      Grid layout
+                    </label>
+                    <select
+                      id="grid-layout"
+                      className="form-control"
+                      value={gridLayout + 1}
+                      onChange={(event) => {
+                        setGridLayout(Number(event.target.value) - 1);
+                      }}
+                    >
+                      {[...Array(layoutsPerGridDimensionArr[gridSize])].map(
+                        (val, index) => {
+                          return (
+                            <option
+                              key={`option-${index + 1}`}
+                              value={index + 1}
+                            >
+                              Option {index + 1}
+                            </option>
+                          );
+                        }
+                      )}
+                    </select>
+                  </div>
+                </>
+              )}
+              {style.type === "text" && (
+                <>
+                  <div>
+                    <label htmlFor="color-presets">Color presets:</label>
+                    <div className="color-picker-panel" id="color-presets">
+                      <ColorPicker
+                        firstColor="#6b4078"
+                        secondColor="#33234c"
+                        onClick={() => {
+                          setTextColor("#e5cdc8");
+                          setFirstBgColor("#6b4078");
+                          setSecondBgColor("#33234c");
+                        }}
+                      />
+                      <ColorPicker
+                        firstColor="#ff2f6e"
+                        secondColor="#e8ff2c"
+                        onClick={() => {
+                          setTextColor("#8a1515");
+                          setFirstBgColor("#ff2f6e");
+                          setSecondBgColor("#e8ff2c");
+                        }}
+                      />
+                      <ColorPicker
+                        firstColor="#786aba"
+                        secondColor="#ff0000"
+                        onClick={() => {
+                          setTextColor("#1f2170");
+                          setFirstBgColor("#786aba");
+                          setSecondBgColor("#ff0000");
+                        }}
+                      />
+                      <ColorPicker
+                        firstColor="#083023"
+                        secondColor="#0fc26c"
+                        onClick={() => {
+                          setTextColor("#dde2bb");
+                          setFirstBgColor("#083023");
+                          setSecondBgColor("#0fc26c");
+                        }}
+                      />
+                      <ColorPicker
+                        firstColor="#ffffff"
+                        secondColor="#006d39"
+                        onClick={() => {
+                          setTextColor("#006d39");
+                          setFirstBgColor("#ffffff");
+                          setSecondBgColor("#006d39");
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="text-color-input">Text color:</label>
+                    <div className="input-group">
+                      <span className="input-group-btn">
+                        <input
+                          id="text-color-input"
+                          type="color"
+                          className="btn btn-transparent form-control"
+                          onChange={updateTextColorCallback}
+                          placeholder="#321529"
+                          value={textColor}
+                        />
+                      </span>
                       <input
-                        id="text-color-input"
-                        type="color"
-                        className="btn btn-transparent form-control"
-                        onChange={updateTextColorCallback}
+                        className="form-control"
+                        type="text"
                         placeholder="#321529"
                         value={textColor}
+                        disabled
                       />
-                    </span>
-                    <input
-                      className="form-control"
-                      type="text"
-                      placeholder="#321529"
-                      value={textColor}
-                      disabled
-                    />
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label htmlFor="bg-color">Background colors:</label>
+                  <div>
+                    <label htmlFor="bg-color">Background colors:</label>
+                    <div className="input-group">
+                      <span className="input-group-btn">
+                        <input
+                          id="bg-color"
+                          type="color"
+                          className="btn btn-transparent form-control"
+                          onChange={updateFirstBgColorCallback}
+                          value={firstBgColor}
+                        />
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Select a color…"
+                        disabled
+                        readOnly
+                        value={firstBgColor}
+                      />
+                    </div>
+                  </div>
+
                   <div className="input-group">
                     <span className="input-group-btn">
                       <input
-                        id="bg-color"
+                        id="bg-color-2"
                         type="color"
                         className="btn btn-transparent form-control"
-                        onChange={updateFirstBgColorCallback}
-                        value={firstBgColor}
+                        onChange={updateSecondBgColorCallback}
+                        value={secondBgColor}
                       />
                     </span>
                     <input
@@ -582,33 +670,12 @@ function ArtCreator() {
                       placeholder="Select a color…"
                       disabled
                       readOnly
-                      value={firstBgColor}
-                    />
-                  </div>
-                </div>
-
-                <div className="input-group">
-                  <span className="input-group-btn">
-                    <input
-                      id="bg-color-2"
-                      type="color"
-                      className="btn btn-transparent form-control"
-                      onChange={updateSecondBgColorCallback}
                       value={secondBgColor}
                     />
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Select a color…"
-                    disabled
-                    readOnly
-                    value={secondBgColor}
-                  />
-                </div>
-              </>
-            )}
-            {/* <div className="flex-center input-group">
+                  </div>
+                </>
+              )}
+              {/* <div className="flex-center input-group">
               <label htmlFor="bg-upload">Background image:</label>
               <div className="input-group">
                 <input className="form-control" type="text" disabled />
@@ -621,7 +688,7 @@ function ArtCreator() {
               </div>
             </div> */}
 
-            {/* <div>
+              {/* <div>
               <label htmlFor="genres">
                 Genres: <FontAwesomeIcon icon={faCircleQuestion} />
               </label>
@@ -632,14 +699,14 @@ function ArtCreator() {
                 onChange={updateGenresCallback}
               />
             </div> */}
-            {/* <div>
+              {/* <div>
               <ToggleOption onClick={userToggler} buttonName="Users" />
               <ToggleOption onClick={dateToggler} buttonName="Date" />
               <ToggleOption onClick={rangeToggler} buttonName="Range" />
               <ToggleOption onClick={totalToggler} buttonName="Total" />
               <ToggleOption onClick={genresToggler} buttonName="Genres" />
             </div> */}
-            {/* <div>
+              {/* <div>
               <label htmlFor="font-select">Font:</label>
               <select
                 id="font-select"
@@ -654,10 +721,11 @@ function ArtCreator() {
                 ))}
               </select>
             </div> */}
-            {/* <div>
+              {/* <div>
               <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
             </div> */}
-          </div>
+            </>
+          )}
         </div>
         {/* <div className="generate-button-container">
           <button

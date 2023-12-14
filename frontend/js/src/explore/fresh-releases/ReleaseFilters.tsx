@@ -194,7 +194,11 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
       <div className="sidenav-content-grid">
         <div
           onClick={toggleFilters}
-          onKeyDown={toggleFilters}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              toggleFilters();
+            }
+          }}
           role="button"
           tabIndex={0}
         >
@@ -330,7 +334,11 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
       <div className="sidenav-content-grid">
         <div
           onClick={toggleDisplay}
-          onKeyDown={toggleDisplay}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              toggleDisplay();
+            }
+          }}
           role="button"
           tabIndex={0}
         >
