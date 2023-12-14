@@ -62,9 +62,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const [loading, setLoading] = React.useState(false);
 
   const [albumsByThisArtist, alsoAppearsOn] = partition(releaseGroups, (rg) =>
-    rg.release_group_artists.find(
-      (rga) => rga.artist_mbid === artist.artist_mbid
-    )
+    rg.artists[0].artist_mbid === artist.artist_mbid
   );
   /** Navigation from one artist to a similar artist */
   //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
@@ -156,17 +154,17 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const getReleaseCard = (rg: ReleaseGroup) => {
     return (
       <ReleaseCard
-        key={rg.release_group_mbid}
+        key={rg.mbid}
         releaseDate={rg.date ?? undefined}
         dateFormatOptions={{ year: "numeric", month: "short" }}
-        releaseGroupMBID={rg.release_group_mbid}
-        releaseName={rg.release_group_name}
+        releaseGroupMBID={rg.mbid}
+        releaseName={rg.name}
         releaseTypePrimary={rg.type}
-        artistCredits={rg.release_group_artists}
-        artistCreditName={rg.release_group_artists
+        artistCredits={rg.artists}
+        artistCreditName={rg.artists
           .map((ar) => ar.artist_credit_name + ar.join_phrase)
           .join("")}
-        artistMBIDs={rg.release_group_artists.map((ar) => ar.artist_mbid)}
+        artistMBIDs={rg.artists.map((ar) => ar.artist_mbid)}
         caaID={rg.caa_id}
         caaReleaseMBID={rg.caa_release_mbid}
         showInformation

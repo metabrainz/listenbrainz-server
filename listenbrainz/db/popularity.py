@@ -1,7 +1,12 @@
+from flask import current_app
+from psycopg2.extras import DictCursor, execute_values
+from psycopg2.sql import SQL, Identifier
 from sqlalchemy import text
 
 from listenbrainz.db import timescale
 from listenbrainz.spark.spark_dataset import DatabaseDataset
+
+import psycopg2
 
 
 class PopularityDataset(DatabaseDataset):
@@ -85,3 +90,39 @@ def get_top_entity_for_entity(entity, artist_mbid, popularity_entity="recording"
     with timescale.engine.begin() as connection:
         results = connection.execute(text(query), {"artist_mbid": artist_mbid})
         return results.mappings().all()
+
+
+def get_counts(entity, mbids):
+    """ Get the total listen and user counts for a given entity and list of mbids """
+    if entity == "recording":
+        entity_mbid = "recording_mbid"
+    elif entity == "release_group":
+        entity_mbid = "release_group_mbid"
+    elif entity == "release":
+        entity_mbid = "release_mbid"
+    else:
+        return []
+
+    query = SQL("""
+          WITH mbids (mbid) AS (VALUES %s)
+        SELECT mbid
+             , total_listen_count
+             , total_user_count
+          FROM {table}
+          JOIN mbids
+            ON {entity_mbid} = mbid::UUID
+    """).format(entity_mbid=Identifier(entity_mbid), table=Identifier("popularity", entity))
+    with timescale.engine.begin() as connection:
+        ts_curs = connection.connection.cursor()
+        results = execute_values(ts_curs, query, [(mbid,) for mbid in mbids], fetch=True)
+        index = {row[0]: (row[1], row[2]) for row in results}
+
+    entity_data = []
+    for mbid in mbids:
+        total_listen_count, total_user_count = index.get(mbid, (None, None))
+        entity_data.append({
+            entity_mbid: mbid,
+            "total_listen_count": total_listen_count,
+            "total_user_count": total_user_count
+        })
+    return entity_data

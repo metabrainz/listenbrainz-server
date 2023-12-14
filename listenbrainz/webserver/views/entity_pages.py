@@ -1,8 +1,7 @@
 from datetime import datetime
 
 from flask import Blueprint, render_template, current_app
-from flask_login import current_user, login_required
-from listenbrainz import webserver
+
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.db import timescale
@@ -98,16 +97,11 @@ def artist_entity(artist_mbid):
     if len(artist_data) == 0:
         raise NotFound(f"artist {artist_mbid} not found in the metadata cache")
 
-    artists_no_uuid = []
-    for artist in artist_data:
-        artist.artist_mbid = str(artist.artist_mbid)
-        artists_no_uuid.append(artist)
-
-    artist_data = artists_no_uuid
-
-    item = {"artist_mbid": artist_data[0].artist_mbid}
-    item.update(**artist_data[0].artist_data)
-    item["tag"] = artist_data[0].tag_data
+    artist = {
+        "artist_mbid": str(artist_data[0].artist_mbid),
+        **artist_data[0].artist_data,
+        "tag": artist_data[0].tag_data,
+    }
 
     # Fetch top recordings for artist
     params = {"artist_mbid": artist_mbid, 'count': 10}
@@ -117,22 +111,16 @@ def artist_entity(artist_mbid):
     else:
         popular_recordings = list(r.json())[:10]
 
-    # Fetch similar artists
-    r = requests.post("https://labs.api.listenbrainz.org/similar-artists/json",
-                      json=[{
-                          'artist_mbid':
-                          artist_mbid,
-                          'algorithm':
-                          "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30"
-                      }])
-
-    if r.status_code != 200:
-        raise RuntimeError(f"Cannot fetch similar artists: {r.status_code} ({r.text})")
+    popular_recordings = popularity.get_top_recordings_for_artist(artist_mbid, 10)
 
     try:
         artists = r.json()[3]["data"][:15]
     except IndexError:
         artists = []
+
+    release_group_data = artist_data[0].release_group_data
+    release_group_mbids = [rg["mbid"] for rg in release_group_data]
+    popularity_data = popularity.get_counts("release_group", release_group_mbids)
 
     # General note: This whole view function is a disaster, yes. But it is only so that monkey can work on the
     # UI for these pages. The next project will be to collect all this data and store it in couchdb.

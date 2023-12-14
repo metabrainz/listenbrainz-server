@@ -10,7 +10,6 @@ import {
   getAlbumArtFromReleaseMBID,
 } from "../../utils/utils";
 import Pill from "../../components/Pill";
-import type { ReleaseGroupArtist } from "../../entity-pages/utils";
 
 type ReleaseCardProps = {
   releaseDate?: string;
@@ -19,7 +18,7 @@ type ReleaseCardProps = {
   releaseGroupMBID?: string;
   releaseName: string;
   artistCreditName: string;
-  artistCredits?: Array<ReleaseGroupArtist>;
+  artistCredits?: Array<MBIDMappingArtist>;
   releaseTypePrimary?: string | null;
   releaseTypeSecondary?: string | null;
   confidence?: number | null;
