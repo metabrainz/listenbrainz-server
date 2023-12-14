@@ -1,13 +1,9 @@
 import * as React from "react";
-import {
-  faChevronDown,
-  faChevronUp,
-  faGear,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Switch from "../../components/Switch";
+import SideBar from "../../components/Sidebar";
 import type {
   DisplaySettingsPropertiesEnum,
   DisplaySettings,
@@ -52,12 +48,6 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     releaseCardGridRef,
     pageType,
   } = props;
-
-  // TODO: Refactor this functionality in a reusable Sidebar component
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
 
   const [checkedList, setCheckedList] = React.useState<
     Array<string | undefined>
@@ -192,205 +182,199 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   ]);
 
   return (
-    <>
-      <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
-        <div id="sidebar-fresh-release">
-          <p>Fresh Releases</p>
-          <p>
-            Listen to recent releases, and browse what&apos;s dropping soon.
-          </p>
-          <p>
-            Check out all releases worldwide, or just from artists you&apos;ve
-            listened to before, with &apos;for you&apos;.
-          </p>
-        </div>
-        <div className="sidenav-content-grid">
+    <SideBar>
+      <div className="sidebar-header">
+        <p>Fresh Releases</p>
+        <p>Listen to recent releases, and browse what&apos;s dropping soon.</p>
+        <p>
+          Check out all releases worldwide, or just from artists you&apos;ve
+          listened to before, with &apos;for you&apos;.
+        </p>
+      </div>
+      <div className="sidenav-content-grid">
+        <div
+          onClick={toggleFilters}
+          onKeyDown={toggleFilters}
+          role="button"
+          tabIndex={0}
+        >
           <h4>
             {filtersOpen ? (
-              <FontAwesomeIcon icon={faChevronDown} onClick={toggleFilters} />
+              <FontAwesomeIcon icon={faChevronDown} />
             ) : (
-              <FontAwesomeIcon icon={faChevronUp} onClick={toggleFilters} />
+              <FontAwesomeIcon icon={faChevronUp} />
             )}
             {"  "}
             <b>Filter</b>
           </h4>
+        </div>
 
-          {filtersOpen && (
-            <>
-              <div id="range">Range: </div>
+        {filtersOpen && (
+          <>
+            <div id="range">Range: </div>
 
-              <div className="input-group">
+            <div className="input-group">
+              <select
+                id="style"
+                className="form-control"
+                value={range}
+                onChange={handleRangeDropdown}
+              >
+                {availableRangeOptions.map((option) => (
+                  <option value={option.key} key={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Switch
+              id="date-filter-item-past"
+              value="past"
+              checked={showPastReleases}
+              onChange={(e) => setShowPastReleases(!showPastReleases)}
+              switchLabel="Past"
+            />
+            <Switch
+              id="date-filter-item-future"
+              value="future"
+              checked={showFutureReleases}
+              onChange={(e) => setShowFutureReleases(!showFutureReleases)}
+              switchLabel="Future"
+            />
+            {allFilters.releaseTypes.length > 0 && (
+              <>
+                <span id="types">Types:</span>
+                {allFilters.releaseTypes?.map((type, index) => (
+                  <Switch
+                    id={`filters-item-${index}`}
+                    key={`filters-item-${type}`}
+                    value={type}
+                    checked={checkedList?.includes(type)}
+                    onChange={handleFilterChange}
+                    switchLabel={type}
+                  />
+                ))}
+              </>
+            )}
+
+            {allFilters.releaseTags.length > 0 && (
+              <>
+                <span id="tags">Include (only):</span>
+                <select
+                  id="include-tags"
+                  className="form-control"
+                  value=""
+                  onChange={handleIncludeTagChange}
+                >
+                  <option value="" disabled>
+                    selection genre/tag...
+                  </option>
+                  {allFilters.releaseTags
+                    ?.filter((tag) => !releaseTagsCheckList.includes(tag))
+                    ?.map((tag, index) => (
+                      <option value={tag} key={tag}>
+                        {tag}
+                      </option>
+                    ))}
+                </select>
+
+                <div className="release-tags">
+                  {releaseTagsCheckList?.map((tag, index) => (
+                    <div id={`include-tag-item-${index}`} className="tags">
+                      <span className="release-tag-name">{tag}</span>
+                      <FontAwesomeIcon
+                        icon={faCircleXmark}
+                        onClick={() => removeFilterTag(tag!)}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <span id="tags">Exclude:</span>
                 <select
                   id="style"
                   className="form-control"
-                  value={range}
-                  onChange={handleRangeDropdown}
+                  value=""
+                  onChange={handleExcludeTagChange}
                 >
-                  {availableRangeOptions.map((option) => (
-                    <option value={option.key} key={option.key}>
-                      {option.label}
-                    </option>
-                  ))}
+                  <option value="" disabled>
+                    selection genre/tag...
+                  </option>
+                  {allFilters.releaseTags
+                    ?.filter(
+                      (tag) => !releaseTagsExcludeCheckList.includes(tag)
+                    )
+                    ?.map((tag, index) => (
+                      <option value={tag} key={tag}>
+                        {tag}
+                      </option>
+                    ))}
                 </select>
-              </div>
-              <Switch
-                id="date-filter-item-past"
-                value="past"
-                checked={showPastReleases}
-                onChange={(e) => setShowPastReleases(!showPastReleases)}
-                switchLabel="Past"
-              />
-              <Switch
-                id="date-filter-item-future"
-                value="future"
-                checked={showFutureReleases}
-                onChange={(e) => setShowFutureReleases(!showFutureReleases)}
-                switchLabel="Future"
-              />
-              {allFilters.releaseTypes.length > 0 && (
-                <>
-                  <span id="types">Types:</span>
-                  {allFilters.releaseTypes?.map((type, index) => (
-                    <Switch
-                      id={`filters-item-${index}`}
-                      key={`filters-item-${type}`}
-                      value={type}
-                      checked={checkedList?.includes(type)}
-                      onChange={handleFilterChange}
-                      switchLabel={type}
-                    />
+
+                <div className="release-tags">
+                  {releaseTagsExcludeCheckList?.map((tag, index) => (
+                    <div id={`exclude-tag-item-${index}`} className="tags">
+                      <span className="release-tag-name">{tag}</span>
+                      <FontAwesomeIcon
+                        icon={faCircleXmark}
+                        onClick={() => removeExcludeTag(tag!)}
+                      />
+                    </div>
                   ))}
-                </>
-              )}
-
-              {allFilters.releaseTags.length > 0 && (
-                <>
-                  <span id="tags">Include (only):</span>
-                  <select
-                    id="include-tags"
-                    className="form-control"
-                    value=""
-                    onChange={handleIncludeTagChange}
-                  >
-                    <option value="" disabled>
-                      selection genre/tag...
-                    </option>
-                    {allFilters.releaseTags
-                      ?.filter((tag) => !releaseTagsCheckList.includes(tag))
-                      ?.map((tag, index) => (
-                        <option value={tag} key={tag}>
-                          {tag}
-                        </option>
-                      ))}
-                  </select>
-
-                  <div className="release-tags">
-                    {releaseTagsCheckList?.map((tag, index) => (
-                      <div id={`include-tag-item-${index}`} className="tags">
-                        <span className="release-tag-name">{tag}</span>
-                        <FontAwesomeIcon
-                          icon={faCircleXmark}
-                          onClick={() => removeFilterTag(tag!)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <span id="tags">Exclude:</span>
-                  <select
-                    id="style"
-                    className="form-control"
-                    value=""
-                    onChange={handleExcludeTagChange}
-                  >
-                    <option value="" disabled>
-                      selection genre/tag...
-                    </option>
-                    {allFilters.releaseTags
-                      ?.filter(
-                        (tag) => !releaseTagsExcludeCheckList.includes(tag)
-                      )
-                      ?.map((tag, index) => (
-                        <option value={tag} key={tag}>
-                          {tag}
-                        </option>
-                      ))}
-                  </select>
-
-                  <div className="release-tags">
-                    {releaseTagsExcludeCheckList?.map((tag, index) => (
-                      <div id={`exclude-tag-item-${index}`} className="tags">
-                        <span className="release-tag-name">{tag}</span>
-                        <FontAwesomeIcon
-                          icon={faCircleXmark}
-                          onClick={() => removeExcludeTag(tag!)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </div>
-        <div className="sidenav-content-grid">
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
+      <div className="sidenav-content-grid">
+        <div
+          onClick={toggleDisplay}
+          onKeyDown={toggleDisplay}
+          role="button"
+          tabIndex={0}
+        >
           <h4>
             {displayOpen ? (
-              <FontAwesomeIcon icon={faChevronDown} onClick={toggleDisplay} />
+              <FontAwesomeIcon icon={faChevronDown} />
             ) : (
-              <FontAwesomeIcon icon={faChevronUp} onClick={toggleDisplay} />
+              <FontAwesomeIcon icon={faChevronUp} />
             )}
             {"  "}
             <b>Display</b>
           </h4>
-
-          {displayOpen && (
-            <>
-              <Switch
-                id="coverart-only"
-                value="coverart-only"
-                checked={coverartOnly}
-                onChange={(e) => setCoverartOnly(!coverartOnly)}
-                switchLabel="Only Releases with artwork"
-              />
-
-              {Object.keys(displaySettings).map((setting, index) =>
-                (setting === "Tags" && allFilters.releaseTags.length === 0) ||
-                (setting === "Listens" && !totalListenCount) ? null : (
-                  <Switch
-                    id={`display-item-${index}`}
-                    key={`display-item-${setting}`}
-                    value={setting}
-                    checked={
-                      displaySettings[setting as DisplaySettingsPropertiesEnum]
-                    }
-                    onChange={(e) =>
-                      toggleSettings(setting as DisplaySettingsPropertiesEnum)
-                    }
-                    switchLabel={setting}
-                  />
-                )
-              )}
-            </>
-          )}
         </div>
+
+        {displayOpen && (
+          <>
+            <Switch
+              id="coverart-only"
+              value="coverart-only"
+              checked={coverartOnly}
+              onChange={(e) => setCoverartOnly(!coverartOnly)}
+              switchLabel="Only Releases with artwork"
+            />
+
+            {Object.keys(displaySettings).map((setting, index) =>
+              (setting === "Tags" && allFilters.releaseTags.length === 0) ||
+              (setting === "Listens" && !totalListenCount) ? null : (
+                <Switch
+                  id={`display-item-${index}`}
+                  key={`display-item-${setting}`}
+                  value={setting}
+                  checked={
+                    displaySettings[setting as DisplaySettingsPropertiesEnum]
+                  }
+                  onChange={(e) =>
+                    toggleSettings(setting as DisplaySettingsPropertiesEnum)
+                  }
+                  switchLabel={setting}
+                />
+              )
+            )}
+          </>
+        )}
       </div>
-      <button
-        className={`toggle-sidebar-button ${isSidebarOpen ? "open" : ""}`}
-        onClick={toggleSidebar}
-        type="button"
-      >
-        <FontAwesomeIcon icon={isSidebarOpen ? faXmark : faGear} size="2x" />
-      </button>
-      {isSidebarOpen && (
-        <button
-          className="sidebar-overlay"
-          onClick={toggleSidebar}
-          type="button"
-        >
-          {}
-        </button>
-      )}
-    </>
+    </SideBar>
   );
 }

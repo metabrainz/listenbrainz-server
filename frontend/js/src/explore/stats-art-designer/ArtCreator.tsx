@@ -24,6 +24,7 @@ import ToggleOption from "./components/ToggleOption";
 import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../playlists/UserSearch";
+import Sidebar from "../../components/Sidebar";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -388,7 +389,7 @@ function ArtCreator() {
           size={DEFAULT_IMAGE_SIZE}
         />
       </div>
-      <div className="sidebar settings-navbar">
+      <Sidebar>
         <div className="basic-settings-container">
           <div className="sidenav-content-grid">
             <h4>Settings</h4>
@@ -666,7 +667,7 @@ function ArtCreator() {
             Generate
           </button>
         </div> */}
-      </div>
+      </Sidebar>
     </div>
   );
 }

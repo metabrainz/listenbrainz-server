@@ -10,7 +10,7 @@ import {
 import Pill from "../../components/Pill";
 
 type ReleaseCardProps = {
-  releaseDate: string;
+  releaseDate?: string;
   artistMBIDs: Array<string>;
   releaseMBID: string;
   releaseName: string;
@@ -25,8 +25,8 @@ type ReleaseCardProps = {
   showInformation?: boolean;
   showTags?: boolean;
   showListens?: boolean;
-  releaseTags: Array<string>;
-  listenCount: number;
+  releaseTags?: Array<string>;
+  listenCount?: number;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -51,12 +51,8 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   } = props;
 
   const [imageLoaded, setImageLoaded] = React.useState(false);
-
-  const futureRelease = new Date(releaseDate) > new Date();
-  const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
-  const RELEASE_TYPE_UNKNOWN = "Unknown";
-
   const [coverartSrc, setCoverartSrc] = React.useState<string>();
+  const RELEASE_TYPE_UNKNOWN = "Unknown";
 
   function releaseTypeTooltip(): string | undefined | null {
     if (
@@ -82,6 +78,10 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
     return `${releaseTypePrimary} + ${releaseTypeSecondary}`;
   }
+
+  const futureRelease = releaseDate
+    ? new Date(releaseDate) > new Date()
+    : false;
 
   const releaseCoverArtIcon = (
     <FontAwesomeIcon icon={futureRelease ? faHourglass : faPlay} />
@@ -150,9 +150,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
                   releaseTypePrimary ||
                   RELEASE_TYPE_UNKNOWN}
               </div>
-              <div className="release-date">
-                {formatReleaseDate(releaseDate)}
-              </div>
+              {releaseDate && (
+                <div className="release-date">
+                  {formatReleaseDate(releaseDate)}
+                </div>
+              )}
             </div>
           )}
         </div>
