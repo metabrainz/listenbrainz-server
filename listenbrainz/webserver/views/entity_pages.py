@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, current_app
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
+from listenbrainz.db.stats import get_entity_listener
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
@@ -131,6 +132,12 @@ def artist_entity(artist_mbid):
 
     release_groups.sort(key=get_release_group_sort_key, reverse=True)
 
+    listening_stats = get_entity_listener("artists", artist_mbid, "all_time")
+    if listening_stats is None:
+        listening_stats = {
+            "total_listen_count": 0,
+            "listeners": []
+        }
 
     try:
         cover_art = get_cover_art_for_artist(release_groups)

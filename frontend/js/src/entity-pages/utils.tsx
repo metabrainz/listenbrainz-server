@@ -55,6 +55,14 @@ export type PopularRecording = {
   total_user_count: number;
 };
 
+export type ListeningStats = {
+  total_listen_count: number;
+  listeners: Array<{
+    user_name: string;
+    listen_count: number;
+  }>;
+};
+
 export function getRelIconLink(relName: string, relValue: string) {
   let icon;
   switch (relName) {
@@ -149,46 +157,4 @@ export function popularRecordingToListen(recording: PopularRecording): Listen {
       },
     },
   };
-}
-
-export async function getArtistCoverImage(
-  releaseMBIDs: string[],
-  APIURL: string
-): Promise<string | undefined> {
-  try {
-    const payload = {
-      background: "transparent",
-      image_size: 400,
-      cover_art_size: 250,
-      dimension: 4,
-      "skip-missing": true,
-      "show-caa": false,
-      tiles: [
-        "0,1,4,5",
-        "10,11,14,15",
-        "2",
-        "3",
-        "6",
-        "7",
-        "8",
-        "9",
-        "12",
-        "13",
-      ],
-      release_mbids: compact(releaseMBIDs),
-    };
-    const response = await fetch(`${APIURL}/art/grid/`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: {
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-    });
-    if (response.ok) {
-      return await response.text();
-    }
-  } catch (error) {
-    console.error("Could not load image art:", error);
-  }
-  return undefined;
 }

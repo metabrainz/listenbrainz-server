@@ -23,8 +23,8 @@ import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import {
-  getArtistCoverImage,
   getRelIconLink,
+  ListeningStats,
   popularRecordingToListen,
 } from "./utils";
 import type { PopularRecording, ReleaseGroup, SimilarArtist } from "./utils";
@@ -35,6 +35,7 @@ export type ArtistPageProps = {
   artist: MusicBrainzArtist;
   releaseGroups: ReleaseGroup[];
   similarArtists: SimilarArtist[];
+  listeningStats: ListeningStats;
   coverArt?: string;
 };
 
@@ -45,12 +46,12 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     popularRecordings: initialPopularRecordings,
     releaseGroups,
     similarArtists,
+    listeningStats,
     coverArt: coverArtSVG
   } = props;
+  const { total_listen_count: listenCount, listeners: topListeners } = listeningStats;
 
   const [artist, setArtist] = React.useState(initialArtist);
-  const [topListeners, setTopListeners] = React.useState([]);
-  const [listenCount, setListenCount] = React.useState(0);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
@@ -86,21 +87,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   //   };
 
   React.useEffect(() => {
-    async function fetchListenerStats() {
-      try {
-        const response = await fetch(
-          `${APIService.APIBaseURI}/stats/artist/${artist.artist_mbid}/listeners`
-        );
-        const body = await response.json();
-        if (!response.ok) {
-          throw body?.message ?? response.statusText;
-        }
-        setTopListeners(body.payload.listeners);
-        setListenCount(body.payload.total_listen_count);
-      } catch (error) {
-        toast.error(error);
-      }
-    }
     async function fetchReviews() {
       try {
         const response = await fetch(
@@ -129,7 +115,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         toast.error(error);
       }
     }
-    fetchListenerStats();
     fetchReviews();
     fetchWikipediaExtract();
   }, [artist, releaseGroups, APIService.APIBaseURI]);
@@ -509,6 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
     popular_recordings,
     release_groups,
     similar_artists,
+    listening_stats,
     cover_art
   } = reactProps;
 
@@ -529,6 +515,7 @@ document.addEventListener("DOMContentLoaded", () => {
             popularRecordings={popular_recordings}
             releaseGroups={release_groups}
             similarArtists={similar_artists}
+            listeningStats={listening_stats}
             coverArt={cover_art}
           />
         </NiceModal.Provider>
