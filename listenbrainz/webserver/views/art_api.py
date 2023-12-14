@@ -93,7 +93,7 @@ def cover_art_grid_post():
 
     if "cover_art_size" in r:
         cover_art_size = r["cover_art_size"]
-    elif image_size < 1000:
+    elif r["image_size"] < 1000:
         cover_art_size = 250
     else:
         cover_art_size = 500

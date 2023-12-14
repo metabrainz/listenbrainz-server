@@ -35,6 +35,7 @@ export type ArtistPageProps = {
   artist: MusicBrainzArtist;
   releaseGroups: ReleaseGroup[];
   similarArtists: SimilarArtist[];
+  coverArt?: string;
 };
 
 export default function ArtistPage(props: ArtistPageProps): JSX.Element {
@@ -44,6 +45,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     popularRecordings: initialPopularRecordings,
     releaseGroups,
     similarArtists,
+    coverArt: coverArtSVG
   } = props;
 
   const [artist, setArtist] = React.useState(initialArtist);
@@ -58,9 +60,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     initialPopularRecordings
   );
   const [loading, setLoading] = React.useState(false);
-
-  /** Album art and album color related */
-  const [coverArtSVG, setCoverArtSVG] = React.useState<string>();
 
   const [albumsByThisArtist, alsoAppearsOn] = partition(releaseGroups, (rg) =>
     rg.release_group_artists.find(
@@ -89,26 +88,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   //   };
 
   React.useEffect(() => {
-    async function fetchCoverArt() {
-      try {
-        const fetchedCoverArtSVG = await getArtistCoverImage(
-          chain(releaseGroups)
-            .take(30)
-            .reduce((resultArray, releaseGroup) => {
-              resultArray.push(releaseGroup.caa_release_mbid);
-              return resultArray;
-            }, [] as string[])
-            .value(),
-          APIService.APIBaseURI
-        );
-        if (fetchedCoverArtSVG) {
-          setCoverArtSVG(fetchedCoverArtSVG);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
     async function fetchListenerStats() {
       try {
         const response = await fetch(
@@ -152,7 +131,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         toast.error(error);
       }
     }
-    fetchCoverArt();
     fetchListenerStats();
     fetchReviews();
     fetchWikipediaExtract();
@@ -533,6 +511,7 @@ document.addEventListener("DOMContentLoaded", () => {
     popular_recordings,
     release_groups,
     similar_artists,
+    cover_art
   } = reactProps;
 
   const ArtistPageWithAlertNotifications = withAlertNotifications(ArtistPage);
@@ -552,6 +531,7 @@ document.addEventListener("DOMContentLoaded", () => {
             popularRecordings={popular_recordings}
             releaseGroups={release_groups}
             similarArtists={similar_artists}
+            coverArt={cover_art}
           />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from flask import Blueprint, render_template, current_app
 from flask_login import current_user, login_required
 from listenbrainz import webserver
+from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.db import timescale
 from listenbrainz.db.metadata import get_metadata_for_artist
@@ -30,6 +33,49 @@ release_bp = Blueprint("release", __name__)
 # Test cases
 # with cover art: 48140466-cff6-3222-bd55-63c27e43190d
 # without : 061e2733-aa87-3ca6-bbec-3303ca1a2760
+
+
+def get_release_group_sort_key(release_group):
+    """ Return a tuple that sorts release group by total_listen_count and then by date """
+    release_date = release_group.get("date")
+    if release_date is None:
+        release_date = datetime.min
+    else:
+        release_date = datetime.strptime(release_date, "%Y-%m-%d")
+
+    return release_group["total_listen_count"] or 0, release_date
+
+
+def get_cover_art_for_artist(release_groups):
+    """ Get the cover art for an artist using a list of their release groups """
+    covers = [rg for rg in release_groups if rg.get("caa_id") is not None]
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"],
+        4,
+        400,
+        "transparent",
+        True,
+        False
+    )
+    images = cac.generate_from_caa_ids(covers, [
+        "0,1,4,5",
+        "10,11,14,15",
+        "2",
+        "3",
+        "6",
+        "7",
+        "8",
+        "9",
+        "12",
+        "13",
+      ], None, 250)
+    return render_template(
+        "art/svg-templates/simple-grid.svg",
+        background="transparent",
+        images=images,
+        width=400,
+        height=400
+    )
 
 
 @release_bp.route("/<release_group_mbid>", methods=["GET"])
@@ -93,81 +139,11 @@ def artist_entity(artist_mbid):
     top_release_groups = get_top_entity_for_entity("release-group", artist_mbid, "release-group")
     release_group_mbids = tuple([str(k["release_group_mbid"]) for k in top_release_groups])
 
-    query = """WITH rg_cover_art AS (
-                   SELECT DISTINCT ON (rg.id)
-                          rg.id AS release_group
-                        , caa.id AS caa_id
-                        , caa_rel.gid AS caa_release_mbid
-                     FROM musicbrainz.release_group rg
-                     JOIN musicbrainz.release caa_rel
-                       ON rg.id = caa_rel.release_group
-                LEFT JOIN (
-                         SELECT release, date_year, date_month, date_day
-                           FROM musicbrainz.release_country
-                      UNION ALL
-                         SELECT release, date_year, date_month, date_day
-                           FROM musicbrainz.release_unknown_country
-                        ) re
-                       ON (re.release = caa_rel.id)
-                FULL JOIN cover_art_archive.release_group_cover_art rgca
-                       ON rgca.release = caa_rel.id
-                LEFT JOIN cover_art_archive.cover_art caa
-                       ON caa.release = caa_rel.id
-                LEFT JOIN cover_art_archive.cover_art_type cat
-                       ON cat.id = caa.id
-                    WHERE type_id = 1
-                      AND mime_type != 'application/pdf'
-                      AND rg.gid in %s
-                 ORDER BY rg.id
-                        , rgca.release
-                        , re.date_year
-                        , re.date_month
-                        , re.date_day
-                        , caa.ordering
-               )
-                   SELECT rg.gid::TEXT AS release_group_mbid
-                        , rg.name AS release_group_name
-                        , ac.name AS artist_credit_name
-                        , rgca.caa_id AS caa_id
-                        , rgca.caa_release_mbid::TEXT AS caa_release_mbid
-                        , (rgm.first_release_date_year::TEXT || '-' ||
-                            LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
-                            LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
-                        , rgpt.name AS type
-                        , json_agg(json_build_object('artist_mbid', a.gid::TEXT,
-                                                     'artist_credit_name', a.name,
-                                                     'join_phrase', acn.join_phrase) ORDER BY acn.position) AS release_group_artists
-                     FROM musicbrainz.release_group rg
-                     JOIN musicbrainz.release_group_meta rgm
-                       ON rgm.id = rg.id
-                     JOIN musicbrainz.release_group_primary_type rgpt
-                          ON rg.type = rgpt.id
-                     JOIN musicbrainz.artist_credit ac
-                       ON rg.artist_credit = ac.id
-                     JOIN musicbrainz.artist_credit_name acn
-                       ON ac.id = acn.artist_credit
-                     JOIN musicbrainz.artist a
-                       ON acn.artist = a.id
-                LEFT JOIN rg_cover_art rgca
-                       ON rgca.release_group = rg.id
-                    WHERE rg.gid in %s
-                 GROUP BY rg.gid
-                        , rg.name
-                        , rgpt.name
-                        , rgm.first_release_date_year
-                        , rgm.first_release_date_month
-                        , rgm.first_release_date_day
-                        , make_date(rgm.first_release_date_year, rgm.first_release_date_month, rgm.first_release_date_day)
-                        , ac.name
-                        , rgca.caa_id
-                        , rgca.caa_release_mbid"""
-
-    release_groups = []
-    if len(release_group_mbids) > 0:
-        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn:
-            with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-                mb_curs.execute(query, (release_group_mbids, release_group_mbids))
-                release_groups = [dict(row) for row in mb_curs.fetchall()]
+    try:
+        cover_art = get_cover_art_for_artist(release_groups)
+    except Exception:
+        current_app.logger.error("Error generating cover art for artist:", exc_info=True)
+        cover_art = None
 
     props = {
         "artist_data": item,
@@ -178,7 +154,8 @@ def artist_entity(artist_mbid):
         # total plays for artist
         # total # of listeners for artist
         # top listeners (10)
-        "release_groups": release_groups
+        "release_groups": release_groups,
+        "cover_art": cover_art
     }
 
     return render_template("entities/artist.html",
