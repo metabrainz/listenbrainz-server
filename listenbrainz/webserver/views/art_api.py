@@ -388,3 +388,38 @@ def cover_art_yim_2022(user_name):
 
     return svg, 200, {"Content-Type": "image/svg+xml"}
 
+
+@art_api_bp.route("/year-in-music/2023/<user_name>", methods=["GET"])
+@crossdomain
+@ratelimit()
+def cover_art_yim_2023(user_name):
+    """ Create the shareable svg image using YIM 2022 stats """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APIBadRequest(f"User {user_name} not found")
+
+    stats = db_yim.get(user["id"], 2023)
+    genres = [(x["genre"], int(x["genre_count_percent"])) for x in stats.get("top_genres", [])[:4]]
+
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+
+    release_group_1 = stats["top_release_groups"][0]
+    release_group_2 = stats["top_release_groups"][1]
+
+    cover_art_1 = cac.resolve_cover_art(release_group_1["caa_id"], release_group_1["caa_release_mbid"], 250)
+    cover_art_2 = cac.resolve_cover_art(release_group_2["caa_id"], release_group_2["caa_release_mbid"], 250)
+
+    props = {
+        "artists_count": stats.get("total_artists_count", 0),
+        "albums_count": stats.get("total_release_groups_count", 0),
+        "songs_count": stats.get("total_recordings_count", 0),
+        "genres": genres,
+        "user_name": user_name,
+        "listen_count_1": release_group_1["listen_count"],
+        "listen_count_2": release_group_2["listen_count"],
+        "cover_art_1": cover_art_1,
+        "cover_art_2": cover_art_2,
+        "plant_img": "https://beta.listenbrainz.org/static/img/year-in-music-23/plantgreenlight.png"
+    }
+
+    return render_template("art/svg-templates/yim-2023.svg", **props), 200, {"Content-Type": "image/svg+xml"}
