@@ -167,7 +167,7 @@ def send_mail(subject, to_name, to_email, text, html, logo, logo_cid):
     message.set_content(text)
     message.add_alternative(html, subtype="html")
 
-    message.get_payload()[1].add_related(logo, 'image', 'png', cid=logo_cid, filename="year-in-music-2022-logo.png")
+    message.get_payload()[1].add_related(logo, 'image', 'png', cid=logo_cid, filename="year-in-music-23-logo.png")
     if current_app.config["TESTING"]:  # Not sending any emails during the testing process
         return
 
@@ -179,7 +179,7 @@ def send_mail(subject, to_name, to_email, text, html, logo, logo_cid):
 
 def notify_yim_users(year):
     logo_cid = make_msgid()
-    with open("/static/img/year-in-music-22/yim-22-logo-small-compressed.png", "rb") as img:
+    with open("/static/img/year-in-music-23/yim-23-logo-small-compressed.png", "rb") as img:
         logo = img.read()
 
     with db.engine.connect() as connection:
