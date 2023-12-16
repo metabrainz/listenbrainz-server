@@ -399,6 +399,8 @@ def cover_art_yim_2023(user_name):
         raise APIBadRequest(f"User {user_name} not found")
 
     stats = db_yim.get(user["id"], 2023)
+    if stats is None:
+        raise APIBadRequest(f"Year In Music report for user {user_name} not found")
 
     filtered_genres = []
     total_filtered_genre_count = 0
