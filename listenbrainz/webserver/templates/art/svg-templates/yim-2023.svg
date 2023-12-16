@@ -19,8 +19,14 @@
         .heading, .entity-count {
           font-size: 70px;
         }
-        .listen-count {
+        .listen-count, .album-name, .artist-name {
           font-size: 20px;
+        }
+        .album-name, .artist-name {
+          fill: #F0EEE2;
+        }
+        .artist-name {
+          font-weight: 300;
         }
         .entity {
           font-weight: 300;
@@ -45,9 +51,28 @@
                 <tspan x="26" y="210">MUSIC</tspan>
             </text>
             <line x1="26" y1="244" x2="244" y2="244" stroke="#4C6C52" stroke-width="8"/>
-            <image x="171" y="291" width="207" height="207" xlink:href="{{ cover_art_2 }}"/>
-            <image width="91.0529" height="161.262" transform="matrix(-0.997002 0.0773749 0.0773749 0.997002 911.78 776)" xlink:href="{{ plant_img }}"/>
         </g>
+        {%- if album_2 -%}
+            <g>
+                {% if album_2['cover_art'] %}
+                <image x="171" y="291" width="207" height="207" xlink:href="{{ album_2['cover_art'] }}"/>
+                {% else %}
+                <rect x="191" y="291" width="207" height="207" fill="#FFC93D"/>
+                <text x="195" y="525" style="transform: rotate(-90deg); transform-origin: 191px 498px;">
+                     <tspan class="album-name">
+                       {{ album_1['title']|upper|e }}
+                     </tspan>
+                     <tspan x="195" dy="20" class="artist-name">
+                       {{ album_1['artist']|upper|e }}
+                     </tspan>
+                </text>
+                {% endif %}
+                <text class="listen-count" style="transform: rotate(-90deg); transform-origin: 158px 498px;" x="158" y="498">
+                    <tspan>#2:</tspan>
+                    <tspan style="font-weight: 300">{{ "{:,}".format(album_2['listen_count']) }} Listens</tspan>
+                </text>
+            </g>
+        {%- endif -%}
         <text text-anchor="end" x="874" y="214">
             <tspan class="entity-count">{{ "{:,}".format(artists_count) }}</tspan>
             <tspan class="entity" dx="16">ARTISTS</tspan>
@@ -60,24 +85,34 @@
             <tspan class="entity-count">{{ "{:,}".format(songs_count) }}</tspan>
             <tspan class="entity" dx="16">SONGS</tspan>
         </text>
-        <text class="listen-count" style="transform: rotate(-90deg); transform-origin: 158px 498px;" x="158" y="498">
-            <tspan>#2:</tspan>
-            <tspan style="font-weight: 300">{{ "{:,}".format(listen_count_2) }} Listens</tspan>
-        </text>
-        {%- set y_start = 837 -%}
+        {%- set y_start = 850 -%}
         {%- set y_step = 79 -%}
         {%- for genre in genres -%}
             <text class="genre-count {% if loop.index0 > 0 %}dark{% endif %}" x="70" y="{{ y_start - y_step * loop.index0 }}">
-                <tspan style="font-weight: 300">{{ genre[1] }}%</tspan>
-                <tspan dx="6">{{ genre[0]|upper }}</tspan>
+                <tspan style="font-weight: 300">{{ genre['genre_count_percent'] }}%</tspan>
+                <tspan dx="6">{{ genre['genre']|upper }}</tspan>
             </text>
-        {%- endfor %}
-        <g>
-            <image x="346" y="373" width="396" height="396" xlink:href="{{ cover_art_1 }}"/>
-            <text class="listen-count" style="text-anchor: end;transform: rotate(90deg); transform-origin: 755px 769px;" x="755" y="769">
-                <tspan>#1:</tspan>
-                <tspan style="font-weight: 300">{{ "{:,}".format(listen_count_1) }} Listens</tspan>
-            </text>
-        </g>
+        {%- endfor -%}
+        {%- if album_1 -%}
+            <g>
+                {% if album_1['cover_art'] %}
+                <image x="346" y="373" width="396" height="396" xlink:href="{{ album_1['cover_art'] }}"/>
+                {% else %}
+                <rect x="346" y="373" width="396" height="396" fill="#EB743B"/>
+                <text x="746" y="400" style="transform: rotate(90deg); transform-origin: 742px 373px;">
+                     <tspan class="album-name">
+                       {{ album_1['title']|upper|e }}
+                     </tspan>
+                     <tspan x="746" dy="20" class="artist-name">
+                       {{ album_1['artist']|upper|e }}
+                     </tspan>
+                </text>
+                {% endif %}
+                <text class="listen-count" style="transform: rotate(90deg); transform-origin: 755px 373px;" x="755" y="373">
+                    <tspan>#1:</tspan>
+                    <tspan style="font-weight: 300">{{ "{:,}".format(album_1['listen_count']) }} Listens</tspan>
+                </text>
+            </g>
+        {%- endif -%}
     </g>
 </svg>

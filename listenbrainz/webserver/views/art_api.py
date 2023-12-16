@@ -399,27 +399,49 @@ def cover_art_yim_2023(user_name):
         raise APIBadRequest(f"User {user_name} not found")
 
     stats = db_yim.get(user["id"], 2023)
-    genres = [(x["genre"], int(x["genre_count_percent"])) for x in stats.get("top_genres", [])[:4]]
+
+    filtered_genres = []
+    total_filtered_genre_count = 0
+    for genre in stats.get("top_genres", []):
+        if genre["genre"] not in ("pop", "rock", "electronic", "hip hop"):
+            filtered_genres.append(genre)
+            total_filtered_genre_count += genre["genre_count"]
+
+    filtered_top_genres = []
+    for genre in filtered_genres[:4]:
+        genre_count_percent = round(genre["genre_count"] / total_filtered_genre_count * 100)
+        filtered_top_genres.append({"genre": genre["genre"], "genre_count_percent": genre_count_percent})
 
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
 
-    release_group_1 = stats["top_release_groups"][0]
-    release_group_2 = stats["top_release_groups"][1]
+    albums = []
+    for release_group in stats.get("top_release_groups", [])[:2]:
+        if release_group.get("caa_id") and release_group.get("caa_release_mbid"):
+            cover_art = cac.resolve_cover_art(release_group["caa_id"], release_group["caa_release_mbid"], 250)
+        else:
+            cover_art = None
+        albums.append({
+            "artist": release_group["artist_name"],
+            "title": release_group["release_group_name"],
+            "listen_count": release_group["listen_count"],
+            "cover_art": cover_art
+        })
 
-    cover_art_1 = cac.resolve_cover_art(release_group_1["caa_id"], release_group_1["caa_release_mbid"], 250)
-    cover_art_2 = cac.resolve_cover_art(release_group_2["caa_id"], release_group_2["caa_release_mbid"], 250)
+    if len(albums) == 2:
+        album_1, album_2 = albums[0], albums[1]
+    elif len(albums) == 1:
+        album_1, album_2 = albums[0], None
+    else:
+        album_1, album_2 = None, None
 
     props = {
         "artists_count": stats.get("total_artists_count", 0),
         "albums_count": stats.get("total_release_groups_count", 0),
         "songs_count": stats.get("total_recordings_count", 0),
-        "genres": genres,
+        "genres": filtered_top_genres,
         "user_name": user_name,
-        "listen_count_1": release_group_1["listen_count"],
-        "listen_count_2": release_group_2["listen_count"],
-        "cover_art_1": cover_art_1,
-        "cover_art_2": cover_art_2,
-        "plant_img": "https://beta.listenbrainz.org/static/img/year-in-music-23/plantgreenlight.png"
+        "album_1": album_1,
+        "album_2": album_2
     }
 
     return render_template("art/svg-templates/yim-2023.svg", **props), 200, {"Content-Type": "image/svg+xml"}
