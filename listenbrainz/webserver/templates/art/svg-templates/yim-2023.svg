@@ -23,10 +23,17 @@
           font-size: 20px;
         }
         .album-name, .artist-name {
-          fill: #F0EEE2;
+          font-family: Inter, sans-serif;
+          font-weight: 900;
+          color: #F0EEE2;
+        }
+        .album-name {
+          margin: 8px;
         }
         .artist-name {
           font-weight: 300;
+          margin: 8px;
+          margin-top: 0;
         }
         .entity {
           font-weight: 300;
@@ -57,15 +64,13 @@
                 {% if album_2['cover_art'] %}
                 <image x="171" y="291" width="207" height="207" xlink:href="{{ album_2['cover_art'] }}"/>
                 {% else %}
-                <rect x="191" y="291" width="207" height="207" fill="#FFC93D"/>
-                <text x="195" y="525" style="transform: rotate(-90deg); transform-origin: 191px 498px;">
-                     <tspan class="album-name">
-                       {{ album_1['title']|upper|e }}
-                     </tspan>
-                     <tspan x="195" dy="20" class="artist-name">
-                       {{ album_1['artist']|upper|e }}
-                     </tspan>
-                </text>
+                <rect x="171" y="291" width="207" height="207" fill="#FFC93D"/>
+                <foreignObject x="171" y="498" width="207" height="207" style="transform: rotate(-90deg); transform-origin: 171px 498px;">
+                    <div xmlns="http://www.w3.org/1999/xhtml">
+                        <p class="album-name">{{ album_1['title']|upper|e }}</p>
+                        <p class="artist-name">{{ album_1['artist']|upper|e }}</p>
+                    </div>
+                </foreignObject>
                 {% endif %}
                 <text class="listen-count" style="transform: rotate(-90deg); transform-origin: 158px 498px;" x="158" y="498">
                     <tspan>#2:</tspan>
@@ -99,14 +104,12 @@
                 <image x="346" y="373" width="396" height="396" xlink:href="{{ album_1['cover_art'] }}"/>
                 {% else %}
                 <rect x="346" y="373" width="396" height="396" fill="#EB743B"/>
-                <text x="746" y="400" style="transform: rotate(90deg); transform-origin: 742px 373px;">
-                     <tspan class="album-name">
-                       {{ album_1['title']|upper|e }}
-                     </tspan>
-                     <tspan x="746" dy="20" class="artist-name">
-                       {{ album_1['artist']|upper|e }}
-                     </tspan>
-                </text>
+                <foreignObject x="742" y="373" width="396" height="396" style="transform: rotate(90deg); transform-origin: 742px 373px;">
+                    <div xmlns="http://www.w3.org/1999/xhtml">
+                        <p class="album-name">{{ album_1['title']|upper|e }}</p>
+                        <p class="artist-name">{{ album_1['artist']|upper|e }}</p>
+                    </div>
+                </foreignObject>
                 {% endif %}
                 <text class="listen-count" style="transform: rotate(90deg); transform-origin: 755px 373px;" x="755" y="373">
                     <tspan>#1:</tspan>
