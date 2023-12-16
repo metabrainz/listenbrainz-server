@@ -1,5 +1,6 @@
 from itertools import cycle
-from random import sample
+
+from markupsafe import Markup
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.year_in_music as db_yim
@@ -230,73 +231,49 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
 
     raise APIBadRequest(f"Unkown custom cover art type {custom_name}")
 
+
 def _cover_art_yim_stats(user_name, stats, year):
     """ Create the SVG using YIM statistics for the given year. """
+    if stats.get("day_of_week") is None or stats.get("most_listened_year") is None or \
+        stats.get("total_listen_count") is None or stats.get("total_new_artists_discovered") is None or \
+            stats.get("total_artists_count") is None:
+        return None
+
+    match stats["day_of_week"]:
+        case "Monday": most_played_day_message = 'I SURVIVED <tspan class="user-stat">MONDAYS</tspan> WITH MUSIC'
+        case "Tuesday": most_played_day_message = 'I CHILLED WITH MUSIC ON <tspan class="user-stat">TUESDAY</tspan>'
+        case "Wednesday": most_played_day_message = 'I GOT THROUGH <tspan class="user-stat">WEDNESDAYS</tspan> WITH MUSIC'
+        case "Thursday": most_played_day_message = 'I SPENT TIME WITH MY TUNES ON <tspan class="user-stat">THURSDAYS</tspan>'
+        case "Friday": most_played_day_message = 'I CELEBRATED <tspan class="user-stat">FRIDAYS</tspan> WITH MUSIC'
+        case "Saturday": most_played_day_message = 'I PARTIED HARD (OR HARDLY!) ON <tspan class="user-stat">SATURDAYS</tspan>'
+        case "Sunday": most_played_day_message = 'I LOVED SPENDING <tspan class="user-stat">SUNDAYS</tspan> WITH MUSIC'
+        case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
+
+    most_listened_year = max(stats["most_listened_year"], key=stats["most_listened_year"].get)
+
     if year == 2022:
-        return _cover_art_yim_stats_2022(user_name,stats)
+        return render_template(
+            "art/svg-templates/yim-2022.svg",
+            user_name=user_name,
+            most_played_day_message=Markup(most_played_day_message),
+            most_listened_year=most_listened_year,
+            total_listen_count=stats["total_listen_count"],
+            total_new_artists_discovered=stats["total_new_artists_discovered"],
+            total_artists_count=stats["total_artists_count"],
+            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+            magnify_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-magnify.png',
+        )
+
     if year == 2023:
-        return _cover_art_yim_stats_2023(user_name,stats)
-
-
-def _cover_art_yim_stats_2022(user_name, stats):
-    """ Create the SVG using YIM statistics for 2022 """
-    if stats.get("day_of_week") is None or stats.get("most_listened_year") is None or \
-        stats.get("total_listen_count") is None or stats.get("total_new_artists_discovered") or \
-        stats.get("total_artists_count") is None:
-        return None
-
-    match stats["day_of_week"]:
-        case "Monday": most_played_day_message = 'I SURVIVED <tspan class="user-stat">MONDAYS</tspan> WITH MUSIC'
-        case "Tuesday": most_played_day_message = 'I CHILLED WITH MUSIC ON <tspan class="user-stat">TUESDAY</tspan>'
-        case "Wednesday": most_played_day_message = 'I GOT THROUGH <tspan class="user-stat">WEDNESDAYS</tspan> WITH MUSIC'
-        case "Thursday": most_played_day_message = 'I SPENT TIME WITH MY TUNES ON <tspan class="user-stat">THURSDAYS</tspan>'
-        case "Friday": most_played_day_message = 'I CELEBRATED <tspan class="user-stat">FRIDAYS</tspan> WITH MUSIC'
-        case "Saturday": most_played_day_message = 'I PARTIED HARD (OR HARDLY!) ON <tspan class="user-stat">SATURDAYS</tspan>'
-        case "Sunday": most_played_day_message = 'I LOVED SPENDING <tspan class="user-stat">SUNDAYS</tspan> WITH MUSIC'
-        case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
-
-    most_listened_year = max(stats["most_listened_year"], key=stats["most_listened_year"].get)
-    return render_template(
-        "art/svg-templates/yim-2022.svg",
-        user_name=user_name,
-        most_played_day_message=most_played_day_message,
-        most_listened_year=most_listened_year,
-        total_listen_count=stats["total_listen_count"],
-        total_new_artists_discovered=stats["total_new_artists_discovered"],
-        total_artists_count=stats["total_artists_count"],
-        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
-        magnify_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-magnify.png',
-    )
-
-def _cover_art_yim_stats_2023(user_name, stats):
-    """ Create the SVG using YIM statistics for 2023 """
-    if stats.get("day_of_week") is None or stats.get("most_listened_year") is None or \
-        stats.get("total_listen_count") is None or stats.get("total_new_artists_discovered") or \
-        stats.get("total_artists_count") is None:
-        return None
-
-    match stats["day_of_week"]:
-        case "Monday": most_played_day_message = 'I SURVIVED <tspan class="user-stat">MONDAYS</tspan> WITH MUSIC'
-        case "Tuesday": most_played_day_message = 'I CHILLED WITH MUSIC ON <tspan class="user-stat">TUESDAY</tspan>'
-        case "Wednesday": most_played_day_message = 'I GOT THROUGH <tspan class="user-stat">WEDNESDAYS</tspan> WITH MUSIC'
-        case "Thursday": most_played_day_message = 'I SPENT TIME WITH MY TUNES ON <tspan class="user-stat">THURSDAYS</tspan>'
-        case "Friday": most_played_day_message = 'I CELEBRATED <tspan class="user-stat">FRIDAYS</tspan> WITH MUSIC'
-        case "Saturday": most_played_day_message = 'I PARTIED HARD (OR HARDLY!) ON <tspan class="user-stat">SATURDAYS</tspan>'
-        case "Sunday": most_played_day_message = 'I LOVED SPENDING <tspan class="user-stat">SUNDAYS</tspan> WITH MUSIC'
-        case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
-
-
-    most_listened_year = max(stats["most_listened_year"], key=stats["most_listened_year"].get)
-    return render_template(
-        "art/svg-templates/yim-2023-stats.svg",
-        user_name=user_name,
-        most_played_day_message=most_played_day_message,
-        most_listened_year=most_listened_year,
-        total_listen_count=stats["total_listen_count"],
-        total_new_artists_discovered=stats["total_new_artists_discovered"],
-        total_artists_count=stats["total_artists_count"],
-        image_url_root=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/year-in-music-23'
-    )
+        return render_template(
+            "art/svg-templates/yim-2023-stats.svg",
+            user_name=user_name,
+            most_played_day_message=Markup(most_played_day_message),
+            most_listened_year=most_listened_year,
+            total_listen_count=stats["total_listen_count"],
+            total_new_artists_discovered=stats["total_new_artists_discovered"],
+            total_artists_count=stats["total_artists_count"],
+        )
 
 
 def _cover_art_yim_albums(user_name, stats, year):
@@ -338,7 +315,6 @@ def _cover_art_yim_albums(user_name, stats, year):
             "art/svg-templates/yim-2023-albums.svg",
             user_name=user_name,
             image_urls=image_urls,
-            image_url_root=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/year-in-music-23'
         )
 
 
@@ -361,7 +337,6 @@ def _cover_art_yim_tracks(user_name, stats, year):
             "art/svg-templates/yim-2023-tracks.svg",
             user_name=user_name,
             tracks=stats["top_recordings"],
-            image_url_root=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/year-in-music-23'
         )
 
 
@@ -385,7 +360,6 @@ def _cover_art_yim_artists(user_name, stats, year):
             user_name=user_name,
             artists=stats["top_artists"],
             total_artists_count=stats["total_artists_count"],
-            image_url_root=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/year-in-music-23'
         )
 
 
@@ -432,7 +406,6 @@ def _cover_art_yim_playlist(user_name, stats, key, year):
             target_svg,
             user_name=user_name,
             image_urls=image_urls,
-            image_url_root=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/year-in-music-23'
         )
 
 
@@ -509,8 +482,8 @@ def cover_art_yim(user_name, year: int = 2022):
         case "albums": svg = _cover_art_yim_albums(user_name, stats, year)
         case "tracks": svg = _cover_art_yim_tracks(user_name, stats, year)
         case "artists": svg = _cover_art_yim_artists(user_name, stats, year)
-        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year",year)
-        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year",year)
+        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year)
+        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year)
         case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
     if svg is None:
