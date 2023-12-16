@@ -19,7 +19,7 @@ metadata_bp = Blueprint('metadata', __name__)
 
 
 def parse_incs():
-    allowed_incs = ("artist", "tag", "release", "recording")
+    allowed_incs = ("artist", "tag", "release", "recording", "release_group")
 
     incs = request.args.get("inc")
     if not incs:
@@ -353,6 +353,9 @@ def metadata_artist():
     for row in get_metadata_for_artist(artist_mbids):
         item = {"artist_mbid": row.artist_mbid}
         item.update(**row.artist_data)
-        item["tag"] = row.tag_data
+        if "tag" in incs:
+            item["tag"] = row.tag_data
+        if "release_group" in incs:
+            item["release_group"] = row.release_group_data
         results.append(item)
     return jsonify(results)
