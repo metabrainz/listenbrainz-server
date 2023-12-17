@@ -191,6 +191,7 @@ def notify_yim_users(year):
               JOIN "user"
                 ON "user".id = yim.user_id
              WHERE year = :year
+               AND data IS NOT NULL
         """), {"year": year})
         rows = result.mappings().fetchall()
 
