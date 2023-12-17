@@ -38,17 +38,15 @@
                 <div style="color: #4C6C52; font-size: 20px; font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: 12px;">
                   #yearinmusic
                 </div>
-                <table style="max-width: 450px; min-height: 90px; margin: 32px auto; background: #4C6C52; border-radius: 8px; color: #F0EEE2; font-size: 16px;">
+                <table style="max-width: 450px; min-height: 90px; width: 100%; margin: 32px auto; background: #4C6C52; border-radius: 8px; font-size: 16px;">
                   <tr>
-                    <td style="padding: 8px">
-                      {{ user_name }}, your ListenBrainz Year in Music is now available.
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px">
-                      <a style="color: #F0EEE2; font-weight: 700; text-decoration: none;"
+                    <td>
+                      <a style="color: #F0EEE2; text-decoration: none; padding: 24px; display: inline-block"
                          href="https://listenbrainz.org/user/{{ user_name }}/year-in-music/">
-                        Click here
+                        <span>{{ user_name }}, your ListenBrainz Year in Music is now available.</span>
+                        <br />
+                        <br />
+                        <span style="font-weight: 700;">Click here</span>
                       </a>
                     </td>
                   </tr>
