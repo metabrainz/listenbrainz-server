@@ -1,3 +1,10 @@
+import psycopg2
+from flask import current_app
+from psycopg2.extras import DictCursor
+
+from listenbrainz.db.model.playlist import Playlist, PlaylistRecording
+from listenbrainz.db.playlist import LISTENBRAINZ_USER_ID, get_playlist_recordings_metadata
+from listenbrainz.db.year_in_music import handle_multi_large_insert
 from listenbrainz.troi.spark import remove_old_playlists, get_user_details, batch_process_playlists
 
 USERS_PER_BATCH = 25
@@ -41,6 +48,44 @@ def exclude_playlists_from_deleted_users(slug, year, jam_name, description, user
             playlists_to_export.append(playlist)
 
     return playlists, playlists_to_export
+
+
+def insert_playlists_in_yim(slug, year, playlists, user_details):
+    """ Insert a copy of the generated playlists in the user's YIM data """
+    playlist_jsons = []
+
+    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+            ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+
+        for playlist in playlists:
+            playlist_obj = Playlist(
+                id=playlist["id"],
+                mbid=playlist["mbid"],
+                creator_id=LISTENBRAINZ_USER_ID,
+                creator="listenbrainz",
+                created_for_id=playlist["user_id"],
+                created_for=user_details[playlist["user_id"]]["username"],
+                name=playlist["name"],
+                description=playlist["description"],
+                created=playlist["created"],
+                recordings=[
+                    PlaylistRecording(
+                        id=0,
+                        playlist_id=playlist["id"],
+                        position=idx,
+                        mbid=recording_mbid,
+                        added_by_id=LISTENBRAINZ_USER_ID,
+                        created=playlist["created"],
+                        added_by="listenbrainz",
+                    ) for idx, recording_mbid in enumerate(playlist["recordings"])
+                ]
+            )
+            get_playlist_recordings_metadata(mb_curs, ts_curs, playlist_obj)
+            playlist_jsons.append({"user_id": playlist["user_id"], "data": playlist_obj.serialize_jspf()})
+
+    handle_multi_large_insert(slug, year, playlist_jsons)
 
 
 def process_yim_playlists(slug, year, playlists):
@@ -93,6 +138,7 @@ def process_yim_playlists(slug, year, playlists):
         playlists
     )
     batch_process_playlists(all_playlists, playlists_to_export)
+    insert_playlists_in_yim(slug, year, all_playlists, user_details)
 
 
 def process_yim_playlists_end(slug, year):

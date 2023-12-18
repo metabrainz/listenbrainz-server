@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 
 from flask import current_app
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_values, DictCursor
 from psycopg2.sql import SQL, Literal
 from spotipy import Spotify
 from sqlalchemy import text
@@ -95,12 +95,12 @@ def insert_playlists(cursor, playlists):
     query = """
         INSERT INTO playlist.playlist (creator_id, name, description, public, created_for_id, additional_metadata)
              VALUES %s
-          RETURNING created_for_id, id
+          RETURNING created_for_id, id, mbid, created
     """
     template = SQL("""({creator_id}, %s, %s, 't', %s, %s)""").format(creator_id=Literal(LISTENBRAINZ_USER_ID))
     values = [(p["name"], p["description"], p["user_id"], json.dumps(p["additional_metadata"])) for p in playlists]
     results = execute_values(cursor, query, values, template, fetch=True)
-    return {r[0]: r[1] for r in results}
+    return {r["created_for_id"]: r for r in results}
 
 
 def exclude_playlists_from_deleted_users(slug, jam_name, all_playlists):
@@ -137,12 +137,13 @@ def batch_process_playlists(all_playlists, playlists_to_export):
 
     conn = timescale.engine.raw_connection()
     try:
-        with conn.cursor() as curs:
+        with conn.cursor(cursor_factory=DictCursor) as curs:
             playlist_ids = insert_playlists(curs, all_playlists)
             for playlist in all_playlists:
                 created_for = playlist["user_id"]
-                playlist_id = playlist_ids[created_for]
-                insert_recordings(curs, playlist_id, playlist["recordings"])
+                generated_data = playlist_ids[created_for]
+                playlist.update(generated_data)
+                insert_recordings(curs, playlist["id"], playlist["recordings"])
         conn.commit()
     except Exception:
         current_app.logger.error("Error while batch inserting playlists:", exc_info=True)
