@@ -357,51 +357,8 @@ def _cover_art_yim_playlist(user_name, stats, key):
     )
 
 
-@art_api_bp.route("/year-in-music/2022/<user_name>", methods=["GET"])
-@crossdomain
-@ratelimit()
-def cover_art_yim_2022(user_name):
-    """ Create the shareable svg image using YIM 2022 stats """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APIBadRequest(f"User {user_name} not found")
-
-    image = request.args.get("image")
-    if image is None:
-        raise APIBadRequest("Type of Image needs to be specified should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
-
-    stats = db_yim.get(user["id"], 2022)
-    if stats is None:
-        raise APIBadRequest(f"Year In Music report for user {user_name} not found")
-
-    match image:
-        case "stats": svg = _cover_art_yim_stats(user_name, stats)
-        case "albums": svg = _cover_art_yim_albums(user_name, stats)
-        case "tracks": svg = _cover_art_yim_tracks(user_name, stats)
-        case "artists": svg = _cover_art_yim_artists(user_name, stats)
-        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year")
-        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year")
-        case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
-
-    if svg is None:
-        return "", 204
-
-    return svg, 200, {"Content-Type": "image/svg+xml"}
-
-
-@art_api_bp.route("/year-in-music/2023/<user_name>", methods=["GET"])
-@crossdomain
-@ratelimit()
-def cover_art_yim_2023(user_name):
-    """ Create the shareable svg image using YIM 2022 stats """
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APIBadRequest(f"User {user_name} not found")
-
-    stats = db_yim.get(user["id"], 2023)
-    if stats is None:
-        raise APIBadRequest(f"Year In Music report for user {user_name} not found")
-
+def _cover_art_yim_overview(user_name, stats, year):
+    """ Create the SVG using top stats for the overview YIM image. """
     filtered_genres = []
     total_filtered_genre_count = 0
     for genre in stats.get("top_genres", []):
@@ -446,4 +403,37 @@ def cover_art_yim_2023(user_name):
         "album_2": album_2
     }
 
-    return render_template("art/svg-templates/yim-2023.svg", **props), 200, {"Content-Type": "image/svg+xml"}
+    if year == 2023:
+        return render_template("art/svg-templates/yim-2023.svg", **props)
+
+
+@art_api_bp.route("/year-in-music/2022/<user_name>", methods=["GET"])
+@crossdomain
+@ratelimit()
+def cover_art_yim_2022(user_name):
+    """ Create the shareable svg image using YIM 2022 stats """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APIBadRequest(f"User {user_name} not found")
+
+    image = request.args.get("image")
+    if image is None:
+        raise APIBadRequest("Type of Image needs to be specified should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
+
+    stats = db_yim.get(user["id"], 2022)
+    if stats is None:
+        raise APIBadRequest(f"Year In Music report for user {user_name} not found")
+
+    match image:
+        case "stats": svg = _cover_art_yim_stats(user_name, stats)
+        case "albums": svg = _cover_art_yim_albums(user_name, stats)
+        case "tracks": svg = _cover_art_yim_tracks(user_name, stats)
+        case "artists": svg = _cover_art_yim_artists(user_name, stats)
+        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year")
+        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year")
+        case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
+
+    if svg is None:
+        return "", 204
+
+    return svg, 200, {"Content-Type": "image/svg+xml"}
