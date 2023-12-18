@@ -1,0 +1,27 @@
+<svg
+    width="452"
+    height="521"
+    viewBox="0 0 452 521"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        .album-art {
+            preserveAspectRatio: "xMidYMid slice";
+            height: 135px;
+            width: 135px;
+        }
+    </style>
+    <g>
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="30" y="75" xlink:href="{{ image_urls[0] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="30" y="210" xlink:href="{{ image_urls[1] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="30" y="345" xlink:href="{{ image_urls[2] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="165" y="75" xlink:href="{{ image_urls[3] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="165" y="210" xlink:href="{{ image_urls[4] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="165" y="345" xlink:href="{{ image_urls[5] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="300" y="75" xlink:href="{{ image_urls[6] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="300" y="210" xlink:href="{{ image_urls[7] }}" />
+        <image class="album-art" preserveAspectRatio="xMidYMid slice" x="300" y="345" xlink:href="{{ image_urls[8] }}" />
+        <image x="0" y="0" width="452" height="521" xlink:href="{{ image_url_root }}/shareable-image-arrows.png" />
+    </g>
+</svg>

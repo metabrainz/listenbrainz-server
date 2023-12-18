@@ -1,0 +1,73 @@
+<svg
+    width="924"
+    height="924"
+    viewBox="0 0 924 924"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
+        text {
+          fill: #FF0E25;
+          font-family: Inter, sans-serif;
+          font-weight: 900;
+        }
+        .common-description {
+          font-weight: 300;
+          font-size: 28px;
+          letter-spacing: 0em;
+          text-anchor: middle;
+        }
+        .user-stat {
+          font-weight: 900;
+        }
+        .branding {
+          font-size: 20px;
+          letter-spacing: 0em;
+        }
+        .subtitle > tspan {
+            text-anchor: middle;
+            font-size: 32px;
+            letter-spacing: 0.6em;
+        }
+    </style>
+    <g>
+        <g>
+            <g style="mix-blend-mode:multiply">
+                <rect width="924" height="924" fill="#FFC93D"/>
+                <image id="bg" width="924" height="924" xlink:href="{{ bg_image_url }}" style="mix-blend-mode:overlay"/>
+            </g>
+            <text class="branding" x="750" y="897">LISTENBRAINZ</text>
+            <text class="branding" x="26" y="43">{{user_name}}</text>
+            <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
+            <text class="branding" x="844" y="43">2022</text>
+            <text class="subtitle">
+                <tspan x="50%" y="754">AND GOT THROUGH</tspan>
+                <tspan x="50%" y="792">2022</tspan>
+            </text>
+        </g>
+        <rect x="110.5" y="206.5" width="684" height="462" fill="#FFC93D" stroke="#FF0E25"/>
+        <text class="common-description" x="451.5" y="283">
+            {{most_played_day_message}}
+        </text>
+        <text class="common-description" x="451.5" y="370">
+            LISTENED TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS
+        </text>
+        <text class="common-description" x="451.5" y="457">
+            MAINLY PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
+        </text>
+        <text class="common-description" x="451.5" y="541">
+            LISTENED TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS
+        </text>
+        <text class="common-description" x="451.5" y="625">
+            DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
+        </text>
+        <g>
+            <image id="magnify" width="125" height="154" transform="matrix(-1 0 0 1 511 83)" xlink:href="{{ magnify_image_url }}" />
+        </g>
+        <line x1="399" y1="314.5" x2="504" y2="314.5" stroke="#FF0E25"/>
+        <line x1="399" y1="400.5" x2="504" y2="400.5" stroke="#FF0E25"/>
+        <line x1="399" y1="486.5" x2="504" y2="486.5" stroke="#FF0E25"/>
+        <line x1="399" y1="572.5" x2="504" y2="572.5" stroke="#FF0E25"/>
+    </g>
+</svg>
