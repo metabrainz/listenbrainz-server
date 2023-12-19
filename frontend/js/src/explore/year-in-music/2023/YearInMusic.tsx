@@ -474,6 +474,7 @@ export default class YearInMusic extends React.Component<
 
     const linkToUserProfile = `https://listenbrainz.org/user/${user.name}`;
     const linkToThisPage = `${linkToUserProfile}/year-in-music/2023`;
+    const imageShareCustomStyles = `.background {\nfill: ${selectedColor};\n}\n`;
     return (
       <div
         id="year-in-music"
@@ -679,7 +680,7 @@ export default class YearInMusic extends React.Component<
                   // shareText="Check out my"
                   shareTitle="My top albums of 2023"
                   fileName={`${user.name}-top-albums-2023`}
-                  customStyles={`.background {\nfill: ${selectedColor};\n}\n`}
+                  customStyles={imageShareCustomStyles}
                 />
               </div>
             </div>
@@ -749,7 +750,7 @@ export default class YearInMusic extends React.Component<
                       // shareText="Check out my"
                       shareTitle="My top tracks of 2023"
                       fileName={`${user.name}-top-tracks-2023`}
-                      customStyles={`.background {\nfill: ${selectedColor};\n}\n`}
+                      customStyles={imageShareCustomStyles}
                     />
                   </div>
                 </div>
@@ -813,7 +814,7 @@ export default class YearInMusic extends React.Component<
                       // shareText="Check out my"
                       shareTitle="My top artists of 2023"
                       fileName={`${user.name}-top-artists-2023`}
-                      customStyles={`.background {\nfill: ${selectedColor};\n}\n`}
+                      customStyles={imageShareCustomStyles}
                     />
                   </div>
                 </div>
@@ -827,14 +828,6 @@ export default class YearInMusic extends React.Component<
             Statistics
             <div className="subheader">You are a wonderful human being</div>
           </div>
-          {/* <div className="yim-share-button-container">
-            <MagicShareButton
-              svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=stats`}
-              shareUrl={`${linkToThisPage}#stats`}
-              shareTitle="My music listening in 2023"
-              fileName={`${user.name}-stats-2023`}
-            />
-          </div> */}
           <div className="card content-card">
             <div className="small-stats">
               {yearInMusicData.total_listen_count && (
@@ -1042,6 +1035,15 @@ export default class YearInMusic extends React.Component<
                 </div>
               </div>
             )}
+            <div className="yim-share-button-container">
+              <ImageShareButtons
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=stats`}
+                shareUrl={`${linkToThisPage}#stats`}
+                shareTitle="My music listening in 2023"
+                fileName={`${user.name}-stats-2023`}
+                customStyles={imageShareCustomStyles}
+              />
+            </div>
           </div>
         </div>
         {(Boolean(topDiscoveriesPlaylist) ||
