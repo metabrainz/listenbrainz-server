@@ -1266,13 +1266,10 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <a href="/explore/cover-art-collage">
+            <a href="/explore/cover-art-collage/2023">
               <LazyLoadImage
-                src="https://staticbrainz.org/LB/year-in-music/2023/rainbow1-100-7-small.jpeg"
-                placeholderSrc="https://staticbrainz.org/LB/year-in-music/2023/rainbow1-100-7-small.jpeg"
-                srcSet="https://staticbrainz.org/LB/year-in-music/2023/rainbow1-100-7-small.jpeg 500w,
-                https://staticbrainz.org/LB/year-in-music/2023/rainbow1-100-7-medium.jpeg 1000w,
-                https://staticbrainz.org/LB/year-in-music/2023/rainbow1-100-7-large.jpeg 2000w"
+                src="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
+                placeholderSrc="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
                 alt="2023 albums"
                 loading="lazy"
                 decoding="async"

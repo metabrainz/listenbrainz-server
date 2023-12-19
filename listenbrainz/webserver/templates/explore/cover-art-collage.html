@@ -1,7 +1,7 @@
 {%- extends 'base-react.html' -%}
 
 {% block title %}
-ListenBrainz Album covers of 2022
+Album covers of {{ year }} - ListenBrainz
 {% endblock %}
 
 {% block head %}
@@ -19,12 +19,24 @@ ListenBrainz Album covers of 2022
             margin: -21px -15px 0;
             padding:0;
             height: 100vh;
-            background-color: #ff0e25;
         }
         section.footer{
             display: none;
         }
     </style>
+    {% if year == 2022 %}
+    <style type="text/css">
+        #react-container {
+            background-color: #ff0e25;
+        }
+    </style>
+    {% elif year == 2023 %}
+    <style type="text/css">
+        #react-container {
+            background-color: #F0EEE2;
+        }
+    </style>
+    {% endif %}
 {% endblock %}
 
 <!-- these props are used in the navbar to highlight the navbar items -->
@@ -34,7 +46,7 @@ ListenBrainz Album covers of 2022
     <div class="secondary-nav">
         <ol class="breadcrumb">
             <li><a href="{{ url_for('explore.index') }}">Explore</a></li>
-            <li class="active">Cover Art Collage</li>
+            <li class="active">Cover Art Collage {{year}}</li>
         </ol>
     </div>
     <div id="react-container"></div>
@@ -43,5 +55,5 @@ ListenBrainz Album covers of 2022
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ get_static_path('coverArtComposite.js') }}" type="text/javascript"></script>
+    <script src="{{ get_static_path('coverArtComposite{{year}}.js') }}" type="text/javascript"></script>
 {% endblock %}
