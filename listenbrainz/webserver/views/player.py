@@ -10,7 +10,6 @@ from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.musicbrainz_db.release import get_release_by_mbid
 
 from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
-from listenbrainz.webserver.views.playlist_api import serialize_jspf
 from listenbrainz.db.model.playlist import WritablePlaylistRecording, WritablePlaylist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
@@ -121,7 +120,7 @@ def load_instant():
 
     return render_template(
         "player/player-page.html",
-        props=orjson.dumps({"playlist": serialize_jspf(playlist)}).decode("utf-8")
+        props=orjson.dumps({"playlist": playlist.serialize_jspf()}).decode("utf-8")
     )
 
 
@@ -178,5 +177,5 @@ def load_release(release_mbid):
 
     return render_template(
         "player/player-page.html",
-        props=orjson.dumps({"playlist": serialize_jspf(playlist) if playlist is not None else {}}).decode("utf-8")
+        props=orjson.dumps({"playlist": playlist.serialize_jspf() if playlist is not None else {}}).decode("utf-8")
     )

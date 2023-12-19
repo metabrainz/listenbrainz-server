@@ -23,7 +23,6 @@ from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from werkzeug.exceptions import NotFound, BadRequest
-from listenbrainz.webserver.views.playlist_api import serialize_jspf
 
 LISTENS_PER_PAGE = 25
 DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
@@ -235,7 +234,7 @@ def playlists(user_name: str):
                                                             count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL,
                                                             offset=0)
     for playlist in user_playlists:
-        playlists.append(serialize_jspf(playlist))
+        playlists.append(playlist.serialize_jspf())
 
     props = {
         "playlists": playlists,
@@ -281,7 +280,7 @@ def recommendation_playlists(user_name: str):
     user_playlists = get_recommendation_playlists_for_user(
         user.id)
     for playlist in user_playlists:
-        playlists.append(serialize_jspf(playlist))
+        playlists.append(playlist.serialize_jspf())
 
     props = {
         "playlists": playlists,
