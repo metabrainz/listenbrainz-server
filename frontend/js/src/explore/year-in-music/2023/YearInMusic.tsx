@@ -28,10 +28,9 @@ import {
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import NiceModal from "@ebay/nice-modal-react";
 import tinycolor from "tinycolor2";
+import humanizeDuration from "humanize-duration";
 import ErrorBoundary from "../../../utils/ErrorBoundary";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../../utils/GlobalAppContext";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
 
 import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
@@ -59,6 +58,11 @@ export type YearInMusicProps = {
       artist_name: string;
       artist_mbid: string;
       listen_count: number;
+    }>;
+    top_genres: Array<{
+      genre: string;
+      genre_count: number;
+      genre_count_percent: number;
     }>;
     top_release_groups: Array<{
       artists?: Array<MBIDMappingArtist>;
@@ -92,6 +96,10 @@ export type YearInMusicProps = {
     most_listened_year: { [key: string]: number };
     total_listen_count: number;
     total_artists_count: number;
+    total_listening_time: number;
+    total_new_artists_discovered: number;
+    total_recordings_count: number;
+    total_release_groups_count: number;
     new_releases_of_top_artists: Array<{
       title: string;
       release_group_mbid: string;
@@ -374,8 +382,13 @@ export default class YearInMusic extends React.Component<
       !yearInMusicData.top_release_groups ||
       !yearInMusicData.top_recordings ||
       !yearInMusicData.top_artists ||
+      !yearInMusicData.top_genres ||
       !yearInMusicData.listens_per_day ||
       !yearInMusicData.total_listen_count ||
+      !yearInMusicData.total_listening_time ||
+      !yearInMusicData.total_new_artists_discovered ||
+      !yearInMusicData.total_recordings_count ||
+      !yearInMusicData.total_release_groups_count ||
       !yearInMusicData.day_of_week ||
       !yearInMusicData.new_releases_of_top_artists ||
       !yearInMusicData.artist_map ||
@@ -850,6 +863,33 @@ export default class YearInMusic extends React.Component<
                     {yearInMusicData.total_artists_count}
                   </div>
                   artists got {yourOrUsersName} attention
+                </div>
+              )}
+              {yearInMusicData.total_listening_time && (
+                <div className="small-stat text-center">
+                  <div className="value">
+                    {humanizeDuration(yearInMusicData.total_listening_time, {
+                      largest: 1,
+                      round: true,
+                    })}
+                  </div>
+                  of music (at least!)
+                </div>
+              )}
+              {yearInMusicData.total_new_artists_discovered && (
+                <div className="small-stat text-center">
+                  <div className="value">
+                    {yearInMusicData.total_new_artists_discovered}
+                  </div>
+                  new artists discovered
+                </div>
+              )}
+              {yearInMusicData.total_release_groups_count && (
+                <div className="small-stat text-center">
+                  <div className="value">
+                    {yearInMusicData.total_release_groups_count}
+                  </div>
+                  albums in total
                 </div>
               )}
             </div>
