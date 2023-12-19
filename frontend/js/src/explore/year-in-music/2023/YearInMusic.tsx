@@ -38,7 +38,7 @@ import withAlertNotifications from "../../../notifications/AlertNotificationsHOC
 
 import {
   generateAlbumArtThumbnailLink,
-  getPageProps,
+  getPageProps, getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../../stats/utils";
 import ImageShareButtons from "./ImageShareButtons";
@@ -59,16 +59,18 @@ export type YearInMusicProps = {
       artist_mbid: string;
       listen_count: number;
     }>;
-    top_releases: Array<{
+    top_release_groups: Array<{
+      artists?: Array<MBIDMappingArtist>;
       artist_name: string;
       artist_mbids: string[];
       listen_count: number;
-      release_name: string;
-      release_mbid: string;
+      release_group_name: string;
+      release_group_mbid: string;
       caa_id?: number;
       caa_release_mbid?: string;
     }>;
     top_recordings: Array<{
+      artists?: Array<MBIDMappingArtist>;
       artist_name: string;
       artist_mbids: string[];
       listen_count: number;
@@ -76,6 +78,8 @@ export type YearInMusicProps = {
       release_mbid: string;
       track_name: string;
       recording_mbid: string;
+      caa_id?: number;
+      caa_release_mbid?: string;
     }>;
     similar_users: { [key: string]: number };
     listens_per_day: Array<{
@@ -94,6 +98,7 @@ export type YearInMusicProps = {
       caa_release_mbid?: string;
       artist_credit_mbids: string[];
       artist_credit_name: string;
+      artists?: Array<MBIDMappingArtist>;
     }>;
     artist_map: Array<{
       country: string;
@@ -153,40 +158,22 @@ export default class YearInMusic extends React.Component<
     playlistName: string,
     description?: string
   ): JSPFPlaylist | undefined {
-    const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
     const { yearInMusicData } = this.props;
-    let playlist;
     try {
-      playlist = get(yearInMusicData, playlistName);
+      const playlist = get(yearInMusicData, playlistName);
       if (!playlist) {
         return undefined;
       }
-      const coverArt = get(yearInMusicData, `${playlistName}-coverart`);
       // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
       if (description) {
         playlist.annotation = description;
       }
-      /* Add a track image if it exists in the `{playlistName}-coverart` key */
-      playlist.track = playlist.track.map((track: JSPFTrack) => {
-        const newTrack = { ...track };
-        const track_id = track.identifier;
-        const found = track_id.match(uuidMatch);
-        if (found) {
-          const recording_mbid = found[0];
-          newTrack.id = recording_mbid;
-          const recording_coverart = coverArt?.[recording_mbid];
-          if (recording_coverart) {
-            newTrack.image = recording_coverart;
-          }
-        }
-        return newTrack;
-      });
+      return playlist;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(`"Error parsing ${playlistName}:`, error);
       return undefined;
     }
-    return playlist;
   }
 
   changeSelectedMetric = (
@@ -383,7 +370,7 @@ export default class YearInMusic extends React.Component<
     let missingSomeData = false;
     const hasSomeData = !!yearInMusicData && !isEmpty(yearInMusicData);
     if (
-      !yearInMusicData.top_releases ||
+      !yearInMusicData.top_release_groups ||
       !yearInMusicData.top_recordings ||
       !yearInMusicData.top_artists ||
       !yearInMusicData.listens_per_day ||
@@ -602,7 +589,7 @@ export default class YearInMusic extends React.Component<
           </div>
         )}
 
-        {yearInMusicData.top_releases && (
+        {yearInMusicData.top_release_groups && (
           <div className="section">
             <div className="card content-card" id="top-releases">
               <h3 className="flex-center">Top albums of 2023</h3>
@@ -639,38 +626,28 @@ export default class YearInMusic extends React.Component<
                     },
                   }}
                 >
-                  {yearInMusicData.top_releases.slice(0, 50).map((release) => {
-                    if (!release.caa_id || !release.caa_release_mbid) {
+                  {yearInMusicData.top_release_groups.slice(0, 50).map((release_group) => {
+                    if (!release_group.caa_id || !release_group.caa_release_mbid) {
                       return null;
                     }
                     const coverArt = generateAlbumArtThumbnailLink(
-                      release.caa_id,
-                      release.caa_release_mbid
+                      release_group.caa_id,
+                      release_group.caa_release_mbid
                     );
                     return (
-                      <SwiperSlide key={`coverflow-${release.release_name}`}>
+                      <SwiperSlide key={`coverflow-${release_group.release_group_name}`}>
                         <img
                           data-src={
                             coverArt ?? "/static/img/cover-art-placeholder.jpg"
                           }
-                          alt={release.release_name}
+                          alt={release_group.release_group_name}
                           className="swiper-lazy"
                         />
                         <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
-                        <div title={release.release_name}>
-                          <a
-                            href={
-                              release.release_mbid
-                                ? `https://musicbrainz.org/release/${release.release_mbid}/`
-                                : undefined
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {release.release_name}
-                          </a>
+                        <div title={release_group.release_group_name}>
+                          {getEntityLink("release-group", release_group.release_group_name, release_group.release_group_mbid)}
                           <div className="small text-muted">
-                            {release.artist_name}
+                            {getStatsArtistLink(release_group.artists, release_group.artist_name, release_group.artist_mbids)}
                           </div>
                         </div>
                       </SwiperSlide>
@@ -725,6 +702,14 @@ export default class YearInMusic extends React.Component<
                               release_mbid: recording.release_mbid,
                               artist_mbids: recording.artist_mbids,
                             },
+                            mbid_mapping: {
+                              recording_mbid: recording.recording_mbid,
+                              release_mbid: recording.release_mbid,
+                              artist_mbids: recording.artist_mbids,
+                              artists: recording.artists,
+                              caa_id: recording.caa_id,
+                              caa_release_mbid: recording.caa_release_mbid
+                            }
                           },
                         };
                         listens.push(listenHere);
