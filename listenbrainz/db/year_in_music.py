@@ -71,16 +71,6 @@ def insert(key, year, data):
         current_app.logger.error(f"Error while inserting {key}:", exc_info=True)
 
 
-def insert_new_releases_of_top_artists(user_id, year, data):
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.year_in_music (user_id, year, data)
-                 VALUES (:user_id ::int, :year, jsonb_build_object('new_releases_of_top_artists', :data :: jsonb))
-            ON CONFLICT (user_id, year)
-          DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{}'::jsonb) || EXCLUDED.data
-        """), {"user_id": user_id, "year": year, "data": orjson.dumps(data).decode("utf-8")})
-
-
 def insert_similar_users(year, data):
     connection = db.engine.raw_connection()
     query = SQL("""
