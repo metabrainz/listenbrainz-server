@@ -34,7 +34,7 @@ def get_new_releases_of_top_artists(year):
         yield {
             "type": "year_in_music_new_releases_of_top_artists",
             "year": year,
-            "stats": stats
+            "data": stats
         }
 
 
