@@ -868,7 +868,7 @@ export default class YearInMusic extends React.Component<
               {yearInMusicData.total_listening_time && (
                 <div className="small-stat text-center">
                   <div className="value">
-                    {humanizeDuration(yearInMusicData.total_listening_time, {
+                    {humanizeDuration(yearInMusicData.total_listening_time * 1000, {
                       largest: 1,
                       round: true,
                     })}
