@@ -662,6 +662,7 @@ export default class YearInMusic extends React.Component<
                   // shareText="Check out my"
                   shareTitle="My top albums of 2023"
                   fileName={`${user.name}-top-albums-2023`}
+                  customStyles={`.background {\nfill: ${selectedColor};\n}\n`}
                 />
               </div>
             </div>
@@ -731,6 +732,7 @@ export default class YearInMusic extends React.Component<
                       // shareText="Check out my"
                       shareTitle="My top tracks of 2023"
                       fileName={`${user.name}-top-tracks-2023`}
+                      customStyles={`.background {\nfill: ${selectedColor};\n}\n`}
                     />
                   </div>
                 </div>
@@ -794,6 +796,7 @@ export default class YearInMusic extends React.Component<
                       // shareText="Check out my"
                       shareTitle="My top artists of 2023"
                       fileName={`${user.name}-top-artists-2023`}
+                      customStyles={`.background {\nfill: ${selectedColor};\n}\n`}
                     />
                   </div>
                 </div>

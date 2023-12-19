@@ -18,6 +18,7 @@ export type MagicShareButtonProps = {
   shareTitle: string;
   shareText?: string;
   fileName: string;
+  customStyles?: string;
 };
 
 export default function MagicShareButton({
@@ -26,10 +27,10 @@ export default function MagicShareButton({
   shareTitle,
   shareText,
   fileName,
+  customStyles,
 }: MagicShareButtonProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [svgBlob, setSvgBlob] = useState<Blob>();
   const [copySuccess, setCopySuccess] = useState(false);
 
   const hasShareFunctionality = Boolean(navigator.canShare);
@@ -57,6 +58,15 @@ export default function MagicShareButton({
         return undefined;
       }
       console.debug("success", fetchedSvgString);
+      if (customStyles) {
+        // inject optional custom styles into the SVG string
+        fetchedSvgString = fetchedSvgString.replace(
+          /(?=<\/style>)/gm,
+          customStyles
+        );
+        console.debug("modified SVG", fetchedSvgString);
+      }
+
       const ctx = canvas?.getContext("2d", { alpha: false });
       if (!ctx || !fetchedSvgString) {
         return undefined;
@@ -78,23 +88,22 @@ export default function MagicShareButton({
           }
         });
       });
-      setSvgBlob(theBlob);
       return theBlob;
     },
-    [svgURL, setSvgBlob]
+    [svgURL, customStyles]
   );
 
   const saveToFile = useCallback(async () => {
-    const blob = svgBlob ?? (await getSVG());
+    const blob = await getSVG();
     if (!blob) {
       console.debug("No blob, returning");
       return;
     }
     saveAs(blob, fileName);
-  }, [fileName, getSVG, svgBlob]);
+  }, [fileName, getSVG]);
 
   const copyToClipboard = useCallback(async () => {
-    const blob = svgBlob ?? (await getSVG());
+    const blob = await getSVG();
     if (!blob) {
       console.debug("No blob, returning");
       return;
@@ -118,10 +127,10 @@ export default function MagicShareButton({
           />
         );
       });
-  }, [svgBlob, getSVG]);
+  }, [getSVG]);
 
   const shareWithAPI = useCallback(async () => {
-    const blob = svgBlob ?? (await getSVG());
+    const blob = await getSVG();
     if (!blob) {
       console.debug("No blob, returning");
       return;
@@ -172,7 +181,6 @@ export default function MagicShareButton({
       saveToFile();
     }
   }, [
-    svgBlob,
     getSVG,
     fileName,
     shareTitle,

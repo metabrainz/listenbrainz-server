@@ -21,7 +21,7 @@
         .drawing {
           fill: #F0EEE2;
         }
-        .backgrond {
+        .background {
          fill: #4C6C52;
         }
     </style>
