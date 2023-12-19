@@ -83,9 +83,12 @@ def insert_playlists_in_yim(slug, year, playlists, user_details):
                 ]
             )
             get_playlist_recordings_metadata(mb_curs, ts_curs, playlist_obj)
-            playlist_jsons.append({"user_id": playlist["user_id"], "data": playlist_obj.serialize_jspf()})
+            playlist_jsons.append({
+                "user_id": playlist["user_id"],
+                "data": playlist_obj.serialize_jspf()["playlist"]
+            })
 
-    handle_multi_large_insert(slug, year, playlist_jsons)
+    handle_multi_large_insert(f"playlist-{slug}-for-year", year, playlist_jsons)
 
 
 def process_yim_playlists(slug, year, playlists):
