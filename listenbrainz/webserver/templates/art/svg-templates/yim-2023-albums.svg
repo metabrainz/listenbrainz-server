@@ -11,7 +11,7 @@
             letter-spacing: 0em;
             text-transform: uppercase;
         }
-        .subtitle > tspan {
+        .subtitle {
             text-anchor: middle;
             font-size: 32px;
             letter-spacing: 0.6em;
@@ -34,8 +34,9 @@
       <text class="branding" x="26" y="43" id="text281">{{user_name}}</text>
       <text class="branding" font-style="italic" x="26" y="897" id="text283">#YEARINMUSIC</text>
       <text class="branding" x="844" y="43" id="text285">2023</text>
-      <text class="subtitle" id="text291"><tspan x="50%" y="110" id="tspan287">MY YEAR</tspan><tspan x="50%" dy="40" id="tspan289">IN MUSIC</tspan></text>
-      <text class="subtitle" id="text295"><tspan x="50%" y="755" id="tspan293">TOP ALBUMS</tspan></text>
+      <text x="50%" y="150" id="text106" class="subtitle">MY YEAR</text>
+      <text x="50%" y="190" id="text106-2" class="subtitle">IN MUSIC</text>
+      <text x="50%" y="755" id="text106-5" class="subtitle">TOP ARTISTS</text>
     </g>
     <g id="g319">
       <image class="album-art" preserveAspectRatio="xMidYMid slice" x="265" y="250" xlink:href="{{ image_urls[0] }}" />

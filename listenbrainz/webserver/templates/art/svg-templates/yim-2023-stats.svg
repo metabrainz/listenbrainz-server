@@ -26,7 +26,7 @@
           font-size: 20px;
           letter-spacing: 0em;
         }
-        .subtitle > tspan {
+        .subtitle {
             fill: #F0EEE2;
             text-anchor: middle;
             font-size: 32px;
@@ -40,10 +40,8 @@
             <text class="branding" x="26" y="43">{{user_name}}</text>
             <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
             <text class="branding" x="844" y="43">2023</text>
-            <text class="subtitle">
-                <tspan x="471.2" y="150" id="tspan1254">MY YEAR</tspan>
-                <tspan x="471.2" dy="40" id="tspan1256">IN MUSIC</tspan>
-            </text>
+            <text x="50%" y="150" id="text106" class="subtitle">MY YEAR</text>
+            <text x="50%" y="190" id="text106-2" class="subtitle">IN MUSIC</text>
         </g>
         <rect x="110.5" y="276.5" width="684" height="462" fill="#F0EEE2" stroke="#4C6C52"/>
         <text class="common-description" x="451.5" y="353">
