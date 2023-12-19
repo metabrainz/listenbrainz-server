@@ -38,7 +38,8 @@ import withAlertNotifications from "../../../notifications/AlertNotificationsHOC
 
 import {
   generateAlbumArtThumbnailLink,
-  getPageProps, getStatsArtistLink,
+  getPageProps,
+  getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../../stats/utils";
 import ImageShareButtons from "./ImageShareButtons";
@@ -626,33 +627,49 @@ export default class YearInMusic extends React.Component<
                     },
                   }}
                 >
-                  {yearInMusicData.top_release_groups.slice(0, 50).map((release_group) => {
-                    if (!release_group.caa_id || !release_group.caa_release_mbid) {
-                      return null;
-                    }
-                    const coverArt = generateAlbumArtThumbnailLink(
-                      release_group.caa_id,
-                      release_group.caa_release_mbid
-                    );
-                    return (
-                      <SwiperSlide key={`coverflow-${release_group.release_group_name}`}>
-                        <img
-                          data-src={
-                            coverArt ?? "/static/img/cover-art-placeholder.jpg"
-                          }
-                          alt={release_group.release_group_name}
-                          className="swiper-lazy"
-                        />
-                        <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
-                        <div title={release_group.release_group_name}>
-                          {getEntityLink("release-group", release_group.release_group_name, release_group.release_group_mbid)}
-                          <div className="small text-muted">
-                            {getStatsArtistLink(release_group.artists, release_group.artist_name, release_group.artist_mbids)}
+                  {yearInMusicData.top_release_groups
+                    .slice(0, 50)
+                    .map((release_group) => {
+                      if (
+                        !release_group.caa_id ||
+                        !release_group.caa_release_mbid
+                      ) {
+                        return null;
+                      }
+                      const coverArt = generateAlbumArtThumbnailLink(
+                        release_group.caa_id,
+                        release_group.caa_release_mbid
+                      );
+                      return (
+                        <SwiperSlide
+                          key={`coverflow-${release_group.release_group_name}`}
+                        >
+                          <img
+                            data-src={
+                              coverArt ??
+                              "/static/img/cover-art-placeholder.jpg"
+                            }
+                            alt={release_group.release_group_name}
+                            className="swiper-lazy"
+                          />
+                          <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
+                          <div title={release_group.release_group_name}>
+                            {getEntityLink(
+                              "release-group",
+                              release_group.release_group_name,
+                              release_group.release_group_mbid
+                            )}
+                            <div className="small text-muted">
+                              {getStatsArtistLink(
+                                release_group.artists,
+                                release_group.artist_name,
+                                release_group.artist_mbids
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </SwiperSlide>
-                    );
-                  })}
+                        </SwiperSlide>
+                      );
+                    })}
                 </Swiper>
               </div>
               <div className="yim-share-button-container">
@@ -709,8 +726,8 @@ export default class YearInMusic extends React.Component<
                               artist_mbids: recording.artist_mbids,
                               artists: recording.artists,
                               caa_id: recording.caa_id,
-                              caa_release_mbid: recording.caa_release_mbid
-                            }
+                              caa_release_mbid: recording.caa_release_mbid,
+                            },
                           },
                         };
                         listens.push(listenHere);
@@ -1270,6 +1287,9 @@ export default class YearInMusic extends React.Component<
               <LazyLoadImage
                 src="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
                 placeholderSrc="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
+                srcSet="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg 500w,
+                https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-medium.jpg 1000w,
+                https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-large.jpg 2000w"
                 alt="2023 albums"
                 loading="lazy"
                 decoding="async"
