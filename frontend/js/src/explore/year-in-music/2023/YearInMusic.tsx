@@ -721,7 +721,7 @@ export default class YearInMusic extends React.Component<
           </div>
           <div className="flex flex-wrap">
             {yearInMusicData.top_recordings && (
-              <div style={{ display: "table" }}>
+              <div>
                 <div className="card content-card" id="top-tracks">
                   <div className="heading">
                     <img
@@ -782,7 +782,7 @@ export default class YearInMusic extends React.Component<
               </div>
             )}
             {yearInMusicData.top_artists && (
-              <div style={{ display: "table" }}>
+              <div>
                 <div className="card content-card" id="top-artists">
                   <div className="heading">
                     <img
