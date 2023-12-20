@@ -24,8 +24,8 @@ def get_active_users_to_process() -> List[dict]:
                 ON "user".id = external_service_oauth.user_id
               JOIN listens_importer
                 ON listens_importer.external_service_oauth_id = external_service_oauth.id
-              WHERE external_service_oauth.service = 'spotify'
-                AND error_message IS NULL
+             WHERE external_service_oauth.service = 'spotify'
+               AND error_message IS NULL
           ORDER BY latest_listened_at DESC NULLS LAST
         """))
         return [row for row in result.mappings()]
