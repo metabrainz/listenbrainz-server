@@ -37,7 +37,6 @@ export default function MagicShareButton({
 
   const getSVG = React.useMemo(
     () => async (): Promise<Blob | null | undefined> => {
-      console.debug("Fetching SVG:", svgURL);
       let fetchedSvgString;
       const canvas = canvasRef.current;
       try {
@@ -57,14 +56,12 @@ export default function MagicShareButton({
         );
         return undefined;
       }
-      console.debug("success", fetchedSvgString);
       if (customStyles) {
         // inject optional custom styles into the SVG string
         fetchedSvgString = fetchedSvgString.replace(
           /(?=<\/style>)/gm,
           customStyles
         );
-        console.debug("modified SVG", fetchedSvgString);
       }
 
       const ctx = canvas?.getContext("2d", { alpha: false });
@@ -85,6 +82,7 @@ export default function MagicShareButton({
             resolve(blob);
           } else {
             console.debug("Canvas element was not able to produce a blob");
+            resolve(undefined);
           }
         });
       });
@@ -97,19 +95,40 @@ export default function MagicShareButton({
     const blob = await getSVG();
     if (!blob) {
       console.debug("No blob, returning");
+      toast.error(
+        <ToastMsg
+          title="Something went wrong…"
+          message="but we don't know what. Sorry for the inconvenience."
+        />
+      );
       return;
     }
     saveAs(blob, fileName);
   }, [fileName, getSVG]);
 
   const copyToClipboard = useCallback(async () => {
+    if (!("ClipboardItem" in window)) {
+      toast.error(
+        <ToastMsg
+          title="'I'm sorry, Dave. I'm afraid I can't do that.'"
+          message="Your browser doesn't allow copying to clipboard"
+        />
+      );
+      return;
+    }
     const blob = await getSVG();
     if (!blob) {
       console.debug("No blob, returning");
+      toast.error(
+        <ToastMsg
+          title="Something went wrong…"
+          message="but we don't know what. Sorry for the inconvenience."
+        />
+      );
       return;
     }
     const data = [new ClipboardItem({ [blob.type]: blob })];
-    navigator.clipboard
+    await navigator.clipboard
       .write(data)
       .then(() => {
         setCopySuccess(true);
@@ -133,6 +152,12 @@ export default function MagicShareButton({
     const blob = await getSVG();
     if (!blob) {
       console.debug("No blob, returning");
+      toast.error(
+        <ToastMsg
+          title="Something went wrong…"
+          message="but we don't know what. Sorry for the inconvenience."
+        />
+      );
       return;
     }
     const canvas = canvasRef.current;
@@ -170,7 +195,6 @@ export default function MagicShareButton({
         saveToFile();
       });
     } else {
-      console.debug();
       toast.error(
         <ToastMsg
           title="'I'm sorry, Dave. I'm afraid I can't do that.'"
