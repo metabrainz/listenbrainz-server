@@ -55,5 +55,5 @@ Album covers of {{ year }} - ListenBrainz
 
 {% block scripts %}
     {{ super() }}
-    <script src="{{ get_static_path('coverArtComposite{{year}}.js') }}" type="text/javascript"></script>
+    <script src="{{ get_static_path('coverArtComposite' ~ year ~ '.js') }}" type="text/javascript"></script>
 {% endblock %}
