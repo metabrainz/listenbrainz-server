@@ -199,13 +199,14 @@ export default class YearInMusic extends React.Component<
   };
 
   getFollowing = async () => {
-    const { APIService, currentUser } = this.context;
+    const { APIService } = this.context;
+    const { user } = this.props;
     const { getFollowingForUser } = APIService;
-    if (!currentUser?.name) {
+    if (!user?.name) {
       return;
     }
     try {
-      const response = await getFollowingForUser(currentUser.name);
+      const response = await getFollowingForUser(user.name);
       const { following } = response;
 
       this.setState({ followingList: following });
