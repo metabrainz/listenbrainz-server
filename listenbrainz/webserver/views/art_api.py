@@ -283,10 +283,14 @@ def _cover_art_yim_albums(user_name, stats, year):
     image_urls = []
     selected_urls = set()
 
-    if stats.get("top_releases") is None:
+    if year == 2022 and stats.get("top_releases") is not None:
+        items = stats.get("top_releases")
+    elif year == 2023 and stats.get("top_release_groups") is not None:
+        items = stats.get("top_release_groups")
+    else:
         return None
 
-    for item in stats["top_releases"]:
+    for item in items:
         if "caa_id" in item and "caa_release_mbid" in item:
             url = cac.resolve_cover_art(item["caa_id"], item["caa_release_mbid"], 250)
             if url not in selected_urls:

@@ -27,7 +27,7 @@
     </style>
   <g id="g138">
     <g id="g114">
-      <path class="background" fill="#4C6C52" id="rect100" d="M0 0h924v924H0z"/>
+      <rect class="background" width="924" height="924" fill="#4C6C52"/>
       <text class="branding" x="750" y="897" id="text102">LISTENBRAINZ</text>
       <text class="branding" x="26" y="43" id="text104">{{user_name}}</text>
       <text x="50%" y="150" id="text106" class="subtitle">MY YEAR</text>

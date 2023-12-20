@@ -1,4 +1,4 @@
-<svg fill="none" version="1.1" id="svg323" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 924 924">
+<svg width="924" height="924" viewBox="0 0 924 924" fill="none" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
   <style id="style1242">
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
         text {
@@ -29,14 +29,14 @@
     </style>
   <g id="g321">
     <g id="g297">
-      <path class="background" fill="#4C6C52" id="rect277" d="M0 0h924v924H0z"/>
+      <rect class="background" width="924" height="924" fill="#4C6C52"/>
       <text class="branding" x="750" y="897" id="text279">LISTENBRAINZ</text>
       <text class="branding" x="26" y="43" id="text281">{{user_name}}</text>
       <text class="branding" font-style="italic" x="26" y="897" id="text283">#YEARINMUSIC</text>
       <text class="branding" x="844" y="43" id="text285">2023</text>
       <text x="50%" y="150" id="text106" class="subtitle">MY YEAR</text>
       <text x="50%" y="190" id="text106-2" class="subtitle">IN MUSIC</text>
-      <text x="50%" y="755" id="text106-5" class="subtitle">TOP ARTISTS</text>
+      <text x="50%" y="755" id="text106-5" class="subtitle">TOP ALBUMS</text>
     </g>
     <g id="g319">
       <image class="album-art" preserveAspectRatio="xMidYMid slice" x="265" y="250" xlink:href="{{ image_urls[0] }}" />

@@ -1,11 +1,6 @@
-<svg
-    width="452"
-    height="521"
-    viewBox="0 0 452 521"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="924" height="924" viewBox="0 0 924 924" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
         .album-art {
             preserveAspectRatio: "xMidYMid slice";
             height: 135px;
@@ -14,8 +9,37 @@
         .drawing {
           fill: #F0EEE2;
         }
+        text {
+            fill: #F0EEE2;
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+        }
+        .branding {
+            font-size: 20px;
+            letter-spacing: 0em;
+            text-transform: uppercase;
+        }
+        .subtitle {
+            text-anchor: middle;
+            font-size: 32px;
+            letter-spacing: 0.6em;
+        }
+        .background {
+            fill: #4C6C52;
+        }
   </style>
-  <g id="g1957">
+  <g id="g297">
+    <rect class="background" width="924" height="924" fill="#4C6C52"/>
+    <text class="branding" x="750" y="897" id="text279">LISTENBRAINZ</text>
+    <text class="branding" x="26" y="43" id="text281">{{user_name}}</text>
+    <text class="branding" font-style="italic" x="26" y="897" id="text283">#YEARINMUSIC</text>
+    <text class="branding" x="844" y="43" id="text285">2023</text>
+    <text x="50%" y="145" id="text106" class="subtitle">MY YEAR</text>
+    <text x="50%" y="185" id="text106-2" class="subtitle">IN MUSIC</text>
+    <text x="50%" y="755" id="text106-5" class="subtitle">PLAYLISTS: </text>
+    <text x="50%" y="795" id="text106-15" class="subtitle">MISSED TRACKS</text>
+  </g>
+  <g transform="translate(225, 190)">
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="20" y="75" xlink:href="{{ image_urls[0] }}" />
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="20" y="210" xlink:href="{{ image_urls[1] }}" />
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="20" y="345" xlink:href="{{ image_urls[2] }}" />

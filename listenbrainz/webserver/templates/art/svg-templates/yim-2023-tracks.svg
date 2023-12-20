@@ -36,7 +36,7 @@
     </style>
   <g id="g1348">
     <g id="g1264">
-      <path class="background" fill="#4C6C52" id="rect1244" d="M0 0h924v924H0z"/>
+      <rect class="background" width="924" height="924" fill="#4C6C52"/>
       <text class="branding" x="750" y="897" id="text1246">LISTENBRAINZ</text>
       <text class="branding" x="26" y="43" id="text1248">{{user_name}}</text>
       <text class="branding" font-style="italic" x="26" y="897" id="text1250">#YEARINMUSIC</text>
