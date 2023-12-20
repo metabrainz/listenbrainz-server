@@ -489,6 +489,17 @@ export default class YearInMusic extends React.Component<
     const linkToUserProfile = `https://listenbrainz.org/user/${user.name}`;
     const linkToThisPage = `${linkToUserProfile}/year-in-music/2023`;
     const imageShareCustomStyles = `.background {\nfill: ${selectedColor};\n}\n`;
+
+    let newArtistsDiscovered: number | string =
+      yearInMusicData.total_new_artists_discovered;
+    const newArtistsDiscoveredPercentage = Math.round(
+      (yearInMusicData.total_new_artists_discovered /
+        yearInMusicData.total_artists_count) *
+        100
+    );
+    if (!Number.isNaN(newArtistsDiscoveredPercentage)) {
+      newArtistsDiscovered = `${newArtistsDiscoveredPercentage}%`;
+    }
     return (
       <div
         id="year-in-music"
@@ -852,10 +863,26 @@ export default class YearInMusic extends React.Component<
                   songs graced {yourOrUsersName} ears
                 </div>
               )}
-              {yearInMusicData.day_of_week && (
+              {yearInMusicData.total_listening_time && (
                 <div className="small-stat text-center">
-                  <div className="value">{yearInMusicData.day_of_week}</div>
-                  was {yourOrUsersName} music day
+                  <div className="value">
+                    {humanizeDuration(
+                      yearInMusicData.total_listening_time * 1000,
+                      {
+                        largest: 1,
+                        round: true,
+                      }
+                    )}
+                  </div>
+                  of music (at least!)
+                </div>
+              )}
+              {yearInMusicData.total_release_groups_count && (
+                <div className="small-stat text-center">
+                  <div className="value">
+                    {yearInMusicData.total_release_groups_count}
+                  </div>
+                  albums in total
                 </div>
               )}
               {yearInMusicData.total_artists_count && (
@@ -866,31 +893,16 @@ export default class YearInMusic extends React.Component<
                   artists got {yourOrUsersName} attention
                 </div>
               )}
-              {yearInMusicData.total_listening_time && (
+              {newArtistsDiscovered && (
                 <div className="small-stat text-center">
-                  <div className="value">
-                    {humanizeDuration(yearInMusicData.total_listening_time * 1000, {
-                      largest: 1,
-                      round: true,
-                    })}
-                  </div>
-                  of music (at least!)
-                </div>
-              )}
-              {yearInMusicData.total_new_artists_discovered && (
-                <div className="small-stat text-center">
-                  <div className="value">
-                    {yearInMusicData.total_new_artists_discovered}
-                  </div>
+                  <div className="value">{newArtistsDiscovered}</div>
                   new artists discovered
                 </div>
               )}
-              {yearInMusicData.total_release_groups_count && (
+              {yearInMusicData.day_of_week && (
                 <div className="small-stat text-center">
-                  <div className="value">
-                    {yearInMusicData.total_release_groups_count}
-                  </div>
-                  albums in total
+                  <div className="value">{yearInMusicData.day_of_week}</div>
+                  was {yourOrUsersName} music day
                 </div>
               )}
             </div>
