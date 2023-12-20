@@ -276,6 +276,7 @@ export default class YearInMusic extends React.Component<
       return undefined;
     }
     const { APIService } = this.context;
+    const { selectedColor } = this.state;
     const { user } = this.props;
     return (
       <div className="card content-card mb-10" id={`${coverArtKey}`}>
@@ -338,6 +339,16 @@ export default class YearInMusic extends React.Component<
           >
             See the full playlist…
           </a>
+        </div>
+        <div className="yim-share-button-container"></div>
+          <ImageShareButtons
+            svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=${coverArtKey}`}
+            shareUrl={`https://listenbrainz.org/user/${user.name}/year-in-music/2023#top-albums`}
+            // shareText="Check out my"
+            shareTitle="My 2023 ListenBrainz playlists"
+            fileName={`${user.name}-${coverArtKey}-2023`}
+            customStyles={`.background {\nfill: ${selectedColor};\n}\n`}
+          />
         </div>
       </div>
     );
