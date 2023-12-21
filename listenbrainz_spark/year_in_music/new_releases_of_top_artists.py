@@ -14,7 +14,7 @@ def get_new_releases_of_top_artists(year):
     get_listens_from_dump(from_date, to_date).createOrReplaceTempView("listens")
 
     create_release_group_metadata_cache()
-    read_files_from_HDFS(RELEASE_GROUP_METADATA_CACHE_DATAFRAME).createOrReplaceTempView("release_groups")
+    read_files_from_HDFS(RELEASE_GROUP_METADATA_CACHE_DATAFRAME).createOrReplaceTempView("release_groups_all")
 
     new_releases = run_query(_get_new_releases_of_top_artists(year))
 
@@ -51,7 +51,7 @@ def _get_new_releases_of_top_artists(year):
                  , explode(artist_credit_mbids) AS artist_mbid
               FROM top_artists
              WHERE row_number <= 50   
-        ), release_groups AS (
+        ), release_groups_of_year AS (
             SELECT title
                  , artist_credit_name  
                  , release_group_mbid
@@ -59,7 +59,7 @@ def _get_new_releases_of_top_artists(year):
                  , caa_id
                  , caa_release_mbid
                  , explode(artist_credit_mbids) AS artist_mbid
-              FROM release_groups_of_year
+              FROM release_groups_all
              WHERE first_release_date_year = {year}
         )
             SELECT user_id
@@ -73,7 +73,7 @@ def _get_new_releases_of_top_artists(year):
                          , rg.caa_release_mbid
                         )
                     ) AS new_releases
-              FROM release_groups rg
+              FROM release_groups_of_year rg
               JOIN top_50_artists t50a
              WHERE rg.artist_mbid = t50a.artist_mbid
           GROUP BY user_id

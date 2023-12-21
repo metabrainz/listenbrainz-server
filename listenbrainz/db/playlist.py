@@ -1,6 +1,7 @@
 import collections
 import datetime
 from typing import List, Optional
+from uuid import UUID
 
 import sqlalchemy
 import orjson
@@ -11,6 +12,8 @@ from sqlalchemy import text
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import timescale as ts
 from listenbrainz.db import user as db_user
+from listenbrainz.db.model.playlist import Playlist
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.db.user import get_users_by_id
 from troi.patches.periodic_jams import WEEKLY_JAMS_DESCRIPTION, WEEKLY_EXPLORATION_DESCRIPTION
 
@@ -19,7 +22,15 @@ TROI_BOT_DEBUG_USER_ID = 19055
 LISTENBRAINZ_USER_ID = 23944
 
 # These are the recommendation troi patches that we showcase on the recommendations page for each user
-RECOMMENDATION_PATCHES = ('daily-jams', 'weekly-jams', 'weekly-exploration', 'top-discoveries-for-year', 'top-missed-recordings-for-year')
+RECOMMENDATION_PATCHES = (
+    'daily-jams',
+    'weekly-jams',
+    'weekly-exploration',
+    'top-discoveries-for-year',
+    'top-missed-recordings-for-year',
+    'top-discoveries-of-2023',
+    'top-missed-recordings-of-2023'
+)
 
 
 def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
@@ -756,3 +767,35 @@ def move_recordings(playlist: model_playlist.Playlist, position_from: int, posit
     removed = playlist.recordings[position_from:position_from+count]
     delete_recordings_from_playlist(playlist, position_from, count)
     add_recordings_to_playlist(playlist, removed, position_to)
+
+
+def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Playlist:
+    """ Retrieve metadata for all recordings in a playlist from the database. """
+    mbids = [str(item.mbid) for item in playlist.recordings]
+    if not mbids:
+        return playlist
+
+    rows = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
+
+    for rec, row in zip(playlist.recordings, rows):
+        rec.artist_credit = row.get("artist_credit_name", "")
+        if "[artist_credit_mbids]" in row and row["[artist_credit_mbids]"] is not None:
+            rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"]]
+        rec.title = row.get("recording_name", "")
+        rec.release_name = row.get("release_name", "")
+        rec.duration_ms = row.get("length", "")
+
+        caa_id = row.get("caa_id")
+        caa_release_mbid = row.get("caa_release_mbid")
+        additional_metadata = {}
+        if caa_id and caa_release_mbid:
+            additional_metadata["caa_id"] = caa_id
+            additional_metadata["caa_release_mbid"] = caa_release_mbid
+
+        if row.get("artists"):
+            additional_metadata["artists"] = row["artists"]
+
+        if additional_metadata:
+            rec.additional_metadata = additional_metadata
+
+    return playlist

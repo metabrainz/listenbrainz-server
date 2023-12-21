@@ -247,10 +247,8 @@ const getArtistName = (
   );
 };
 
-const getArtistLink = (listen: Listen) => {
-  const artists = listen.track_metadata?.mbid_mapping?.artists;
-  if (artists?.length) {
-    return (
+const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
+  return (
       <>
         {artists.map((artist) => (
           <>
@@ -267,6 +265,12 @@ const getArtistLink = (listen: Listen) => {
         ))}
       </>
     );
+};
+
+const getArtistLink = (listen: Listen) => {
+  const artists = listen.track_metadata?.mbid_mapping?.artists;
+  if (artists?.length) {
+    return getMBIDMappingArtistLink(artists);
   }
   const artistName = getArtistName(listen);
   const artistMbids = getArtistMBIDs(listen);
@@ -955,6 +959,7 @@ export function getPersonalRecommendationEventContent(
 export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,
+  getMBIDMappingArtistLink,
   getArtistLink,
   getTrackLink,
   formatWSMessageToListen,

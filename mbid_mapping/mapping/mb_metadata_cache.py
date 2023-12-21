@@ -31,6 +31,11 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.mb_metadata_cache", mb_conn, lb_conn, batch_size)
+        # cache the last updated to avoid calling it millions of times for the entire cache,
+        # not initializing it here because there can be a huge time gap between initialization
+        # and the actual query to fetch and insert the items in the cache. the pre_insert_queries_db_setup
+        # is called just before the insert queries are run.
+        self.last_updated = None
 
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
@@ -64,6 +69,12 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         return [("mb_metadata_cache_idx_recording_mbid", "recording_mbid",          True),
                 ("mb_metadata_cache_idx_artist_mbids",   "USING gin(artist_mbids)", False),
                 ("mb_metadata_cache_idx_dirty",          "dirty",                   False)]
+
+    def process_row(self, row):
+        return [("false", self.last_updated, *self.create_json_data(row))]
+
+    def process_row_complete(self):
+        return []
 
     def create_json_data(self, row):
         """ Format the data returned into sane JSONB blobs for easy consumption. Return

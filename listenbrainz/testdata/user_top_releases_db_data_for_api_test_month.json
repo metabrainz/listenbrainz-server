@@ -12,18 +12,32 @@
         "listen_count": 16,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_mbids": [
           "6817e85a-f5ae-4479-b73d-e8e320e1b927"
         ],
         "release_mbid": "aec9a871-cd3b-467f-a53d-4ef5bc3bbafe",
-        "release_name": "÷ (Deluxe)",
+        "release_name": "\u00f7 (Deluxe)",
         "listen_count": 14,
         "artist_name": "Ed Sheeran",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ed Sheeran",
+            "join_phrase": "",
+            "artist_mbid": "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -34,7 +48,14 @@
         "listen_count": 12,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       }
     ]
   },
@@ -51,7 +72,14 @@
         "listen_count": 10,
         "artist_name": "Imagine Dragons",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -62,7 +90,14 @@
         "listen_count": 10,
         "artist_name": "The Script",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Script",
+            "join_phrase": "",
+            "artist_mbid": "1871df1a-93b7-4e25-9d60-64102ba89913"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -73,7 +108,14 @@
         "listen_count": 9,
         "artist_name": "Coldplay",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -84,7 +126,14 @@
         "listen_count": 9,
         "artist_name": "OneRepublic",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -95,7 +144,14 @@
         "listen_count": 8,
         "artist_name": "Lenka",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       }
     ]
   }

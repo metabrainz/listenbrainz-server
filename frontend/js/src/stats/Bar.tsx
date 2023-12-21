@@ -61,6 +61,7 @@ export default function Bar(props: BarProps) {
       "artistMBID",
       "release",
       "releaseMBID",
+      "artists"
     ])
   );
   return (

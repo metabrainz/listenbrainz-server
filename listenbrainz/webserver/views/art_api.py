@@ -1,9 +1,8 @@
+from itertools import cycle
 from random import sample
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.year_in_music as db_yim
-
-from uuid import UUID
 
 from brainzutils.ratelimit import ratelimit
 from flask import request, render_template, Blueprint, current_app
@@ -11,6 +10,7 @@ from flask import request, render_template, Blueprint, current_app
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
+from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 art_api_bp = Blueprint('art_api_v1', __name__)
 
@@ -75,8 +75,14 @@ def cover_art_grid_post():
     else:
         layout = None
 
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], r["dimension"], r["image_size"], r["background"],
-                            r["skip-missing"], r["show-caa"])
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"],
+        r.get("dimension"),
+        r.get("image_size"),
+        r.get("background"),
+        r.get("skip-missing"),
+        r.get("show-caa")
+    )
 
     err = cac.validate_parameters()
     if err is not None:
@@ -86,9 +92,7 @@ def cover_art_grid_post():
         raise APIBadRequest("release_mbids must be a list of strings specifying release_mbids")
 
     for mbid in r["release_mbids"]:
-        try:
-            UUID(mbid)
-        except ValueError:
+        if not is_valid_uuid(mbid):
             raise APIBadRequest(f"Invalid release_mbid {mbid} specified.")
 
     if "cover_art_size" in r:
@@ -215,6 +219,10 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
             images, releases, metadata = cac.create_release_stats_cover(user_name, time_range)
             if images is None:
                 raise APIInternalServerError("Failed to release cover art SVG")
+            if custom_name == "lps-on-the-floor":
+                repeater = cycle(images)
+                while len(images) < 5:
+                    images.append(next(repeater))
         except ValueError as error:
             raise APIBadRequest(str(error))
 
@@ -279,10 +287,14 @@ def _cover_art_yim_albums(user_name, stats):
                 selected_urls.add(url)
                 image_urls.append(url)
 
+    if len(image_urls) == 0:
+        return None
+
     if len(image_urls) < 9:
-        # fill up the remaining slots with random repeated images
-        more_image_urls = sample(image_urls, 9 - len(image_urls))
-        image_urls.extend(more_image_urls)
+        repeater = cycle(image_urls)
+        # fill up the remaining slots with repeated images
+        while len(image_urls) < 9:
+            image_urls.append(next(repeater))
 
     return render_template(
         "art/svg-templates/yim-2022-albums.svg",
@@ -336,10 +348,14 @@ def _cover_art_yim_playlist(user_name, stats, key):
             image_urls.append(all_cover_arts[mbid])
             selected_urls.add(all_cover_arts[mbid])
 
+    if len(image_urls) == 0:
+        return None
+
     if len(image_urls) < 9:
-        # fill up the remaining slots with random repeated images
-        more_image_urls = sample(image_urls, 9 - len(image_urls))
-        image_urls.extend(more_image_urls)
+        repeater = cycle(image_urls)
+        # fill up the remaining slots with repeated images
+        while len(image_urls) < 9:
+            image_urls.append(next(repeater))
 
     return render_template(
         "art/svg-templates/yim-2022-playlists.svg",
@@ -348,6 +364,56 @@ def _cover_art_yim_playlist(user_name, stats, key):
         bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
         flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-flames.png',
     )
+
+
+def _cover_art_yim_overview(user_name, stats, year):
+    """ Create the SVG using top stats for the overview YIM image. """
+    filtered_genres = []
+    total_filtered_genre_count = 0
+    for genre in stats.get("top_genres", []):
+        if genre["genre"] not in ("pop", "rock", "electronic", "hip hop"):
+            filtered_genres.append(genre)
+            total_filtered_genre_count += genre["genre_count"]
+
+    filtered_top_genres = []
+    for genre in filtered_genres[:4]:
+        genre_count_percent = round(genre["genre_count"] / total_filtered_genre_count * 100)
+        filtered_top_genres.append({"genre": genre["genre"], "genre_count_percent": genre_count_percent})
+
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+
+    albums = []
+    for release_group in stats.get("top_release_groups", [])[:2]:
+        if release_group.get("caa_id") and release_group.get("caa_release_mbid"):
+            cover_art = cac.resolve_cover_art(release_group["caa_id"], release_group["caa_release_mbid"], 250)
+        else:
+            cover_art = None
+        albums.append({
+            "artist": release_group["artist_name"],
+            "title": release_group["release_group_name"],
+            "listen_count": release_group["listen_count"],
+            "cover_art": cover_art
+        })
+
+    if len(albums) == 2:
+        album_1, album_2 = albums[0], albums[1]
+    elif len(albums) == 1:
+        album_1, album_2 = albums[0], None
+    else:
+        album_1, album_2 = None, None
+
+    props = {
+        "artists_count": stats.get("total_artists_count", 0),
+        "albums_count": stats.get("total_release_groups_count", 0),
+        "songs_count": stats.get("total_recordings_count", 0),
+        "genres": filtered_top_genres,
+        "user_name": user_name,
+        "album_1": album_1,
+        "album_2": album_2
+    }
+
+    if year == 2023:
+        return render_template("art/svg-templates/yim-2023.svg", **props)
 
 
 @art_api_bp.route("/year-in-music/2022/<user_name>", methods=["GET"])
@@ -380,4 +446,3 @@ def cover_art_yim_2022(user_name):
         return "", 204
 
     return svg, 200, {"Content-Type": "image/svg+xml"}
-
