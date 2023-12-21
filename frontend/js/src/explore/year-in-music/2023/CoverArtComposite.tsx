@@ -139,6 +139,7 @@ export default function CoverArtComposite() {
                     shape="rect"
                     coords={coordinates}
                     alt={name}
+                    title={name}
                     href={
                       preventClick
                         ? undefined
