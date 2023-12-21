@@ -2,8 +2,8 @@
     {% set width = 924 %}
     {% set height = 924 %}
 {% else %}
-    {% set width = 452 %}
-    {% set height = 521 %}
+    {% set width = 520 %}
+    {% set height = 520 %}
 {% endif %}
 <svg width="{{width}}" height="{{height}}" viewBox="0 0 {{width}} {{height}}" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">    <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');

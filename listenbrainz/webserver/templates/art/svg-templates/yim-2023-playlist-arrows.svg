@@ -2,8 +2,8 @@
     {% set width = 924 %}
     {% set height = 924 %}
 {% else %}
-    {% set width = 452 %}
-    {% set height = 521 %}
+    {% set width = 520 %}
+    {% set height = 520 %}
 {% endif %}
 <svg width="{{width}}" height="{{height}}" viewBox="0 0 {{width}} {{height}}" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <style>
@@ -88,7 +88,7 @@
   </g>
   <g transform="translate(225, 190)">
   {% else %}
-  <g>
+  <g transform="translate(35, 0)">
   {% endif %}
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="20" y="75" xlink:href="{{ image_urls[0] }}" />
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="20" y="210" xlink:href="{{ image_urls[1] }}" />
