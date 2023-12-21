@@ -500,6 +500,7 @@ export default class YearInMusic extends React.Component<
     const linkToUserProfile = `https://listenbrainz.org/user/${user.name}`;
     const linkToThisPage = `${linkToUserProfile}/year-in-music/2023`;
     const imageShareCustomStyles = `.background {\nfill: ${selectedColor};\n}\n`;
+    const statsImageCustomStyles = `.background, text {\nfill: ${selectedColor};\n}\n.outline {\nstroke: ${selectedColor};\n}\n`;
 
     let newArtistsDiscovered: number | string =
       yearInMusicData.total_new_artists_discovered;
@@ -1105,7 +1106,7 @@ export default class YearInMusic extends React.Component<
                 shareUrl={`${linkToThisPage}#stats`}
                 shareTitle="My music listening in 2023"
                 fileName={`${user.name}-stats-2023`}
-                customStyles={imageShareCustomStyles}
+                customStyles={statsImageCustomStyles}
               />
             </div>
           </div>

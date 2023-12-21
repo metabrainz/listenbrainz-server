@@ -49,7 +49,7 @@
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="290" y="75" xlink:href="{{ image_urls[6] }}" />
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="290" y="210" xlink:href="{{ image_urls[7] }}" />
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="290" y="345" xlink:href="{{ image_urls[8] }}" />
-    <g id="arrows" transform="translate(5 42) scale(.3455)" class="drawing">
+    <g id="arrows" transform="translate(-30 20) scale(0.4)" class="drawing">
       <path d="M849 1c2 1 8 1 7 5-1 6-3 11-6 16-6 19-14 38-17 58-4 13 10-5 16 1 2 2 8-1 8 3 2 13-14 21-24 27-5 1-4 11-10 7s-30-32-16-35c8-2 14 6 15 0 4-18 3-83 27-82z" id="path2118"/>
       <path d="M505 1269c-14-7-11-71-21-62-4 4-6 7-11 1-11-10 8-29 15-37 6-10 16-14 24-5 4 5 14 14 5 20-2 2-3 6-7 6s-3 3-3 5c0 19 2 37 6 55 3 10-6 9-6 17h-2z" id="path2120"/>
       <path d="M998 903c2-15 63-31 54-6-1 4-9 7-3 10 10 7 22 11 31 19 13 12 31 15 44 28 24 19 53 34 69 60 8 12-4 24-12 11-9-21-34-29-49-44-25-19-51-39-80-50-3 0-7-6-9-1-5 8-15 9-19 1-6-13-25-12-26-28z" id="path2122"/>
