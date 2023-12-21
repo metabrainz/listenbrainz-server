@@ -34,9 +34,34 @@
       <text class="branding" x="26" y="43" id="text281">{{user_name}}</text>
       <text class="branding" font-style="italic" x="26" y="897" id="text283">#YEARINMUSIC</text>
       <text class="branding" x="844" y="43" id="text285">2023</text>
-      <text x="50%" y="150" id="text106" class="subtitle">MY YEAR</text>
-      <text x="50%" y="190" id="text106-2" class="subtitle">IN MUSIC</text>
-      <text x="50%" y="755" id="text106-5" class="subtitle">TOP ALBUMS</text>
+      <text x="50%" y="150" id="my-year" class="subtitle">
+          <tspan>M</tspan>
+          <tspan dx="12">Y</tspan>
+          <tspan dx="30">Y</tspan>
+          <tspan dx="12">E</tspan>
+          <tspan dx="12">A</tspan>
+          <tspan dx="12">R</tspan>
+      </text>
+      <text x="50%" y="190" id="in-music" class="subtitle">
+          <tspan>I</tspan>
+          <tspan dx="12">N</tspan>
+          <tspan dx="30">M</tspan>
+          <tspan dx="12">U</tspan>
+          <tspan dx="12">S</tspan>
+          <tspan dx="12">I</tspan>
+          <tspan dx="12">C</tspan>
+      </text>
+      <text x="50%" y="755" id="top-albums" class="subtitle">
+          <tspan>T</tspan>
+          <tspan dx="12">O</tspan>
+          <tspan dx="12">P</tspan>
+          <tspan dx="30">A</tspan>
+          <tspan dx="12">L</tspan>
+          <tspan dx="12">B</tspan>
+          <tspan dx="12">U</tspan>
+          <tspan dx="12">M</tspan>
+          <tspan dx="12">S</tspan>
+      </text>
     </g>
     <g id="g319">
       <image class="album-art" preserveAspectRatio="xMidYMid slice" x="265" y="250" xlink:href="{{ image_urls[0] }}" />
