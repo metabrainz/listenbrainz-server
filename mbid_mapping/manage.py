@@ -7,7 +7,8 @@ import subprocess
 import click
 
 from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
-from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache
+from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
+    incremental_update_mb_artist_metadata_cache
 from mapping.typesense_index import build_all as action_build_index
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
@@ -16,7 +17,8 @@ from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache, incremental_update_mb_metadata_cache, \
     cleanup_mbid_mapping_table
-from mapping.mb_release_group_cache import create_mb_release_group_cache
+from mapping.mb_release_group_cache import create_mb_release_group_cache, \
+    incremental_update_mb_release_group_metadata_cache
 from mapping.spotify_metadata_index import create_spotify_metadata_index
 from similar.tag_similarity import create_tag_similarity
 
@@ -142,6 +144,24 @@ def update_mb_metadata_cache(use_lb_conn):
         Update the MB metadata cache that LB uses incrementally.
     """
     incremental_update_mb_metadata_cache(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def update_mb_release_group_metadata_cache(use_lb_conn):
+    """
+        Update the MB metadata cache that LB uses incrementally.
+    """
+    incremental_update_mb_release_group_metadata_cache(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def update_mb_artist_metadata_cache(use_lb_conn):
+    """
+        Update the MB metadata cache that LB uses incrementally.
+    """
+    incremental_update_mb_artist_metadata_cache(use_lb_conn)
 
 
 @cli.command()

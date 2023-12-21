@@ -1,33 +1,32 @@
-from datetime import datetime
-
-from typing import List, Set
+from typing import List
 import uuid
 
 import psycopg2
 import psycopg2.extras
 import ujson
-from psycopg2.extras import execute_values
 
-from mapping.mb_metadata_cache import ARTIST_LINK_GIDS_SQL, update_metadata_cache_timestamp, \
-    select_metadata_cache_timestamp
-from mapping.utils import insert_rows, log
-from mapping.bulk_table import BulkInsertTable
+from mapping.mb_cache_base import create_metadata_cache, incremental_update_metadata_cache, \
+    MusicBrainzEntityMetadataCache
+from mapping.mb_metadata_cache import ARTIST_LINK_GIDS_SQL
+from mapping.utils import log
 import config
 
 MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY = "mb_artist_metadata_cache_last_update_timestamp"
 
 
-class MusicBrainzArtistMetadataCache(BulkInsertTable):
+class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
     """
-        This class creates the MB metadata cache
+        This class creates the MB artist metadata cache
 
         For documentation on what each of the functions in this class does, please refer
         to the BulkInsertTable docs.
     """
 
+    def get_post_process_queries(self):
+        return []
+
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.mb_artist_metadata_cache", mb_conn, lb_conn, batch_size)
-        self.last_updated = None
 
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
@@ -48,25 +47,9 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
         else:
             return [[]]
 
-    def get_insert_queries(self):
-        return [("MB", self.get_metadata_cache_query(with_values=config.USE_MINIMAL_DATASET))]
-
-    def pre_insert_queries_db_setup(self, curs):
-        self.config_postgres_join_limit(curs)
-        self.last_updated = datetime.now()
-
-    def get_post_process_queries(self):
-        return []
-
     def get_index_names(self):
         return [("mb_artist_metadata_cache_idx_artist_mbid", "artist_mbid", True),
                 ("mb_artist_metadata_cache_idx_dirty", "dirty", False)]
-
-    def process_row(self, row):
-        return [("false", self.last_updated, *self.create_json_data(row))]
-
-    def process_row_complete(self):
-        return []
 
     def create_json_data(self, row):
         """ Format the data returned into sane JSONB blobs for easy consumption. Return
@@ -300,19 +283,6 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
         with conn.cursor() as curs:
             curs.execute(query, (tuple(artist_mbids), ))
 
-    def config_postgres_join_limit(self, curs):
-        """
-        Because of the size of query we need to hint to postgres that it should continue to
-        reorder JOINs in an optimal order. Without these settings, PG will take minutes to
-        execute the metadata cache query for even for 3-4 mbids. With these settings,
-        the query planning time increases by few milliseconds but the query running time
-        becomes instantaneous.
-        """
-        curs.execute('SET geqo = off')
-        curs.execute('SET geqo_threshold = 20')
-        curs.execute('SET from_collapse_limit = 15')
-        curs.execute('SET join_collapse_limit = 15')
-
     def query_last_updated_items(self, timestamp):
         # there queries mirror the structure and logic of the main cache building queries
         # note that the tags queries in any of these omit the count > 0 clause because possible removal
@@ -331,9 +301,8 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
         #
         # |   CTE / table   |       purpose                  |  last_updated considered           | last_updated ignored
         # |   artist_rels   |  artist - url links            |  link relationship related and url | artist
-        # |   artist_data   |  life span, area, type, gender |  area                              | artist
-        # |   artist_tags   |  artist tags                   |  recording_tag, genre              | artist
-        # |   artist        |                                |  artist                            |
+        # |   artist_tags   |  artist tags                   |  artist_tag, genre                 | artist
+        # |   artist        |  area, type, gender, life span |  artist, area                      |
         artist_mbids_query = f"""
             SELECT a.gid
               FROM musicbrainz.artist a
@@ -374,60 +343,53 @@ class MusicBrainzArtistMetadataCache(BulkInsertTable):
              WHERE a.last_updated > %(timestamp)s
         """
 
+        # 2. rg_cover_art, release_group_data
+        # these CTEs concern release group data and we fetch release and cover art data from these.
+        # FIXME: release_group_meta is not considered here because it does not have a last_updated column.
+        release_group_mbids_query = """
+            WITH release_group_mbids AS (
+                SELECT rel.id
+                  FROM musicbrainz.release_group rg
+                  JOIN musicbrainz.release rel
+                    ON rel.release_group = rg.id
+             LEFT JOIN cover_art_archive.cover_art caa
+                    ON caa.release = rel.id
+             LEFT JOIN cover_art_archive.cover_art_type cat
+                    ON cat.id = caa.id
+                 WHERE rg.last_updated > %(timestamp)s
+                    OR (caa.date_uploaded > %(timestamp)s AND (type_id = 1 OR type_id IS NULL))
+            )   SELECT a.gid
+                  FROM musicbrainz.artist a
+                  JOIN musicbrainz.artist_credit_name acn
+                    ON acn.artist = a.id
+                  JOIN musicbrainz.release_group rg
+                    ON rg.artist_credit = acn.artist_credit
+                  JOIN release_group_mbids rmb
+                    on rg.id = rmb.id
+        """
+
         try:
             with self.mb_conn.cursor() as curs:
                 self.config_postgres_join_limit(curs)
                 artist_mbids = set()
 
-                log("mb metadata cache: querying artist mbids to update")
+                log("mb artist metadata cache: querying artist mbids to update")
                 curs.execute(artist_mbids_query, {"timestamp": timestamp})
+                for row in curs.fetchall():
+                    artist_mbids.add(row[0])
+
+                log("mb artist metadata cache: querying release mbids to update")
+                curs.execute(release_group_mbids_query, {"timestamp": timestamp})
                 for row in curs.fetchall():
                     artist_mbids.add(row[0])
 
                 return artist_mbids
         except psycopg2.errors.OperationalError as err:
-            log("mb metadata cache: cannot query rows for update", err)
+            log("mb artist metadata cache: cannot query rows for update", err)
             return None
 
-    def update_dirty_cache_items(self, artist_mbids: Set[uuid.UUID]):
-        """Refresh any dirty items in the mb_artist_metadata_cache table.
-
-        This process first looks for all recording MIBDs which are dirty, gets updated metadata for them, and then
-        in batches deletes the dirty rows and inserts the updated ones.
-        """
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
-        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
-            with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-                self.config_postgres_join_limit(mb_curs)
-
-                log("mb metadata update: Running looooong query on dirty items")
-                query = self.get_metadata_cache_query(with_values=True)
-                values = [(mbid, ) for mbid in artist_mbids]
-                execute_values(mb_curs, query, values, page_size=len(values))
-
-                rows = []
-                count = 0
-                total_rows = len(artist_mbids)
-                for row in mb_curs:
-                    count += 1
-                    data = self.create_json_data(row)
-                    rows.append(("false", *data))
-                    if len(rows) >= self.batch_size:
-                        batch_artist_mbids = [row[1] for row in rows]
-                        self.delete_rows(batch_artist_mbids)
-                        insert_rows(lb_curs, self.table_name, rows)
-                        conn.commit()
-                        log("mb metadata update: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
-                        rows = []
-
-                if rows:
-                    batch_artist_mbids = [row[1] for row in rows]
-                    self.delete_rows(batch_artist_mbids)
-                    insert_rows(lb_curs, self.table_name, rows)
-                    conn.commit()
-
-        log("mb metadata update: inserted %d rows. %.1f%%" % (count, 100 * count / total_rows))
-        log("mb metadata update: Done!")
+    def get_delete_rows_query(self):
+        return f"DELETE FROM {self.table_name} WHERE artist_mbid IN %s"
 
 
 def create_mb_artist_metadata_cache(use_lb_conn: bool):
@@ -437,58 +399,9 @@ def create_mb_artist_metadata_cache(use_lb_conn: bool):
         Arguments:
             use_lb_conn: whether to use LB conn or not
     """
-    psycopg2.extras.register_uuid()
-
-    if use_lb_conn:
-        mb_uri = config.MB_DATABASE_STANDBY_URI or config.MBID_MAPPING_DATABASE_URI
-    else:
-        mb_uri = config.MBID_MAPPING_DATABASE_URI
-
-    with psycopg2.connect(mb_uri) as mb_conn:
-        lb_conn = None
-        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
-
-        new_timestamp = datetime.now()
-        cache = MusicBrainzArtistMetadataCache(mb_conn, lb_conn)
-        cache.run()
-        update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY)
+    create_metadata_cache(MusicBrainzArtistMetadataCache, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY, [], use_lb_conn)
 
 
 def incremental_update_mb_artist_metadata_cache(use_lb_conn: bool):
     """ Update the MB metadata cache incrementally """
-    psycopg2.extras.register_uuid()
-
-    if use_lb_conn:
-        mb_uri = config.MB_DATABASE_STANDBY_URI or config.MBID_MAPPING_DATABASE_URI
-    else:
-        mb_uri = config.MBID_MAPPING_DATABASE_URI
-
-    with psycopg2.connect(mb_uri) as mb_conn:
-        lb_conn = None
-        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
-
-        cache = MusicBrainzArtistMetadataCache(mb_conn, lb_conn)
-        if not cache.table_exists():
-            log("mb metadata cache: table does not exist, first create the table normally")
-            return
-
-        log("mb metadata cache: starting incremental update")
-
-        timestamp = select_metadata_cache_timestamp(lb_conn or mb_conn, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY)
-        log(f"mb metadata cache: last update timestamp - {timestamp}")
-        if not timestamp:
-            return
-
-        new_timestamp = datetime.now()
-        artist_mbids = cache.query_last_updated_items(timestamp)
-        cache.update_dirty_cache_items(artist_mbids)
-
-        if len(artist_mbids) == 0:
-            log("mb metadata cache: no recording mbids found to update")
-            return
-
-        update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY)
-
-        log("mb metadata cache: incremental update completed")
+    incremental_update_metadata_cache(MusicBrainzArtistMetadataCache, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY, use_lb_conn)
