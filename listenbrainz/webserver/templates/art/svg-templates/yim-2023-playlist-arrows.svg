@@ -1,4 +1,11 @@
-<svg width="924" height="924" viewBox="0 0 924 924" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+{% if branding %}
+    {% set width = 924 %}
+    {% set height = 924 %}
+{% else %}
+    {% set width = 452 %}
+    {% set height = 521 %}
+{% endif %}
+<svg width="{{width}}" height="{{height}}" viewBox="0 0 {{width}} {{height}}" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
         .album-art {
@@ -28,6 +35,7 @@
             fill: #4C6C52;
         }
   </style>
+  {% if branding %}
   <g id="g297">
     <rect class="background" width="924" height="924" fill="#4C6C52"/>
     <text class="branding" x="750" y="897" id="text279">LISTENBRAINZ</text>
@@ -40,6 +48,9 @@
     <text x="50%" y="795" id="text106-15" class="subtitle">MISSED TRACKS</text>
   </g>
   <g transform="translate(225, 190)">
+  {% else %}
+  <g>
+  {% endif %}
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="20" y="75" xlink:href="{{ image_urls[0] }}" />
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="20" y="210" xlink:href="{{ image_urls[1] }}" />
     <image class="album-art" preserveAspectRatio="xMidYMid slice" x="20" y="345" xlink:href="{{ image_urls[2] }}" />

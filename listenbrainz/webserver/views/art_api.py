@@ -11,7 +11,7 @@ from flask import request, render_template, Blueprint, current_app
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
-from listenbrainz.webserver.views.api_tools import is_valid_uuid
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_EXTENSION_URI
 
 art_api_bp = Blueprint('art_api_v1', __name__)
@@ -402,7 +402,7 @@ def _cover_art_yim_playlist_2022(user_name, stats, key):
     )
 
 
-def _cover_art_yim_playlist_2023(user_name, stats, key):
+def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
     """ Create the SVG using playlist tracks' cover arts for the given YIM 2023 playlist. """
     if stats.get(key) is None:
         return None
@@ -444,16 +444,17 @@ def _cover_art_yim_playlist_2023(user_name, stats, key):
         target_svg,
         user_name=user_name,
         image_urls=image_urls,
+        branding=branding
     )
 
 
-def _cover_art_yim_playlist(user_name, stats, key, year):
+def _cover_art_yim_playlist(user_name, stats, key, year, branding):
     """ Create the SVG using playlist tracks' cover arts for the given YIM playlist. """
     if year == 2022:
         return _cover_art_yim_playlist_2022(user_name, stats, key)
 
     if year == 2023:
-        return _cover_art_yim_playlist_2023(user_name, stats, key)
+        return _cover_art_yim_playlist_2023(user_name, stats, key, branding)
 
 
 def _cover_art_yim_overview(user_name, stats, year):
@@ -519,6 +520,8 @@ def cover_art_yim(user_name, year: int = 2022):
     if image is None:
         raise APIBadRequest("Type of Image needs to be specified should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
+    branding = _parse_bool_arg("branding", True)
+
     stats = db_yim.get(user["id"], year)
     if stats is None:
         raise APIBadRequest(f"Year In Music {year} report for user {user_name} not found")
@@ -529,8 +532,8 @@ def cover_art_yim(user_name, year: int = 2022):
         case "albums": svg = _cover_art_yim_albums(user_name, stats, year)
         case "tracks": svg = _cover_art_yim_tracks(user_name, stats, year)
         case "artists": svg = _cover_art_yim_artists(user_name, stats, year)
-        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year)
-        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year)
+        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year, branding)
+        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year, branding)
         case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
     if svg is None:

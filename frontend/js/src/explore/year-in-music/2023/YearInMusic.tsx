@@ -283,8 +283,8 @@ export default class YearInMusic extends React.Component<
         <div className="center-p">
           <object
             style={{ maxWidth: "100%" }}
-            data={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=${coverArtKey}`}
-          >{`SVG of cover art for Top Discovery Playlist for ${user.name}`}</object>
+            data={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=${coverArtKey}&branding=False`}
+          >{`SVG of cover art for ${topLevelPlaylist.title}`}</object>
           <h4>
             <a
               href={topLevelPlaylist.identifier}
