@@ -22,7 +22,7 @@ def load_all_releases():
     data = response.json()
 
     releases = []
-    for release in data:
+    for release in data["payload"]["releases"]:
         releases.append(Row(
             release_date=release["release_date"],
             artist_credit_name=release["artist_credit_name"],
