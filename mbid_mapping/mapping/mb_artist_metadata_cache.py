@@ -1,15 +1,15 @@
-from typing import List
 import uuid
+from typing import List
 
 import psycopg2
 import psycopg2.extras
 import ujson
 
+import config
 from mapping.mb_cache_base import create_metadata_cache, incremental_update_metadata_cache, \
     MusicBrainzEntityMetadataCache
 from mapping.mb_metadata_cache import ARTIST_LINK_GIDS_SQL
 from mapping.utils import log
-import config
 
 MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY = "mb_artist_metadata_cache_last_update_timestamp"
 

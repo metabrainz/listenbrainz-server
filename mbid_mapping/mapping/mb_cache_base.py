@@ -1,3 +1,4 @@
+from abc import ABC
 from datetime import datetime
 
 from typing import List, Set
@@ -11,7 +12,6 @@ from psycopg2.sql import SQL, Literal
 from mapping.utils import insert_rows, log
 from mapping.bulk_table import BulkInsertTable
 import config
-
 
 
 ARTIST_LINK_GIDS = (
@@ -44,7 +44,7 @@ RECORDING_LINK_GIDS = (
 RECORDING_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in RECORDING_LINK_GIDS])
 
 
-class MusicBrainzEntityMetadataCache(BulkInsertTable):
+class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
     """
         This class creates the MB metadata cache
 
@@ -173,7 +173,13 @@ def select_metadata_cache_timestamp(conn, key):
 def update_metadata_cache_timestamp(conn, ts: datetime, key):
     """ Update the timestamp of metadata creation in database. The incremental update process will read this
      timestamp next time it runs and only update cache for rows updated since then in MB database. """
-    query = SQL("UPDATE background_worker_state SET value = %s WHERE key = {key}") \
+    query = SQL("""
+        INSERT INTO background_worker_state (key, value)
+             VALUES ({key}, %s)
+         ON CONFLICT (key)
+           DO UPDATE
+                 SET value = EXCLUDED.value
+    """) \
         .format(key=Literal(key))
     with conn.cursor() as curs:
         curs.execute(query, (ts.isoformat(),))

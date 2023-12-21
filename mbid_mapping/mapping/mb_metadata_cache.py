@@ -1,22 +1,14 @@
-from datetime import datetime
-
-from typing import List, Set
 import uuid
 
 import psycopg2
-from psycopg2.errors import OperationalError
 import psycopg2.extras
 import ujson
-from psycopg2.extras import execute_values
-from psycopg2.sql import SQL, Literal
 
-from mapping.mb_cache_base import MusicBrainzEntityMetadataCache, update_metadata_cache_timestamp, ARTIST_LINK_GIDS_SQL, \
-    RECORDING_LINK_GIDS_SQL, select_metadata_cache_timestamp, incremental_update_metadata_cache, create_metadata_cache
-from mapping.utils import insert_rows, log
-from mapping.bulk_table import BulkInsertTable
-from mapping.canonical_recording_release_redirect import CanonicalRecordingReleaseRedirect
 import config
-
+from mapping.canonical_recording_release_redirect import CanonicalRecordingReleaseRedirect
+from mapping.mb_cache_base import MusicBrainzEntityMetadataCache, ARTIST_LINK_GIDS_SQL, \
+    RECORDING_LINK_GIDS_SQL, incremental_update_metadata_cache, create_metadata_cache
+from mapping.utils import log
 
 MB_METADATA_CACHE_TIMESTAMP_KEY = "mb_metadata_cache_last_update_timestamp"
 

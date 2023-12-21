@@ -1,23 +1,17 @@
-from datetime import datetime
+import uuid
 
-from typing import List, Set
 import uuid
 
 import psycopg2
-from psycopg2.errors import OperationalError
 import psycopg2.extras
 import ujson
-from psycopg2.extras import execute_values
-from psycopg2.sql import SQL, Literal
 
+import config
 from mapping.mb_cache_base import create_metadata_cache, MusicBrainzEntityMetadataCache, \
     incremental_update_metadata_cache, ARTIST_LINK_GIDS_SQL
-from mapping.utils import insert_rows, log
-from mapping.bulk_table import BulkInsertTable
-import config
+from mapping.utils import log
 
-
-MB_METADATA_CACHE_TIMESTAMP_KEY = "mb_release_group_cache_last_update_timestamp"
+MB_RELEASE_GROUP_CACHE_TIMESTAMP_KEY = "mb_release_group_cache_last_update_timestamp"
 
 
 RELEASE_GROUP_LINK_GIDS = (
@@ -566,9 +560,9 @@ def create_mb_release_group_cache(use_lb_conn: bool):
         Arguments:
             use_lb_conn: whether to use LB conn or not
     """
-    create_metadata_cache(MusicBrainzReleaseGroupCache, MB_METADATA_CACHE_TIMESTAMP_KEY, [], use_lb_conn)
+    create_metadata_cache(MusicBrainzReleaseGroupCache, MB_RELEASE_GROUP_CACHE_TIMESTAMP_KEY, [], use_lb_conn)
 
 
 def incremental_update_mb_release_group_metadata_cache(use_lb_conn: bool):
     """ Update the MB metadata cache incrementally """
-    incremental_update_metadata_cache(MusicBrainzReleaseGroupCache, MB_METADATA_CACHE_TIMESTAMP_KEY, use_lb_conn)
+    incremental_update_metadata_cache(MusicBrainzReleaseGroupCache, MB_RELEASE_GROUP_CACHE_TIMESTAMP_KEY, use_lb_conn)
