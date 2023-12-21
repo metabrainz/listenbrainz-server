@@ -733,100 +733,37 @@ export default class YearInMusic extends React.Component<
           </div>
           <div className="flex flex-wrap">
             {yearInMusicData.top_recordings && (
-              <div>
-                <div className="card content-card" id="top-tracks">
-                  <div className="heading">
-                    <img
-                      className="img-header"
-                      src="/static/img/year-in-music-23/peep.png"
-                      alt="Top songs of 2023"
-                    />
-                    <h4>Top songs of 2023</h4>
-                  </div>
-                  <div className="scrollable-area">
-                    {yearInMusicData.top_recordings
-                      .slice(0, 50)
-                      .map((recording) => {
-                        const listenHere = {
-                          listened_at: 0,
-                          track_metadata: {
-                            artist_name: recording.artist_name,
-                            track_name: recording.track_name,
-                            release_name: recording.release_name,
-                            additional_info: {
-                              recording_mbid: recording.recording_mbid,
-                              release_mbid: recording.release_mbid,
-                              artist_mbids: recording.artist_mbids,
-                            },
-                            mbid_mapping: {
-                              recording_mbid: recording.recording_mbid,
-                              release_mbid: recording.release_mbid,
-                              artist_mbids: recording.artist_mbids,
-                              artists: recording.artists,
-                              caa_id: recording.caa_id,
-                              caa_release_mbid: recording.caa_release_mbid,
-                            },
-                          },
-                        };
-                        listens.push(listenHere);
-                        return (
-                          <ListenCard
-                            compact
-                            key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
-                            listen={listenHere}
-                            showTimestamp={false}
-                            showUsername={false}
-                          />
-                        );
-                      })}
-                  </div>
-                  <div className="yim-share-button-container">
-                    <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=tracks`}
-                      shareUrl={`${linkToThisPage}#top-tracks`}
-                      // shareText="Check out my"
-                      shareTitle="My top tracks of 2023"
-                      fileName={`${user.name}-top-tracks-2023`}
-                      customStyles={imageShareCustomStyles}
-                    />
-                  </div>
+              <div className="card content-card" id="top-tracks">
+                <div className="heading">
+                  <img
+                    className="img-header"
+                    src="/static/img/year-in-music-23/peep.png"
+                    alt="Top songs of 2023"
+                  />
+                  <h4>Top songs of 2023</h4>
                 </div>
-              </div>
-            )}
-            {yearInMusicData.top_artists && (
-              <div>
-                <div className="card content-card" id="top-artists">
-                  <div className="heading">
-                    <img
-                      className="img-header"
-                      src="/static/img/year-in-music-23/heart.png"
-                      alt="Top artists of 2023"
-                    />
-                    <h4>Top artists of 2023</h4>
-                  </div>
-                  <div className="scrollable-area">
-                    {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
-                      const details = getEntityLink(
-                        "artist",
-                        artist.artist_name,
-                        artist.artist_mbid
-                      );
-                      const thumbnail = (
-                        <span className="badge badge-info">
-                          <FontAwesomeIcon
-                            style={{ marginRight: "4px" }}
-                            icon={faHeadphones}
-                          />{" "}
-                          {artist.listen_count}
-                        </span>
-                      );
+                <div className="scrollable-area">
+                  {yearInMusicData.top_recordings
+                    .slice(0, 50)
+                    .map((recording) => {
                       const listenHere = {
                         listened_at: 0,
                         track_metadata: {
-                          track_name: "",
-                          artist_name: artist.artist_name,
+                          artist_name: recording.artist_name,
+                          track_name: recording.track_name,
+                          release_name: recording.release_name,
                           additional_info: {
-                            artist_mbids: [artist.artist_mbid],
+                            recording_mbid: recording.recording_mbid,
+                            release_mbid: recording.release_mbid,
+                            artist_mbids: recording.artist_mbids,
+                          },
+                          mbid_mapping: {
+                            recording_mbid: recording.recording_mbid,
+                            release_mbid: recording.release_mbid,
+                            artist_mbids: recording.artist_mbids,
+                            artists: recording.artists,
+                            caa_id: recording.caa_id,
+                            caa_release_mbid: recording.caa_release_mbid,
                           },
                         },
                       };
@@ -834,26 +771,85 @@ export default class YearInMusic extends React.Component<
                       return (
                         <ListenCard
                           compact
-                          key={`top-artists-${artist.artist_name}-${artist.artist_mbid}`}
+                          key={`top-recordings-${recording.track_name}-${recording.recording_mbid}`}
                           listen={listenHere}
-                          customThumbnail={thumbnail}
-                          listenDetails={details}
                           showTimestamp={false}
                           showUsername={false}
                         />
                       );
                     })}
-                  </div>
-                  <div className="yim-share-button-container">
-                    <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=artists`}
-                      shareUrl={`${linkToThisPage}#top-artists`}
-                      // shareText="Check out my"
-                      shareTitle="My top artists of 2023"
-                      fileName={`${user.name}-top-artists-2023`}
-                      customStyles={imageShareCustomStyles}
-                    />
-                  </div>
+                </div>
+                <div className="yim-share-button-container">
+                  <ImageShareButtons
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=tracks`}
+                    shareUrl={`${linkToThisPage}#top-tracks`}
+                    // shareText="Check out my"
+                    shareTitle="My top tracks of 2023"
+                    fileName={`${user.name}-top-tracks-2023`}
+                    customStyles={imageShareCustomStyles}
+                  />
+                </div>
+              </div>
+            )}
+            {yearInMusicData.top_artists && (
+              <div className="card content-card" id="top-artists">
+                <div className="heading">
+                  <img
+                    className="img-header"
+                    src="/static/img/year-in-music-23/heart.png"
+                    alt="Top artists of 2023"
+                  />
+                  <h4>Top artists of 2023</h4>
+                </div>
+                <div className="scrollable-area">
+                  {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
+                    const details = getEntityLink(
+                      "artist",
+                      artist.artist_name,
+                      artist.artist_mbid
+                    );
+                    const thumbnail = (
+                      <span className="badge badge-info">
+                        <FontAwesomeIcon
+                          style={{ marginRight: "4px" }}
+                          icon={faHeadphones}
+                        />{" "}
+                        {artist.listen_count}
+                      </span>
+                    );
+                    const listenHere = {
+                      listened_at: 0,
+                      track_metadata: {
+                        track_name: "",
+                        artist_name: artist.artist_name,
+                        additional_info: {
+                          artist_mbids: [artist.artist_mbid],
+                        },
+                      },
+                    };
+                    listens.push(listenHere);
+                    return (
+                      <ListenCard
+                        compact
+                        key={`top-artists-${artist.artist_name}-${artist.artist_mbid}`}
+                        listen={listenHere}
+                        customThumbnail={thumbnail}
+                        listenDetails={details}
+                        showTimestamp={false}
+                        showUsername={false}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="yim-share-button-container">
+                  <ImageShareButtons
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=artists`}
+                    shareUrl={`${linkToThisPage}#top-artists`}
+                    // shareText="Check out my"
+                    shareTitle="My top artists of 2023"
+                    fileName={`${user.name}-top-artists-2023`}
+                    customStyles={imageShareCustomStyles}
+                  />
                 </div>
               </div>
             )}
