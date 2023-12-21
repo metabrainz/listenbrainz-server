@@ -69,7 +69,7 @@ export default function CoverArtComposite() {
         WebkitOverflowScrolling: "auto", // See https://github.com/anvaka/panzoom/issues/235#issuecomment-1207341563
       }}
     >
-      <div className="header" style={{ marginBottom: "0.5em", height: "15vh" }}>
+      <div className="header" style={{ paddingTop: "1em", height: "15vh" }}>
         Album covers of 2023
         <div className="subheader">
           Zoom, drag and click your way to some of 2023&apos;s most colourful
@@ -116,8 +116,11 @@ export default function CoverArtComposite() {
             <img
               src="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
               srcSet="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg 500w,
-			https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-medium.jpg 1000w"
+                https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-medium.jpg 1000w
+                https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-large.jpg 2000w"
+              sizes="(max-width: 500px) 500px, (max-width: 1000px) 1000px, 2000px"
               alt="2023 albums"
+              width="100%"
             />
           </>
         ) : (
