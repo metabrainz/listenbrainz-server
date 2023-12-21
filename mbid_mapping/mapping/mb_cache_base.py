@@ -53,16 +53,12 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable):
     """
 
     def __init__(self, table, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.mb_metadata_cache", mb_conn, lb_conn, batch_size)
+        super().__init__(table, mb_conn, lb_conn, batch_size)
+        # cache the last updated to avoid calling it millions of times for the entire cache,
+        # not initializing it here because there can be a huge time gap between initialization
+        # and the actual query to fetch and insert the items in the cache. the pre_insert_queries_db_setup
+        # is called just before the insert queries are run.
         self.last_updated = None
-
-    def get_insert_queries_test_values(self):
-        if config.USE_MINIMAL_DATASET:
-            return [[(uuid.UUID(u),) for u in ('e97f805a-ab48-4c52-855e-07049142113d',
-                                               'e95e5009-99b3-42d2-abdd-477967233b08',
-                                               '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')]]
-        else:
-            return [[]]
 
     def get_insert_queries(self):
         return [("MB", self.get_metadata_cache_query(with_values=config.USE_MINIMAL_DATASET))]
@@ -125,7 +121,7 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable):
         conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
             with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
-                self.config_postgres_join_limit(mb_curs)
+                self.pre_insert_queries_db_setup(mb_curs)
 
                 log(f"{self.table_name} update: Running looooong query on dirty items")
                 query = self.get_metadata_cache_query(with_values=True)
@@ -140,7 +136,7 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable):
                     data = self.create_json_data(row)
                     rows.append(("false", self.last_updated, *data))
                     if len(rows) >= self.batch_size:
-                        batch_recording_mbids = [row[1] for row in rows]
+                        batch_recording_mbids = [row[2] for row in rows]
                         self.delete_rows(batch_recording_mbids)
                         insert_rows(lb_curs, self.table_name, rows)
                         conn.commit()
@@ -148,7 +144,7 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable):
                         rows = []
 
                 if rows:
-                    batch_recording_mbids = [row[1] for row in rows]
+                    batch_recording_mbids = [row[2] for row in rows]
                     self.delete_rows(batch_recording_mbids)
                     insert_rows(lb_curs, self.table_name, rows)
                     conn.commit()

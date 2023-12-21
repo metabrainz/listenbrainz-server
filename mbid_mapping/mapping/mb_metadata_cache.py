@@ -31,11 +31,6 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
         super().__init__("mapping.mb_metadata_cache", mb_conn, lb_conn, batch_size)
-        # cache the last updated to avoid calling it millions of times for the entire cache,
-        # not initializing it here because there can be a huge time gap between initialization
-        # and the actual query to fetch and insert the items in the cache. the pre_insert_queries_db_setup
-        # is called just before the insert queries are run.
-        self.last_updated = None
 
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
