@@ -138,7 +138,7 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable):
                 for row in mb_curs:
                     count += 1
                     data = self.create_json_data(row)
-                    rows.append(("false", *data))
+                    rows.append(("false", self.last_updated, *data))
                     if len(rows) >= self.batch_size:
                         batch_recording_mbids = [row[1] for row in rows]
                         self.delete_rows(batch_recording_mbids)
