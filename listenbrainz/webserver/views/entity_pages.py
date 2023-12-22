@@ -19,20 +19,6 @@ album_bp = Blueprint("album", __name__)
 release_bp = Blueprint("release", __name__)
 release_group_bp = Blueprint("release-group", __name__)
 
-# Problems / TODO / Goals
-# - These view functions need to be cleaned up so that for each artist / release group page,
-#   we only make two DB accesses: the cached MB data and the populartity data. This far from the
-#   case right now, since we build the caches with what we thought we inittially needed. However,
-#   all the things that are tacked onto this module are all the things we forgot about, so now those
-#   need to get moved to a proper home in the cached data.
-# - Need to find the canonical release
-# - Need to have popularity data
-# - MB data doesnt change very often. Popularity data, constantly
-
-# Test cases
-# with cover art: 48140466-cff6-3222-bd55-63c27e43190d
-# without : 061e2733-aa87-3ca6-bbec-3303ca1a2760
-
 
 def get_release_group_sort_key(release_group):
     """ Return a tuple that sorts release group by total_listen_count and then by date """
@@ -223,7 +209,8 @@ def album_entity(release_group_mbid):
                            props=orjson.dumps(props).decode("utf-8"),
                            title=release_group["release_group"]["name"])
 
+
 @release_group_bp.route("/<release_group_mbid>", methods=["GET"])
 def release_group_redirect(release_group_mbid):
     """ Redirect to the /album/… page. Intended for better interplay with MusicBrainz URLs """
-    return redirect(url_for("album.album_entity", release_group_mbid=result["release_group_mbid"]))
+    return redirect(url_for("album.album_entity", release_group_mbid=release_group_mbid))
