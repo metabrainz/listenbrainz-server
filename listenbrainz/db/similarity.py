@@ -109,7 +109,6 @@ def get_artists(mb_curs, ts_curs, mbids, algorithm, count):
     """ For the given artist mbids, fetch at most `count` number of similar artists using the given algorithm
         along with their metadata. """
     similar_mbids, score_idx, mbid_idx = get(ts_curs, "artist_credit_mbids_dev", mbids, algorithm, count)
-    current_app.logger.info("similar_mbids: %s", similar_mbids)
     if not similar_mbids:
         return []
 
