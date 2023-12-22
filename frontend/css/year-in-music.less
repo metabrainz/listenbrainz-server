@@ -61,7 +61,8 @@
   .graph-container {
     overflow-x: scroll;
     .graph {
-      min-width: 700px;
+      min-width: min(700px, 100%);
+      width:100%;
     }
   }
 
@@ -452,6 +453,7 @@
     }
     .link-section{
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 0.5em;
@@ -479,6 +481,9 @@
       font-weight: 900;
       font-family: 'Inter', 'Roboto', sans-serif;
       text-align: center;
+      @media (max-width:@screen-sm){
+        letter-spacing: 1rem;
+      }
     }
     .color-picker{
       position: relative;
@@ -572,7 +577,7 @@
       gap: 3em;
       padding: 3em;
       > .small-stat {
-        flex: 1 28%;
+        flex: 1 max(28%, 200px);
       }
     }
     .small-stat {

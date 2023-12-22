@@ -11,6 +11,7 @@ import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
 import { debounce, isFinite, isUndefined, maxBy } from "lodash";
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -299,19 +300,21 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         // @ts-ignore
         layers={["features", customLegend]}
       />
-      {selectedCountry && (
-        <div
-          style={{
-            transform: `translate(${tooltipPosition[0]}px, ${tooltipPosition[1]}px)`,
-            position: "absolute",
-            zIndex: 10,
-            top: "0px",
-            left: "0px",
-          }}
-        >
-          {customTooltip}
-        </div>
-      )}
+      {selectedCountry &&
+        createPortal(
+          <div
+            style={{
+              transform: `translate(${tooltipPosition[0]}px, ${tooltipPosition[1]}px)`,
+              position: "absolute",
+              zIndex: 10,
+              top: "0px",
+              left: "0px",
+            }}
+          >
+            {customTooltip}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

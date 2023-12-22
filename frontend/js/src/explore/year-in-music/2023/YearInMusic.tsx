@@ -734,7 +734,7 @@ export default class YearInMusic extends React.Component<
               {youOrUsername} {isCurrentUser ? "have" : "has"} great taste.
             </div>
           </div>
-          <div className="flex flex-wrap">
+          <div className="flex flex-wrap" style={{ gap: "2em" }}>
             {yearInMusicData.top_recordings && (
               <div className="card content-card" id="top-tracks">
                 <div className="heading">
@@ -990,7 +990,7 @@ export default class YearInMusic extends React.Component<
                     <ResponsiveBar
                       margin={{ left: 50, bottom: 30 }}
                       data={mostListenedYearDataForGraph}
-                      padding={0.1}
+                      padding={1}
                       layout="vertical"
                       keys={["songs"]}
                       indexBy="year"
