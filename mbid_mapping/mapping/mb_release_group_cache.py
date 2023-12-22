@@ -163,12 +163,12 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
         values_join = ""
         if with_values:
             values_cte = "subset (subset_release_group_mbid) AS (values %s), "
-            values_join = "JOIN subset ON r.gid = subset.subset_release_group_mbid"
+            values_join = "JOIN subset ON rg.gid = subset.subset_release_group_mbid"
 
         query = f"""WITH {values_cte} artist_rels AS (
                                 SELECT a.gid
                                      , array_agg(distinct(ARRAY[lt.name, url])) AS artist_links
-                                  FROM musicbrainz.release_group r
+                                  FROM musicbrainz.release_group rg
                                   JOIN musicbrainz.artist_credit_name acn
                                  USING (artist_credit)
                                 -- we cannot directly start as FROM artist a because the values_join JOINs on release_group
@@ -187,11 +187,11 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                    AND NOT l.ended
                               GROUP BY a.gid
                    ), release_group_rels AS (
-                                SELECT r.gid
+                                SELECT rg.gid
                                      , array_agg(ARRAY[lt.name, a1.name, a1.gid::TEXT, lat.name]) AS release_group_links
-                                  FROM musicbrainz.release_group r
+                                  FROM musicbrainz.release_group rg
                                   JOIN musicbrainz.l_artist_release_group lar
-                                    ON lar.entity1 = r.id
+                                    ON lar.entity1 = rg.id
                                   JOIN musicbrainz.artist a1
                                     ON lar.entity0 = a1.id
                                   JOIN musicbrainz.link l
@@ -205,9 +205,9 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                   {values_join}
                                  WHERE lt.gid IN ({RELEASE_GROUP_LINK_GIDS_SQL})
                                    AND NOT l.ended
-                               GROUP BY r.gid
+                               GROUP BY rg.gid
                    ), artist_data AS (
-                            SELECT r.gid
+                            SELECT rg.gid
                                  , jsonb_agg(
                                     jsonb_build_array(
                                         a.gid
@@ -222,7 +222,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                     )
                                     ORDER BY acn.position
                                    ) AS artist_data
-                              FROM musicbrainz.release_group r
+                              FROM musicbrainz.release_group rg
                               JOIN musicbrainz.artist_credit_name acn
                              USING (artist_credit)
                               JOIN musicbrainz.artist a
@@ -236,11 +236,11 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                          LEFT JOIN artist_rels arl
                                 ON arl.gid = a.gid
                               {values_join}
-                          GROUP BY r.gid
+                          GROUP BY rg.gid
                    ), artist_tags AS (
-                            SELECT r.gid AS release_group_mbid
+                            SELECT rg.gid AS release_group_mbid
                                  , array_agg(jsonb_build_array(t.name, count, a.gid, g.gid)) AS artist_tags
-                              FROM musicbrainz.release_group r
+                              FROM musicbrainz.release_group rg
                               JOIN musicbrainz.artist_credit_name acn
                              USING (artist_credit)
                               JOIN musicbrainz.artist a
@@ -253,28 +253,28 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                 ON t.name = g.name
                               {values_join}
                              WHERE count > 0
-                          GROUP BY r.gid
+                          GROUP BY rg.gid
                    ), release_group_tags AS (
-                            SELECT r.gid AS release_group_mbid
+                            SELECT rg.gid AS release_group_mbid
                                  , array_agg(jsonb_build_array(t.name, count, g.gid)) AS release_group_tags
-                              FROM musicbrainz.release_group r
+                              FROM musicbrainz.release_group rg
                               JOIN musicbrainz.release_group_tag rgt
-                                ON r.id = rgt.release_group
+                                ON rg.id = rgt.release_group
                               JOIN musicbrainz.tag t
                                 ON rgt.tag = t.id
                          LEFT JOIN musicbrainz.genre g
                                 ON t.name = g.name
                               {values_join}
                              WHERE count > 0
-                          GROUP BY r.gid
+                          GROUP BY rg.gid
                    ), rg_cover_art AS (
-                            SELECT DISTINCT ON(r.id)
-                                   r.id AS release_group
+                            SELECT DISTINCT ON(rg.id)
+                                   rg.id AS release_group
                                  , caa_rel.gid::TEXT AS caa_release_mbid
                                  , caa.id AS caa_id
-                              FROM musicbrainz.release_group r
+                              FROM musicbrainz.release_group rg
                               JOIN musicbrainz.release caa_rel
-                                ON r.id = caa_rel.release_group
+                                ON rg.id = caa_rel.release_group
                          LEFT JOIN (
                                   SELECT release, date_year, date_month, date_day
                                     FROM musicbrainz.release_country
@@ -292,7 +292,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                               {values_join}
                              WHERE type_id = 1
                                AND mime_type != 'application/pdf'
-                          ORDER BY r.id
+                          ORDER BY rg.id
                                  , rgca.release
                                  , re.date_year
                                  , re.date_month
@@ -323,18 +323,17 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                ON t.medium = m.id
                              JOIN musicbrainz.recording r
                                ON r.id = t.recording
-                              {values_join}
                          GROUP BY release_group_mbid
                                 , rel.gid
                    )
                             SELECT release_group_links
-                                 , r.name AS release_group_name
-                                 , r.artist_credit AS artist_credit_id
+                                 , rg.name AS release_group_name
+                                 , rg.artist_credit AS artist_credit_id
                                  , ac.name AS artist_credit_name
                                  , artist_data
                                  , artist_tags
                                  , release_group_tags
-                                 , r.gid::TEXT AS release_group_mbid
+                                 , rg.gid::TEXT AS release_group_mbid
                                  , rgca.caa_id
                                  , rgca.caa_release_mbid
                                  , rgpt.name AS type
@@ -343,29 +342,29 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                     LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
                                  , rec_data.recordings
                                  , rec_data.recordings_release_mbid
-                              FROM musicbrainz.release_group r
+                              FROM musicbrainz.release_group rg
                               JOIN musicbrainz.artist_credit ac
-                                ON r.artist_credit = ac.id
+                                ON rg.artist_credit = ac.id
                          LEFT JOIN musicbrainz.release_group_primary_type rgpt
-                                ON r.type = rgpt.id
+                                ON rg.type = rgpt.id
                          LEFT JOIN musicbrainz.release_group_meta rgm
-                                ON rgm.id = r.id
+                                ON rgm.id = rg.id
                          LEFT JOIN artist_data ard
-                                ON ard.gid = r.gid
+                                ON ard.gid = rg.gid
                          LEFT JOIN release_group_rels rrl
-                                ON rrl.gid = r.gid
+                                ON rrl.gid = rg.gid
                          LEFT JOIN release_group_tags rt
-                                ON rt.release_group_mbid = r.gid
+                                ON rt.release_group_mbid = rg.gid
                          LEFT JOIN artist_tags ats
-                                ON ats.release_group_mbid = r.gid
+                                ON ats.release_group_mbid = rg.gid
                          LEFT JOIN rg_cover_art rgca
-                                ON rgca.release_group = r.id
+                                ON rgca.release_group = rg.id
                          LEFT JOIN recording_data rec_data
-                                ON rec_data.release_group_mbid = r.gid
+                                ON rec_data.release_group_mbid = rg.gid
                               {values_join}
-                          GROUP BY r.gid
-                                 , r.name
-                                 , r.artist_credit
+                          GROUP BY rg.gid
+                                 , rg.name
+                                 , rg.artist_credit
                                  , ac.name
                                  , rgpt.name
                                  , rgm.first_release_date_year
@@ -442,8 +441,8 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                 SELECT a.id
                   FROM musicbrainz.artist a
                  WHERE a.last_updated > %(timestamp)s
-            ) SELECT r.gid
-                FROM musicbrainz.release_group r
+            ) SELECT rg.gid
+                FROM musicbrainz.release_group rg
                 JOIN musicbrainz.artist_credit_name acn
                USING (artist_credit)
                 JOIN artist_mbids am
@@ -459,10 +458,10 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
         # |  release_group_tags |  release_group tags        | release_group_tag, genre          | release_group
         # |  release_group      |                            | release_group                     |
         release_group_mbids_query = f"""
-                SELECT r.gid
-                  FROM musicbrainz.release_group r
+                SELECT rg.gid
+                  FROM musicbrainz.release_group rg
                   JOIN musicbrainz.l_artist_release_group lar
-                    ON lar.entity1 = r.id
+                    ON lar.entity1 = rg.id
                   JOIN musicbrainz.link l
                     ON lar.link = l.id
                   JOIN musicbrainz.link_type lt
@@ -478,20 +477,20 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                       OR lat.last_updated > %(timestamp)s
                    )
             UNION
-                SELECT r.gid
+                SELECT rg.gid
                   FROM musicbrainz.tag t
                   JOIN musicbrainz.release_group_tag rt
                     ON rt.tag = t.id
-                  JOIN musicbrainz.release_group r
-                    ON rt.recording = r.id
+                  JOIN musicbrainz.release_group rg
+                    ON rt.release_group = rg.id
              LEFT JOIN musicbrainz.genre g
                     ON t.name = g.name
                  WHERE rt.last_updated > %(timestamp)s
                     OR  g.last_updated > %(timestamp)s
             UNION
-                SELECT r.gid
-                  FROM musicbrainz.release_group r
-                 WHERE r.last_updated > %(timestamp)s
+                SELECT rg.gid
+                  FROM musicbrainz.release_group rg
+                 WHERE rg.last_updated > %(timestamp)s
         """
 
         # 3. canonical_release_selection, recordings_data
@@ -508,7 +507,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                         ON rel.id = crl.release
                   ORDER BY rg.gid
                          , crl.id
-            ), recording_data AS (
+            )
                    SELECT release_group_mbid
                      FROM musicbrainz.recording r
                      JOIN musicbrainz.track t
@@ -521,30 +520,30 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                        ON rel.id = crs.release_id
                     WHERE r.last_updated > %(timestamp)s
                        OR t.last_updated > %(timestamp)s
-                GROUP BY release_group_mbid
+                 GROUP BY release_group_mbid
         """
 
         try:
             with self.mb_conn.cursor() as curs:
                 self.config_postgres_join_limit(curs)
-                recording_mbids = set()
+                release_group_mbids = set()
 
-                log("mb release group metadata cache: querying recording mbids to update")
+                log("mb release group metadata cache: querying release group mbids to update")
                 curs.execute(release_group_mbids_query, {"timestamp": timestamp})
                 for row in curs.fetchall():
-                    recording_mbids.add(row[0])
+                    release_group_mbids.add(row[0])
 
                 log("mb release group metadata cache: querying artist mbids to update")
                 curs.execute(artist_mbids_query, {"timestamp": timestamp})
                 for row in curs.fetchall():
-                    recording_mbids.add(row[0])
+                    release_group_mbids.add(row[0])
 
-                log("mb release group metadata cache: querying release mbids to update")
+                log("mb release group metadata cache: querying recording mbids to update")
                 curs.execute(recordings_query, {"timestamp": timestamp})
                 for row in curs.fetchall():
-                    recording_mbids.add(row[0])
+                    release_group_mbids.add(row[0])
 
-                return recording_mbids
+                return release_group_mbids
         except psycopg2.errors.OperationalError as err:
             log("mb release group metadata cache: cannot query rows for update", err)
             return None
@@ -563,6 +562,6 @@ def create_mb_release_group_cache(use_lb_conn: bool):
     create_metadata_cache(MusicBrainzReleaseGroupCache, MB_RELEASE_GROUP_CACHE_TIMESTAMP_KEY, [], use_lb_conn)
 
 
-def incremental_update_mb_release_group_metadata_cache(use_lb_conn: bool):
+def incremental_update_mb_release_group_cache(use_lb_conn: bool):
     """ Update the MB metadata cache incrementally """
     incremental_update_metadata_cache(MusicBrainzReleaseGroupCache, MB_RELEASE_GROUP_CACHE_TIMESTAMP_KEY, use_lb_conn)

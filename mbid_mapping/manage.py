@@ -18,7 +18,7 @@ from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache, incremental_update_mb_metadata_cache, \
     cleanup_mbid_mapping_table
 from mapping.mb_release_group_cache import create_mb_release_group_cache, \
-    incremental_update_mb_release_group_metadata_cache
+    incremental_update_mb_release_group_cache
 from mapping.spotify_metadata_index import create_spotify_metadata_index
 from similar.tag_similarity import create_tag_similarity
 
@@ -148,11 +148,11 @@ def update_mb_metadata_cache(use_lb_conn):
 
 @cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
-def update_mb_release_group_metadata_cache(use_lb_conn):
+def update_mb_release_group_cache(use_lb_conn):
     """
         Update the MB metadata cache that LB uses incrementally.
     """
-    incremental_update_mb_release_group_metadata_cache(use_lb_conn)
+    incremental_update_mb_release_group_cache(use_lb_conn)
 
 
 @cli.command()
