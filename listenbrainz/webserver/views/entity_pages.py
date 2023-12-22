@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, current_app
+from flask import Blueprint, render_template, current_app, redirect, url_for
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
@@ -76,11 +76,26 @@ def get_cover_art_for_artist(release_groups):
     )
 
 
-@release_bp.route("/<release_group_mbid>", methods=["GET"])
+@release_bp.route("/<release_mbid>", methods=["GET"])
 @web_listenstore_needed
-def release_redirect(release_group_mbid):
+def release_redirect(release_mbid):
     # TODO: Load release_group and redirect to it
-    pass
+    if not is_valid_uuid(release_mbid):
+        raise BadRequest("Provided release mbid is invalid: %s" % release_mbid)
+
+    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn,\
+            mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+        mb_curs.execute("""
+            SELECT rg.gid AS release_group_mbid
+              FROM musicbrainz.release rel
+              JOIN musicbrainz.release_group rg
+                ON rel.release_group = rg.id
+             WHERE rel.gid = %s
+        """, (release_mbid,))
+        result = mb_curs.fetchone()
+        if result is None:
+            raise NotFound(f"Release {release_mbid} not found in the metadata cache")
+        return redirect(url_for("album.album_entity", release_group_mbid=result["release_group_mbid"]))
 
 
 @artist_bp.route("/<artist_mbid>", methods=["GET"])
@@ -89,7 +104,7 @@ def artist_entity(artist_mbid):
     """ Show a artist page with all their relevant information """
 
     if not is_valid_uuid(artist_mbid):
-        raise BadRequest("Provided artist ID is invalid: %s" % artist_mbid)
+        raise BadRequest("Provided artist mbid is invalid: %s" % artist_mbid)
 
     # Fetch the artist cached data
     artist_data = get_metadata_for_artist([artist_mbid])
@@ -173,7 +188,7 @@ def album_entity(release_group_mbid):
         ["artist", "tag", "release", "recording"]
     )
     if len(metadata) == 0:
-        raise NotFound(f"Release group {release_group_mbid} not found in the metadata cache")
+        raise NotFound(f"Release group mbid {release_group_mbid} not found in the metadata cache")
     release_group = metadata[release_group_mbid]
 
     recording_data = release_group.pop("recording").get("recordings", [])

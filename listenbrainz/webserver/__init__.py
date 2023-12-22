@@ -351,6 +351,7 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.popularity_api import popularity_api_bp
     app.register_blueprint(popularity_api_bp, url_prefix=API_PREFIX+"/popularity")
 
-    from listenbrainz.webserver.views.entity_pages import artist_bp, album_bp
+    from listenbrainz.webserver.views.entity_pages import artist_bp, album_bp, release_bp
     app.register_blueprint(artist_bp, url_prefix='/artist')
     app.register_blueprint(album_bp, url_prefix='/album')
+    app.register_blueprint(release_bp, url_prefix='/release')
