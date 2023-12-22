@@ -154,9 +154,7 @@ export default function CoverArtComposite() {
                       coords={coordinates}
                       alt={name}
                       href={
-                        preventClick
-                          ? undefined
-                          : `/player/release/${release_mbid}/`
+                        preventClick ? undefined : `/release/${release_mbid}/`
                       }
                       target="_blank"
                       rel="noopener noreferrer"
