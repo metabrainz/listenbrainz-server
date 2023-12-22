@@ -332,6 +332,17 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                   tracknumber: recording.position,
                   recording_mbid: recording.recording_mbid,
                 },
+                mbid_mapping: {
+                  release_mbid: caa_release_mbid ?? "",
+                  artist_mbids:
+                    artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
+                  recording_mbid: recording.recording_mbid,
+                  artists: artist.artists.map((ar) => ({
+                    ...ar,
+                    artist_credit_name: ar.name,
+                    join_phrase: ar.join_phrase ?? "",
+                  })),
+                },
               },
             };
             let thumbnailReplacement;
