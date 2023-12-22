@@ -253,7 +253,7 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
         {artists.map((artist) => (
           <>
             <a
-              href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
+              href={`/artist/${artist.artist_mbid}`}
               target="_blank"
               rel="noopener noreferrer"
               title={artist.artist_credit_name}
@@ -275,7 +275,7 @@ const getStatsArtistLink = (artists?: MBIDMappingArtist[], artist_name?: string,
   if (firstArtist) {
     return (
       <a
-        href={`https://musicbrainz.org/artist/${firstArtist}`}
+        href={`/artist/${firstArtist}`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -631,13 +631,17 @@ const pinnedRecordingToListen = (pinnedRecording: PinnedRecording): Listen => {
 
 const generateAlbumArtThumbnailLink = (
   caaId: number | string,
-  releaseMBID: string
+  releaseMBID: string,
+  size: CAAThumbnailSizes = 250
 ): string => {
-  return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb250.jpg`;
+  return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb${size}.jpg`;
 };
 
+export type CAAThumbnailSizes = 250 | 500 | 1200 | "small" | "large";
+
 const getThumbnailFromCAAResponse = (
-  body: CoverArtArchiveResponse
+  body: CoverArtArchiveResponse,
+  size: CAAThumbnailSizes = 250
 ): string | undefined => {
   if (!body.images?.length) {
     return undefined;
@@ -659,53 +663,76 @@ const getThumbnailFromCAAResponse = (
 
   // No front image? Fallback to whatever the first image is
   const { thumbnails, image } = body.images[0];
-  return thumbnails[250] ?? thumbnails.small ?? image;
+  return thumbnails[size] ?? thumbnails.small ?? image;
+};
+
+const retryParams = {
+  retries: 4,
+  retryOn: [429],
+  retryDelay(attempt: number) {
+    // Exponential backoff at random interval between maxRetryTime and minRetryTime,
+    // adding minRetryTime for every attempt. `attempt` starts at 0
+    const maxRetryTime = 2500;
+    const minRetryTime = 1800;
+    const clampedRandomTime =
+      Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
+    // Make it exponential
+    return Math.floor(clampedRandomTime) * 2 ** attempt;
+  },
+};
+
+const getAlbumArtFromReleaseGroupMBID = async (
+  releaseGroupMBID: string,
+  optionalSize?: CAAThumbnailSizes
+): Promise<string | undefined> => {
+  try {
+    const CAAResponse = await fetchWithRetry(
+      `https://coverartarchive.org/release-group/${releaseGroupMBID}`,
+      retryParams
+    );
+    if (CAAResponse.ok) {
+      const body: CoverArtArchiveResponse = await CAAResponse.json();
+      return getThumbnailFromCAAResponse(body, optionalSize);
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Couldn't fetch Cover Art Archive entry for ${releaseGroupMBID}`,
+      error
+    );
+  }
+  return undefined;
 };
 
 const getAlbumArtFromReleaseMBID = async (
   userSubmittedReleaseMBID: string,
-  useReleaseGroupFallback: boolean = false,
-  APIService?: APIServiceClass
+  useReleaseGroupFallback: boolean | string = false,
+  APIService?: APIServiceClass,
+  optionalSize?: CAAThumbnailSizes
 ): Promise<string | undefined> => {
   try {
-    const retryParams = {
-      retries: 4,
-      retryOn: [429],
-      retryDelay(attempt: number) {
-        // Exponential backoff at random interval between maxRetryTime and minRetryTime,
-        // adding minRetryTime for every attempt. `attempt` starts at 0
-        const maxRetryTime = 2500;
-        const minRetryTime = 1800;
-        const clampedRandomTime =
-          Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
-        // Make it exponential
-        return Math.floor(clampedRandomTime) * 2 ** attempt;
-      },
-    };
-
     const CAAResponse = await fetchWithRetry(
       `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
       retryParams
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      return getThumbnailFromCAAResponse(body);
+      return getThumbnailFromCAAResponse(body, optionalSize);
     }
 
-    if (CAAResponse.status === 404 && useReleaseGroupFallback && APIService) {
-      const releaseGroupResponse = await APIService.lookupMBRelease(
-        userSubmittedReleaseMBID
-      );
-      const releaseGroupMBID = releaseGroupResponse["release-group"].id;
-
-      const CAAReleaseGroupResponse = await fetchWithRetry(
-        `https://coverartarchive.org/release-group/${releaseGroupMBID}`,
-        retryParams
-      );
-      if (CAAReleaseGroupResponse.ok) {
-        const body: CoverArtArchiveResponse = await CAAReleaseGroupResponse.json();
-        return getThumbnailFromCAAResponse(body);
+    if (CAAResponse.status === 404 && useReleaseGroupFallback) {
+      let releaseGroupMBID = useReleaseGroupFallback;
+      if (!_.isString(useReleaseGroupFallback) && APIService) {
+        const releaseGroupResponse = await APIService.lookupMBRelease(
+          userSubmittedReleaseMBID
+        );
+        releaseGroupMBID = releaseGroupResponse["release-group"].id;
       }
+      if (!_.isString(releaseGroupMBID)) {
+        return undefined;
+      }
+
+      return await getAlbumArtFromReleaseGroupMBID(releaseGroupMBID);
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -871,19 +898,18 @@ export function personalRecommendationEventToListen(
 }
 
 export function getReviewEventContent(
-  eventMetadata: CritiqueBrainzReview
+  eventMetadata: CritiqueBrainzReview | CritiqueBrainzReviewAPI
 ): JSX.Element {
-  const additionalContent = getAdditionalContent(eventMetadata);
+  const additionalContent = getAdditionalContent(
+    eventMetadata as CritiqueBrainzReview
+  );
+  const reviewID =
+    _.get(eventMetadata, "review_mbid") ?? _.get(eventMetadata, "id");
+  const userName =
+    _.get(eventMetadata, "user_name") ??
+    _.get(eventMetadata, "user.display_name");
   return (
-    <>
-      <a
-        href={`https://critiquebrainz.org/review/${eventMetadata.review_mbid}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="pull-right"
-      >
-        See this review on CritiqueBrainz
-      </a>
+    <div className="review">
       {!isUndefined(eventMetadata.rating) && isFinite(eventMetadata.rating) && (
         <div className="rating-container">
           <b>Rating: </b>
@@ -898,8 +924,19 @@ export function getReviewEventContent(
           />
         </div>
       )}
-      {additionalContent}
-    </>
+      <div className="text">{additionalContent}</div>
+      <div className="author read-more">
+        by {userName}
+        <a
+          href={`https://critiquebrainz.org/review/${reviewID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pull-right"
+        >
+          Read on CritiqueBrainz
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -951,6 +988,7 @@ export {
   getListenCardKey,
   pinnedRecordingToListen,
   getAlbumArtFromReleaseMBID,
+  getAlbumArtFromReleaseGroupMBID,
   getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,
   getAdditionalContent,

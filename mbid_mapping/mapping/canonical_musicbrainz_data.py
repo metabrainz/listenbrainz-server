@@ -103,7 +103,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
-            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+            can_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             mb_conn.commit()
             lb_conn.commit()
             lb_conn.close()

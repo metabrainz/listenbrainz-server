@@ -270,9 +270,10 @@
   }
   .additional-content {
     border-top: 1px solid @gray-lighter;
-    font-style: italic;
     width: 100%;
-
+    .review {
+      font-style: italic;
+    }
     .sent-to {
       padding-bottom: 10px;
     }
@@ -298,10 +299,14 @@
       margin-right: 1em;
       width: @cover-art-thumbnail-size;
       min-width: @cover-art-thumbnail-size;
-      > * {
+      > *:not(.track-position) {
         height: 100%;
         width: inherit;
         aspect-ratio: 1/1;
+      }
+      > .track-position {
+        padding-left: 1.5em;
+        padding-right: 0.5em;
       }
       .add-cover-art,
       .not-mapped,

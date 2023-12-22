@@ -25,13 +25,16 @@ def get_user_details(slug, user_ids):
     details = {}
 
     query = """
-        SELECT "user".id as user_id
-             , "user".musicbrainz_id AS musicbrainz_id
-             , COALESCE(us.troi->>:export_preference, 'f')::bool AS export_to_spotify
-          FROM "user"
+        SELECT u.id as user_id
+             , u.musicbrainz_id AS musicbrainz_id
+             , CASE WHEN (us.troi->:export_preference)::bool AND eso.service = 'spotify' THEN true ELSE false END AS export_to_spotify
+          FROM "user" u
      LEFT JOIN user_setting us
-            ON us.user_id = "user".id
-         WHERE "user".id = ANY(:user_ids)
+            ON us.user_id = u.id
+     LEFT JOIN external_service_oauth eso
+            ON u.id = eso.user_id
+         WHERE u.id = ANY(:user_ids)
+           AND (eso.service = 'spotify' OR eso.service IS NULL)
     """
     with db.engine.connect() as conn:
         results = conn.execute(text(query), {"user_ids": user_ids, "export_preference": SPOTIFY_EXPORT_PREFERENCE})

@@ -136,6 +136,7 @@ def get_entity_listener(entity, entity_id, stats_range) -> Optional[dict]:
         current_app.logger.error(f"Error connecting to CouchDB: {e}")
     return None
 
+
 def insert_artist_map(user_id: int, stats_range: str, from_ts: int, to_ts: int, data: list[UserArtistMapRecord]):
     """ Insert artist map stats in database.
 

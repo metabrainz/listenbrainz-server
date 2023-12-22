@@ -298,7 +298,7 @@ class BulkInsertTable:
                 if not no_swap_transaction:
                     conn.commit()
 
-        except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
+        except psycopg2.Error as err:
             log(f"{self.table_name}: failed to swap into production", err)
             if not no_swap_transaction:
                 conn.rollback()
