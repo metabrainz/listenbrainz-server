@@ -630,6 +630,28 @@ export default class YearInMusic extends React.Component<
             page might look a bit different than others.
           </div>
         )}
+        <div className="section">
+          <div className="card content-card" id="overview">
+            <h3 className="flex-center">Overview</h3>
+            <div className="center-p">
+              <object
+                className="card"
+                data={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=overview`}
+              >
+                Overview
+              </object>
+            </div>
+            <div className="yim-share-button-container">
+              <ImageShareButtons
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=overview`}
+                shareUrl={linkToThisPage}
+                shareText="Check out my ListenBrainz stats for 2023"
+                shareTitle="My year in music"
+                fileName={`${user.name}-overview-2023`}
+              />
+            </div>
+          </div>
+        </div>
 
         {yearInMusicData.top_release_groups && (
           <div className="section">
