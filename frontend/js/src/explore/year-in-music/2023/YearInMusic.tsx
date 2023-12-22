@@ -679,7 +679,8 @@ export default class YearInMusic extends React.Component<
                       }
                       const coverArt = generateAlbumArtThumbnailLink(
                         release_group.caa_id,
-                        release_group.caa_release_mbid
+                        release_group.caa_release_mbid,
+                        500
                       );
                       return (
                         <SwiperSlide
