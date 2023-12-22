@@ -13,7 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty } from "lodash";
 import tinycolor from "tinycolor2";
-import {getRelIconLink, ListeningStats} from "./utils";
+import { getRelIconLink, ListeningStats } from "./utils";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
@@ -59,7 +59,10 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     type,
     listening_stats,
   } = props;
-  const { total_listen_count: listenCount, listeners: topListeners } = listening_stats;
+  const {
+    total_listen_count: listenCount,
+    listeners: topListeners,
+  } = listening_stats;
 
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
@@ -176,8 +179,20 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         <div className="artist-info">
           <h1>{album?.name}</h1>
           <div className="details h3">
-            <div>{artist?.name}</div>
-            <small className="help-block">{type} - {album?.date}</small>
+            <div>
+              {artist.artists.map((ar) => {
+                return (
+                  <span key={ar.artist_mbid}>
+                    <a href={`/artist/${ar.artist_mbid}`}>{ar?.name}</a>
+                    {ar.join_phrase}
+                  </span>
+                );
+              })}
+            </div>
+            <small className="help-block">
+              {type ? `${type} - ` : ""}
+              {album?.date}
+            </small>
           </div>
         </div>
         <div className="right-side">
@@ -310,7 +325,8 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                 track_name: recording.name,
                 recording_mbid: recording.recording_mbid,
                 additional_info: {
-                  artist_mbids: artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
+                  artist_mbids:
+                    artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
                   release_artist_names: artist?.artists?.map((ar) => ar.name),
                   duration_ms: recording.length,
                   tracknumber: recording.position,
@@ -443,7 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
     caa_release_mbid,
     type,
     release_group_metadata,
-    listening_stats
+    listening_stats,
   } = reactProps;
 
   const AlbumPageWithAlertNotifications = withAlertNotifications(AlbumPage);
@@ -459,7 +475,9 @@ document.addEventListener("DOMContentLoaded", () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
           <AlbumPageWithAlertNotifications
-            release_group_metadata={release_group_metadata as ReleaseGroupMetadataLookup}
+            release_group_metadata={
+              release_group_metadata as ReleaseGroupMetadataLookup
+            }
             recordings={recordings}
             release_group_mbid={release_group_mbid}
             caa_id={caa_id}
