@@ -42,7 +42,7 @@ export default function CoverArtComposite() {
     const imageWidth = 10750;
     const lowestZoom = containerWidth / imageWidth;
     const createdPanZoomInstance = panzoom(targetRef.current, {
-      maxZoom: 1,
+      maxZoom: 2,
       minZoom: lowestZoom,
       bounds: true,
       onTouch: () => false, // how to allow touch events to work on mobile. See https://github.com/anvaka/panzoom/issues/235#issuecomment-1207341563
@@ -69,7 +69,10 @@ export default function CoverArtComposite() {
         WebkitOverflowScrolling: "auto", // See https://github.com/anvaka/panzoom/issues/235#issuecomment-1207341563
       }}
     >
-      <div className="header" style={{ paddingTop: "1em", height: "15vh" }}>
+      <div
+        className="header"
+        style={{ paddingTop: "1em", marginBottom: "0.5em" }}
+      >
         Album covers of 2023
         <div className="subheader">
           Zoom, drag and click your way to some of 2023&apos;s most colourful
@@ -84,7 +87,7 @@ export default function CoverArtComposite() {
       <div
         style={{
           width: "100%",
-          height: "70vh",
+          maxHeight: "80vh",
           overflow: "hidden",
           position: "relative",
         }}
@@ -116,9 +119,9 @@ export default function CoverArtComposite() {
             <img
               src="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
               srcSet="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg 500w,
-                https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-medium.jpg 1000w
+                https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-medium.jpg 1000w,
                 https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-large.jpg 2000w"
-              sizes="(max-width: 500px) 500px, (max-width: 1000px) 1000px, 2000px"
+              sizes="(max-width:768px) 100vw, calc(100vw - 190px)"
               alt="2023 albums"
               width="100%"
             />

@@ -65,6 +65,11 @@
     }
   }
 
+  #calendar, #most-listened-year, #user-artist-map {
+    > h3 {
+      padding: 0.6em;
+    }
+  }
   #calendar .graph {
     height: 200px;
     @media (min-width: @screen-desktop) {
@@ -93,7 +98,7 @@
     margin-right: auto;
     .user-artist-map{
       width: 100%;
-      max-height: 500px;
+      max-height: 70vw;
       height:auto;
       > div{
         min-height:300px;
@@ -415,6 +420,10 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      .heading .img-header {
+        max-width: 450px;
+        max-width: min(80%, 450px);
+      }
     }
     #buddies {
       display: flex;
@@ -446,6 +455,9 @@
       justify-content: center;
       align-items: center;
       gap: 0.5em;
+      input.form-control{
+        height: 2em;
+      }
     }
     .header .subheader {
       margin-top: 1rem;
@@ -496,9 +508,15 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        aspect-ratio: 1;
         .img-header {
+          padding: 0.5rem;
           margin-bottom: auto;
           margin-top: auto;
+          width: 100%;
+          max-width: 400px;
+          max-width: min(60%, 400px);
+          min-width: 200px;
         }
         @media (max-width: @screen-sm) {
           font-size: 38px;
@@ -507,6 +525,7 @@
       h3,h4 {
         a {
           color:inherit;
+          font-weight: initial;
         }
         color:inherit;
       }
@@ -550,9 +569,10 @@
     .small-stats {
       display: flex;
       flex-wrap: wrap;
-      gap: 1.5em;
+      gap: 3em;
+      padding: 3em;
       > .small-stat {
-        flex: 1 30%;
+        flex: 1 28%;
       }
     }
     .small-stat {
@@ -563,11 +583,11 @@
       font-family: 'Roboto', sans-serif;
       .value {
         position: relative;
-        font-size: 2.5em;
+        font-size: 2.3em;
         font-weight: 600;
         line-height: 1.5;
         margin-bottom: 0.2em;
-        &::after {
+        &:not(:last-child)::after {
           content: "";
           position: absolute;
           bottom: 0;

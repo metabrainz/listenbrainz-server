@@ -280,9 +280,9 @@ export default class YearInMusic extends React.Component<
     const { user } = this.props;
     return (
       <div className="card content-card mb-10" id={`${coverArtKey}`}>
-        <div className="center-p">
+        <div className="center-p heading">
           <object
-            style={{ maxWidth: "100%" }}
+            className="img-header"
             data={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=${coverArtKey}&branding=False`}
           >{`SVG of cover art for ${topLevelPlaylist.title}`}</object>
           <h4>
@@ -512,10 +512,46 @@ export default class YearInMusic extends React.Component<
     if (!Number.isNaN(newArtistsDiscoveredPercentage)) {
       newArtistsDiscovered = `${newArtistsDiscoveredPercentage}%`;
     }
+    const userShareBar = (
+      <div className="card content-card">
+        <div className="link-section">
+          <FollowButton
+            type="icon-only btn-info"
+            user={user}
+            loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
+          />
+          <a href={linkToUserProfile} role="button" className="btn btn-info">
+            ListenBrainz Profile
+          </a>
+          <div className="input-group">
+            <input
+              type="text"
+              className="form-control"
+              size={linkToThisPage.length - 5}
+              value={linkToThisPage}
+            />
+            <span className="btn btn-info input-group-addon">
+              <FontAwesomeIcon
+                icon={faCopy}
+                onClick={async () => {
+                  await navigator.clipboard.writeText(linkToThisPage);
+                }}
+              />
+            </span>
+          </div>
+          {!isUndefined(navigator.canShare) && (
+            <div className="btn btn-info">
+              <FontAwesomeIcon icon={faShareAlt} onClick={this.sharePage} />
+            </div>
+          )}
+        </div>
+      </div>
+    );
     return (
       <div
         id="year-in-music"
         className="yim-2023"
+        role="main"
         style={{ ["--selectedColor" as any]: selectedColor }}
       >
         <div id="main-header" className="flex-center">
@@ -584,40 +620,7 @@ export default class YearInMusic extends React.Component<
           <div className="arrow-down" />
         </div>
 
-        <div className="card content-card">
-          <div className="link-section">
-            <FollowButton
-              type="icon-only btn-info"
-              user={user}
-              loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
-            />
-            <a href={linkToUserProfile} role="button" className="btn btn-info">
-              ListenBrainz Profile
-            </a>
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control"
-                disabled
-                size={linkToThisPage.length - 5}
-                value={linkToThisPage}
-              />
-              <span className="btn btn-info input-group-addon">
-                <FontAwesomeIcon
-                  icon={faCopy}
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(linkToThisPage);
-                  }}
-                />
-              </span>
-              {!isUndefined(navigator.canShare) && (
-                <span className="btn btn-info input-group-addon">
-                  <FontAwesomeIcon icon={faShareAlt} onClick={this.sharePage} />
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+        {userShareBar}
 
         {missingSomeData && (
           <div className="alert alert-warning">
@@ -654,7 +657,7 @@ export default class YearInMusic extends React.Component<
                   }}
                   breakpoints={{
                     700: {
-                      initialSlide: 1,
+                      initialSlide: 2,
                       spaceBetween: 100,
                       slidesPerView: 3,
                       coverflowEffect: {
@@ -868,7 +871,7 @@ export default class YearInMusic extends React.Component<
                   <div className="value">
                     {yearInMusicData.total_listen_count}
                   </div>
-                  songs graced {yourOrUsersName} ears
+                  <span>songs graced {yourOrUsersName} ears</span>
                 </div>
               )}
               {yearInMusicData.total_listening_time && (
@@ -882,7 +885,7 @@ export default class YearInMusic extends React.Component<
                       }
                     )}
                   </div>
-                  of music (at least!)
+                  <span>of music (at least!)</span>
                 </div>
               )}
               {yearInMusicData.total_release_groups_count && (
@@ -890,7 +893,7 @@ export default class YearInMusic extends React.Component<
                   <div className="value">
                     {yearInMusicData.total_release_groups_count}
                   </div>
-                  albums in total
+                  <span>albums in total</span>
                 </div>
               )}
               {yearInMusicData.total_artists_count && (
@@ -898,19 +901,19 @@ export default class YearInMusic extends React.Component<
                   <div className="value">
                     {yearInMusicData.total_artists_count}
                   </div>
-                  artists got {yourOrUsersName} attention
+                  <span>artists got {yourOrUsersName} attention</span>
                 </div>
               )}
               {newArtistsDiscovered && (
                 <div className="small-stat text-center">
                   <div className="value">{newArtistsDiscovered}</div>
-                  new artists discovered
+                  <span>new artists discovered</span>
                 </div>
               )}
               {yearInMusicData.day_of_week && (
                 <div className="small-stat text-center">
                   <div className="value">{yearInMusicData.day_of_week}</div>
-                  was {yourOrUsersName} music day
+                  <span>was {yourOrUsersName} music day</span>
                 </div>
               )}
             </div>
@@ -1353,12 +1356,16 @@ export default class YearInMusic extends React.Component<
                 srcSet="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg 500w,
                 https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-medium.jpg 1000w,
                 https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-large.jpg 2000w"
+                sizes="(max-width:768px) 100vw, calc(100vw - 200px)"
                 alt="2023 albums"
                 loading="lazy"
                 decoding="async"
               />
             </a>
           </div>
+
+          {userShareBar}
+
           <div className="section closing-remarks">
             <span className="bold">
               Wishing you a restful 2024, from the ListenBrainz team.
