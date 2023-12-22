@@ -149,7 +149,7 @@ export default function CoverArtComposite() {
                     href={
                       preventClick
                         ? undefined
-                        : `/player/release/${release_mbid}/`
+                        : `/release/${release_mbid}/`
                     }
                     target="_blank"
                     rel="noopener noreferrer"
