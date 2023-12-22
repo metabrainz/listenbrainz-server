@@ -17,6 +17,7 @@ from psycopg2.extras import DictCursor
 artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
 release_bp = Blueprint("release", __name__)
+release_group_bp = Blueprint("release-group", __name__)
 
 # Problems / TODO / Goals
 # - These view functions need to be cleaned up so that for each artist / release group page,
@@ -222,3 +223,8 @@ def album_entity(release_group_mbid):
     return render_template("entities/album.html",
                            props=orjson.dumps(props).decode("utf-8"),
                            title=release_group["release_group"]["name"])
+
+@release_group_bp.route("/<release_group_mbid>", methods=["GET"])
+def release_group_redirect(release_group_mbid):
+    """ Redirect to the /album/… page. Intended for better interplay with MusicBrainz URLs """
+    return redirect(url_for("album.album_entity", release_group_mbid=result["release_group_mbid"]))
