@@ -138,7 +138,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
 
   const linkToEntity = releaseGroupMBID
     ? `/album/${releaseGroupMBID}`
-    : `/player/release/${releaseMBID}`;
+    : `/release/${releaseMBID}`;
   return (
     <div className="release-card-container">
       <div className="release-item">

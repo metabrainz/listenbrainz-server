@@ -1,5 +1,5 @@
 import * as React from "react";
-import {getMBIDMappingArtistLink} from "../utils/utils";
+import { getMBIDMappingArtistLink } from "../utils/utils";
 
 export function getEntityLink(
   entityType: Entity,
@@ -7,12 +7,23 @@ export function getEntityLink(
   entityMBID?: string
 ): JSX.Element {
   if (entityMBID) {
+    let link;
+    switch (entityType) {
+      case "artist":
+      case "release":
+        link = `/${entityType}/${entityMBID}`;
+        break;
+      case "release-group":
+        link = `/album/${entityMBID}`;
+        break;
+      case "recording":
+        link = `https://musicbrainz.org/${entityType}/${entityMBID}`;
+        break;
+      default:
+        break;
+    }
     return (
-      <a
-        href={`https://musicbrainz.org/${entityType}/${entityMBID}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a href={link} target="_blank" rel="noopener noreferrer">
         {entityName}
       </a>
     );
@@ -35,7 +46,7 @@ export function userChartEntityToListen(
     releaseGroupMBID,
     caaID,
     caaReleaseMBID,
-    artists
+    artists,
   } = datum;
 
   const trackName = entityType === "recording" ? entityName : "";
@@ -73,7 +84,7 @@ export function userChartEntityToListen(
         caa_release_mbid: caaReleaseMBID,
         release_group_mbid: release_group_mbid ?? "",
         release_group_name: releaseGroupName ?? "",
-        artists
+        artists,
       },
     },
   };

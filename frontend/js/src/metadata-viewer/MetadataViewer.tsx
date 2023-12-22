@@ -319,7 +319,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                           <tr key={artist_mbid}>
                             <td>
                               <a
-                                href={`${musicBrainzURLRoot}artist/${artist_mbid}`}
+                                href={`/artist/${artist_mbid}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
@@ -492,11 +492,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             </div>
             <span className="artist-name small ellipsis" title={artistName}>
               <a
-                href={
-                  artistMBID
-                    ? `${musicBrainzURLRoot}artist/${artistMBID}`
-                    : undefined
-                }
+                href={artistMBID ? `/artist/${artistMBID}` : undefined}
                 target="_blank"
                 rel="noopener noreferrer"
               >

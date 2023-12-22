@@ -184,9 +184,7 @@ export default class ColorPlay extends React.Component<
                   />
                   <div style={{ flex: 3, padding: "0.5em 2em" }}>
                     <div className="h3">
-                      <a
-                        href={`https://musicbrainz.org/release/${selectedRelease.release_mbid}`}
-                      >
+                      <a href={`/release/${selectedRelease.release_mbid}`}>
                         {selectedRelease.release_name}
                       </a>
                     </div>

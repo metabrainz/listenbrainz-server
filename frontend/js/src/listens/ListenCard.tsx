@@ -331,10 +331,10 @@ export default class ListenCard extends React.Component<
       let thumbnailLink;
       let thumbnailTitle;
       if (releaseMBID) {
-        thumbnailLink = `https://musicbrainz.org/release/${releaseMBID}`;
+        thumbnailLink = `/release/${releaseMBID}`;
         thumbnailTitle = getReleaseName(listen);
       } else if (releaseGroupMBID) {
-        thumbnailLink = `https://musicbrainz.org/release-group/${releaseGroupMBID}`;
+        thumbnailLink = `/album/${releaseGroupMBID}`;
         thumbnailTitle = get(
           listen,
           "track_metadata.mbid_mapping.release_group_name"
@@ -413,19 +413,16 @@ export default class ListenCard extends React.Component<
         </div>
       );
     } else if (recordingMBID || releaseGroupMBID) {
-      let entity;
-      let entityMBID;
+      let link;
       if (recordingMBID) {
-        entity = "recording";
-        entityMBID = recordingMBID;
+        link = `https://musicbrainz.org/recording/${recordingMBID}`;
       } else {
-        entity = "release-group";
-        entityMBID = releaseGroupMBID;
+        link = `/album/${releaseGroupMBID}`;
       }
       thumbnail = (
         <a
-          href={`https://musicbrainz.org/${entity}/${entityMBID}`}
-          title="Could not load cover art. Open in MusicBrainz"
+          href={link}
+          title="Could not load cover art"
           target="_blank"
           rel="noopener noreferrer"
           className="listen-thumbnail"
