@@ -451,7 +451,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             </>
           ) : (
             <>
-              <p>Be the first to review this album on CritiqueBrainz</p>
+              <p>Be the first to review this artist on CritiqueBrainz</p>
               <a
                 href={`https://critiquebrainz.org/review/write/artist/${artist.artist_mbid}`}
                 className="btn btn-outline"
