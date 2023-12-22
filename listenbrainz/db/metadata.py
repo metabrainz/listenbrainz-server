@@ -9,6 +9,13 @@ from flask import current_app
 MAX_NUMBER_OF_RECORDINGS_PER_CALL = 50
 
 
+def fixup_mbids_to_artists(row):
+    """ Add artist mbid to the artists data retrieved from recording or release group cache """
+    for (mbid, artist) in zip(row["artist_mbids"], row["artist_data"]["artists"]):
+        artist["artist_mbid"] = str(mbid)
+    return row
+
+
 def get_metadata_for_recording(recording_mbid_list: List[str]) -> List[RecordingMetadata]:
     """ Get a list of recording Metadata objects for a given recording in descending order of their creation.
         The list of recordings cannot exceed `~db.metadata.MAX_NUMBER_OF_RECORDINGS_PER_CALL` per call.
@@ -34,7 +41,11 @@ def get_metadata_for_recording(recording_mbid_list: List[str]) -> List[Recording
     conn = timescale.engine.raw_connection()
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         curs.execute(query, (recording_mbid_list, ))
-        return [RecordingMetadata(**dict(row)) for row in curs.fetchall()]
+        data = []
+        for row in curs.fetchall():
+            row = fixup_mbids_to_artists(row)
+            data.append(RecordingMetadata(**row))
+        return data
 
 
 def get_metadata_for_release_group(release_group_mbid_list: List[str]) -> List[ReleaseGroupMetadata]:
@@ -62,7 +73,11 @@ def get_metadata_for_release_group(release_group_mbid_list: List[str]) -> List[R
     conn = timescale.engine.raw_connection()
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         curs.execute(query, (release_group_mbid_list, ))
-        return [ReleaseGroupMetadata(**dict(row)) for row in curs.fetchall()]
+        data = []
+        for row in curs.fetchall():
+            row = fixup_mbids_to_artists(row)
+            data.append(ReleaseGroupMetadata(**row))
+        return data
 
 
 def get_metadata_for_artist(artist_mbid_list: List[str]) -> List[ArtistMetadata]:

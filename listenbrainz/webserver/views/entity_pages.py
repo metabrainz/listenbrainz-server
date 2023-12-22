@@ -80,7 +80,6 @@ def get_cover_art_for_artist(release_groups):
 @release_bp.route("/<release_mbid>", methods=["GET"])
 @web_listenstore_needed
 def release_redirect(release_mbid):
-    # TODO: Load release_group and redirect to it
     if not is_valid_uuid(release_mbid):
         raise BadRequest("Provided release mbid is invalid: %s" % release_mbid)
 
