@@ -3,9 +3,10 @@ from psycopg2.extras import DictCursor, execute_values
 from psycopg2.sql import SQL, Identifier
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
+from listenbrainz.db import timescale, color
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset
+from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
 
 import psycopg2
 
@@ -147,6 +148,8 @@ def get_top_recordings_for_artist(artist_mbid, count=None):
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
             ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
         recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, recording_mbids)
+        release_mbids = [str(r["release_mbid"]) for r in recordings_data if r["release_mbid"] is not None]
+        releases_color = color.fetch_color_for_releases(release_mbids)
 
         for recording, data in zip(recordings, recordings_data):
             data.pop("artist_credit_id", None)
@@ -156,7 +159,40 @@ def get_top_recordings_for_artist(artist_mbid, count=None):
                 "artist_name": data.pop("artist_credit_name"),
                 "artist_mbids": data.pop("[artist_credit_mbids]"),
                 "total_listen_count": recording["total_listen_count"],
-                "total_user_count": recording["total_user_count"]
+                "total_user_count": recording["total_user_count"],
+                "release_color": releases_color.get(str(data["release_mbid"]), {})
             })
 
         return recordings_data
+
+
+def get_top_release_groups_for_artist(artist_mbid: str, count=None):
+    """ Get the top releases for a given artist mbid """
+    release_groups = get_top_entity_for_artist("release_group", artist_mbid, count)
+    release_group_mbids = [str(r["release_group_mbid"]) for r in release_groups]
+
+    release_groups_data = []
+    for i in range(0, len(release_group_mbids), 50):
+        fetchedData = fetch_release_group_metadata(release_group_mbids[i:i + 50], incs=["artist", "release", "tag"])
+
+        release_group_data_list = []
+        for release_group_mbid, release_group_data in fetchedData.items():
+            release_group_data["release_group_mbid"] = release_group_mbid
+            release_group_data_list.append(release_group_data)
+                        
+        release_groups_data.extend(release_group_data_list)
+    
+    release_groups_data.sort(key=lambda x: release_group_mbids.index(x["release_group_mbid"]))
+
+    release_mbids = [str(r["release"]['caa_release_mbid']) for r in release_groups_data if r["release"] is not None and r["release"]['caa_release_mbid'] is not None]
+
+    releases_color = color.fetch_color_for_releases(release_mbids)
+    
+    for release_group, pop in zip(release_groups_data, release_groups):
+        release_group.update({
+            "total_listen_count": pop["total_listen_count"],
+            "total_user_count": pop["total_user_count"],
+            "release_color": releases_color.get(str(release_group["release"]["caa_release_mbid"] if release_group["release"] is not None else None), {})
+        })
+
+    return release_groups_data
