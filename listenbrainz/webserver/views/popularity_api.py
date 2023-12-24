@@ -56,6 +56,7 @@ def top_recordings():
         current_app.logger.error("Error while fetching metadata for recordings: ", exc_info=True)
         raise APIInternalServerError("Failed to fetch metadata for recordings. Please try again.")
 
+
 @popularity_api_bp.get("/top-release-groups-for-artist")
 @crossdomain
 @ratelimit()

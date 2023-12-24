@@ -1,3 +1,4 @@
+import psycopg2
 from flask import current_app
 from psycopg2.extras import DictCursor, execute_values
 from psycopg2.sql import SQL, Identifier
@@ -7,9 +8,6 @@ from listenbrainz.db import timescale, color
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
-
-import psycopg2
-
 
 class PopularityDataset(DatabaseDataset):
     """ Dataset class for artists, recordings and releases with popularity info (listen count and unique listener count)
@@ -173,26 +171,28 @@ def get_top_release_groups_for_artist(artist_mbid: str, count=None):
 
     release_groups_data = []
     for i in range(0, len(release_group_mbids), 50):
-        fetchedData = fetch_release_group_metadata(release_group_mbids[i:i + 50], incs=["artist", "release", "tag"])
+        fetched_data = fetch_release_group_metadata(release_group_mbids[i:i + 50], incs=["artist", "release", "tag"])
 
         release_group_data_list = []
-        for release_group_mbid, release_group_data in fetchedData.items():
+        for release_group_mbid, release_group_data in fetched_data.items():
             release_group_data["release_group_mbid"] = release_group_mbid
             release_group_data_list.append(release_group_data)
-                        
+
         release_groups_data.extend(release_group_data_list)
-    
+
     release_groups_data.sort(key=lambda x: release_group_mbids.index(x["release_group_mbid"]))
 
-    release_mbids = [str(r["release"]['caa_release_mbid']) for r in release_groups_data if r["release"] is not None and r["release"]['caa_release_mbid'] is not None]
+    release_mbids = [str(r["release"]['caa_release_mbid']) for r in release_groups_data \
+                     if r["release"] is not None and r["release"]['caa_release_mbid'] is not None]
 
     releases_color = color.fetch_color_for_releases(release_mbids)
-    
+
     for release_group, pop in zip(release_groups_data, release_groups):
         release_group.update({
             "total_listen_count": pop["total_listen_count"],
             "total_user_count": pop["total_user_count"],
-            "release_color": releases_color.get(str(release_group["release"]["caa_release_mbid"] if release_group["release"] is not None else None), {})
+            "release_color": releases_color.get(str(release_group["release"]["caa_release_mbid"] \
+                                                    if release_group["release"] is not None else None), {})
         })
 
     return release_groups_data
