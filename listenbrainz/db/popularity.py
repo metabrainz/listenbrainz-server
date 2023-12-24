@@ -182,7 +182,7 @@ def get_top_release_groups_for_artist(artist_mbid: str, count=None):
 
     release_groups_data.sort(key=lambda x: release_group_mbids.index(x["release_group_mbid"]))
 
-    release_mbids = [str(r["release"]['caa_release_mbid']) for r in release_groups_data \
+    release_mbids = [str(r["release"]['caa_release_mbid']) for r in release_groups_data
                      if r["release"] is not None and r["release"]['caa_release_mbid'] is not None]
 
     releases_color = color.fetch_color_for_releases(release_mbids)
@@ -191,7 +191,7 @@ def get_top_release_groups_for_artist(artist_mbid: str, count=None):
         release_group.update({
             "total_listen_count": pop["total_listen_count"],
             "total_user_count": pop["total_user_count"],
-            "release_color": releases_color.get(str(release_group["release"]["caa_release_mbid"] \
+            "release_color": releases_color.get(str(release_group["release"]["caa_release_mbid"]
                                                     if release_group["release"] is not None else None), {})
         })
 
