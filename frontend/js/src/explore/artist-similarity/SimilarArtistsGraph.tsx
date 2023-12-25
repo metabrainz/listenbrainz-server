@@ -30,6 +30,7 @@ function CustomNodeComponent({
 }: NodeProps<NodeType>) {
   return (
     <animated.g
+      className="artist-similarity-graph-node"
       transform={to(
         [animatedProps.x, animatedProps.y, animatedProps.scale],
         (x, y, scale) => {

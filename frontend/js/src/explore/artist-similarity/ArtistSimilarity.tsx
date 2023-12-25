@@ -19,19 +19,22 @@ import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import generateTransformedArtists from "./generateTransformedArtists";
 import { downloadComponentAsImage, copyImageToClipboard } from "./utils";
 
-const DEFAULT_ARTIST_MBID = "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11";
-const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
-const BASE_URL =
-  "https://labs.api.listenbrainz.org/similar-artists/json?algorithm=session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30&artist_mbid=";
-// Apha value of the background color of the graph
-const BACKGROUND_ALPHA = 0.2;
-
-const colorGenerator = (): [tinycolor.Instance, tinycolor.Instance] => {
-  const initialColor = tinycolor(`hsv(${Math.random() * 360}, 100%, 90%)`);
-  return [initialColor, initialColor.clone().tetrad()[1]];
+type ArtistSimilarityProps = {
+  algorithm: string;
+  artist_mbid: string;
 };
 
-function ArtistSimilarity() {
+const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
+const BACKGROUND_ALPHA = 0.2;
+
+function ArtistSimilarity(props: ArtistSimilarityProps) {
+  const {
+    algorithm: DEFAULT_ALGORITHM,
+    artist_mbid: DEFAULT_ARTIST_MBID,
+  } = props;
+
+  const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbid=`;
+
   const { APIService } = React.useContext(GlobalAppContext);
   const [similarArtistsLimit, setSimilarArtistsLimit] = React.useState(
     SIMILAR_ARTISTS_LIMIT_VALUE
@@ -49,6 +52,7 @@ function ArtistSimilarity() {
     tinycolor("#FF87AE"),
     tinycolor("#001616"),
   ]);
+
   const [currentTracks, setCurrentTracks] = React.useState<Array<Listen>>([]);
 
   const [artistInfo, setArtistInfo] = React.useState<ArtistInfoType | null>(
@@ -100,9 +104,6 @@ function ArtistSimilarity() {
 
         setCompleteSimilarArtistsList(similarArtists);
         setSimilarArtistsList(similarArtists?.slice(0, similarArtistsLimit));
-
-        // Set the background color of the graph
-        // setColors((prevColors) => [prevColors[1], prevColors[1].tetrad()[1]]);
       } catch (error) {
         setSimilarArtistsList([]);
         toast.error(
@@ -144,40 +145,62 @@ function ArtistSimilarity() {
     [artistInfo, similarArtistsList, colors, similarArtistsLimit]
   );
 
-  const fetchArtistInfo = React.useCallback(async (artistMBID: string): Promise<
-    ArtistInfoType
-  > => {
-    const [
-      artistInformation,
-      wikipediaData,
-      topRecordingsForArtist,
-      topAlbumsForArtist,
-    ] = await Promise.all([
-      APIService.lookupMBArtist(artistMBID, ""),
-      APIService.getArtistWikipediaExtract(artistMBID),
-      APIService.getTopRecordingsForArtist(artistMBID),
-      APIService.getTopReleaseGroupsForArtist(artistMBID),
-    ]);
+  const fetchArtistInfo = React.useCallback(
+    async (artistMBID: string): Promise<ArtistInfoType> => {
+      const [
+        artistInformation,
+        wikipediaData,
+        topRecordingsForArtist,
+        topAlbumsForArtist,
+      ]: [
+        Array<MusicBrainzArtist>,
+        string,
+        Array<RecordingType>,
+        Array<ReleaseGroupType>
+      ] = await Promise.all([
+        APIService.lookupMBArtist(artistMBID, ""),
+        APIService.getArtistWikipediaExtract(artistMBID),
+        APIService.getTopRecordingsForArtist(artistMBID),
+        APIService.getTopReleaseGroupsForArtist(artistMBID),
+      ]);
 
-    const birthAreaData = {
-      born: artistInformation[0]?.begin_year || "Unknown",
-      area: artistInformation[0]?.area || "Unknown",
-    };
+      const birthAreaData = {
+        born: artistInformation[0]?.begin_year || "Unknown",
+        area: artistInformation[0]?.area || "Unknown",
+      };
 
-    const newArtistInfo = {
-      name: artistInformation[0]?.name,
-      type: artistInformation[0]?.type,
-      ...birthAreaData,
-      wiki: wikipediaData,
-      mbLink: `https://musicbrainz.org/artist/${artistMBID}`,
-      topTracks: topRecordingsForArtist ?? null,
-      topAlbum: topAlbumsForArtist?.[0] ?? null,
-      artist_mbid: artistInformation[0]?.artist_mbid,
-      gender: artistInformation[0]?.gender,
-    };
-    setArtistInfo(newArtistInfo);
-    return newArtistInfo;
-  }, []);
+      const newArtistInfo: ArtistInfoType = {
+        name: artistInformation[0]?.name,
+        type: artistInformation[0]?.type,
+        ...birthAreaData,
+        wiki: wikipediaData,
+        mbLink: `https://musicbrainz.org/artist/${artistMBID}`,
+        topTracks: topRecordingsForArtist ?? null,
+        topAlbum: topAlbumsForArtist?.[0] ?? null,
+        artist_mbid: artistInformation[0]?.artist_mbid,
+        gender: artistInformation[0]?.gender,
+      };
+      setArtistInfo(newArtistInfo);
+
+      const topAlbumReleaseColor = topAlbumsForArtist[0]?.release_color;
+      const topRecordingReleaseColor = topRecordingsForArtist[0]?.release_color;
+
+      setColors([
+        tinycolor(
+          topAlbumReleaseColor
+            ? `rgb(${topAlbumReleaseColor.red}, ${topAlbumReleaseColor.green}, ${topAlbumReleaseColor.blue})`
+            : "#FF87AE"
+        ),
+        tinycolor(
+          topRecordingsForArtist[0]?.release_color
+            ? `rgb(${topRecordingReleaseColor.red}, ${topRecordingReleaseColor.green}, ${topRecordingReleaseColor.blue})`
+            : "#001616"
+        ),
+      ]);
+      return newArtistInfo;
+    },
+    [APIService]
+  );
 
   const backgroundGradient = React.useMemo(() => {
     const releaseHue = colors[0]
@@ -277,7 +300,12 @@ function ArtistSimilarity() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, globalAppContext, sentryProps } = getPageProps();
+  const {
+    domContainer,
+    reactProps,
+    globalAppContext,
+    sentryProps,
+  } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
@@ -287,6 +315,9 @@ document.addEventListener("DOMContentLoaded", () => {
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
+
+  const { algorithm, artist_mbid } = reactProps;
+
   const ArtistSimilarityPageWithAlertNotifications = withAlertNotifications(
     ArtistSimilarity
   );
@@ -296,7 +327,10 @@ document.addEventListener("DOMContentLoaded", () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <ArtistSimilarityPageWithAlertNotifications />
+          <ArtistSimilarityPageWithAlertNotifications
+            algorithm={algorithm}
+            artist_mbid={artist_mbid}
+          />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
