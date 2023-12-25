@@ -1095,9 +1095,12 @@ export default class APIService {
 
   lookupMBArtist = async (
     artistMBID: string,
-    inc = "releases"
-  ): Promise<MusicBrainzArtist> => {
-    const url = `${this.MBBaseURI}/artist/${artistMBID}?fmt=json&inc=${inc}`;
+    inc?: string
+  ): Promise<Array<MusicBrainzArtist>> => {
+    let url = `${this.APIBaseURI}/metadata/artist/?artist_mbids=${artistMBID}`;
+    if (inc) {
+      url += `&inc=${inc}`;
+    }
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
@@ -1547,14 +1550,14 @@ export default class APIService {
   };
 
   getTopRecordingsForArtist = async (artistMBID: string): Promise<any> => {
-    const url = `${this.TestAPIBaseURI}/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
+    const url = `${this.APIBaseURI}/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
-  getTopReleasesForArtist = async (artistMBID: string): Promise<any> => {
-    const url = `${this.TestAPIBaseURI}/popularity/top-releases-for-artist?artist_mbid=${artistMBID}`;
+  getTopReleaseGroupsForArtist = async (artistMBID: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist?artist_mbid=${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

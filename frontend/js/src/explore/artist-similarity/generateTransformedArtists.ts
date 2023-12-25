@@ -10,35 +10,45 @@ const MAIN_NODE_SIZE = 150;
 const SIMILAR_NODE_SIZE = 85;
 // Score in case it is undefined (as in case of main artist)
 const NULL_SCORE = Infinity;
+const MAIN_NODE_COLOR = "rgba(53, 48, 112, 1)";
 
 function generateTransformedArtists(
   mainArtist: ArtistType,
   similarArtistsList: ArtistType[],
-  color1: tinycolor.Instance,
-  color2: tinycolor.Instance,
+  releaseHueSoundColor: tinycolor.Instance,
+  recordingHueSoundColor: tinycolor.Instance,
   similarArtistsLimit: number
 ): GraphDataType {
   const minScore = Math.sqrt(
     similarArtistsList?.[similarArtistsLimit - 1]?.score ?? 0
   );
+
   const scoreList = similarArtistsList.map(
     (similarArtist: ArtistType, index: number) =>
       minScore / Math.sqrt(similarArtist?.score ?? NULL_SCORE)
   );
+
   const mainArtistNode = {
     id: mainArtist.artist_mbid,
     artist_mbid: mainArtist.artist_mbid,
     artist_name: mainArtist.name,
     size: MAIN_NODE_SIZE,
-    color: color1.toRgbString(),
+    color: MAIN_NODE_COLOR,
     score: NULL_SCORE,
   };
+
+  const maximumScore = Math.max(...scoreList);
+  const minimumScore = Math.min(...scoreList);
+
   const similarArtistNodes = similarArtistsList.map((similarArtist, index) => {
+    const mixRatio =
+      (scoreList[index] - minimumScore) / (maximumScore - minimumScore);
     const computedColor = tinycolor.mix(
-      color1,
-      color2,
-      (index / similarArtistsLimit) * scoreList[index] * 100
+      releaseHueSoundColor,
+      recordingHueSoundColor,
+      mixRatio * 100
     );
+
     return {
       id: `${similarArtist.artist_mbid}.${mainArtist.artist_mbid}`,
       artist_mbid: similarArtist.artist_mbid,
@@ -65,4 +75,5 @@ function generateTransformedArtists(
     ),
   };
 }
+
 export default generateTransformedArtists;

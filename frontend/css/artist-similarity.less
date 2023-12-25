@@ -4,114 +4,144 @@
 @mb_blue_dark: #211e45;
 
 .artist-similarity-main-container {
-  .user-inputs-container {
+  display: flex;
+  flex-direction: column;
+
+  .artist-similarity-header {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    height: 4vh;
-    min-height: 20px;
-    width: 40%;
-    margin: 2vh 0;
+    align-items: center;
+    justify-content: start;
+    flex-wrap: wrap;
+    padding: 2vh 0;
 
-    .artist-input-container {
-      height: inherit;
-      width: 45%;
+    @media screen and (max-width: 768px) {
+      justify-content: space-between;
+    }
+
+    .share-buttons {
+      margin-left: 30px;
       display: flex;
-      flex-direction: column;
+      align-items: center;
+    }
 
-      .searchbox-container {
+    .user-inputs-container {
+      display: flex;
+      justify-content: space-between;
+      height: 42px;
+      min-height: 20px;
+      flex-wrap: wrap;
+
+      .artist-input-container {
+        height: inherit;
+        // width: 45%;
+        display: flex;
+        flex-direction: column;
+
+        .searchbox-container {
+          display: flex;
+          flex-direction: row;
+          height: inherit;
+          // width: 100%;
+
+          #searchbox-artist-name {
+            // display: flex;
+            // height: 100%;
+            // width: 80%;
+            border-radius: 0;
+            border: 2px solid #e0e0e0;
+            padding: 10px;
+          }
+
+          #searchbox-icon {
+            vertical-align: middle;
+            background-color: @blue;
+            border: none;
+            height: inherit;
+            width: 20%;
+            min-width: fit-content;
+
+            &:hover {
+              background-color: @mb_blue_light;
+              border-color: @mb_blue_dark;
+            }
+          }
+        }
+
+        .searchbox-dropdown-container {
+          .searchbox-dropdown {
+            display: flex;
+            flex-direction: column;
+            max-height: 20vh;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
+            border: 1px solid #ccc;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            background-color: #e0e0e0;
+          }
+          .search-item {
+            display: block;
+            border: none;
+            text-align: left;
+            outline: inherit;
+            cursor: pointer;
+            background-color: @white;
+            z-index: 1;
+            padding: 4%;
+            font: inherit;
+            &:hover {
+              color: @white;
+              background-color: @blue;
+            }
+          }
+        }
+      }
+      .graph-size-input-container {
         display: flex;
         flex-direction: row;
-        height: inherit;
-        width: 100%;
-
-        #searchbox-artist-name {
-          display: flex;
-          height: 100%;
-          width: 80%;
-          border-radius: 0;
-          border: 2px solid #e0e0e0;
-          padding: 10px;
-        }
-        #searchbox-icon {
-          vertical-align: middle;
-          background-color: @blue;
-          border: none;
-          height: inherit;
-          width: 20%;
-          min-width: fit-content;
-
-          &:hover {
-            background-color: @mb_blue_light;
-            border-color: @mb_blue_dark;
-          }
-        }
-      }
-      .searchbox-dropdown-container {
-        .searchbox-dropdown {
-          display: flex;
-          flex-direction: column;
-          max-height: 20vh;
-          overflow-y: scroll;
-          overflow-x: hidden;
-          box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
-          border: 1px solid #ccc;
-          border: 1px solid rgba(0, 0, 0, 0.15);
-          background-color: #e0e0e0;
-        }
-        .search-item {
-          display: block;
-          border: none;
-          text-align: left;
-          outline: inherit;
-          cursor: pointer;
-          background-color: @white;
-          z-index: 1;
-          padding: 4%;
-          font: inherit;
-          &:hover {
-            color: @white;
-            background-color: @blue;
-          }
-        }
-      }
-    }
-    .graph-size-input-container {
-      display: flex;
-      flex-direction: row;
-      height: 100%;
-      width: 45%;
-
-      #graph-size-input-label {
-        display: flex;
-        align-items: center;
-        padding-right: 0.5em;
-      }
-      #graph-size-input-number {
         height: 100%;
-        width: 10%;
-        min-width: fit-content;
-        border-radius: 0;
-        border: 2px solid #e0e0e0;
-        border-left: none;
-        border-right: none;
-        text-align: center;
-      }
-      /*
-			* CSS to hide the up, down arrows for input number field
-			*/
-      input {
-        &::-webkit-outer-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
+        align-items: center;
+        padding-left: 2em;
+
+        @media screen and (max-width: 530px) {
+          padding-left: 0; 
         }
-        &::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
+  
+        #graph-size-input-label {
+          padding-right: 0.5em;
         }
-      }
-      input[type="number"] {
-        -moz-appearance: textfield;
+        .graph-size-input {
+          display: flex;
+          flex-wrap: nowrap;
+          height: inherit;
+
+          #graph-size-input-number {
+            height: 100%;
+            min-width: fit-content;
+            border-radius: 0;
+            border: 2px solid #e0e0e0;
+            border-left: none;
+            border-right: none;
+            text-align: center;
+          }
+        }
+        /*
+        * CSS to hide the up, down arrows for input number field
+        */
+        input {
+          &::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+          &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+        }
+        input[type="number"] {
+          -moz-appearance: textfield;
+          appearance: textfield;
+        }
       }
 
       #graph-size-input-icon-minus,
@@ -130,6 +160,7 @@
       }
     }
   }
+
   .artist-similarity-graph-panel-container {
     display: flex;
     justify-content: space-between;
@@ -154,7 +185,7 @@
       }
 
       .artist-panel-info {
-        height: 25%;
+        height: min(fit-content, 200px);
         #artist-wiki {
           padding-top: 0.5em;
           padding-bottom: 0.5em;
@@ -213,7 +244,7 @@
 
     .artist-similarity-graph-container {
       height: 100vh;
-      width: 75%;
+      width: 80%;
     }
 
     @media (max-width: @screen-md) {

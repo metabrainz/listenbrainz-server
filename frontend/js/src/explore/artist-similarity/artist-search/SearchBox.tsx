@@ -119,31 +119,35 @@ function SearchBox({
         <label htmlFor="graph-size-input-number" id="graph-size-input-label">
           Web size:
         </label>
-        <button
-          id="graph-size-input-icon-minus"
-          type="button"
-          onClick={decrement}
-        >
-          <FontAwesomeIcon icon={faMinus} color="white" />
-        </button>
-        <input
-          id="graph-size-input-number"
-          type="number"
-          name="similarArtistsLimit"
-          placeholder="Graph size"
-          size={2}
-          onChange={(e) => onSimilarArtistsLimitChange(e.target.valueAsNumber)}
-          value={currentSimilarArtistsLimit}
-          required
-        />
-        <span id="graph-size-input-warning" className="validity" />
-        <button
-          id="graph-size-input-icon-plus"
-          type="button"
-          onClick={increment}
-        >
-          <FontAwesomeIcon icon={faPlus} color="white" />
-        </button>
+        <div className="graph-size-input">
+          <button
+            id="graph-size-input-icon-minus"
+            type="button"
+            onClick={decrement}
+          >
+            <FontAwesomeIcon icon={faMinus} color="white" />
+          </button>
+          <input
+            id="graph-size-input-number"
+            type="number"
+            name="similarArtistsLimit"
+            placeholder="Graph size"
+            size={2}
+            onChange={(e) =>
+              onSimilarArtistsLimitChange(e.target.valueAsNumber)
+            }
+            value={currentSimilarArtistsLimit}
+            required
+          />
+          <span id="graph-size-input-warning" className="validity" />
+          <button
+            id="graph-size-input-icon-plus"
+            type="button"
+            onClick={increment}
+          >
+            <FontAwesomeIcon icon={faPlus} color="white" />
+          </button>
+        </div>
       </div>
     </form>
   );

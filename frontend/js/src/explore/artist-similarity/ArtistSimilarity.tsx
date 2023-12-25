@@ -6,6 +6,8 @@ import { Integrations } from "@sentry/tracing";
 import { ErrorBoundary } from "@sentry/react";
 import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
@@ -15,6 +17,7 @@ import SimilarArtistsGraph from "./SimilarArtistsGraph";
 import Panel from "./artist-panel/Panel";
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import generateTransformedArtists from "./generateTransformedArtists";
+import { downloadComponentAsImage, copyImageToClipboard } from "./utils";
 
 const DEFAULT_ARTIST_MBID = "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11";
 const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
@@ -42,41 +45,77 @@ function ArtistSimilarity() {
     setCompleteSimilarArtistsList,
   ] = React.useState<Array<ArtistType>>([]);
 
-  const [colors, setColors] = React.useState(colorGenerator);
-  const [artistInfo, setArtistInfo] = React.useState<ArtistType>();
+  const [colors, setColors] = React.useState([
+    tinycolor("#FF87AE"),
+    tinycolor("#001616"),
+  ]);
+  const [currentTracks, setCurrentTracks] = React.useState<Array<Listen>>([]);
 
-  // Will Figure out how to use this later
-  const [currentTracks, setCurrentTracks] = React.useState<Array<Listen>>();
+  const [artistInfo, setArtistInfo] = React.useState<ArtistInfoType | null>(
+    null
+  );
 
-  const onArtistChange = async (artistMBID: string) => {
+  const graphParentElementRef = React.useRef<HTMLDivElement>(null);
+
+  const onClickDownload = React.useCallback(async () => {
+    if (!graphParentElementRef?.current) {
+      return;
+    }
+
     try {
-      const response = await fetch(BASE_URL + artistMBID);
-      const data = await response.json();
-
-      if (!data || !data.length || data.length === 3) {
-        throw new Error("No Similar Artists Found");
-      }
-
-      const mainArtist = data[1]?.data[0];
-      const similarArtists = data[3]?.data ?? [];
-
-      setArtistInfo(mainArtist);
-      setCompleteSimilarArtistsList(similarArtists);
-      setSimilarArtistsList(similarArtists?.slice(0, similarArtistsLimit));
-
-      // Set the background color of the graph
-      setColors((prevColors) => [prevColors[1], prevColors[1].tetrad()[1]]);
+      downloadComponentAsImage(
+        graphParentElementRef.current,
+        `${artistInfo?.name}-similarity-graph.png`
+      );
     } catch (error) {
-      setSimilarArtistsList([]);
       toast.error(
         <ToastMsg
-          title="Search Error"
-          message={typeof error === "object" ? error.message : error}
+          title="Could not save as an image"
+          message={typeof error === "object" ? error.message : error.toString()}
         />,
-        { toastId: "error" }
+        { toastId: "download-svg-error" }
       );
     }
-  };
+  }, [artistInfo, graphParentElementRef]);
+
+  const copyImage = React.useCallback(async () => {
+    if (!graphParentElementRef?.current) {
+      return;
+    }
+
+    await copyImageToClipboard(graphParentElementRef.current);
+  }, [graphParentElementRef]);
+
+  const fetchArtistSimilarityInfo = React.useCallback(
+    async (artistMBID: string) => {
+      try {
+        const response = await fetch(BASE_URL + artistMBID);
+        const data = await response.json();
+
+        if (!data || !data.length || data.length === 3) {
+          throw new Error("No Similar Artists Found");
+        }
+
+        const similarArtists = data[3]?.data ?? [];
+
+        setCompleteSimilarArtistsList(similarArtists);
+        setSimilarArtistsList(similarArtists?.slice(0, similarArtistsLimit));
+
+        // Set the background color of the graph
+        // setColors((prevColors) => [prevColors[1], prevColors[1].tetrad()[1]]);
+      } catch (error) {
+        setSimilarArtistsList([]);
+        toast.error(
+          <ToastMsg
+            title="Search Error"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "error" }
+        );
+      }
+    },
+    [similarArtistsLimit]
+  );
 
   const updateSimilarArtistsLimit = (limit: number) => {
     setSimilarArtistsLimit(limit);
@@ -87,7 +126,12 @@ function ArtistSimilarity() {
     () =>
       artistInfo
         ? generateTransformedArtists(
-            artistInfo,
+            {
+              artist_mbid: artistInfo.artist_mbid,
+              name: artistInfo.name,
+              type: artistInfo.type,
+              gender: artistInfo.gender,
+            },
             similarArtistsList,
             colors[0],
             colors[1],
@@ -100,33 +144,126 @@ function ArtistSimilarity() {
     [artistInfo, similarArtistsList, colors, similarArtistsLimit]
   );
 
+  const fetchArtistInfo = React.useCallback(async (artistMBID: string): Promise<
+    ArtistInfoType
+  > => {
+    const [
+      artistInformation,
+      wikipediaData,
+      topRecordingsForArtist,
+      topAlbumsForArtist,
+    ] = await Promise.all([
+      APIService.lookupMBArtist(artistMBID, ""),
+      APIService.getArtistWikipediaExtract(artistMBID),
+      APIService.getTopRecordingsForArtist(artistMBID),
+      APIService.getTopReleaseGroupsForArtist(artistMBID),
+    ]);
+
+    const birthAreaData = {
+      born: artistInformation[0]?.begin_year || "Unknown",
+      area: artistInformation[0]?.area || "Unknown",
+    };
+
+    const newArtistInfo = {
+      name: artistInformation[0]?.name,
+      type: artistInformation[0]?.type,
+      ...birthAreaData,
+      wiki: wikipediaData,
+      mbLink: `https://musicbrainz.org/artist/${artistMBID}`,
+      topTracks: topRecordingsForArtist ?? null,
+      topAlbum: topAlbumsForArtist?.[0] ?? null,
+      artist_mbid: artistInformation[0]?.artist_mbid,
+      gender: artistInformation[0]?.gender,
+    };
+    setArtistInfo(newArtistInfo);
+    return newArtistInfo;
+  }, []);
+
   const backgroundGradient = React.useMemo(() => {
-    const color1 = colors[0].clone().setAlpha(BACKGROUND_ALPHA).toRgbString();
-    const color2 = colors[1].clone().setAlpha(BACKGROUND_ALPHA).toRgbString();
-    return `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`;
+    const releaseHue = colors[0]
+      .clone()
+      .setAlpha(BACKGROUND_ALPHA)
+      .toRgbString();
+    const recordingHue = colors[1]
+      .clone()
+      .setAlpha(BACKGROUND_ALPHA)
+      .toRgbString();
+    return `linear-gradient(180deg, ${releaseHue} 0%, ${recordingHue} 100%)`;
   }, [colors]);
+
+  const onArtistChange = React.useCallback(
+    async (artistMBID: string) => {
+      try {
+        const [_, newArtistInfo] = await Promise.all([
+          fetchArtistSimilarityInfo(artistMBID),
+          fetchArtistInfo(artistMBID),
+        ]);
+        const topTracksAsListen = newArtistInfo?.topTracks?.map((topTrack) => ({
+          listened_at: 0,
+          track_metadata: {
+            artist_name: topTrack.artist_name,
+            track_name: topTrack.recording_name,
+            release_name: topTrack.release_name,
+            release_mbid: topTrack.release_mbid,
+            recording_mbid: topTrack.recording_mbid,
+          },
+        }));
+        setCurrentTracks(topTracksAsListen ?? []);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="Search Error"
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "error" }
+        );
+      }
+    },
+    [fetchArtistSimilarityInfo, fetchArtistInfo]
+  );
 
   React.useEffect(() => {
     onArtistChange(DEFAULT_ARTIST_MBID);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const browserHasClipboardAPI = "clipboard" in navigator;
+
   return (
     <div className="artist-similarity-main-container">
-      <SearchBox
-        onArtistChange={onArtistChange}
-        onSimilarArtistsLimitChange={updateSimilarArtistsLimit}
-        currentSimilarArtistsLimit={similarArtistsLimit}
-      />
+      <div className="artist-similarity-header">
+        <SearchBox
+          onArtistChange={onArtistChange}
+          onSimilarArtistsLimitChange={updateSimilarArtistsLimit}
+          currentSimilarArtistsLimit={similarArtistsLimit}
+        />
+        <div className="share-buttons">
+          <button
+            type="button"
+            className="btn btn-icon btn-info"
+            onClick={onClickDownload}
+          >
+            <FontAwesomeIcon icon={faDownload} color="white" />
+          </button>
+          {browserHasClipboardAPI && (
+            <button
+              type="button"
+              className="btn btn-icon btn-info"
+              onClick={copyImage}
+            >
+              <FontAwesomeIcon icon={faCopy} color="white" />
+            </button>
+          )}
+        </div>
+      </div>
       <div className="artist-similarity-graph-panel-container">
         <SimilarArtistsGraph
           onArtistChange={onArtistChange}
           data={transformedArtists}
           background={backgroundGradient}
+          graphParentElementRef={graphParentElementRef}
         />
-        {artistInfo && (
-          <Panel artist={artistInfo} onTrackChange={setCurrentTracks} />
-        )}
+        {artistInfo && <Panel artistInfo={artistInfo} />}
       </div>
       <BrainzPlayer
         listens={currentTracks ?? []}

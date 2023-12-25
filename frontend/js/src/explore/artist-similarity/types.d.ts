@@ -8,19 +8,6 @@ type ArtistType = {
   reference_mbid?: string;
 };
 
-type MarkupResponseType = {
-  data: string;
-  type: "markup";
-};
-
-type DatasetResponseType = {
-  columns: Array<string>;
-  data: Array<ArtistType>;
-  type: "dataset";
-};
-
-type ApiResponseType = Array<MarkupResponseType | DatasetResponseType>;
-
 type NodeType = {
   id: string;
   artist_mbid: string;
@@ -39,4 +26,68 @@ type LinkType = {
 type GraphDataType = {
   nodes: Array<NodeType>;
   links: Array<LinkType>;
+};
+
+type ArtistInfoType = {
+  area: string;
+  artist_mbid: string;
+  born: string | number;
+  gender?: string;
+  mbLink: string;
+  name: string;
+  topAlbum: ReleaseGroupType | null;
+  topTracks: RecordingType[] | null;
+  type: string;
+  wiki: string;
+};
+
+type ReleaseColor = {
+  blue: number;
+  green: number;
+  red: number;
+};
+
+type RecordingType = {
+  artist_mbids: Array<string>;
+  artist_name: string;
+  caa_id: number;
+  caa_release_mbid: string;
+  length: number;
+  recording_mbid: string;
+  recording_name: string;
+  release_color: ReleaseColor;
+  release_mbid: string;
+  release_name: string;
+  total_listen_count: number;
+  total_user_count: number;
+};
+
+type ReleaseGroupType = {
+  artist: {
+    artist_credit_id: number;
+    name: string;
+    artists: Array<MusicBrainzArtist>;
+  };
+  release: {
+    caa_id: number;
+    caa_release_mbid: string;
+    date: string;
+    name: string;
+    type: string;
+  };
+  release_color: ReleaseColor;
+  release_group: {
+    caa_id: number;
+    caa_release_mbid: string;
+    date: string;
+    name: string;
+    type: string;
+  };
+  release_group_mbid: string;
+  tag: {
+    artist: Array<ArtistTag>;
+    release_group: Array<ReleaseGroupTag>;
+  };
+  total_listen_count: number;
+  total_user_count: number;
 };

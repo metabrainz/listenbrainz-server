@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import * as React from "react";
 import {
   ResponsiveNetwork,
   NodeProps,
@@ -6,12 +6,13 @@ import {
   NetworkSvgProps,
 } from "@nivo/network";
 import { animated, to } from "@react-spring/web";
-import { isFinite, throttle } from "lodash";
+import { isFinite } from "lodash";
 
 interface GraphProps {
   data: GraphDataType;
   onArtistChange: (artist_mbid: string) => void;
   background: string;
+  graphParentElementRef: React.RefObject<HTMLDivElement>;
 }
 
 type OmitHeightWidth<T> = Omit<T, "height" | "width">;
@@ -58,7 +59,7 @@ function CustomNodeComponent({
       />
       <animated.text
         textAnchor="middle"
-        dominantBaseline="alphabetic"
+        dominantBaseline="central"
         fontSize={to([animatedProps.size], (size) => size / 6)}
         style={{ pointerEvents: "none", fill: "white" }}
       >
@@ -110,35 +111,17 @@ function CustomNodeTooltipComponent({ node }: NodeTooltipProps<NodeType>) {
   );
 }
 
-function SimilarArtistsGraph({ data, onArtistChange, background }: GraphProps) {
-  const [graphMargin, setGraphMargin] = useState({
-    top: 0,
-    right: window.innerWidth / 5,
-    bottom: 0,
-    left: 0,
-  });
-
-  useEffect(() => {
-    const handleResize = throttle(() => {
-      setGraphMargin({
-        top: 0,
-        right: window.innerWidth / 5,
-        bottom: 0,
-        left: 0,
-      });
-    });
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
+function SimilarArtistsGraph({
+  data,
+  onArtistChange,
+  background,
+  graphParentElementRef,
+}: GraphProps) {
   const chartProperties: OmitHeightWidth<NetworkSvgProps<
     NodeType,
     LinkType
   >> = {
     data,
-    margin: graphMargin,
     repulsivity: 350,
     iterations: 120,
     centeringStrength: 0.11,
@@ -160,10 +143,11 @@ function SimilarArtistsGraph({ data, onArtistChange, background }: GraphProps) {
   return data ? (
     <div
       className="artist-similarity-graph-container"
+      id="artist-similarity-graph-container"
       style={{
         background,
-        height: "85vh",
       }}
+      ref={graphParentElementRef}
     >
       <ResponsiveNetwork
         {...chartProperties}
@@ -175,4 +159,5 @@ function SimilarArtistsGraph({ data, onArtistChange, background }: GraphProps) {
     <p>Please wait...</p>
   );
 }
+
 export default SimilarArtistsGraph;

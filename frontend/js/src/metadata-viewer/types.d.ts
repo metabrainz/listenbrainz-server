@@ -3,7 +3,7 @@ declare type MusicBrainzArtist = {
   name: string;
   artist_mbid: string;
   join_phrase?: string;
-  area: { [key: string]: string };
+  area: string;
   begin_year?: number;
   end_year?: number;
   rels: { [key: string]: string };
@@ -12,7 +12,7 @@ declare type MusicBrainzArtist = {
   tag?: {
     artist: Array<ArtistTag>;
   };
-  "life-span": { [key: string]: string };
+  gender: string;
 };
 
 declare type MusicBrainzArtistCredit = {
