@@ -16,8 +16,6 @@
 @nav-link-color: #1e1e1e;
 @gradient-orange: #ffa500;
 
-@sidebar-gradient: linear-gradient(50deg, #dedede, transparent);
-
 body {
   display: flex;
   > nav[role="navigation"] {
@@ -404,20 +402,5 @@ body {
   margin: 0;
   &:not(.in) {
     pointer-events: none;
-  }
-}
-
-/* Settings side bar on the right-hand side*/
-.sidebar {
-  background: #f3f3f3;
-
-  > * {
-    background: @sidebar-gradient;
-    padding: 12px 20px;
-  }
-  .sidenav-content-grid {
-    display: grid;
-    gap: 8px;
-    padding-bottom: 12px;
   }
 }
