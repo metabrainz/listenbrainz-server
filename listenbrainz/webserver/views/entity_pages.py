@@ -63,7 +63,7 @@ def get_cover_art_for_artist(release_groups):
     )
 
 
-@release_bp.route("/<release_mbid>", methods=["GET"])
+@release_bp.route("/<release_mbid>/", methods=["GET"])
 @web_listenstore_needed
 def release_redirect(release_mbid):
     if not is_valid_uuid(release_mbid):
@@ -84,7 +84,7 @@ def release_redirect(release_mbid):
         return redirect(url_for("album.album_entity", release_group_mbid=result["release_group_mbid"]))
 
 
-@artist_bp.route("/<artist_mbid>", methods=["GET"])
+@artist_bp.route("/<artist_mbid>/", methods=["GET"])
 @web_listenstore_needed
 def artist_entity(artist_mbid):
     """ Show a artist page with all their relevant information """
@@ -160,7 +160,7 @@ def artist_entity(artist_mbid):
                            title=artist_data[0].artist_data["name"])
 
 
-@album_bp.route("/<release_group_mbid>", methods=["GET"])
+@album_bp.route("/<release_group_mbid>/", methods=["GET"])
 @web_listenstore_needed
 def album_entity(release_group_mbid):
     """ Show an album page with all their relevant information """
@@ -210,7 +210,7 @@ def album_entity(release_group_mbid):
                            title=release_group["release_group"]["name"])
 
 
-@release_group_bp.route("/<release_group_mbid>", methods=["GET"])
+@release_group_bp.route("/<release_group_mbid>/", methods=["GET"])
 def release_group_redirect(release_group_mbid):
     """ Redirect to the /album/… page. Intended for better interplay with MusicBrainz URLs """
     return redirect(url_for("album.album_entity", release_group_mbid=release_group_mbid))

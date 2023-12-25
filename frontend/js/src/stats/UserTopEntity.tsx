@@ -237,7 +237,7 @@ export default class UserTopEntity extends React.Component<
                         recording_mbid: recording_mbid ?? "",
                         release_mbid: release_mbid ?? "",
                         artist_mbids: artist_mbids ?? [],
-                        artists
+                        artists,
                       },
                     },
                   };
