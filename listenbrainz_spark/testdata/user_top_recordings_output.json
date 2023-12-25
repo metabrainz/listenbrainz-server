@@ -19,6 +19,13 @@
             "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
             "caa_id": 6351940170,
             "caa_release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "artists": [
+              {
+                "artist_credit_name": "Portishead",
+                "join_phrase": "",
+                "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+              }
+            ],
             "track_name": "The Rip",
             "listen_count": 2
           },
@@ -32,6 +39,13 @@
             "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
             "caa_id": 6351940170,
             "caa_release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "artists": [
+              {
+                "artist_credit_name": "Portishead",
+                "join_phrase": "",
+                "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+              }
+            ],
             "track_name": "Plastic",
             "listen_count": 2
           },
@@ -45,6 +59,13 @@
             "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
             "caa_id": 2714350967,
             "caa_release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "artists": [
+              {
+                "artist_credit_name": "Massive Attack",
+                "join_phrase": "",
+                "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+              }
+            ],
             "track_name": "Euro Child",
             "listen_count": 2
           },
@@ -58,6 +79,13 @@
             "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
             "caa_id": 32489333474,
             "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "artists": [
+              {
+                "artist_credit_name": "Aether",
+                "join_phrase": "",
+                "artist_mbid": "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+              }
+            ],
             "track_name": "You Still Echo Here",
             "listen_count": 1
           },
@@ -71,6 +99,13 @@
             "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
             "caa_id": 32489333474,
             "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "artists": [
+              {
+                "artist_credit_name": "Aether",
+                "join_phrase": "",
+                "artist_mbid": "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+              }
+            ],
             "track_name": "Yamanote",
             "listen_count": 1
           },
@@ -85,6 +120,18 @@
             "release_mbid": "39967fee-e436-4f87-b36e-299aae4dc670",
             "caa_id": 27448523314,
             "caa_release_mbid": "39967fee-e436-4f87-b36e-299aae4dc670",
+            "artists": [
+              {
+                "artist_credit_name": "Jah Wobble",
+                "join_phrase": " & ",
+                "artist_mbid": "904cc1c8-021e-45ac-bbe9-95c01a1f8099"
+              },
+              {
+                "artist_credit_name": "Marconi Union",
+                "join_phrase": "",
+                "artist_mbid": "3f9b5837-ed1c-413e-bfef-ca4f892dcc59"
+              }
+            ],
             "track_name": "Wealth",
             "listen_count": 1
           },
@@ -98,6 +145,13 @@
             "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
             "caa_id": 6351940170,
             "caa_release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "artists": [
+              {
+                "artist_credit_name": "Portishead",
+                "join_phrase": "",
+                "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+              }
+            ],
             "track_name": "We Carry On",
             "listen_count": 1
           },
@@ -111,6 +165,13 @@
             "release_mbid": "af6fdf7a-fcb0-46f9-b8c5-517fe8cb3e5d",
             "caa_id": 11988727956,
             "caa_release_mbid": "00cc6a5a-1051-4b7e-8344-4ec33099eb98",
+            "artists": [
+              {
+                "artist_credit_name": "The Egg",
+                "join_phrase": "",
+                "artist_mbid": "6fe91ae9-8ddb-47b0-a2d7-252833ce5500"
+              }
+            ],
             "track_name": "Venice Beach",
             "listen_count": 1
           },
@@ -124,6 +185,13 @@
             "release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
             "caa_id": 34328682227,
             "caa_release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
+            "artists": [
+              {
+                "artist_credit_name": "The Polish Ambassador",
+                "join_phrase": "",
+                "artist_mbid": "e9787dd2-5857-4b51-8e59-a190a54820fc"
+              }
+            ],
             "track_name": "Two and a Half Moons Away",
             "listen_count": 1
           },
@@ -137,6 +205,13 @@
             "release_mbid": "2f7634f3-3bb5-4f2c-9821-d150e8415fb8",
             "caa_id": 14187025380,
             "caa_release_mbid": "2f7634f3-3bb5-4f2c-9821-d150e8415fb8",
+            "artists": [
+              {
+                "artist_credit_name": "Sounds From the Ground",
+                "join_phrase": "",
+                "artist_mbid": "9806e551-9a63-4a9d-be1b-5297b2ac0e76"
+              }
+            ],
             "track_name": "Treasure",
             "listen_count": 1
           },
@@ -150,6 +225,13 @@
             "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
             "caa_id": 19363639475,
             "caa_release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "artists": [
+              {
+                "artist_credit_name": "Romare",
+                "join_phrase": "",
+                "artist_mbid": "b014d579-b549-4b21-b90d-5264e0433988"
+              }
+            ],
             "track_name": "The Drifter",
             "listen_count": 1
           },
@@ -163,6 +245,13 @@
             "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
             "caa_id": 32489333474,
             "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "artists": [
+              {
+                "artist_credit_name": "Aether",
+                "join_phrase": "",
+                "artist_mbid": "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+              }
+            ],
             "track_name": "Sunshine City",
             "listen_count": 1
           },
@@ -176,6 +265,13 @@
             "release_mbid": "99e39642-cae5-4061-9800-751108bc650b",
             "caa_id": 6477557415,
             "caa_release_mbid": "99e39642-cae5-4061-9800-751108bc650b",
+            "artists": [
+              {
+                "artist_credit_name": "Ott",
+                "join_phrase": "",
+                "artist_mbid": "1a40f886-0877-4bab-9ab1-761147dadb89"
+              }
+            ],
             "track_name": "Splitting an Atom",
             "listen_count": 1
           },
@@ -189,6 +285,13 @@
             "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
             "caa_id": 2714350967,
             "caa_release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "artists": [
+              {
+                "artist_credit_name": "Massive Attack",
+                "join_phrase": "",
+                "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+              }
+            ],
             "track_name": "Sly",
             "listen_count": 1
           },
@@ -202,6 +305,13 @@
             "release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
             "caa_id": 6351940170,
             "caa_release_mbid": "930345b1-a970-3495-a1dd-55147bea7741",
+            "artists": [
+              {
+                "artist_credit_name": "Portishead",
+                "join_phrase": "",
+                "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+              }
+            ],
             "track_name": "Silence",
             "listen_count": 1
           },
@@ -215,6 +325,13 @@
             "release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
             "caa_id": 34328682227,
             "caa_release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
+            "artists": [
+              {
+                "artist_credit_name": "The Polish Ambassador",
+                "join_phrase": "",
+                "artist_mbid": "e9787dd2-5857-4b51-8e59-a190a54820fc"
+              }
+            ],
             "track_name": "Rootshine Revival",
             "listen_count": 1
           },
@@ -229,6 +346,18 @@
             "release_mbid": "91231e74-2674-411e-968f-b188bb67b711",
             "caa_id": 10340680649,
             "caa_release_mbid": "91231e74-2674-411e-968f-b188bb67b711",
+            "artists": [
+              {
+                "artist_credit_name": "Massive Attack",
+                "join_phrase": " with ",
+                "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+              },
+              {
+                "artist_credit_name": "Tracey Thorn",
+                "join_phrase": "",
+                "artist_mbid": "6dbd7f8b-20ac-4287-8dd3-b4cae5c5f82f"
+              }
+            ],
             "track_name": "Protection",
             "listen_count": 1
           },
@@ -242,6 +371,13 @@
             "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
             "caa_id": 19363639475,
             "caa_release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "artists": [
+              {
+                "artist_credit_name": "Romare",
+                "join_phrase": "",
+                "artist_mbid": "b014d579-b549-4b21-b90d-5264e0433988"
+              }
+            ],
             "track_name": "Prison Blues",
             "listen_count": 1
           },
@@ -255,6 +391,13 @@
             "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
             "caa_id": 19363639475,
             "caa_release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "artists": [
+              {
+                "artist_credit_name": "Romare",
+                "join_phrase": "",
+                "artist_mbid": "b014d579-b549-4b21-b90d-5264e0433988"
+              }
+            ],
             "track_name": "Nina's Charm",
             "listen_count": 1
           },
@@ -268,6 +411,13 @@
             "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
             "caa_id": 15079002702,
             "caa_release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "artists": [
+              {
+                "artist_credit_name": "Little People",
+                "join_phrase": "",
+                "artist_mbid": "78c94cba-761f-4212-8508-a24bda2e57dc"
+              }
+            ],
             "track_name": "Moon",
             "listen_count": 1
           },
@@ -281,6 +431,13 @@
             "release_mbid": "d619edca-d766-36b3-a2c0-19cd47ed427b",
             "caa_id": 6082721506,
             "caa_release_mbid": "d619edca-d766-36b3-a2c0-19cd47ed427b",
+            "artists": [
+              {
+                "artist_credit_name": "Vangelis",
+                "join_phrase": "",
+                "artist_mbid": "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+              }
+            ],
             "track_name": "Memories of Green",
             "listen_count": 1
           },
@@ -294,6 +451,13 @@
             "release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
             "caa_id": 11778363663,
             "caa_release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+            "artists": [
+              {
+                "artist_credit_name": "Brazilian Girls",
+                "join_phrase": "",
+                "artist_mbid": "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+              }
+            ],
             "track_name": "Me Gustas Cuando Callas",
             "listen_count": 1
           },
@@ -305,6 +469,13 @@
             "recording_mbid": "1f36b477-3b7c-4a34-a024-a042135fede8",
             "release_name": "Blade Runner (Music From The Original Soundtrack)",
             "release_mbid": "9792e059-f7af-4bce-90cf-9a2f78288c72",
+            "artists": [
+              {
+                "artist_credit_name": "Vangelis",
+                "join_phrase": "",
+                "artist_mbid": "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+              }
+            ],
             "track_name": "Main Titles",
             "listen_count": 1
           },
@@ -318,6 +489,13 @@
             "release_mbid": "73e4a3e9-bb1d-4243-9c1b-f285fc842248",
             "caa_id": 22036362973,
             "caa_release_mbid": "73e4a3e9-bb1d-4243-9c1b-f285fc842248",
+            "artists": [
+              {
+                "artist_credit_name": "Kiasmos",
+                "join_phrase": "",
+                "artist_mbid": "3252542b-98a7-48ba-9861-7a612b16c227"
+              }
+            ],
             "track_name": "Lit",
             "listen_count": 1
           },
@@ -338,6 +516,13 @@
             "release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
             "caa_id": 19363639475,
             "caa_release_mbid": "a4bb5de1-b856-40e3-8b8b-1130faf9afbc",
+            "artists": [
+              {
+                "artist_credit_name": "Romare",
+                "join_phrase": "",
+                "artist_mbid": "b014d579-b549-4b21-b90d-5264e0433988"
+              }
+            ],
             "track_name": "La Petite Mort",
             "listen_count": 1
           },
@@ -358,6 +543,13 @@
             "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
             "caa_id": 2714350967,
             "caa_release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "artists": [
+              {
+                "artist_credit_name": "Massive Attack",
+                "join_phrase": "",
+                "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+              }
+            ],
             "track_name": "Karmacoma",
             "listen_count": 1
           },
@@ -371,6 +563,13 @@
             "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
             "caa_id": 15079002702,
             "caa_release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "artists": [
+              {
+                "artist_credit_name": "Little People",
+                "join_phrase": "",
+                "artist_mbid": "78c94cba-761f-4212-8508-a24bda2e57dc"
+              }
+            ],
             "track_name": "Intermezzo",
             "listen_count": 1
           },
@@ -384,6 +583,13 @@
             "release_mbid": "6122ca09-a4ca-4d13-96c5-2b1ea502e7f5",
             "caa_id": 3984827641,
             "caa_release_mbid": "6122ca09-a4ca-4d13-96c5-2b1ea502e7f5",
+            "artists": [
+              {
+                "artist_credit_name": "Abakus",
+                "join_phrase": "",
+                "artist_mbid": "a8b39181-6939-451e-9641-2db231b73706"
+              }
+            ],
             "track_name": "I Had a Dream Last Night",
             "listen_count": 1
           },
@@ -397,6 +603,13 @@
             "release_mbid": "74fcd7f4-a2c8-4526-b350-558b157942bf",
             "caa_id": 28936814610,
             "caa_release_mbid": "74fcd7f4-a2c8-4526-b350-558b157942bf",
+            "artists": [
+              {
+                "artist_credit_name": "Daft Punk",
+                "join_phrase": "",
+                "artist_mbid": "056e4f3e-d505-4dad-8ec1-d04f521cbb56"
+              }
+            ],
             "track_name": "Give Life Back to Music",
             "listen_count": 1
           },
@@ -410,6 +623,13 @@
             "release_mbid": "1a12cb18-84cc-4818-b748-2eceaa63de16",
             "caa_id": 11008549019,
             "caa_release_mbid": "1a12cb18-84cc-4818-b748-2eceaa63de16",
+            "artists": [
+              {
+                "artist_credit_name": "All India Radio",
+                "join_phrase": "",
+                "artist_mbid": "53d2a4d1-556e-4701-a8ac-5fcb74a8e393"
+              }
+            ],
             "track_name": "Four Three",
             "listen_count": 1
           },
@@ -423,6 +643,13 @@
             "release_mbid": "f63bfd08-a085-3a33-8d83-d396ab8d1f6d",
             "caa_id": 2546509254,
             "caa_release_mbid": "01681b1d-3068-3689-b879-efefde1f7b3b",
+            "artists": [
+              {
+                "artist_credit_name": "New Order",
+                "join_phrase": "",
+                "artist_mbid": "f1106b17-dcbb-45f6-b938-199ccfab50cc"
+              }
+            ],
             "track_name": "Dream Attack",
             "listen_count": 1
           },
@@ -436,6 +663,13 @@
             "release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
             "caa_id": 11778363663,
             "caa_release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+            "artists": [
+              {
+                "artist_credit_name": "Brazilian Girls",
+                "join_phrase": "",
+                "artist_mbid": "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+              }
+            ],
             "track_name": "Don't Stop",
             "listen_count": 1
           },
@@ -457,6 +691,18 @@
             "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
             "caa_id": 15079002702,
             "caa_release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "artists": [
+              {
+                "artist_credit_name": "Little People",
+                "join_phrase": " feat. ",
+                "artist_mbid": "78c94cba-761f-4212-8508-a24bda2e57dc"
+              },
+              {
+                "artist_credit_name": "Rachael Roberts",
+                "join_phrase": "",
+                "artist_mbid": "bd43cb68-3a68-429e-9aad-6fc512f7df71"
+              }
+            ],
             "track_name": "Breathe Again",
             "listen_count": 1
           },
@@ -470,6 +716,13 @@
             "release_mbid": "0efa1563-cbc7-4249-b6ec-fab766c38c81",
             "caa_id": 8448022908,
             "caa_release_mbid": "0efa1563-cbc7-4249-b6ec-fab766c38c81",
+            "artists": [
+              {
+                "artist_credit_name": "Vangelis",
+                "join_phrase": "",
+                "artist_mbid": "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+              }
+            ],
             "track_name": "Blade Runner Blues",
             "listen_count": 1
           },
@@ -483,6 +736,13 @@
             "release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
             "caa_id": 2714350967,
             "caa_release_mbid": "8ec7bce7-27ee-3144-a52b-b5bd765860c5",
+            "artists": [
+              {
+                "artist_credit_name": "Massive Attack",
+                "join_phrase": "",
+                "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+              }
+            ],
             "track_name": "Better Things",
             "listen_count": 1
           },
@@ -496,6 +756,13 @@
             "release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
             "caa_id": 11778363663,
             "caa_release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+            "artists": [
+              {
+                "artist_credit_name": "Brazilian Girls",
+                "join_phrase": "",
+                "artist_mbid": "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+              }
+            ],
             "track_name": "All We Have",
             "listen_count": 1
           },
@@ -509,6 +776,13 @@
             "release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
             "caa_id": 15079002702,
             "caa_release_mbid": "db4d5128-f065-4938-8161-c50cf64b6f05",
+            "artists": [
+              {
+                "artist_credit_name": "Little People",
+                "join_phrase": "",
+                "artist_mbid": "78c94cba-761f-4212-8508-a24bda2e57dc"
+              }
+            ],
             "track_name": "Above The Clouds",
             "listen_count": 1
           },
@@ -522,6 +796,13 @@
             "release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
             "caa_id": 32489333474,
             "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+            "artists": [
+              {
+                "artist_credit_name": "Aether",
+                "join_phrase": "",
+                "artist_mbid": "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+              }
+            ],
             "track_name": "151018",
             "listen_count": 1
           }
@@ -546,6 +827,13 @@
             "recording_mbid": "2d6f51c6-afc5-457e-9c58-689679c08d30",
             "release_name": "Teenage Dream",
             "release_mbid": "ae8288cf-134e-48bc-a146-f0a2ac35b322",
+            "artists": [
+              {
+                "artist_credit_name": "Katy Perry",
+                "join_phrase": "",
+                "artist_mbid": "122d63fc-8671-43e4-9752-34e846d62a9c"
+              }
+            ],
             "track_name": "The One That Got Away",
             "listen_count": 5
           },
@@ -559,6 +847,13 @@
             "release_mbid": "834d8732-8e2d-42b6-9496-55b067d0748f",
             "caa_id": 27620887370,
             "caa_release_mbid": "834d8732-8e2d-42b6-9496-55b067d0748f",
+            "artists": [
+              {
+                "artist_credit_name": "Klergy",
+                "join_phrase": "",
+                "artist_mbid": "5586fc31-7c41-4a2d-97a2-d358b58b250d"
+              }
+            ],
             "track_name": "And so It Begins",
             "listen_count": 5
           },
@@ -578,8 +873,20 @@
             "recording_mbid": "b9e26fa2-8d35-456b-ad09-b946d4e0675f",
             "release_name": "This Is Hip Hop",
             "release_mbid": "1760ede9-4041-4d64-982e-a8fa76b9ea51",
-            "caa_id": 24568197148,
-            "caa_release_mbid": "00e661dc-4b95-4fe6-9605-455f9321d199",
+            "caa_id": 4199784147,
+            "caa_release_mbid": "b0d805e3-2afe-4e3a-a8a5-3f4f8dfde2bb",
+            "artists": [
+              {
+                "artist_credit_name": "Guy Sebastian",
+                "join_phrase": " feat. ",
+                "artist_mbid": "f116b984-45ae-49d0-9445-efc5a61458a1"
+              },
+              {
+                "artist_credit_name": "Lupe Fiasco",
+                "join_phrase": "",
+                "artist_mbid": "cf15719f-51f9-4db8-a15d-5eed9664ce69"
+              }
+            ],
             "track_name": "Battle Scars",
             "listen_count": 3
           },
@@ -593,6 +900,13 @@
             "release_mbid": "7a5d7834-ff3b-4214-95eb-9b14332e9541",
             "caa_id": 28354644282,
             "caa_release_mbid": "7a5d7834-ff3b-4214-95eb-9b14332e9541",
+            "artists": [
+              {
+                "artist_credit_name": "Jon Bellion",
+                "join_phrase": "",
+                "artist_mbid": "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
+              }
+            ],
             "track_name": "All Time Low",
             "listen_count": 3
           },
@@ -607,6 +921,18 @@
             "release_mbid": "1355c8b7-f563-4ddc-8b00-620f4a63d081",
             "caa_id": 15528924240,
             "caa_release_mbid": "1355c8b7-f563-4ddc-8b00-620f4a63d081",
+            "artists": [
+              {
+                "artist_credit_name": "Ursine Vulpine",
+                "join_phrase": " feat. ",
+                "artist_mbid": "43736f76-419a-42a0-816a-830876647ba5"
+              },
+              {
+                "artist_credit_name": "Annaca",
+                "join_phrase": "",
+                "artist_mbid": "93cfee41-b1a6-4604-a01c-91243e6926e6"
+              }
+            ],
             "track_name": "Wicked Game",
             "listen_count": 2
           },
@@ -620,6 +946,13 @@
             "release_mbid": "89b9a362-af9b-4a19-8e56-647355a73f39",
             "caa_id": 11188355897,
             "caa_release_mbid": "89b9a362-af9b-4a19-8e56-647355a73f39",
+            "artists": [
+              {
+                "artist_credit_name": "X Ambassadors",
+                "join_phrase": "",
+                "artist_mbid": "298f4089-1948-44b5-b5e8-d5381f42362f"
+              }
+            ],
             "track_name": "Renegades",
             "listen_count": 2
           },
@@ -633,6 +966,13 @@
             "release_mbid": "e00b32b1-a697-4679-b085-52eb6bd5ffd9",
             "caa_id": 6325697296,
             "caa_release_mbid": "e00b32b1-a697-4679-b085-52eb6bd5ffd9",
+            "artists": [
+              {
+                "artist_credit_name": "Beyoncé",
+                "join_phrase": "",
+                "artist_mbid": "859d0860-d480-4efd-970c-c05d5f1776b8"
+              }
+            ],
             "track_name": "Halo",
             "listen_count": 2
           },
@@ -653,6 +993,13 @@
             "release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
             "caa_id": 29093344876,
             "caa_release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
+            "artists": [
+              {
+                "artist_credit_name": "Olivia Rodrigo",
+                "join_phrase": "",
+                "artist_mbid": "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+              }
+            ],
             "track_name": "jealousy, jealousy",
             "listen_count": 1
           },
@@ -666,6 +1013,13 @@
             "release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
             "caa_id": 29093344876,
             "caa_release_mbid": "92f78019-e5e6-4ce2-86ab-6057a8396f4a",
+            "artists": [
+              {
+                "artist_credit_name": "Olivia Rodrigo",
+                "join_phrase": "",
+                "artist_mbid": "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+              }
+            ],
             "track_name": "good 4 u",
             "listen_count": 1
           },
@@ -679,6 +1033,13 @@
             "release_mbid": "96a204c8-e368-436f-a1e6-37f13f302108",
             "caa_id": 26607171644,
             "caa_release_mbid": "96a204c8-e368-436f-a1e6-37f13f302108",
+            "artists": [
+              {
+                "artist_credit_name": "Dua Lipa",
+                "join_phrase": "",
+                "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+              }
+            ],
             "track_name": "Physical",
             "listen_count": 1
           },
@@ -692,6 +1053,18 @@
             "release_mbid": "5fe133cb-d394-4089-a5e1-ec1e27bf4fe3",
             "caa_id": 7179546566,
             "caa_release_mbid": "5fe133cb-d394-4089-a5e1-ec1e27bf4fe3",
+            "artists": [
+              {
+                "artist_credit_name": "Shakira",
+                "join_phrase": " feat. ",
+                "artist_mbid": "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+              },
+              {
+                "artist_credit_name": "Wyclef Jean",
+                "join_phrase": "",
+                "artist_mbid": "4f29ecd7-21a5-4c03-b9ba-d0cfe9488f8c"
+              }
+            ],
             "track_name": "Hips Don't Lie ft. Wyclef Jean",
             "listen_count": 1
           },
@@ -705,6 +1078,13 @@
             "release_mbid": "2866428a-8a00-354d-af5c-0648746a1202",
             "caa_id": 10964653558,
             "caa_release_mbid": "2866428a-8a00-354d-af5c-0648746a1202",
+            "artists": [
+              {
+                "artist_credit_name": "Beyoncé",
+                "join_phrase": "",
+                "artist_mbid": "859d0860-d480-4efd-970c-c05d5f1776b8"
+              }
+            ],
             "track_name": "Halo",
             "listen_count": 1
           },
@@ -718,6 +1098,13 @@
             "release_mbid": "c6a3c8a1-1c6e-4fef-a3f4-6b24eb064c19",
             "caa_id": 24872573548,
             "caa_release_mbid": "c6a3c8a1-1c6e-4fef-a3f4-6b24eb064c19",
+            "artists": [
+              {
+                "artist_credit_name": "Harry Styles",
+                "join_phrase": "",
+                "artist_mbid": "7eb1ce54-a355-41f9-8d68-e018b096d427"
+              }
+            ],
             "track_name": "Golden",
             "listen_count": 1
           },
@@ -731,6 +1118,13 @@
             "release_mbid": "5f68e32a-ccc1-4b01-a4de-daa880bf3864",
             "caa_id": 8059714826,
             "caa_release_mbid": "5f68e32a-ccc1-4b01-a4de-daa880bf3864",
+            "artists": [
+              {
+                "artist_credit_name": "*NSYNC",
+                "join_phrase": "",
+                "artist_mbid": "603ba565-3967-4be1-931e-9cb945394e86"
+              }
+            ],
             "track_name": "Bye Bye Bye",
             "listen_count": 1
           },
@@ -744,6 +1138,13 @@
             "release_mbid": "315bbc48-dea9-463c-bfa9-a6ccab78b990",
             "caa_id": 25806517352,
             "caa_release_mbid": "315bbc48-dea9-463c-bfa9-a6ccab78b990",
+            "artists": [
+              {
+                "artist_credit_name": "Dua Lipa",
+                "join_phrase": "",
+                "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+              }
+            ],
             "track_name": "Break My Heart",
             "listen_count": 1
           }

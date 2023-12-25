@@ -31,6 +31,8 @@
 @import "tags.less";
 @import "artist-similarity.less";
 @import "stats-art-creator.less";
+@import "entity-pages.less";
+@import "release-card.less";
 
 @icon-font-path: "/static/fonts/";
 
@@ -239,12 +241,17 @@ pre code.hljs {
 }
 
 // Allows styling of elements other than <a> in Bootstrap dropdowns
-.dropdown-menu > li > * {
-  &:extend(.dropdown-menu>li>a all);
-  background: inherit;
-  border: none;
-  width: 100%;
-  text-align: left;
+.dropdown-menu > li {
+  max-width: 300px;
+  > * {
+    &:extend(.dropdown-menu>li>a all);
+    background: inherit;
+    border: none;
+    width: 100%;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .full-page-loader {

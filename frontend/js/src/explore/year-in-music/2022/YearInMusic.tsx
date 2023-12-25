@@ -592,7 +592,7 @@ export default class YearInMusic extends React.Component<
                               <a
                                 href={
                                   release.release_mbid
-                                    ? `https://musicbrainz.org/release/${release.release_mbid}/`
+                                    ? `/release/${release.release_mbid}/`
                                     : undefined
                                 }
                                 target="_blank"

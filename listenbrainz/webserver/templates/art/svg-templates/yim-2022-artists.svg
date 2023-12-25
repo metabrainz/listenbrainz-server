@@ -34,16 +34,13 @@
             <text class="branding" x="844" y="43">2022</text>
         </g>
         <g>
-            <text class="artist-name" y="155" x="-20">{{ artists[0].artist_name|upper|e }}</text>
-            <text class="artist-name" y="230" x="-20">{{ artists[1].artist_name|upper|e }}</text>
-            <text class="artist-name" y="305" x="-20">{{ artists[2].artist_name|upper|e }}</text>
-            <text class="artist-name" y="380" x="-20">{{ artists[3].artist_name|upper|e }}</text>
-            <text class="artist-name" y="455" x="-20">{{ artists[4].artist_name|upper|e }}</text>
-            <text class="artist-name" y="530" x="-20">{{ artists[5].artist_name|upper|e }}</text>
-            <text class="artist-name" y="605" x="-20">{{ artists[6].artist_name|upper|e }}</text>
-            <text class="artist-name" y="680" x="-20">{{ artists[7].artist_name|upper|e }}</text>
-            <text class="artist-name" y="755" x="-20">{{ artists[8].artist_name|upper|e }}</text>
-            <text class="artist-name" y="830" x="-20">{{ artists[9].artist_name|upper|e }}</text>
+            {% set y_start = 155 %}
+            {% set gap = 75 %}
+            {% for artist in artists[:10] %}
+                <text class="artist-name" y="{{ y_start + loop.index0 * gap }}" x="-20">
+                    {{ artist.artist_name|upper|e }}
+                </text>
+            {% endfor %}
         </g>
     </g>
 </svg>

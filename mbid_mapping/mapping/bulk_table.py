@@ -159,9 +159,14 @@ class BulkInsertTable:
         """
             This function creates the temp table, given the provided specification.
         """
+        if self.lb_conn is not None:
+            conn = self.lb_conn
+            unlogged = False
+        else:
+            conn = self.mb_conn
+            unlogged = True
 
         # drop/create finished table
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
         try:
             with conn.cursor() as curs:
                 if "." in self.table_name:
@@ -187,7 +192,7 @@ class BulkInsertTable:
                 columns = ", ".join(columns)
 
                 curs.execute(f"DROP TABLE IF EXISTS {self.temp_table_name}")
-                curs.execute(f"CREATE TABLE {self.temp_table_name} ({columns})")
+                curs.execute(f"CREATE {'UNLOGGED' if unlogged else ''} TABLE {self.temp_table_name} ({columns})")
                 conn.commit()
 
         except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
@@ -293,7 +298,7 @@ class BulkInsertTable:
                 if not no_swap_transaction:
                     conn.commit()
 
-        except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
+        except psycopg2.Error as err:
             log(f"{self.table_name}: failed to swap into production", err)
             if not no_swap_transaction:
                 conn.rollback()

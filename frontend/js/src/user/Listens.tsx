@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Integrations } from "@sentry/tracing";
-import {cloneDeep, get, isEmpty, isEqual, isNil} from "lodash";
+import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
@@ -276,7 +276,7 @@ export default class Listens extends React.Component<
           artists: metadata?.artist?.artists?.map((artist, index) => {
             return {
               artist_credit_name: artist.name,
-              join_phrase: artist.join_phrase,
+              join_phrase: artist.join_phrase ?? "",
               artist_mbid: artist_mbids[index],
             };
           }),
