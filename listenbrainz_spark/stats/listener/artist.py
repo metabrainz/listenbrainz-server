@@ -49,6 +49,7 @@ def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -
         ), entity_count as (
             SELECT artist_mbid
                  , SUM(listen_count) as total_listen_count
+                 , COUNT(DISTINCT user_id) as total_user_count
               FROM intermediate_table
           GROUP BY artist_mbid      
         ), ranked_stats as (
@@ -79,6 +80,7 @@ def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -
                  , artist_name
                  , listeners
                  , total_listen_count
+                 , total_user_count
               FROM grouped_stats
               JOIN entity_count
              USING (artist_mbid)
