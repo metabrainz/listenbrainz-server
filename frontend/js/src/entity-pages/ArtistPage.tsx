@@ -52,6 +52,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
+    total_user_count: userCount
   } = listeningStats;
 
   const [artist, setArtist] = React.useState(initialArtist);
@@ -354,7 +355,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             <div className="separator" />
             <div className="text-center">
               <div className="number">
-                {bigNumberFormatter.format(topListeners.length)}
+                {bigNumberFormatter.format(userCount)}
               </div>
               <div className="text-muted small">
                 <FontAwesomeIcon icon={faUserAstronaut} /> listeners
