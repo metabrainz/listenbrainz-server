@@ -62,6 +62,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
+    total_user_count: userCount,
   } = listening_stats;
 
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
@@ -376,7 +377,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             <div className="separator" />
             <div className="text-center">
               <div className="number">
-                {bigNumberFormatter.format(topListeners.length)}
+                {bigNumberFormatter.format(userCount)}
               </div>
               <div className="text-muted small">
                 <FontAwesomeIcon icon={faUserAstronaut} /> listeners
