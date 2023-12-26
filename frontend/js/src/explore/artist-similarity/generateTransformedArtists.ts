@@ -13,8 +13,8 @@ const NULL_SCORE = Infinity;
 const MAIN_NODE_COLOR = "rgba(53, 48, 112, 1)";
 
 function generateTransformedArtists(
-  mainArtist: ArtistType,
-  similarArtistsList: ArtistType[],
+  mainArtist: ArtistNodeInfo,
+  similarArtistsList: ArtistNodeInfo[],
   releaseHueSoundColor: tinycolor.Instance,
   recordingHueSoundColor: tinycolor.Instance,
   similarArtistsLimit: number
@@ -24,7 +24,7 @@ function generateTransformedArtists(
   );
 
   const scoreList = similarArtistsList.map(
-    (similarArtist: ArtistType, index: number) =>
+    (similarArtist: ArtistNodeInfo, index: number) =>
       minScore / Math.sqrt(similarArtist?.score ?? NULL_SCORE)
   );
 
@@ -62,7 +62,7 @@ function generateTransformedArtists(
   return {
     nodes: [mainArtistNode, ...similarArtistNodes],
     links: similarArtistsList.map(
-      (similarArtist: ArtistType, index: number): LinkType => {
+      (similarArtist: ArtistNodeInfo, index: number): LinkType => {
         return {
           source: mainArtist.artist_mbid,
           target:

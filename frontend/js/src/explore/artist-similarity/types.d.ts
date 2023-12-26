@@ -1,4 +1,4 @@
-type ArtistType = {
+type ArtistNodeInfo = {
   artist_mbid: string;
   name: string;
   comment?: string;

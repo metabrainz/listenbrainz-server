@@ -8,6 +8,7 @@ import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
+import { isEqual } from "lodash";
 import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
@@ -27,6 +28,11 @@ type ArtistSimilarityProps = {
 const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
 const BACKGROUND_ALPHA = 0.2;
 
+const colorGenerator = (): [tinycolor.Instance, tinycolor.Instance] => {
+  const initialColor = tinycolor(`hsv(${Math.random() * 360}, 100%, 90%)`);
+  return [initialColor, initialColor.clone().tetrad()[1]];
+};
+
 function ArtistSimilarity(props: ArtistSimilarityProps) {
   const {
     algorithm: DEFAULT_ALGORITHM,
@@ -34,6 +40,7 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
   } = props;
 
   const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbid=`;
+  const DEFAULT_COLORS = colorGenerator();
 
   const { APIService } = React.useContext(GlobalAppContext);
   const [similarArtistsLimit, setSimilarArtistsLimit] = React.useState(
@@ -41,17 +48,19 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
   );
 
   const [similarArtistsList, setSimilarArtistsList] = React.useState<
-    Array<ArtistType>
+    Array<ArtistNodeInfo>
   >([]);
   const [
     completeSimilarArtistsList,
     setCompleteSimilarArtistsList,
-  ] = React.useState<Array<ArtistType>>([]);
+  ] = React.useState<Array<ArtistNodeInfo>>([]);
 
-  const [colors, setColors] = React.useState([
-    tinycolor("#FF87AE"),
-    tinycolor("#001616"),
-  ]);
+  const [artistGraphNodeInfo, setArtistGraphNodeInfo] = React.useState<
+    ArtistNodeInfo
+  >();
+
+  const [colors, setColors] = React.useState(DEFAULT_COLORS);
+  const [loading, setLoading] = React.useState<boolean>(false);
 
   const [currentTracks, setCurrentTracks] = React.useState<Array<Listen>>([]);
 
@@ -100,6 +109,7 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
           throw new Error("No Similar Artists Found");
         }
 
+        setArtistGraphNodeInfo(data[1]?.data[0] ?? null);
         const similarArtists = data[3]?.data ?? [];
 
         setCompleteSimilarArtistsList(similarArtists);
@@ -115,7 +125,7 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
         );
       }
     },
-    [similarArtistsLimit]
+    [similarArtistsLimit, BASE_URL]
   );
 
   const updateSimilarArtistsLimit = (limit: number) => {
@@ -125,14 +135,9 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
 
   const transformedArtists = React.useMemo(
     () =>
-      artistInfo
+      artistGraphNodeInfo
         ? generateTransformedArtists(
-            {
-              artist_mbid: artistInfo.artist_mbid,
-              name: artistInfo.name,
-              type: artistInfo.type,
-              gender: artistInfo.gender,
-            },
+            artistGraphNodeInfo,
             similarArtistsList,
             colors[0],
             colors[1],
@@ -142,7 +147,7 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
             nodes: [],
             links: [],
           },
-    [artistInfo, similarArtistsList, colors, similarArtistsLimit]
+    [artistGraphNodeInfo, similarArtistsList, colors, similarArtistsLimit]
   );
 
   const fetchArtistInfo = React.useCallback(
@@ -184,19 +189,23 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
 
       const topAlbumReleaseColor = topAlbumsForArtist[0]?.release_color;
       const topRecordingReleaseColor = topRecordingsForArtist[0]?.release_color;
+      if (
+        !topAlbumReleaseColor ||
+        !topRecordingReleaseColor ||
+        isEqual(topAlbumReleaseColor, topRecordingReleaseColor)
+      ) {
+        setColors((prevColors) => [prevColors[1], prevColors[1].tetrad()[1]]);
+      } else {
+        setColors([
+          tinycolor(
+            `rgb(${topAlbumReleaseColor.red}, ${topAlbumReleaseColor.green}, ${topAlbumReleaseColor.blue})`
+          ),
+          tinycolor(
+            `rgb(${topRecordingReleaseColor.red}, ${topRecordingReleaseColor.green}, ${topRecordingReleaseColor.blue})`
+          ),
+        ]);
+      }
 
-      setColors([
-        tinycolor(
-          topAlbumReleaseColor
-            ? `rgb(${topAlbumReleaseColor.red}, ${topAlbumReleaseColor.green}, ${topAlbumReleaseColor.blue})`
-            : "#FF87AE"
-        ),
-        tinycolor(
-          topRecordingsForArtist[0]?.release_color
-            ? `rgb(${topRecordingReleaseColor.red}, ${topRecordingReleaseColor.green}, ${topRecordingReleaseColor.blue})`
-            : "#001616"
-        ),
-      ]);
       return newArtistInfo;
     },
     [APIService]
@@ -217,10 +226,12 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
   const onArtistChange = React.useCallback(
     async (artistMBID: string) => {
       try {
-        const [_, newArtistInfo] = await Promise.all([
-          fetchArtistSimilarityInfo(artistMBID),
+        setLoading(true);
+        const [newArtistInfo, _] = await Promise.all([
           fetchArtistInfo(artistMBID),
+          fetchArtistSimilarityInfo(artistMBID),
         ]);
+        setLoading(false);
         const topTracksAsListen = newArtistInfo?.topTracks?.map((topTrack) => ({
           listened_at: 0,
           track_metadata: {
@@ -286,7 +297,7 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
           background={backgroundGradient}
           graphParentElementRef={graphParentElementRef}
         />
-        {artistInfo && <Panel artistInfo={artistInfo} />}
+        {artistInfo && <Panel artistInfo={artistInfo} loading={loading} />}
       </div>
       <BrainzPlayer
         listens={currentTracks ?? []}
