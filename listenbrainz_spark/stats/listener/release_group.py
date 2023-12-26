@@ -73,7 +73,7 @@ def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -
                  , caa_release_mbid
                  , user_id 
                  , listen_count
-                 , row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rank
+                 , row_number() OVER (PARTITION BY release_group_mbid ORDER BY listen_count DESC) AS rank
               FROM intermediate_table
         ), grouped_stats AS (
             SELECT release_group_mbid
