@@ -242,7 +242,10 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                             rgd.caa_id,
                                             rgd.caa_release_mbid
                                         ) ORDER BY rgd.date
-                                   ) AS release_groups
+                                   )
+                                    -- if the artist has no release groups, left join will cause a NULL row to be
+                                    -- added to the array, filter ensures that it is removed
+                                    FILTER (WHERE rgd.release_group_mbid IS NOT NULL) AS release_groups
                               FROM musicbrainz.artist a
                          LEFT JOIN musicbrainz.artist_type at
                                 ON a.type = at.id
