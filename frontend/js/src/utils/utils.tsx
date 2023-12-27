@@ -249,22 +249,22 @@ const getArtistName = (
 
 const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
   return (
-      <>
-        {artists.map((artist) => (
-          <>
-            <a
-              href={`/artist/${artist.artist_mbid}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={artist.artist_credit_name}
-            >
-              {artist.artist_credit_name}
-            </a>
-            {artist.join_phrase}
-          </>
-        ))}
-      </>
-    );
+    <>
+      {artists.map((artist) => (
+        <>
+          <a
+            href={`/artist/${artist.artist_mbid}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={artist.artist_credit_name}
+          >
+            {artist.artist_credit_name}
+          </a>
+          {artist.join_phrase}
+        </>
+      ))}
+    </>
+  );
 };
 
 const getStatsArtistLink = (artists?: MBIDMappingArtist[], artist_name?: string, artist_mbids?: string[]) => {
