@@ -415,7 +415,7 @@ def taste(user_name: str):
 
 @user_bp.route("/<user_name>/year-in-music/")
 @user_bp.route("/<user_name>/year-in-music/<int:year>/")
-def year_in_music(user_name, year: int = 2022):
+def year_in_music(user_name, year: int = 2023):
     """ Year in Music """
     if year != 2021 and year != 2022 and year != 2023:
         raise NotFound(f"Cannot find Year in Music report for year: {year}")
