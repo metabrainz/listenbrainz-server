@@ -1011,9 +1011,9 @@ export default class YearInMusic extends React.Component<
                 <div className="graph-container">
                   <div className="graph">
                     <ResponsiveBar
-                      margin={{ left: 50, bottom: 30 }}
+                      margin={{ left: 50, bottom: 30, right: 30, top: 30 }}
                       data={mostListenedYearDataForGraph}
-                      padding={1}
+                      padding={0.1}
                       layout="vertical"
                       keys={["songs"]}
                       indexBy="year"
