@@ -556,7 +556,7 @@ def _cover_art_yim_overview(user_name, stats, year):
 @art_api_bp.route("/year-in-music/<int:year>/<user_name>", methods=["GET"])
 @crossdomain
 @ratelimit()
-def cover_art_yim(user_name, year: int = 2022):
+def cover_art_yim(user_name, year: int = 2023):
     """ Create the shareable svg image using YIM stats """
     user = db_user.get_by_mb_id(user_name)
     if user is None:
