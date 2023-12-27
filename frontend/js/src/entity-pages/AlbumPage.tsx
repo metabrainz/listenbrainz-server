@@ -11,7 +11,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, merge } from "lodash";
+import { chain, flatMap, isEmpty, merge } from "lodash";
 import tinycolor from "tinycolor2";
 import {
   getRelIconLink,
@@ -43,8 +43,14 @@ type AlbumRecording = {
   total_listen_count: number;
   total_user_count: number;
 };
+
 export type AlbumPageProps = {
-  recordings?: Array<AlbumRecording>;
+  mediums?: Array<{
+    name: string;
+    position: number;
+    format: string;
+    tracks?: Array<AlbumRecording>;
+  }>;
   release_group_mbid: string;
   release_group_metadata: ReleaseGroupMetadataLookup;
   type: string;
@@ -58,7 +64,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const {
     release_group_metadata: initialReleaseGroupMetadata,
     release_group_mbid,
-    recordings,
+    mediums,
     caa_id,
     caa_release_mbid,
     type,
@@ -81,7 +87,8 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   } = metadata as ReleaseGroupMetadataLookup;
   const releaseGroupTags = tag?.release_group;
 
-  const [trackList, setTrackList] = React.useState(recordings);
+  // JSPF Tracks fetched using the recording mbids above
+  const [popularTracks, setPopularTracks] = React.useState<JSPFTrack[]>([]);
   const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
@@ -153,19 +160,24 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const artistName = artist?.name ?? "";
 
   const listensFromAlbumRecordings =
-    trackList?.map(
-      (track): Listen =>
-        popularRecordingToListen(
-          merge(track, {
-            artist_name: artistName,
-            artist_mbids: artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
-            caa_id: Number(caa_id) || undefined,
-            caa_release_mbid,
-            recording_name: track.name,
-            release_mbid: caa_release_mbid ?? "",
-            release_name: album.name,
-          })
-        )
+    flatMap(
+      mediums,
+      (medium) =>
+        medium?.tracks?.map(
+          (track): Listen =>
+            popularRecordingToListen(
+              merge(track, {
+                artist_name: artistName,
+                artist_mbids:
+                  artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
+                caa_id: Number(caa_id) || undefined,
+                caa_release_mbid,
+                recording_name: track.name,
+                release_mbid: caa_release_mbid ?? "",
+                release_name: album.name,
+              })
+            )
+        ) ?? []
     ) ?? [];
 
   const filteredTags = chain(releaseGroupTags)
@@ -177,6 +189,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const bigNumberFormatter = Intl.NumberFormat(undefined, {
     notation: "compact",
   });
+  const showMediumTitle = (mediums?.length ?? 0) > 1;
 
   return (
     <div
@@ -325,33 +338,51 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               )}
             </h3>
           </div>
-          {trackList?.map((recording, index) => {
-            let listenCountComponent;
-            if (recording && Number.isFinite(recording.total_listen_count)) {
-              listenCountComponent = (
-                <span className="badge badge-info">
-                  {bigNumberFormatter.format(recording.total_listen_count)}
-                  &nbsp;
-                  <FontAwesomeIcon icon={faHeadphones} />
-                </span>
-              );
-            }
-            const listenFromRecording = listensFromAlbumRecordings[index];
-            let thumbnailReplacement;
-            if (Number.isFinite(recording.position)) {
-              thumbnailReplacement = (
-                <div className="track-position">{recording.position}.</div>
-              );
-            }
+          {mediums?.map((medium) => {
             return (
-              <ListenCard
-                key={recording.name}
-                customThumbnail={thumbnailReplacement}
-                listen={listenFromRecording}
-                showTimestamp={false}
-                showUsername={false}
-                additionalActions={listenCountComponent}
-              />
+              <>
+                {showMediumTitle && (
+                  <h4 className="header-with-line">
+                    {medium.format} {medium.position}: {medium.name}
+                  </h4>
+                )}
+                {medium?.tracks?.map((recording, index) => {
+                  let listenCountComponent;
+                  if (
+                    recording &&
+                    Number.isFinite(recording.total_listen_count)
+                  ) {
+                    listenCountComponent = (
+                      <span className="badge badge-info">
+                        {bigNumberFormatter.format(
+                          recording.total_listen_count
+                        )}
+                        &nbsp;
+                        <FontAwesomeIcon icon={faHeadphones} />
+                      </span>
+                    );
+                  }
+                  const listenFromRecording = listensFromAlbumRecordings[index];
+                  let thumbnailReplacement;
+                  if (Number.isFinite(recording.position)) {
+                    thumbnailReplacement = (
+                      <div className="track-position">
+                        {recording.position}.
+                      </div>
+                    );
+                  }
+                  return (
+                    <ListenCard
+                      key={recording.name}
+                      customThumbnail={thumbnailReplacement}
+                      listen={listenFromRecording}
+                      showTimestamp={false}
+                      showUsername={false}
+                      additionalActions={listenCountComponent}
+                    />
+                  );
+                })}
+              </>
             );
           })}
         </div>
@@ -456,7 +487,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   const {
-    recordings,
+    mediums,
     release_group_mbid,
     caa_id,
     caa_release_mbid,
@@ -481,7 +512,7 @@ document.addEventListener("DOMContentLoaded", () => {
             release_group_metadata={
               release_group_metadata as ReleaseGroupMetadataLookup
             }
-            recordings={recordings}
+            mediums={mediums}
             release_group_mbid={release_group_mbid}
             caa_id={caa_id}
             caa_release_mbid={caa_release_mbid}

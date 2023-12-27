@@ -135,7 +135,7 @@ def get_counts(entity, mbids):
             "total_listen_count": total_listen_count,
             "total_user_count": total_user_count
         })
-    return entity_data
+    return entity_data, index
 
 
 def get_top_recordings_for_artist(artist_mbid, count=None):

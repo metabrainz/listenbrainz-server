@@ -123,7 +123,7 @@ def artist_entity(artist_mbid):
 
     release_group_data = artist_data[0].release_group_data
     release_group_mbids = [rg["mbid"] for rg in release_group_data]
-    popularity_data = popularity.get_counts("release_group", release_group_mbids)
+    popularity_data, _ = popularity.get_counts("release_group", release_group_mbids)
 
     release_groups = []
     for release_group, pop in zip(release_group_data, popularity_data):
@@ -177,16 +177,19 @@ def album_entity(release_group_mbid):
         raise NotFound(f"Release group mbid {release_group_mbid} not found in the metadata cache")
     release_group = metadata[release_group_mbid]
 
-    recording_data = release_group.pop("recording").get("recordings", [])
-    recording_mbids = [rec["recording_mbid"] for rec in recording_data]
-    popularity_data = popularity.get_counts("recording", recording_mbids)
+    mediums = release_group.pop("recording").get("mediums", [])
+    recording_mbids = []
+    for medium in mediums:
+        for track in medium["tracks"]:
+            recording_mbids.append(track["recording_mbid"])
+    popularity_data, popularity_index = popularity.get_counts("recording", recording_mbids)
 
-    recordings = []
-    for rec, pop in zip(recording_data, popularity_data):
-        recording = dict(rec)
-        recording["total_listen_count"] = pop["total_listen_count"]
-        recording["total_user_count"] = pop["total_user_count"]
-        recordings.append(recording)
+    for medium in mediums:
+        for track in medium["tracks"]:
+            track["total_listen_count"], track["total_user_count"] = popularity_index.get(
+                track["recording_mbid"],
+                (None, None)
+            )
 
     listening_stats = get_entity_listener("release_groups", release_group_mbid, "all_time")
     if listening_stats is None:
@@ -198,7 +201,7 @@ def album_entity(release_group_mbid):
     props = {
         "release_group_mbid": release_group_mbid,
         "release_group_metadata": release_group,
-        "recordings": recordings,
+        "mediums": mediums,
         "caa_id": release_group["release_group"]["caa_id"],
         "caa_release_mbid": release_group["release_group"]["caa_release_mbid"],
         "type": release_group["release_group"].get("type"),

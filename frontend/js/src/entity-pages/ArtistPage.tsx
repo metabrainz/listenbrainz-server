@@ -52,7 +52,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
-    total_user_count: userCount
+    total_user_count: userCount,
   } = listeningStats;
 
   const [artist, setArtist] = React.useState(initialArtist);
