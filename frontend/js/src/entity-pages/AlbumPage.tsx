@@ -11,9 +11,13 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty } from "lodash";
+import { chain, isEmpty, merge } from "lodash";
 import tinycolor from "tinycolor2";
-import { getRelIconLink, ListeningStats } from "./utils";
+import {
+  getRelIconLink,
+  ListeningStats,
+  popularRecordingToListen,
+} from "./utils";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
@@ -29,17 +33,18 @@ import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
-import { JSPFTrackToListen } from "../playlists/utils";
 
+// not the same format of tracks as what we get in the ArtistPage props
+type AlbumRecording = {
+  length: number;
+  name: string;
+  position: number;
+  recording_mbid: string;
+  total_listen_count: number;
+  total_user_count: number;
+};
 export type AlbumPageProps = {
-  recordings?: Array<{
-    length: number;
-    name: string;
-    position: number;
-    recording_mbid: string;
-    total_listen_count: number;
-    total_user_count: number;
-  }>;
+  recordings?: Array<AlbumRecording>;
   release_group_mbid: string;
   release_group_metadata: ReleaseGroupMetadataLookup;
   type: string;
@@ -75,10 +80,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   } = metadata as ReleaseGroupMetadataLookup;
   const releaseGroupTags = tag?.release_group;
 
-  // Data we get from the back end, doesn't contain metadata
   const [trackList, setTrackList] = React.useState(recordings);
-  // JSPF Tracks fetched using the recording mbids above
-  const [popularTracks, setPopularTracks] = React.useState<JSPFTrack[]>([]);
   const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
@@ -147,14 +149,29 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     fetchReviews();
   }, [APIService, release_group_mbid, caa_id, caa_release_mbid]);
 
-  const listensFromJSPFTracks = popularTracks.map(JSPFTrackToListen) ?? [];
+  const artistName = artist?.name ?? "";
+
+  const listensFromAlbumRecordings =
+    trackList?.map(
+      (track): Listen =>
+        popularRecordingToListen(
+          merge(track, {
+            artist_name: artistName,
+            artist_mbids: artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
+            caa_id: Number(caa_id) || undefined,
+            caa_release_mbid,
+            recording_name: track.name,
+            release_mbid: caa_release_mbid ?? "",
+            release_name: album.name,
+          })
+        )
+    ) ?? [];
+
   const filteredTags = chain(releaseGroupTags)
     .filter("genre_mbid")
     .sortBy("count")
     .value()
     .reverse();
-
-  const artistName = artist?.name ?? "";
 
   const bigNumberFormatter = Intl.NumberFormat(undefined, {
     notation: "compact",
@@ -287,7 +304,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           <div className="header">
             <h3 className="header-with-line">
               Tracklist
-              {Boolean(listensFromJSPFTracks?.length) && (
+              {Boolean(listensFromAlbumRecordings?.length) && (
                 <button
                   type="button"
                   className="btn btn-info btn-rounded play-tracks-button"
@@ -296,7 +313,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                     window.postMessage(
                       {
                         brainzplayer_event: "play-listen",
-                        payload: listensFromJSPFTracks,
+                        payload: listensFromAlbumRecordings,
                       },
                       window.location.origin
                     );
@@ -307,7 +324,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               )}
             </h3>
           </div>
-          {trackList?.map((recording) => {
+          {trackList?.map((recording, index) => {
             let listenCountComponent;
             if (recording && Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
@@ -318,33 +335,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                 </span>
               );
             }
-            const listenFromRecording: Listen = {
-              listened_at: 0,
-              track_metadata: {
-                artist_name: artistName,
-                track_name: recording.name,
-                recording_mbid: recording.recording_mbid,
-                additional_info: {
-                  artist_mbids:
-                    artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
-                  release_artist_names: artist?.artists?.map((ar) => ar.name),
-                  duration_ms: recording.length,
-                  tracknumber: recording.position,
-                  recording_mbid: recording.recording_mbid,
-                },
-                mbid_mapping: {
-                  release_mbid: caa_release_mbid ?? "",
-                  artist_mbids:
-                    artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
-                  recording_mbid: recording.recording_mbid,
-                  artists: artist.artists.map((ar) => ({
-                    ...ar,
-                    artist_credit_name: ar.name,
-                    join_phrase: ar.join_phrase ?? "",
-                  })),
-                },
-              },
-            };
+            const listenFromRecording = listensFromAlbumRecordings[index];
             let thumbnailReplacement;
             if (Number.isFinite(recording.position)) {
               thumbnailReplacement = (
@@ -437,7 +428,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         </div>
       </div>
       <BrainzPlayer
-        listens={listensFromJSPFTracks}
+        listens={listensFromAlbumRecordings}
         listenBrainzAPIBaseURI={APIService.APIBaseURI}
         refreshSpotifyToken={APIService.refreshSpotifyToken}
         refreshYoutubeToken={APIService.refreshYoutubeToken}
