@@ -62,11 +62,13 @@
     overflow-x: scroll;
     .graph {
       min-width: min(700px, 100%);
-      width:100%;
+      width: 100%;
     }
   }
 
-  #calendar, #most-listened-year, #user-artist-map {
+  #calendar,
+  #most-listened-year,
+  #user-artist-map {
     > h3 {
       padding: 0.6em;
     }
@@ -97,13 +99,13 @@
     display: block;
     margin-left: auto;
     margin-right: auto;
-    .user-artist-map{
+    .user-artist-map {
       width: 100%;
       max-height: 70vw;
-      height:auto;
-      > div{
-        min-height:300px;
-        max-height:500px;
+      height: auto;
+      > div {
+        min-height: 300px;
+        max-height: 500px;
       }
     }
   }
@@ -188,7 +190,8 @@
     }
   }
 
-  &.yim-2022, &.yim-2023 {
+  &.yim-2022,
+  &.yim-2023 {
     --swiper-theme-color: @2022red;
     /* Main header section at the top with logo */
     #main-header {
@@ -307,7 +310,7 @@
       padding: 2em;
     }
   }
-  
+
   /* Styles specific to YIM 2022 */
   &.yim-2022 {
     --swiper-theme-color: @2022red;
@@ -326,12 +329,12 @@
         @media (min-width: @screen-sm) {
           display: none;
         }
-        border-top-color: @2022red;
         width: 0;
         height: 0;
         border-left: 7px solid transparent;
         border-right: 7px solid transparent;
         border-top: 12px solid;
+        border-top-color: @2022red;
       }
     }
     .header-image {
@@ -397,9 +400,9 @@
     }
   }
   &.yim-2023 {
-    --selectedColor: #4C6C52;
+    --selectedColor: #4c6c52;
     --swiper-navigation-color: var(--selectedColor);
-    @cream: #F0EEE2;
+    @cream: #f0eee2;
     @text-color: @cream;
     @content-background-color: #e0e5de;
     background-color: @cream;
@@ -415,7 +418,8 @@
         margin: 3em 0;
       }
     }
-    #discovery-playlist, #missed-playlist {
+    #discovery-playlist,
+    #missed-playlist {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -432,18 +436,18 @@
       justify-items: center;
       align-items: center;
       .card-container {
-        flex:1;
+        flex: 1;
         scroll-snap-type: x mandatory;
       }
       .buddy {
         scroll-snap-align: start;
         text-align: center;
         max-width: fit-content;
-        .value{
+        .value {
           overflow-wrap: anywhere;
           font-size: 1.5em;
         }
-        .img-container{
+        .img-container {
           display: flex;
           width: 270px;
           height: 270px;
@@ -453,45 +457,52 @@
         }
       }
     }
-    .link-section{
+    .link-section {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 0.5em;
-      input.form-control{
+      input.form-control {
         height: 2em;
       }
     }
     .header .subheader {
       margin-top: 1rem;
     }
-    .yim-share-button, .btn-info {
+    .yim-share-button,
+    .btn-info {
       color: @text-color;
-      background-color: fade(@black,60%);
-      &:hover{
-        background-color: fade(@black,40%);
+      background-color: fade(@black, 60%);
+      &:hover {
+        background-color: fade(@black, 40%);
       }
     }
-    .lb-follow-button{
+    .lb-follow-button {
       border: none;
     }
     .user-name {
       line-break: anywhere;
     }
-    .user-name, .hashtag {
+    .user-name,
+    .hashtag {
       text-transform: uppercase;
       letter-spacing: 1em;
       font-size: 2em;
       font-weight: 900;
-      font-family: 'Inter', 'Roboto', sans-serif;
+      font-family: "Inter", "Roboto", sans-serif;
       text-align: center;
-      @media (max-width:@screen-sm){
+      @media (max-width: @screen-sm) {
         letter-spacing: 1rem;
       }
     }
-    .color-picker{
+    .color-picker {
       position: relative;
+      gap: 1em;
+      padding: 2rem;
+      display: inline-flex;
+      justify-content: center;
+      margin: auto;
       .pick-color-caption {
         position: absolute;
         left: max(-15vw, -180px);
@@ -513,7 +524,7 @@
         font-weight: 700;
         font-size: 48px;
         line-height: 56px;
-        color:@cream;
+        color: @cream;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -532,12 +543,13 @@
           font-size: 38px;
         }
       }
-      h3,h4 {
+      h3,
+      h4 {
         a {
-          color:inherit;
+          color: inherit;
           font-weight: initial;
         }
-        color:inherit;
+        color: inherit;
       }
     }
     .graph-container {
@@ -547,12 +559,14 @@
         color: var(--selectedColor);
       }
     }
-    .swiper, .similar-users-list, .graph-container{
+    .swiper,
+    .similar-users-list,
+    .graph-container {
       background-color: @content-background-color;
     }
     .masked-image {
       display: inline-block;
-      background-color:  var(--selectedColor);
+      background-color: var(--selectedColor);
       mask-size: 98%; /* edges might get cut off if you use 100% */
       mask-repeat: no-repeat;
       mask-position: center;
@@ -561,22 +575,15 @@
       -webkit-mask-position: center;
       > img {
         opacity: 0;
-        display:block;
+        display: block;
       }
     }
     .section {
       margin-top: 4em;
       margin-bottom: 2em;
     }
-    .closing-remarks{
+    .closing-remarks {
       color: var(--selectedColor);
-    }
-    .color-picker {
-      gap: 1em;
-      padding: 2rem;
-      display: inline-flex;
-      justify-content: center;
-      margin: auto;
     }
     .small-stats {
       display: flex;
@@ -592,7 +599,7 @@
       font-size: 1.8rem;
       text-align: center;
       font-weight: lighter;
-      font-family: 'Roboto', sans-serif;
+      font-family: "Roboto", sans-serif;
       .value {
         position: relative;
         font-size: 2.3em;
@@ -605,23 +612,22 @@
           bottom: 0;
           left: calc(50% - 1.5em);
           width: 3em;
-          height:1px;
+          height: 1px;
           border-bottom: 1px solid @cream;
         }
       }
     }
-    .scrollable-area{
+    .scrollable-area {
       position: relative;
       &::after {
-          content: " ";
-          width: 100%;
-          position: sticky;
-          display: block;
-          bottom: -10px;
-          height: 50px;
-          background: linear-gradient(0deg, var(--selectedColor), transparent);
+        content: " ";
+        width: 100%;
+        position: sticky;
+        display: block;
+        bottom: -10px;
+        height: 50px;
+        background: linear-gradient(0deg, var(--selectedColor), transparent);
       }
     }
   }
 }
-
