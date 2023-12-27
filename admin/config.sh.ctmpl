@@ -5,6 +5,7 @@
 
 DUMP_THREADS="{{template "KEY" "dump_threads"}}"
 DUMP_BASE_DIR="{{template "KEY" "base_dir"}}"
+PRIVATE_DUMP_BASE_DIR="{{template "KEY" "private_base_dir"}}"
 
 # Where to back things up to, who should own the backup files, and what mode
 # those files should have.
@@ -14,6 +15,8 @@ BACKUP_USER="{{template "KEY" "user"}}"
 BACKUP_GROUP="{{template "KEY" "group"}}"
 BACKUP_DIR_MODE=700
 BACKUP_FILE_MODE=600
+
+PRIVATE_BACKUP_DIR="{{template "KEY" "private_backup_dir"}}"
 
 # Same but for the files that need to copied to the FTP server,
 # for public consumption

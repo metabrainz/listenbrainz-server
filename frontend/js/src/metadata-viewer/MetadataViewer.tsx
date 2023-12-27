@@ -243,7 +243,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <br />
               We work hard to make this data available to you as soon as we
               receive it, but until your music service sends us a{" "}
-              <a href="https://listenbrainz.readthedocs.io/en/production/dev/json/?highlight=playing%20now#submission-json">
+              <a href="https://listenbrainz.readthedocs.io/en/latest/users/json.html?highlight=playing%20now#submission-json">
                 <i>playing-now</i> event
               </a>
               , we cannot display anything here.
