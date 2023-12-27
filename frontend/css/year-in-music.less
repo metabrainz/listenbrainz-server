@@ -93,7 +93,7 @@
     margin-left: 0;
   }
   #user-artist-map .graph {
-    width: max-content;
+    width: auto;
     display: block;
     margin-left: auto;
     margin-right: auto;
@@ -193,25 +193,6 @@
     /* Main header section at the top with logo */
     #main-header {
       padding: 3em 2em;
-      background: white;
-      flex-direction: column;
-      @media (max-width: @screen-sm) {
-        // 80% of screen height minus menu bar and BrainzPlayer
-        height: calc(80vh - 84px - 60px);
-        .arrow-down {
-          display: initial;
-        }
-      }
-      .arrow-down {
-        @media (min-width: @screen-sm) {
-          display: none;
-        }
-        width: 0;
-        height: 0;
-        border-left: 7px solid transparent;
-        border-right: 7px solid transparent;
-        border-top: 12px solid;
-      }
     }
     .header-image {
       padding: 1.5em;
@@ -333,8 +314,24 @@
     /* Main header section at the top with logo */
     #main-header {
       background: white;
+      flex-direction: column;
+      @media (max-width: @screen-sm) {
+        // 80% of screen height minus menu bar and BrainzPlayer
+        height: calc(80vh - 84px - 60px);
+        .arrow-down {
+          display: initial;
+        }
+      }
       .arrow-down {
+        @media (min-width: @screen-sm) {
+          display: none;
+        }
         border-top-color: @2022red;
+        width: 0;
+        height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-top: 12px solid;
       }
     }
     .header-image {
@@ -412,6 +409,7 @@
     }
     #main-header {
       background: unset;
+      text-align: center;
       .header-image {
         width: 500px;
         margin: 3em 0;
@@ -427,7 +425,7 @@
       }
     }
     #overview object {
-      max-width: min(500px, 80%);
+      max-width: min(500px, 90%);
     }
     #buddies {
       display: flex;
@@ -440,6 +438,7 @@
       .buddy {
         scroll-snap-align: start;
         text-align: center;
+        max-width: fit-content;
         .value{
           overflow-wrap: anywhere;
           font-size: 1.5em;
@@ -477,6 +476,9 @@
     .lb-follow-button{
       border: none;
     }
+    .user-name {
+      line-break: anywhere;
+    }
     .user-name, .hashtag {
       text-transform: uppercase;
       letter-spacing: 1em;
@@ -492,7 +494,7 @@
       position: relative;
       .pick-color-caption {
         position: absolute;
-        left: -180px;
+        left: max(-15vw, -180px);
         top: -15px;
       }
       .color-selector {
@@ -572,7 +574,9 @@
     .color-picker {
       gap: 1em;
       padding: 2rem;
-      display: flex;
+      display: inline-flex;
+      justify-content: center;
+      margin: auto;
     }
     .small-stats {
       display: flex;

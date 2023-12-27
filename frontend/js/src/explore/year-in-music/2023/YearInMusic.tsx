@@ -554,7 +554,7 @@ export default class YearInMusic extends React.Component<
         role="main"
         style={{ ["--selectedColor" as any]: selectedColor }}
       >
-        <div id="main-header" className="flex-center">
+        <div id="main-header">
           <div className="color-picker">
             <img
               className="pick-color-caption"
@@ -1332,21 +1332,20 @@ export default class YearInMusic extends React.Component<
               >
                 {followingList.slice(0, 15).map((followedUser, index) => {
                   return (
-                    <div className="buddy content-card card">
+                    <a
+                      className="buddy content-card card"
+                      href={`/user/${followedUser}/year-in-music/2023`}
+                    >
                       <div className="img-container">
-                        <a href={`/user/${followedUser}`}>
-                          <img
-                            src={buddiesImages[index % 7]}
-                            alt="Music buddies"
-                          />
-                        </a>
+                        <img
+                          src={buddiesImages[index % 7]}
+                          alt="Music buddies"
+                        />
                       </div>
-                      <a href={`/user/${followedUser}`}>
-                        <div className="small-stat">
-                          <div className="value">{followedUser}</div>
-                        </div>
-                      </a>
-                    </div>
+                      <div className="small-stat">
+                        <div className="value">{followedUser}</div>
+                      </div>
+                    </a>
                   );
                 })}
               </div>
@@ -1379,7 +1378,7 @@ export default class YearInMusic extends React.Component<
                 srcSet="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg 500w,
                 https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-medium.jpg 1000w,
                 https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-large.jpg 2000w"
-                sizes="(max-width:768px) 100vw, calc(100vw - 200px)"
+                sizes="(max-width:992px) 100vw, calc(100vw - 200px)"
                 alt="2023 albums"
                 loading="lazy"
                 decoding="async"

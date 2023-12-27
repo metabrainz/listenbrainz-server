@@ -121,7 +121,7 @@ export default function CoverArtComposite() {
               srcSet="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg 500w,
                 https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-medium.jpg 1000w,
                 https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-large.jpg 2000w"
-              sizes="(max-width:768px) 100vw, calc(100vw - 190px)"
+              sizes="(max-width:992px) 100vw, calc(100vw - 190px)"
               alt="2023 albums"
               width="100%"
             />
@@ -147,9 +147,7 @@ export default function CoverArtComposite() {
                     alt={name}
                     title={name}
                     href={
-                      preventClick
-                        ? undefined
-                        : `/release/${release_mbid}/`
+                      preventClick ? undefined : `/release/${release_mbid}/`
                     }
                     target="_blank"
                     rel="noopener noreferrer"
