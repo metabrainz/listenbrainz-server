@@ -93,13 +93,3 @@ class CanonicalReleaseNew(BulkInsertTable):
 
         self.release_index[row["release"]] = 1
         return [(row["release"], row["release_mbid"])]
-
-
-"""
-    SELECT min(cr.id)
-      FROM mapping.canonical_release cr
-      JOIN mapping.canonical_release_new crn
-     USING (release_mbid)
-     WHERE cr.id != crn.id;
-
-"""

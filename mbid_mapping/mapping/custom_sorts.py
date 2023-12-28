@@ -134,10 +134,10 @@ def get_combined_release_group_types_sort():
             RELEASE_GROUP_COMBINED_TYPES.append(
                 (primary_type_id, primary_type_name, secondary_type_id, secondary_type_name)
             )
-    #
-    # item = (2, "Single", None, None)
-    # RELEASE_GROUP_COMBINED_TYPES.remove(item)
-    # RELEASE_GROUP_COMBINED_TYPES.insert(1, item)
+
+    item = (2, "Single", None, "NULL")
+    RELEASE_GROUP_COMBINED_TYPES.remove(item)
+    RELEASE_GROUP_COMBINED_TYPES.insert(1, item)
 
     return RELEASE_GROUP_COMBINED_TYPES
 
