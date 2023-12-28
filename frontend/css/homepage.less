@@ -157,7 +157,7 @@
     font-weight: 700;
     line-height: normal;
 
-    @media (max-width: @screen-xs) {
+    @media (max-width: @screen-sm) {
       font-size: 30px;
     }
   }
@@ -300,6 +300,17 @@
         margin-right: auto;
       }
     }
+
+    .homepage-lower {
+      .homepage-lower-speaker {
+        height: min(55%, 460px);
+        top: 23%;
+      }
+
+      .listen-container {
+        top: 25vh;
+      }
+    }
   }
 
   @media (max-width: @screen-sm) {
@@ -326,6 +337,31 @@
       .homepage-upper-headphone {
         height: min(41%, 475px);
         top: 25%;
+      }
+    }
+
+    .homepage-lower {
+      .homepage-lower-vector-1 {
+        right: 20%;
+        height: 15%;
+        top: 40%;
+      }
+
+      .homepage-lower-vector-3 {
+        left: 25%;
+      }
+
+      .homepage-lower-speaker {
+        height: min(41%, 475px);
+        top: 25%;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .listen-container {
+        top: 3vh;
       }
     }
   }
@@ -356,6 +392,22 @@
       .homepage-upper-headphone {
         height: min(40%, 475px);
         top: 25%;
+      }
+    }
+
+    .homepage-lower {
+      .homepage-lower-vector-1 {
+        right: 10%;
+        height: 13%;
+        top: 42%;
+      }
+
+      .homepage-lower-vector-3 {
+        left: 15%;
+      }
+
+      .homepage-lower-speaker {
+        height: min(36%, 475px);
       }
     }
   }
