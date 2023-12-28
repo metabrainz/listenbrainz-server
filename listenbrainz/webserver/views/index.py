@@ -3,6 +3,7 @@ import locale
 import os
 import requests
 import subprocess
+import psycopg2
 
 from brainzutils import cache
 from datetime import datetime
@@ -39,20 +40,30 @@ def index():
     if _ts:
         try:
             listen_count = _ts.get_total_listen_count()
-            user_count = format(int(_get_user_count()), ',d')
         except Exception as e:
             current_app.logger.error('Error while trying to get total listen count: %s', str(e))
-            listen_count = None
-            user_count = 'Unknown'
+            listen_count = 0
 
     else:
-        listen_count = None
-        user_count = 'Unknown'
+        listen_count = 0
+
+    artist_count = 0
+    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+        ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+
+        ts_curs.execute("SELECT COUNT(DISTINCT artist_mbid) FROM popularity.artist")
+        artist_count = ts_curs.fetchone()[0]
+
+    
+
+    props = {
+        "listen_count": listen_count,
+        "artist_count": artist_count,
+    }
 
     return render_template(
         "index/index.html",
-        listen_count=format(int(listen_count), ",d") if listen_count else "0",
-        user_count=user_count,
+        props=orjson.dumps(props).decode("utf-8")
     )
 
 @index_bp.route("/import/")
