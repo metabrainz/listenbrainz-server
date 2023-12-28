@@ -368,6 +368,90 @@ class BulkInsertTable:
                no_swap     - If True, do not call swap_into_production, the caller will do it
                no_analyze  - If True, do not run ANALYZE on the result table
         """
+
+        log(f"{self.table_name}: start")
+        log(f"{self.table_name}: drop old tables, create new tables")
+        self._create_tables()
+
+        total_row_count = 0
+        rows = []
+        inserted = 0
+        inserted_total = 0
+        batch_count = 0
+
+        ins_conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        with ins_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
+            queries = self.get_insert_queries()
+            values = self.get_insert_queries_test_values()
+
+            for i, db_query_vals in enumerate(zip_longest(queries, values)):
+                db = db_query_vals[0][0]
+                query = db_query_vals[0][1]
+                vals = db_query_vals[1]
+                select_conn = None
+                if db == "MB":
+                    select_conn = self.mb_conn
+                elif db == "LB":
+                    select_conn = self.lb_conn
+                else:
+                    log("Invalid DB provided in create table data: '%s'" % query)
+                    raise RuntimeError
+
+                if select_conn is None:
+                    log("You need to provide a LB DB connections string.")
+                    raise RuntimeError
+
+                with select_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+                    log(f"{self.table_name}: execute query {i+1} of {len(queries)}")
+                    self.pre_insert_queries_db_setup(curs)
+                    if vals:
+                        psycopg2.extras.execute_values(curs, query, vals, page_size=len(vals))
+                    else:
+                        curs.execute(query)
+
+                    row_count = 0
+                    inserted = 0
+                    self.total_rows = curs.rowcount
+                    log(f"{self.table_name}: fetch {self.total_rows:,} rows")
+                    progress_bar = tqdm(total=self.total_rows)
+                    while True:
+                        batch = curs.fetchmany(BATCH_SIZE)
+                        if len(batch) == 0:
+                            break
+
+                        for row in batch:
+                            row_count += 1
+                            total_row_count += 1
+                            result = self.process_row(row)
+                            progress_bar.update(1)
+                            rows.extend(self._handle_result(result))
+
+                        if len(rows) >= self.batch_size:
+                            insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
+                            ins_conn.commit()
+                            rows = []
+                            batch_count += 1
+                            inserted += self.batch_size
+                            inserted_total += self.batch_size
+
+                            if batch_count % 20 == 0:
+                                percent = "%.1f" % (100.0 * row_count / self.total_rows)
+                                log(f"{self.table_name}: inserted {inserted:,} from {row_count:,} rows. {percent}% complete")
+
+                    progress_bar.close()
+
+                rows.extend(self._handle_result(self.process_row_complete()))
+                if rows:
+                    insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
+                    ins_conn.commit()
+                    inserted_total += len(rows)
+                    rows = []
+
+                for table in self.additional_tables:
+                    table._flush_insert_rows()
+
+        log(f"{self.table_name}: complete! inserted {inserted_total:,} rows total.")
+
         log(f"{self.table_name}: post process inserted rows")
         self._post_process()
 
