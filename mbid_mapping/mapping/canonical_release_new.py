@@ -3,8 +3,6 @@ import re
 import psycopg2
 from unidecode import unidecode
 
-from mapping.canonical_release_new import CanonicalReleaseNew
-from mapping.custom_sorts import create_custom_sort_tables
 from mapping.utils import create_schema, insert_rows, log
 from mapping.bulk_table import BulkInsertTable
 import config
@@ -12,7 +10,7 @@ import config
 TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
 
 
-class CanonicalRelease(BulkInsertTable):
+class CanonicalReleaseNew(BulkInsertTable):
     """
         This class creates the MBID mapping release table.
 
@@ -21,7 +19,7 @@ class CanonicalRelease(BulkInsertTable):
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_release", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_release_new", mb_conn, lb_conn, batch_size)
         self.release_index = {}
 
     def get_create_table_columns(self):
@@ -62,12 +60,12 @@ class CanonicalRelease(BulkInsertTable):
                                     ON rg.id = rgstj.release_group
                              LEFT JOIN musicbrainz.release_group_secondary_type rgst
                                     ON rgstj.secondary_type = rgst.id
-                             LEFT JOIN mapping.release_group_secondary_type_sort rgsts
-                                    ON rgst.id = rgsts.secondary_type
+                             LEFT JOIN mapping.release_group_combined_type_sort rgcts
+                                    ON rgpt.id = rgcts.primary_type
+                                   AND (rgst.id = rgcts.secondary_type OR (rgst.id IS NULL AND rgcts.secondary_type IS NULL))
                                  WHERE rg.artist_credit %s 1
                                        %s
-                              ORDER BY rg.type
-                                     , rgsts.sort NULLS FIRST
+                              ORDER BY rgcts.sort NULLS LAST
                                      , fs.sort NULLS LAST
                                      , to_date(date_year::TEXT || '-' ||
                                                COALESCE(date_month,12)::TEXT || '-' ||
@@ -86,8 +84,8 @@ class CanonicalRelease(BulkInsertTable):
         return queries
 
     def get_index_names(self):
-        return [("canonical_release_idx_release", "release", False),
-                ("canonical_release_idx_id",      "id", False)]
+        return [("canonical_release_new_idx_release", "release", False),
+                ("canonical_release_new_idx_id",      "id", False)]
 
     def process_row(self, row):
         if row["release"] in self.release_index:
@@ -97,35 +95,11 @@ class CanonicalRelease(BulkInsertTable):
         return [(row["release"], row["release_mbid"])]
 
 
-def create_canonical_release(use_lb_conn: bool):
-    mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
+"""
+SELECT count(*)
+      FROM mapping.canonical_release cr
+      JOIN mapping.canonical_release_new crn
+     USING (release_mbid)
+     WHERE abs(cr.id - crn.id) > 10000;
 
-    with psycopg2.connect(mb_uri) as mb_conn:
-
-        lb_conn = None
-        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
-
-        releases = CanonicalRelease(mb_conn, lb_conn)
-        releases_new = CanonicalReleaseNew(mb_conn, lb_conn)
-
-        # Carry out the bulk of the work
-        create_custom_sort_tables(mb_conn)
-        releases.run(no_swap=True)
-        releases_new.run(no_swap=True)
-
-        # Now swap everything into production in a single transaction
-        log("canonical releases: Swap into production")
-        if lb_conn:
-            releases.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
-            releases_new.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
-            mb_conn.commit()
-            lb_conn.commit()
-            lb_conn.close()
-        else:
-            releases.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
-            releases_new.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
-            mb_conn.commit()
-
-        log("canonical releases: done done done!")
-
+"""
