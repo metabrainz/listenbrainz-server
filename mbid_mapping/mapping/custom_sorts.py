@@ -121,10 +121,15 @@ def get_combined_release_group_types_sort():
         We want to sort by primary type first, then secondary type except for one case.
         Singles should rank over albums that have a secondary type.
     """
+    primary_types = RELEASE_GROUP_PRIMARY_TYPES.copy()
+    primary_types.append((None, "NULL"))
+
+    secondary_types = RELEASE_GROUP_SECONDARY_TYPES.copy()
+    secondary_types.insert(0, (None, "NULL"))
+
     RELEASE_GROUP_COMBINED_TYPES = []
 
     for primary_type_id, primary_type_name in RELEASE_GROUP_PRIMARY_TYPES:
-        RELEASE_GROUP_COMBINED_TYPES.append((primary_type_id, primary_type_name, None, None))
         for secondary_type_id, secondary_type_name in RELEASE_GROUP_SECONDARY_TYPES:
             RELEASE_GROUP_COMBINED_TYPES.append(
                 (primary_type_id, primary_type_name, secondary_type_id, secondary_type_name)

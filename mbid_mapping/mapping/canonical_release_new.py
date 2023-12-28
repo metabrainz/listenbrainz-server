@@ -61,7 +61,7 @@ class CanonicalReleaseNew(BulkInsertTable):
                              LEFT JOIN musicbrainz.release_group_secondary_type rgst
                                     ON rgstj.secondary_type = rgst.id
                              LEFT JOIN mapping.release_group_combined_type_sort rgcts
-                                    ON rgpt.id = rgcts.primary_type
+                                    ON (rgpt.id = rgcts.primary_type OR (rgpt.id IS NULL AND rgcts.primary_type IS NULL))
                                    AND (rgst.id = rgcts.secondary_type OR (rgst.id IS NULL AND rgcts.secondary_type IS NULL))
                                  WHERE rg.artist_credit %s 1
                                        %s
@@ -96,10 +96,10 @@ class CanonicalReleaseNew(BulkInsertTable):
 
 
 """
-SELECT count(*)
+    SELECT min(cr.id)
       FROM mapping.canonical_release cr
       JOIN mapping.canonical_release_new crn
      USING (release_mbid)
-     WHERE abs(cr.id - crn.id) > 10000;
+     WHERE cr.id != crn.id;
 
 """
