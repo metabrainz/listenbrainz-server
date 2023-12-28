@@ -129,8 +129,8 @@ def get_combined_release_group_types_sort():
 
     RELEASE_GROUP_COMBINED_TYPES = []
 
-    for primary_type_id, primary_type_name in RELEASE_GROUP_PRIMARY_TYPES:
-        for secondary_type_id, secondary_type_name in RELEASE_GROUP_SECONDARY_TYPES:
+    for primary_type_id, primary_type_name in primary_types:
+        for secondary_type_id, secondary_type_name in secondary_types:
             RELEASE_GROUP_COMBINED_TYPES.append(
                 (primary_type_id, primary_type_name, secondary_type_id, secondary_type_name)
             )
