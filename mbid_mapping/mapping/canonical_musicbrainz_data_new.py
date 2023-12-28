@@ -58,7 +58,7 @@ class CanonicalMusicBrainzDataNew(CanonicalMusicBrainzDataBaseNew):
         table = self.table_name.split(".")[-1]
         return [
             (f"{table}_idx_combined_lookup",              "combined_lookup", False),
-            (f"{table}_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False),
+            # (f"{table}_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False),
             (f"{table}_idx_recording_mbid", "recording_mbid", True)
         ]
 
