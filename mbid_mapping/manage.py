@@ -7,6 +7,7 @@ import subprocess
 import click
 
 from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
+from mapping.canonical_musicbrainz_data_new import create_canonical_musicbrainz_data_new
 from mapping.canonical_release import create_canonical_release
 from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
@@ -54,6 +55,7 @@ def canonical_data(use_lb_conn):
         Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
     create_canonical_musicbrainz_data(use_lb_conn)
+    create_canonical_musicbrainz_data_new(use_lb_conn)
 
 
 @cli.command()
