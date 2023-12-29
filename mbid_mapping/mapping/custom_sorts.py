@@ -1,5 +1,4 @@
 import psycopg2
-from psycopg2.errors import OperationalError, UndefinedTable
 
 RELEASE_GROUP_SECONDARY_TYPES = [
     (2, "Soundtrack"),
@@ -11,6 +10,7 @@ RELEASE_GROUP_SECONDARY_TYPES = [
     (4, "Interview"),
     (10, "Demo"),
     (6, "Live"),
+    (12, "Field recording"),
     (1, "Compilation"),
     (8, "DJ-mix")
 ]
