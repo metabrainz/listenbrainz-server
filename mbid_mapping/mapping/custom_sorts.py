@@ -1,5 +1,13 @@
 import psycopg2
 
+RELEASE_GROUP_PRIMARY_TYPES = [
+    (1, "Album"),
+    (2, "Single"),
+    (3, "EP"),
+    (11, "Other"),
+    (12, "Broadcast")
+]
+
 RELEASE_GROUP_SECONDARY_TYPES = [
     (2, "Soundtrack"),
     (9, "Mixtape/Street"),
@@ -106,6 +114,37 @@ ANALOG_FORMATS = [
 ]
 
 
+def get_combined_release_group_types_sort():
+    """ Get a sort order based on both primary and secondary release group types
+
+        We want to sort by primary type first, then secondary type except for one case.
+        Singles and EPs should rank over albums that have a secondary type.
+    """
+    primary_types = RELEASE_GROUP_PRIMARY_TYPES.copy()
+    primary_types.append((None, "NULL"))
+
+    secondary_types = RELEASE_GROUP_SECONDARY_TYPES.copy()
+    secondary_types.insert(0, (None, "NULL"))
+
+    RELEASE_GROUP_COMBINED_TYPES = []
+
+    for primary_type_id, primary_type_name in primary_types:
+        for secondary_type_id, secondary_type_name in secondary_types:
+            RELEASE_GROUP_COMBINED_TYPES.append(
+                (primary_type_id, primary_type_name, secondary_type_id, secondary_type_name)
+            )
+
+    item = (2, "Single", None, "NULL")
+    RELEASE_GROUP_COMBINED_TYPES.remove(item)
+    RELEASE_GROUP_COMBINED_TYPES.insert(1, item)
+
+    item = (3, "EP", None, "NULL")
+    RELEASE_GROUP_COMBINED_TYPES.remove(item)
+    RELEASE_GROUP_COMBINED_TYPES.insert(2, item)
+
+    return RELEASE_GROUP_COMBINED_TYPES
+
+
 def insert_rows(sort_index, curs, formats):
     '''
         Helper function for inserting format rows.
@@ -161,5 +200,30 @@ def create_custom_sort_tables(conn):
         conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable):
         print("failed to create release_group_secondary_type_sort table")
+        conn.rollback()
+        raise
+
+    try:
+        with conn.cursor() as curs:
+            curs.execute("DROP TABLE IF EXISTS mapping.release_group_combined_type_sort")
+            curs.execute("""CREATE TABLE mapping.release_group_combined_type_sort (
+                                         sort INTEGER
+                                       , primary_type INTEGER
+                                       , secondary_type INTEGER)""")
+
+            sort_index = 1
+            for primary_type_id, _, secondary_type_id, _ in get_combined_release_group_types_sort():
+                curs.execute("""INSERT INTO mapping.release_group_combined_type_sort
+                                            (sort, primary_type, secondary_type)
+                                     VALUES (%s, %s, %s);""", tuple((sort_index, primary_type_id, secondary_type_id)))
+                sort_index += 1
+
+            curs.execute("""CREATE INDEX release_group_combined_type_sort_ndx_primary_secondary_type
+                                      ON mapping.release_group_combined_type_sort(primary_type, secondary_type)""")
+            curs.execute("""CREATE INDEX release_group_combined_type_sort_ndx_sort
+                                      ON mapping.release_group_combined_type_sort(sort)""")
+        conn.commit()
+    except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable):
+        print("failed to create release_group_combined_type_sort table")
         conn.rollback()
         raise
