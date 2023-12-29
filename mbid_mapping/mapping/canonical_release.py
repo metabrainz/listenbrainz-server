@@ -1,9 +1,4 @@
-import re
-
-import psycopg2
-from unidecode import unidecode
-
-from mapping.utils import create_schema, insert_rows, log
+from mapping.utils import log
 from mapping.bulk_table import BulkInsertTable
 import config
 
@@ -60,12 +55,12 @@ class CanonicalRelease(BulkInsertTable):
                                     ON rg.id = rgstj.release_group
                              LEFT JOIN musicbrainz.release_group_secondary_type rgst
                                     ON rgstj.secondary_type = rgst.id
-                             LEFT JOIN mapping.release_group_secondary_type_sort rgsts
-                                    ON rgst.id = rgsts.secondary_type
+                             LEFT JOIN mapping.release_group_combined_type_sort rgcts
+                                    ON (rgpt.id = rgcts.primary_type OR (rgpt.id IS NULL AND rgcts.primary_type IS NULL))
+                                   AND (rgst.id = rgcts.secondary_type OR (rgst.id IS NULL AND rgcts.secondary_type IS NULL))
                                  WHERE rg.artist_credit %s 1
                                        %s
-                              ORDER BY rg.type
-                                     , rgsts.sort NULLS FIRST
+                              ORDER BY rgcts.sort NULLS LAST
                                      , fs.sort NULLS LAST
                                      , to_date(date_year::TEXT || '-' ||
                                                COALESCE(date_month,12)::TEXT || '-' ||
