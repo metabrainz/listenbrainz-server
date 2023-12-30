@@ -68,6 +68,7 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
           src="/static/img/homepage/LB-Headphone.png"
           alt="ListenBrainz Logo"
         />
+        <div className="homepage-upper-grey-box" />
 
         <div className="listen-container">
           <NumberCounter count={listenCount} />
@@ -129,10 +130,17 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
           alt="ListenBrainz Logo"
         />
         <img
+          className="homepage-lower-vector-5"
+          src="/static/img/homepage/Vector-5.svg"
+          alt="ListenBrainz Logo"
+        />
+        <img
           className="homepage-lower-speaker"
           src="/static/img/homepage/LB-Speaker.png"
           alt="ListenBrainz Logo"
         />
+        <div className="homepage-lower-grey-box" />
+
         <div className="listen-container">
           <h1>Dig deeper with</h1>
           <div id="artist-count-container">
