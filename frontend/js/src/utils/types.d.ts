@@ -262,6 +262,7 @@ declare type UserReleasesResponse = {
       listen_count: number;
       caa_id?: number;
       caa_release_mbid?: string;
+      artists?: Array<MBIDMappingArtist>;
     }>;
     count: number;
     last_updated: number;
@@ -286,6 +287,7 @@ declare type UserRecordingsResponse = {
       recording_msid?: string;
       caa_id?: number;
       caa_release_mbid?: string;
+      artists?: Array<MBIDMappingArtist>;
       listen_count: number;
     }>;
     count: number;
@@ -309,6 +311,7 @@ declare type UserReleaseGroupsResponse = {
       listen_count: number;
       caa_id?: number;
       caa_release_mbid?: string;
+      artists?: Array<MBIDMappingArtist>;
     }>;
     count: number;
     last_updated: number;
@@ -351,6 +354,7 @@ declare type UserEntityDatum = {
   count: number;
   caaID?: number;
   caaReleaseMBID?: string;
+  artists?: Array<MBIDMappingArtist>;
 };
 
 declare type UserEntityData = Array<UserEntityDatum>;
@@ -641,6 +645,16 @@ type ReviewableEntity = {
   mbid: string;
 };
 
+type CritiqueBrainzUser = {
+  created: string;
+  display_name: string;
+  id: string;
+  karma: number;
+  musicbrainz_username: string;
+  user_ref: string;
+  user_type: string;
+};
+
 type CritiqueBrainzReview = {
   entity_id: string;
   entity_name: string;
@@ -650,6 +664,37 @@ type CritiqueBrainzReview = {
   languageCode?: string;
   rating?: number;
   user_name?: string;
+};
+
+type CritiqueBrainzReviewAPI = {
+  created: string;
+  edits: number;
+  entity_id: string;
+  entity_type: ReviewableEntityType;
+  id: string; // id of the review
+  full_name: string; // license
+  info_url: string; // license
+  is_draft: boolean;
+  is_hidden: boolean;
+  language: string;
+  last_revision: {
+    id: number;
+    rating: number;
+    review_id: string;
+    text: string;
+    timestamp: string;
+  };
+  last_updated: string;
+  license_id: string;
+  popularity: number;
+  published_on: string;
+  source: string | null;
+  source_url: string | null;
+  text: string | null;
+  rating: number;
+  user: CritiqueBrainzUser;
+  votes_negative_count: number;
+  votes_positive_count: number;
 };
 
 type CoverArtArchiveEntry = {
@@ -711,6 +756,8 @@ type FreshReleaseItem = {
   release_group_secondary_type?: string;
   release_mbid: string;
   release_name: string;
+  release_tags: Array<string>;
+  listen_count: number;
 };
 
 type UserFreshReleasesResponse = {

@@ -107,19 +107,19 @@ class CoverArtGenerator:
         except ValueError:
             return None
 
-        return (r, g, b)
+        return r, g, b
 
     def validate_parameters(self):
         """ Validate the parameters for the cover art designs. """
 
         if self.dimension not in list(range(MIN_DIMENSION, MAX_DIMENSION + 1)):
-            return "dimmension must be between {MIN_DIMENSION} and {MAX_DIMENSION}, inclusive."
+            return "dimension must be between {MIN_DIMENSION} and {MAX_DIMENSION}, inclusive."
 
         bg_color = self.parse_color_code(self.background)
         if self.background not in ("transparent", "white", "black") and bg_color is None:
             return f"background must be one of transparent, white, black or a color code #rrggbb, not {self.background}"
 
-        if self.image_size < MIN_IMAGE_SIZE or self.image_size > MAX_IMAGE_SIZE:
+        if self.image_size < MIN_IMAGE_SIZE or self.image_size > MAX_IMAGE_SIZE or self.image_size is None:
             return f"image size must be between {MIN_IMAGE_SIZE} and {MAX_IMAGE_SIZE}, inclusive."
 
         if not isinstance(self.skip_missing, bool):
@@ -157,11 +157,11 @@ class CoverArtGenerator:
         """ Given a cell 'address' return its bounding box. An address is a list of comma separeated
             grid cells, which taken collectively present a bounding box for a cover art image."""
 
-        tiles = address.split(",")
         try:
+            tiles = address.split(",")
             for i in range(len(tiles)):
                 tiles[i] = int(tiles[i].strip())
-        except ValueError:
+        except (ValueError, TypeError):
             return None, None, None, None
 
         for tile in tiles:
@@ -202,11 +202,24 @@ class CoverArtGenerator:
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             return get_caa_ids_for_release_mbids(curs, release_mbids)
 
-    def load_images(self, mbids, tile_addrs=None, layout=None):
+    def load_images(self, mbids, tile_addrs=None, layout=None, cover_art_size=500):
         """ Given a list of MBIDs and optional tile addresses, resolve all the cover art design, all the
             cover art to be used and then return the list of images and locations where they should be
             placed. Return an array of dicts containing the image coordinates and the URL of the image. """
 
+        release_mbids = [mbid for mbid in mbids if mbid]
+        results = self.load_caa_ids(release_mbids)
+        covers = [
+            {
+                "release_mbid": release_mbid,
+                "caa_id": results[release_mbid]["caa_id"],
+                "caa_release_mbid": results[release_mbid]["caa_release_mbid"]
+            } for release_mbid in release_mbids
+        ]
+        return self.generate_from_caa_ids(covers, tile_addrs, layout, cover_art_size)
+
+    def generate_from_caa_ids(self, covers, tile_addrs=None, layout=None, cover_art_size=500):
+        """ If the caa_ids have already been resolved, use them directly to generate the grid . """
         # See if we're given a layout or a list of tile addresses
         if layout is not None:
             addrs = self.GRID_TILE_DESIGNS[self.dimension][layout]
@@ -223,16 +236,13 @@ class CoverArtGenerator:
                 raise ValueError(f"Invalid address {addr} specified.")
             tiles.append((x1, y1, x2, y2))
 
-        release_mbids = [mbid for mbid in mbids if mbid]
-        covers = self.load_caa_ids(release_mbids)
-
         # Now resolve cover art images into URLs and image dimensions
         images = []
         for x1, y1, x2, y2 in tiles:
             while True:
                 try:
-                    mbid = release_mbids.pop(0)
-                    if covers[mbid]["caa_id"] is None:
+                    cover = covers.pop(0)
+                    if cover["caa_id"] is None:
                         if self.skip_missing:
                             url = None
                             continue
@@ -241,7 +251,7 @@ class CoverArtGenerator:
                         else:
                             url = None
                     else:
-                        url = self.resolve_cover_art(covers[mbid]["caa_id"], covers[mbid]["caa_release_mbid"])
+                        url = self.resolve_cover_art(cover["caa_id"], cover["caa_release_mbid"], cover_art_size)
 
                     break
                 except IndexError:

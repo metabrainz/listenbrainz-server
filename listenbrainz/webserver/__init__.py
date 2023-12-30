@@ -98,7 +98,7 @@ def create_app(debug=None):
 
     # If we're running tests, overwrite the given DB configuration from the config and disregard the
     # configuration, since that configuration could possibly point a different (production) DB.
-    if app.config['TESTING']:
+    if "PYTHON_TESTS_RUNNING" in os.environ:
         db_connect = create_test_database_connect_strings()
         ts_connect = create_test_timescale_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
@@ -350,3 +350,9 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.popularity_api import popularity_api_bp
     app.register_blueprint(popularity_api_bp, url_prefix=API_PREFIX+"/popularity")
+
+    from listenbrainz.webserver.views.entity_pages import artist_bp, album_bp, release_bp, release_group_bp
+    app.register_blueprint(artist_bp, url_prefix='/artist')
+    app.register_blueprint(album_bp, url_prefix='/album')
+    app.register_blueprint(release_bp, url_prefix='/release')
+    app.register_blueprint(release_group_bp, url_prefix='/release-group')

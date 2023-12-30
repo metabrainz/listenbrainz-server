@@ -3,8 +3,8 @@ from listenbrainz_spark.postgres.utils import save_pg_table_to_hdfs
 
 
 def create_release_group_metadata_cache():
-    """ Import release groups which were released in the given year from postgres to HDFS """
-    query = f"""
+    """ Import release groups with cover art data from postgres to HDFS """
+    query = """
         WITH rg_cover_art AS (
             SELECT DISTINCT ON (rg.id)
                    rg.id AS release_group
@@ -42,6 +42,14 @@ def create_release_group_metadata_cache():
                  , rgca.caa_id AS caa_id
                  , rgca.caa_release_mbid AS caa_release_mbid
                  , array_agg(a.gid ORDER BY acn.position) AS artist_credit_mbids
+                 , jsonb_agg(
+                        jsonb_build_object(
+                            'artist_credit_name', acn.name,
+                            'join_phrase', acn.join_phrase,
+                            'artist_mbid', a.gid::TEXT
+                        )
+                        ORDER BY acn.position
+                    ) AS artists
                  , rgm.first_release_date_year
               FROM musicbrainz.release_group rg
               JOIN musicbrainz.release_group_meta rgm
@@ -63,4 +71,4 @@ def create_release_group_metadata_cache():
                  , rgca.caa_release_mbid
     """
 
-    save_pg_table_to_hdfs(query, RELEASE_GROUP_METADATA_CACHE_DATAFRAME)
+    save_pg_table_to_hdfs(query, RELEASE_GROUP_METADATA_CACHE_DATAFRAME, process_artists_column=True)

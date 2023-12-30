@@ -37,6 +37,7 @@ import {
   getRecordingMSID,
   getReleaseGroupMBID,
   getReleaseMBID,
+  getReleaseName,
   getTrackDurationInMs,
   getTrackLink,
   getTrackName,
@@ -352,21 +353,32 @@ export default class ListenCard extends React.Component<
     if (customThumbnail) {
       thumbnail = customThumbnail;
     } else if (thumbnailSrc) {
+      let thumbnailLink;
+      let thumbnailTitle;
+      if (releaseMBID) {
+        thumbnailLink = `/release/${releaseMBID}`;
+        thumbnailTitle = getReleaseName(listen);
+      } else if (releaseGroupMBID) {
+        thumbnailLink = `/album/${releaseGroupMBID}`;
+        thumbnailTitle = get(
+          listen,
+          "track_metadata.mbid_mapping.release_group_name"
+        );
+      } else {
+        thumbnailLink = spotifyURL || youtubeURL || soundcloudURL;
+        thumbnailTitle = "Cover art";
+      }
       thumbnail = (
         <div className="listen-thumbnail">
           <a
-            href={
-              releaseMBID
-                ? `https://musicbrainz.org/release/${releaseMBID}`
-                : (spotifyURL || youtubeURL || soundcloudURL) ?? ""
-            }
-            title={listen.track_metadata?.release_name ?? "Cover art"}
+            href={thumbnailLink}
+            title={thumbnailTitle}
             target="_blank"
             rel="noopener noreferrer"
           >
             <CoverArtWithFallback
               imgSrc={thumbnailSrc}
-              altText={listen.track_metadata?.release_name}
+              altText={thumbnailTitle}
             />
           </a>
         </div>
@@ -397,7 +409,7 @@ export default class ListenCard extends React.Component<
           </div>
         </a>
       );
-    } else if (!recordingMBID) {
+    } else if (isLoggedIn && Boolean(recordingMSID)) {
       const openModal = () => {
         NiceModal.show(MBIDMappingModal, {
           listenToMap: listen,
@@ -425,13 +437,17 @@ export default class ListenCard extends React.Component<
           </div>
         </div>
       );
-    } else {
-      // Edge case: has no thumbnail, has a recording_mbid
-      // but no release_mbid for some reason
+    } else if (recordingMBID || releaseGroupMBID) {
+      let link;
+      if (recordingMBID) {
+        link = `https://musicbrainz.org/recording/${recordingMBID}`;
+      } else {
+        link = `/album/${releaseGroupMBID}`;
+      }
       thumbnail = (
         <a
-          href={`https://musicbrainz.org/recording/${recordingMBID}`}
-          title="Could not load cover art. Open in MusicBrainz"
+          href={link}
+          title="Could not load cover art"
           target="_blank"
           rel="noopener noreferrer"
           className="listen-thumbnail"
@@ -447,6 +463,9 @@ export default class ListenCard extends React.Component<
           </div>
         </a>
       );
+    } else {
+      // eslint-disable-next-line react/jsx-no-useless-fragment
+      thumbnail = <></>;
     }
 
     return (

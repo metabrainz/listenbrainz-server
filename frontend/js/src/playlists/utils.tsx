@@ -97,7 +97,7 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
   listen.track_metadata.mbid_mapping = {
     artist_mbids:
       customFields?.artist_identifiers?.map(getArtistMBIDFromURI) ?? [],
-    artists: [],
+    artists: customFields?.additional_metadata?.artists ?? [],
     recording_mbid: recordingMBID,
     release_mbid: caa_release_mbid,
     caa_id,

@@ -15,6 +15,7 @@ import ReleaseTimeline from "../../src/explore/fresh-releases/ReleaseTimeline";
 import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
 import * as userData from "../__mocks__/freshReleasesUserData.json";
 import * as sitewideFilters from "../__mocks__/freshReleasesSitewideFilters.json";
+import * as userDisplayFilters from "../__mocks__/freshReleasesDisplaySettings.json";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 const freshReleasesProps = {
@@ -49,7 +50,24 @@ const mountOptions: { context: GlobalAppContextT } = {
   },
 };
 
+window.scrollTo = jest.fn();
+
 describe("FreshReleases", () => {
+  beforeAll(() => {
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: jest.fn().mockImplementation((query) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(), // Deprecated
+        removeListener: jest.fn(), // Deprecated
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+      })),
+    });
+  });
   it("renders the page correctly", async () => {
     const mockFetchUserFreshReleases = jest.fn().mockResolvedValue({
       json: () => userData,
@@ -61,14 +79,19 @@ describe("FreshReleases", () => {
       </GlobalAppContext.Provider>
     );
     await waitForComponentToPaint(wrapper);
-    expect(mockFetchUserFreshReleases).toHaveBeenCalledWith("chinmaykunkikar");
+    expect(mockFetchUserFreshReleases).toHaveBeenCalledWith(
+      "chinmaykunkikar",
+      true,
+      true,
+      "release_date"
+    );
     expect(wrapper.find(FreshReleases)).toHaveLength(1);
   });
 
   it("renders sitewide fresh releases page, including timeline component", async () => {
-    const mockFetchSitewideFreshReleases = jest.fn().mockResolvedValue({
-      json: () => sitewideData,
-    });
+    const mockFetchSitewideFreshReleases = jest
+      .fn()
+      .mockResolvedValue(sitewideData);
     mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases;
     const wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
@@ -76,29 +99,49 @@ describe("FreshReleases", () => {
       </GlobalAppContext.Provider>
     );
     await waitForComponentToPaint(wrapper);
-    await act(() => {
+    await act(async () => {
       // click on sitewide-releases button
       wrapper.find("#sitewide-releases").at(0).simulate("click");
     });
     await waitForComponentToPaint(wrapper);
-    expect(mockFetchSitewideFreshReleases).toHaveBeenCalledWith(3);
-    expect(wrapper.find("#release-filters")).toHaveLength(1);
+    expect(mockFetchSitewideFreshReleases).toHaveBeenCalledWith(
+      7,
+      true,
+      true,
+      "release_date"
+    );
+    expect(wrapper.find(".sidebar")).toHaveLength(1);
     expect(wrapper.find(".releases-timeline")).toHaveLength(1);
   });
 
   it("renders filters correctly", async () => {
     const setFilteredList = jest.fn();
+    const handleRangeChange = jest.fn();
+    const toggleSettings = jest.fn();
+    const setShowPastReleases = jest.fn();
+    const setShowFutureReleases = jest.fn();
+    const releaseCardGridRef: React.RefObject<HTMLDivElement> = React.createRef();
 
     const wrapper = mount(
       <ReleaseFilters
         allFilters={sitewideFilters}
-        releases={sitewideData}
+        displaySettings={userDisplayFilters}
+        releases={sitewideData.payload.releases}
         setFilteredList={setFilteredList}
+        range="three_months"
+        handleRangeChange={handleRangeChange}
+        toggleSettings={toggleSettings}
+        showPastReleases
+        setShowPastReleases={setShowPastReleases}
+        showFutureReleases
+        setShowFutureReleases={setShowFutureReleases}
+        releaseCardGridRef={releaseCardGridRef}
+        pageType="sitewide"
       />
     );
 
     await waitForComponentToPaint(wrapper);
-    wrapper.find("#filters-item-0").simulate("click");
+    wrapper.find("#filters-item-0").at(0).simulate("click");
     expect(setFilteredList).toBeCalled();
   });
 });

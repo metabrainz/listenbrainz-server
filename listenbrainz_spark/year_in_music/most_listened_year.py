@@ -1,6 +1,9 @@
 from more_itertools import chunked
 
-from listenbrainz_spark.year_in_music.utils import setup_listens_for_year, setup_all_releases
+from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.postgres import create_release_metadata_cache
+from listenbrainz_spark.utils import read_files_from_HDFS
+from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 from listenbrainz_spark.stats import run_query
 
 USERS_PER_MESSAGE = 1000
@@ -8,7 +11,10 @@ USERS_PER_MESSAGE = 1000
 
 def get_most_listened_year(year):
     setup_listens_for_year(year)
-    setup_all_releases()
+
+    create_release_metadata_cache()
+    read_files_from_HDFS(RELEASE_METADATA_CACHE_DATAFRAME).createOrReplaceTempView("releases_all")
+
     data = run_query(_get_releases_with_date()).collect()
     for entries in chunked(data, USERS_PER_MESSAGE):
         yield {
@@ -20,23 +26,16 @@ def get_most_listened_year(year):
 
 def _get_releases_with_date():
     return """
-        WITH release_date AS (
-            SELECT title
-                 , id AS release_mbid
-                 , int(substr(`release-group`.`first-release-date`, 1, 4)) AS year
-              FROM release
-             WHERE substr(`release-group`.`first-release-date`, 1, 4) != '????'
-               AND substr(`release-group`.`first-release-date`, 1, 4) != ''
-        ), listen_year AS (
+        WITH listen_year AS (
         SELECT user_id
-             , collect_list(release_date.release_mbid) AS release_mbids
-             , release_date.year
+             , rel.first_release_date_year AS year
              , count(*) AS listen_count
           FROM listens_of_year l
-          JOIN release_date
-            ON l.release_mbid = release_date.release_mbid
+          JOIN releases_all rel
+            ON l.release_mbid = rel.release_mbid
+         WHERE first_release_date_year IS NOT NULL
       GROUP BY user_id
-             , release_date.year
+             , rel.first_release_date_year
         )
         SELECT user_id
              , map_from_entries(

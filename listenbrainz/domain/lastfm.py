@@ -36,6 +36,8 @@ def bulk_insert_loved_tracks(user_id: int, feedback: list[tuple[int, str]]):
 def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:
     """ Fetch recording mbids corresponding to track mbids. Last.FM uses tracks mbids in loved tracks endpoint
      but we use recording mbids in feedback table so need convert between the two. """
+    if not track_mbids:
+        return {}
     query = """
         SELECT track.gid::text AS track_mbid
              , recording.gid::text AS recording_mbid
@@ -52,7 +54,7 @@ def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:
 def fetch_lfm_feedback(lfm_user: str):
     """ Retrieve the loved tracks of a user from Last.FM api """
     session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, method_whitelist=["GET"])))
+    session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, allowed_methods=["GET"])))
 
     params = {
         "method": "user.getlovedtracks",
