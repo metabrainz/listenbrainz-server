@@ -11,7 +11,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, flatMap, isEmpty, isUndefined, merge } from "lodash";
+import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import tinycolor from "tinycolor2";
 import {
   getRelIconLink,
@@ -87,8 +87,6 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   } = metadata as ReleaseGroupMetadataLookup;
   const releaseGroupTags = tag?.release_group;
 
-  // JSPF Tracks fetched using the recording mbids above
-  const [popularTracks, setPopularTracks] = React.useState<JSPFTrack[]>([]);
   const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
@@ -160,8 +158,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const artistName = artist?.name ?? "";
 
   const listensFromAlbumRecordings =
-    flatMap(
-      mediums,
+    mediums?.map(
       (medium) =>
         medium?.tracks?.map(
           (track): Listen =>
@@ -179,6 +176,10 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             )
         ) ?? []
     ) ?? [];
+
+  const listensFromAlbumsRecordingsFlattened = flatten(
+    listensFromAlbumRecordings
+  );
 
   const filteredTags = chain(releaseGroupTags)
     .filter("genre_mbid")
@@ -318,7 +319,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           <div className="header">
             <h3 className="header-with-line">
               Tracklist
-              {Boolean(listensFromAlbumRecordings?.length) && (
+              {Boolean(listensFromAlbumsRecordingsFlattened?.length) && (
                 <button
                   type="button"
                   className="btn btn-info btn-rounded play-tracks-button"
@@ -327,7 +328,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                     window.postMessage(
                       {
                         brainzplayer_event: "play-listen",
-                        payload: listensFromAlbumRecordings,
+                        payload: listensFromAlbumsRecordingsFlattened,
                       },
                       window.location.origin
                     );
@@ -338,7 +339,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               )}
             </h3>
           </div>
-          {mediums?.map((medium) => {
+          {mediums?.map((medium, medium_idx) => {
             return (
               <>
                 {showMediumTitle && (
@@ -362,7 +363,8 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                       </span>
                     );
                   }
-                  const listenFromRecording = listensFromAlbumRecordings[index];
+                  const listenFromRecording =
+                    listensFromAlbumRecordings[medium_idx][index];
                   let thumbnailReplacement;
                   if (Number.isFinite(recording.position)) {
                     thumbnailReplacement = (
@@ -464,7 +466,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         </div>
       </div>
       <BrainzPlayer
-        listens={listensFromAlbumRecordings}
+        listens={listensFromAlbumsRecordingsFlattened}
         listenBrainzAPIBaseURI={APIService.APIBaseURI}
         refreshSpotifyToken={APIService.refreshSpotifyToken}
         refreshYoutubeToken={APIService.refreshYoutubeToken}
