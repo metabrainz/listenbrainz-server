@@ -36,6 +36,8 @@ import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
+  artists: Array<MBIDMappingArtist>;
+  artist_mbids: string[];
   length: number;
   name: string;
   position: number;
@@ -45,6 +47,7 @@ type AlbumRecording = {
 };
 
 export type AlbumPageProps = {
+  recordings_release_mbid?: string;
   mediums?: Array<{
     name: string;
     position: number;
@@ -63,6 +66,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const {
     release_group_metadata: initialReleaseGroupMetadata,
+    recordings_release_mbid,
     release_group_mbid,
     mediums,
     caa_id,
@@ -164,13 +168,16 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           (track): Listen =>
             popularRecordingToListen(
               merge(track, {
-                artist_name: artistName,
-                artist_mbids:
-                  artist?.artists?.map((ar) => ar.artist_mbid) ?? [],
+                artist_name: track.artists
+                  .map(
+                    (track_artist) =>
+                      `${track_artist.artist_credit_name}${track_artist.join_phrase}`
+                  )
+                  .join(""),
                 caa_id: Number(caa_id) || undefined,
                 caa_release_mbid,
                 recording_name: track.name,
-                release_mbid: caa_release_mbid ?? "",
+                release_mbid: recordings_release_mbid ?? "",
                 release_name: album.name,
               })
             )
@@ -493,6 +500,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   const {
+    recordings_release_mbid,
     mediums,
     release_group_mbid,
     caa_id,
@@ -518,6 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
             release_group_metadata={
               release_group_metadata as ReleaseGroupMetadataLookup
             }
+            recordings_release_mbid={recordings_release_mbid}
             mediums={mediums}
             release_group_mbid={release_group_mbid}
             caa_id={caa_id}
