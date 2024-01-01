@@ -287,7 +287,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           key={artist.name}
           tags={filteredTags}
           entityType="artist"
-          entityMBID={artist.name}
+          entityMBID={artist.artist_mbid}
         />
       </div>
       <div className="entity-page-content">
