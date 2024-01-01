@@ -44,7 +44,7 @@ def canonical_data(use_lb_conn):
     """
         Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
-    # create_canonical_musicbrainz_data(use_lb_conn)
+    create_canonical_musicbrainz_data(use_lb_conn)
     create_canonical_musicbrainz_data_old(use_lb_conn)
 
 
