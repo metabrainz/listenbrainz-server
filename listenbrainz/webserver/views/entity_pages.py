@@ -189,7 +189,8 @@ def album_entity(release_group_mbid):
         raise NotFound(f"Release group mbid {release_group_mbid} not found in the metadata cache")
     release_group = metadata[release_group_mbid]
 
-    mediums = release_group.pop("recording").get("mediums", [])
+    recording_data = release_group.pop("recording")
+    mediums = recording_data.get("mediums", [])
     recording_mbids = []
     for medium in mediums:
         for track in medium["tracks"]:
@@ -213,6 +214,7 @@ def album_entity(release_group_mbid):
     props = {
         "release_group_mbid": release_group_mbid,
         "release_group_metadata": release_group,
+        "recordings_release_mbid": recording_data.get("release_mbid"),
         "mediums": mediums,
         "caa_id": release_group["release_group"]["caa_id"],
         "caa_release_mbid": release_group["release_group"]["caa_release_mbid"],
