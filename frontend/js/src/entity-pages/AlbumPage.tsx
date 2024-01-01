@@ -296,7 +296,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         <TagsComponent
           key={release_group_mbid}
           tags={filteredTags}
-          entityType="artist"
+          entityType="release-group"
           entityMBID={release_group_mbid}
         />
       </div>
