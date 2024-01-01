@@ -1,11 +1,10 @@
 from mapping.bulk_table import BulkInsertTable
 
-import config
 
 TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
 
 
-class CanonicalMusicBrainzDataBaseNew(BulkInsertTable):
+class CanonicalMusicBrainzDataOldBase(BulkInsertTable):
     """
         This class creates the MBID mapping tables.
 
@@ -50,7 +49,7 @@ class CanonicalMusicBrainzDataBaseNew(BulkInsertTable):
                    ON m.id = t.medium
                  JOIN musicbrainz.release rl
                    ON rl.id = m.release
-                 JOIN mapping.canonical_release_new_tmp rpr
+                 JOIN mapping.canonical_release_old_tmp rpr
                    ON rl.id = rpr.release
                  JOIN (SELECT artist_credit, array_agg(gid ORDER BY position) AS artist_mbids
                          FROM musicbrainz.artist_credit_name acn2

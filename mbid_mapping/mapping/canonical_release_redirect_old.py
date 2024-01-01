@@ -1,7 +1,7 @@
 from mapping.bulk_table import BulkInsertTable
 
 
-class CanonicalReleaseRedirectNew(BulkInsertTable):
+class CanonicalReleaseRedirectOld(BulkInsertTable):
     """
         This class creates the canonical releases table.
         This maps any given release mbid to the "most canonical" release in that release group,
@@ -15,7 +15,7 @@ class CanonicalReleaseRedirectNew(BulkInsertTable):
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_release_redirect_new", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_release_redirect_old", mb_conn, lb_conn, batch_size)
 
     def get_create_table_columns(self):
         return [("id",                       "SERIAL"),
@@ -33,7 +33,7 @@ class CanonicalReleaseRedirectNew(BulkInsertTable):
                 FROM musicbrainz.release
                 JOIN musicbrainz.release_group rg
                   ON release.release_group = rg.id
-                JOIN mapping.canonical_release_new_tmp cmdr
+                JOIN mapping.canonical_release_old_tmp cmdr
                   ON cmdr.release = release.id
             ), first_release AS (
               SELECT *
@@ -58,7 +58,7 @@ class CanonicalReleaseRedirectNew(BulkInsertTable):
         return []
 
     def get_index_names(self):
-        return [("release_mbid_ndx_canonical_release_redirect_new", "release_mbid", True)]
+        return [("release_mbid_ndx_canonical_release_redirect_old", "release_mbid", True)]
 
     def process_row(self, row):
         return [(row["release_mbid"], row["canonical_release_mbid"], row["release_group_mbid"])]

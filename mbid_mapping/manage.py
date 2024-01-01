@@ -6,9 +6,8 @@ import subprocess
 
 import click
 
+from mapping.canonical_musicbrainz_data_old import create_canonical_musicbrainz_data_old
 from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
-from mapping.canonical_musicbrainz_data_new import create_canonical_musicbrainz_data_new
-from mapping.canonical_release import create_canonical_release
 from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
 from mapping.typesense_index import build_all as action_build_index
@@ -31,15 +30,6 @@ def cli():
 
 
 @cli.command()
-@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
-def create_canonical_releases_old_and_new(use_lb_conn):
-    """
-        Create both the old and new canonical release tables.
-    """
-    create_canonical_release(use_lb_conn)
-
-
-@cli.command()
 def create_all():
     """
         Create all canonical data in one go. First mb canonical data, then its typesense index.
@@ -55,7 +45,7 @@ def canonical_data(use_lb_conn):
         Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
     # create_canonical_musicbrainz_data(use_lb_conn)
-    create_canonical_musicbrainz_data_new(use_lb_conn)
+    create_canonical_musicbrainz_data_old(use_lb_conn)
 
 
 @cli.command()

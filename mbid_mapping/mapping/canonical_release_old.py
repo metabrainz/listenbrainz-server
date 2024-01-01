@@ -1,16 +1,15 @@
-import re
-
 import psycopg2
-from unidecode import unidecode
 
-from mapping.utils import create_schema, insert_rows, log
+from mapping.canonical_release import CanonicalRelease
+from mapping.custom_sorts import create_custom_sort_tables
+from mapping.utils import log
 from mapping.bulk_table import BulkInsertTable
 import config
 
 TEST_ARTIST_IDS = [1160983, 49627, 65, 21238]  # Gun'n'roses, beyoncé, portishead, Erik Satie
 
 
-class CanonicalReleaseNew(BulkInsertTable):
+class CanonicalReleaseOld(BulkInsertTable):
     """
         This class creates the MBID mapping release table.
 
@@ -19,7 +18,7 @@ class CanonicalReleaseNew(BulkInsertTable):
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_release_new", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_release_old", mb_conn, lb_conn, batch_size)
         self.release_index = {}
 
     def get_create_table_columns(self):
@@ -60,12 +59,12 @@ class CanonicalReleaseNew(BulkInsertTable):
                                     ON rg.id = rgstj.release_group
                              LEFT JOIN musicbrainz.release_group_secondary_type rgst
                                     ON rgstj.secondary_type = rgst.id
-                             LEFT JOIN mapping.release_group_combined_type_sort rgcts
-                                    ON (rgpt.id = rgcts.primary_type OR (rgpt.id IS NULL AND rgcts.primary_type IS NULL))
-                                   AND (rgst.id = rgcts.secondary_type OR (rgst.id IS NULL AND rgcts.secondary_type IS NULL))
+                             LEFT JOIN mapping.release_group_secondary_type_sort rgsts
+                                    ON rgst.id = rgsts.secondary_type
                                  WHERE rg.artist_credit %s 1
                                        %s
-                              ORDER BY rgcts.sort NULLS LAST
+                              ORDER BY rg.type
+                                     , rgsts.sort NULLS FIRST
                                      , fs.sort NULLS LAST
                                      , to_date(date_year::TEXT || '-' ||
                                                COALESCE(date_month,12)::TEXT || '-' ||
@@ -84,8 +83,8 @@ class CanonicalReleaseNew(BulkInsertTable):
         return queries
 
     def get_index_names(self):
-        return [("canonical_release_new_idx_release", "release", False),
-                ("canonical_release_new_idx_id",      "id", False)]
+        return [("canonical_release_old_idx_release", "release", False),
+                ("canonical_release_old_idx_id",      "id", False)]
 
     def process_row(self, row):
         if row["release"] in self.release_index:

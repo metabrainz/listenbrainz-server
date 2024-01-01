@@ -3,39 +3,38 @@ import re
 import psycopg2
 from unidecode import unidecode
 
-from mapping.canonical_musicbrainz_data_new_base import CanonicalMusicBrainzDataBaseNew
-from mapping.canonical_musicbrainz_data_release_support import CanonicalMusicBrainzDataReleaseSupport
-from mapping.canonical_recording_redirect_new import CanonicalRecordingRedirectNew
-from mapping.canonical_recording_release_redirect_new import CanonicalRecordingReleaseRedirectNew
-from mapping.canonical_release_new import CanonicalReleaseNew
-from mapping.canonical_release_redirect_new import CanonicalReleaseRedirectNew
+from mapping.canonical_musicbrainz_data_old_base import CanonicalMusicBrainzDataOldBase
+from mapping.canonical_recording_redirect_old import CanonicalRecordingRedirectOld
+from mapping.canonical_recording_release_redirect_old import CanonicalRecordingReleaseRedirectOld
+from mapping.canonical_release_old import CanonicalReleaseOld
+from mapping.canonical_release_redirect_old import CanonicalReleaseRedirectOld
 from mapping.utils import log
 from mapping.custom_sorts import create_custom_sort_tables
 
 import config
 
 
-class CanonicalMusicBrainzDataNew(CanonicalMusicBrainzDataBaseNew):
+class CanonicalMusicBrainzDataOld(CanonicalMusicBrainzDataOldBase):
     """
         This class creates the MBID mapping tables without release name in the lookup.
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_musicbrainz_data_new", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_musicbrainz_data_old", mb_conn, lb_conn, batch_size)
 
     def get_post_process_queries(self):
         return ["""
             WITH all_recs AS (
                 SELECT *
                      , row_number() OVER (PARTITION BY combined_lookup ORDER BY score) AS rnum
-                  FROM mapping.canonical_musicbrainz_data_new_tmp
+                  FROM mapping.canonical_musicbrainz_data_old_tmp
             ), deleted_recs AS (
                 DELETE
-                  FROM mapping.canonical_musicbrainz_data_new_tmp
+                  FROM mapping.canonical_musicbrainz_data_old_tmp
                  WHERE id IN (SELECT id FROM all_recs WHERE rnum > 1)
              RETURNING recording_mbid, combined_lookup
             )
-           INSERT INTO mapping.canonical_recording_redirect_new_tmp (recording_mbid, canonical_recording_mbid, canonical_release_mbid)
+           INSERT INTO mapping.canonical_recording_redirect_old_tmp (recording_mbid, canonical_recording_mbid, canonical_release_mbid)
                 SELECT t1.recording_mbid
                      , t2.recording_mbid AS canonical_recording
                      , t2.release_mbid AS canonical_release
@@ -58,12 +57,12 @@ class CanonicalMusicBrainzDataNew(CanonicalMusicBrainzDataBaseNew):
         table = self.table_name.split(".")[-1]
         return [
             (f"{table}_idx_combined_lookup",              "combined_lookup", False),
-            # (f"{table}_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False),
+            (f"{table}_idx_artist_credit_recording_name", "artist_credit_name, recording_name", False),
             (f"{table}_idx_recording_mbid", "recording_mbid", True)
         ]
 
 
-def create_canonical_musicbrainz_data_new(use_lb_conn: bool):
+def create_canonical_musicbrainz_data_old(use_lb_conn: bool):
     """
         Main function for creating the MBID mapping and its related tables.
 
@@ -79,11 +78,11 @@ def create_canonical_musicbrainz_data_new(use_lb_conn: bool):
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
         # Setup all the needed objects
-        can = CanonicalRecordingRedirectNew(mb_conn, lb_conn)
-        can_rec_rel = CanonicalRecordingReleaseRedirectNew(mb_conn, lb_conn)
-        can_rel = CanonicalReleaseRedirectNew(mb_conn)
-        releases = CanonicalReleaseNew(mb_conn)
-        mapping = CanonicalMusicBrainzDataNew(mb_conn, lb_conn)
+        can = CanonicalRecordingRedirectOld(mb_conn, lb_conn)
+        can_rec_rel = CanonicalRecordingReleaseRedirectOld(mb_conn, lb_conn)
+        can_rel = CanonicalReleaseRedirectOld(mb_conn)
+        releases = CanonicalReleaseOld(mb_conn)
+        mapping = CanonicalMusicBrainzDataOld(mb_conn, lb_conn)
         mapping.add_additional_bulk_table(can)
 
         # Carry out the bulk of the work

@@ -1,7 +1,7 @@
 from mapping.bulk_table import BulkInsertTable
 
 
-class CanonicalRecordingReleaseRedirectNew(BulkInsertTable):
+class CanonicalRecordingReleaseRedirectOld(BulkInsertTable):
     """
         This class creates the canonical recording releases table.
         This maps a recording mbid to the "most canonical" release that the recording appears on.
@@ -11,7 +11,7 @@ class CanonicalRecordingReleaseRedirectNew(BulkInsertTable):
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_recording_release_redirect_new", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_recording_release_redirect_old", mb_conn, lb_conn, batch_size)
 
     def get_create_table_columns(self):
         return [("id",                       "SERIAL"),
@@ -22,17 +22,17 @@ class CanonicalRecordingReleaseRedirectNew(BulkInsertTable):
         return []
 
     def get_post_process_queries(self):
-        return ["""INSERT INTO mapping.canonical_recording_release_redirect_new_tmp (recording_mbid, release_mbid)
+        return ["""INSERT INTO mapping.canonical_recording_release_redirect_old_tmp (recording_mbid, release_mbid)
                         SELECT recording_mbid
                              , canonical_release_mbid AS release_mbid
-                          FROM mapping.canonical_recording_redirect_new_tmp""",
-                """INSERT INTO mapping.canonical_recording_release_redirect_new_tmp (recording_mbid, release_mbid)
+                          FROM mapping.canonical_recording_redirect_old_tmp""",
+                """INSERT INTO mapping.canonical_recording_release_redirect_old_tmp (recording_mbid, release_mbid)
                                  SELECT recording_mbid
                                       , release_mbid
-                                   FROM mapping.canonical_musicbrainz_data_new_tmp"""]
+                                   FROM mapping.canonical_musicbrainz_data_old_tmp"""]
 
     def get_index_names(self):
-        return [("recording_mbid_ndx_canonical_recording_release_redirect_new", "recording_mbid", True)]
+        return [("recording_mbid_ndx_canonical_recording_release_redirect_old", "recording_mbid", True)]
 
     def process_row(self, row):
         return []

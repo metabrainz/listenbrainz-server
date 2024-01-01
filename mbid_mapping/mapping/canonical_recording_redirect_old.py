@@ -1,7 +1,7 @@
 from mapping.bulk_table import BulkInsertTable
 
 
-class CanonicalRecordingRedirectNew(BulkInsertTable):
+class CanonicalRecordingRedirectOld(BulkInsertTable):
     """
         This class creates the canonical recording table.
 
@@ -10,7 +10,7 @@ class CanonicalRecordingRedirectNew(BulkInsertTable):
     """
 
     def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_recording_redirect_new", mb_conn, lb_conn, batch_size)
+        super().__init__("mapping.canonical_recording_redirect_old", mb_conn, lb_conn, batch_size)
 
     def get_create_table_columns(self):
         return [("id",                       "SERIAL"),
@@ -26,15 +26,15 @@ class CanonicalRecordingRedirectNew(BulkInsertTable):
             WITH all_rows AS (
                  SELECT id
                       , row_number() OVER (PARTITION BY recording_mbid ORDER BY id) AS rnum
-                   FROM mapping.canonical_recording_redirect_new_tmp
+                   FROM mapping.canonical_recording_redirect_old_tmp
             )
-            DELETE FROM mapping.canonical_recording_redirect_new_tmp
+            DELETE FROM mapping.canonical_recording_redirect_old_tmp
                   WHERE id IN (SELECT id FROM all_rows WHERE rnum > 1)
         """]
 
     def get_index_names(self):
-        return [("canonical_recording_redirect_new_ndx_canonical_recording_mbid", "canonical_recording_mbid", False),
-                ("canonical_recording_redirect_new_ndx_recording_mbid", "recording_mbid", True)]
+        return [("canonical_recording_redirect_old_ndx_canonical_recording_mbid", "canonical_recording_mbid", False),
+                ("canonical_recording_redirect_old_ndx_recording_mbid", "recording_mbid", True)]
 
     def process_row(self, row):
         assert False
