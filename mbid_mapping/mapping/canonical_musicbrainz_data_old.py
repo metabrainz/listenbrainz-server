@@ -112,3 +112,27 @@ def create_canonical_musicbrainz_data_old(use_lb_conn: bool):
             mb_conn.commit()
 
         log("canonical_musicbrainz_data: done done done!")
+
+"""
+select cmd.combined_lookup
+     , cmd.recording_name
+     , cmd.artist_credit_name
+     , cmd.recording_mbid
+     , cmdo.recording_mbid
+     , cmd.release_mbid
+     , cmdo.release_mbid
+  from mapping.canonical_musicbrainz_data_old cmdo
+  join mapping.canonical_musicbrainz_data cmd
+    on cmdo.combined_lookup = cmd.combined_lookup
+   and cmdo.recording_mbid != cmd.recording_mbid
+   and cmdo.release_mbid != cmd.release_mbid
+   and cmdo.artist_credit_id != 1
+   and cmd.artist_credit_id != 1
+  join musicbrainz.release r
+    on r.gid = cmdo.release_mbid
+  join musicbrainz.release_group rg
+    on rg.id = r.release_group
+  join musicbrainz.release_group_secondary_type_join rgstj
+    on rgstj.release_group = rg.id
+   and rgstj.secondary_type = 2;
+"""
