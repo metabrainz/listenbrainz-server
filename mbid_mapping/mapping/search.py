@@ -25,7 +25,7 @@ def search(query):
         'num_typos': 5
     }
 
-    hits = client.collections['canonical_musicbrainz_data_latest'].documents.search(search_parameters)
+    hits = client.collections['canonical_musicbrainz_data_old_latest'].documents.search(search_parameters)
 
     output = []
     for hit in hits['hits']:
