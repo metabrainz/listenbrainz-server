@@ -754,7 +754,7 @@ export default class YearInMusic extends React.Component<
           <div className="header">
             Charts
             <div className="subheader">
-              {youOrUsername} {isCurrentUser ? "have" : "has"} great taste.
+              {youOrUsername} {isCurrentUser ? "have" : "has"} great taste
             </div>
           </div>
           <div className="flex flex-wrap" style={{ gap: "2em" }}>
@@ -885,7 +885,7 @@ export default class YearInMusic extends React.Component<
         <div className="section" id="stats">
           <div className="header">
             Statistics
-            <div className="subheader">You are a wonderful human being</div>
+            <div className="subheader">you are a wonderful human being</div>
           </div>
           <div className="card content-card">
             <div className="small-stats">
@@ -1005,7 +1005,7 @@ export default class YearInMusic extends React.Component<
                   <Tooltip id="most-listened-year-helptext">
                     How much {isCurrentUser ? "were you" : `was ${user.name}`}{" "}
                     on the lookout for new music this year? Not that we&apos;re
-                    judging.
+                    judging
                   </Tooltip>
                 </h3>
                 <div className="graph-container">
@@ -1139,8 +1139,7 @@ export default class YearInMusic extends React.Component<
             <div className="header">
               2023 Playlists
               <div className="subheader">
-                {capitalize(youOrUsername)} {isCurrentUser ? "have" : "has"}{" "}
-                earned these
+                {youOrUsername} {isCurrentUser ? "have" : "has"} earned these
               </div>
             </div>
             <div className="row flex flex-wrap" id="playlists">
@@ -1165,7 +1164,7 @@ export default class YearInMusic extends React.Component<
           <div className="header">
             Discover
             <div className="subheader">
-              There&apos;s a whole world out there
+              there&apos;s a whole world out there
             </div>
           </div>
           <div className="flex flex-wrap">

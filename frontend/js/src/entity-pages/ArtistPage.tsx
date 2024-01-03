@@ -47,9 +47,13 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     releaseGroups,
     similarArtists,
     listeningStats,
-    coverArt: coverArtSVG
+    coverArt: coverArtSVG,
   } = props;
-  const { total_listen_count: listenCount, listeners: topListeners } = listeningStats;
+  const {
+    total_listen_count: listenCount,
+    listeners: topListeners,
+    total_user_count: userCount
+  } = listeningStats;
 
   const [artist, setArtist] = React.useState(initialArtist);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
@@ -62,8 +66,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   );
   const [loading, setLoading] = React.useState(false);
 
-  const [albumsByThisArtist, alsoAppearsOn] = partition(releaseGroups, (rg) =>
-    rg.artists[0].artist_mbid === artist.artist_mbid
+  const [albumsByThisArtist, alsoAppearsOn] = partition(
+    releaseGroups,
+    (rg) => rg.artists[0].artist_mbid === artist.artist_mbid
   );
   /** Navigation from one artist to a similar artist */
   //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
@@ -282,7 +287,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           key={artist.name}
           tags={filteredTags}
           entityType="artist"
-          entityMBID={artist.name}
+          entityMBID={artist.artist_mbid}
         />
       </div>
       <div className="entity-page-content">
@@ -350,7 +355,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             <div className="separator" />
             <div className="text-center">
               <div className="number">
-                {bigNumberFormatter.format(topListeners.length)}
+                {bigNumberFormatter.format(userCount)}
               </div>
               <div className="text-muted small">
                 <FontAwesomeIcon icon={faUserAstronaut} /> listeners
@@ -495,7 +500,7 @@ document.addEventListener("DOMContentLoaded", () => {
     release_groups,
     similar_artists,
     listening_stats,
-    cover_art
+    cover_art,
   } = reactProps;
 
   const ArtistPageWithAlertNotifications = withAlertNotifications(ArtistPage);

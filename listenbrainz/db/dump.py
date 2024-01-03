@@ -1,7 +1,7 @@
 """ This module contains data dump creation and import functions.
 
 Read more about the data dumps in our documentation here:
-https://listenbrainz.readthedocs.io/en/production/dev/listenbrainz-dumps.html
+https://listenbrainz.readthedocs.io/en/latest/users/listenbrainz-dumps.html
 """
 
 # listenbrainz-server - Server for the ListenBrainz project
@@ -240,11 +240,12 @@ PRIVATE_TABLES_TIMESCALE = {
 }
 
 
-def dump_postgres_db(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
+def dump_postgres_db(location, location_private, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump in the specified location
 
         Arguments:
-            location: Directory where the final dump will be stored
+            location: Directory where the final public dump will be stored
+            location_private: Directory where the final private dump will be stored
             dump_time: datetime object representing when the dump was started
             threads: Maximal number of threads to run during compression
 
@@ -252,18 +253,19 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_
             a tuple: (path to private dump, path to public dump)
     """
     current_app.logger.info('Beginning dump of PostgreSQL database...')
-    current_app.logger.info('dump path: %s', location)
+    current_app.logger.info('private dump path: %s', location_private)
 
     current_app.logger.info('Creating dump of private data...')
     try:
-        private_dump = create_private_dump(location, dump_time, threads)
+        private_dump = create_private_dump(location_private, dump_time, threads)
     except Exception:
         current_app.logger.critical('Unable to create private db dump due to error: ', exc_info=True)
         current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
+        shutil.rmtree(location_private)
         return
     current_app.logger.info('Dump of private data created at %s!', private_dump)
 
+    current_app.logger.info('public dump path: %s', location)
     current_app.logger.info('Creating dump of public data...')
     try:
         public_dump = create_public_dump(location, dump_time, threads)
@@ -277,12 +279,13 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_
     return private_dump, public_dump
 
 
-def dump_timescale_db(location: str, dump_time: datetime = datetime.today(),
+def dump_timescale_db(location: str, location_private: str, dump_time: datetime = datetime.today(),
                       threads: int = DUMP_DEFAULT_THREAD_COUNT) -> Optional[Tuple[str, str]]:
     """ Create timescale database (excluding listens) dump in the specified location
 
         Arguments:
-            location: Directory where the final dump will be stored
+            location: Directory where the final public dump will be stored
+            location_private: Directory where the final private dump will be stored
             dump_time: datetime object representing when the dump was started
             threads: Maximal number of threads to run during compression
 
@@ -293,14 +296,13 @@ def dump_timescale_db(location: str, dump_time: datetime = datetime.today(),
 
     current_app.logger.info('Creating dump of timescale private data...')
     try:
-        private_timescale_dump = create_private_timescale_dump(location, dump_time, threads)
+        private_timescale_dump = create_private_timescale_dump(location_private, dump_time, threads)
     except Exception:
         current_app.logger.critical('Unable to create private timescale db dump due to error: ', exc_info=True)
         current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
+        shutil.rmtree(location_private)
         return
-    current_app.logger.info(
-        'Dump of private timescale data created at %s!', private_timescale_dump)
+    current_app.logger.info('Dump of private timescale data created at %s!', private_timescale_dump)
 
     current_app.logger.info('Creating dump of timescale public data...')
     try:
