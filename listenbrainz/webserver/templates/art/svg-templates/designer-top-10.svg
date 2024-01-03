@@ -1,3 +1,5 @@
+{%- from 'macros.html' import render_entity_link -%}
+
 <svg id="svg2"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns="http://www.w3.org/2000/svg"
@@ -46,10 +48,10 @@
        {% endif %}
      </tspan>
      <tspan x="40" y="{{ y_artists_start + loop.index0 * gap }}" id="artist-{{ loop.index }}-album">
-       {{ render_entity_link("release", release.release_mbid, release.release_name|upper|e }}
+       {{ render_entity_link("release", release.release_mbid, release.release_name|upper|e) }}
      </tspan>
      <tspan x="40" y="{{ y_albums_start + loop.index0 * gap }}" class="artist-name" id="artist-{{ loop.index }}-name">
-       {{ render_entity_link("artist", release.artist_mbids[0], release.artist_name|upper|e }}
+       {{ render_entity_link("artist", release.artist_mbids[0], release.artist_name|upper|e) }}
      </tspan>
    </text>
    {% endfor %}
