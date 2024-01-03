@@ -267,14 +267,11 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
   );
 };
 
-const getArtistLink = (listen: Listen) => {
-  const artists = listen.track_metadata?.mbid_mapping?.artists;
+const getStatsArtistLink = (artists?: MBIDMappingArtist[], artist_name?: string, artist_mbids?: string[]) => {
   if (artists?.length) {
     return getMBIDMappingArtistLink(artists);
   }
-  const artistName = getArtistName(listen);
-  const artistMbids = getArtistMBIDs(listen);
-  const firstArtist = _.first(artistMbids);
+  const firstArtist = _.first(artist_mbids);
   if (firstArtist) {
     return (
       <a
@@ -282,11 +279,18 @@ const getArtistLink = (listen: Listen) => {
         target="_blank"
         rel="noopener noreferrer"
       >
-        {artistName}
+        {artist_name}
       </a>
     );
   }
-  return artistName;
+  return artist_name;
+};
+
+const getArtistLink = (listen: Listen) => {
+  const artists = listen.track_metadata?.mbid_mapping?.artists;
+  const artist_name = getArtistName(listen);
+  const artist_mbids = getArtistMBIDs(listen);
+  return getStatsArtistLink(artists, artist_name, artist_mbids);
 };
 
 const getTrackLink = (listen: Listen): JSX.Element | string => {
@@ -960,6 +964,7 @@ export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,
   getMBIDMappingArtistLink,
+  getStatsArtistLink,
   getArtistLink,
   getTrackLink,
   formatWSMessageToListen,

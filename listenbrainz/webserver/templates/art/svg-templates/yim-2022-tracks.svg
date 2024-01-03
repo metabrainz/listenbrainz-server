@@ -65,7 +65,7 @@
                 <tspan class="track-name" x="125" y="{{ y_start + loop.index0 * gap }}">
                     {{ track.track_name|upper|e }}
                 </tspan>
-                <tspan class="artist-name" x="125" dy="20">{{ tracks[0].artist_name|upper|e }}</tspan>
+                <tspan class="artist-name" x="125" dy="20">{{ track.artist_name|upper|e }}</tspan>
             </text>
             {% endfor %}
         </g>

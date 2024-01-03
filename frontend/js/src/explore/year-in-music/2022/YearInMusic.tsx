@@ -1164,7 +1164,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <a href="/explore/cover-art-collage">
+            <a href="/explore/cover-art-collage/2022">
               <LazyLoadImage
                 src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
                 placeholderSrc="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"

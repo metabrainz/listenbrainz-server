@@ -30,7 +30,7 @@ import {
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 type FollowButtonProps = {
-  type: "icon-only" | "block";
+  type: "icon-only" | "block" | string;
   user: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
   updateFollowingList?: (

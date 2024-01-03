@@ -78,9 +78,17 @@ module.exports = function (env, argv) {
         jsDir,
         "src/explore/year-in-music/2022/YearInMusic.tsx"
       ),
-      coverArtComposite: path.resolve(
+      yearInMusic2023: path.resolve(
+        jsDir,
+        "src/explore/year-in-music/2023/YearInMusic.tsx"
+      ),
+      coverArtComposite2022: path.resolve(
         jsDir,
         "src/explore/year-in-music/2022/CoverArtComposite.tsx"
+      ),
+      coverArtComposite2023: path.resolve(
+        jsDir,
+        "src/explore/year-in-music/2023/CoverArtComposite.tsx"
       ),
       homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
       recommendationsPlayground: path.resolve(

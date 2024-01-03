@@ -336,12 +336,7 @@ def handle_yim_similar_users(message):
 
 
 def handle_yim_new_releases_of_top_artists(message):
-    user_id = message["user_id"]
-    # need to check whether user exists before inserting otherwise possible FK error.
-    user = db_user.get(user_id)
-    if not user:
-        return
-    year_in_music.insert_new_releases_of_top_artists(user_id, message["year"], message["data"])
+    year_in_music.handle_multi_large_insert("new_releases_of_top_artists", message["year"], message["data"])
 
 
 def handle_yim_day_of_week(message):
