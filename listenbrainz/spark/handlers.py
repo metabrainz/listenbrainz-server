@@ -400,4 +400,9 @@ def handle_troi_playlists_end(message):
 
 
 def handle_echo(message):
-    current_app.logger.info("message with unknown action: %s", json.dumps(message))
+    if message["action"] == "year_in_music_start":
+        year_in_music.create_yim_table(message["year"])
+    elif message["action"] == "year_in_music_end":
+        year_in_music.swap_yim_tables(message["year"])
+    else:
+        current_app.logger.info("message with unknown action: %s", json.dumps(message))
