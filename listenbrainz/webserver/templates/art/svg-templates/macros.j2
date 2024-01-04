@@ -21,7 +21,7 @@
         href="{{ image.url }}">
         {% if image.title and image.artist %}
         <title>
-          {{ image.title ~ " - " ~ image.artist }}
+          {{ image.title|escape ~ " - " ~ image.artist|escape }}
         </title>
         {% endif %}
     </image>
