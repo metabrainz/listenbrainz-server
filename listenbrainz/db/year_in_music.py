@@ -107,8 +107,39 @@ def insert_top_stats(entity, year, data):
     insert(f"total_{entity}_count", year, [(user["user_id"], user["count"]) for user in data], False)
 
 
+def create_yim_table(year):
+    """ Create a new year in music unlogged table for the specified year """
+    table = "statistics.year_in_music_" + year + "_tmp"
+    drop_sql = "DROP TABLE IF EXISTS " + table
+    create_sql = """
+        CREATE UNLOGGED TABLE """ + table + """ (
+            user_id INTEGER NOT NULL PRIMARY KEY,
+            data JSONB NOT NULL
+        )
+    """
+    with timescale.engine.begin() as connection:
+        connection.execute(text(drop_sql))
+        connection.execute(text(create_sql))
 
-def send_mail(subject, to_name, to_email, text, html, logo, logo_cid):
+
+def swap_yim_tables(year):
+    """ Swap the year in music tables """
+    table_without_schema = "year_in_music_" + year
+    table = "statistics." + table_without_schema
+    tmp_table = table + "_tmp"
+
+    drop_sql = "DROP TABLE IF EXISTS " + table
+    rename_sql = "ALTER TABLE IF EXISTS " + tmp_table + " RENAME TO " + table_without_schema
+    logged_sql = "ALTER TABLE IF EXISTS " + table + " SET LOGGED"
+    vacuum_sql = "VACUUM ANALYZE " + table
+    with timescale.engine.begin() as connection:
+        connection.execute(text(drop_sql))
+        connection.execute(text(rename_sql))
+        connection.execute(text(logged_sql))
+        connection.execute(text(vacuum_sql))
+
+
+def send_mail(subject, to_name, to_email, content, html, logo, logo_cid):
     if not to_email:
         return
 
@@ -117,7 +148,7 @@ def send_mail(subject, to_name, to_email, text, html, logo, logo_cid):
     message["To"] = f"{to_name} <{to_email}>"
     message["Subject"] = subject
 
-    message.set_content(text)
+    message.set_content(content)
     message.add_alternative(html, subtype="html")
 
     message.get_payload()[1].add_related(logo, 'image', 'png', cid=logo_cid, filename="year-in-music-23-logo.png")
@@ -163,7 +194,7 @@ def notify_yim_users(year):
         try:
             send_mail(
                 subject=f"Year In Music {year}",
-                text=render_template("emails/year_in_music.txt", **params),
+                content=render_template("emails/year_in_music.txt", **params),
                 to_email=row["email"],
                 to_name=user_name,
                 html=render_template("emails/year_in_music.html", **params),
