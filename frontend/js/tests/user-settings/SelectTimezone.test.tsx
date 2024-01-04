@@ -6,7 +6,7 @@ import {
   textContentMatcher,
 } from "../test-utils/rtl-test-utils";
 import APIServiceClass from "../../src/utils/APIService";
-import SelectTimezone from "../../src/user-settings/SelectTimezone";
+import SelectTimezone from "../../src/settings/pages/SelectTimezone";
 
 const user_timezone = "America/New_York";
 const pg_timezones: Array<[string, string]> = [
