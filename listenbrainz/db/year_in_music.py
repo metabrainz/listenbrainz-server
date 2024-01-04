@@ -1,21 +1,19 @@
-import json
 import smtplib
 from email.message import EmailMessage
 from email.utils import make_msgid
-import os
 
 import psycopg2
 import sqlalchemy
 import orjson
 from flask import current_app, render_template
-from psycopg2.extras import execute_values, DictCursor
-from brainzutils import musicbrainz_db
-from psycopg2.sql import SQL, Literal
+from psycopg2.extras import execute_values
+from psycopg2.sql import SQL, Literal, Identifier
+from sqlalchemy import text
 
 from listenbrainz.db.model.user_timeline_event import NotificationMetadata
 from listenbrainz import db
 from listenbrainz.db import timescale
-from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mbids
+from listenbrainz.db.user import get_all_usernames
 from listenbrainz.db.user_timeline_event import create_user_notification_event
 
 # Year in Music data element defintions
@@ -41,108 +39,73 @@ from listenbrainz.db.user_timeline_event import create_user_notification_event
 
 def get(user_id, year):
     """ Get year in music data for requested user """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT data FROM statistics.year_in_music WHERE user_id = :user_id AND year = :year
-        """), {"user_id": user_id, "year": year})
+    if year not in [2021, 2022, 2023]:
+        return None
+
+    table = "statistics.year_in_music_" + str(year)
+    with timescale.engine.connect() as connection:
+        result = connection.execute(
+            text("SELECT data FROM " + table + " WHERE user_id = :user_id"),
+            {"user_id": user_id}
+        )
         row = result.fetchone()
         return row.data if row else None
 
 
-def insert(key, year, data):
-    connection = db.engine.raw_connection()
+def insert(key, year, data, cast_to_jsonb):
+    connection = timescale.engine.raw_connection()
     query = SQL("""
-        INSERT INTO statistics.year_in_music(user_id, year, data)
-             SELECT "user".id
-                  , {year}
-                  , jsonb_build_object({key}, value)
+        INSERT INTO {table} AS yim (user_id, data)
+             SELECT user_id
+                  , jsonb_build_object({key}, value::jsonb)
                FROM (VALUES %s) AS t(user_id, value)
-               JOIN "user"
-                 ON "user".id = user_id::int
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(year=Literal(year), key=Literal(key))
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = COALESCE(yim.data, '{{}}'::jsonb) || EXCLUDED.data
+    """).format(table=Identifier("statistics", "year_in_music_" + year), key=Literal(key))
+    if cast_to_jsonb:
+        template = f"jsonb_build_object('{key}', value::jsonb)"
+    else:
+        template = f"jsonb_build_object('{key}', value)"
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, orjson.loads(data).items())
+            execute_values(cursor, query, data, template)
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error(f"Error while inserting {key}:", exc_info=True)
 
 
+def insert_heavy(key, year, data):
+    insert(key, year, [(user["user_id"], orjson.dumps(user["data"]).decode("utf-8")) for user in data], True)
+
+
 def insert_similar_users(year, data):
-    connection = db.engine.raw_connection()
-    query = SQL("""
-        INSERT INTO statistics.year_in_music (user_id, year, data)
-             SELECT "user".id
-                  , {year}
-                  , jsonb_build_object('similar_users', jsonb_object_agg(other_user.musicbrainz_id, similar_user.score::float))
-               FROM (VALUES %s) AS t(user_id, data)
-               JOIN "user"
-                 ON "user".id = user_id::int
-       JOIN LATERAL jsonb_each(t.data::jsonb) AS similar_user(user_id, score)
-                 ON TRUE
-               JOIN "user" other_user
-                 ON other_user.id = similar_user.user_id::int
-           GROUP BY "user".id
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(year=Literal(year))
-    try:
-        with connection.cursor() as cursor:
-            values = [(k, json.dumps(v, ensure_ascii=False)) for k, v in data.items()]
-            execute_values(cursor, query, values)
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting similar users:", exc_info=True)
+    user_ids = get_all_usernames()
+
+    similar_user_data = [
+        {
+            "user_id": user["user_id"],
+            "data": orjson.dumps(
+                [
+                    {
+                        "musicbrainz_id": user_ids[other_user["user_id"]],
+                        "score": other_user["score"]
+                    }
+                    for other_user in user["data"]
+                    if other_user["user_id"] in user_ids
+                ]
+            ).decode("utf-8")
+        }
+        for user in data
+    ]
+
+    insert_heavy("similar_users", year, similar_user_data)
 
 
-def handle_multi_large_insert(key, year, data):
-    connection = db.engine.raw_connection()
-    query = SQL("""
-        INSERT INTO statistics.year_in_music (user_id, year, data)
-             SELECT "user".id
-                  , {year}
-                  , jsonb_build_object({key}, data::jsonb)
-               FROM (VALUES %s) AS t(user_id, data)
-               JOIN "user"
-                 ON "user".id = user_id::int
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(key=Literal(key), year=Literal(year))
-    try:
-        with connection.cursor() as cursor:
-            values = [(user["user_id"], orjson.dumps(user["data"]).decode("utf-8")) for user in data]
-            execute_values(cursor, query, values)
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting top stats:", exc_info=True)
+def insert_top_stats(entity, year, data):
+    insert_heavy(f"top_{entity}", year, data)
+    insert(f"total_{entity}_count", year, [(user["user_id"], user["count"]) for user in data], False)
 
-
-def handle_insert_top_stats(entity, year, data):
-    connection = db.engine.raw_connection()
-    query = SQL("""
-        INSERT INTO statistics.year_in_music (user_id, year, data)
-             SELECT "user".id
-                  , {year}
-                  , jsonb_build_object({key}, data::jsonb, {count_key}, count)
-               FROM (VALUES %s) AS t(user_id, count, data)
-               JOIN "user"
-                 ON "user".id = user_id::int
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(key=Literal(f"top_{entity}"), count_key=Literal(f"total_{entity}_count"), year=Literal(year))
-    try:
-        with connection.cursor() as cursor:
-            values = [(user["user_id"], user["count"], orjson.dumps(user["data"]).decode("utf-8")) for user in data]
-            execute_values(cursor, query, values)
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting top stats:", exc_info=True)
 
 
 def send_mail(subject, to_name, to_email, text, html, logo, logo_cid):

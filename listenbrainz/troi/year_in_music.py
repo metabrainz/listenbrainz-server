@@ -4,7 +4,7 @@ from psycopg2.extras import DictCursor
 
 from listenbrainz.db.model.playlist import Playlist, PlaylistRecording
 from listenbrainz.db.playlist import LISTENBRAINZ_USER_ID, get_playlist_recordings_metadata
-from listenbrainz.db.year_in_music import handle_multi_large_insert
+from listenbrainz.db.year_in_music import insert_heavy
 from listenbrainz.troi.spark import remove_old_playlists, get_user_details, batch_process_playlists
 
 USERS_PER_BATCH = 25
@@ -88,7 +88,7 @@ def insert_playlists_in_yim(slug, year, playlists, user_details):
                 "data": playlist_obj.serialize_jspf()["playlist"]
             })
 
-    handle_multi_large_insert(f"playlist-{slug}-for-year", year, playlist_jsons)
+    insert_heavy(f"playlist-{slug}-for-year", year, playlist_jsons)
 
 
 def process_yim_playlists(slug, year, playlists):
