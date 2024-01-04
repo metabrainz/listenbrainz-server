@@ -1385,68 +1385,70 @@ export default class YearInMusic extends React.Component<
             </a>
           </div>
 
-          {userShareBar}
-
-          <div className="section closing-remarks">
-            <span className="bold">
-              Wishing you a restful 2024, from the ListenBrainz team.
-            </span>
-            <br />
-            If you have questions or feedback don&apos;t hesitate to contact us
-            <br />
-            on&nbsp;
-            <a
-              target="_blank"
-              href="https://community.metabrainz.org/c/listenbrainz/18"
-              rel="noopener noreferrer"
-            >
-              our forums
-            </a>
-            ,&nbsp;
-            <a
-              target="_blank"
-              href="mailto:listenbrainz@metabrainz.org"
-              rel="noopener noreferrer"
-            >
-              by email
-            </a>
-            ,&nbsp;
-            <a
-              target="_blank"
-              href="https://web.libera.chat/#metabrainz"
-              rel="noopener noreferrer"
-            >
-              IRC
-            </a>
-            ,&nbsp;
-            <a
-              target="_blank"
-              href="https://twitter.com/listenbrainz"
-              rel="noopener noreferrer"
-            >
-              X
-            </a>
-            ,&nbsp;
-            <a
-              target="_blank"
-              href="https://bsky.app/profile/metabrainz.bsky.social"
-              rel="noopener noreferrer"
-            >
-              Bluesky
-            </a>
-            &nbsp;or&nbsp;
-            <a
-              target="_blank"
-              href="https://mastodon.social/@metabrainz"
-              rel="noopener noreferrer"
-            >
-              Mastodon
-            </a>
-            .
-            <br />
-            <br />
-            Feeling nostalgic? See your previous Year in Music:{" "}
-            <a href={`/user/${user.name}/year-in-music/2022`}>2022</a>
+          <div className="section">
+            {userShareBar}
+            <div className="closing-remarks">
+              <span className="bold">
+                Wishing you a restful 2024, from the ListenBrainz team.
+              </span>
+              <br />
+              If you have questions or feedback don&apos;t hesitate to contact
+              us
+              <br />
+              on&nbsp;
+              <a
+                target="_blank"
+                href="https://community.metabrainz.org/c/listenbrainz/18"
+                rel="noopener noreferrer"
+              >
+                our forums
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="mailto:listenbrainz@metabrainz.org"
+                rel="noopener noreferrer"
+              >
+                by email
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="https://web.libera.chat/#metabrainz"
+                rel="noopener noreferrer"
+              >
+                IRC
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="https://twitter.com/listenbrainz"
+                rel="noopener noreferrer"
+              >
+                X
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="https://bsky.app/profile/metabrainz.bsky.social"
+                rel="noopener noreferrer"
+              >
+                Bluesky
+              </a>
+              &nbsp;or&nbsp;
+              <a
+                target="_blank"
+                href="https://mastodon.social/@metabrainz"
+                rel="noopener noreferrer"
+              >
+                Mastodon
+              </a>
+              .
+              <br />
+              <br />
+              Feeling nostalgic? See your previous Year in Music:{" "}
+              <a href={`/user/${user.name}/year-in-music/2022`}>2022</a>
+            </div>
           </div>
         </div>
         {/* Trick to load the font files for use with the SVG render */}
