@@ -4,7 +4,7 @@ import { redirect } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ToastMsg } from "../../notifications/Notifications";
 
-export default function ResetToken() {
+export default function ResetImportTimestamp() {
   const resetToken = async () => {
     try {
       const response = await fetch(window.location.href, {

@@ -20,6 +20,7 @@ import {
   SelectTroiPreferencesWrapper,
 } from "../pages/SelectTroiPreferences";
 import Settings from "../pages/Settings";
+import ResetImportTimestamp from "../pages/ResetLatestImports";
 
 const getSettingsRoutes = () => {
   const SettingsWithAlertNotifications = withAlertNotifications(Settings);
@@ -28,6 +29,9 @@ const getSettingsRoutes = () => {
     MusicServices
   );
   const ImportWithAlertNotifications = withAlertNotifications(Import);
+  const ResetImportTimestampWithAlertNotifications = withAlertNotifications(
+    ResetImportTimestamp
+  );
   const SelectTroiPreferencesWithAlertNotifications = withAlertNotifications(
     SelectTroiPreferencesWrapper
   );
@@ -68,6 +72,10 @@ const getSettingsRoutes = () => {
           path: "import/",
           loader: ImportLoader,
           element: <ImportWithAlertNotifications />,
+        },
+        {
+          path: "resetlatestimportts/",
+          element: <ResetImportTimestampWithAlertNotifications />,
         },
         {
           path: "missing-data/",

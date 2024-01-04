@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import LastFmImporter from "../../lastfm/LastFMImporter";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
@@ -113,12 +113,9 @@ export default function Import() {
       <p>If you want to reset your previous import timestamp, click below</p>
       <p>
         <span className="btn btn-info btn-lg" style={{ width: "300px" }}>
-          <a
-            href="{{ url_for('profile.reset_latest_import_timestamp') }"
-            style={{ color: "white" }}
-          >
+          <Link to="/profile/resetlatestimportts/" style={{ color: "white" }}>
             Reset Import Timestamp
-          </a>
+          </Link>
         </span>
       </p>
     </>
