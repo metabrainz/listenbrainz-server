@@ -30,8 +30,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def test_profile_view(self):
         """Tests the user info view and makes sure auth token is present there"""
         self.temporary_login(self.user['login_id'])
-        response = self.client.get(url_for('profile.info', user_name=self.user['musicbrainz_id']))
-        self.assertTemplateUsed('profile/info.html')
+        response = self.client.get(url_for('profile.index', path=''))
+        self.assertTemplateUsed('profile/index.html')
         self.assert200(response)
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
@@ -41,21 +41,21 @@ class ProfileViewsTestCase(IntegrationTestCase):
         val = int(time.time())
         listens_importer.update_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM, val)
         self.temporary_login(self.user['login_id'])
-        response = self.client.get(url_for('profile.reset_latest_import_timestamp'))
-        self.assertTemplateUsed('profile/resetlatestimportts.html')
+        response = self.client.get(url_for('profile.index', path='resetlatestimportts/'))
+        self.assertTemplateUsed('profile/index.html')
         self.assert200(response)
 
         response = self.client.post(
-            url_for('profile.reset_latest_import_timestamp'),
+            url_for('profile.index', path='resetlatestimportts/'),
             data={'csrf_token': g.csrf_token}
         )
-        self.assertRedirects(response, url_for('profile.info'))  # should have redirected to the info page
+        self.assertRedirects(response, url_for('profile.index', path=''))  # should have redirected to the info page
         ts = listens_importer.get_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM)
         self.assertEqual(int(ts.strftime('%s')), 0)
 
     def test_user_info_not_logged_in(self):
         """Tests user info view when not logged in"""
-        profile_info_url = url_for('profile.info')
+        profile_info_url = url_for('profile.index', path='')
         response = self.client.get(profile_info_url)
         self.assertRedirects(response, url_for('login.index', next=profile_info_url))
 
@@ -64,17 +64,17 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.temporary_login(self.user['login_id'])
         # we do a get request first to put the CSRF token in the flask global context
         # so that we can access it for using in the post request in the next step
-        delete_listens_url = url_for('profile.delete_listens')
+        delete_listens_url = url_for('profile.index', path='delete-listens/')
         response = self.client.get(delete_listens_url)
         self.assert200(response)
 
-        response = self.client.post(delete_listens_url, data={'csrf_token': g.csrf_token})
+        response = self.client.post(delete_listens_url)
         self.assertMessageFlashed("Successfully deleted listens for %s." % self.user['musicbrainz_id'], 'info')
         self.assertRedirects(response, url_for('user.profile', user_name=self.user['musicbrainz_id']))
 
     def test_delete_listens_not_logged_in(self):
         """Tests delete listens view when not logged in"""
-        delete_listens_url = url_for('profile.delete_listens')
+        delete_listens_url = url_for('profile.index', path='delete-listens/')
         response = self.client.get(delete_listens_url)
         self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
 
@@ -84,44 +84,44 @@ class ProfileViewsTestCase(IntegrationTestCase):
     def test_delete_listens_csrf_token_not_provided(self):
         """Tests delete listens end point when auth token is missing"""
         self.temporary_login(self.user['login_id'])
-        delete_listens_url = url_for('profile.delete_listens')
+        delete_listens_url = url_for('profile.index', path='delete-listens/')
         response = self.client.get(delete_listens_url)
         self.assert200(response)
 
         response = self.client.post(delete_listens_url)
         self.assertMessageFlashed('Cannot delete listens due to error during authentication, please try again later.',
                                   'error')
-        self.assertRedirects(response, url_for('profile.info'))
+        self.assertRedirects(response, url_for('profile.index', path=''))
 
     def test_delete_listens_invalid_csrf_token(self):
         """Tests delete listens end point when auth token is invalid"""
         self.temporary_login(self.user['login_id'])
-        delete_listens_url = url_for('profile.delete_listens')
+        delete_listens_url = url_for('profile.index', path='delete-listens/')
         response = self.client.get(delete_listens_url)
         self.assert200(response)
 
         response = self.client.post(delete_listens_url, data={'csrf_token': 'invalid-auth-token'})
         self.assertMessageFlashed('Cannot delete listens due to error during authentication, please try again later.',
                                   'error')
-        self.assertRedirects(response, url_for('profile.info'))
+        self.assertRedirects(response, url_for('profile.index', path=''))
 
     def test_select_timezone(self):
         """Tests select timezone end point"""
         self.temporary_login(self.user['login_id'])
-        select_timezone_url = url_for('profile.select_timezone')
+        select_timezone_url = url_for('profile.index', path='select_timezone/')
         response = self.client.get(select_timezone_url)
         self.assert200(response)
 
     def test_select_timezone_logged_out(self):
         """Tests select timezone view when not logged in"""
-        select_timezone_url = url_for('profile.select_timezone')
+        select_timezone_url = url_for('profile.index', path='select_timezone/')
         response = self.client.get(select_timezone_url)
         self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=select_timezone_url))
 
     def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])
-        r = self.client.get(url_for('profile.music_services_details'))
+        r = self.client.get(url_for('profile.index', path='music-services/details/'))
         self.assert200(r)
 
         r = self.client.post(url_for('profile.music_services_disconnect', service_name='spotify'))
@@ -248,7 +248,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         # zero listens in the batch. This tests that we fetch all batches.
         mock_fetch_listens.side_effect = [(listens[0:2], 0, 0), (listens[2:3], 0, 0), ([], 0, 0)]
 
-        r = self.client.post(url_for('profile.export_data'))
+        r = self.client.post(url_for('profile.index', path='export/'))
         self.assert200(r)
 
         # r.json returns None, so we decode the response manually.
@@ -315,7 +315,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         # zero feedback in the batch. This tests that we fetch all batches.
         mock_fetch_feedback.side_effect = [feedback[0:2], feedback[2:3], []]
 
-        r = self.client.post(url_for('profile.export_feedback'))
+        r = self.client.post(url_for('profile.index', path='export-feedback/'))
         self.assert200(r)
 
         # r.json returns None, so we decode the response manually.
@@ -347,6 +347,6 @@ class ProfileViewsTestCase(IntegrationTestCase):
         })
 
     def test_export_feedback_streaming_not_logged_in(self):
-        export_feedback_url = url_for('profile.export_feedback')
+        export_feedback_url = url_for('profile.index', path='export-feedback/')
         response = self.client.post(export_feedback_url)
         self.assertRedirects(response, url_for('login.index', next=export_feedback_url))
