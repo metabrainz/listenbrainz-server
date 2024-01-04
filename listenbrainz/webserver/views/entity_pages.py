@@ -33,7 +33,18 @@ def get_release_group_sort_key(release_group):
 
 def get_cover_art_for_artist(release_groups):
     """ Get the cover art for an artist using a list of their release groups """
-    covers = [rg for rg in release_groups if rg.get("caa_id") is not None]
+    covers = []
+    for release_group in release_groups:
+        if release_group.get("caa_id") is not None:
+            cover = {
+                "entity_mbid": release_group["mbid"],
+                "title": release_group["name"],
+                "artist": release_group["artist_credit_name"],
+                "caa_id": release_group["caa_id"],
+                "caa_release_mbid": release_group["caa_release_mbid"]
+            }
+            covers.append(cover)
+
     cac = CoverArtGenerator(
         current_app.config["MB_DATABASE_URI"],
         4,
@@ -58,6 +69,7 @@ def get_cover_art_for_artist(release_groups):
         "art/svg-templates/simple-grid.svg",
         background="transparent",
         images=images,
+        entity="release-group",
         width=400,
         height=400
     )

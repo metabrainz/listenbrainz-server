@@ -1,27 +1,14 @@
+{%- from 'macros.html' import render_image_link -%}
+
 <svg version="1.1"
-     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
      viewBox="0 0 {{ width }} {{ height }}"
      width="{{ width }}"
      height="{{ height }}">
 
-     <rect id="background" fill="{{ background }}" x="0" ry="0" width="{{ width }}" height="{{ height}}"/>
-     {% for index, image in enumerate(images) %}
-     {% if releases is iterable %}
-       <a href="https://musicbrainz.org/release/{{ releases[index].release_mbid }}" >
-     {% endif %}
-          <image x="{{ image.x }}"
-               y="{{ image.y }}"
-               width="{{ image.width }}"
-               height="{{ image.height }}"
-               preserveAspectRatio="xMidYMid slice">
-               {% if releases is iterable %}
-               <title>
-                    {% releases[index].release_name %} - {% releases[index].artist_name %}
-               </title>
-               {% endif %}
-          </image>
-     {% if releases is iterable %}
-       </a>
-     {% endif %}
+     <rect id="background" fill="{{ background }}" x="0" ry="0" width="{{ width }}" height="{{ height }}"/>
+     {% for image in images %}
+          {{ render_image_link(entity, image) }}
      {% endfor %}
 </svg>
