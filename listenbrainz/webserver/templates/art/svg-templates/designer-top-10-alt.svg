@@ -12,8 +12,8 @@
      width="{{ width }}">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;900');
-    .artist-name {
-      font-weight:500;
+    .artist-name *, .artist-name {
+      font-weight: 500;
     }
   </style>
  <defs id="defs42">
