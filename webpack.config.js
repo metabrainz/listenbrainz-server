@@ -112,20 +112,13 @@ module.exports = function (env, argv) {
         jsDir,
         "src/explore/fresh-releases/FreshReleases.tsx"
       ),
-      selectTimezone: path.resolve(
-        jsDir,
-        "src/user-settings/SelectTimezone.tsx"
-      ),
-      selectTroiPreferences: path.resolve(
-        jsDir,
-        "src/user-settings/SelectTroiPreferences.tsx"
-      ),
       artCreator: path.resolve(
         jsDir,
         "src/explore/stats-art-designer/ArtCreator.tsx"
       ),
       artistPage: path.resolve(jsDir, "src/entity-pages/ArtistPage.tsx"),
       albumPage: path.resolve(jsDir, "src/entity-pages/AlbumPage.tsx"),
+      settingsPage: path.resolve(jsDir, "src/settings/index.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
