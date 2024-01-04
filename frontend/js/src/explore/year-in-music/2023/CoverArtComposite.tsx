@@ -27,7 +27,7 @@ export default function CoverArtComposite() {
       return;
     }
     panZoomInstance.moveTo(0, 0);
-    panZoomInstance.smoothZoom(
+    panZoomInstance.zoomTo(
       0, // initial x position
       0, // initial y position
       panZoomInstance.getMinZoom() // initial zoom
@@ -44,6 +44,9 @@ export default function CoverArtComposite() {
     const createdPanZoomInstance = panzoom(targetRef.current, {
       maxZoom: 2,
       minZoom: lowestZoom,
+      initialZoom: lowestZoom,
+      initialX: 0,
+      initialY: 0,
       bounds: true,
       onTouch: () => false, // how to allow touch events to work on mobile. See https://github.com/anvaka/panzoom/issues/235#issuecomment-1207341563
     });
@@ -94,10 +97,7 @@ export default function CoverArtComposite() {
       >
         {!bigImageActive ? (
           <>
-            <div
-              className="flex flex-center"
-              style={{ width: "100%", top: "10em", position: "absolute" }}
-            >
+            <div className="flex flex-center">
               <div
                 className="alert alert-warning"
                 style={{ maxWidth: "700px", zIndex: 1 }}
