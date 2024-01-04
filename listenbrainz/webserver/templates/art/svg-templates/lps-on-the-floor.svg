@@ -1,6 +1,6 @@
 {% macro render_lp_image(x, y, width, height, transform, image) %}
   {% if image.entity_mbid %}
-  <a href="https://musicbrainz.org/release/{{ image.entity_mbid }}" target="_blank">
+  <a href="https://listenbrainz.org/release/{{ image.entity_mbid }}" target="_blank">
   {% endif %}
     <image
         x="{{ x }}"
@@ -21,11 +21,6 @@
   </a>
   {% endif %}
 {% endmacro %}
-    <image x="0"
-           y="0"
-           width="{{ width }}"
-           height="{{ height }}"
-           href="{{ cover_art_on_floor_url }}"/>
 <svg version="1.1"
      xmlns="http://www.w3.org/2000/svg"
      width="{{ width }}" height="{{ height }}"
