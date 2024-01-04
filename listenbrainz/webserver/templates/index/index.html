@@ -24,8 +24,8 @@
         account, you can <a href="https://musicbrainz.org/register">create one</a>!
         <br>
         Once you have an
-        account, you can <a href="{{ url_for('profile.import_data') }}">import</a>
-        data from Last.FM, <a href="{{ url_for('profile.music_services_details') }}">connect your Spotify account</a>,
+        account, you can <a href="{{ url_for('profile.index', path='index') }}">import</a>
+        data from Last.FM, <a href="{{ url_for('profile.index', path='music-services/details/') }}">connect your Spotify account</a>,
         or use one of the <a href="{{ url_for('index.add_data_info') }}">many players</a> which can
         automatically record your listening history.
       </p>

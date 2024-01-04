@@ -1,0 +1,10 @@
+{%- extends 'base-react.html' -%}
+
+{% block title %}
+  Settings - ListenBrainz
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ get_static_path('settingsPage.js') }}" type="text/javascript"></script>
+{% endblock %}

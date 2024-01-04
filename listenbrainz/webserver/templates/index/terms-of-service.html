@@ -20,7 +20,7 @@
 	Additionally, we use the following third party resources to enable you to play music on ListenBrainz:
 </p>
 <ul>
-	<li><b><a href="https://developer.spotify.com/documentation/web-playback-sdk/">Spotify web player SDK</a></b>: Only loaded if you <a href="{{ url_for('profile.music_services_details') }}">linked you Spotify pro account</a></li>
+	<li><b><a href="https://developer.spotify.com/documentation/web-playback-sdk/">Spotify web player SDK</a></b>: Only loaded if you <a href="{{ url_for('profile.index', path='music-services/details/') }}">linked you Spotify pro account</a></li>
 	<li><b><a href="https://developers.google.com/youtube/iframe_api_reference">Youtube embedded player</a></b>: This is always loaded and serves as our backup player.
 		The search is not as precise as other music services but it enables playback for everyone by default</li>
 	<li><b><a href="https://developers.soundcloud.com/docs/api/html5-widget">Soundcloud player widget</a></b>: Always loaded, only used to play Soundcloud URLs</li>

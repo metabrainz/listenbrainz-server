@@ -99,10 +99,6 @@ module.exports = function (env, argv) {
         jsDir,
         "src/recommendations/RecommendationsPage.tsx"
       ),
-      missingMBData: path.resolve(
-        jsDir,
-        "src/missing-mb-data/MissingMBData.tsx"
-      ),
       playerPage: path.resolve(jsDir, "src/player-pages/PlayerPage.tsx"),
       metadataViewer: path.resolve(
         jsDir,

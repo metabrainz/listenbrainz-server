@@ -1,29 +1,31 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase,react/jsx-no-bind */
 
 import * as React from "react";
-import { toast } from "react-toastify";
-import { createRoot } from "react-dom/client";
+
+import { faLink, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import { useLoaderData } from "react-router-dom";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import { faLink, faPlus, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import { createRoot } from "react-dom/client";
+import { toast } from "react-toastify";
 
 import NiceModal from "@ebay/nice-modal-react";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
-import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import Loader from "../../components/Loader";
+import ListenCard from "../../listens/ListenCard";
+import ListenControl from "../../listens/ListenControl";
+import MBIDMappingModal from "../../mbid-mapping/MBIDMappingModal";
+import { ToastMsg } from "../../notifications/Notifications";
+import ErrorBoundary from "../../utils/ErrorBoundary";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 import {
   getArtistName,
   getPageProps,
   getRecordingMSID,
   getTrackName,
-} from "../utils/utils";
-import ListenCard from "../listens/ListenCard";
-import ListenControl from "../listens/ListenControl";
-import Loader from "../components/Loader";
-import { ToastMsg } from "../notifications/Notifications";
-import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
+} from "../../utils/utils";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
@@ -226,36 +228,55 @@ export default class MissingMBDataPage extends React.Component<
       };
     });
     return (
-      <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
-        <div className="col-xs-12 col-md-8">
-          <div>
-            <div id="missingMBData" ref={this.MissingMBDataTable}>
-              <div
-                style={{
-                  height: 0,
-                  position: "sticky",
-                  top: "50%",
-                  zIndex: 1,
-                }}
-              >
-                <Loader isLoading={loading} />
-              </div>
-              {missingData.map((data, index) => {
-                if (
-                  deletedListens.find(
-                    (deletedMSID) => deletedMSID === data.recording_msid
-                  )
-                ) {
-                  // If the item was deleted, don't show it to the user
-                  return null;
-                }
-                let additionalActions;
-                const listen = missingMBDataAsListen[index];
-                const additionalMenuItems = [];
-                if (currentUser?.auth_token) {
-                  // Commenting this out for now because currently it leads to new eager users creating
-                  // a bunch of standalone recordings, and possible duplicates
-                  /* const addToMB = (
+      <>
+        <h2 className="page-title">
+          Missing MusicBrainz Data of {currentUser?.name}
+        </h2>
+        <p>
+          <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source
+          music encyclopedia that ListenBrainz uses to display information about
+          your music.
+          <br />
+          <br />
+          This page displays your top 200 (by listen count) submitted songs that
+          we haven&apos;t been able to automatically link with MusicBrainz
+          “recordings”, or that don&apos;t yet exist in MusicBrainz. Please take
+          a few minutes to link these recordings below, or to{" "}
+          <a href="https://wiki.musicbrainz.org/How_to_Contribute">
+            submit new data to MusicBrainz
+          </a>
+          .
+        </p>
+        <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
+          <div className="col-xs-12 col-md-8">
+            <div>
+              <div id="missingMBData" ref={this.MissingMBDataTable}>
+                <div
+                  style={{
+                    height: 0,
+                    position: "sticky",
+                    top: "50%",
+                    zIndex: 1,
+                  }}
+                >
+                  <Loader isLoading={loading} />
+                </div>
+                {missingData.map((data, index) => {
+                  if (
+                    deletedListens.find(
+                      (deletedMSID) => deletedMSID === data.recording_msid
+                    )
+                  ) {
+                    // If the item was deleted, don't show it to the user
+                    return null;
+                  }
+                  let additionalActions;
+                  const listen = missingMBDataAsListen[index];
+                  const additionalMenuItems = [];
+                  if (currentUser?.auth_token) {
+                    // Commenting this out for now because currently it leads to new eager users creating
+                    // a bunch of standalone recordings, and possible duplicates
+                    /* const addToMB = (
                     <ListenControl
                       buttonClassName="btn btn-sm"
                       icon={faPlus}
@@ -266,137 +287,120 @@ export default class MissingMBDataPage extends React.Component<
                     />
                   ); */
 
-                  const recordingMSID = getRecordingMSID(listen);
-                  const canDelete =
-                    isCurrentUser &&
-                    Boolean(listen.listened_at) &&
-                    Boolean(recordingMSID);
+                    const recordingMSID = getRecordingMSID(listen);
+                    const canDelete =
+                      isCurrentUser &&
+                      Boolean(listen.listened_at) &&
+                      Boolean(recordingMSID);
 
-                  if (canDelete) {
-                    additionalMenuItems.push(
-                      <ListenControl
-                        text="Delete Listen"
-                        icon={faTrashAlt}
-                        action={this.deleteListen.bind(this, data)}
-                      />
-                    );
-                  }
+                    if (canDelete) {
+                      additionalMenuItems.push(
+                        <ListenControl
+                          text="Delete Listen"
+                          icon={faTrashAlt}
+                          action={this.deleteListen.bind(this, data)}
+                        />
+                      );
+                    }
 
-                  if (listen?.track_metadata?.additional_info?.recording_msid) {
-                    const linkWithMB = (
-                      <ListenControl
-                        buttonClassName="btn btn-sm btn-success"
-                        text=""
-                        title="Link with MusicBrainz"
-                        icon={faLink}
-                        action={() => {
-                          NiceModal.show(MBIDMappingModal, {
-                            listenToMap: listen,
-                          });
-                        }}
-                      />
-                    );
-                    additionalActions = linkWithMB;
+                    if (
+                      listen?.track_metadata?.additional_info?.recording_msid
+                    ) {
+                      const linkWithMB = (
+                        <ListenControl
+                          buttonClassName="btn btn-sm btn-success"
+                          text=""
+                          title="Link with MusicBrainz"
+                          icon={faLink}
+                          action={() => {
+                            NiceModal.show(MBIDMappingModal, {
+                              listenToMap: listen,
+                            });
+                          }}
+                        />
+                      );
+                      additionalActions = linkWithMB;
+                    }
                   }
-                }
-                return (
-                  <ListenCard
-                    key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
-                    showTimestamp
-                    showUsername={false}
-                    // eslint-disable-next-line react/jsx-no-useless-fragment
-                    customThumbnail={<></>}
-                    // eslint-disable-next-line react/jsx-no-useless-fragment
-                    feedbackComponent={<></>}
-                    listen={missingMBDataAsListen[index]}
-                    additionalMenuItems={additionalMenuItems}
-                    additionalActions={additionalActions}
-                  />
-                );
-              })}
+                  return (
+                    <ListenCard
+                      key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
+                      showTimestamp
+                      showUsername={false}
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      customThumbnail={<></>}
+                      // eslint-disable-next-line react/jsx-no-useless-fragment
+                      feedbackComponent={<></>}
+                      listen={missingMBDataAsListen[index]}
+                      additionalMenuItems={additionalMenuItems}
+                      additionalActions={additionalActions}
+                    />
+                  );
+                })}
+              </div>
+              <ul className="pager" style={{ display: "flex" }}>
+                <li
+                  className={`previous ${
+                    currPage && currPage <= 1 ? "hidden" : ""
+                  }`}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickPrevious}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickPrevious();
+                    }}
+                    tabIndex={0}
+                  >
+                    &larr; Previous
+                  </a>
+                </li>
+                <li
+                  className={`next ${
+                    currPage && currPage >= totalPages ? "hidden" : ""
+                  }`}
+                  style={{ marginLeft: "auto" }}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickNext}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") this.handleClickNext();
+                    }}
+                    tabIndex={0}
+                  >
+                    Next &rarr;
+                  </a>
+                </li>
+              </ul>
             </div>
-            <ul className="pager" style={{ display: "flex" }}>
-              <li
-                className={`previous ${
-                  currPage && currPage <= 1 ? "hidden" : ""
-                }`}
-              >
-                <a
-                  role="button"
-                  onClick={this.handleClickPrevious}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") this.handleClickPrevious();
-                  }}
-                  tabIndex={0}
-                >
-                  &larr; Previous
-                </a>
-              </li>
-              <li
-                className={`next ${
-                  currPage && currPage >= totalPages ? "hidden" : ""
-                }`}
-                style={{ marginLeft: "auto" }}
-              >
-                <a
-                  role="button"
-                  onClick={this.handleClickNext}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") this.handleClickNext();
-                  }}
-                  tabIndex={0}
-                >
-                  Next &rarr;
-                </a>
-              </li>
-            </ul>
           </div>
+          <BrainzPlayer
+            listens={missingMBDataAsListen}
+            listenBrainzAPIBaseURI={APIService.APIBaseURI}
+            refreshSpotifyToken={APIService.refreshSpotifyToken}
+            refreshYoutubeToken={APIService.refreshYoutubeToken}
+            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
+          />
         </div>
-        <BrainzPlayer
-          listens={missingMBDataAsListen}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
-      </div>
+      </>
     );
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function MissingMBDataPageWrapper() {
+  const data = useLoaderData() as MissingMBDataProps;
+  const { currentUser: user } = React.useContext(GlobalAppContext);
+  return <MissingMBDataPage {...data} user={user} />;
+}
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const { missingData, user } = reactProps;
-
-  const MissingMBDataPageWithAlertNotification = withAlertNotifications(
-    MissingMBDataPage
-  );
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <MissingMBDataPageWithAlertNotification
-            missingData={missingData}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const MissingMBDataPageLoader = async () => {
+  const response = await fetch("/profile/missing-data/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return { ...data };
+};

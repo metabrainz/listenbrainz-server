@@ -12,6 +12,7 @@ const sections: Section[] = [
     links: [
       { to: "music-services/details/", label: "Connect services" },
       { to: "import/", label: "Import listens" },
+      { to: "missing-data/", label: "Missing data" },
     ],
   },
   {

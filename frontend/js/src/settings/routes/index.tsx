@@ -5,6 +5,10 @@ import DeleteAccount from "../pages/DeleteAccount";
 import DeleteListens from "../pages/DeleteListens";
 import Export from "../pages/ExportData";
 import Import, { ImportLoader } from "../pages/ImportListens";
+import {
+  MissingMBDataPageLoader,
+  MissingMBDataPageWrapper,
+} from "../pages/MissingMBData";
 import MusicServices, { MusicServicesLoader } from "../pages/MusicServices";
 import ResetToken from "../pages/ResetToken";
 import {
@@ -26,6 +30,9 @@ const getSettingsRoutes = () => {
   const ImportWithAlertNotifications = withAlertNotifications(Import);
   const SelectTroiPreferencesWithAlertNotifications = withAlertNotifications(
     SelectTroiPreferencesWrapper
+  );
+  const MissingMBDataPageWithAlertNotification = withAlertNotifications(
+    MissingMBDataPageWrapper
   );
   const SelectTimezoneWithAlertNotifications = withAlertNotifications(
     SelectTimezoneWrapper
@@ -61,6 +68,11 @@ const getSettingsRoutes = () => {
           path: "import/",
           loader: ImportLoader,
           element: <ImportWithAlertNotifications />,
+        },
+        {
+          path: "missing-data/",
+          loader: MissingMBDataPageLoader,
+          element: <MissingMBDataPageWithAlertNotification />,
         },
         {
           path: "select_timezone/",

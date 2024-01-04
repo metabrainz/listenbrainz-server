@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import NiceModal from "@ebay/nice-modal-react";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { createRoot } from "react-dom/client";
@@ -39,7 +40,9 @@ document.addEventListener("DOMContentLoaded", () => {
         hideProgressBar
       />
       <GlobalAppContext.Provider value={globalAppContext}>
-        <RouterProvider router={router} />
+        <NiceModal.Provider>
+          <RouterProvider router={router} />
+        </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );
