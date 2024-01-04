@@ -10,7 +10,7 @@ from listenbrainz_spark.similarity.user import get_similar_users_df
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_dump
 
-USERS_PER_MESSAGE = 1000
+USERS_PER_MESSAGE = 250
 MAX_ARTIST_OCCURRENCE = 2
 MAX_TRACKS_PER_PLAYLIST = 50
 TOP_MISSED_TRACKS_COUNT = 200
