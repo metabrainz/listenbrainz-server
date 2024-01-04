@@ -42,7 +42,7 @@
 
 {% macro render_entity_link (entity, mbid, name) %}
   {%- if mbid is defined and mbid is not none -%}
-    <a href="https://musicbrainz.org/{{ entity }}/{{ mbid }}">
+    <a href="https://musicbrainz.org/{{ entity }}/{{ mbid }}" target=”_blank”>
       {{ name }}
     </a>
   {%- else -%}
