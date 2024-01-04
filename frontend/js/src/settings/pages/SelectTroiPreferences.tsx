@@ -1,24 +1,20 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
+import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { ToastMsg } from "../../notifications/Notifications";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
-import { getPageProps } from "../utils/utils";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import { ToastMsg } from "../notifications/Notifications";
-
-export type SelectTroiPreferencesProps = {
+type SelectTroiPreferencesProps = {
   exportToSpotify: boolean;
 };
 
-export interface SelectTroiPreferencesState {
+type SelectTroiPreferencesLoaderData = SelectTroiPreferencesProps;
+
+interface SelectTroiPreferencesState {
   exportToSpotify: boolean;
 }
-class SelectTroiPreferences extends React.Component<
+export default class SelectTroiPreferences extends React.Component<
   SelectTroiPreferencesProps,
   SelectTroiPreferencesState
 > {
@@ -129,37 +125,20 @@ class SelectTroiPreferences extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function SelectTroiPreferencesWrapper() {
+  const data = useLoaderData() as SelectTroiPreferencesLoaderData;
+  return <SelectTroiPreferences {...data} />;
+}
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { troi_prefs } = reactProps;
+export const SelectTroiPreferencesLoader = async () => {
+  const response = await fetch("/profile/troi/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  const { troi_prefs } = data;
   const exportToSpotify = troi_prefs?.troi?.export_to_spotify ?? false;
-
-  const SelectTroiPreferencesWithAlertNotifications = withAlertNotifications(
-    SelectTroiPreferences
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <SelectTroiPreferencesWithAlertNotifications
-          exportToSpotify={exportToSpotify}
-        />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+  return { exportToSpotify };
+};
