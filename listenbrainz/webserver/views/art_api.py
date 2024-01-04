@@ -17,6 +17,16 @@ from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_EXTENSION_U
 art_api_bp = Blueprint('art_api_v1', __name__)
 
 
+def _repeat_images(images, size=9):
+    """ Repeat the images so that we have required number of images. """
+    if len(images) >= size:
+        return images
+    repeater = cycle(images)
+    while len(images) < size:
+        images.append(next(repeater))
+    return images
+
+
 @art_api_bp.route("/grid/", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
@@ -224,9 +234,7 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
             if images is None:
                 raise APIInternalServerError("Failed to release cover art SVG")
             if custom_name == "lps-on-the-floor":
-                repeater = cycle(images)
-                while len(images) < 5:
-                    images.append(next(repeater))
+                images = _repeat_images(images, 5)
         except ValueError as error:
             raise APIBadRequest(str(error))
 
@@ -288,22 +296,18 @@ def _cover_art_yim_stats(user_name, stats, year):
         )
 
 
-def _cover_art_yim_albums(user_name, stats, year):
-    """ Create the SVG using YIM top albums for the given year. """
+def _cover_art_yim_albums_2022(user_name, stats):
+    """ Create the SVG using YIM top albums for 2022. """
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
     image_urls = []
     selected_urls = set()
 
-    if year == 2022 and stats.get("top_releases") is not None:
-        items = stats.get("top_releases")
-    elif year == 2023 and stats.get("top_release_groups") is not None:
-        items = stats.get("top_release_groups")
-    else:
+    if stats.get("top_releases") is None:
         return None
 
-    for item in items:
-        if "caa_id" in item and "caa_release_mbid" in item:
-            url = cac.resolve_cover_art(item["caa_id"], item["caa_release_mbid"], 250)
+    for release in stats["top_releases"]:
+        if "caa_id" in release and "caa_release_mbid" in release:
+            url = cac.resolve_cover_art(release["caa_id"], release["caa_release_mbid"], 250)
             if url not in selected_urls:
                 selected_urls.add(url)
                 image_urls.append(url)
@@ -311,27 +315,57 @@ def _cover_art_yim_albums(user_name, stats, year):
     if len(image_urls) == 0:
         return None
 
-    if len(image_urls) < 9:
-        repeater = cycle(image_urls)
-        # fill up the remaining slots with repeated images
-        while len(image_urls) < 9:
-            image_urls.append(next(repeater))
+    image_urls = _repeat_images(image_urls)
 
+    return render_template(
+        "art/svg-templates/yim-2022-albums.svg",
+        user_name=user_name,
+        image_urls=image_urls,
+        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+        flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-flames.png',
+    )
+
+
+def _cover_art_yim_albums_2023(user_name, stats):
+    """ Create the SVG using YIM top albums for 2023. """
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    images = []
+    selected_urls = set()
+
+    if stats.get("top_release_groups") is None:
+        return None
+
+    for release_group in stats["top_release_groups"]:
+        if "caa_id" in release_group and "caa_release_mbid" in release_group:
+            url = cac.resolve_cover_art(release_group["caa_id"], release_group["caa_release_mbid"], 250)
+            if url not in selected_urls:
+                selected_urls.add(url)
+                images.append({
+                    "url": url,
+                    "title": release_group["release_group_name"],
+                    "artist": release_group["artist_name"],
+                    "entity_mbid": release_group["release_group_mbid"]
+                })
+
+    if len(images) == 0:
+        return None
+
+    images = _repeat_images(images)
+
+    return render_template(
+        "art/svg-templates/yim-2023-albums.svg",
+        user_name=user_name,
+        images=images,
+    )
+
+
+def _cover_art_yim_albums(user_name, stats, year):
+    """ Create the SVG using YIM top albums for the given year. """
     if year == 2022:
-        return render_template(
-            "art/svg-templates/yim-2022-albums.svg",
-            user_name=user_name,
-            image_urls=image_urls,
-            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
-            flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-flames.png',
-        )
+        return _cover_art_yim_albums_2022(user_name, stats)
 
     if year == 2023:
-        return render_template(
-            "art/svg-templates/yim-2023-albums.svg",
-            user_name=user_name,
-            image_urls=image_urls,
-        )
+        return _cover_art_yim_albums_2023(user_name, stats)
 
 
 def _cover_art_yim_tracks(user_name, stats, year):
@@ -418,7 +452,7 @@ def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
     if stats.get(key) is None:
         return None
 
-    image_urls = []
+    images = []
     selected_urls = set()
 
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
@@ -432,16 +466,17 @@ def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
 
             # check existence in set to avoid duplicates
             if cover_art not in selected_urls:
-                image_urls.append(cover_art)
+                images.append({
+                    "url": cover_art,
+                    "entity_mbid": caa_release_mbid,
+                    "title": track.get("album"),
+                    "artist": track.get("creator"),
+                })
 
-    if len(image_urls) == 0:
+    if len(images) == 0:
         return None
 
-    if len(image_urls) < 9:
-        repeater = cycle(image_urls)
-        # fill up the remaining slots with repeated images
-        while len(image_urls) < 9:
-            image_urls.append(next(repeater))
+    images = _repeat_images(images)
 
     match key:
         case "playlist-top-discoveries-for-year":
@@ -454,7 +489,7 @@ def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
     return render_template(
         target_svg,
         user_name=user_name,
-        image_urls=image_urls,
+        images=images,
         branding=branding
     )
 

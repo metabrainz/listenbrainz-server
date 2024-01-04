@@ -69,7 +69,9 @@
         {% for artist in artists[:10] %}
         <text class="artist-name" y="{{ y_start + loop.index0 * gap }}" x="126">
             <tspan>{% if loop.index == 10 %}X{% else %}{{ loop.index }}{% endif %}</tspan>
-            <tspan dx="20">{{ artist.artist_name|upper|e }}</tspan>
+            <tspan dx="20">
+                {{ render_entity_link("artist", artist.artist_mbids[0], artist.artist_name|upper|e) }}
+            </tspan>
         </text>
         {% endfor %}
     </g>

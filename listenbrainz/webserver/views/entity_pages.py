@@ -69,7 +69,7 @@ def get_cover_art_for_artist(release_groups):
         "art/svg-templates/simple-grid.svg",
         background="transparent",
         images=images,
-        entity="release-group",
+        entity="album",
         width=400,
         height=400
     )

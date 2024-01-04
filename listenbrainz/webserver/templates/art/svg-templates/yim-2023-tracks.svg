@@ -20,10 +20,10 @@
             font-size: 32px;
             letter-spacing: 0.6em;
         }
-        .track-name {
+        .track-name, .track-name * {
             font-size: 20px;
         }
-        .artist-name {
+        .artist-name, .artist-name * {
             font-size: 20px;
             font-weight: 500;
         }
@@ -82,9 +82,11 @@
           {% endif %}
         </tspan>
         <tspan class="track-name" x="125" y="{{ y_start + loop.index0 * gap }}">
-          {{ track.track_name|upper|e }}
+          {{ render_entity_link("recording", track.recording_mbid, track.track_name|upper|e) }}
         </tspan>
-        <tspan class="artist-name" x="125" dy="20">{{ track.artist_name|upper|e }}</tspan>
+        <tspan class="artist-name" x="125" dy="20">
+          {{ render_entity_link("artist", track.artist_mbids[0], track.artist_name|upper|e) }}
+        </tspan>
       </text>
       {% endfor %}
     </g>
