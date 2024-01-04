@@ -397,3 +397,7 @@ def handle_troi_playlists(message):
 
 def handle_troi_playlists_end(message):
     process_weekly_playlists_end(message["slug"])
+
+
+def handle_echo(message):
+    current_app.logger.info("message with unknown action: %s", json.dumps(message))

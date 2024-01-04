@@ -512,6 +512,7 @@ def request_yim_artist_map(year: int):
 @click.pass_context
 def request_year_in_music(ctx, year: int):
     """ Send the cluster a request to generate all year in music statistics. """
+    send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_start"})
     ctx.invoke(request_import_pg_tables)
     ctx.invoke(request_yim_new_release_stats, year=year)
     ctx.invoke(request_yim_day_of_week, year=year)
@@ -526,6 +527,7 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_artist_map, year=year)
     ctx.invoke(request_yim_top_missed_recordings, year=year)
     ctx.invoke(request_yim_top_discoveries, year=year)
+    send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_end"})
 
 
 @cli.command(name="request_troi_playlists")
