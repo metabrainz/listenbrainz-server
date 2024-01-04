@@ -21,19 +21,29 @@
   </a>
   {% endif %}
 {% endmacro %}
-
-<svg version="1.1"
-     xmlns="http://www.w3.org/2000/svg"
-     width="{{ width }}" height="{{ height }}"
-     viewBox="0 0 {{ width }} {{ height }}">
     <image x="0"
            y="0"
            width="{{ width }}"
            height="{{ height }}"
            href="{{ cover_art_on_floor_url }}"/>
+<svg version="1.1"
+     xmlns="http://www.w3.org/2000/svg"
+     width="{{ width }}" height="{{ height }}"
+     viewBox="0 0 {{ width }} {{ height }}">
+    <style>
+        .background-image {
+            pointer-events: none;
+        }
+    </style>
     {{ render_lp_image(89, 318, 195, 195, "rotate(6.1)", images[2]) }}
     {{ render_lp_image(17, 223, 193, 193, "rotate(-22.4)", images[1]) }}
     {{ render_lp_image(189, 240, 189, 189, "rotate(-4)", images[0]) }}
     {{ render_lp_image(404, 480, 198, 198, "rotate(-11.9)", images[4]) }}
     {{ render_lp_image(385, 488, 202, 203, "rotate(2.2)", images[3]) }}
+    <image x="0"
+           y="0"
+           width="{{ width }}"
+           height="{{ height }}"
+           href="{{ cover_art_on_floor_url }}"
+           class="background-image" />
 </svg>
