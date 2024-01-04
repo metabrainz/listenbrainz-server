@@ -1,4 +1,4 @@
-{%- from 'macros.html' import render_entity_link -%}
+{%- from 'art/svg-templates/macros.j2' import render_entity_link -%}
 
 <svg id="svg2"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
