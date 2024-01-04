@@ -88,7 +88,13 @@ def get_caa_ids_for_release_mbids(curs, release_mbids: Iterable[str]):
             ) SELECT rm.mbid::TEXT AS original_mbid
                    , COALESCE(rca.caa_id, rgca.caa_id) AS caa_id
                    , COALESCE(rca.caa_release_mbid, rgca.caa_release_mbid)::TEXT AS caa_release_mbid
+                   , rel.name AS title
+                   , ac.name AS artist
                 FROM release_mbids rm
+           LEFT JOIN musicbrainz.release rel
+                  ON rel.gid = rm.mbid
+           LEFT JOIN musicbrainz.artist_credit ac
+                  ON ac.id = rel.artist_credit
            LEFT JOIN release_cover_art rca
                   ON rm.mbid = rca.original_mbid
            LEFT JOIN release_group_cover_art rgca
