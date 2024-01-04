@@ -34,7 +34,8 @@ def get_user_details(slug, user_ids):
      LEFT JOIN external_service_oauth eso
             ON u.id = eso.user_id
          WHERE u.id = ANY(:user_ids)
-           AND (eso.service = 'spotify' OR eso.service IS NULL)
+           AND ((eso.service = 'spotify' AND eso.scopes @> ARRAY['playlist-modify-public'])
+                 OR eso.service IS NULL)
     """
     with db.engine.connect() as conn:
         results = conn.execute(text(query), {"user_ids": user_ids, "export_preference": SPOTIFY_EXPORT_PREFERENCE})
