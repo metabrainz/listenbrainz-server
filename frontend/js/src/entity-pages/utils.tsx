@@ -57,8 +57,8 @@ export type PopularRecording = {
 };
 
 export type ListeningStats = {
-  total_listen_count: number;
-  total_user_count: number;
+  total_listen_count?: number;
+  total_user_count?: number;
   listeners: Array<{
     user_name: string;
     listen_count: number;
