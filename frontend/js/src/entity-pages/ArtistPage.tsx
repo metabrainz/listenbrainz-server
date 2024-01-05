@@ -11,7 +11,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, partition, sortBy } from "lodash";
+import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -52,7 +52,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
-    total_user_count: userCount
+    total_user_count: userCount,
   } = listeningStats;
 
   const [artist, setArtist] = React.useState(initialArtist);
@@ -346,7 +346,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
           <div className="listening-stats card flex-center">
             <div className="text-center">
               <div className="number">
-                {bigNumberFormatter.format(listenCount)}
+                {isUndefined(listenCount) || !Number.isFinite(listenCount)
+                  ? "-"
+                  : bigNumberFormatter.format(listenCount)}
               </div>
               <div className="text-muted small">
                 <FontAwesomeIcon icon={faHeadphones} /> plays
@@ -355,7 +357,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             <div className="separator" />
             <div className="text-center">
               <div className="number">
-                {bigNumberFormatter.format(userCount)}
+                {isUndefined(userCount) || !Number.isFinite(userCount)
+                  ? "-"
+                  : bigNumberFormatter.format(userCount)}
               </div>
               <div className="text-muted small">
                 <FontAwesomeIcon icon={faUserAstronaut} /> listeners
