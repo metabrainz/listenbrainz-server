@@ -1,3 +1,5 @@
+{%- from 'art/svg-templates/macros.j2' import render_entity_link -%}
+
 <svg width="924" height="924" viewBox="0 0 924 924" fill="none" xmlns="http://www.w3.org/2000/svg">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
@@ -70,7 +72,7 @@
         <text class="artist-name" y="{{ y_start + loop.index0 * gap }}" x="126">
             <tspan>{% if loop.index == 10 %}X{% else %}{{ loop.index }}{% endif %}</tspan>
             <tspan dx="20">
-                {{ render_entity_link("artist", artist.artist_mbids[0], artist.artist_name|upper|e) }}
+                {{ render_entity_link("artist", artist.artist_mbid, artist.artist_name|upper|e) }}
             </tspan>
         </text>
         {% endfor %}

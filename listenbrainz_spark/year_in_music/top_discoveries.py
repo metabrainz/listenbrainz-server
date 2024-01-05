@@ -78,5 +78,6 @@ def create_tracks_of_the_year(year):
           GROUP BY user_id
                  , recording_mbid
             HAVING date_part('YEAR', min(listened_at)) = {year}
+               AND count(*) > 3
     """
     run_query(query).createOrReplaceTempView("tracks_of_year")
