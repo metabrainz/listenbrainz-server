@@ -23,13 +23,6 @@ DELETE FROM hide_user_timeline_event       CASCADE;
 DELETE FROM external_service_oauth         CASCADE;
 DELETE FROM listens_importer               CASCADE;
 
--- DELETE FROM statistics.release             CASCADE;
--- DELETE FROM statistics.artist              CASCADE;
--- DELETE FROM statistics.recording           CASCADE;
-DELETE FROM statistics.user                CASCADE;
--- DELETE FROM statistics.sitewide            CASCADE;
--- DELETE FROM statistics.year_in_music       CASCADE;
-
 DELETE FROM recording_feedback             CASCADE;
 DELETE FROM recommendation_feedback        CASCADE;
 DELETE FROM user_relationship              CASCADE;
