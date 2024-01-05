@@ -1011,7 +1011,7 @@ export default class YearInMusic extends React.Component<
                 <div className="graph-container">
                   <div className="graph">
                     <ResponsiveBar
-                      margin={{ left: 50, bottom: 30, right: 30, top: 30 }}
+                      margin={{ left: 50, bottom: 45, right: 30, top: 30 }}
                       data={mostListenedYearDataForGraph}
                       padding={0.1}
                       layout="vertical"
@@ -1021,6 +1021,7 @@ export default class YearInMusic extends React.Component<
                       enableLabel={false}
                       axisBottom={{
                         tickValues: mostListenedYearTicks,
+                        tickRotation: -55,
                       }}
                       axisLeft={{
                         legend: "Number of listens",
