@@ -3,6 +3,6 @@ def handler(message):
     return [
         {
             "type": "echo",
-            "data": message["data"]
+            "message": message
         }
     ]
