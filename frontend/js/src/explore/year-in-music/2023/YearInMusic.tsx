@@ -1021,7 +1021,7 @@ export default class YearInMusic extends React.Component<
                       enableLabel={false}
                       axisBottom={{
                         tickValues: mostListenedYearTicks,
-                        tickRotation: -55,
+                        tickRotation: -30,
                       }}
                       axisLeft={{
                         legend: "Number of listens",
