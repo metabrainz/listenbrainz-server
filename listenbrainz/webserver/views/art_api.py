@@ -564,7 +564,8 @@ def cover_art_yim(user_name, year: int = 2023):
 
     image = request.args.get("image")
     if image is None:
-        raise APIBadRequest("Type of Image needs to be specified should be one of (overview, stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
+        raise APIBadRequest(
+            "Type of Image needs to be specified should be one of (overview, stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
     branding = _parse_bool_arg("branding", True)
 
