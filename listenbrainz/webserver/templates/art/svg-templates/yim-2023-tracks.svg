@@ -1,3 +1,5 @@
+{%- from 'art/svg-templates/macros.j2' import render_entity_link -%}
+
 <svg
         width="924"
         height="924"
