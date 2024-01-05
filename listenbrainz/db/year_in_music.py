@@ -188,21 +188,24 @@ def notify_yim_users(year):
     with open("/static/img/year-in-music-23/yim-23-logo-small-compressed.png", "rb") as img:
         logo = img.read()
 
+    if year not in [2021, 2022, 2023, 2024]:
+        return None
+
+    table = "statistics.year_in_music_" + str(year)
+
+    with timescale.engine.connect() as connection:
+        result = connection.execute(text("SELECT user_id FROM " + table + " WHERE data IS NOT NULL"))
+        user_ids = [row.user_id for row in result.fetchall()]
+
     with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id
-                 , musicbrainz_id
-                 , email
-              FROM statistics.year_in_music yim
-              JOIN "user"
-                ON "user".id = yim.user_id
-             WHERE year = :year
-               AND data IS NOT NULL
-        """), {"year": year})
-        rows = result.mappings().fetchall()
+        result = connection.execute(
+            text('SELECT id AS user_id, email, musicbrainz_id FROM "user" WHERE id = ANY(:user_ids)'),
+            {"user_ids": user_ids}
+        )
+        rows = result.fetchall()
 
     for row in rows:
-        user_name = row["musicbrainz_id"]
+        user_name = row.musicbrainz_id
 
         # cannot use url_for because we do not set SERVER_NAME and
         # a request_context will not be available in this script.
@@ -217,7 +220,7 @@ def notify_yim_users(year):
             send_mail(
                 subject=f"Year In Music {year}",
                 content=render_template("emails/year_in_music.txt", **params),
-                to_email=row["email"],
+                to_email=row.email,
                 to_name=user_name,
                 html=render_template("emails/year_in_music.html", **params),
                 logo_cid=logo_cid,
@@ -230,4 +233,4 @@ def notify_yim_users(year):
         timeline_message = f'ListenBrainz\' very own retrospective on {year} has just dropped: Check out ' \
                            f'your own <a href="{year_in_music}">Year in Music</a> now!'
         metadata = NotificationMetadata(creator="troi-bot", message=timeline_message)
-        create_user_notification_event(row["user_id"], metadata)
+        create_user_notification_event(row.user_id, metadata)
