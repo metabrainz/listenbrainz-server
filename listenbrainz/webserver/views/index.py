@@ -75,7 +75,7 @@ def data():
 
 @index_bp.route("/add-data/")
 def add_data_info():
-    return render_template("index/add-data.html", active_settings_section = "add-listens" )
+    return render_template("index/add-data.html", active_about_section = "add-listens" )
 
 
 @index_bp.route("/import-data/")
