@@ -104,16 +104,14 @@ def insert_similar_users(year, data):
     similar_user_data = [
         {
             "user_id": int(user_id),
-            "data": orjson.dumps(
-                [
-                    {
-                        "musicbrainz_id": user_ids[int(other_user_id)],
-                        "score": score
-                    }
-                    for other_user_id, score in similar_users.items()
-                    if int(other_user_id) in user_ids
-                ]
-            ).decode("utf-8")
+            "data": [
+                {
+                    "musicbrainz_id": user_ids[int(other_user_id)],
+                    "score": score
+                }
+                for other_user_id, score in similar_users.items()
+                if int(other_user_id) in user_ids
+            ]
         }
         for user_id, similar_users in data.items()
     ]
