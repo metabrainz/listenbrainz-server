@@ -39,7 +39,7 @@ from listenbrainz.db.user_timeline_event import create_user_notification_event
 
 def get(user_id, year):
     """ Get year in music data for requested user """
-    if year not in [2021, 2022, 2023]:
+    if year not in [2021, 2022, 2023, 2024]:
         return None
 
     table = "statistics.year_in_music_" + str(year)
@@ -53,22 +53,41 @@ def get(user_id, year):
 
 
 def insert(key, year, data, cast_to_jsonb):
+    table = "year_in_music_" + str(year) + "_tmp"
     connection = timescale.engine.raw_connection()
     query = SQL("""
-        INSERT INTO {table} AS yim (user_id, data)
-             SELECT user_id
-                  , jsonb_build_object({key}, value::jsonb)
-               FROM (VALUES %s) AS t(user_id, value)
+        INSERT INTO {table} AS yim
+                    (VALUES %s)
         ON CONFLICT (user_id)
       DO UPDATE SET data = COALESCE(yim.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(table=Identifier("statistics", "year_in_music_" + year), key=Literal(key))
+    """).format(table=Identifier("statistics", table), key=Literal(key))
     if cast_to_jsonb:
-        template = f"jsonb_build_object('{key}', value::jsonb)"
+        template = f"(%s, jsonb_build_object('{key}', %s::jsonb))"
     else:
-        template = f"jsonb_build_object('{key}', value)"
+        template = f"(%s, jsonb_build_object('{key}', %s))"
     try:
         with connection.cursor() as cursor:
             execute_values(cursor, query, data, template)
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error(f"Error while inserting {key}:", exc_info=True)
+
+
+def insert_light(key, year, data):
+    table = "year_in_music_" + str(year) + "_tmp"
+    connection = timescale.engine.raw_connection()
+    query = SQL("""
+        INSERT INTO {table} AS yim
+             SELECT user_id::int
+                  , jsonb_build_object({key}, value) AS data
+               FROM jsonb_each(%s::jsonb) AS t(user_id, value)
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = COALESCE(yim.data, '{{}}'::jsonb) || EXCLUDED.data
+    """).format(table=Identifier("statistics", table), key=Literal(key))
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query, (data,))
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
@@ -84,19 +103,19 @@ def insert_similar_users(year, data):
 
     similar_user_data = [
         {
-            "user_id": user["user_id"],
+            "user_id": int(user_id),
             "data": orjson.dumps(
                 [
                     {
-                        "musicbrainz_id": user_ids[other_user["user_id"]],
-                        "score": other_user["score"]
+                        "musicbrainz_id": user_ids[int(other_user_id)],
+                        "score": score
                     }
-                    for other_user in user["data"]
-                    if other_user["user_id"] in user_ids
+                    for other_user_id, score in similar_users.items()
+                    if int(other_user_id) in user_ids
                 ]
             ).decode("utf-8")
         }
-        for user in data
+        for user_id, similar_users in data.items()
     ]
 
     insert_heavy("similar_users", year, similar_user_data)
@@ -109,7 +128,7 @@ def insert_top_stats(entity, year, data):
 
 def create_yim_table(year):
     """ Create a new year in music unlogged table for the specified year """
-    table = "statistics.year_in_music_" + year + "_tmp"
+    table = "statistics.year_in_music_" + str(year) + "_tmp"
     drop_sql = "DROP TABLE IF EXISTS " + table
     create_sql = """
         CREATE UNLOGGED TABLE """ + table + """ (
@@ -124,19 +143,22 @@ def create_yim_table(year):
 
 def swap_yim_tables(year):
     """ Swap the year in music tables """
-    table_without_schema = "year_in_music_" + year
+    table_without_schema = "year_in_music_" + str(year)
     table = "statistics." + table_without_schema
     tmp_table = table + "_tmp"
 
     drop_sql = "DROP TABLE IF EXISTS " + table
     rename_sql = "ALTER TABLE IF EXISTS " + tmp_table + " RENAME TO " + table_without_schema
     logged_sql = "ALTER TABLE IF EXISTS " + table + " SET LOGGED"
-    vacuum_sql = "VACUUM ANALYZE " + table
+    vacuum_sql = "VACUUM ANALYZE " + tmp_table
+    with timescale.engine.connect() as connection:
+        connection.connection.set_isolation_level(0)
+        connection.execute(text(vacuum_sql))
+
     with timescale.engine.begin() as connection:
         connection.execute(text(drop_sql))
         connection.execute(text(rename_sql))
         connection.execute(text(logged_sql))
-        connection.execute(text(vacuum_sql))
 
 
 def send_mail(subject, to_name, to_email, content, html, logo, logo_cid):
