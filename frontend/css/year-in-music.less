@@ -433,6 +433,7 @@
     }
     #overview object {
       max-width: min(500px, 90%);
+      height: auto;
     }
     #buddies {
       display: flex;
@@ -560,6 +561,10 @@
       overflow: hidden;
       .graph {
         color: var(--selectedColor);
+        overflow: scroll;
+        > * {
+          min-width: 550px;
+        }
       }
     }
     .swiper,
