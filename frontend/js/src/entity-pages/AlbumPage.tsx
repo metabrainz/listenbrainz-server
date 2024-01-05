@@ -11,7 +11,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, merge } from "lodash";
+import { chain, isEmpty, isUndefined, merge } from "lodash";
 import tinycolor from "tinycolor2";
 import {
   getRelIconLink,
@@ -359,7 +359,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           <div className="listening-stats card flex-center">
             <div className="text-center">
               <div className="number">
-                {bigNumberFormatter.format(listenCount)}
+                {isUndefined(listenCount) || !Number.isFinite(listenCount)
+                  ? "-"
+                  : bigNumberFormatter.format(listenCount)}
               </div>
               <div className="text-muted small">
                 <FontAwesomeIcon icon={faHeadphones} /> plays
@@ -368,7 +370,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             <div className="separator" />
             <div className="text-center">
               <div className="number">
-                {bigNumberFormatter.format(userCount)}
+                {isUndefined(userCount) || !Number.isFinite(userCount)
+                  ? "-"
+                  : bigNumberFormatter.format(userCount)}
               </div>
               <div className="text-muted small">
                 <FontAwesomeIcon icon={faUserAstronaut} /> listeners
