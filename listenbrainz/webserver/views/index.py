@@ -204,7 +204,7 @@ def gdpr_notice():
                 return redirect(next)
             return redirect(url_for('index.index'))
         elif request.form.get('gdpr-options') == 'disagree':
-            return redirect(url_for('profile.index',  path='delete/'))
+            return redirect(url_for('profile.index',  path='delete'))
         else:
             flash.error('You must agree to or decline our terms')
             return render_template('index/gdpr.html', next=request.args.get('next'))

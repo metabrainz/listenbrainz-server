@@ -204,8 +204,8 @@ def create_web_app(debug=None):
     def before_request_gdpr_check():
         # skip certain pages, static content and the API
         if request.path == url_for('index.gdpr_notice') \
-                or request.path == url_for('profile.index', path='delete/') \
-                or request.path == url_for('profile.index', path='export/') \
+                or request.path == url_for('profile.index', path='delete') \
+                or request.path == url_for('profile.index', path='export') \
                 or request.path == url_for('login.logout') \
                 or request.path.startswith('/static') \
                 or request.path.startswith('/1'):

@@ -286,7 +286,7 @@ def music_services_callback(service_name: str):
         raise BadRequest('missing code')
     token = service.fetch_access_token(code)
     service.add_new_user(current_user.id, token)
-    return redirect(url_for('profile.index', path='music-services/details/'))
+    return redirect(url_for('profile.index', path='music-services/details'))
 
 
 @profile_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
@@ -320,7 +320,11 @@ def music_services_disconnect(service_name: str):
     if user:
         service.remove_user(current_user.id)
 
-    action = json.loads(request.data).get('action')
+    try:
+        action = json.loads(request.data).get('action', None)
+    except json.JSONDecodeError:
+        raise BadRequest('Invalid JSON')
+
     if not action or action == 'disable':
         return jsonify({"success": True})
     else:
@@ -353,10 +357,9 @@ def missing_mb_data():
     }
     return jsonify(data)
 
+
 @profile_bp.route('/', defaults={'path': ''})
-@profile_bp.route('/<path:path>')
+@profile_bp.route('/<path:path>/')
 @login_required
 def index(path):
-    current_app.logger.warn("Accessing profile page with path: %s", path)
-
     return render_template("profile/index.html")
