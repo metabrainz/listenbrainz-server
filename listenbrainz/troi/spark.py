@@ -25,16 +25,26 @@ def get_user_details(slug, user_ids):
     details = {}
 
     query = """
-        SELECT u.id as user_id
-             , u.musicbrainz_id AS musicbrainz_id
-             , CASE WHEN (us.troi->:export_preference)::bool AND eso.service = 'spotify' AND eso.scopes @> ARRAY['playlist-modify-public'] THEN true ELSE false END AS export_to_spotify
-          FROM "user" u
-     LEFT JOIN user_setting us
-            ON us.user_id = u.id
-     LEFT JOIN external_service_oauth eso
-            ON u.id = eso.user_id
-         WHERE u.id = ANY(:user_ids)
-           AND (eso.service = 'spotify' OR eso.service IS NULL)
+          WITH spotify_exports AS (
+                SELECT u.id as user_id
+                     , true AS export
+                  FROM "user" u
+                  JOIN user_setting us
+                    ON us.user_id = u.id
+                  JOIN external_service_oauth eso
+                    ON u.id = eso.user_id
+                 WHERE u.id = ANY(:user_ids)
+                   AND eso.service = 'spotify'
+                   AND eso.scopes @> ARRAY['playlist-modify-public']
+                   AND (us.troi->:export_preference)::bool
+             )
+                SELECT u.id as user_id
+                     , u.musicbrainz_id AS musicbrainz_id
+                     , coalesce(se.export, false) AS export_to_spotify
+                  FROM "user" u
+             LEFT JOIN spotify_exports se
+                    ON u.id = se.user_id
+                 WHERE u.id = ANY(:user_ids)
     """
     with db.engine.connect() as conn:
         results = conn.execute(text(query), {"user_ids": user_ids, "export_preference": SPOTIFY_EXPORT_PREFERENCE})
