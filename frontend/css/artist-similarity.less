@@ -59,7 +59,6 @@
       width: calc(100% - 20px);
       margin-left: 10px;
     }
-
   }
 
   .artist-similarity-graph-panel-container {
@@ -149,6 +148,28 @@
 
       .artist-similarity-graph-node {
         cursor: pointer;
+
+        .centered-text {
+          margin-left: 5px;
+          overflow: hidden;
+
+          display: flex;
+          align-items: center;
+          text-align: center;
+          border-radius: 50%;
+
+          .centered-text-inner {
+            width: 100%;
+          }
+          .ellipsis-3-lines {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: white;
+          }
+        }
       }
     }
 

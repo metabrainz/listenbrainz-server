@@ -28,6 +28,7 @@ function CustomNodeComponent({
   onMouseMove,
   onMouseLeave,
 }: NodeProps<NodeType>) {
+  const nodeSize = node.size;
   return (
     <animated.g
       className="artist-similarity-graph-node"
@@ -58,39 +59,25 @@ function CustomNodeComponent({
         stroke={animatedProps.borderColor}
         opacity={animatedProps.opacity}
       />
-      <animated.text
-        textAnchor="middle"
-        dominantBaseline="central"
+      <animated.foreignObject
         fontSize={to([animatedProps.size], (size) => size / 6)}
-        style={{ pointerEvents: "none", fill: "white" }}
+        width={to([animatedProps.size], (size) => size)}
+        height={to([animatedProps.size], (size) => size)}
+        x={to([animatedProps.size], (size) => -size / 2)}
+        y={to([animatedProps.size], (size) => -size / 2)}
       >
-        {// SVG text does not allow for easy multi line text
-        // So, we split the text into words and render each word as a separate tspan element in a different line
-        // We use ellipsis if word length exceeds MAX_WORD_LENGTH or if number of words(each in a separate line) exceed MAX_LINES
-        node.data.artist_name.split(" ").map((word, index) =>
-          index < MAX_LINES ? (
-            <animated.tspan
-              x={0}
-              dy={
-                index === 0 ? "0" : to([animatedProps.size], (size) => size / 6)
-              }
-            >
-              {word.length > MAX_WORD_LENGTH
-                ? `${word.substring(0, MAX_WORD_LENGTH - 3)}...`
-                : word}
-            </animated.tspan>
-          ) : (
-            index === MAX_LINES && (
-              <animated.tspan
-                x={0}
-                dy={to([animatedProps.size], (size) => size / 6)}
-              >
-                ...
-              </animated.tspan>
-            )
-          )
-        )}
-      </animated.text>
+        <div
+          className="centered-text"
+          style={{
+            width: nodeSize * 0.9,
+            height: nodeSize,
+          }}
+        >
+          <div className="centered-text-inner ellipsis-3-lines">
+            {node.data.artist_name}
+          </div>
+        </div>
+      </animated.foreignObject>
     </animated.g>
   );
 }
