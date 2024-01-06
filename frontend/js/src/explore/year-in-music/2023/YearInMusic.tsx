@@ -37,6 +37,7 @@ import withAlertNotifications from "../../../notifications/AlertNotificationsHOC
 
 import {
   generateAlbumArtThumbnailLink,
+  getArtistLink,
   getPageProps,
   getStatsArtistLink,
 } from "../../../utils/utils";
@@ -1200,6 +1201,28 @@ export default class YearInMusic extends React.Component<
                 <div className="scrollable-area">
                   {yearInMusicData.new_releases_of_top_artists.map(
                     (release) => {
+                      const listenHere: Listen = {
+                        listened_at: 0,
+                        track_metadata: {
+                          artist_name: release.artist_credit_name,
+                          track_name: release.title,
+                          release_name: release.title,
+                          additional_info: {
+                            release_group_mbid: release.release_group_mbid,
+                            artist_mbids: release.artist_credit_mbids,
+                          },
+                          mbid_mapping: {
+                            recording_mbid: "",
+                            release_mbid: "",
+                            artist_mbids: release.artist_credit_mbids,
+                            release_group_mbid: release.release_group_mbid,
+                            release_group_name: release.title,
+                            caa_id: release.caa_id,
+                            caa_release_mbid: release.caa_release_mbid,
+                            artists: release.artists,
+                          },
+                        },
+                      };
                       const details = (
                         <>
                           <div
@@ -1216,33 +1239,10 @@ export default class YearInMusic extends React.Component<
                             className="small text-muted ellipsis"
                             title={release.artist_credit_name}
                           >
-                            {getEntityLink(
-                              "artist",
-                              release.artist_credit_name,
-                              release.artist_credit_mbids[0]
-                            )}
+                            {getArtistLink(listenHere)}
                           </span>
                         </>
                       );
-                      const listenHere: Listen = {
-                        listened_at: 0,
-                        track_metadata: {
-                          artist_name: release.artist_credit_name,
-                          track_name: release.title,
-                          release_name: release.title,
-                          additional_info: {
-                            release_group_mbid: release.release_group_mbid,
-                            artist_mbids: release.artist_credit_mbids,
-                          },
-                          mbid_mapping: {
-                            recording_mbid: "",
-                            release_mbid: "",
-                            artist_mbids: [],
-                            caa_id: release.caa_id,
-                            caa_release_mbid: release.caa_release_mbid,
-                          },
-                        },
-                      };
                       listens.push(listenHere);
                       return (
                         <ListenCard
