@@ -8,7 +8,6 @@ export default class APIService {
 
   MBBaseURI: string = "https://musicbrainz.org/ws/2";
   CBBaseURI: string = "https://critiquebrainz.org/ws/1";
-  TestAPIBaseURI: string = "https://test-api.listenbrainz.org/1";
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 

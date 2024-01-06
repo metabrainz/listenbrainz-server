@@ -24,141 +24,42 @@
       align-items: center;
     }
 
-    .user-inputs-container {
+    .artist-search-input {
       display: flex;
-      justify-content: space-between;
-      height: 42px;
-      min-height: 20px;
-      flex-wrap: wrap;
+      margin-left: 10px;
+      margin-right: 10px;
 
-      .artist-input-container {
-        height: inherit;
-        // width: 45%;
-        display: flex;
-        flex-direction: column;
-
-        .searchbox-container {
-          display: flex;
-          flex-direction: row;
-          height: inherit;
-          // width: 100%;
-
-          #searchbox-artist-name {
-            // display: flex;
-            // height: 100%;
-            // width: 80%;
-            border-radius: 0;
-            border: 2px solid #e0e0e0;
-            padding: 10px;
-          }
-
-          #searchbox-icon {
-            vertical-align: middle;
-            background-color: @blue;
-            border: none;
-            height: inherit;
-            width: 20%;
-            min-width: fit-content;
-
-            &:hover {
-              background-color: @mb_blue_light;
-              border-color: @mb_blue_dark;
-            }
-          }
-        }
-
-        .searchbox-dropdown-container {
-          .searchbox-dropdown {
-            display: flex;
-            flex-direction: column;
-            max-height: 20vh;
-            overflow-y: scroll;
-            overflow-x: hidden;
-            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
-            border: 1px solid #ccc;
-            border: 1px solid rgba(0, 0, 0, 0.15);
-            background-color: #e0e0e0;
-          }
-          .search-item {
-            display: block;
-            border: none;
-            text-align: left;
-            outline: inherit;
-            cursor: pointer;
-            background-color: @white;
-            z-index: 1;
-            padding: 4%;
-            font: inherit;
-            &:hover {
-              color: @white;
-              background-color: @blue;
-            }
-          }
-        }
-      }
-      .graph-size-input-container {
-        display: flex;
-        flex-direction: row;
-        height: 100%;
-        align-items: center;
-        padding-left: 2em;
-
-        @media screen and (max-width: 530px) {
-          padding-left: 0;
-        }
-
-        #graph-size-input-label {
-          padding-right: 0.5em;
-        }
-        .graph-size-input {
-          display: flex;
-          flex-wrap: nowrap;
-          height: inherit;
-
-          #graph-size-input-number {
-            height: 100%;
-            min-width: fit-content;
-            border-radius: 0;
-            border: 2px solid #e0e0e0;
-            border-left: none;
-            border-right: none;
-            text-align: center;
-          }
-        }
-        /*
-        * CSS to hide the up, down arrows for input number field
-        */
-        input {
-          &::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-          }
-          &::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-          }
-        }
-        input[type="number"] {
-          -moz-appearance: textfield;
-          appearance: textfield;
-        }
+      #artist-graph-size-input {
+        width: 100px;
+        text-align: center;
       }
 
-      #graph-size-input-icon-minus,
-      #graph-size-input-icon-plus {
+      #searchbox-icon {
         vertical-align: middle;
         background-color: @blue;
         border: none;
         height: inherit;
-        width: 10%;
+        width: 20%;
         min-width: fit-content;
+
         &:hover {
           background-color: @mb_blue_light;
           border-color: @mb_blue_dark;
-          cursor: pointer;
         }
       }
     }
+
+    .graph-size-input {
+      display: flex;
+      align-items: center;
+    }
+
+    .track-search-dropdown {
+      max-height: 20vh;
+      width: calc(100% - 20px);
+      margin-left: 10px;
+    }
+
   }
 
   .artist-similarity-graph-panel-container {
