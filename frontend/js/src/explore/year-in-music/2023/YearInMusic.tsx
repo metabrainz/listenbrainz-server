@@ -602,6 +602,7 @@ export default class YearInMusic extends React.Component<
                 style={{
                   WebkitMaskImage:
                     "url('/static/img/year-in-music-23/flower.png')",
+                  marginTop: "6vh",
                 }}
               >
                 <img
@@ -609,15 +610,17 @@ export default class YearInMusic extends React.Component<
                   alt="Your year in music 2023"
                 />
               </span>
-              <p className="center-p">Oh no!</p>
-              <p className="center-p">
-                We don&apos;t have enough 2023 statistics for {user.name}.
-              </p>
-              <p className="center-p">
-                <a href="/profile/music-services/details/">Submit</a> enough
-                listens before the end of December to generate your #yearinmusic
-                next year.
-              </p>
+              <div className="no-yim-message">
+                <p className="center-p">Oh no!</p>
+                <p className="center-p">
+                  We don&apos;t have enough 2023 statistics for {user.name}.
+                </p>
+                <p className="center-p">
+                  <a href="/profile/music-services/details/">Submit</a> enough
+                  listens before the end of December to generate your
+                  #yearinmusic next year.
+                </p>
+              </div>
             </>
           )}
           <div className="user-name">{user.name}</div>
