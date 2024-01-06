@@ -771,7 +771,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src="/static/img/year-in-music-23/peep.png"
+                        src="/static/img/year-in-music-23/peep-square.png"
                         alt="Top songs of 2023"
                       />
                       <h4>Top songs of 2023</h4>
@@ -830,7 +830,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src="/static/img/year-in-music-23/heart.png"
+                        src="/static/img/year-in-music-23/heart-square.png"
                         alt="Top artists of 2023"
                       />
                       <h4>Top artists of 2023</h4>
