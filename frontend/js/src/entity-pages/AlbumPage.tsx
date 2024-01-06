@@ -177,7 +177,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                 caa_id: Number(caa_id) || undefined,
                 caa_release_mbid,
                 recording_name: track.name,
-                release_mbid: recordings_release_mbid ?? "",
+                release_mbid: recordings_release_mbid ?? caa_release_mbid ?? "",
                 release_name: album.name,
               })
             )
