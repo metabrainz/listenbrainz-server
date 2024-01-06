@@ -267,7 +267,11 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
   );
 };
 
-const getStatsArtistLink = (artists?: MBIDMappingArtist[], artist_name?: string, artist_mbids?: string[]) => {
+const getStatsArtistLink = (
+  artists?: MBIDMappingArtist[],
+  artist_name?: string,
+  artist_mbids?: string[]
+) => {
   if (artists?.length) {
     return getMBIDMappingArtistLink(artists);
   }
