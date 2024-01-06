@@ -161,6 +161,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   } = props;
 
   const isPlayingATrack = Boolean(currentListen);
+  const recordingMSID = getRecordingMSID(currentListen as Listen);
+  const recordingMBID = getRecordingMBID(currentListen as Listen);
+  const showFeedback = Boolean(recordingMSID) || Boolean(recordingMBID);
 
   return (
     <div id="brainz-player" aria-label="Playback control">
@@ -226,30 +229,34 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             <FontAwesomeIcon icon={currentDataSourceIcon!} />
           </a>
         )}
-        <FontAwesomeIcon
-          icon={faHeart}
-          title="Love"
-          onClick={
-            isPlayingATrack
-              ? () => submitFeedback(currentListenFeedback === 1 ? 0 : 1)
-              : undefined
-          }
-          className={`${currentListenFeedback === 1 ? " loved" : ""}${
-            !isPlayingATrack ? " disabled" : ""
-          }`}
-        />
-        <FontAwesomeIcon
-          icon={faHeartCrack}
-          title="Hate"
-          onClick={
-            isPlayingATrack
-              ? () => submitFeedback(currentListenFeedback === -1 ? 0 : -1)
-              : undefined
-          }
-          className={`${currentListenFeedback === -1 ? " hated" : ""}${
-            !isPlayingATrack ? " disabled" : ""
-          }`}
-        />
+        {showFeedback && (
+          <>
+            <FontAwesomeIcon
+              icon={faHeart}
+              title="Love"
+              onClick={
+                isPlayingATrack
+                  ? () => submitFeedback(currentListenFeedback === 1 ? 0 : 1)
+                  : undefined
+              }
+              className={`${currentListenFeedback === 1 ? " loved" : ""}${
+                !isPlayingATrack ? " disabled" : ""
+              }`}
+            />
+            <FontAwesomeIcon
+              icon={faHeartCrack}
+              title="Hate"
+              onClick={
+                isPlayingATrack
+                  ? () => submitFeedback(currentListenFeedback === -1 ? 0 : -1)
+                  : undefined
+              }
+              className={`${currentListenFeedback === -1 ? " hated" : ""}${
+                !isPlayingATrack ? " disabled" : ""
+              }`}
+            />
+          </>
+        )}
         <MenuOptions currentListen={currentListen} />
         {/* <FontAwesomeIcon icon={faCog} /> */}
       </div>
