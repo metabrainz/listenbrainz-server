@@ -412,6 +412,7 @@ export default class YearInMusic extends React.Component<
       missingSomeData = true;
     }
 
+    const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
     // Is the logged-in user looking at their own page?
     const isCurrentUser = user.name === currentUser?.name;
     const youOrUsername = isCurrentUser ? "you" : `${user.name}`;
@@ -516,11 +517,13 @@ export default class YearInMusic extends React.Component<
     const userShareBar = (
       <div className="card content-card">
         <div className="link-section">
-          <FollowButton
-            type="icon-only btn-info"
-            user={user}
-            loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
-          />
+          {isUserLoggedIn && (
+            <FollowButton
+              type="icon-only btn-info"
+              user={user}
+              loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
+            />
+          )}
           <a href={linkToUserProfile} role="button" className="btn btn-info">
             ListenBrainz Profile
           </a>
