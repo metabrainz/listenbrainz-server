@@ -426,7 +426,7 @@ def year_in_music(user_name, year: int = 2023):
         user_name=user_name,
         year=year,
         props=orjson.dumps({
-            "data": db_year_in_music.get(user.id, year),
+            "data": db_year_in_music.get(user.id, year) or {},
             "user": {
                 "id": user.id,
                 "name": user.musicbrainz_id,
