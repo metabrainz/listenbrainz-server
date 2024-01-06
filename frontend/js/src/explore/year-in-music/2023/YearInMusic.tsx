@@ -425,7 +425,7 @@ export default class YearInMusic extends React.Component<
       // Ensure there are no holes between years
       const filledYears = range(
         Number(mostListenedYears[0]),
-        Number(mostListenedYears[mostListenedYears.length - 1])
+        Number(mostListenedYears[mostListenedYears.length - 1]) + 1
       );
       mostListenedYearDataForGraph = filledYears.map((year: number) => ({
         year,
