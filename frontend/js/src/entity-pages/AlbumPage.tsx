@@ -229,7 +229,8 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               })}
             </div>
             <small className="help-block">
-              {type ? `${type} - ` : ""}
+              {type}
+              {type && album?.date ? " - " : ""}
               {album?.date}
             </small>
           </div>
