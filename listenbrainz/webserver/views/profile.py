@@ -21,7 +21,7 @@ from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIO
 from listenbrainz.webserver import flash
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
+from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
@@ -392,7 +392,7 @@ def refresh_service_token(service_name: str):
         try:
             user = service.refresh_access_token(current_user.id, user["refresh_token"])
         except ExternalServiceInvalidGrantError:
-            raise APINotFound("User has revoked authorization to %s" % service_name.capitalize())
+            raise APIForbidden("User has revoked authorization to %s" % service_name.capitalize())
         except Exception:
             current_app.logger.error("Unable to refresh %s token:", exc_info=True)
             raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
