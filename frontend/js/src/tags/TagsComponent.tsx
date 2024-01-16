@@ -251,6 +251,16 @@ export default function AddTagSelect(props: {
             ...styles,
             flexWrap: "nowrap",
             overflowX: "auto",
+            "::-webkit-scrollbar": {
+              height: "5px",
+              backgroundColor: "#f5f5f5",
+            },
+            "::-webkit-scrollbar-track": {
+              backgroundColor: "#f5f5f5",
+            },
+            ":hover::-webkit-scrollbar-thumb": {
+              backgroundColor: "#ccc",
+            },
           }),
           indicatorsContainer: (styles) => ({
             ...styles,
