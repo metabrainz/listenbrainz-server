@@ -84,7 +84,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         # Setup all the needed objects
         can = CanonicalRecordingRedirect(mb_conn, lb_conn, unlogged=unlogged)
         can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, lb_conn, unlogged=unlogged)
-        can_rel = CanonicalReleaseRedirect(mb_conn, unlogged=unlogged)
+        can_rel = CanonicalReleaseRedirect(mb_conn, lb_conn, unlogged=unlogged)
         releases = CanonicalRelease(mb_conn, unlogged=False)
         mapping = CanonicalMusicBrainzData(mb_conn, lb_conn, unlogged=unlogged)
         mapping.add_additional_bulk_table(can)
