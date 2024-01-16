@@ -82,21 +82,27 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
             unlogged = True
 
         # Setup all the needed objects
-        can = CanonicalRecordingRedirect(mb_conn, lb_conn, unlogged=unlogged)
-        can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, lb_conn, unlogged=unlogged)
-        can_rel = CanonicalReleaseRedirect(mb_conn, lb_conn, unlogged=unlogged)
         releases = CanonicalRelease(mb_conn, unlogged=False)
+        can = CanonicalRecordingRedirect(mb_conn, lb_conn, unlogged=unlogged)
         mapping = CanonicalMusicBrainzData(mb_conn, lb_conn, unlogged=unlogged)
         mapping.add_additional_bulk_table(can)
+        can_rel = CanonicalReleaseRedirect(mb_conn, lb_conn, unlogged=unlogged)
+
+        if lb_conn:
+            can_rec_rel = CanonicalRecordingReleaseRedirect(lb_conn, mb_conn, unlogged=unlogged)
+        else:
+            can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, unlogged=unlogged)
+
         mapping_release = CanonicalMusicBrainzDataReleaseSupport(mb_conn, lb_conn, unlogged=unlogged)
 
         # Carry out the bulk of the work
         create_custom_sort_tables(mb_conn)
         releases.run(no_swap=True)
-        mapping_release.run(no_swap=True)
         mapping.run(no_swap=True)
-        can_rec_rel.run(no_swap=True)
         can_rel.run(no_swap=True)
+
+        can_rec_rel.run(no_swap=True)
+        mapping_release.run(no_swap=True)
 
         # Now swap everything into production in a single transaction
         log("canonical_musicbrainz_data: Swap into production")
@@ -105,7 +111,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
             mapping_release.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
-            can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
+            can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             can_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             mb_conn.commit()
             lb_conn.commit()
