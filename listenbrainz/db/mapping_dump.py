@@ -69,7 +69,7 @@ PUBLIC_TABLES_MAPPING = {
         )
     },
     'mapping.canonical_release_redirect': {
-        'engine': 'mb',
+        'engine': 'lb_if_set',
         'filename': 'canonical_release_redirect.csv',
         'columns': (
             'release_mbid',
