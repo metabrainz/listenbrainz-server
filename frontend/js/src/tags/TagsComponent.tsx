@@ -243,9 +243,11 @@ export default function AddTagSelect(props: {
           DropdownIndicator,
         }}
         styles={{
+          // @ts-expect-error -> the "!important" in the pointerEvents css rule is not recognized
           container: (baseStyles, state) => ({
             ...baseStyles,
             border: "0px",
+            pointerEvents: "initial !important",
           }),
           valueContainer: (styles) => ({
             ...styles,
