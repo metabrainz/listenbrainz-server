@@ -189,7 +189,6 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   );
 
   const filteredTags = chain(releaseGroupTags)
-    .filter("genre_mbid")
     .sortBy("count")
     .value()
     .reverse();

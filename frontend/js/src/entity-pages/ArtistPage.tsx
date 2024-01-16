@@ -128,7 +128,6 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     popularRecordings.map(popularRecordingToListen) ?? [];
 
   const filteredTags = chain(artist.tag?.artist)
-    .filter("genre_mbid")
     .sortBy("count")
     .value()
     .reverse();

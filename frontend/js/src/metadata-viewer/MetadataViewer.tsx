@@ -44,16 +44,12 @@ function getNowPlayingRecordingMBID(
 }
 
 function filterAndSortTags(tags?: EntityTag[]): EntityTag[] | undefined {
-  return tags
-    ?.filter((tag) => {
-      return tag.genre_mbid;
-    })
-    .sort((a, b) => {
-      if (a.genre_mbid && !b.genre_mbid) {
-        return 1;
-      }
-      return b.count - a.count;
-    });
+  return tags?.sort((a, b) => {
+    if (a.genre_mbid && !b.genre_mbid) {
+      return 1;
+    }
+    return b.count - a.count;
+  });
 }
 
 export default function MetadataViewer(props: MetadataViewerProps) {
