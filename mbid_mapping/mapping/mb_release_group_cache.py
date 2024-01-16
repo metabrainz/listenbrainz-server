@@ -142,21 +142,49 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
             "rels": release_group_rels
         }
 
-        recordings = []
-        for position, name, recording_mbid, length in row["recordings"] or []:
-            recordings.append({
-                "recording_mbid": recording_mbid,
-                "name": name,
-                "position": position,
-                "length": length
+        all_recordings = []
+        mediums = []
+        for medium_name, medium_position, medium_format, tracks in row["mediums"] or []:
+            recordings = []
+            for position, name, recording_mbid, length, ac_parts in tracks or []:
+                recording_artist_mbids = []
+                recording_artists = []
+
+                for artist_mbid, ac_name, ac_jp in ac_parts:
+                    recording_artist_mbids.append(artist_mbid)
+                    recording_artists.append({
+                        "artist_mbid": artist_mbid,
+                        "artist_credit_name": ac_name,
+                        "join_phrase": ac_jp
+                    })
+
+                recordings.append({
+                    "recording_mbid": recording_mbid,
+                    "name": name,
+                    "position": position,
+                    "length": length,
+                    "artists": recording_artists,
+                    "artist_mbids": recording_artist_mbids
+                })
+
+            mediums.append({
+                "name": medium_name,
+                "position": medium_position,
+                "format": medium_format,
+                "tracks": recordings
             })
+            all_recordings.extend(recordings)
 
         return (row["release_group_mbid"],
                 artist_mbids,
                 ujson.dumps(artist),
                 ujson.dumps({"artist": artist_tags, "release_group": release_group_tags}),
                 ujson.dumps(release_group),
-                ujson.dumps({"release_mbid": str(row["recordings_release_mbid"]), "recordings": recordings}))
+                ujson.dumps({
+                    "release_mbid": str(row["recordings_release_mbid"]),
+                    "recordings": all_recordings,
+                    "mediums": mediums
+                }))
 
     def get_metadata_cache_query(self, with_values=False):
         values_cte = ""
@@ -310,21 +338,83 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                               {values_join}
                           ORDER BY rg.gid
                                  , crl.id
-                   ), recording_data AS (
+                   ), recording_artist_data AS (
                            SELECT release_group_mbid
                                 , rel.gid AS recordings_release_mbid
-                                , array_agg(jsonb_build_array(t.position, r.name, r.gid::TEXT, r.length) ORDER BY t.position) AS recordings
+                                , m.name AS medium_name
+                                , m.position AS medium_position
+                                , mf.name AS medium_format
+                                , t.position AS track_position
+                                , r.name AS recording_name
+                                , r.gid::TEXT AS recording_mbid
+                                , r.length AS recording_length
+                                , jsonb_agg(
+                                    jsonb_build_array(
+                                        a.gid::TEXT
+                                      , acn.name
+                                      , acn.join_phrase
+                                    )
+                                    ORDER BY acn.position
+                                   ) AS artists
                              FROM canonical_release_selection crs
                              JOIN musicbrainz.release rel
                                ON rel.id = crs.release_id
                              JOIN musicbrainz.medium m
                                ON m.release = rel.id
+                        LEFT JOIN musicbrainz.medium_format mf
+                               ON mf.id = m.format
                              JOIN musicbrainz.track t
                                ON t.medium = m.id
                              JOIN musicbrainz.recording r
                                ON r.id = t.recording
+                             JOIN musicbrainz.artist_credit_name acn
+                               ON r.artist_credit = acn.artist_credit
+                             JOIN musicbrainz.artist a
+                               ON acn.artist = a.id
                          GROUP BY release_group_mbid
                                 , rel.gid
+                                , medium_name
+                                , medium_position
+                                , medium_format
+                                , track_position
+                                , recording_name
+                                , recording_mbid
+                                , recording_length
+                   ), recording_medium_data AS (
+                           SELECT release_group_mbid
+                                , recordings_release_mbid
+                                , medium_name
+                                , medium_position
+                                , medium_format
+                                , array_agg(
+                                        jsonb_build_array(
+                                            track_position
+                                          , recording_name
+                                          , recording_mbid
+                                          , recording_length
+                                          , artists
+                                        ) ORDER BY track_position
+                                  ) AS tracks
+                             FROM recording_artist_data rad
+                         GROUP BY release_group_mbid
+                                , recordings_release_mbid
+                                , medium_name
+                                , medium_position
+                                , medium_format
+                   ), recording_data AS (
+                           SELECT release_group_mbid
+                                , recordings_release_mbid
+                                , array_agg(
+                                        jsonb_build_array(
+                                            medium_name
+                                          , medium_position
+                                          , medium_format
+                                          , tracks
+                                        ) ORDER BY medium_position
+                                  ) AS mediums
+                             FROM recording_medium_data
+                         GROUP BY release_group_mbid
+                                , recordings_release_mbid
                    )
                             SELECT release_group_links
                                  , rg.name AS release_group_name
@@ -340,7 +430,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                  , (rgm.first_release_date_year::TEXT || '-' ||
                                     LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
                                     LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
-                                 , rec_data.recordings
+                                 , rec_data.mediums
                                  , rec_data.recordings_release_mbid
                               FROM musicbrainz.release_group rg
                               JOIN musicbrainz.artist_credit ac
@@ -376,7 +466,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                  , artist_tags
                                  , rgca.caa_id
                                  , rgca.caa_release_mbid
-                                 , rec_data.recordings
+                                 , rec_data.mediums
                                  , rec_data.recordings_release_mbid
                    """
         return query
@@ -513,13 +603,14 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                      JOIN musicbrainz.track t
                        ON t.recording = r.id
                      JOIN musicbrainz.medium m
-                       ON t.medium = m.id  
+                       ON t.medium = m.id
                      JOIN musicbrainz.release rel
                        ON m.release = rel.id
                      JOIN canonical_release_selection crs
                        ON rel.id = crs.release_id
                     WHERE r.last_updated > %(timestamp)s
                        OR t.last_updated > %(timestamp)s
+                       OR m.last_updated > %(timestamp)s
                  GROUP BY release_group_mbid
         """
 

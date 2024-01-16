@@ -78,7 +78,7 @@ function ExplorePage() {
             url="/explore/similar-users"
           />
         </div>
-        {/* {currentUser?.name && (
+        {currentUser?.name && (
           <div>
             <ExploreCard
               name="Your Year in Music 2023"
@@ -87,7 +87,7 @@ function ExplorePage() {
               url={`/user/${currentUser.name}/year-in-music/2023`}
             />
           </div>
-        )} */}
+        )}
         {currentUser?.name && (
           <div>
             <ExploreCard

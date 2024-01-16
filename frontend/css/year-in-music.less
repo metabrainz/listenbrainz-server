@@ -72,6 +72,9 @@
     > h3 {
       padding: 0.6em;
     }
+    .graph-container {
+      overflow: visible;
+    }
   }
   #calendar .graph {
     height: 200px;
@@ -105,7 +108,7 @@
       height: auto;
       > div {
         min-height: 300px;
-        max-height: 500px;
+        max-height: 700px;
       }
     }
   }
@@ -203,6 +206,13 @@
       @media (max-width: @screen-sm) {
         min-height: 20vh;
       }
+    }
+    .no-yim-message {
+      margin: 4vh auto;
+      font-family: "Roboto", sans-serif;
+      font-weight: 300;
+      font-size: 24px;
+      max-width: 480px;
     }
     .header {
       margin-bottom: 1em;
@@ -430,6 +440,7 @@
     }
     #overview object {
       max-width: min(500px, 90%);
+      height: auto;
     }
     #buddies {
       display: flex;
@@ -557,6 +568,10 @@
       overflow: hidden;
       .graph {
         color: var(--selectedColor);
+        overflow: scroll;
+        > * {
+          min-width: 550px;
+        }
       }
     }
     .swiper,

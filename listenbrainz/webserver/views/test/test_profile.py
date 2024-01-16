@@ -174,7 +174,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
 
         response = self.client.post(url_for('profile.refresh_service_token', service_name='spotify'))
 
-        self.assertEqual(response.json, {'code': 404, 'error': 'User has revoked authorization to Spotify'})
+        self.assertEqual(response.json, {'code': 403, 'error': 'User has revoked authorization to Spotify'})
 
     @patch('listenbrainz.listenstore.timescale_listenstore.TimescaleListenStore.fetch_listens')
     def test_export_streaming(self, mock_fetch_listens):

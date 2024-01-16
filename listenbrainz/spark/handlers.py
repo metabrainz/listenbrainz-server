@@ -336,43 +336,43 @@ def handle_yim_similar_users(message):
 
 
 def handle_yim_new_releases_of_top_artists(message):
-    year_in_music.handle_multi_large_insert("new_releases_of_top_artists", message["year"], message["data"])
+    year_in_music.insert_heavy("new_releases_of_top_artists", message["year"], message["data"])
 
 
 def handle_yim_day_of_week(message):
-    year_in_music.insert("day_of_week", message["year"], message["data"])
+    year_in_music.insert_light("day_of_week", message["year"], message["data"])
 
 
 def handle_yim_most_listened_year(message):
-    year_in_music.handle_multi_large_insert("most_listened_year", message["year"], message["data"])
+    year_in_music.insert_heavy("most_listened_year", message["year"], message["data"])
 
 
 def handle_yim_top_stats(message):
-    year_in_music.handle_insert_top_stats(message["entity"], message["year"], message["data"])
+    year_in_music.insert_top_stats(message["entity"], message["year"], message["data"])
 
 
 def handle_yim_listens_per_day(message):
-    year_in_music.handle_multi_large_insert("listens_per_day", message["year"], message["data"])
+    year_in_music.insert_heavy("listens_per_day", message["year"], message["data"])
 
 
 def handle_yim_listen_counts(message):
-    year_in_music.insert("total_listen_count", message["year"], message["data"])
+    year_in_music.insert_light("total_listen_count", message["year"], message["data"])
 
 
 def handle_yim_listening_time(message):
-    year_in_music.insert("total_listening_time", message["year"], message["data"])
+    year_in_music.insert_light("total_listening_time", message["year"], message["data"])
 
 
 def handle_yim_artist_map(message):
-    year_in_music.handle_multi_large_insert("artist_map", message["year"], message["data"])
+    year_in_music.insert_heavy("artist_map", message["year"], message["data"])
 
 
 def handle_yim_new_artists_discovered_count(message):
-    year_in_music.insert("total_new_artists_discovered", message["year"], message["data"])
+    year_in_music.insert_light("total_new_artists_discovered", message["year"], message["data"])
 
 
 def handle_yim_top_genres(message):
-    year_in_music.handle_multi_large_insert("top_genres", message["year"], message["data"])
+    year_in_music.insert_heavy("top_genres", message["year"], message["data"])
 
 
 def handle_yim_playlists(message):
@@ -397,3 +397,12 @@ def handle_troi_playlists(message):
 
 def handle_troi_playlists_end(message):
     process_weekly_playlists_end(message["slug"])
+
+
+def handle_echo(message):
+    if message["message"]["action"] == "year_in_music_start":
+        year_in_music.create_yim_table(message["message"]["year"])
+    elif message["message"]["action"] == "year_in_music_end":
+        year_in_music.swap_yim_tables(message["message"]["year"])
+    else:
+        current_app.logger.info("message with unknown action: %s", json.dumps(message))

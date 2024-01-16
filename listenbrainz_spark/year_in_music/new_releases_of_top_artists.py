@@ -2,7 +2,6 @@ from datetime import datetime, date, time
 
 from more_itertools import chunked
 
-from data.model.new_releases_stat import NewReleasesStat
 from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.postgres.release_group import create_release_group_metadata_cache
 
@@ -63,11 +62,12 @@ def _get_new_releases_of_top_artists(year):
              WHERE row_number <= 50   
         ), release_groups_of_year AS (
             SELECT title
-                 , artist_credit_name  
+                 , artist_credit_name
                  , release_group_mbid
                  , artist_credit_mbids
                  , caa_id
                  , caa_release_mbid
+                 , artists
                  , explode(artist_credit_mbids) AS artist_mbid
               FROM release_groups_all
              WHERE first_release_date_year = {year}
@@ -76,9 +76,10 @@ def _get_new_releases_of_top_artists(year):
                  , collect_set(
                         struct(
                            rg.title
-                         , rg.artist_credit_name  
+                         , rg.artist_credit_name
                          , rg.release_group_mbid
                          , rg.artist_credit_mbids
+                         , rg.artists
                          , rg.caa_id
                          , rg.caa_release_mbid
                         )

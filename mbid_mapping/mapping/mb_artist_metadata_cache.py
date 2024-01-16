@@ -127,6 +127,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON l.link_type = lt.id
                               {values_join}
                              WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
+                               AND NOT l.ended
                           GROUP BY a.gid
                    ), artist_tags AS (
                             SELECT a.gid AS artist_mbid
