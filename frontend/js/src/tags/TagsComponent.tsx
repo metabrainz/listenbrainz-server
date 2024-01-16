@@ -247,6 +247,23 @@ export default function AddTagSelect(props: {
             ...baseStyles,
             border: "0px",
           }),
+          valueContainer: (styles) => ({
+            ...styles,
+            flexWrap: "nowrap",
+            overflowX: "auto",
+          }),
+          indicatorsContainer: (styles) => ({
+            ...styles,
+            position: "relative",
+            ":before": {
+              content: "''",
+              width: "3em",
+              position: "absolute",
+              height: "100%",
+              left: "-3em",
+              background: "linear-gradient(-90deg, white 10%, transparent)",
+            },
+          }),
         }}
       />
     </div>
