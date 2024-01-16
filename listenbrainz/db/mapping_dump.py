@@ -57,7 +57,6 @@ PUBLIC_TABLES_MAPPING = {
             'recording_name',
             'combined_lookup',
             'score',
-            'year',
         ),
     },
     'mapping.canonical_recording_redirect': {

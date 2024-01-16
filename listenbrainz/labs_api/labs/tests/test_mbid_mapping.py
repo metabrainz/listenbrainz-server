@@ -39,8 +39,7 @@ typesense_response_0 = [
                 "recording_mbid": "398a5f12-80ba-4d29-8b6b-bfe2176341a6",
                 "recording_name": "Gloria",
                 "release_mbid": "7abd5878-4ea3-4b33-a5d2-7721317013d7",
-                "release_name": "October",
-                "year": 1981
+                "release_name": "October"
             },
         }
         ]
@@ -57,8 +56,7 @@ typesense_response_0 = [
                     "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
                     "recording_name": "Strangers",
                     "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-                    "release_name": "Dummy",
-                    "year": 1995
+                    "release_name": "Dummy"
                 }
             }
         ]
@@ -77,8 +75,7 @@ typesense_response_0 = [
                 "recording_mbid": "145f5c43-0ac2-4886-8b09-63d0e92ded5d",
                 "recording_name": "Glory Box",
                 "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-                "release_name": "Dummy",
-                "year": 1996
+                "release_name": "Dummy"
             }
         }
         ]
@@ -98,8 +95,7 @@ typesense_response_1 = [
                     "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
                     "recording_name": "Strangers",
                     "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-                    "release_name": "Dummy",
-                    "year": 1996
+                    "release_name": "Dummy"
                 }
             }
         ]
@@ -118,8 +114,7 @@ json_response_0 = [
         "recording_mbid": "398a5f12-80ba-4d29-8b6b-bfe2176341a6",
         "recording_name": "Gloria",
         "release_mbid": "7abd5878-4ea3-4b33-a5d2-7721317013d7",
-        "release_name": "October",
-        "year": 1981
+        "release_name": "October"
     },
     {
         "artist_credit_arg": "portishead",
@@ -132,8 +127,7 @@ json_response_0 = [
         "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
         "recording_name": "Strangers",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-        "release_name": "Dummy",
-        "year": 1995
+        "release_name": "Dummy"
     },
     {
         "artist_credit_arg": "portishead",
@@ -146,8 +140,7 @@ json_response_0 = [
         "recording_mbid": "145f5c43-0ac2-4886-8b09-63d0e92ded5d",
         "recording_name": "Glory Box",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-        "release_name": "Dummy",
-        "year": 1996
+        "release_name": "Dummy"
     }
 ]
 
@@ -163,10 +156,10 @@ json_response_1 = [
         "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
         "recording_name": "Strangers",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-        "release_name": "Dummy",
-        "year": 1996
+        "release_name": "Dummy"
     }
 ]
+
 
 class MainTestCase(flask_testing.TestCase):
 
@@ -189,7 +182,7 @@ class MainTestCase(flask_testing.TestCase):
             q.inputs(), ['[artist_credit_name]', '[recording_name]'])
         self.assertEqual(q.outputs(), ['index', 'artist_credit_arg', 'recording_arg',
                                        'artist_credit_name', 'artist_mbids', 'release_name', 'recording_name',
-                                       'release_mbid', 'recording_mbid', 'artist_credit_id', 'year'])
+                                       'release_mbid', 'recording_mbid', 'artist_credit_id'])
 
     @patch('typesense.documents.Documents.search')
     def test_fetch(self, search):
