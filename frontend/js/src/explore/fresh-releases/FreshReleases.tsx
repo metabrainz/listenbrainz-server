@@ -322,8 +322,8 @@ export default function FreshReleases() {
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, globalAppContext, sentryProps } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, globalAppContext, sentryProps } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {

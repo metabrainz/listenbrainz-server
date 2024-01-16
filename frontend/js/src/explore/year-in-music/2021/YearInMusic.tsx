@@ -979,8 +979,8 @@ export default class YearInMusic extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalAppContext } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, reactProps, globalAppContext } = await getPageProps();
   const { user, data: yearInMusicData } = reactProps;
 
   const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
