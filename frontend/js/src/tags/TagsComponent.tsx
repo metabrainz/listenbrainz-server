@@ -51,7 +51,8 @@ function MultiValueContainer(props: MultiValueGenericProps<TagOptionType>) {
   const { data, selectProps } = props;
   return (
     <TagComponent
-      tag={data.originalTag ?? { tag: data.value }}
+      isDisabled={selectProps.isDisabled}
+      tag={data.originalTag ?? { tag: data.value, count: 1 }}
       entityType={data.entityType}
       entityMBID={data.entityMBID}
       isNew={!data.isFixed}

@@ -73,10 +73,11 @@ function TagVoteButton(props: {
 
 export default function TagComponent(props: {
   tag: ArtistTag | RecordingTag | ReleaseGroupTag;
-  entityType: "artist" | "release-group" | "recording";
+  entityType: Entity;
   entityMBID?: string;
   isNew?: boolean;
   isOwnTag?: boolean;
+  isDisabled?: boolean;
   deleteCallback: (tag: string) => void;
   initialScore?: UserTagScore;
 }) {
@@ -86,6 +87,7 @@ export default function TagComponent(props: {
     entityMBID,
     isNew,
     isOwnTag,
+    isDisabled,
     deleteCallback,
     initialScore,
   } = props;
@@ -165,7 +167,7 @@ export default function TagComponent(props: {
       >
         {tag.tag}
       </a>
-      {isNew ? (
+      {!isDisabled && isNew && (
         <TagVoteButton
           action={TagActionType.WITHDRAW}
           actionFunction={(e) => {
@@ -173,7 +175,8 @@ export default function TagComponent(props: {
           }}
           userScore={1}
         />
-      ) : (
+      )}
+      {!isDisabled && !isNew && (
         <>
           <TagVoteButton
             action={TagActionType.UPVOTE}
