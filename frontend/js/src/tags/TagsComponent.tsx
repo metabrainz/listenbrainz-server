@@ -88,6 +88,7 @@ function getOptionFromTag(
     value: tag.tag,
     label: tag.tag,
     isNew: false,
+    isOwnTag: false,
     entityMBID: entityMBID ?? (tag as ArtistTag).artist_mbid ?? undefined,
     entityType,
     originalTag: tag,
@@ -151,6 +152,7 @@ export default function AddTagSelect(props: {
             entityType,
             entityMBID,
             isNew: false,
+            isOwnTag: false,
             originalTag: { tag: tag.name, count: tag.count },
           })
         );
@@ -268,7 +270,7 @@ export default function AddTagSelect(props: {
   return (
     <div className="add-tag-select">
       <CreatableSelect
-        value={sortBy(selected, "originalTag.count").reverse()}
+        value={sortBy(selected, ["originalTag.count", "isOwnTag"]).reverse()}
         options={musicbrainzGenres?.map((genre) => ({
           value: genre,
           label: genre,
