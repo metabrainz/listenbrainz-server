@@ -116,7 +116,7 @@ def get_caa_ids_for_release_group_mbids(curs, release_group_mbids: Iterable[str]
                            rgm.mbid::TEXT AS original_mbid
                          , caa.id AS caa_id
                          , caa_rel.gid::TEXT AS caa_release_mbid
-                         , rg.name as title,
+                         , rg.name as title
                          , rg.artist_credit as artist
                       FROM release_group_mbids rgm
                       JOIN musicbrainz.release_group rg

@@ -203,7 +203,7 @@ class CoverArtGenerator:
         with psycopg2.connect(self.mb_db_connection_str) as conn, \
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             return get_caa_ids_for_release_mbids(curs, release_mbids)
-        
+
     def load_release_group_caa_ids(self, release_group_mbids):
         """ Load caa_ids for the given release group mbids """
         if len(release_group_mbids) == 0:
@@ -213,7 +213,7 @@ class CoverArtGenerator:
             return get_caa_ids_for_release_group_mbids(curs, release_group_mbids)
 
     def load_images(self, release_mbids, release_group_mbids=[], tile_addrs=None, layout=None, cover_art_size=500):
-        """ Given a list of release and release group MBIDs and optional tile addresses, resolve all the cover art design, 
+        """ Given a list of release and release group MBIDs and optional tile addresses, resolve all the cover art design,
             all the cover art to be used and then return the list of images and locations where they should be
             placed. Return an array of dicts containing the image coordinates and the URL of the image. """
 
