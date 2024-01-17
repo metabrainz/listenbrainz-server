@@ -63,8 +63,14 @@ def cover_art_grid_post():
     :type tiles: ``list``
     :param release_mbids: An ordered list of release_mbids. The images will be loaded and processed
                           in the order that this list is in. The cover art for the release_mbids will be placed
-                          on the tiles defined by the tiles parameter.
+                          on the tiles defined by the tiles parameter. If release_group_mbids are supplied as well, cover arts
+                          for release_group_mbids will be processed after release_mbids.
     :type release_mbids: ``list``
+    :param release_group_mbids: An ordered list of release_group_mbids. The images will be loaded and processed
+                          in the order that this list is in. The cover art for the release_group_mbids will be placed
+                          on the tiles defined by the tiles parameter. If release_mbids are supplied as well, cover arts
+                          for release_mbids will be processed first.
+    :type release_group_mbids: ``list``
     :param cover_art_size: Size in pixels of each cover art in the composited image. Can be either 250 or 500
     :type cover_art_size: ``int``
 
@@ -99,22 +105,50 @@ def cover_art_grid_post():
     err = cac.validate_parameters()
     if err is not None:
         raise APIBadRequest(err)
-
-    if not isinstance(r["release_mbids"], list):
-        raise APIBadRequest("release_mbids must be a list of strings specifying release_mbids")
-
-    for mbid in r["release_mbids"]:
-        if not is_valid_uuid(mbid):
-            raise APIBadRequest(f"Invalid release_mbid {mbid} specified.")
-
+    
     if "cover_art_size" in r:
         cover_art_size = r["cover_art_size"]
     elif r["image_size"] < 1000:
         cover_art_size = 250
     else:
         cover_art_size = 500
+    
+    # Get release_mbids
+    release_mbids = []
+    if "release_mbids" in r:
+        if not isinstance(r["release_mbids"], list):
+            raise APIBadRequest("release_mbids must be a list of strings specifying release_mbids")
+        
+        release_mbids = list(r["release_mbids"]) 
 
-    images = cac.load_images(r["release_mbids"], tile_addrs=tiles, layout=layout, cover_art_size=cover_art_size)
+    # Get release_group_mbids
+    release_group_mbids = []
+    if "release_group_mbids" in r:
+        if not isinstance(r["release_group_mbids"], list):
+            raise APIBadRequest("release_group_mbids must be a list of strings specifying release_mbids")
+        
+        release_group_mbids = list(r["release_group_mbids"])         
+ 
+    # If someone inputs a lot of mbids, it can lead to excessive search while fetching 
+    # caa_ids from database, hence, we will make sure mbids does not exceed 100.
+    if len(release_mbids) + len(release_group_mbids) > 100:
+        if len(release_mbids) > 100:
+            release_mbids = release_mbids[:100]
+            release_group_mbids = []
+        else:
+            required_rg_mbids = 100 - len(release_mbids)
+            release_group_mbids = release_group_mbids[:required_rg_mbids]
+            
+    # Validate mbids
+    for mbid in release_mbids + release_group_mbids:
+        if not is_valid_uuid(mbid):
+            raise APIBadRequest(f"Invalid release_mbid {mbid} specified.")
+
+    images = cac.load_images(release_mbids=release_mbids, 
+                             release_group_mbids=release_group_mbids, 
+                             tile_addrs=tiles, 
+                             layout=layout, 
+                             cover_art_size=cover_art_size)
     if images is None:
         raise APIInternalServerError("Failed to grid cover art SVG")
 
