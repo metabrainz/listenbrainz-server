@@ -151,8 +151,7 @@ export default function AddTagSelect(props: {
             entityType,
             entityMBID,
             isFixed: false,
-            isOwnTag: true,
-            originalTag: { tag: tag.name, count: tag.count ?? 1 },
+            originalTag: { tag: tag.name, count: tag.count },
           })
         );
         // mark the tags that the user has voted on
