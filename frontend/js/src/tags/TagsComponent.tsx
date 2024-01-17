@@ -1,4 +1,4 @@
-import { isUndefined, noop } from "lodash";
+import { isFunction, isUndefined, noop } from "lodash";
 import * as React from "react";
 import { useCallback, useState, useEffect } from "react";
 import {
@@ -14,6 +14,9 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TagComponent, { TagActionType } from "./TagComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
+
+const originalFetch = window.fetch;
+const fetchWithRetry = require("fetch-retry")(originalFetch);
 
 type MBResponseTag = {
   name: string;
@@ -101,7 +104,8 @@ export default function AddTagSelect(props: {
   const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
     GlobalAppContext
   );
-  const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
+  const { access_token: musicbrainzAuthToken, refreshMBToken } =
+    musicbrainzAuth ?? {};
   const { submitTagToMusicBrainz, MBBaseURI } = APIService;
 
   const [selected, setSelected] = useState<TagOptionType[]>(
@@ -114,10 +118,25 @@ export default function AddTagSelect(props: {
       return;
     }
     const url = `${MBBaseURI}/${entityType}/${entityMBID}?fmt=json&inc=user-tags tags`;
-    const response = await fetch(encodeURI(url), {
+    const response = await fetchWithRetry(encodeURI(url), {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
         Authorization: `Bearer ${musicbrainzAuthToken}`,
+      },
+      async retryOn(attempt: number, error: Error, res: Response) {
+        if (attempt > 3) return false;
+
+        if (error !== null || res.status === 401) {
+          if (isFunction(refreshMBToken)) {
+            try {
+              await refreshMBToken();
+              return true;
+            } catch {
+              return false;
+            }
+          }
+        }
+        return false;
       },
     });
     if (response.ok) {
@@ -211,7 +230,7 @@ export default function AddTagSelect(props: {
             selectedTags.map((tag) => {
               const clonedTag = { ...tag };
               if (clonedTag.value === callbackValue?.value) {
-                if (!isUndefined(clonedTag.originalTag?.count)) {
+                if (clonedTag.originalTag?.count !== undefined) {
                   clonedTag.originalTag.count += 1;
                 } else if (!isUndefined(clonedTag?.originalTag)) {
                   clonedTag.originalTag.count = 1;

@@ -615,7 +615,21 @@ const getPageProps = async (): Promise<{
       youtubeAuth: youtube,
       soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
-      musicbrainzAuth: musicbrainz,
+      musicbrainzAuth: {
+        ...musicbrainz,
+        refreshMBToken: async function refreshMBToken() {
+          try {
+            const newToken = await apiService.refreshMusicbrainzToken();
+            _.set(globalAppContext, "musicbrainzAuth.access_token", newToken);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error(
+              "Could not refresh MusicBrainz auth token:",
+              err.toString()
+            );
+          }
+        },
+      },
       userPreferences: user_preferences,
       musicbrainzGenres: await getOrFetchMBGenres(),
       recordingFeedbackManager: new RecordingFeedbackManager(
