@@ -1,4 +1,4 @@
-import { isFunction, isUndefined, noop, sortBy } from "lodash";
+import { isFunction, isUndefined, noop, set, sortBy } from "lodash";
 import * as React from "react";
 import { useCallback, useState, useEffect } from "react";
 import {
@@ -26,7 +26,7 @@ type MBResponseTag = {
 type TagOptionType = {
   value: string;
   label: string;
-  isFixed?: boolean;
+  isNew?: boolean;
   isOwnTag?: boolean;
   entityType: Entity;
   entityMBID?: string;
@@ -63,18 +63,18 @@ function MultiValueContainer(props: MultiValueGenericProps<TagOptionType>) {
       tag={data.originalTag ?? { tag: data.value, count: 1 }}
       entityType={data.entityType}
       entityMBID={data.entityMBID}
-      isNew={!data.isFixed}
+      isNew={data.isNew}
       isOwnTag={data.isOwnTag}
       initialScore={data.isOwnTag ? 1 : 0}
       deleteCallback={
-        data.isFixed
-          ? noop
-          : (tagName) => {
+        data.isNew
+          ? (tagName) => {
               selectProps.onChange(selectProps.value, {
                 action: "remove-value",
                 removedValue: data,
               });
             }
+          : noop
       }
     />
   );
@@ -87,7 +87,7 @@ function getOptionFromTag(
   return {
     value: tag.tag,
     label: tag.tag,
-    isFixed: true,
+    isNew: false,
     entityMBID: entityMBID ?? (tag as ArtistTag).artist_mbid ?? undefined,
     entityType,
     originalTag: tag,
@@ -150,7 +150,7 @@ export default function AddTagSelect(props: {
             label: tag.name,
             entityType,
             entityMBID,
-            isFixed: false,
+            isNew: false,
             originalTag: { tag: tag.name, count: tag.count },
           })
         );
@@ -225,19 +225,22 @@ export default function AddTagSelect(props: {
           if (!success) {
             return;
           }
-          setSelected(
-            selectedTags.map((tag) => {
-              const clonedTag = { ...tag };
-              if (clonedTag.value === callbackValue?.value) {
-                if (clonedTag.originalTag?.count !== undefined) {
-                  clonedTag.originalTag.count += 1;
-                } else if (!isUndefined(clonedTag?.originalTag)) {
-                  clonedTag.originalTag.count = 1;
-                }
-              }
-              return clonedTag;
-            }) as TagOptionType[]
+          const newSelection = [...selectedTags];
+          const newTag = newSelection.find(
+            (tag) => tag.value === callbackValue?.value
           );
+          if (newTag) {
+            // mark tag as newly created
+            newTag.isNew = true;
+            newTag.isOwnTag = true;
+            // increment the tag count safely
+            set(
+              newTag,
+              "originalTag.count",
+              (newTag.originalTag?.count ?? 0) + 1
+            );
+          }
+          setSelected(newSelection);
           break;
         }
         case "remove-value": {
