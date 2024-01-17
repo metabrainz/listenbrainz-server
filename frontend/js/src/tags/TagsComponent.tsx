@@ -1,4 +1,4 @@
-import { isFunction, isUndefined, noop } from "lodash";
+import { isFunction, isUndefined, noop, sortBy } from "lodash";
 import * as React from "react";
 import { useCallback, useState, useEffect } from "react";
 import {
@@ -265,7 +265,7 @@ export default function AddTagSelect(props: {
   return (
     <div className="add-tag-select">
       <CreatableSelect
-        value={selected}
+        value={sortBy(selected, "originalTag.count").reverse()}
         options={musicbrainzGenres?.map((genre) => ({
           value: genre,
           label: genre,
@@ -316,6 +316,7 @@ export default function AddTagSelect(props: {
               height: "100%",
               left: "-3em",
               background: "linear-gradient(-90deg, white 10%, transparent)",
+              pointerEvents: "none",
             },
           }),
         }}

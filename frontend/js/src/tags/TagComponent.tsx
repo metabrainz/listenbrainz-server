@@ -1,4 +1,4 @@
-import { noop, upperFirst } from "lodash";
+import { isFinite, noop, upperFirst } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 
@@ -167,7 +167,9 @@ export default function TagComponent(props: {
       >
         {tag.tag}
       </a>
-      <span className="small text-muted">{tag.count}</span>
+      {isFinite(tag.count) && (
+        <span className="small text-muted">{tag.count}</span>
+      )}
       {!isDisabled && isNew && (
         <TagVoteButton
           action={TagActionType.WITHDRAW}
