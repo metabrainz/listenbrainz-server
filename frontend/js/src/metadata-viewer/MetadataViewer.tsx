@@ -186,6 +186,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       const copy = { ...cur };
       if (copy.type === "vocal") {
         copy.instrument = "vocals";
+      } else if (!copy.instrument) {
+        // Fall back to credit type if no instrument is available
+        copy.instrument = copy.type;
       }
       if (existingArtist) {
         existingArtist.instrument += `, ${copy.instrument}`;
