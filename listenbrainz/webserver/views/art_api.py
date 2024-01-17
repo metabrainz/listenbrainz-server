@@ -105,31 +105,31 @@ def cover_art_grid_post():
     err = cac.validate_parameters()
     if err is not None:
         raise APIBadRequest(err)
-    
+
     if "cover_art_size" in r:
         cover_art_size = r["cover_art_size"]
     elif r["image_size"] < 1000:
         cover_art_size = 250
     else:
         cover_art_size = 500
-    
+
     # Get release_mbids
     release_mbids = []
     if "release_mbids" in r:
         if not isinstance(r["release_mbids"], list):
             raise APIBadRequest("release_mbids must be a list of strings specifying release_mbids")
-        
-        release_mbids = list(r["release_mbids"]) 
+
+        release_mbids = list(r["release_mbids"])
 
     # Get release_group_mbids
     release_group_mbids = []
     if "release_group_mbids" in r:
         if not isinstance(r["release_group_mbids"], list):
             raise APIBadRequest("release_group_mbids must be a list of strings specifying release_mbids")
-        
-        release_group_mbids = list(r["release_group_mbids"])         
- 
-    # If someone inputs a lot of mbids, it can lead to excessive search while fetching 
+
+        release_group_mbids = list(r["release_group_mbids"])
+
+    # If someone inputs a lot of mbids, it can lead to excessive search while fetching
     # caa_ids from database, hence, we will make sure mbids does not exceed 100.
     if len(release_mbids) + len(release_group_mbids) > 100:
         if len(release_mbids) > 100:
@@ -138,16 +138,16 @@ def cover_art_grid_post():
         else:
             required_rg_mbids = 100 - len(release_mbids)
             release_group_mbids = release_group_mbids[:required_rg_mbids]
-            
+
     # Validate mbids
     for mbid in release_mbids + release_group_mbids:
         if not is_valid_uuid(mbid):
             raise APIBadRequest(f"Invalid release_mbid {mbid} specified.")
 
-    images = cac.load_images(release_mbids=release_mbids, 
-                             release_group_mbids=release_group_mbids, 
-                             tile_addrs=tiles, 
-                             layout=layout, 
+    images = cac.load_images(release_mbids=release_mbids,
+                             release_group_mbids=release_group_mbids,
+                             tile_addrs=tiles,
+                             layout=layout,
                              cover_art_size=cover_art_size)
     if images is None:
         raise APIInternalServerError("Failed to grid cover art SVG")

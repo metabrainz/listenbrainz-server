@@ -219,7 +219,7 @@ class CoverArtGenerator:
 
         release_mbids = [mbid for mbid in release_mbids if mbid]
         release_group_mbids = [mbid for mbid in release_group_mbids if mbid]
-        
+
         results = self.load_release_caa_ids(release_mbids).update(self.load_release_group_caa_ids(release_group_mbids))
         covers = [
             {

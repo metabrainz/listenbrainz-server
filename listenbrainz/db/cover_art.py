@@ -106,7 +106,7 @@ def get_caa_ids_for_release_mbids(curs, release_mbids: Iterable[str]):
 
 def get_caa_ids_for_release_group_mbids(curs, release_group_mbids: Iterable[str]):
     """Given a list of release group mbids, find the associated cover art for the release groups.
-    
+
        Returns a dictionary similar to `get_caa_ids_for_release_mbids()`
     """
     query = """
@@ -118,7 +118,7 @@ def get_caa_ids_for_release_group_mbids(curs, release_group_mbids: Iterable[str]
                          , caa_rel.gid::TEXT AS caa_release_mbid
                          , rg.name as title,
                          , rg.artist_credit as artist
-                      FROM release_group_mbids rgm 
+                      FROM release_group_mbids rgm
                       JOIN musicbrainz.release_group rg
                         ON rg.id = rgm.mbid::uuid
                       JOIN musicbrainz.release caa_rel
