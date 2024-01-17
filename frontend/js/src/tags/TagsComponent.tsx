@@ -1,4 +1,4 @@
-import { isUndefined, noop, uniqBy } from "lodash";
+import { isUndefined, noop } from "lodash";
 import * as React from "react";
 import { useCallback, useState, useEffect } from "react";
 import {
@@ -14,6 +14,11 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TagComponent, { TagActionType } from "./TagComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
+
+type MBResponseTag = {
+  name: string;
+  count?: number;
+};
 
 type TagOptionType = {
   value: string;
@@ -57,6 +62,7 @@ function MultiValueContainer(props: MultiValueGenericProps<TagOptionType>) {
       entityMBID={data.entityMBID}
       isNew={!data.isFixed}
       isOwnTag={data.isOwnTag}
+      initialScore={data.isOwnTag ? 1 : 0}
       deleteCallback={
         data.isFixed
           ? noop
@@ -101,12 +107,13 @@ export default function AddTagSelect(props: {
   const [selected, setSelected] = useState<TagOptionType[]>(
     tags?.map((tag) => getOptionFromTag(tag, entityType, entityMBID)) ?? []
   );
+
   const getUserTags = useCallback(async () => {
-    /* Get user's own tags */
+    /* If user is logged in, fetch fresh tags and user's own tags */
     if (!musicbrainzAuthToken || !entityType || !entityMBID) {
       return;
     }
-    const url = `${MBBaseURI}/${entityType}/${entityMBID}?fmt=json&inc=user-tags`;
+    const url = `${MBBaseURI}/${entityType}/${entityMBID}?fmt=json&inc=user-tags tags`;
     const response = await fetch(encodeURI(url), {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
@@ -115,24 +122,28 @@ export default function AddTagSelect(props: {
     });
     if (response.ok) {
       const responseJSON = await response.json();
-      const userTags = responseJSON["user-tags"];
-      if (userTags?.length) {
-        setSelected((prevSelected) => {
-          const tagsArray: TagOptionType[] = userTags
-            .map(
-              (tag: { name: string }): TagOptionType => ({
-                value: tag.name,
-                label: tag.name,
-                entityType,
-                entityMBID,
-                isFixed: false,
-                isOwnTag: true,
-                originalTag: { tag: tag.name, count: 1 },
-              })
-            )
-            .concat(prevSelected);
-          return uniqBy(tagsArray, "value");
+      const userTags: MBResponseTag[] = responseJSON["user-tags"];
+      if (responseJSON.tags?.length || userTags?.length) {
+        const userTagNames: string[] = userTags.map((t) => t.name);
+        const formattedTags: TagOptionType[] = responseJSON.tags?.map(
+          (tag: MBResponseTag) => ({
+            value: tag.name,
+            label: tag.name,
+            entityType,
+            entityMBID,
+            isFixed: false,
+            isOwnTag: true,
+            originalTag: { tag: tag.name, count: tag.count ?? 1 },
+          })
+        );
+        // mark the tags that the user has voted on
+        formattedTags.forEach((tag) => {
+          if (userTagNames.includes(tag.value)) {
+            // eslint-disable-next-line no-param-reassign
+            tag.isOwnTag = true;
+          }
         });
+        setSelected(formattedTags);
       }
     }
   }, [entityType, entityMBID, musicbrainzAuthToken, MBBaseURI]);
@@ -196,7 +207,19 @@ export default function AddTagSelect(props: {
           if (!success) {
             return;
           }
-          setSelected(selectedTags as TagOptionType[]);
+          setSelected(
+            selectedTags.map((tag) => {
+              const clonedTag = { ...tag };
+              if (clonedTag.value === callbackValue?.value) {
+                if (!isUndefined(clonedTag.originalTag?.count)) {
+                  clonedTag.originalTag.count += 1;
+                } else if (!isUndefined(clonedTag?.originalTag)) {
+                  clonedTag.originalTag.count = 1;
+                }
+              }
+              return clonedTag;
+            }) as TagOptionType[]
+          );
           break;
         }
         case "remove-value": {
@@ -231,7 +254,7 @@ export default function AddTagSelect(props: {
           entityMBID,
           entityType,
         }))}
-        placeholder="Add tag"
+        placeholder="Add genre or tag"
         formatCreateLabel={CreateTagText}
         isSearchable
         isMulti

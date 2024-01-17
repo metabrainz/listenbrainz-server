@@ -167,6 +167,7 @@ export default function TagComponent(props: {
       >
         {tag.tag}
       </a>
+      <span className="small text-muted">{tag.count}</span>
       {!isDisabled && isNew && (
         <TagVoteButton
           action={TagActionType.WITHDRAW}
