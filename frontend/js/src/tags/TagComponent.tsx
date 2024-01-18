@@ -158,8 +158,11 @@ export default function TagComponent(props: {
     cssClasses += " upvoted";
   }
   let liveCount = tag.count;
-  if (userScore !== initialScore) {
-    liveCount += userScore;
+  if (userScore > (initialScore ?? 0)) {
+    liveCount += 1;
+  }
+  if (userScore < (initialScore ?? 0)) {
+    liveCount -= 1;
   }
 
   return (
