@@ -58,7 +58,7 @@ module.exports = function (env, argv) {
         path.resolve(jsDir, "src/recent/RecentListens.tsx"),
         path.resolve(cssDir, "main.less"),
       ],
-      AIBrainz: [path.resolve(jsDir, "src/AIBrainz/AIBrainz.tsx")],
+      AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/AIBrainz.tsx")],
       listens: [path.resolve(jsDir, "src/user/Listens.tsx")],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
@@ -67,20 +67,28 @@ module.exports = function (env, argv) {
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
       playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
-      explore: path.resolve(jsDir, "src/explore/ExploreCard.tsx"),
+      explore: path.resolve(jsDir, "src/explore/Explore.tsx"),
       huesound: path.resolve(jsDir, "src/explore/huesound/ColorPlay.tsx"),
       lb_radio: path.resolve(jsDir, "src/explore/lb-radio/LBRadio.tsx"),
       yearInMusic2021: path.resolve(
         jsDir,
-        "src/explore/year-in-music/2021/YearInMusic.tsx"
+        "src/user/year-in-music/2021/YearInMusic2021.tsx"
       ),
       yearInMusic2022: path.resolve(
         jsDir,
-        "src/explore/year-in-music/2022/YearInMusic.tsx"
+        "src/user/year-in-music/2022/YearInMusic2022.tsx"
       ),
-      coverArtComposite: path.resolve(
+      yearInMusic2023: path.resolve(
         jsDir,
-        "src/explore/year-in-music/2022/CoverArtComposite.tsx"
+        "src/user/year-in-music/2023/YearInMusic2023.tsx"
+      ),
+      coverArtComposite2022: path.resolve(
+        jsDir,
+        "src/explore/cover-art-collage/2022/CoverArtComposite.tsx"
+      ),
+      coverArtComposite2023: path.resolve(
+        jsDir,
+        "src/explore/cover-art-collage/2023/CoverArtComposite.tsx"
       ),
       homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
       recommendationsPlayground: path.resolve(
@@ -112,10 +120,7 @@ module.exports = function (env, argv) {
         jsDir,
         "src/user-settings/SelectTroiPreferences.tsx"
       ),
-      artCreator: path.resolve(
-        jsDir,
-        "src/explore/stats-art-designer/ArtCreator.tsx"
-      ),
+      artCreator: path.resolve(jsDir, "src/explore/art-creator/ArtCreator.tsx"),
       artistPage: path.resolve(jsDir, "src/entity-pages/ArtistPage.tsx"),
       albumPage: path.resolve(jsDir, "src/entity-pages/AlbumPage.tsx"),
     },

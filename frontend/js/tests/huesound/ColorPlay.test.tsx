@@ -8,7 +8,7 @@ import APIService from "../../src/utils/APIService";
 import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 import * as colorPlayProps from "../__mocks__/colorPlayProps.json";
 import ColorPlay from "../../src/explore/huesound/ColorPlay";
-import ColorWheel from "../../src/explore/huesound/ColorWheel";
+import ColorWheel from "../../src/explore/huesound/components/ColorWheel";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.

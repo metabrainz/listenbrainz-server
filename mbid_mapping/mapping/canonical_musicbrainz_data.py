@@ -20,8 +20,8 @@ class CanonicalMusicBrainzData(CanonicalMusicBrainzDataBase):
         This class creates the MBID mapping tables without release name in the lookup.
     """
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_musicbrainz_data", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.canonical_musicbrainz_data", select_conn, insert_conn, batch_size, unlogged)
 
     def get_post_process_queries(self):
         return ["""
@@ -77,23 +77,32 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         lb_conn = None
         if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+            unlogged = False
+        else:
+            unlogged = True
 
         # Setup all the needed objects
-        can = CanonicalRecordingRedirect(mb_conn, lb_conn)
-        can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, lb_conn)
-        can_rel = CanonicalReleaseRedirect(mb_conn)
-        releases = CanonicalRelease(mb_conn)
-        mapping = CanonicalMusicBrainzData(mb_conn, lb_conn)
+        releases = CanonicalRelease(mb_conn, unlogged=False)
+        can = CanonicalRecordingRedirect(mb_conn, lb_conn, unlogged=unlogged)
+        mapping = CanonicalMusicBrainzData(mb_conn, lb_conn, unlogged=unlogged)
         mapping.add_additional_bulk_table(can)
-        mapping_release = CanonicalMusicBrainzDataReleaseSupport(mb_conn, lb_conn)
+        can_rel = CanonicalReleaseRedirect(mb_conn, lb_conn, unlogged=unlogged)
+
+        if lb_conn:
+            can_rec_rel = CanonicalRecordingReleaseRedirect(lb_conn, mb_conn, unlogged=unlogged)
+        else:
+            can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, unlogged=unlogged)
+
+        mapping_release = CanonicalMusicBrainzDataReleaseSupport(mb_conn, lb_conn, unlogged=unlogged)
 
         # Carry out the bulk of the work
         create_custom_sort_tables(mb_conn)
         releases.run(no_swap=True)
-        mapping_release.run(no_swap=True)
         mapping.run(no_swap=True)
-        can_rec_rel.run(no_swap=True)
         can_rel.run(no_swap=True)
+
+        can_rec_rel.run(no_swap=True)
+        mapping_release.run(no_swap=True)
 
         # Now swap everything into production in a single transaction
         log("canonical_musicbrainz_data: Swap into production")
@@ -102,7 +111,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
             mapping_release.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             mapping.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             can.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
-            can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
+            can_rec_rel.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
             can_rel.swap_into_production(no_swap_transaction=True, swap_conn=lb_conn)
             mb_conn.commit()
             lb_conn.commit()

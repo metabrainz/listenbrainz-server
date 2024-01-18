@@ -1,11 +1,15 @@
 from datetime import datetime, date, time
 
-from data.model.new_releases_stat import NewReleasesStat
+from more_itertools import chunked
+
 from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.postgres.release_group import create_release_group_metadata_cache
 
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
+
+
+USERS_PER_MESSAGE = 500
 
 
 def get_new_releases_of_top_artists(year):
@@ -18,14 +22,19 @@ def get_new_releases_of_top_artists(year):
 
     new_releases = run_query(_get_new_releases_of_top_artists(year))
 
-    for entry in new_releases.toLocalIterator():
-        data = entry.asDict(recursive=True)
-        yield NewReleasesStat(
-            type="year_in_music_new_releases_of_top_artists",
-            year=year,
-            user_id=data["user_id"],
-            data=data["new_releases"]
-        ).dict(exclude_none=True)
+    for rows in chunked(new_releases.toLocalIterator(), USERS_PER_MESSAGE):
+        stats = []
+        for row in rows:
+            data = row.asDict(recursive=True)
+            stats.append({
+                "user_id": data["user_id"],
+                "data": data["new_releases"]
+            })
+        yield {
+            "type": "year_in_music_new_releases_of_top_artists",
+            "year": year,
+            "data": stats
+        }
 
 
 def _get_new_releases_of_top_artists(year):
@@ -53,11 +62,12 @@ def _get_new_releases_of_top_artists(year):
              WHERE row_number <= 50   
         ), release_groups_of_year AS (
             SELECT title
-                 , artist_credit_name  
+                 , artist_credit_name
                  , release_group_mbid
                  , artist_credit_mbids
                  , caa_id
                  , caa_release_mbid
+                 , artists
                  , explode(artist_credit_mbids) AS artist_mbid
               FROM release_groups_all
              WHERE first_release_date_year = {year}
@@ -66,9 +76,10 @@ def _get_new_releases_of_top_artists(year):
                  , collect_set(
                         struct(
                            rg.title
-                         , rg.artist_credit_name  
+                         , rg.artist_credit_name
                          , rg.release_group_mbid
                          , rg.artist_credit_mbids
+                         , rg.artists
                          , rg.caa_id
                          , rg.caa_release_mbid
                         )

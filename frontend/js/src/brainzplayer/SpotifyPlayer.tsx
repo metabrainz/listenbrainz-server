@@ -7,6 +7,7 @@ import {
   debounce as _debounce,
   isString,
   has,
+  difference,
 } from "lodash";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import {
@@ -292,11 +293,18 @@ export default class SpotifyPlayer
   };
 
   datasourceRecordsListens = (): boolean => {
-    // Starting 2022 we realized tracks played through BrainzPlayer + Spotify
-    // don't appear in the Spotify listening history anymore
-    // and consequently don't appear in LB user's listens.
-    // From here onwards we submit listens ourselves and hope there are no duplicates…
-    return false;
+    const { spotifyUser } = this.props;
+    if (!spotifyUser?.permission) {
+      return false;
+    }
+    const permissionsForRecordingSpotifyListens = [
+      "user-read-currently-playing",
+      "user-read-recently-played",
+    ];
+    return (
+      difference(permissionsForRecordingSpotifyListens, spotifyUser.permission)
+        .length === 0
+    );
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {

@@ -44,6 +44,7 @@ export type ReleaseGroup = {
 export type PopularRecording = {
   artist_mbids: string[];
   artist_name: string;
+  artists?: Array<MBIDMappingArtist>;
   caa_id?: number;
   caa_release_mbid?: string;
   position?: number;
@@ -57,8 +58,8 @@ export type PopularRecording = {
 };
 
 export type ListeningStats = {
-  total_listen_count: number;
-  total_user_count: number;
+  total_listen_count?: number;
+  total_user_count?: number;
   listeners: Array<{
     user_name: string;
     listen_count: number;
@@ -157,6 +158,7 @@ export function popularRecordingToListen(recording: PopularRecording): Listen {
         recording_mbid: recording.recording_mbid,
         release_mbid: recording.release_mbid,
         artist_mbids: recording.artist_mbids,
+        artists: recording.artists,
       },
     },
   };

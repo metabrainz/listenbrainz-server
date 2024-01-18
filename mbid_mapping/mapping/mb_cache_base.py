@@ -52,8 +52,8 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
         to the BulkInsertTable docs.
     """
 
-    def __init__(self, table, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__(table, mb_conn, lb_conn, batch_size)
+    def __init__(self, table, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__(table, select_conn, insert_conn, batch_size, unlogged)
         # cache the last updated to avoid calling it millions of times for the entire cache,
         # not initializing it here because there can be a huge time gap between initialization
         # and the actual query to fetch and insert the items in the cache. the pre_insert_queries_db_setup
@@ -61,7 +61,7 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
         self.last_updated = None
 
     def get_insert_queries(self):
-        return [("MB", self.get_metadata_cache_query(with_values=config.USE_MINIMAL_DATASET))]
+        return [self.get_metadata_cache_query(with_values=config.USE_MINIMAL_DATASET)]
 
     def pre_insert_queries_db_setup(self, curs):
         self.config_postgres_join_limit(curs)
@@ -91,7 +91,7 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
             recording_mbids: a list of Recording MBIDs to delete
         """
         query = self.get_delete_rows_query()
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         with conn.cursor() as curs:
             curs.execute(query, (tuple(recording_mbids),))
 
@@ -118,9 +118,9 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
         This process first looks for all recording MIBDs which are dirty, gets updated metadata for them, and then
         in batches deletes the dirty rows and inserts the updated ones.
         """
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
-            with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+            with self.select_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
                 self.pre_insert_queries_db_setup(mb_curs)
 
                 log(f"{self.table_name} update: Running looooong query on dirty items")
@@ -197,8 +197,10 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
 
     if use_lb_conn:
         mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
+        unlogged = False
     else:
         mb_uri = config.MBID_MAPPING_DATABASE_URI
+        unlogged = True
 
     with psycopg2.connect(mb_uri) as mb_conn:
         lb_conn = None
@@ -206,14 +208,14 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
         for table_cls in required_tables:
-            table = table_cls(mb_conn, lb_conn)
+            table = table_cls(mb_conn, lb_conn, unlogged=unlogged)
 
             if not table.table_exists():
                 log(f"{table.table_name} table does not exist, first create the table normally")
                 return
 
         new_timestamp = datetime.now()
-        cache = cache_cls(mb_conn, lb_conn)
+        cache = cache_cls(mb_conn, lb_conn, unlogged=unlogged)
         cache.run()
         update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, cache_key)
 

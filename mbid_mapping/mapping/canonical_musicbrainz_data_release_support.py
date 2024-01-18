@@ -9,8 +9,8 @@ class CanonicalMusicBrainzDataReleaseSupport(CanonicalMusicBrainzDataBase):
         This class creates the MBID mapping tables including the release name in lookups.
     """
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_musicbrainz_data_release_support", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.canonical_musicbrainz_data_release_support", select_conn, insert_conn, batch_size, unlogged)
 
     def get_index_names(self):
         table = "can_mb_data_release"

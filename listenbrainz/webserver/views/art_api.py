@@ -1,5 +1,6 @@
 from itertools import cycle
-from random import sample
+
+from markupsafe import Markup
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.year_in_music as db_yim
@@ -10,9 +11,20 @@ from flask import request, render_template, Blueprint, current_app
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
-from listenbrainz.webserver.views.api_tools import is_valid_uuid
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg
+from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_EXTENSION_URI
 
 art_api_bp = Blueprint('art_api_v1', __name__)
+
+
+def _repeat_images(images, size=9):
+    """ Repeat the images so that we have required number of images. """
+    if len(images) >= size:
+        return images
+    repeater = cycle(images)
+    while len(images) < size:
+        images.append(next(repeater))
+    return images
 
 
 @art_api_bp.route("/grid/", methods=["POST", "OPTIONS"])
@@ -109,6 +121,7 @@ def cover_art_grid_post():
     return render_template("art/svg-templates/simple-grid.svg",
                            background=r["background"],
                            images=images,
+                           entity="release",
                            width=r["image_size"],
                            height=r["image_size"]), 200, {
                                'Content-Type': 'image/svg+xml'
@@ -154,7 +167,7 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
         return f"layout {layout} is not available for dimension {dimension}."
 
     try:
-        images, _ = cac.create_grid_stats_cover(user_name, time_range, layout)
+        images = cac.create_grid_stats_cover(user_name, time_range, layout)
         if images is None:
             raise APIInternalServerError("Failed to grid cover art SVG")
     except ValueError as error:
@@ -163,6 +176,7 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
     return render_template("art/svg-templates/simple-grid.svg",
                            background=cac.background,
                            images=images,
+                           entity="release",
                            width=image_size,
                            height=image_size), 200, {
                                'Content-Type': 'image/svg+xml'
@@ -220,9 +234,7 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
             if images is None:
                 raise APIInternalServerError("Failed to release cover art SVG")
             if custom_name == "lps-on-the-floor":
-                repeater = cycle(images)
-                while len(images) < 5:
-                    images.append(next(repeater))
+                images = _repeat_images(images, 5)
         except ValueError as error:
             raise APIBadRequest(str(error))
 
@@ -240,11 +252,11 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
     raise APIBadRequest(f"Unkown custom cover art type {custom_name}")
 
 
-def _cover_art_yim_stats(user_name, stats):
+def _cover_art_yim_stats(user_name, stats, year):
     """ Create the SVG using YIM statistics for the given year. """
     if stats.get("day_of_week") is None or stats.get("most_listened_year") is None or \
-        stats.get("total_listen_count") is None or stats.get("total_new_artists_discovered") or \
-        stats.get("total_artists_count") is None:
+        stats.get("total_listen_count") is None or stats.get("total_new_artists_discovered") is None or \
+            stats.get("total_artists_count") is None:
         return None
 
     match stats["day_of_week"]:
@@ -258,21 +270,34 @@ def _cover_art_yim_stats(user_name, stats):
         case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
 
     most_listened_year = max(stats["most_listened_year"], key=stats["most_listened_year"].get)
-    return render_template(
-        "art/svg-templates/yim-2022.svg",
-        user_name=user_name,
-        most_played_day_message=most_played_day_message,
-        most_listened_year=most_listened_year,
-        total_listen_count=stats["total_listen_count"],
-        total_new_artists_discovered=stats["total_new_artists_discovered"],
-        total_artists_count=stats["total_artists_count"],
-        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
-        magnify_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-magnify.png',
-    )
+
+    if year == 2022:
+        return render_template(
+            "art/svg-templates/yim-2022.svg",
+            user_name=user_name,
+            most_played_day_message=Markup(most_played_day_message),
+            most_listened_year=most_listened_year,
+            total_listen_count=stats["total_listen_count"],
+            total_new_artists_discovered=stats["total_new_artists_discovered"],
+            total_artists_count=stats["total_artists_count"],
+            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+            magnify_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-magnify.png',
+        )
+
+    if year == 2023:
+        return render_template(
+            "art/svg-templates/yim-2023-stats.svg",
+            user_name=user_name,
+            most_played_day_message=Markup(most_played_day_message),
+            most_listened_year=most_listened_year,
+            total_listen_count=stats["total_listen_count"],
+            total_new_artists_discovered=stats["total_new_artists_discovered"],
+            total_artists_count=stats["total_artists_count"],
+        )
 
 
-def _cover_art_yim_albums(user_name, stats):
-    """ Create the SVG using YIM top albums for the given year. """
+def _cover_art_yim_albums_2022(user_name, stats):
+    """ Create the SVG using YIM top albums for 2022. """
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
     image_urls = []
     selected_urls = set()
@@ -280,9 +305,9 @@ def _cover_art_yim_albums(user_name, stats):
     if stats.get("top_releases") is None:
         return None
 
-    for item in stats["top_releases"]:
-        if "caa_id" in item and "caa_release_mbid" in item:
-            url = cac.resolve_cover_art(item["caa_id"], item["caa_release_mbid"], 250)
+    for release in stats["top_releases"]:
+        if "caa_id" in release and "caa_release_mbid" in release:
+            url = cac.resolve_cover_art(release["caa_id"], release["caa_release_mbid"], 250)
             if url not in selected_urls:
                 selected_urls.add(url)
                 image_urls.append(url)
@@ -290,11 +315,7 @@ def _cover_art_yim_albums(user_name, stats):
     if len(image_urls) == 0:
         return None
 
-    if len(image_urls) < 9:
-        repeater = cycle(image_urls)
-        # fill up the remaining slots with repeated images
-        while len(image_urls) < 9:
-            image_urls.append(next(repeater))
+    image_urls = _repeat_images(image_urls)
 
     return render_template(
         "art/svg-templates/yim-2022-albums.svg",
@@ -305,35 +326,95 @@ def _cover_art_yim_albums(user_name, stats):
     )
 
 
-def _cover_art_yim_tracks(user_name, stats):
+def _cover_art_yim_albums_2023(user_name, stats):
+    """ Create the SVG using YIM top albums for 2023. """
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    images = []
+    selected_urls = set()
+
+    if stats.get("top_release_groups") is None:
+        return None
+
+    for release_group in stats["top_release_groups"]:
+        if "caa_id" in release_group and "caa_release_mbid" in release_group:
+            url = cac.resolve_cover_art(release_group["caa_id"], release_group["caa_release_mbid"], 250)
+            if url not in selected_urls:
+                selected_urls.add(url)
+                images.append({
+                    "url": url,
+                    "title": release_group["release_group_name"],
+                    "artist": release_group["artist_name"],
+                    "entity_mbid": release_group["release_group_mbid"]
+                })
+
+    if len(images) == 0:
+        return None
+
+    images = _repeat_images(images)
+
+    return render_template(
+        "art/svg-templates/yim-2023-albums.svg",
+        user_name=user_name,
+        images=images,
+    )
+
+
+def _cover_art_yim_albums(user_name, stats, year):
+    """ Create the SVG using YIM top albums for the given year. """
+    if year == 2022:
+        return _cover_art_yim_albums_2022(user_name, stats)
+
+    if year == 2023:
+        return _cover_art_yim_albums_2023(user_name, stats)
+
+
+def _cover_art_yim_tracks(user_name, stats, year):
     """ Create the SVG using top tracks for the given user. """
     if stats.get("top_recordings") is None:
         return None
 
-    return render_template(
-        "art/svg-templates/yim-2022-tracks.svg",
-        user_name=user_name,
-        tracks=stats["top_recordings"],
-        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
-        stereo_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-stereo.png',
-    )
+    if year == 2022:
+        return render_template(
+            "art/svg-templates/yim-2022-tracks.svg",
+            user_name=user_name,
+            tracks=stats["top_recordings"],
+            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+            stereo_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-stereo.png',
+        )
+
+    if year == 2023:
+        return render_template(
+            "art/svg-templates/yim-2023-tracks.svg",
+            user_name=user_name,
+            tracks=stats["top_recordings"],
+        )
 
 
-def _cover_art_yim_artists(user_name, stats):
+def _cover_art_yim_artists(user_name, stats, year):
     """ Create the SVG using top artists for the given user. """
     if stats.get("top_artists") is None:
         return None
-    return render_template(
-        "art/svg-templates/yim-2022-artists.svg",
-        user_name=user_name,
-        artists=stats["top_artists"],
-        total_artists_count=stats["total_artists_count"],
-        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
-    )
+
+    if year == 2022:
+        return render_template(
+            "art/svg-templates/yim-2022-artists.svg",
+            user_name=user_name,
+            artists=stats["top_artists"],
+            total_artists_count=stats["total_artists_count"],
+            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+        )
+
+    if year == 2023:
+        return render_template(
+            "art/svg-templates/yim-2023-artists.svg",
+            user_name=user_name,
+            artists=stats["top_artists"],
+            total_artists_count=stats["total_artists_count"],
+        )
 
 
-def _cover_art_yim_playlist(user_name, stats, key):
-    """ Create the SVG using playlist tracks' cover arts for the given YIM playlist. """
+def _cover_art_yim_playlist_2022(user_name, stats, key):
+    """ Create the SVG using playlist tracks' cover arts for the given YIM 2022 playlist. """
     if stats.get(key) is None or stats.get(f"{key}-coverart") is None:
         return None
 
@@ -364,6 +445,62 @@ def _cover_art_yim_playlist(user_name, stats, key):
         bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
         flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-flames.png',
     )
+
+
+def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
+    """ Create the SVG using playlist tracks' cover arts for the given YIM 2023 playlist. """
+    if stats.get(key) is None:
+        return None
+
+    images = []
+    selected_urls = set()
+
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+
+    for track in stats[key]["track"]:
+        additional_metadata = track["extension"][PLAYLIST_TRACK_EXTENSION_URI].get("additional_metadata")
+        if additional_metadata.get("caa_id") and additional_metadata.get("caa_release_mbid"):
+            caa_id = additional_metadata["caa_id"]
+            caa_release_mbid = additional_metadata["caa_release_mbid"]
+            cover_art = cac.resolve_cover_art(caa_id, caa_release_mbid, 250)
+
+            # check existence in set to avoid duplicates
+            if cover_art not in selected_urls:
+                images.append({
+                    "url": cover_art,
+                    "entity_mbid": caa_release_mbid,
+                    "title": track.get("album"),
+                    "artist": track.get("creator"),
+                })
+
+    if len(images) == 0:
+        return None
+
+    images = _repeat_images(images)
+
+    match key:
+        case "playlist-top-discoveries-for-year":
+            target_svg = "art/svg-templates/yim-2023-playlist-hug.svg"
+        case "playlist-top-missed-recordings-for-year":
+            target_svg = "art/svg-templates/yim-2023-playlist-arrows.svg"
+        case other:
+            raise APIBadRequest(f"Invalid playlist type {key}. Playlist type should be one of (playlist-top-discoveries-for-year, playlist-top-missed-recordings-for-year)")
+
+    return render_template(
+        target_svg,
+        user_name=user_name,
+        images=images,
+        branding=branding
+    )
+
+
+def _cover_art_yim_playlist(user_name, stats, key, year, branding):
+    """ Create the SVG using playlist tracks' cover arts for the given YIM playlist. """
+    if year == 2022:
+        return _cover_art_yim_playlist_2022(user_name, stats, key)
+
+    if year == 2023:
+        return _cover_art_yim_playlist_2023(user_name, stats, key, branding)
 
 
 def _cover_art_yim_overview(user_name, stats, year):
@@ -416,30 +553,34 @@ def _cover_art_yim_overview(user_name, stats, year):
         return render_template("art/svg-templates/yim-2023.svg", **props)
 
 
-@art_api_bp.route("/year-in-music/2022/<user_name>", methods=["GET"])
+@art_api_bp.route("/year-in-music/<int:year>/<user_name>", methods=["GET"])
 @crossdomain
 @ratelimit()
-def cover_art_yim_2022(user_name):
-    """ Create the shareable svg image using YIM 2022 stats """
+def cover_art_yim(user_name, year: int = 2023):
+    """ Create the shareable svg image using YIM stats """
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APIBadRequest(f"User {user_name} not found")
 
     image = request.args.get("image")
     if image is None:
-        raise APIBadRequest("Type of Image needs to be specified should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
+        raise APIBadRequest(
+            "Type of Image needs to be specified should be one of (overview, stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
-    stats = db_yim.get(user["id"], 2022)
+    branding = _parse_bool_arg("branding", True)
+
+    stats = db_yim.get(user["id"], year)
     if stats is None:
-        raise APIBadRequest(f"Year In Music report for user {user_name} not found")
+        raise APIBadRequest(f"Year In Music {year} report for user {user_name} not found")
 
     match image:
-        case "stats": svg = _cover_art_yim_stats(user_name, stats)
-        case "albums": svg = _cover_art_yim_albums(user_name, stats)
-        case "tracks": svg = _cover_art_yim_tracks(user_name, stats)
-        case "artists": svg = _cover_art_yim_artists(user_name, stats)
-        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year")
-        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year")
+        case "overview": svg = _cover_art_yim_overview(user_name, stats, year)
+        case "stats": svg = _cover_art_yim_stats(user_name, stats, year)
+        case "albums": svg = _cover_art_yim_albums(user_name, stats, year)
+        case "tracks": svg = _cover_art_yim_tracks(user_name, stats, year)
+        case "artists": svg = _cover_art_yim_artists(user_name, stats, year)
+        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year, branding)
+        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year, branding)
         case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
     if svg is None:

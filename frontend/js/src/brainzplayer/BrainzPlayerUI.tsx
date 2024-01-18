@@ -180,6 +180,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   } = props;
 
   const isPlayingATrack = Boolean(currentListen);
+  const recordingMSID = getRecordingMSID(currentListen as Listen);
+  const recordingMBID = getRecordingMBID(currentListen as Listen);
+  const showFeedback = Boolean(recordingMSID) || Boolean(recordingMBID);
 
   return (
     <>
@@ -266,30 +269,35 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             title={queueRepeatMode.title}
             onClick={toggleRepeatMode}
           />
-          <FontAwesomeIcon
-            icon={faHeart}
-            title="Love"
-            onClick={
-              isPlayingATrack
-                ? () => submitFeedback(currentListenFeedback === 1 ? 0 : 1)
-                : undefined
-            }
-            className={`${currentListenFeedback === 1 ? " loved" : ""}${
-              !isPlayingATrack ? " disabled" : ""
-            }`}
-          />
-          <FontAwesomeIcon
-            icon={faHeartCrack}
-            title="Hate"
-            onClick={
-              isPlayingATrack
-                ? () => submitFeedback(currentListenFeedback === -1 ? 0 : -1)
-                : undefined
-            }
-            className={`${currentListenFeedback === -1 ? " hated" : ""}${
-              !isPlayingATrack ? " disabled" : ""
-            }`}
-          />
+          {showFeedback && (
+            <>
+              <FontAwesomeIcon
+                icon={faHeart}
+                title="Love"
+                onClick={
+                  isPlayingATrack
+                    ? () => submitFeedback(currentListenFeedback === 1 ? 0 : 1)
+                    : undefined
+                }
+                className={`${currentListenFeedback === 1 ? " loved" : ""}${
+                  !isPlayingATrack ? " disabled" : ""
+                }`}
+              />
+              <FontAwesomeIcon
+                icon={faHeartCrack}
+                title="Hate"
+                onClick={
+                  isPlayingATrack
+                    ? () =>
+                        submitFeedback(currentListenFeedback === -1 ? 0 : -1)
+                    : undefined
+                }
+                className={`${currentListenFeedback === -1 ? " hated" : ""}${
+                  !isPlayingATrack ? " disabled" : ""
+                }`}
+              />
+            </>
+          )}
           <MenuOptions currentListen={currentListen} />
         </div>
       </div>

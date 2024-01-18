@@ -66,6 +66,8 @@ def fetch_release_group_metadata(release_group_mbids, incs):
             data["release"] = entry.release_group_data
 
         if "recording" in incs:
+            if "recordings" in entry.recording_data:
+                del entry.recording_data["recordings"]
             data["recording"] = entry.recording_data
 
         result[str(entry.release_group_mbid)] = data

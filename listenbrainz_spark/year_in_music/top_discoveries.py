@@ -6,7 +6,7 @@ from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import get_listens_from_dump
 
-USERS_PER_MESSAGE = 1000
+USERS_PER_MESSAGE = 250
 MAX_ARTIST_OCCURRENCE = 2
 MAX_TRACKS_PER_PLAYLIST = 50
 
@@ -78,5 +78,6 @@ def create_tracks_of_the_year(year):
           GROUP BY user_id
                  , recording_mbid
             HAVING date_part('YEAR', min(listened_at)) = {year}
+               AND count(*) > 3
     """
     run_query(query).createOrReplaceTempView("tracks_of_year")

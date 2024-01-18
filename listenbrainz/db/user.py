@@ -611,3 +611,14 @@ def search_user_name(search_term: str, limit: int) -> List[object]:
         for row in rows:
             search_results.append({"user_name": row.musicbrainz_id})
         return search_results
+
+
+def get_all_usernames():
+    """ Return a map of all user ids to their musicbrainz usernames """
+    user_id_map = {}
+    query = 'SELECT id, musicbrainz_id FROM "user"'
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text(query))
+        for row in result:
+            user_id_map[row.id] = row.musicbrainz_id
+    return user_id_map

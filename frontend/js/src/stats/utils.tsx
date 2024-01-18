@@ -1,5 +1,5 @@
 import * as React from "react";
-import { getMBIDMappingArtistLink } from "../utils/utils";
+import { getMBIDMappingArtistLink, getStatsArtistLink } from "../utils/utils";
 
 export function getEntityLink(
   entityType: Entity,
@@ -110,12 +110,7 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
     [artistMBID] = artistMBIDs;
   }
 
-  let artistLink;
-  if (artists?.length) {
-    artistLink = getMBIDMappingArtistLink(artists);
-  } else if (artistName) {
-    artistLink = getEntityLink("artist", artistName, artistMBID);
-  }
+  const artistLink = getStatsArtistLink(artists, artistName, artistMBIDs);
 
   return (
     <>
