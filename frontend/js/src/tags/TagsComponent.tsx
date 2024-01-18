@@ -236,6 +236,7 @@ export default function AddTagSelect(props: {
             newTag.isNew = true;
             newTag.isOwnTag = true;
             // increment the tag count safely
+            set(newTag, "originalTag.tag", callbackValue?.value);
             set(
               newTag,
               "originalTag.count",
@@ -281,6 +282,7 @@ export default function AddTagSelect(props: {
         formatCreateLabel={CreateTagText}
         isSearchable
         isMulti
+        backspaceRemovesValue={false}
         isDisabled={!musicbrainzAuthToken || !entityMBID}
         isClearable={false}
         openMenuOnClick={false}

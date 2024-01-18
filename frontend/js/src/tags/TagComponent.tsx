@@ -154,9 +154,14 @@ export default function TagComponent(props: {
   let cssClasses = "tag";
   if (userScore === -1) {
     cssClasses += " downvoted";
-  } else if (userScore === 1 || isOwnTag) {
+  } else if (userScore === 1 || isNew) {
     cssClasses += " upvoted";
   }
+  let liveCount = tag.count;
+  if (userScore !== initialScore) {
+    liveCount += userScore;
+  }
+
   return (
     <span className={cssClasses}>
       <a
@@ -167,8 +172,8 @@ export default function TagComponent(props: {
       >
         {tag.tag}
       </a>
-      {isFinite(tag.count) && (
-        <span className="small text-muted">{tag.count}</span>
+      {isFinite(liveCount) && (
+        <span className="small text-muted">{liveCount}</span>
       )}
       {!isDisabled && isNew && (
         <TagVoteButton
