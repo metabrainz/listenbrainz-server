@@ -1,9 +1,9 @@
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import * as React from "react";
 import { toast } from "react-toastify";
-import { ToastMsg } from "../notifications/Notifications";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import { getPlaylistId, isPlaylistOwner } from "./utils";
+import { ToastMsg } from "../../../notifications/Notifications";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { getPlaylistId, isPlaylistOwner } from "../../../playlists/utils";
 
 type DeletePlaylistConfirmationModalProps = {
   playlist?: JSPFPlaylist;

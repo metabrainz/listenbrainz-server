@@ -3,15 +3,15 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../utils/APIService";
-import Card from "../components/Card";
-import Loader from "../components/Loader";
+import APIService from "../../../utils/APIService";
+import Card from "../../../components/Card";
+import Loader from "../../../components/Loader";
 import {
   getChartEntityDetails,
   isInvalidStatRange,
   userChartEntityToListen,
-} from "./utils";
-import ListenCard from "../listens/ListenCard";
+} from "../utils";
+import ListenCard from "../../../listens/ListenCard";
 
 export type UserTopEntityProps = {
   range: UserStatsAPIRange;

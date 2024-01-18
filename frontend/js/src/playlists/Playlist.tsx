@@ -28,7 +28,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
 import { getPageProps } from "../utils/utils";
 import PlaylistItemCard from "./PlaylistItemCard";
-import PlaylistMenu from "./PlaylistMenu";
+import PlaylistMenu from "../user/playlists/components/PlaylistMenu";
 import {
   getPlaylistExtension,
   getPlaylistId,

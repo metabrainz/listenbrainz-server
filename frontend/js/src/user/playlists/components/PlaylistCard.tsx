@@ -8,11 +8,11 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { sanitize } from "dompurify";
 import { toast } from "react-toastify";
-import Card from "../components/Card";
-import { ToastMsg } from "../notifications/Notifications";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import Card from "../../../components/Card";
+import { ToastMsg } from "../../../notifications/Notifications";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 import PlaylistMenu from "./PlaylistMenu";
-import { getPlaylistExtension, getPlaylistId } from "./utils";
+import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 
 export type PlaylistCardProps = {
   playlist: JSPFPlaylist;

@@ -10,16 +10,16 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import Pill from "../components/Pill";
-import UserListeningActivity from "./UserListeningActivity";
-import UserTopEntity from "./UserTopEntity";
-import UserDailyActivity from "./UserDailyActivity";
-import UserArtistMap from "./UserArtistMap";
-import { getPageProps } from "../utils/utils";
+import ErrorBoundary from "../../utils/ErrorBoundary";
+import Pill from "../../components/Pill";
+import UserListeningActivity from "./components/UserListeningActivity";
+import UserTopEntity from "./components/UserTopEntity";
+import UserDailyActivity from "./components/UserDailyActivity";
+import UserArtistMap from "./components/UserArtistMap";
+import { getPageProps } from "../../utils/utils";
 import { getAllStatRanges } from "./utils";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;

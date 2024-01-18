@@ -4,11 +4,11 @@
 import { noop } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
-import Loader from "../components/Loader";
-import { ToastMsg } from "../notifications/Notifications";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import Loader from "../../../components/Loader";
+import { ToastMsg } from "../../../notifications/Notifications";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 import PlaylistCard from "./PlaylistCard";
-import { PlaylistType } from "./utils";
+import { PlaylistType } from "../../../playlists/utils";
 
 export type PlaylistsListProps = {
   playlists: JSPFPlaylist[];

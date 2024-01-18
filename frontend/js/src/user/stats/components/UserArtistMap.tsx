@@ -4,12 +4,12 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../utils/APIService";
-import Card from "../components/Card";
-import Loader from "../components/Loader";
+import APIService from "../../../utils/APIService";
+import Card from "../../../components/Card";
+import Loader from "../../../components/Loader";
 import Choropleth from "./Choropleth";
-import { isInvalidStatRange } from "./utils";
-import { COLOR_BLACK } from "../utils/constants";
+import { isInvalidStatRange } from "../utils";
+import { COLOR_BLACK } from "../../../utils/constants";
 
 export type UserArtistMapProps = {
   range: UserStatsAPIRange;

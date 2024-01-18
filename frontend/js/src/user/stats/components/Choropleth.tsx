@@ -15,8 +15,8 @@ import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
-import * as worldCountries from "./world_countries.json";
-import { COLOR_BLACK } from "../utils/constants";
+import * as worldCountries from "../data/world_countries.json";
+import { COLOR_BLACK } from "../../../utils/constants";
 
 const {
   useState,

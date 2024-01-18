@@ -15,16 +15,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { toast } from "react-toastify";
-import Card from "../components/Card";
-import Pill from "../components/Pill";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import { ToastMsg } from "../notifications/Notifications";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import { getPageProps } from "../utils/utils";
-import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
-import PlaylistsList from "./PlaylistsList";
-import { getPlaylistId, PlaylistType } from "./utils";
+import Card from "../../components/Card";
+import Pill from "../../components/Pill";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import { ToastMsg } from "../../notifications/Notifications";
+import ErrorBoundary from "../../utils/ErrorBoundary";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { getPageProps } from "../../utils/utils";
+import CreateOrEditPlaylistModal from "./components/CreateOrEditPlaylistModal";
+import PlaylistsList from "./components/PlaylistsList";
+import { getPlaylistId, PlaylistType } from "../../playlists/utils";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];

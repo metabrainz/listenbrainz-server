@@ -3,7 +3,7 @@ import * as React from "react";
 import { BarTooltipProps, ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
 import { BasicTooltip } from "@nivo/tooltip";
-import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../utils/constants";
+import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../../utils/constants";
 
 export type BarDualToneProps = {
   data: UserListeningActivityData;

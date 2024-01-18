@@ -3,12 +3,12 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../utils/APIService";
-import Card from "../components/Card";
+import APIService from "../../../utils/APIService";
+import Card from "../../../components/Card";
 import HeatMap from "./HeatMap";
-import Loader from "../components/Loader";
-import { isInvalidStatRange } from "./utils";
-import { COLOR_BLACK } from "../utils/constants";
+import Loader from "../../../components/Loader";
+import { isInvalidStatRange } from "../utils";
+import { COLOR_BLACK } from "../../../utils/constants";
 
 export type UserDailyActivityProps = {
   range: UserStatsAPIRange;

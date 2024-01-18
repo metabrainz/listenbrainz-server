@@ -1,5 +1,8 @@
 import * as React from "react";
-import { getMBIDMappingArtistLink, getStatsArtistLink } from "../utils/utils";
+import {
+  getMBIDMappingArtistLink,
+  getStatsArtistLink,
+} from "../../utils/utils";
 
 export function getEntityLink(
   entityType: Entity,
