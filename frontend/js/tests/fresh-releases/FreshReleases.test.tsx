@@ -9,8 +9,8 @@ import GlobalAppContext, {
 import APIService from "../../src/utils/APIService";
 
 import FreshReleases from "../../src/explore/fresh-releases/FreshReleases";
-import ReleaseFilters from "../../src/explore/fresh-releases/ReleaseFilters";
-import ReleaseTimeline from "../../src/explore/fresh-releases/ReleaseTimeline";
+import ReleaseFilters from "../../src/explore/fresh-releases/components/ReleaseFilters";
+import ReleaseTimeline from "../../src/explore/fresh-releases/components/ReleaseTimeline";
 
 import * as sitewideData from "../__mocks__/freshReleasesSitewideData.json";
 import * as userData from "../__mocks__/freshReleasesUserData.json";

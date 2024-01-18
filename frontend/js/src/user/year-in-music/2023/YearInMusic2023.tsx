@@ -42,7 +42,7 @@ import {
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../../stats/utils";
-import ImageShareButtons from "./ImageShareButtons";
+import ImageShareButtons from "./components/ImageShareButtons";
 
 import ListenCard from "../../../listens/ListenCard";
 import UserListModalEntry from "../../../follow/UserListModalEntry";
