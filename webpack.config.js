@@ -58,7 +58,7 @@ module.exports = function (env, argv) {
         path.resolve(jsDir, "src/recent/RecentListens.tsx"),
         path.resolve(cssDir, "main.less"),
       ],
-      AIBrainz: [path.resolve(jsDir, "src/AIBrainz/AIBrainz.tsx")],
+      AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/page.tsx")],
       listens: [path.resolve(jsDir, "src/user/Listens.tsx")],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
       userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
@@ -72,15 +72,15 @@ module.exports = function (env, argv) {
       lb_radio: path.resolve(jsDir, "src/explore/lb-radio/page.tsx"),
       yearInMusic2021: path.resolve(
         jsDir,
-        "src/explore/year-in-music/2021/page.tsx"
+        "src/user/year-in-music/2021/page.tsx"
       ),
       yearInMusic2022: path.resolve(
         jsDir,
-        "src/explore/year-in-music/2022/page.tsx"
+        "src/user/year-in-music/2022/page.tsx"
       ),
       yearInMusic2023: path.resolve(
         jsDir,
-        "src/explore/year-in-music/2023/page.tsx"
+        "src/user/year-in-music/2023/page.tsx"
       ),
       coverArtComposite2022: path.resolve(
         jsDir,
