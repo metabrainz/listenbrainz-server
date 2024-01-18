@@ -346,8 +346,8 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, globalAppContext } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, globalAppContext } = await getPageProps();
 
   const AIBrainzComponentWithAlertNotifications = withAlertNotifications(
     AIBrainzComponent

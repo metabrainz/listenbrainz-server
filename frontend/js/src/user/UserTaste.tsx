@@ -83,13 +83,13 @@ export default class UserTaste extends React.Component<UserTasteProps> {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const {
     domContainer,
     reactProps,
     globalAppContext,
     sentryProps,
-  } = getPageProps();
+  } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {

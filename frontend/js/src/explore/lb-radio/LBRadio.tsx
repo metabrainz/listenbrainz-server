@@ -133,8 +133,8 @@ function LBRadio(props: LBRadioProps) {
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalAppContext } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, reactProps, globalAppContext } = await getPageProps();
 
   const { user, mode, prompt, token } = reactProps;
   const renderRoot = createRoot(domContainer!);

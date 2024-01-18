@@ -236,8 +236,8 @@ export default class ColorPlay extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalAppContext } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, reactProps, globalAppContext } = await getPageProps();
 
   const { user } = reactProps;
 
