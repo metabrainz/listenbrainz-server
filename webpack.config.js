@@ -59,14 +59,17 @@ module.exports = function (env, argv) {
         path.resolve(cssDir, "main.less"),
       ],
       AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/AIBrainz.tsx")],
-      listens: [path.resolve(jsDir, "src/user/Listens.tsx")],
+      dashboard: [path.resolve(jsDir, "src/user/Dashboard.tsx")],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
-      userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
-      userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
-      userTaste: path.resolve(jsDir, "src/user/UserTaste.tsx"),
+      userEntityChart: path.resolve(
+        jsDir,
+        "src/user/charts/UserEntityChart.tsx"
+      ),
+      userReports: path.resolve(jsDir, "src/user/stats/UserReports.tsx"),
+      userTaste: path.resolve(jsDir, "src/user/taste/UserTaste.tsx"),
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
-      playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
+      playlists: path.resolve(jsDir, "src/user/playlists/Playlists.tsx"),
       explore: path.resolve(jsDir, "src/explore/Explore.tsx"),
       huesound: path.resolve(jsDir, "src/explore/huesound/ColorPlay.tsx"),
       lb_radio: path.resolve(jsDir, "src/explore/lb-radio/LBRadio.tsx"),
@@ -97,11 +100,11 @@ module.exports = function (env, argv) {
       ),
       recommendations: path.resolve(
         jsDir,
-        "src/recommendations/RecommendationsPage.tsx"
+        "src/user/recommendations/RecommendationsPage.tsx"
       ),
       missingMBData: path.resolve(
         jsDir,
-        "src/missing-mb-data/MissingMBData.tsx"
+        "src/user/missing-data/MissingMBData.tsx"
       ),
       playerPage: path.resolve(jsDir, "src/player-pages/PlayerPage.tsx"),
       metadataViewer: path.resolve(
