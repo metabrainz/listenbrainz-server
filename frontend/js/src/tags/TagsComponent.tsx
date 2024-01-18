@@ -166,7 +166,7 @@ export default function AddTagSelect(props: {
         setSelected(formattedTags);
       }
     }
-  }, [entityType, entityMBID, musicbrainzAuthToken, MBBaseURI]);
+  }, [entityType, entityMBID, musicbrainzAuthToken, MBBaseURI, refreshMBToken]);
 
   if (!isUndefined(entityMBID) && prevEntityMBID !== entityMBID) {
     // Will only run once when the entityMBID changes,
