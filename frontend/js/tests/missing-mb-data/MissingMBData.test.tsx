@@ -5,7 +5,7 @@ import { act } from "react-dom/test-utils";
 import * as missingDataProps from "../__mocks__/missingMBDataProps.json";
 import { youtube, spotify, user } from "../__mocks__/missingMBDataProps.json";
 
-import MissingMBDataPage from "../../src/settings/pages/MissingMBData";
+import MissingMBDataPage from "../../src/settings/missing-data/MissingMBData";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";

@@ -12,12 +12,7 @@ import { getPageProps } from "../utils/utils";
 import getSettingsRoutes from "./routes";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = getPageProps();
+  const { domContainer, globalAppContext, sentryProps } = getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {

@@ -4,7 +4,7 @@ import { redirect } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { downloadFile } from "./ExportData";
+import { downloadFile } from "../export/ExportData";
 
 export default function DeleteAccount() {
   const { currentUser } = React.useContext(GlobalAppContext);

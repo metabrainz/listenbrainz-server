@@ -1,26 +1,28 @@
 import * as React from "react";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import SettingsLayout from "../layout";
-import DeleteAccount from "../pages/DeleteAccount";
-import DeleteListens from "../pages/DeleteListens";
-import Export from "../pages/ExportData";
-import Import, { ImportLoader } from "../pages/ImportListens";
+import DeleteAccount from "../delete/DeleteAccount";
+import DeleteListens from "../delete-listens/DeleteListens";
+import Export from "../export/ExportData";
+import Import, { ImportLoader } from "../import/ImportListens";
 import {
   MissingMBDataPageLoader,
   MissingMBDataPageWrapper,
-} from "../pages/MissingMBData";
-import MusicServices, { MusicServicesLoader } from "../pages/MusicServices";
-import ResetToken from "../pages/ResetToken";
+} from "../missing-data/MissingMBData";
+import MusicServices, {
+  MusicServicesLoader,
+} from "../music-services/details/MusicServices";
+import ResetToken from "../resettoken/ResetToken";
 import {
   SelectTimezoneLoader,
   SelectTimezoneWrapper,
-} from "../pages/SelectTimezone";
+} from "../select_timezone/SelectTimezone";
 import {
   SelectTroiPreferencesLoader,
   SelectTroiPreferencesWrapper,
-} from "../pages/SelectTroiPreferences";
-import Settings from "../pages/Settings";
-import ResetImportTimestamp from "../pages/ResetLatestImports";
+} from "../troi/SelectTroiPreferences";
+import Settings from "../Settings";
+import ResetImportTimestamp from "../resetlatestimportts/ResetLatestImports";
 
 const getSettingsRoutes = () => {
   const SettingsWithAlertNotifications = withAlertNotifications(Settings);

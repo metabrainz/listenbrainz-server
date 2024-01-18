@@ -2,8 +2,8 @@ import * as React from "react";
 
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ToastMsg } from "../../notifications/Notifications";
-import GlobalAppContext from "../../utils/GlobalAppContext";
+import { ToastMsg } from "../notifications/Notifications";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 export default function Settings() {
   const { currentUser } = React.useContext(GlobalAppContext);

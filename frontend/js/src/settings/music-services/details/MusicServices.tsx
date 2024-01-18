@@ -3,8 +3,8 @@ import * as React from "react";
 import { capitalize } from "lodash";
 import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ToastMsg } from "../../notifications/Notifications";
-import ServicePermissionButton from "../components/ExternalServiceButton";
+import { ToastMsg } from "../../../notifications/Notifications";
+import ServicePermissionButton from "./components/ExternalServiceButton";
 
 type MusicServicesLoaderData = {
   current_spotify_permissions: string;
