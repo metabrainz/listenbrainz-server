@@ -19,7 +19,7 @@ class BulkInsertTable:
 
     def __init__(self, table_name, select_conn, insert_conn=None, batch_size=None, unlogged=None):
         """
-            This init function expects to be passed a database connection to read data from (usually to MB)
+            This init function expects to be passed a database connection to read data from (usually MB)
             and an optional DB connection to write data to (usually ListenBrainz). If the insert_conn is
             passed in, the newly written table will be written to that database and the select_conn connection
             will only be used to fetch the data. However, if insert_conn is not passed in, the select_conn
@@ -72,7 +72,7 @@ class BulkInsertTable:
             The process_row function will be called for each of the rows resulting from the queries.
 
             Example:
-                ["SELECT * from ...", "SELECT * from ... ")]
+                ["SELECT * from ...", "SELECT * from ... "]
         """
         return []
 
