@@ -28,7 +28,7 @@ import {
   popularRecordingToListen,
 } from "./utils";
 import type { PopularRecording, ReleaseGroup, SimilarArtist } from "./utils";
-import ReleaseCard from "../explore/fresh-releases/ReleaseCard";
+import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];

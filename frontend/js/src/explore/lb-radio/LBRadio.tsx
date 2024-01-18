@@ -16,8 +16,8 @@ import {
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
-import { LBRadioFeedback, Playlist } from "./Playlist";
-import Prompt, { Modes } from "./Prompt";
+import { LBRadioFeedback, Playlist } from "./components/Playlist";
+import Prompt, { Modes } from "./components/Prompt";
 
 type LBRadioProps = {
   modeArg: Modes;

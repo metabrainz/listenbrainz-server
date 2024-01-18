@@ -99,7 +99,6 @@ def build(client, collection_name, table, combiner):
                      , artist_credit_name
                      , artist_mbids
                      , score
-                     , year
                   FROM {table}
             """
 

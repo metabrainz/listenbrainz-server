@@ -165,9 +165,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   let coverArtSrc = "/static/img/cover-art-placeholder.jpg";
 
-  // try fetching cover art using user submitted release mbid first
+  // try fetching cover art using user-submitted release mbid first
   if (userSubmittedReleaseMBID) {
-    coverArtSrc = `https://coverartarchive.org/release/${userSubmittedReleaseMBID}/front`;
+    coverArtSrc = `https://coverartarchive.org/release/${userSubmittedReleaseMBID}/front-500`;
   } else if (CAAReleaseMBID && CAAID) {
     // if user didn't submit a release mbid but mapper has a match, try using that
     // Bypass the Cover Art Archive redirect since we have the info to directly fetch from archive.org
@@ -180,8 +180,16 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         (el) => el.artist_mbid === cur.artist_mbid
       );
       const copy = { ...cur };
-      if (copy.type === "vocal") {
-        copy.instrument = "vocals";
+      // Fall back to credit type if no instrument/vocal attribute is available
+      if (!copy.instrument) {
+        // Prefer plural form for unspecified vocal or instrument type
+        if (copy.type === "vocal") {
+          copy.instrument = "vocals";
+        } else if (copy.type === "instrument") {
+          copy.instrument = "instruments";
+        } else {
+          copy.instrument = copy.type;
+        }
       }
       if (existingArtist) {
         existingArtist.instrument += `, ${copy.instrument}`;

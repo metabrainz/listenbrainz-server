@@ -14,8 +14,8 @@ class CanonicalReleaseRedirect(BulkInsertTable):
         to the BulkInsertTable docs.
     """
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_release_redirect", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.canonical_release_redirect", select_conn, insert_conn, batch_size, unlogged)
 
     def get_create_table_columns(self):
         return [("id",                       "SERIAL"),
@@ -24,7 +24,7 @@ class CanonicalReleaseRedirect(BulkInsertTable):
                 ("release_group_mbid",       "UUID NOT NULL"),]
 
     def get_insert_queries(self):
-        return [("MB", """
+        return ["""
             WITH canonical_release AS (
                 SELECT release.gid rel_mbid
                     , rg.gid rg_mbid
@@ -52,7 +52,7 @@ class CanonicalReleaseRedirect(BulkInsertTable):
                 FROM release_rg
                 JOIN first_release
                   ON first_release.rg_mbid = release_rg.release_group_mbid
-        """)]
+        """]
 
     def get_post_process_queries(self):
         return []

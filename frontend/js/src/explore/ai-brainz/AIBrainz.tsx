@@ -1,10 +1,10 @@
 import { ErrorBoundary } from "@sentry/react";
 import React, { useCallback, useContext, useState } from "react";
 import { createRoot } from "react-dom/client";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import { getPageProps } from "../utils/utils";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { getPageProps } from "../../utils/utils";
 
 const totallyInnocentListen: Listen = {
   listened_at: 1654079332,

@@ -15,8 +15,8 @@ class SpotifyMetadataIndex(BulkInsertTable):
         This class creates the spotify metadata index using the reverse painters algorithm.
     """
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.spotify_metadata_index", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.spotify_metadata_index", select_conn, insert_conn, batch_size, unlogged)
         self.row_id = 0 
 
     def get_create_table_columns(self):
@@ -33,42 +33,43 @@ class SpotifyMetadataIndex(BulkInsertTable):
         These name fields will be used to calculate a lookup for each track which will then be used for matching
         purposes. The order by determines the tie-breaking score in case of multiple rows have the same lookup.
         """
-        return [("LB", """
-                    SELECT album.album_id AS album_id
-                         , album.name AS album_name
-                         , album.type AS album_type
-                         , album.release_date AS release_date
-                         , track.track_id AS track_id
-                         , track.name AS track_name
-                         , track.track_number AS track_number
-                         -- retrieve track artists in same order as they appear on the spotify track
-                         , array_agg(ARRAY[artist.name, artist.artist_id] ORDER BY rta.position) AS artists
-                         -- prefer albums over single over compilations.
-                         , CASE 
-                            WHEN album.type = 'album' THEN 1
-                            WHEN album.type = 'single' THEN 2
-                            WHEN album.type = 'compilation' THEN 3
-                            ELSE 4 END
-                            AS album_sort_order
-                      FROM spotify_cache.album album
-                      JOIN spotify_cache.track track
-                        ON album.album_id = track.album_id
-                      JOIN spotify_cache.rel_track_artist rta
-                        ON track.track_id = rta.track_id
-                      JOIN spotify_cache.artist artist
-                        ON rta.artist_id = artist.artist_id
-                  GROUP BY album.album_id
-                         , album.name
-                         , album.type
-                         , album.release_date
-                         , track.track_id
-                         , track.name
-                         , track.track_number
-                  ORDER BY album_sort_order
-                         , release_date
-                         , album_id
-                         , track_number
-                         , track_name""")]
+        return ["""
+            SELECT album.album_id AS album_id
+                 , album.name AS album_name
+                 , album.type AS album_type
+                 , album.release_date AS release_date
+                 , track.track_id AS track_id
+                 , track.name AS track_name
+                 , track.track_number AS track_number
+                 -- retrieve track artists in same order as they appear on the spotify track
+                 , array_agg(ARRAY[artist.name, artist.artist_id] ORDER BY rta.position) AS artists
+                 -- prefer albums over single over compilations.
+                 , CASE 
+                    WHEN album.type = 'album' THEN 1
+                    WHEN album.type = 'single' THEN 2
+                    WHEN album.type = 'compilation' THEN 3
+                    ELSE 4 END
+                    AS album_sort_order
+              FROM spotify_cache.album album
+              JOIN spotify_cache.track track
+                ON album.album_id = track.album_id
+              JOIN spotify_cache.rel_track_artist rta
+                ON track.track_id = rta.track_id
+              JOIN spotify_cache.artist artist
+                ON rta.artist_id = artist.artist_id
+          GROUP BY album.album_id
+                 , album.name
+                 , album.type
+                 , album.release_date
+                 , track.track_id
+                 , track.name
+                 , track.track_number
+          ORDER BY album_sort_order
+                 , release_date
+                 , album_id
+                 , track_number
+                 , track_name
+        """]
 
     def get_index_names(self):
         return [
@@ -110,7 +111,7 @@ def create_spotify_metadata_index(use_lb_conn: bool):
         lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
     log("spotify_metdata_index: start!")
 
-    ndx = SpotifyMetadataIndex(None, lb_conn)
+    ndx = SpotifyMetadataIndex(lb_conn)
     ndx.run()
 
     log("spotify_metdata_index: done!")

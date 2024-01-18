@@ -10,8 +10,8 @@ import {
   calculateBounds,
   produceRgbShades,
   convertObjToString,
-} from "./utils/utils";
-import defaultColors from "./utils/defaultColors";
+} from "../utils/utils";
+import defaultColors from "../utils/defaultColors";
 
 type ColorWheelProps = {
   radius: number;

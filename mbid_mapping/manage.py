@@ -169,7 +169,6 @@ def cron_build_mb_metadata_cache():
     """ Build the mb metadata cache and tables it depends on in production in appropriate databases.
      After building the cache, cleanup mbid_mapping table.
     """
-    create_canonical_musicbrainz_data(False)
     create_mb_metadata_cache(True)
     cleanup_mbid_mapping_table()
 

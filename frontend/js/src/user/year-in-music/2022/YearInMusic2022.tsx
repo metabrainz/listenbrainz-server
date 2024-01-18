@@ -38,7 +38,7 @@ import {
   getPageProps,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../../stats/utils";
-import MagicShareButton from "./MagicShareButton";
+import MagicShareButton from "./components/MagicShareButton";
 
 import ListenCard from "../../../listens/ListenCard";
 import UserListModalEntry from "../../../follow/UserListModalEntry";

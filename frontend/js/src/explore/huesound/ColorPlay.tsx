@@ -6,7 +6,7 @@ import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import NiceModal from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
-import ColorWheel from "./ColorWheel";
+import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {

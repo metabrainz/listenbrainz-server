@@ -3,13 +3,13 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 import { faPlay, faHourglass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isArray, isString, isUndefined } from "lodash";
-import { formatListenCount, formatReleaseDate } from "./utils";
+import { formatListenCount, formatReleaseDate } from "../utils";
 import {
   generateAlbumArtThumbnailLink,
   getAlbumArtFromReleaseGroupMBID,
   getAlbumArtFromReleaseMBID,
-} from "../../utils/utils";
-import Pill from "../../components/Pill";
+} from "../../../utils/utils";
+import Pill from "../../../components/Pill";
 
 type ReleaseCardProps = {
   releaseDate?: string;

@@ -10,10 +10,10 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";
 import ErrorBoundary from "../../utils/ErrorBoundary";
-import ReleaseFilters from "./ReleaseFilters";
-import ReleaseTimeline from "./ReleaseTimeline";
+import ReleaseFilters from "./components/ReleaseFilters";
+import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
-import ReleaseCardsGrid from "./ReleaseCardsGrid";
+import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
 
 export enum DisplaySettingsPropertiesEnum {
   releaseTitle = "Release Title",
