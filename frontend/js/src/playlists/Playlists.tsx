@@ -7,21 +7,16 @@ import {
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
+import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
 import Card from "../components/Card";
 import Pill from "../components/Pill";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import { ToastMsg } from "../notifications/Notifications";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { getPageProps } from "../utils/utils";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import PlaylistsList from "./PlaylistsList";
 import { getPlaylistId, PlaylistType } from "./utils";
@@ -37,6 +32,8 @@ export type UserPlaylistsState = {
   playlistCount: number;
   playlistType: PlaylistType;
 };
+
+type UserPlaylistsLoaderData = UserPlaylistsProps;
 
 export default class UserPlaylists extends React.Component<
   UserPlaylistsProps,
@@ -183,40 +180,18 @@ export default class UserPlaylists extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function UserPlaylistsWrapper() {
+  const data = useLoaderData() as UserPlaylistsLoaderData;
+  return <UserPlaylists {...data} />;
+}
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { playlists, user, playlist_count: playlistCount } = reactProps;
-
-  const UserPlaylistsWithAlertNotifications = withAlertNotifications(
-    UserPlaylists
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserPlaylistsWithAlertNotifications
-            playlistCount={playlistCount}
-            playlists={playlists}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const UserPlaylistsLoader = async ({ request }: { request: any }) => {
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return { ...data };
+};

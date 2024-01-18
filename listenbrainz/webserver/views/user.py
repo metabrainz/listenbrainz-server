@@ -63,7 +63,7 @@ redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
                          redirect_user_page("user.year_in_music"))
 
 
-@user_bp.route("/<user_name>/")
+@user_bp.route("/<user_name>/", methods=['POST'])
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
@@ -120,7 +120,7 @@ def profile(user_name):
     if pin:
         pin = fetch_track_metadata_for_items([pin])[0].to_api()
 
-    props = {
+    data = {
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
@@ -134,10 +134,7 @@ def profile(user_name):
         "already_reported_user": already_reported_user,
     }
 
-    return render_template("user/profile.html",
-                           props=orjson.dumps(props).decode("utf-8"),
-                           user=user,
-                           active_section='listens')
+    return jsonify(data)
 
 
 @user_bp.route("/<user_name>/artists/")
@@ -186,7 +183,7 @@ def reports(user_name):
     return redirect(url_for('user.stats', user_name=user_name), code=301)
 
 
-@user_bp.route("/<user_name>/stats/")
+@user_bp.route("/<user_name>/stats/", methods=['POST'])
 def stats(user_name: str):
     """ Show user stats """
     user = _get_user(user_name)
@@ -196,17 +193,12 @@ def stats(user_name: str):
         "id": user.id,
     }
 
-    props = {
+    data = {
         "user": user_data,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
-    return render_template(
-        "user/stats.html",
-        active_section="stats",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(data)
 
 
 @user_bp.route("/<user_name>/collaborations/")
@@ -214,7 +206,7 @@ def collaborations(user_name: str):
     return redirect(url_for("user.playlists", user_name=user_name))
 
 
-@user_bp.route("/<user_name>/playlists/")
+@user_bp.route("/<user_name>/playlists/", methods=['POST'])
 @web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
@@ -236,7 +228,7 @@ def playlists(user_name: str):
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
-    props = {
+    data = {
         "playlists": playlists,
         "user": user_data,
         "active_section": "playlists",
@@ -244,15 +236,10 @@ def playlists(user_name: str):
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
-    return render_template(
-        "playlists/playlists.html",
-        active_section="playlists",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(data)
 
 
-@user_bp.route("/<user_name>/recommendations/")
+@user_bp.route("/<user_name>/recommendations/", methods=['POST'])
 @web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
@@ -282,18 +269,13 @@ def recommendation_playlists(user_name: str):
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
-    props = {
+    data = {
         "playlists": playlists,
         "user": user_data,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
-    return render_template(
-        "playlists/recommendations.html",
-        active_section="recommendations",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(data)
 
 
 
@@ -362,7 +344,7 @@ def logged_in_user_follows_user(user):
     return None
 
 
-@user_bp.route("/<user_name>/taste/")
+@user_bp.route("/<user_name>/taste/", methods=['POST'])
 @web_listenstore_needed
 def taste(user_name: str):
     """ Show user feedback(love/hate) and pins.
@@ -394,7 +376,7 @@ def taste(user_name: str):
     pins = [pin.to_api() for pin in fetch_track_metadata_for_items(pins)]
     pin_count = get_pin_count_for_user(user_id=user.id)
 
-    props = {
+    data = {
         "feedback": [f.to_api() for f in feedback],
         "feedback_count": feedback_count,
         "user": user_data,
@@ -405,12 +387,7 @@ def taste(user_name: str):
         "profile_url": url_for('user.profile', user_name=user_name),
     }
 
-    return render_template(
-        "user/taste.html",
-        active_section="taste",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(data)
 
 
 @user_bp.route("/<user_name>/year-in-music/")
@@ -451,3 +428,14 @@ def missing_mb_data(user_name: str):
     }
 
     return render_template("user/missing_data.html", user=user, props=orjson.dumps(props).decode("utf-8"), active_settings_section="missing-musicbrainz-data")
+
+
+@user_bp.route("/<user_name>/",  defaults={'path': ''})
+@user_bp.route('/<user_name>/<path:path>/')
+@web_listenstore_needed
+def index(user_name, path):
+    current_app.logger.info("User index page accessed")
+    current_app.logger.info("User name: %s" % user_name)
+    current_app.logger.info("Path: %s" % path)
+    user = _get_user(user_name)
+    return render_template("user/index.html", user=user)

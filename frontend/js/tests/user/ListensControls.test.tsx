@@ -12,7 +12,7 @@ import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOne
 import * as recentListensPropsThreeListens from "../__mocks__/recentListensPropsThreeListens.json";
 import * as getFeedbackByMsidResponse from "../__mocks__/getFeedbackByMsidResponse.json";
 import * as getMultipleFeedbackResponse from "../__mocks__/getMultipleFeedbackResponse.json";
-import Listens, { ListensProps } from "../../src/user/Listens";
+import Listens, { ListensProps } from "../../src/user/pages";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

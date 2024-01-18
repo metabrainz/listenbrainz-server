@@ -1,24 +1,19 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
 import {
   faGlobe,
   faInfoCircle,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useLoaderData } from "react-router-dom";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
 import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
 import UserArtistMap from "./UserArtistMap";
-import { getPageProps } from "../utils/utils";
 import { getAllStatRanges } from "./utils";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 export type UserReportsProps = {
@@ -30,6 +25,8 @@ export type UserReportsState = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
 };
+
+type UserReportsLoaderData = UserReportsProps;
 
 export default class UserReports extends React.Component<
   UserReportsProps,
@@ -215,38 +212,19 @@ export default class UserReports extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function UserReportsWrapper() {
+  const data = useLoaderData() as UserReportsLoaderData;
+  const { APIService } = React.useContext(GlobalAppContext);
+  return <UserReports {...data} apiUrl={APIService.APIBaseURI} />;
+}
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { user } = reactProps;
-  const UserReportsPageWithAlertNotifications = withAlertNotifications(
-    UserReports
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserReportsPageWithAlertNotifications
-            apiUrl={globalAppContext.APIService.APIBaseURI}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const UserReportsLoader = async ({ request }: { request: Request }) => {
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return { ...data };
+};

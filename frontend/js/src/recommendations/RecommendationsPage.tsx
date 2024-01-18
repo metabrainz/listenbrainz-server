@@ -2,40 +2,36 @@
 /* eslint-disable camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import { toast, ToastContainer } from "react-toastify";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
   faChevronRight,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
-import { get, isUndefined, set, throttle } from "lodash";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { isUndefined, set, throttle } from "lodash";
+import { useLoaderData } from "react-router-dom";
 import { ReactSortable } from "react-sortablejs";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { toast } from "react-toastify";
+import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import { getPageProps, preciseTimestamp } from "../utils/utils";
+import PlaylistItemCard from "../playlists/PlaylistItemCard";
 import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../playlists/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { preciseTimestamp } from "../utils/utils";
 import RecommendationPlaylistSettings from "./RecommendationPlaylistSettings";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import PlaylistItemCard from "../playlists/PlaylistItemCard";
-import { ToastMsg } from "../notifications/Notifications";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
 };
+
+type RecommendationsPageLoaderData = RecommendationsPageProps;
 
 export type RecommendationsPageState = {
   playlists: JSPFPlaylist[];
@@ -488,44 +484,22 @@ export default class RecommendationsPage extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function RecommendationsPageWrapper() {
+  const data = useLoaderData() as RecommendationsPageLoaderData;
+  return <RecommendationsPage {...data} />;
+}
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { playlists, user } = reactProps;
-
-  const RecommendationsPageWithAlertNotifications = withAlertNotifications(
-    RecommendationsPage
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <RecommendationsPageWithAlertNotifications
-            playlists={playlists}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const RecommendationsPageLoader = async ({
+  request,
+}: {
+  request: Request;
+}) => {
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return { ...data };
+};

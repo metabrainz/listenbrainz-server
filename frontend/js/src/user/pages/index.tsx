@@ -1,9 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -14,34 +12,30 @@ import {
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Integrations } from "@sentry/tracing";
 import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { useLoaderData } from "react-router-dom";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
-import AddListenModal from "../add-listen/AddListenModal";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import Loader from "../components/Loader";
-import UserSocialNetwork from "../follow/UserSocialNetwork";
-import ListenCard from "../listens/ListenCard";
-import ListenControl from "../listens/ListenControl";
-import ListenCountCard from "../listens/ListenCountCard";
-import { ToastMsg } from "../notifications/Notifications";
-import PinnedRecordingCard from "../pins/PinnedRecordingCard";
-import APIServiceClass from "../utils/APIService";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import AddListenModal from "../../add-listen/AddListenModal";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import Loader from "../../components/Loader";
+import UserSocialNetwork from "../../follow/UserSocialNetwork";
+import ListenCard from "../../listens/ListenCard";
+import ListenControl from "../../listens/ListenControl";
+import ListenCountCard from "../../listens/ListenCountCard";
+import { ToastMsg } from "../../notifications/Notifications";
+import PinnedRecordingCard from "../../pins/PinnedRecordingCard";
+import APIServiceClass from "../../utils/APIService";
 import {
   formatWSMessageToListen,
   getListenablePin,
   getListenCardKey,
-  getPageProps,
   getRecordingMSID,
-  getTrackName,
-} from "../utils/utils";
-import FollowButton from "../follow/FollowButton";
+} from "../../utils/utils";
+import FollowButton from "../../follow/FollowButton";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -68,6 +62,8 @@ export interface ListensState {
   playingNowListen?: Listen;
   followingList: Array<string>;
 }
+
+type ListenLoaderData = ListensProps;
 
 export default class Listens extends React.Component<
   ListensProps,
@@ -972,46 +968,18 @@ export default class Listens extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function ListensWrapper() {
+  const data = useLoaderData() as ListenLoaderData;
+  return <Listens {...data} />;
+}
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const {
-    latest_listen_ts,
-    listens,
-    oldest_listen_ts,
-    userPinnedRecording,
-    user,
-  } = reactProps;
-
-  const ListensWithAlertNotifications = withAlertNotifications(Listens);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <ListensWithAlertNotifications
-            latestListenTs={latest_listen_ts}
-            listens={listens}
-            userPinnedRecording={userPinnedRecording}
-            oldestListenTs={oldest_listen_ts}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const ListensLoader = async ({ request }: { request: Request }) => {
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return { ...data };
+};
