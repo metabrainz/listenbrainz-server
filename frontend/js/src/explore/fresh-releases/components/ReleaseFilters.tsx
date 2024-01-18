@@ -12,8 +12,8 @@ import type {
   DisplaySettingsPropertiesEnum,
   DisplaySettings,
   filterRangeOption,
-} from "../page";
-import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../page";
+} from "../FreshReleases";
+import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
 
 type ReleaseFiltersProps = {
   allFilters: {

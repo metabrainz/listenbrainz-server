@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback } from "react";
-import { TemplateNameEnum, TemplateOption } from "../page";
+import { TemplateNameEnum, TemplateOption } from "../ArtCreator";
 
 type GalleryTileProps = {
   templateOption: TemplateOption;

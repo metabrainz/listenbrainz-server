@@ -1,6 +1,6 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
-import type { SortOption } from "../explore/fresh-releases/page";
+import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
 
 export default class APIService {

@@ -1,6 +1,6 @@
 import * as React from "react";
 import GalleryTile from "./GalleryTile";
-import { TemplateOption, TemplateNameEnum } from "../page";
+import { TemplateOption, TemplateNameEnum } from "../ArtCreator";
 
 type GalleryProps = {
   currentStyle: TemplateOption;

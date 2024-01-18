@@ -8,7 +8,7 @@ import GlobalAppContext, {
 } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 
-import FreshReleases from "../../src/explore/fresh-releases/page";
+import FreshReleases from "../../src/explore/fresh-releases/FreshReleases";
 import ReleaseFilters from "../../src/explore/fresh-releases/components/ReleaseFilters";
 import ReleaseTimeline from "../../src/explore/fresh-releases/components/ReleaseTimeline";
 
