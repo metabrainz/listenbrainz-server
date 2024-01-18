@@ -7,13 +7,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Switch from "../../components/Switch";
+import Switch from "../../../components/Switch";
 import type {
   DisplaySettingsPropertiesEnum,
   DisplaySettings,
   filterRangeOption,
-} from "./FreshReleases";
-import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "./FreshReleases";
+} from "../page";
+import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../page";
 
 type ReleaseFiltersProps = {
   allFilters: {

@@ -1,7 +1,7 @@
 import * as React from "react";
 import ReleaseCard from "./ReleaseCard";
-import { formatReleaseDate } from "./utils";
-import type { DisplaySettings } from "./FreshReleases";
+import { formatReleaseDate } from "../utils";
+import type { DisplaySettings } from "../page";
 
 type ReleaseCardReleaseProps = {
   filteredList: Array<FreshReleaseItem>;
