@@ -72,15 +72,15 @@ module.exports = function (env, argv) {
       lb_radio: path.resolve(jsDir, "src/explore/lb-radio/LBRadio.tsx"),
       yearInMusic2021: path.resolve(
         jsDir,
-        "src/user/year-in-music/2021/YearInMusic.tsx"
+        "src/user/year-in-music/2021/YearInMusic2021.tsx"
       ),
       yearInMusic2022: path.resolve(
         jsDir,
-        "src/user/year-in-music/2022/YearInMusic.tsx"
+        "src/user/year-in-music/2022/YearInMusic2022.tsx"
       ),
       yearInMusic2023: path.resolve(
         jsDir,
-        "src/user/year-in-music/2023/YearInMusic.tsx"
+        "src/user/year-in-music/2023/YearInMusic2023.tsx"
       ),
       coverArtComposite2022: path.resolve(
         jsDir,
