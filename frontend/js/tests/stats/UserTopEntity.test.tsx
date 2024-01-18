@@ -6,7 +6,7 @@ import APIError from "../../src/utils/APIError";
 import UserTopEntity, {
   UserTopEntityProps,
   UserTopEntityState,
-} from "../../src/stats/UserTopEntity";
+} from "../../src/user/stats/components/UserTopEntity";
 import * as userArtists from "../__mocks__/userArtists.json";
 import * as userReleases from "../__mocks__/userReleases.json";
 import * as userRecordings from "../__mocks__/userRecordings.json";

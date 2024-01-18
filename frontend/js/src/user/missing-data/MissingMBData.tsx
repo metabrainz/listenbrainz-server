@@ -8,22 +8,22 @@ import { Integrations } from "@sentry/tracing";
 import { faLink, faPlus, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 
 import NiceModal from "@ebay/nice-modal-react";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
-import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import ErrorBoundary from "../../utils/ErrorBoundary";
 import {
   getArtistName,
   getPageProps,
   getRecordingMSID,
   getTrackName,
-} from "../utils/utils";
-import ListenCard from "../listens/ListenCard";
-import ListenControl from "../listens/ListenControl";
-import Loader from "../components/Loader";
-import { ToastMsg } from "../notifications/Notifications";
-import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
+} from "../../utils/utils";
+import ListenCard from "../../listens/ListenCard";
+import ListenControl from "../../listens/ListenControl";
+import Loader from "../../components/Loader";
+import { ToastMsg } from "../../notifications/Notifications";
+import MBIDMappingModal from "../../mbid-mapping/MBIDMappingModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;

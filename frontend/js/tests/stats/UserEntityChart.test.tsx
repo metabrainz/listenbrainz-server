@@ -5,7 +5,7 @@ import { act } from "react-dom/test-utils";
 import UserEntityChart, {
   UserEntityChartProps,
   UserEntityChartState,
-} from "../../src/stats/UserEntityChart";
+} from "../../src/user/charts/UserEntityChart";
 import APIError from "../../src/utils/APIError";
 import APIService from "../../src/utils/APIService";
 import * as userArtistsResponse from "../__mocks__/userArtists.json";

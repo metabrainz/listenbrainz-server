@@ -11,7 +11,7 @@ import { ToastMsg } from "../notifications/Notifications";
 import { PLAYLIST_URI_PREFIX, listenToJSPFTrack } from "../playlists/utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getTrackName } from "../utils/utils";
-import CreateOrEditPlaylistModal from "../playlists/CreateOrEditPlaylistModal";
+import CreateOrEditPlaylistModal from "../user/playlists/components/CreateOrEditPlaylistModal";
 
 type AddToPlaylistProps = {
   listen: Listen | JSPFTrack;

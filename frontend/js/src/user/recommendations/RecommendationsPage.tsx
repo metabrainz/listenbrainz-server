@@ -16,21 +16,21 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { get, isUndefined, set, throttle } from "lodash";
 import { ReactSortable } from "react-sortablejs";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import Loader from "../components/Loader";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import { getPageProps, preciseTimestamp } from "../utils/utils";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import Loader from "../../components/Loader";
+import ErrorBoundary from "../../utils/ErrorBoundary";
+import { getPageProps, preciseTimestamp } from "../../utils/utils";
 import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
-} from "../playlists/utils";
-import RecommendationPlaylistSettings from "./RecommendationPlaylistSettings";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import PlaylistItemCard from "../playlists/PlaylistItemCard";
-import { ToastMsg } from "../notifications/Notifications";
+} from "../../playlists/utils";
+import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import PlaylistItemCard from "../../playlists/PlaylistItemCard";
+import { ToastMsg } from "../../notifications/Notifications";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];

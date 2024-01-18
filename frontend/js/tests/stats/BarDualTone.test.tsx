@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 
-import BarDualTone from "../../src/stats/BarDualTone";
+import BarDualTone from "../../src/user/stats/components/BarDualTone";
 import * as ListeningActivityDataWeek from "../__mocks__/userListeningActivityProcessDataWeek.json";
 import * as ListeningActivityDataMonth from "../__mocks__/userListeningActivityProcessDataMonth.json";
 import * as ListeningActivityDataYear from "../__mocks__/userListeningActivityProcessDataYear.json";

@@ -5,13 +5,13 @@ import { act } from "react-dom/test-utils";
 import UserArtistMap, {
   UserArtistMapProps,
   UserArtistMapState,
-} from "../../src/stats/UserArtistMap";
+} from "../../src/user/stats/components/UserArtistMap";
 import APIError from "../../src/utils/APIError";
 import * as userArtistMapResponse from "../__mocks__/userArtistMap.json";
 import * as userArtistMapProcessedDataArtist from "../__mocks__/userArtistMapProcessDataArtist.json";
 import * as userArtistMapProcessedDataListen from "../__mocks__/userArtistMapProcessDataListen.json";
 import { waitForComponentToPaint } from "../test-utils";
-import CustomChoropleth from "../../src/stats/Choropleth";
+import CustomChoropleth from "../../src/user/stats/components/Choropleth";
 
 const userProps: UserArtistMapProps = {
   user: {

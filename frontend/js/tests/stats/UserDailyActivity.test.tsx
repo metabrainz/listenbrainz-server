@@ -5,12 +5,12 @@ import { act } from "react-dom/test-utils";
 import UserDailyActivity, {
   UserDailyActivityProps,
   UserDailyActivityState,
-} from "../../src/stats/UserDailyActivity";
+} from "../../src/user/stats/components/UserDailyActivity";
 import APIError from "../../src/utils/APIError";
 import * as userDailyActivityResponse from "../__mocks__/userDailyActivity.json";
 import * as userDailyActivityProcessedData from "../__mocks__/userDailyActivityProcessData.json";
 import { waitForComponentToPaint } from "../test-utils";
-import Heatmap from "../../src/stats/HeatMap";
+import Heatmap from "../../src/user/stats/components/HeatMap";
 
 const props: UserDailyActivityProps = {
   user: {

@@ -4,7 +4,7 @@ import { faCamera, faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import ListenCard from "../../../../listens/ListenCard";
-import { getEntityLink } from "../../../../stats/utils";
+import { getEntityLink } from "../../../stats/utils";
 import Loader from "../../../../components/Loader";
 
 export type ComponentToImageProps = {

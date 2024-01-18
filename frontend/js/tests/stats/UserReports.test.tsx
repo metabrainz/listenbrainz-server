@@ -4,7 +4,7 @@ import { shallow, ShallowWrapper } from "enzyme";
 import UserReports, {
   UserReportsProps,
   UserReportsState,
-} from "../../src/stats/UserReports";
+} from "../../src/user/stats/UserReports";
 
 const userProps: UserReportsProps = {
   user: {

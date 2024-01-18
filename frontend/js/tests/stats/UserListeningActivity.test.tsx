@@ -5,7 +5,7 @@ import { act } from "react-dom/test-utils";
 import UserListeningActivity, {
   UserListeningActivityProps,
   UserListeningActivityState,
-} from "../../src/stats/UserListeningActivity";
+} from "../../src/user/stats/components/UserListeningActivity";
 import APIError from "../../src/utils/APIError";
 import * as userListeningActivityResponseWeek from "../__mocks__/userListeningActivityWeek.json";
 import * as userListeningActivityResponseMonth from "../__mocks__/userListeningActivityMonth.json";

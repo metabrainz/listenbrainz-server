@@ -3,7 +3,7 @@ import * as React from "react";
 import { useContext } from "react";
 import FollowButton from "./FollowButton";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import SimilarityScore from "../stats/SimilarityScore";
+import SimilarityScore from "../user/stats/components/SimilarityScore";
 
 export type UserListModalEntryProps = {
   mode: "follow-following" | "similar-users";

@@ -18,7 +18,7 @@ import APIServiceClass from "../../src/utils/APIService";
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
-import Listens, { ListensProps } from "../../src/user/Listens";
+import Listens, { ListensProps } from "../../src/user/Dashboard";
 import { renderWithProviders } from "../test-utils/rtl-test-utils";
 
 jest.mock("socket.io-client", () => ({

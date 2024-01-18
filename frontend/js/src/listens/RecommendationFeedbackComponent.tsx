@@ -17,7 +17,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import { get } from "lodash";
-import RecommendationControl from "../recommendations/RecommendationControl";
+import RecommendationControl from "../user/recommendations/components/RecommendationControl";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getRecordingMBID } from "../utils/utils";
 import { ToastMsg } from "../notifications/Notifications";
