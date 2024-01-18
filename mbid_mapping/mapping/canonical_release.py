@@ -13,8 +13,8 @@ class CanonicalRelease(BulkInsertTable):
         to the BulkInsertTable docs.
     """
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_release", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.canonical_release", select_conn, insert_conn, batch_size, unlogged)
         self.release_index = {}
 
     def get_create_table_columns(self):
@@ -71,10 +71,10 @@ class CanonicalRelease(BulkInsertTable):
         for op in ['!=', '=']:
             if config.USE_MINIMAL_DATASET:
                 log(f"{self.table_name}: Using a minimal dataset for artist credit pairs: artist_id %s 1" % op)
-                queries.append(("MB", query % (op, 'AND rg.artist_credit IN (%s)' % ",".join([str(i) for i in TEST_ARTIST_IDS]))))
+                queries.append(query % (op, 'AND rg.artist_credit IN (%s)' % ",".join([str(i) for i in TEST_ARTIST_IDS])))
             else:
                 log(f"{self.table_name}: Using a full dataset for artist credit pairs: artist_id %s 1" % op)
-                queries.append(("MB", query % (op, "")))
+                queries.append(query % (op, ""))
 
         return queries
 

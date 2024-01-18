@@ -27,7 +27,7 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
                 ("year",               "INTEGER")]
 
     def get_insert_queries(self):
-        return [("MB", """
+        return ["""
                SELECT ac.id as artist_credit_id
                     , r.name AS recording_name
                     , r.gid AS recording_mbid
@@ -66,7 +66,7 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
                 WHERE length(concat(ac.name, r.name, rl.name)) < 500 
              GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name, year
              ORDER BY ac.id, rpr.id
-        """)]
+        """]
 
     def get_combined_lookup(self, row):
         pass

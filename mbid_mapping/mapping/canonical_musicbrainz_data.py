@@ -20,8 +20,8 @@ class CanonicalMusicBrainzData(CanonicalMusicBrainzDataBase):
         This class creates the MBID mapping tables without release name in the lookup.
     """
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_musicbrainz_data", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.canonical_musicbrainz_data", select_conn, insert_conn, batch_size, unlogged)
 
     def get_post_process_queries(self):
         return ["""
@@ -77,15 +77,18 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         lb_conn = None
         if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+            unlogged = False
+        else:
+            unlogged = True
 
         # Setup all the needed objects
-        can = CanonicalRecordingRedirect(mb_conn, lb_conn)
-        can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, lb_conn)
-        can_rel = CanonicalReleaseRedirect(mb_conn)
-        releases = CanonicalRelease(mb_conn)
-        mapping = CanonicalMusicBrainzData(mb_conn, lb_conn)
+        can = CanonicalRecordingRedirect(mb_conn, lb_conn, unlogged=unlogged)
+        can_rec_rel = CanonicalRecordingReleaseRedirect(mb_conn, lb_conn, unlogged=unlogged)
+        can_rel = CanonicalReleaseRedirect(mb_conn, unlogged=unlogged)
+        releases = CanonicalRelease(mb_conn, unlogged=False)
+        mapping = CanonicalMusicBrainzData(mb_conn, lb_conn, unlogged=unlogged)
         mapping.add_additional_bulk_table(can)
-        mapping_release = CanonicalMusicBrainzDataReleaseSupport(mb_conn, lb_conn)
+        mapping_release = CanonicalMusicBrainzDataReleaseSupport(mb_conn, lb_conn, unlogged=unlogged)
 
         # Carry out the bulk of the work
         create_custom_sort_tables(mb_conn)
