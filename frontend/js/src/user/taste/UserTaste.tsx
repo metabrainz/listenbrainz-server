@@ -12,7 +12,7 @@ import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import { getListenablePin, getPageProps } from "../../utils/utils";
-import UserFeedback from "../UserFeedback";
+import UserFeedback from "./components/UserFeedback";
 import UserPins from "../../pins/UserPins";
 
 export type UserTasteProps = {

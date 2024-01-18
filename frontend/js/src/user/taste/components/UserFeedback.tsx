@@ -6,12 +6,12 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeart, faHeartCrack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import Pill from "../components/Pill";
-import ListenCard from "../listens/ListenCard";
-import Loader from "../components/Loader";
-import { ToastMsg } from "../notifications/Notifications";
-import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
+import Pill from "../../../components/Pill";
+import ListenCard from "../../../listens/ListenCard";
+import Loader from "../../../components/Loader";
+import { ToastMsg } from "../../../notifications/Notifications";
+import { getRecordingMBID, getRecordingMSID } from "../../../utils/utils";
 
 export type UserFeedbackProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
