@@ -184,8 +184,16 @@ export default function MetadataViewer(props: MetadataViewerProps) {
         (el) => el.artist_mbid === cur.artist_mbid
       );
       const copy = { ...cur };
-      if (copy.type === "vocal") {
-        copy.instrument = "vocals";
+      // Fall back to credit type if no instrument/vocal attribute is available
+      if (!copy.instrument) {
+        // Prefer plural form for unspecified vocal or instrument type
+        if (copy.type === "vocal") {
+          copy.instrument = "vocals";
+        } else if (copy.type === "instrument") {
+          copy.instrument = "instruments";
+        } else {
+          copy.instrument = copy.type;
+        }
       }
       if (existingArtist) {
         existingArtist.instrument += `, ${copy.instrument}`;
