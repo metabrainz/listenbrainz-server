@@ -4,13 +4,9 @@ import * as React from "react";
 
 import { faLink, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import { useLoaderData } from "react-router-dom";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import { createRoot } from "react-dom/client";
 import { toast } from "react-toastify";
 
 import NiceModal from "@ebay/nice-modal-react";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
@@ -18,11 +14,9 @@ import ListenCard from "../../listens/ListenCard";
 import ListenControl from "../../listens/ListenControl";
 import MBIDMappingModal from "../../mbid-mapping/MBIDMappingModal";
 import { ToastMsg } from "../../notifications/Notifications";
-import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import {
   getArtistName,
-  getPageProps,
   getRecordingMSID,
   getTrackName,
 } from "../../utils/utils";
@@ -30,6 +24,10 @@ import {
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
   user: ListenBrainzUser;
+};
+
+type MissingMBDataLoaderData = {
+  missing_data?: Array<MissingMBData>;
 };
 
 export interface MissingMBDataState {
@@ -389,9 +387,9 @@ export default class MissingMBDataPage extends React.Component<
 }
 
 export function MissingMBDataPageWrapper() {
-  const data = useLoaderData() as MissingMBDataProps;
+  const data = useLoaderData() as MissingMBDataLoaderData;
   const { currentUser: user } = React.useContext(GlobalAppContext);
-  return <MissingMBDataPage {...data} user={user} />;
+  return <MissingMBDataPage missingData={data.missing_data} user={user} />;
 }
 
 export const MissingMBDataPageLoader = async () => {
@@ -402,5 +400,5 @@ export const MissingMBDataPageLoader = async () => {
     },
   });
   const data = await response.json();
-  return { ...data };
+  return data;
 };

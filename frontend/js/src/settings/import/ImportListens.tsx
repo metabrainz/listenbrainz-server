@@ -7,7 +7,6 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 type ImportLoaderData = {
   user_has_email: boolean;
   profile_url?: string;
-  apiUrl?: string;
   lastfm_api_url: string;
   lastfm_api_key: string;
   librefm_api_url: string;
@@ -15,18 +14,18 @@ type ImportLoaderData = {
 };
 
 export default function Import() {
-  const { currentUser } = React.useContext(GlobalAppContext);
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const { name } = currentUser;
   const data = useLoaderData() as ImportLoaderData;
   const {
     user_has_email: userHasEmail,
     profile_url: profileUrl,
-    apiUrl,
     lastfm_api_url: lastfmApiUrl,
     lastfm_api_key: lastfmApiKey,
     librefm_api_url: librefmApiUrl,
     librefm_api_key: librefmApiKey,
   } = data;
+  const apiUrl = APIService.APIBaseURI;
 
   return (
     <>
@@ -130,5 +129,5 @@ export const ImportLoader = async () => {
     },
   });
   const data = await response.json();
-  return { ...data };
+  return data;
 };
