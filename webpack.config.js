@@ -96,7 +96,7 @@ module.exports = function (env, argv) {
       homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
       recommendationsPlayground: path.resolve(
         jsDir,
-        "src/recommendations/Recommendations.tsx"
+        "src/recommended/tracks/Recommendations.tsx"
       ),
       recommendations: path.resolve(
         jsDir,
@@ -106,7 +106,7 @@ module.exports = function (env, argv) {
         jsDir,
         "src/user/missing-data/MissingMBData.tsx"
       ),
-      playerPage: path.resolve(jsDir, "src/player-pages/PlayerPage.tsx"),
+      playerPage: path.resolve(jsDir, "src/player/PlayerPage.tsx"),
       metadataViewer: path.resolve(
         jsDir,
         "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
@@ -124,8 +124,8 @@ module.exports = function (env, argv) {
         "src/user-settings/SelectTroiPreferences.tsx"
       ),
       artCreator: path.resolve(jsDir, "src/explore/art-creator/ArtCreator.tsx"),
-      artistPage: path.resolve(jsDir, "src/entity-pages/ArtistPage.tsx"),
-      albumPage: path.resolve(jsDir, "src/entity-pages/AlbumPage.tsx"),
+      artistPage: path.resolve(jsDir, "src/artist/ArtistPage.tsx"),
+      albumPage: path.resolve(jsDir, "src/album/AlbumPage.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

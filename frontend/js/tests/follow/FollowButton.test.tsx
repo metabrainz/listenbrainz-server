@@ -21,7 +21,7 @@
 import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 import { act } from "react-dom/test-utils";
-import FollowButton from "../../src/follow/FollowButton";
+import FollowButton from "../../src/user/components/follow/FollowButton";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";

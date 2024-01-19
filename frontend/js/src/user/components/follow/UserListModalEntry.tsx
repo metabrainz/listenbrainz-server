@@ -2,8 +2,8 @@ import { isEmpty, isNil } from "lodash";
 import * as React from "react";
 import { useContext } from "react";
 import FollowButton from "./FollowButton";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import SimilarityScore from "../user/stats/components/SimilarityScore";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
+import SimilarityScore from "../../stats/components/SimilarityScore";
 
 export type UserListModalEntryProps = {
   mode: "follow-following" | "similar-users";

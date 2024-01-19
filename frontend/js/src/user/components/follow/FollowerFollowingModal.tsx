@@ -1,9 +1,9 @@
 import * as React from "react";
 import { includes as _includes } from "lodash";
 
-import Pill from "../components/Pill";
+import Pill from "../../../components/Pill";
 import UserListModalEntry from "./UserListModalEntry";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type FollowerFollowingModalProps = {
   user: ListenBrainzUser;

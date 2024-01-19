@@ -7,7 +7,7 @@ import * as recommendationProps from "../__mocks__/recommendations.json";
 import Recommendations, {
   RecommendationsProps,
   RecommendationsState,
-} from "../../src/recommendations/Recommendations";
+} from "../../src/recommended/tracks/Recommendations";
 import * as recommendationPropsOne from "../__mocks__/recommendationPropsOne.json";
 
 import GlobalAppContext, {

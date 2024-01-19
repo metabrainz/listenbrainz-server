@@ -30,12 +30,12 @@ import { getEntityLink } from "../../stats/utils";
 import ComponentToImage from "./components/ComponentToImage";
 
 import ListenCard from "../../../listens/ListenCard";
-import UserListModalEntry from "../../../follow/UserListModalEntry";
+import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../../../playlists/utils";
-import FollowButton from "../../../follow/FollowButton";
+import FollowButton from "../../components/follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import { ToastMsg } from "../../../notifications/Notifications";
 

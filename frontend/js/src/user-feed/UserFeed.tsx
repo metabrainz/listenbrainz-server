@@ -46,7 +46,7 @@ import {
   personalRecommendationEventToListen,
   getPersonalRecommendationEventContent,
 } from "../utils/utils";
-import UserSocialNetwork from "../follow/UserSocialNetwork";
+import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import ListenControl from "../listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
 

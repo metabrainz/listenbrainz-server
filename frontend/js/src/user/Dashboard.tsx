@@ -25,7 +25,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import AddListenModal from "./components/AddListenModal";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
-import UserSocialNetwork from "../follow/UserSocialNetwork";
+import UserSocialNetwork from "./components/follow/UserSocialNetwork";
 import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import ListenCountCard from "../listens/ListenCountCard";
@@ -41,7 +41,7 @@ import {
   getRecordingMSID,
   getTrackName,
 } from "../utils/utils";
-import FollowButton from "../follow/FollowButton";
+import FollowButton from "./components/follow/FollowButton";
 
 export type ListensProps = {
   latestListenTs: number;

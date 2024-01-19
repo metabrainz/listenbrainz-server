@@ -27,7 +27,7 @@ import {
   faUserTimes,
   faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 type FollowButtonProps = {
   type: "icon-only" | "block" | string;

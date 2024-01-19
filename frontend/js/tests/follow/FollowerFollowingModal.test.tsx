@@ -21,13 +21,13 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import { act } from "react-dom/test-utils";
-import FollowerFollowingModal from "../../src/follow/FollowerFollowingModal";
+import FollowerFollowingModal from "../../src/user/components/follow/FollowerFollowingModal";
 import APIService from "../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
-import UserListModalEntry from "../../src/follow/UserListModalEntry";
+import UserListModalEntry from "../../src/user/components/follow/UserListModalEntry";
 
 const props = {
   user: { name: "foobar" },

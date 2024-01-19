@@ -8,13 +8,13 @@ import { get, isEqual, isInteger } from "lodash";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
-import APIServiceClass from "../utils/APIService";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import Loader from "../components/Loader";
+import APIServiceClass from "../../utils/APIService";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import ErrorBoundary from "../../utils/ErrorBoundary";
+import Loader from "../../components/Loader";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getArtistName,
@@ -22,10 +22,10 @@ import {
   getRecordingMBID,
   getTrackName,
   preciseTimestamp,
-} from "../utils/utils";
-import ListenCard from "../listens/ListenCard";
-import RecommendationFeedbackComponent from "../listens/RecommendationFeedbackComponent";
-import { ToastMsg } from "../notifications/Notifications";
+} from "../../utils/utils";
+import ListenCard from "../../listens/ListenCard";
+import RecommendationFeedbackComponent from "../../listens/RecommendationFeedbackComponent";
+import { ToastMsg } from "../../notifications/Notifications";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;

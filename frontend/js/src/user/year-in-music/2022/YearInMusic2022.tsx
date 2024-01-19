@@ -41,7 +41,7 @@ import { getEntityLink } from "../../stats/utils";
 import MagicShareButton from "./components/MagicShareButton";
 
 import ListenCard from "../../../listens/ListenCard";
-import UserListModalEntry from "../../../follow/UserListModalEntry";
+import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../stats/components/Choropleth";

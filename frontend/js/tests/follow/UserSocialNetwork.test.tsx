@@ -25,9 +25,9 @@ import { act } from "react-dom/test-utils";
 import UserSocialNetwork, {
   UserSocialNetworkProps,
   UserSocialNetworkState,
-} from "../../src/follow/UserSocialNetwork";
-import FollowerFollowingModal from "../../src/follow/FollowerFollowingModal";
-import SimilarUsersModal from "../../src/follow/SimilarUsersModal";
+} from "../../src/user/components/follow/UserSocialNetwork";
+import FollowerFollowingModal from "../../src/user/components/follow/FollowerFollowingModal";
+import SimilarUsersModal from "../../src/user/components/follow/SimilarUsersModal";
 
 import * as userSocialNetworkProps from "../__mocks__/userSocialNetworkProps.json";
 import GlobalAppContext, {

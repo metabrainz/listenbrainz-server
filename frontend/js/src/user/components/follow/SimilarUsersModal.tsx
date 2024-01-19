@@ -2,7 +2,7 @@ import * as React from "react";
 import { includes as _includes } from "lodash";
 
 import UserListModalEntry from "./UserListModalEntry";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type SimilarUsersModalProps = {
   user: ListenBrainzUser;

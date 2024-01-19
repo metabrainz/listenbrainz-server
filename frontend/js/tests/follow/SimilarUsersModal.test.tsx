@@ -1,6 +1,6 @@
 import * as React from "react";
 import { mount } from "enzyme";
-import SimilarUsersModal from "../../src/follow/SimilarUsersModal";
+import SimilarUsersModal from "../../src/user/components/follow/SimilarUsersModal";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";

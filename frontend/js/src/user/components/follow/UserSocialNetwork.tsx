@@ -1,11 +1,11 @@
 import { isEmpty, isNil } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
-import Card from "../components/Card";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import Card from "../../../components/Card";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
-import { ToastMsg } from "../notifications/Notifications";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 export type UserSocialNetworkProps = {
   user: ListenBrainzUser;
