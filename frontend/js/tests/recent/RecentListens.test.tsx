@@ -23,7 +23,7 @@ import ListenCard from "../../src/common/listens/ListenCard";
 // import Card from "../../src/components/Card";
 // import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 
-jest.createMockFromModule("../../src/brainzplayer/BrainzPlayer");
+jest.createMockFromModule("../../src/common/brainzplayer/BrainzPlayer");
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

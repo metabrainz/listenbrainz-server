@@ -8,7 +8,7 @@ import {
   searchForSoundcloudTrack,
 } from "../../utils/utils";
 
-require("../../lib/soundcloud-player-api");
+require("../../../lib/soundcloud-player-api");
 
 enum SoundCloudHTML5WidgetEvents {
   LOAD_PROGRESS = "loadProgress", // fired periodically while the sound is loading.
