@@ -10,7 +10,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import MetadataViewer from "./MetadataViewer";
+import MetadataViewer from "./components/MetadataViewer";
 import { ToastMsg } from "../notifications/Notifications";
 
 export type PlayingNowPageProps = {

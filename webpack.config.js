@@ -109,7 +109,7 @@ module.exports = function (env, argv) {
       playerPage: path.resolve(jsDir, "src/player/PlayerPage.tsx"),
       metadataViewer: path.resolve(
         jsDir,
-        "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
+        "src/metadata-viewer/MetadataViewerPage.tsx"
       ),
       freshReleases: path.resolve(
         jsDir,

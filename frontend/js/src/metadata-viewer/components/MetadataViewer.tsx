@@ -4,16 +4,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as tinycolor from "tinycolor2";
 import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
-import { millisecondsToStr } from "../playlists/utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import TagsComponent from "../tags/TagsComponent";
+import { millisecondsToStr } from "../../playlists/utils";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import TagsComponent from "../../tags/TagsComponent";
 import {
   getArtistName,
   getAverageRGBOfImage,
   getRecordingMBID,
   getTrackName,
-} from "../utils/utils";
-import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
+} from "../../utils/utils";
+import OpenInMusicBrainzButton from "../../components/OpenInMusicBrainz";
 
 type MetadataViewerProps = {
   recordingData?: MetadataLookup;
