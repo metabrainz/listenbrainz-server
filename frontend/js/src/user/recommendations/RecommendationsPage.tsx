@@ -29,7 +29,7 @@ import {
 } from "../../playlists/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
 import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
-import PlaylistItemCard from "../../playlists/PlaylistItemCard";
+import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
 import { ToastMsg } from "../../notifications/Notifications";
 
 export type RecommendationsPageProps = {

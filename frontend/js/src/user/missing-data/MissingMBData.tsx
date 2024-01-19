@@ -23,7 +23,7 @@ import ListenCard from "../../listens/ListenCard";
 import ListenControl from "../../listens/ListenControl";
 import Loader from "../../components/Loader";
 import { ToastMsg } from "../../notifications/Notifications";
-import MBIDMappingModal from "../../mbid-mapping/MBIDMappingModal";
+import MBIDMappingModal from "./components/MBIDMappingModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;

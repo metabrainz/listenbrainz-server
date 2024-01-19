@@ -27,7 +27,7 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
 import { getPageProps } from "../utils/utils";
-import PlaylistItemCard from "./PlaylistItemCard";
+import PlaylistItemCard from "./components/PlaylistItemCard";
 import PlaylistMenu from "../user/playlists/components/PlaylistMenu";
 import {
   getPlaylistExtension,

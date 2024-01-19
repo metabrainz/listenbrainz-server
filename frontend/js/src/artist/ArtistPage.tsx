@@ -26,8 +26,8 @@ import {
   getRelIconLink,
   ListeningStats,
   popularRecordingToListen,
-} from "./utils";
-import type { PopularRecording, ReleaseGroup, SimilarArtist } from "./utils";
+} from "../album/utils";
+import type { PopularRecording, ReleaseGroup, SimilarArtist } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 
 export type ArtistPageProps = {

@@ -6,15 +6,15 @@ import * as React from "react";
 import * as _ from "lodash";
 
 import { toast } from "react-toastify";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import Loader from "../components/Loader";
-import PinnedRecordingCard from "./PinnedRecordingCard";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
+import Loader from "../../../components/Loader";
+import PinnedRecordingCard from "../../components/PinnedRecordingCard";
 import {
   getListenablePin,
   getRecordingMBID,
   getRecordingMSID,
-} from "../utils/utils";
-import { ToastMsg } from "../notifications/Notifications";
+} from "../../../utils/utils";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 export type UserPinsProps = {
   user: ListenBrainzUser;

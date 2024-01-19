@@ -13,7 +13,7 @@ import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import { getListenablePin, getPageProps } from "../../utils/utils";
 import UserFeedback from "./components/UserFeedback";
-import UserPins from "../../pins/UserPins";
+import UserPins from "./components/UserPins";
 
 export type UserTasteProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;

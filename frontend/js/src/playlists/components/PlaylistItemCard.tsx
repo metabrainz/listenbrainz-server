@@ -4,9 +4,9 @@ import { faGripLines, faMinusCircle } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { JSPFTrackToListen } from "./utils";
-import ListenCard from "../listens/ListenCard";
-import ListenControl from "../listens/ListenControl";
+import { JSPFTrackToListen } from "../utils";
+import ListenCard from "../../listens/ListenCard";
+import ListenControl from "../../listens/ListenControl";
 
 export type PlaylistItemCardProps = {
   track: JSPFTrack;

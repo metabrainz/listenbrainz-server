@@ -5,7 +5,7 @@ import { act } from "react-dom/test-utils";
 import PinnedRecordingCard, {
   PinnedRecordingCardProps,
   PinnedRecordingCardState,
-} from "../../src/pins/PinnedRecordingCard";
+} from "../../src/user/components/PinnedRecordingCard";
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext, {

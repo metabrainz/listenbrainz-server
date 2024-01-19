@@ -51,7 +51,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import ListenPayloadModal from "./ListenPayloadModal";
-import MBIDMappingModal from "../mbid-mapping/MBIDMappingModal";
+import MBIDMappingModal from "../user/missing-data/components/MBIDMappingModal";
 import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
 import PinRecordingModal from "../pins/PinRecordingModal";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";

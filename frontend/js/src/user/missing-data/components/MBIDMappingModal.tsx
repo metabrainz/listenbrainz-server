@@ -11,18 +11,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
-import ListenCard from "../listens/ListenCard";
-import ListenControl from "../listens/ListenControl";
-import { ToastMsg } from "../notifications/Notifications";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
-import { COLOR_LB_GREEN, COLOR_LB_LIGHT_GRAY } from "../utils/constants";
+import ListenCard from "../../../listens/ListenCard";
+import ListenControl from "../../../listens/ListenControl";
+import { ToastMsg } from "../../../notifications/Notifications";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
+import SearchTrackOrMBID from "../../../utils/SearchTrackOrMBID";
+import { COLOR_LB_GREEN, COLOR_LB_LIGHT_GRAY } from "../../../utils/constants";
 import {
   getArtistName,
   getRecordingMBID,
   getRecordingMSID,
   getTrackName,
-} from "../utils/utils";
+} from "../../../utils/utils";
 
 export type MBIDMappingModalProps = {
   listenToMap?: Listen;

@@ -22,7 +22,7 @@ import { Socket, io } from "socket.io-client";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
-import AddListenModal from "../add-listen/AddListenModal";
+import AddListenModal from "./components/AddListenModal";
 import BrainzPlayer from "../brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
 import UserSocialNetwork from "../follow/UserSocialNetwork";
@@ -30,7 +30,7 @@ import ListenCard from "../listens/ListenCard";
 import ListenControl from "../listens/ListenControl";
 import ListenCountCard from "../listens/ListenCountCard";
 import { ToastMsg } from "../notifications/Notifications";
-import PinnedRecordingCard from "../pins/PinnedRecordingCard";
+import PinnedRecordingCard from "./components/PinnedRecordingCard";
 import APIServiceClass from "../utils/APIService";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import {
