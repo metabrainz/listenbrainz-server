@@ -29,9 +29,9 @@ import {
   getPageProps,
   getReviewEventContent,
 } from "../utils/utils";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
-import ListenCard from "../listens/ListenCard";
+import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 
 // not the same format of tracks as what we get in the ArtistPage props

@@ -18,9 +18,9 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import { getPageProps, getReviewEventContent } from "../utils/utils";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
-import ListenCard from "../listens/ListenCard";
+import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import {
   getRelIconLink,

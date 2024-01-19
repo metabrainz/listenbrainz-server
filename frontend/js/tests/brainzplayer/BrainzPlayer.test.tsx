@@ -5,17 +5,17 @@ import fetchMock from "jest-fetch-mock";
 import { mount } from "enzyme";
 import BrainzPlayer, {
   DataSourceType,
-} from "../../src/brainzplayer/BrainzPlayer";
+} from "../../src/common/brainzplayer/BrainzPlayer";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
 
 import APIService from "../../src/utils/APIService";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
-import SoundcloudPlayer from "../../src/brainzplayer/SoundcloudPlayer";
-import SpotifyPlayer from "../../src/brainzplayer/SpotifyPlayer";
-import YoutubePlayer from "../../src/brainzplayer/YoutubePlayer";
-import BrainzPlayerUI from "../../src/brainzplayer/BrainzPlayerUI";
+import SoundcloudPlayer from "../../src/common/brainzplayer/SoundcloudPlayer";
+import SpotifyPlayer from "../../src/common/brainzplayer/SpotifyPlayer";
+import YoutubePlayer from "../../src/common/brainzplayer/YoutubePlayer";
+import BrainzPlayerUI from "../../src/common/brainzplayer/BrainzPlayerUI";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

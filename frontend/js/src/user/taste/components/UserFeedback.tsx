@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import Pill from "../../../components/Pill";
-import ListenCard from "../../../listens/ListenCard";
+import ListenCard from "../../../common/listens/ListenCard";
 import Loader from "../../../components/Loader";
 import { ToastMsg } from "../../../notifications/Notifications";
 import { getRecordingMBID, getRecordingMSID } from "../../../utils/utils";

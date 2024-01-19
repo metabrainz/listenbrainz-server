@@ -1,7 +1,7 @@
 import { isNaN, throttle } from "lodash";
 import * as React from "react";
 import ReactTooltip from "react-tooltip";
-import { millisecondsToStr } from "../playlists/utils";
+import { millisecondsToStr } from "../../playlists/utils";
 
 type ProgressBarProps = {
   progressMs: number;

@@ -11,7 +11,7 @@ import {
   isInvalidStatRange,
   userChartEntityToListen,
 } from "../utils";
-import ListenCard from "../../../listens/ListenCard";
+import ListenCard from "../../../common/listens/ListenCard";
 
 export type UserTopEntityProps = {
   range: UserStatsAPIRange;

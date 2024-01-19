@@ -4,7 +4,7 @@ import { mount } from "enzyme";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
-import ListenCountCard from "../../src/listens/ListenCountCard";
+import ListenCountCard from "../../src/common/listens/ListenCountCard";
 import APIService from "../../src/utils/APIService";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 

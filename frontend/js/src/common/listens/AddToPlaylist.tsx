@@ -7,11 +7,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { ToastMsg } from "../notifications/Notifications";
-import { PLAYLIST_URI_PREFIX, listenToJSPFTrack } from "../playlists/utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import { getTrackName } from "../utils/utils";
-import CreateOrEditPlaylistModal from "../user/playlists/components/CreateOrEditPlaylistModal";
+import { ToastMsg } from "../../notifications/Notifications";
+import { PLAYLIST_URI_PREFIX, listenToJSPFTrack } from "../../playlists/utils";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { getTrackName } from "../../utils/utils";
+import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
 
 type AddToPlaylistProps = {
   listen: Listen | JSPFTrack;

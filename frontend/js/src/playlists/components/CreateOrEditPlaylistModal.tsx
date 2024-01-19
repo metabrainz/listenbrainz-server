@@ -7,11 +7,11 @@ import {
   getPlaylistExtension,
   getPlaylistId,
   isPlaylistOwner,
-} from "../../../playlists/utils";
-import GlobalAppContext from "../../../utils/GlobalAppContext";
-import UserSearch from "./UserSearch";
-import NamePill from "../../../personal-recommendations/NamePill";
-import { ToastMsg } from "../../../notifications/Notifications";
+} from "../utils";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import UserSearch from "../../common/UserSearch";
+import NamePill from "../../personal-recommendations/NamePill";
+import { ToastMsg } from "../../notifications/Notifications";
 
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;

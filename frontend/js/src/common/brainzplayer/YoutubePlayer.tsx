@@ -21,7 +21,7 @@ import {
   getArtistName,
   getTrackName,
   searchForYoutubeTrack,
-} from "../utils/utils";
+} from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 export type YoutubePlayerState = {

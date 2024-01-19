@@ -12,7 +12,7 @@ import * as userReleases from "../__mocks__/userReleases.json";
 import * as userRecordings from "../__mocks__/userRecordings.json";
 import * as userReleaseGroups from "../__mocks__/userReleaseGroups.json";
 import { waitForComponentToPaint } from "../test-utils";
-import ListenCard from "../../src/listens/ListenCard";
+import ListenCard from "../../src/common/listens/ListenCard";
 
 const userProps: UserTopEntityProps = {
   range: "week",

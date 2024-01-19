@@ -3,7 +3,7 @@ import { mount, ReactWrapper } from "enzyme";
 
 import SimilarityScore, {
   SimilarityScoreProps,
-} from "../../src/user/stats/components/SimilarityScore";
+} from "../../src/user/components/follow/SimilarityScore";
 import { waitForComponentToPaint } from "../test-utils";
 
 const props: SimilarityScoreProps = {

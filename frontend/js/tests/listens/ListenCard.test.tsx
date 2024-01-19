@@ -7,7 +7,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import ListenCard, {
   ListenCardProps,
   ListenCardState,
-} from "../../src/listens/ListenCard";
+} from "../../src/common/listens/ListenCard";
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext, {

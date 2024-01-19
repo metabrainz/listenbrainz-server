@@ -7,10 +7,10 @@ import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { has } from "lodash";
 import { toast } from "react-toastify";
-import ListenControl from "../../listens/ListenControl";
+import ListenControl from "../../common/listens/ListenControl";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { convertDateToUnixTimestamp } from "../../utils/utils";
-import ListenCard from "../../listens/ListenCard";
+import ListenCard from "../../common/listens/ListenCard";
 import SearchTrackOrMBID from "../../utils/SearchTrackOrMBID";
 import { ToastMsg } from "../../notifications/Notifications";
 

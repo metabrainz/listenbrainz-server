@@ -11,7 +11,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import {
   getArtistName,
@@ -19,11 +19,11 @@ import {
   getRecordingMSID,
   getTrackName,
 } from "../../utils/utils";
-import ListenCard from "../../listens/ListenCard";
-import ListenControl from "../../listens/ListenControl";
+import ListenCard from "../../common/listens/ListenCard";
+import ListenControl from "../../common/listens/ListenControl";
 import Loader from "../../components/Loader";
 import { ToastMsg } from "../../notifications/Notifications";
-import MBIDMappingModal from "./components/MBIDMappingModal";
+import MBIDMappingModal from "../../common/listens/MBIDMappingModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;

@@ -42,23 +42,23 @@ import {
   getTrackLink,
   getTrackName,
   preciseTimestamp,
-} from "../utils/utils";
+} from "../../utils/utils";
 
-import CBReviewModal from "../cb-review/CBReviewModal";
-import Card from "../components/Card";
+import CBReviewModal from "../../cb-review/CBReviewModal";
+import Card from "../../components/Card";
 import CoverArtWithFallback from "./CoverArtWithFallback";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import ListenPayloadModal from "./ListenPayloadModal";
-import MBIDMappingModal from "../user/missing-data/components/MBIDMappingModal";
-import PersonalRecommendationModal from "../personal-recommendations/PersonalRecommendationsModal";
-import PinRecordingModal from "../pins/PinRecordingModal";
+import MBIDMappingModal from "./MBIDMappingModal";
+import PersonalRecommendationModal from "../../personal-recommendations/PersonalRecommendationsModal";
+import PinRecordingModal from "../../pins/PinRecordingModal";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
-import { ToastMsg } from "../notifications/Notifications";
+import { ToastMsg } from "../../notifications/Notifications";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
-import { millisecondsToStr } from "../playlists/utils";
+import { millisecondsToStr } from "../../playlists/utils";
 import AddToPlaylist from "./AddToPlaylist";
 
 export type ListenCardProps = {

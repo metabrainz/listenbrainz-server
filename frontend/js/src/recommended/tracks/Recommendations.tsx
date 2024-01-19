@@ -12,7 +12,7 @@ import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
 import APIServiceClass from "../../utils/APIService";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import Loader from "../../components/Loader";
 import {
@@ -23,8 +23,8 @@ import {
   getTrackName,
   preciseTimestamp,
 } from "../../utils/utils";
-import ListenCard from "../../listens/ListenCard";
-import RecommendationFeedbackComponent from "../../listens/RecommendationFeedbackComponent";
+import ListenCard from "../../common/listens/ListenCard";
+import RecommendationFeedbackComponent from "../../common/listens/RecommendationFeedbackComponent";
 import { ToastMsg } from "../../notifications/Notifications";
 
 export type RecommendationsProps = {

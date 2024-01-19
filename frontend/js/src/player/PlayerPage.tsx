@@ -13,7 +13,7 @@ import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
@@ -22,8 +22,8 @@ import {
   JSPFTrackToListen,
 } from "../playlists/utils";
 import { getPageProps } from "../utils/utils";
-import ListenControl from "../listens/ListenControl";
-import ListenCard from "../listens/ListenCard";
+import ListenControl from "../common/listens/ListenControl";
+import ListenCard from "../common/listens/ListenCard";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import { ToastMsg } from "../notifications/Notifications";
 

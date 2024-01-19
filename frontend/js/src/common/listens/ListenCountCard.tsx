@@ -1,6 +1,6 @@
 import * as React from "react";
-import Card from "../components/Card";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import Card from "../../components/Card";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export type ListenCountCardProps = {
   listenCount?: number;

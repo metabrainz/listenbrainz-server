@@ -5,8 +5,8 @@ import { act } from "react-dom/test-utils";
 import YoutubePlayer, {
   YoutubePlayerProps,
   YoutubePlayerState,
-} from "../../src/brainzplayer/YoutubePlayer";
-import { DataSourceTypes } from "../../src/brainzplayer/BrainzPlayer";
+} from "../../src/common/brainzplayer/YoutubePlayer";
+import { DataSourceTypes } from "../../src/common/brainzplayer/BrainzPlayer";
 import APIService from "../../src/utils/APIService";
 
 const props = {

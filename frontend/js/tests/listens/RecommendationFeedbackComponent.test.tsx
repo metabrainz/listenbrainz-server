@@ -16,7 +16,7 @@ import * as React from "react";
 import { act } from "react-dom/test-utils";
 import RecommendationFeedbackComponent, {
   RecommendationFeedbackComponentProps,
-} from "../../src/listens/RecommendationFeedbackComponent";
+} from "../../src/common/listens/RecommendationFeedbackComponent";
 import RecommendationControl from "../../src/user/recommendations/components/RecommendationControl";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext, {

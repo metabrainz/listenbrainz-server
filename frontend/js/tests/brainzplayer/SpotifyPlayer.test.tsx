@@ -5,12 +5,12 @@ import { act } from "react-dom/test-utils";
 import SpotifyPlayer, {
   SpotifyPlayerProps,
   SpotifyPlayerState,
-} from "../../src/brainzplayer/SpotifyPlayer";
+} from "../../src/common/brainzplayer/SpotifyPlayer";
 import APIService from "../../src/utils/APIService";
 import {
   DataSourceProps,
   DataSourceTypes,
-} from "../../src/brainzplayer/BrainzPlayer";
+} from "../../src/common/brainzplayer/BrainzPlayer";
 
 const props = {
   spotifyUser: {

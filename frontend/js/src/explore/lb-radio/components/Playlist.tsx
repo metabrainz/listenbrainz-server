@@ -5,7 +5,7 @@ import { faCog } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import PlaylistItemCard from "../../../playlists/components/PlaylistItemCard";
-import PlaylistMenu from "../../../user/playlists/components/PlaylistMenu";
+import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
 
 type LBRadioFeedbackProps = {
   feedback: string[];

@@ -13,7 +13,7 @@ import GlobalAppContext, {
 } from "../../src/utils/GlobalAppContext";
 import { waitForComponentToPaint } from "../test-utils";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
-import ListenCard from "../../src/listens/ListenCard";
+import ListenCard from "../../src/common/listens/ListenCard";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

@@ -19,7 +19,7 @@ import RecentListens, {
 } from "../../src/recent/RecentListens";
 import { waitForComponentToPaint } from "../test-utils";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
-import ListenCard from "../../src/listens/ListenCard";
+import ListenCard from "../../src/common/listens/ListenCard";
 // import Card from "../../src/components/Card";
 // import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 

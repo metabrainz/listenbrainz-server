@@ -5,7 +5,7 @@ import { mount } from "enzyme";
 import { act } from "react-dom/test-utils";
 import { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
-import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../src/common/brainzplayer/BrainzPlayer";
 import * as colorPlayProps from "../__mocks__/colorPlayProps.json";
 import ColorPlay from "../../src/explore/huesound/ColorPlay";
 import ColorWheel from "../../src/explore/huesound/components/ColorWheel";

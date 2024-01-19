@@ -8,7 +8,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Integrations } from "@sentry/tracing";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
 import Bar from "./components/Bar";
@@ -22,7 +22,7 @@ import {
   isInvalidStatRange,
   userChartEntityToListen,
 } from "../stats/utils";
-import ListenCard from "../../listens/ListenCard";
+import ListenCard from "../../common/listens/ListenCard";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;

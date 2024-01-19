@@ -1,7 +1,7 @@
 import { ErrorBoundary } from "@sentry/react";
 import React, { useCallback, useContext, useState } from "react";
 import { createRoot } from "react-dom/client";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";

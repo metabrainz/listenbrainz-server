@@ -28,7 +28,7 @@ import {
   JSPFTrackToListen,
 } from "../../playlists/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
 import { ToastMsg } from "../../notifications/Notifications";
 

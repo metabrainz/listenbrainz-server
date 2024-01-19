@@ -21,7 +21,7 @@ import ErrorBoundary from "../../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
 import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
@@ -29,7 +29,7 @@ import { getPageProps } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
 import ComponentToImage from "./components/ComponentToImage";
 
-import ListenCard from "../../../listens/ListenCard";
+import ListenCard from "../../../common/listens/ListenCard";
 import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import {
   JSPFTrackToListen,

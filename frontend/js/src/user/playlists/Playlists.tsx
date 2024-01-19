@@ -22,7 +22,7 @@ import { ToastMsg } from "../../notifications/Notifications";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
-import CreateOrEditPlaylistModal from "./components/CreateOrEditPlaylistModal";
+import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import { getPlaylistId, PlaylistType } from "../../playlists/utils";
 

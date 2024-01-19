@@ -12,10 +12,10 @@ import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslin
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
-import { ToastMsg } from "../notifications/Notifications";
-import { millisecondsToStr } from "../playlists/utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
+import { ToastMsg } from "../../notifications/Notifications";
+import { millisecondsToStr } from "../../playlists/utils";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
 import MenuOptions from "./MenuOptions";
 import ProgressBar from "./ProgressBar";
 

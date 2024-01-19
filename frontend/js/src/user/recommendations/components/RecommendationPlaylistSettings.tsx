@@ -11,7 +11,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 import { preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import ListenPayloadModal from "../../../listens/ListenPayloadModal";
+import ListenPayloadModal from "../../../common/listens/ListenPayloadModal";
 
 export type RecommendationPlaylistSettingsProps = {
   playlist: JSPFPlaylist;

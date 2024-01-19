@@ -3,9 +3,9 @@ import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { throttle as _throttle } from "lodash";
 import { toast } from "react-toastify";
 import debounceAsync from "debounce-async";
-import GlobalAppContext from "../../../utils/GlobalAppContext";
-import ListenControl from "../../../listens/ListenControl";
-import { ToastMsg } from "../../../notifications/Notifications";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import ListenControl from "./listens/ListenControl";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type UserSearchProps = {
   onSelectUser: (userName: string) => void;

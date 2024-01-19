@@ -31,7 +31,7 @@ import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
 import ErrorBoundary from "../../../utils/ErrorBoundary";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
 import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
@@ -44,7 +44,7 @@ import {
 import { getEntityLink } from "../../stats/utils";
 import ImageShareButtons from "./components/ImageShareButtons";
 
-import ListenCard from "../../../listens/ListenCard";
+import ListenCard from "../../../common/listens/ListenCard";
 import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
 import CustomChoropleth from "../../stats/components/Choropleth";

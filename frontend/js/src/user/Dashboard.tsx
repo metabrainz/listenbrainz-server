@@ -23,12 +23,12 @@ import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "./components/AddListenModal";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
 import UserSocialNetwork from "./components/follow/UserSocialNetwork";
-import ListenCard from "../listens/ListenCard";
-import ListenControl from "../listens/ListenControl";
-import ListenCountCard from "../listens/ListenCountCard";
+import ListenCard from "../common/listens/ListenCard";
+import ListenControl from "../common/listens/ListenControl";
+import ListenCountCard from "../common/listens/ListenCountCard";
 import { ToastMsg } from "../notifications/Notifications";
 import PinnedRecordingCard from "./components/PinnedRecordingCard";
 import APIServiceClass from "../utils/APIService";

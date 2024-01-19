@@ -28,7 +28,7 @@ import UserFeedPage, {
   UserFeedPageState,
 } from "../../src/user-feed/UserFeed";
 import UserSocialNetwork from "../../src/user/components/follow/UserSocialNetwork";
-import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../src/common/brainzplayer/BrainzPlayer";
 import * as timelineProps from "../__mocks__/timelineProps.json";
 import GlobalAppContext, {
   GlobalAppContextT,

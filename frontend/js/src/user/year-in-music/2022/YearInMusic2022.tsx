@@ -29,7 +29,7 @@ import ErrorBoundary from "../../../utils/ErrorBoundary";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
 import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
@@ -40,7 +40,7 @@ import {
 import { getEntityLink } from "../../stats/utils";
 import MagicShareButton from "./components/MagicShareButton";
 
-import ListenCard from "../../../listens/ListenCard";
+import ListenCard from "../../../common/listens/ListenCard";
 import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";

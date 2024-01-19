@@ -2,9 +2,9 @@ import * as React from "react";
 
 import { faHeart, faHeartCrack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { getRecordingMBID, getRecordingMSID } from "../utils/utils";
+import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
 
-import useFeedbackMap from "../hooks/useFeedbackMap";
+import useFeedbackMap from "../../hooks/useFeedbackMap";
 
 export type ListenFeedbackComponentProps = {
   listen: BaseListenFormat;

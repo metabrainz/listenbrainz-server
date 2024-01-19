@@ -6,7 +6,7 @@ import {
   getArtistName,
   getTrackName,
   searchForSoundcloudTrack,
-} from "../utils/utils";
+} from "../../utils/utils";
 
 require("../../lib/soundcloud-player-api");
 

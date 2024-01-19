@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import BrainzPlayerUI from "../../src/brainzplayer/BrainzPlayerUI";
+import BrainzPlayerUI from "../../src/common/brainzplayer/BrainzPlayerUI";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

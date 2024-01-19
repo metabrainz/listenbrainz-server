@@ -14,9 +14,9 @@ import * as React from "react";
 import { useContext } from "react";
 import { toast } from "react-toastify";
 import NiceModal from "@ebay/nice-modal-react";
-import { ToastMsg } from "../../../notifications/Notifications";
-import GlobalAppContext from "../../../utils/GlobalAppContext";
-import { getPlaylistId, isPlaylistOwner } from "../../../playlists/utils";
+import { ToastMsg } from "../../notifications/Notifications";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { getPlaylistId, isPlaylistOwner } from "../utils";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 

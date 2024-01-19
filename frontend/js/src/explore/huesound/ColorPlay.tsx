@@ -14,10 +14,10 @@ import GlobalAppContext, {
 } from "../../utils/GlobalAppContext";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import { getPageProps } from "../../utils/utils";
-import ListenCard from "../../listens/ListenCard";
+import ListenCard from "../../common/listens/ListenCard";
 import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
 import { ToastMsg } from "../../notifications/Notifications";

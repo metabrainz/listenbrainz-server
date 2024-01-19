@@ -9,7 +9,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import { getListenablePin, getPageProps } from "../../utils/utils";
 import UserFeedback from "./components/UserFeedback";

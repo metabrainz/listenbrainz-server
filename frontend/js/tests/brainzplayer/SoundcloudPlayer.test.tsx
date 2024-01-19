@@ -4,11 +4,11 @@ import { mount, ReactWrapper, shallow } from "enzyme";
 import { act } from "react-dom/test-utils";
 import SoundcloudPlayer, {
   SoundcloudPlayerState,
-} from "../../src/brainzplayer/SoundcloudPlayer";
+} from "../../src/common/brainzplayer/SoundcloudPlayer";
 import {
   DataSourceProps,
   DataSourceTypes,
-} from "../../src/brainzplayer/BrainzPlayer";
+} from "../../src/common/brainzplayer/BrainzPlayer";
 import APIService from "../../src/utils/APIService";
 
 const props = {

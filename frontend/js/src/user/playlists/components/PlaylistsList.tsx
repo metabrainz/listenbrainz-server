@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import PlaylistCard from "./PlaylistCard";
+import PlaylistCard from "../../../playlists/components/PlaylistCard";
 import { PlaylistType } from "../../../playlists/utils";
 
 export type PlaylistsListProps = {

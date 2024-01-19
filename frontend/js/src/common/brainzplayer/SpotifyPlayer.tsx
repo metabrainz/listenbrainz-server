@@ -15,7 +15,7 @@ import {
   loadScriptAsync,
   getTrackName,
   getArtistName,
-} from "../utils/utils";
+} from "../../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
 // Fix for LB-447 (Player does not play any sound)

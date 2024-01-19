@@ -4,7 +4,7 @@ import { mount } from "enzyme";
 import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import ListenControl, {
   ListenControlProps,
-} from "../../src/listens/ListenControl";
+} from "../../src/common/listens/ListenControl";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

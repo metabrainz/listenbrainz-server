@@ -10,7 +10,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import ListenControl from "../listens/ListenControl";
-import { getRecordingMBID } from "../utils/utils";
+import { getRecordingMBID } from "../../utils/utils";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
