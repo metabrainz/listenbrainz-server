@@ -2,9 +2,9 @@ import * as React from "react";
 import fetchMock from "jest-fetch-mock";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import UserFeedback, { UserFeedbackProps } from "../../src/user/taste/components/UserFeedback";
-import * as userFeedbackProps from "../__mocks__/userFeedbackProps.json";
-import * as userFeedbackAPIResponse from "../__mocks__/userFeedbackAPIResponse.json";
+import UserFeedback, { UserFeedbackProps } from "../../../src/user/taste/components/UserFeedback";
+import * as userFeedbackProps from "../../__mocks__/userFeedbackProps.json";
+import * as userFeedbackAPIResponse from "../../__mocks__/userFeedbackAPIResponse.json";
 
 const { totalCount, user, feedback } = userFeedbackProps;
 
