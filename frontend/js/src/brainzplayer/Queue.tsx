@@ -1,10 +1,13 @@
 import * as React from "react";
 import { ReactSortable } from "react-sortablejs";
 import NiceModal from "@ebay/nice-modal-react";
+import { faSave } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import QueueItemCard from "./QueueItemCard";
 import ListenCard from "../listens/ListenCard";
 import CreateOrEditPlaylistModal from "../playlists/CreateOrEditPlaylistModal";
 import { listenToJSPFTrack } from "../playlists/utils";
+import { getListenCardKey } from "../utils/utils";
 
 type QueueProps = {
   queue: BrainzPlayerQueue;
@@ -60,12 +63,31 @@ function Queue(props: QueueProps) {
 
   return (
     <div className="queue">
-      <h2>Queue</h2>
       {currentListen && (
         <>
-          <p className="queue-headers">Now Playing</p>
+          <div className="queue-headers">
+            <h4>Now Playing:</h4>
+            <div className="queue-buttons">
+              <button
+                className="btn btn-info btn-sm"
+                data-toggle="modal"
+                data-target="#CreateOrEditPlaylistModal"
+                onClick={addQueueToPlaylist}
+                type="button"
+              >
+                <FontAwesomeIcon icon={faSave} fixedWidth /> Save to Playlist
+              </button>
+              <button
+                className="btn btn-info btn-sm"
+                onClick={clearQueue}
+                type="button"
+              >
+                Clear Queue
+              </button>
+            </div>
+          </div>
           <ListenCard
-            key="queue-listening-now-card"
+            key={`queue-listening-now-${getListenCardKey(currentListen)}}`}
             className="queue-item-card"
             listen={currentListen as Listen}
             showTimestamp={false}
@@ -74,21 +96,7 @@ function Queue(props: QueueProps) {
         </>
       )}
       <div className="queue-headers">
-        <p>Next Up:</p>
-        <div className="queue-buttons">
-          <button
-            className="btn btn-info"
-            data-toggle="modal"
-            data-target="#CreateOrEditPlaylistModal"
-            onClick={addQueueToPlaylist}
-            type="button"
-          >
-            Save to Playlist
-          </button>
-          <button className="btn btn-info" onClick={clearQueue} type="button">
-            Clear Queue
-          </button>
-        </div>
+        <h4>Next Up:</h4>
       </div>
       <div className="queue-list">
         {queueNextUp.length > 0 ? (
@@ -101,7 +109,7 @@ function Queue(props: QueueProps) {
             {queueNextUp.map((queueItem: BrainzPlayerQueueItem) => {
               return (
                 <QueueItemCard
-                  key={queueItem.id}
+                  key={`queue-item-${getListenCardKey(queueItem)}`}
                   track={queueItem}
                   removeTrackFromQueue={removeTrackFromQueue}
                 />

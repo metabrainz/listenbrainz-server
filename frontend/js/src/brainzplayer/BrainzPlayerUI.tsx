@@ -119,7 +119,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       }
     }
     getFeedback();
-  }, [currentListen]);
+  }, [currentUser, currentListen, listenBrainzAPIBaseURI]);
 
   async function submitFeedback(score: ListenFeedBack) {
     if (currentUser?.auth_token) {

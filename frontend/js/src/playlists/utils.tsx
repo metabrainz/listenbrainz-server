@@ -1,5 +1,10 @@
 import { cloneDeep, has } from "lodash";
-import { getArtistName, getRecordingMBID, getTrackName } from "../utils/utils";
+import {
+  getArtistName,
+  getListenCardKey,
+  getRecordingMBID,
+  getTrackName,
+} from "../utils/utils";
 
 export const MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION =
   "https://musicbrainz.org/doc/jspf#playlist";
@@ -143,7 +148,7 @@ export function listenOrJSPFTrackToQueueItem(
   }
   const queueItem = {
     ...listenTrack,
-    id: `${listenTrack.track_metadata.track_name} - ${Date.now().toString()}`,
+    id: `queue-item-${getListenCardKey(listenTrack)}`,
   };
   return queueItem;
 }

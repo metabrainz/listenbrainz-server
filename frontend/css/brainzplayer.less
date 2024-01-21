@@ -341,29 +341,17 @@
 
 .queue {
   position: fixed;
+  padding: 1em;
   bottom: 60px;
-  width: calc(100% - @sidenav-width);
+  width: 100%;
+  max-width: 550px;
   height: 500px;
   background-color: #f8f8f8;
   border-top: 1px solid #ccc;
-  box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: -6px -1px 10px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
   z-index: 5;
-  left: @sidenav-width;
-  @media (max-width: @offscreen-sidenav-breakpoint) {
-    width: 100%;
-    left: 0;
-  }
-
-  h2 {
-    font-size: 18px;
-    margin: 0;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    background-color: #fff;
-    position: fixed;
-    width: 100%;
-  }
+  right: 0;
 
   .queue-item {
     display: flex;
@@ -384,20 +372,24 @@
 
   .queue-headers {
     font-size: 16px;
-    padding: 4px;
     margin-top: 4px;
+    margin-bottom: 4px;
     display: flex;
     justify-content: space-between;
-  }
+    border-bottom: 1px solid #ccc;
 
-  .queue-headers:first-of-type {
-    margin-top: 50px;
-  }
+    h4 {
+      font-size: 18px;
+      margin: 0;
+      padding: 10px;
+      padding-left: 0;
+      width: 100%;
+    }
 
-  .queue-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
+    .queue-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
   }
 }
