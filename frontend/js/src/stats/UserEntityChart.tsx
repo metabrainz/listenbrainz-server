@@ -116,6 +116,11 @@ export default class UserEntityChart extends React.Component<
     this.syncStateWithURL();
   };
 
+  entityHref = (newEntity: Entity): string => {
+    const { range } = this.state;
+    return this.buildURLParams(1, range, newEntity);
+  };
+
   getInitData = async (
     range: UserStatsAPIRange,
     entity: Entity
@@ -495,21 +500,42 @@ export default class UserEntityChart extends React.Component<
                 <Pill
                   active={entity === "artist"}
                   type="secondary"
-                  onClick={() => this.changeEntity("artist")}
+                  href={this.entityHref("artist")}
+                  onClick={(e) => {
+                    // LB-925 ctrl-click and cmd-click shouldn't navigate in this tab
+                    if (!e.ctrlKey) {
+                      e.preventDefault();
+                      this.changeEntity("artist");
+                    }
+                  }}
                 >
                   Artists
                 </Pill>
                 <Pill
                   active={entity === "release-group"}
                   type="secondary"
-                  onClick={() => this.changeEntity("release-group")}
+                  href={this.entityHref("release-group")}
+                  onClick={(e) => {
+                    // LB-925 ctrl-click and cmd-click shouldn't navigate in this tab
+                    if (!e.ctrlKey) {
+                      e.preventDefault();
+                      this.changeEntity("release-group");
+                    }
+                  }}
                 >
                   Albums
                 </Pill>
                 <Pill
                   active={entity === "recording"}
                   type="secondary"
-                  onClick={() => this.changeEntity("recording")}
+                  href={this.entityHref("recording")}
+                  onClick={(e) => {
+                    // LB-925 ctrl-click and cmd-click shouldn't navigate in this tab
+                    if (!e.ctrlKey) {
+                      e.preventDefault();
+                      this.changeEntity("recording");
+                    }
+                  }}
                 >
                   Tracks
                 </Pill>
