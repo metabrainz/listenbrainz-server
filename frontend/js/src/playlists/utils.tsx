@@ -148,7 +148,7 @@ export function listenOrJSPFTrackToQueueItem(
   }
   const queueItem = {
     ...listenTrack,
-    id: `queue-item-${getListenCardKey(listenTrack)}`,
+    id: `queue-item-${getListenCardKey(listenTrack)}-${Date.now().toString()}`,
   };
   return queueItem;
 }

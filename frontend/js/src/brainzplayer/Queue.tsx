@@ -109,7 +109,7 @@ function Queue(props: QueueProps) {
             {queueNextUp.map((queueItem: BrainzPlayerQueueItem) => {
               return (
                 <QueueItemCard
-                  key={`queue-item-${getListenCardKey(queueItem)}`}
+                  key={queueItem.id}
                   track={queueItem}
                   removeTrackFromQueue={removeTrackFromQueue}
                 />
