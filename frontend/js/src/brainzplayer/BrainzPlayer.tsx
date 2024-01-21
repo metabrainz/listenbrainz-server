@@ -6,7 +6,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  has as _has,
   isEqual as _isEqual,
   isNil as _isNil,
   isString as _isString,
@@ -14,7 +13,6 @@ import {
   assign,
   cloneDeep,
   debounce,
-  findIndex,
   omit,
 } from "lodash";
 import * as React from "react";
@@ -462,17 +460,16 @@ export default class BrainzPlayer extends React.Component<
       }
     }
 
-    const nextListen = queue[nextListenIndex];
+    let nextListen = queue[nextListenIndex];
     if (
       !nextListen ||
       (_isEqual(queueRepeatMode, QueueRepeatModes.off) && nextListenIndex === 0)
     ) {
-      this.handleWarning(
-        "You can try loading more listens or refreshing the page",
-        "No more listens to play"
-      );
-      this.reinitializeWindowTitle();
-      return;
+      const { listens } = this.props;
+      listens.forEach((listen) => {
+        this.addTrackToQueue(listen);
+      });
+      nextListen = queue[currentListenIndex + 1];
     }
     this.playListen(nextListen, 0);
   };
