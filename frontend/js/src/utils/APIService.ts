@@ -3,6 +3,15 @@ import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
 
+const originalFetch = window.fetch;
+const fetchWithRetry = require("fetch-retry")(originalFetch, {
+  retries: 5,
+  retryDelay: (attempt: number, error: unknown, response: Response) => {
+    // Exponential backoff
+    return 2 ** attempt * 1000; // 1000, 2000, 4000
+  },
+});
+
 export default class APIService {
   APIBaseURI: string;
 
@@ -34,7 +43,7 @@ export default class APIService {
       query += `?limit=${limit}`;
     }
 
-    const response = await fetch(query, {
+    const response = await fetchWithRetry(query, {
       method: "GET",
     });
     await this.checkStatus(response);
@@ -71,7 +80,7 @@ export default class APIService {
       query += `?${queryParams.join("&")}`;
     }
 
-    const response = await fetch(query, {
+    const response = await fetchWithRetry(query, {
       method: "GET",
     });
     await this.checkStatus(response);
@@ -110,7 +119,7 @@ export default class APIService {
       query += `?${queryParams.join("&")}`;
     }
 
-    const response = await fetch(query, {
+    const response = await fetchWithRetry(query, {
       method: "GET",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -129,7 +138,7 @@ export default class APIService {
 
     const query: string = `${this.APIBaseURI}/user/${userName}/listen-count`;
 
-    const response = await fetch(query, {
+    const response = await fetchWithRetry(query, {
       method: "GET",
     });
     await this.checkStatus(response);
@@ -159,7 +168,7 @@ export default class APIService {
   };
 
   refreshAccessToken = async (service: string): Promise<string> => {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `/profile/music-services/${service}/refresh/`,
       {
         method: "POST",
@@ -180,12 +189,15 @@ export default class APIService {
     if (!userToken) {
       throw new SyntaxError("User token missing");
     }
-    const response = await fetch(`${this.APIBaseURI}/user/${userName}/follow`, {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${userToken}`,
-      },
-    });
+    const response = await fetchWithRetry(
+      `${this.APIBaseURI}/user/${userName}/follow`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+        },
+      }
+    );
     return { status: response.status };
   };
 
@@ -199,7 +211,7 @@ export default class APIService {
     if (!userToken) {
       throw new SyntaxError("User token missing");
     }
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${this.APIBaseURI}/user/${userName}/unfollow`,
       {
         method: "POST",
@@ -217,7 +229,7 @@ export default class APIService {
     try {
       const url = new URL(`${this.APIBaseURI}/search/users/`);
       url.searchParams.append("search_term", userName);
-      const response = await fetch(url.toString(), {
+      const response = await fetchWithRetry(url.toString(), {
         method: "GET",
       });
 
@@ -240,7 +252,7 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/user/${username}/followers`;
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
@@ -253,7 +265,7 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/user/${username}/following`;
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
@@ -266,7 +278,7 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/user/${username}/playing-now`;
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     const result = await response.json();
     return result.payload.listens?.[0];
@@ -376,7 +388,7 @@ export default class APIService {
     const url = encodeURI(
       `${this.APIBaseURI}/latest-import?user_name=${userName}&service=${service}`
     );
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "GET",
     });
     await this.checkStatus(response);
@@ -395,7 +407,7 @@ export default class APIService {
     timestamp: number
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/latest-import`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -424,7 +436,7 @@ export default class APIService {
     if (count !== null && count !== undefined) {
       url += `&count=${count}`;
     }
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     // if response code is 204, then statistics havent been calculated, send empty object
     if (response.status === 204) {
@@ -446,7 +458,7 @@ export default class APIService {
     } else {
       url = `${this.APIBaseURI}/stats/sitewide/listening-activity`;
     }
-    const response = await fetch(`${url}?range=${range}`);
+    const response = await fetchWithRetry(`${url}?range=${range}`);
     await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
@@ -462,7 +474,7 @@ export default class APIService {
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserDailyActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/daily-activity?range=${range}`;
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
@@ -485,7 +497,7 @@ export default class APIService {
       url = `${this.APIBaseURI}/stats/sitewide/`;
     }
     url += `artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
@@ -526,7 +538,7 @@ export default class APIService {
     recordingMSID: string
   ): Promise<string | null> => {
     const url = `${this.APIBaseURI}/get-cover-art/?release_mbid=${releaseMBID}&recording_msid=${recordingMSID}`;
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     if (response.status === 200) {
       const data = await response.json();
@@ -549,7 +561,7 @@ export default class APIService {
     if (recordingMBID) {
       body.recording_mbid = recordingMBID;
     }
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -586,7 +598,7 @@ export default class APIService {
       user_name: userName,
       service,
     };
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -621,7 +633,7 @@ export default class APIService {
     if (queryParams.length) {
       queryURL += `?${queryParams.join("&")}`;
     }
-    const response = await fetch(queryURL);
+    const response = await fetchWithRetry(queryURL);
     await this.checkStatus(response);
     return response.json();
   };
@@ -641,7 +653,7 @@ export default class APIService {
     if (recording_msids?.length) {
       requestBody.recording_msids = recording_msids;
     }
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json;charset=UTF-8",
@@ -658,7 +670,7 @@ export default class APIService {
     listenedAt: number
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/delete-listen`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -682,7 +694,7 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/playlist/create`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -706,7 +718,7 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/playlist/edit/${playlistMBID}`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -746,7 +758,7 @@ export default class APIService {
       createdFor ? "/createdfor" : ""
     }${collaborator ? "/collaborator" : ""}?offset=${offset}&count=${count}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "GET",
       headers,
     });
@@ -767,7 +779,7 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/playlist/${playlistMBID}`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "GET",
       headers,
     });
@@ -787,7 +799,7 @@ export default class APIService {
     const optionalOffset =
       !isNil(offset) && Number.isSafeInteger(offset) ? `?offset=${offset}` : "";
     const url = `${this.APIBaseURI}/playlist/${playlistMBID}/item/add${optionalOffset}`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -812,7 +824,7 @@ export default class APIService {
       throw new SyntaxError("Playlist MBID is missing");
     }
     const url = `${this.APIBaseURI}/playlist/${playlistMBID}/item/delete`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -834,7 +846,7 @@ export default class APIService {
     count: number
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/playlist/${playlistMBID}/item/move`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -856,7 +868,7 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/playlist/${playlistMBID}/copy`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -876,7 +888,7 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/playlist/${playlistMBID}/delete`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -892,7 +904,7 @@ export default class APIService {
     rating: RecommendationFeedBack
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/recommendation/feedback/submit`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -909,7 +921,7 @@ export default class APIService {
     recordingMBID: string
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/recommendation/feedback/delete`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -930,7 +942,7 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/recommendation/feedback/user/${userName}/recordings?mbids=${recordings}`;
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
@@ -941,7 +953,7 @@ export default class APIService {
     metadata: UserTrackRecommendationMetadata
   ) => {
     const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recording`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${authToken}`,
@@ -963,13 +975,13 @@ export default class APIService {
     }
 
     const url = `${this.APIBaseURI}/user/${username}/similar-users`;
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
 
   reportUser = async (userName: string, optionalContext?: string) => {
-    const response = await fetch(`/user/${userName}/report-user/`, {
+    const response = await fetchWithRetry(`/user/${userName}/report-user/`, {
       method: "POST",
       body: JSON.stringify({ reason: optionalContext }),
       headers: {
@@ -986,7 +998,7 @@ export default class APIService {
     blurb_content?: string
   ): Promise<{ status: string; data: PinnedRecording }> => {
     const url = `${this.APIBaseURI}/pin`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1008,7 +1020,7 @@ export default class APIService {
     recordingMBID: string
   ): Promise<{ status: string }> => {
     const url = `${this.APIBaseURI}/metadata/submit_manual_mapping/`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1025,7 +1037,7 @@ export default class APIService {
 
   unpinRecording = async (userToken: string): Promise<number> => {
     const url = `${this.APIBaseURI}/pin/unpin`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1038,7 +1050,7 @@ export default class APIService {
 
   deletePin = async (userToken: string, pinID: number): Promise<number> => {
     const url = `${this.APIBaseURI}/pin/delete/${pinID}`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1056,7 +1068,7 @@ export default class APIService {
 
     const query = `${this.APIBaseURI}/${userName}/pins?offset=${offset}&count=${count}`;
 
-    const response = await fetch(query, {
+    const response = await fetchWithRetry(query, {
       method: "GET",
     });
 
@@ -1070,7 +1082,7 @@ export default class APIService {
     review: CritiqueBrainzReview
   ) => {
     const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/review`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1097,7 +1109,7 @@ export default class APIService {
     inc = "artists"
   ): Promise<MusicBrainzRecording> => {
     const url = `${this.MBBaseURI}/recording/${recordingMBID}?fmt=json&inc=${inc}`;
-    const response = await fetch(encodeURI(url));
+    const response = await fetchWithRetry(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
   };
@@ -1106,7 +1118,7 @@ export default class APIService {
     releaseMBID: string
   ): Promise<MusicBrainzReleaseWithReleaseGroup> => {
     const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
-    const response = await fetch(encodeURI(url));
+    const response = await fetchWithRetry(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
   };
@@ -1119,7 +1131,7 @@ export default class APIService {
     releases: MusicBrainzReleaseWithMedia[];
   }> => {
     const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
-    const response = await fetch(encodeURI(url));
+    const response = await fetchWithRetry(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
   };
@@ -1130,7 +1142,7 @@ export default class APIService {
   ): Promise<any> => {
     let query = `${this.APIBaseURI}/explore/color/${color}`;
     if (!isUndefined(count)) query += `?count=${count}`;
-    const response = await fetch(query);
+    const response = await fetchWithRetry(query);
     await this.checkStatus(response);
     return response.json();
   };
@@ -1145,7 +1157,7 @@ export default class APIService {
       throw new SyntaxError("Event ID not present");
     }
     const query = `${this.APIBaseURI}/user/${username}/feed/events/delete`;
-    const response = await fetch(query, {
+    const response = await fetchWithRetry(query, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1167,7 +1179,7 @@ export default class APIService {
       throw new SyntaxError("Event ID not present");
     }
     const query = `${this.APIBaseURI}/user/${username}/feed/events/hide`;
-    const response = await fetch(query, {
+    const response = await fetchWithRetry(query, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1189,7 +1201,7 @@ export default class APIService {
       throw new SyntaxError("Event ID not present");
     }
     const query = `${this.APIBaseURI}/user/${username}/feed/events/unhide`;
-    const response = await fetch(query, {
+    const response = await fetchWithRetry(query, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1227,7 +1239,7 @@ export default class APIService {
       url.searchParams.append("inc", "artist tag release");
     }
 
-    const response = await fetch(url.toString());
+    const response = await fetchWithRetry(url.toString());
     await this.checkStatus(response);
     return response.json();
   };
@@ -1247,7 +1259,7 @@ export default class APIService {
       url.searchParams.append("inc", "artist tag release");
     }
 
-    const response = await fetch(url.toString());
+    const response = await fetchWithRetry(url.toString());
     await this.checkStatus(response);
     return response.json();
   };
@@ -1257,7 +1269,7 @@ export default class APIService {
     zonename: string
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/settings/timezone`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1276,7 +1288,7 @@ export default class APIService {
     metadata: UserTrackPersonalRecommendationMetadata
   ) => {
     const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recommend-personal`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1294,7 +1306,7 @@ export default class APIService {
     exportToSpotify: boolean
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/settings/troi`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1311,7 +1323,7 @@ export default class APIService {
     playlist_mbid: string
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/spotify`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1330,7 +1342,7 @@ export default class APIService {
       throw new Error("Expected a playlist");
     }
     const url = `${this.APIBaseURI}/playlist/export-jspf/spotify`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1347,7 +1359,7 @@ export default class APIService {
     playlist_mbid: string
   ): Promise<Blob> => {
     const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/xspf`;
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: "GET",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -1387,7 +1399,7 @@ export default class APIService {
       url += `?${queryParams.join("&")}`;
     }
 
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
@@ -1418,7 +1430,7 @@ export default class APIService {
     if (queryParams.length) {
       url += `?${queryParams.join("&")}`;
     }
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };

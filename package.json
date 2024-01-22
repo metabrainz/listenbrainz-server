@@ -62,7 +62,7 @@
     "debounce-async": "0.0.2",
     "dompurify": "^2.2.6",
     "external-svg-loader": "^1.6.10",
-    "fetch-retry": "^5.0.3",
+    "fetch-retry": "^5.0.6",
     "file-saver": "^2.0.5",
     "he": "^1.2.0",
     "highlight.js": "^11.6.0",
