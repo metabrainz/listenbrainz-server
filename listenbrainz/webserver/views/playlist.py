@@ -5,8 +5,9 @@ from flask import Blueprint, render_template, current_app
 from flask_login import current_user
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
-from listenbrainz.webserver.views.playlist_api import serialize_jspf, fetch_playlist_recording_metadata
+from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
 import listenbrainz.db.playlist as db_playlist
+import listenbrainz.db.user as db_user
 
 playlist_bp = Blueprint("playlist", __name__)
 
@@ -31,10 +32,13 @@ def load_playlist(playlist_mbid: str):
 
     props = {
         "labs_api_url": current_app.config["LISTENBRAINZ_LABS_API_URL"],
-        "playlist": serialize_jspf(playlist),
+        "playlist": playlist.serialize_jspf(),
     }
+
+    playlist_creator = db_user.get(playlist.creator_id)
 
     return render_template(
         "playlists/playlist.html",
-        props=orjson.dumps(props).decode("utf-8")
+        props=orjson.dumps(props).decode("utf-8"),
+        user=playlist_creator
     )

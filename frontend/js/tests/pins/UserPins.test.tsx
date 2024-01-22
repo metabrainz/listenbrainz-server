@@ -13,8 +13,9 @@ import * as APIPins from "../__mocks__/pinProps.json";
 import UserPins, {
   UserPinsProps,
   UserPinsState,
-} from "../../src/pins/UserPins";
-import PinnedRecordingCard from "../../src/pins/PinnedRecordingCard";
+} from "../../src/user/taste/components/UserPins";
+import PinnedRecordingCard from "../../src/user/components/PinnedRecordingCard";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -25,7 +26,6 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 const props = {
   ...pinsPageProps,
   pins: pinsPageProps.pins as Array<PinnedRecording>,
-  
 };
 
 const APIPinsPageTwo = {
@@ -53,27 +53,23 @@ const APIPinsPageTwo = {
 const mountOptions: { context: GlobalAppContextT } = {
   context: {
     APIService: new APIService("foo"),
+    websocketsUrl: "",
     youtubeAuth: pinsPageProps.youtube as YoutubeUser,
     spotifyAuth: pinsPageProps.spotify as SpotifyUser,
     currentUser: pinsPageProps.user,
+    recordingFeedbackManager: new RecordingFeedbackManager(
+      new APIService("foo"),
+      { name: "Fnord" }
+    ),
   },
 };
 
 describe("UserPins", () => {
-  it("renders correctly on the profile page", () => {
-    // Datepicker component uses current time at load as max date,
-    // and PinnedRecordingModal component uses current time at load to display recording unpin date,
-    // so we have to mock the Date constructor otherwise snapshots will be different every day
-    const mockDate = new Date("2021-05-19");
-    const fakeDateNow = jest
-      .spyOn(global.Date, "now")
-      .mockImplementation(() => mockDate.getTime());
-
-    // eslint-disable-next-line no-import-assign
-    timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
+  it("renders correctly", () => {
     const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-    expect(wrapper.html()).toMatchSnapshot();
-    fakeDateNow.mockRestore();
+    expect(wrapper.find("#pinned-recordings")).toHaveLength(1);
+    expect(wrapper.getDOMNode()).toHaveTextContent("Lorde");
+    expect(wrapper.getDOMNode()).toHaveTextContent("400 Lux");
   });
 
   it("renders the correct number of pinned recordings", () => {

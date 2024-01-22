@@ -18,6 +18,7 @@ class UserIdListener(BaseModel):
 class BaseListenerRecord(BaseModel):
     """ Common base class for entity listener stats """
     total_listen_count: NonNegativeInt
+    total_user_count: NonNegativeInt
     listeners: List[UserIdListener]
 
 

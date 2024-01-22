@@ -242,6 +242,14 @@ def request_yim_new_artists_discovered(year: int):
     send_request_to_spark_cluster("year_in_music.new_artists_discovered_count", year=year)
 
 
+@cli.command(name="request_yim_top_genres")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+              default=date.today().year)
+def request_yim_top_genres(year: int):
+    """ Send request to calculate top genres each user listened to this year. """
+    send_request_to_spark_cluster("year_in_music.top_genres", year=year)
+
+
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
@@ -319,15 +327,13 @@ def request_model(rank, itr, lmbda, alpha, use_transformed_listencounts):
 
 
 @cli.command(name='request_recommendations')
-@click.option("--top", type=int, default=1000, help="Generate given number of top artist recommendations")
 @click.option("--raw", type=int, default=1000, help="Generate given number of raw recommendations")
 @click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
               help="Generate recommendations for given users. Generate recommendations for all users by default.")
-def request_recommendations(top, similar, raw, users):
+def request_recommendations(raw, users):
     """ Send the cluster a request to generate recommendations.
     """
     params = {
-        'recommendation_top_artist_limit': top,
         'recommendation_raw_limit': raw,
         'users': users
     }
@@ -473,13 +479,22 @@ def request_yim_similar_users(year: int):
     send_request_to_spark_cluster('year_in_music.similar_users', year=year)
 
 
-@cli.command(name="request_yim_playlists")
+@cli.command(name="request_yim_top_missed_recordings")
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
-def request_yim_playlists(year: int):
+def request_yim_top_missed_recordings(year: int):
     """ Send the cluster a request to generate tracks of the year data and then
      once the data has been imported generate YIM playlists. """
-    send_request_to_spark_cluster("year_in_music.tracks_of_the_year", year=year)
+    send_request_to_spark_cluster("year_in_music.top_missed_recordings", year=year)
+
+
+@cli.command(name="request_yim_top_discoveries")
+@click.option("--year", type=int, help="Year for which to generate the playlists",
+              default=date.today().year)
+def request_yim_top_discoveries(year: int):
+    """ Send the cluster a request to generate tracks of the year data and then
+     once the data has been imported generate YIM playlists. """
+    send_request_to_spark_cluster("year_in_music.top_discoveries", year=year)
 
 
 @cli.command(name="request_yim_artist_map")
@@ -497,10 +512,12 @@ def request_yim_artist_map(year: int):
 @click.pass_context
 def request_year_in_music(ctx, year: int):
     """ Send the cluster a request to generate all year in music statistics. """
+    send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_start"})
     ctx.invoke(request_import_pg_tables)
     ctx.invoke(request_yim_new_release_stats, year=year)
     ctx.invoke(request_yim_day_of_week, year=year)
     ctx.invoke(request_yim_most_listened_year, year=year)
+    ctx.invoke(request_yim_top_genres, year=year)
     ctx.invoke(request_yim_top_stats, year=year)
     ctx.invoke(request_yim_listens_per_day, year=year)
     ctx.invoke(request_yim_listen_count, year=year)
@@ -508,7 +525,9 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_new_artists_discovered, year=year)
     ctx.invoke(request_yim_listening_time, year=year)
     ctx.invoke(request_yim_artist_map, year=year)
-    ctx.invoke(request_yim_playlists, year=year)
+    ctx.invoke(request_yim_top_missed_recordings, year=year)
+    ctx.invoke(request_yim_top_discoveries, year=year)
+    send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_end"})
 
 
 @cli.command(name="request_troi_playlists")

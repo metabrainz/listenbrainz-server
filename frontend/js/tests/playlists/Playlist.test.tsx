@@ -14,6 +14,7 @@ import GlobalAppContext, {
 import APIService from "../../src/utils/APIService";
 import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "../../src/playlists/utils";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -26,11 +27,11 @@ const { labsApiUrl, currentUser, playlist } = playlistPageProps;
 const props = {
   labsApiUrl,
   playlist: playlist as JSPFObject,
-  
 };
 
 const GlobalContextMock: GlobalAppContextT = {
   APIService: new APIService("foo"),
+  websocketsUrl: "",
   youtubeAuth: {
     api_key: "fake-api-key",
   },
@@ -39,6 +40,10 @@ const GlobalContextMock: GlobalAppContextT = {
     permission: ["streaming"] as Array<SpotifyPermission>,
   },
   currentUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 describe("PlaylistPage", () => {
@@ -51,7 +56,11 @@ describe("PlaylistPage", () => {
         value: GlobalContextMock,
       },
     });
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper.find("#playlist")).toHaveLength(1);
+    const h1 = wrapper.find("h1");
+    expect(h1).toHaveLength(1);
+    expect(h1.getDOMNode()).toHaveTextContent("1980s flashback jams");
+    expect(wrapper.getDOMNode()).toHaveTextContent(/Your lame 80s music/i);
   });
 
   it("hides exportPlaylistToSpotify button if playlist permissions are absent", () => {
@@ -84,55 +93,5 @@ describe("PlaylistPage", () => {
       },
     });
     expect(wrapper.find("#exportPlaylistToSpotify")).toHaveLength(1);
-  });
-
-  it("filters out playlist owner from collaborators", async () => {
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
-      wrappingComponent: GlobalAppContext.Provider,
-      wrappingComponentProps: {
-        value: GlobalContextMock,
-      },
-    });
-    const instance = wrapper.instance();
-    expect(
-      instance.state.playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]
-        ?.collaborators
-    ).toEqual([]);
-
-    const APISpy = jest
-      .spyOn(instance.context.APIService, "editPlaylist")
-      .mockResolvedValue(200);
-    await act(async () => {
-      await instance.editPlaylist(
-        "FNORD",
-        "I have seen the FNORDS, have you?",
-        true,
-        // Calling editPlaylist with playlist owner name, should be filtered out
-        ["iliekcomputers", "mr_monkey"],
-        "https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546"
-      );
-    });
-
-    expect(APISpy).toHaveBeenCalledWith(
-      "merde-a-celui-qui-lit",
-      "https://listenbrainz.org/playlist/4245ccd3-4f0d-4276-95d6-2e09d87b5546",
-      {
-        playlist: expect.objectContaining({
-          extension: {
-            "https://musicbrainz.org/doc/jspf#playlist": expect.objectContaining(
-              {
-                collaborators: ["mr_monkey"],
-              }
-            ),
-          },
-        }),
-      }
-    );
-    expect(
-      instance.state.playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]
-        ?.collaborators
-    ).toEqual(["mr_monkey"]);
-    await waitForComponentToPaint(wrapper);
-    expect(wrapper.find("[href='/user/mr_monkey']")).toHaveLength(1);
   });
 });

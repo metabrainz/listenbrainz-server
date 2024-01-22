@@ -6,7 +6,7 @@ import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import NiceModal from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
-import ColorWheel from "./ColorWheel";
+import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {
@@ -14,10 +14,10 @@ import GlobalAppContext, {
 } from "../../utils/GlobalAppContext";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import { getPageProps } from "../../utils/utils";
-import ListenCard from "../../listens/ListenCard";
+import ListenCard from "../../common/listens/ListenCard";
 import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -184,9 +184,7 @@ export default class ColorPlay extends React.Component<
                   />
                   <div style={{ flex: 3, padding: "0.5em 2em" }}>
                     <div className="h3">
-                      <a
-                        href={`https://musicbrainz.org/release/${selectedRelease.release_mbid}`}
-                      >
+                      <a href={`/release/${selectedRelease.release_mbid}`}>
                         {selectedRelease.release_name}
                       </a>
                     </div>
@@ -196,7 +194,7 @@ export default class ColorPlay extends React.Component<
                         "recordings[0].track_metadata.additional_info.artist_mbids[0]"
                       ) ? (
                         <a
-                          href={`https://musicbrainz.org/artist/${get(
+                          href={`/artist/${get(
                             selectedRelease,
                             "recordings[0].track_metadata.additional_info.artist_mbids[0]"
                           )}`}
@@ -215,7 +213,6 @@ export default class ColorPlay extends React.Component<
                       return (
                         <ListenCard
                           listen={recording}
-                          currentFeedback={0}
                           showTimestamp={false}
                           showUsername={false}
                         />
@@ -229,6 +226,7 @@ export default class ColorPlay extends React.Component<
                 listenBrainzAPIBaseURI={APIService.APIBaseURI}
                 refreshSpotifyToken={APIService.refreshSpotifyToken}
                 refreshYoutubeToken={APIService.refreshYoutubeToken}
+                refreshSoundcloudToken={APIService.refreshSoundcloudToken}
               />
             </div>
           )}
@@ -238,8 +236,8 @@ export default class ColorPlay extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalAppContext } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, reactProps, globalAppContext } = await getPageProps();
 
   const { user } = reactProps;
 

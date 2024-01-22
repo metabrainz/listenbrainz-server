@@ -1,30 +1,32 @@
+import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { throttle } from "lodash";
 import React, {
   useCallback,
   useContext,
   useEffect,
   useMemo,
-  useState,
   useRef,
+  useState,
 } from "react";
-import { throttle, throttle as _throttle } from "lodash";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
-import GlobalAppContext from "./GlobalAppContext";
 import { ToastMsg } from "../notifications/Notifications";
+import GlobalAppContext from "./GlobalAppContext";
 
 const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 type SearchTrackOrMBIDProps = {
   onSelectRecording: (selectedRecordingMetadata: TrackMetadata) => void;
+  defaultValue?: string;
 };
 
 export default function SearchTrackOrMBID({
   onSelectRecording,
+  defaultValue,
 }: SearchTrackOrMBIDProps) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRecording } = APIService;
   const inputRef = useRef<HTMLInputElement>(null);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(defaultValue ?? "");
   const [searchResults, setSearchResults] = useState<Array<ACRMSearchResult>>(
     []
   );

@@ -20,8 +20,8 @@ from listenbrainz.db.fresh_releases import insert_fresh_releases
 from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
-from listenbrainz.troi.weekly_playlists import batch_process_playlists, batch_process_playlists_end
-from listenbrainz.troi.year_in_music import yim_patch_runner
+from listenbrainz.troi.weekly_playlists import process_weekly_playlists, process_weekly_playlists_end
+from listenbrainz.troi.year_in_music import process_yim_playlists, process_yim_playlists_end
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -332,62 +332,55 @@ def handle_similar_users(message):
 
 
 def handle_yim_similar_users(message):
-    year_in_music.insert_similar_recordings(message["year"], message["data"])
+    year_in_music.insert_similar_users(message["year"], message["data"])
 
 
 def handle_yim_new_releases_of_top_artists(message):
-    user_id = message["user_id"]
-    # need to check whether user exists before inserting otherwise possible FK error.
-    user = db_user.get(user_id)
-    if not user:
-        return
-    year_in_music.insert_new_releases_of_top_artists(user_id, message["year"], message["data"])
+    year_in_music.insert_heavy("new_releases_of_top_artists", message["year"], message["data"])
 
 
 def handle_yim_day_of_week(message):
-    year_in_music.insert("day_of_week", message["year"], message["data"])
+    year_in_music.insert_light("day_of_week", message["year"], message["data"])
 
 
 def handle_yim_most_listened_year(message):
-    year_in_music.handle_multi_large_insert("most_listened_year", message["year"], message["data"])
+    year_in_music.insert_heavy("most_listened_year", message["year"], message["data"])
 
 
 def handle_yim_top_stats(message):
-    year_in_music.handle_insert_top_stats(message["entity"], message["year"], message["data"])
+    year_in_music.insert_top_stats(message["entity"], message["year"], message["data"])
 
 
 def handle_yim_listens_per_day(message):
-    year_in_music.handle_multi_large_insert("listens_per_day", message["year"], message["data"])
+    year_in_music.insert_heavy("listens_per_day", message["year"], message["data"])
 
 
 def handle_yim_listen_counts(message):
-    year_in_music.insert("total_listen_count", message["year"], message["data"])
+    year_in_music.insert_light("total_listen_count", message["year"], message["data"])
 
 
 def handle_yim_listening_time(message):
-    year_in_music.insert("total_listening_time", message["year"], message["data"])
+    year_in_music.insert_light("total_listening_time", message["year"], message["data"])
 
 
 def handle_yim_artist_map(message):
-    year_in_music.handle_multi_large_insert("artist_map", message["year"], message["data"])
+    year_in_music.insert_heavy("artist_map", message["year"], message["data"])
 
 
-def handle_new_artists_discovered_count(message):
-    year_in_music.insert("total_new_artists_discovered", message["year"], message["data"])
+def handle_yim_new_artists_discovered_count(message):
+    year_in_music.insert_light("total_new_artists_discovered", message["year"], message["data"])
 
 
-def handle_yim_tracks_of_the_year_start(message):
-    year_in_music.create_tracks_of_the_year(message["year"])
+def handle_yim_top_genres(message):
+    year_in_music.insert_heavy("top_genres", message["year"], message["data"])
 
 
-def handle_yim_tracks_of_the_year_data(message):
-    year_in_music.insert_tracks_of_the_year(message["year"], message["data"])
+def handle_yim_playlists(message):
+    process_yim_playlists(message["slug"], message["year"], message["data"])
 
 
-def handle_yim_tracks_of_the_year_end(message):
-    # all of the tracks data has been inserted, now we can generate the playlists
-    year_in_music.finalise_tracks_of_the_year(message["year"])
-    yim_patch_runner(message["year"])
+def handle_yim_playlists_end(message):
+    process_yim_playlists_end(message["slug"], message["year"])
 
 
 def handle_similar_recordings(message):
@@ -399,8 +392,17 @@ def handle_similar_artists(message):
 
 
 def handle_troi_playlists(message):
-    batch_process_playlists(message["slug"], message["data"])
+    process_weekly_playlists(message["slug"], message["data"])
 
 
 def handle_troi_playlists_end(message):
-    batch_process_playlists_end(message["slug"])
+    process_weekly_playlists_end(message["slug"])
+
+
+def handle_echo(message):
+    if message["message"]["action"] == "year_in_music_start":
+        year_in_music.create_yim_table(message["message"]["year"])
+    elif message["message"]["action"] == "year_in_music_end":
+        year_in_music.swap_yim_tables(message["message"]["year"])
+    else:
+        current_app.logger.info("message with unknown action: %s", json.dumps(message))

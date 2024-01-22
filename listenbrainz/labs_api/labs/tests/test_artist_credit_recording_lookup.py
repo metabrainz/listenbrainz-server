@@ -29,8 +29,7 @@ db_response = [
         "recording_mbid": "97e69767-5d34-4c97-b36a-f3b2b1ef9dae",
         "recording_name": "Trigger Hippie",
         "release_mbid": "9db51cd6-38f6-3b42-8ad5-559963d68f35",
-        "release_name": "Who Can You Trust?",
-        "year": 1996
+        "release_name": "Who Can You Trust?"
     },
     {
         "artist_credit_id": 65,
@@ -40,8 +39,7 @@ db_response = [
         "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
         "recording_name": "Strangers",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-        "release_name": "Dummy",
-        "year": 1995
+        "release_name": "Dummy"
     }
 
 ]
@@ -58,8 +56,7 @@ json_response = [
         "recording_mbid": "97e69767-5d34-4c97-b36a-f3b2b1ef9dae",
         "recording_name": "Trigger Hippie",
         "release_mbid": "9db51cd6-38f6-3b42-8ad5-559963d68f35",
-        "release_name": "Who Can You Trust?",
-        "year": 1996
+        "release_name": "Who Can You Trust?"
     },
     {
         "artist_credit_arg": "portishead",
@@ -72,8 +69,7 @@ json_response = [
         "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
         "recording_name": "Strangers",
         "release_mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd",
-        "release_name": "Dummy",
-        "year": 1995
+        "release_name": "Dummy"
     }
 ]
 
@@ -101,7 +97,7 @@ class MainTestCase(flask_testing.TestCase):
             q.inputs(), ['[artist_credit_name]', '[recording_name]'])
         self.assertEqual(q.outputs(), ['index', 'artist_credit_arg', 'recording_arg',
                                        'artist_credit_name', 'release_name', 'recording_name',
-                                       'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid', 'year'])
+                                       'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid'])
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):

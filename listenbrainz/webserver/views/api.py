@@ -26,7 +26,6 @@ from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
     get_non_negative_param
-from listenbrainz.webserver.views.playlist_api import serialize_jspf
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -161,7 +160,7 @@ def get_listens(user_name):
     if min_ts and max_ts and min_ts >= max_ts:
         raise APIBadRequest("min_ts should be less than max_ts")
 
-    listens, _, max_ts_per_user = timescale_connection._ts.fetch_listens(
+    listens, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
         user,
         limit=count,
         from_ts=datetime.utcfromtimestamp(min_ts) if min_ts else None,
@@ -176,6 +175,7 @@ def get_listens(user_name):
         'count': len(listen_data),
         'listens': listen_data,
         'latest_listen_ts': int(max_ts_per_user.timestamp()),
+        'oldest_listen_ts': int(min_ts_per_user.timestamp()),
     }})
 
 
@@ -529,7 +529,7 @@ def serialize_playlists(playlists, playlist_count, count, offset):
 
     items = []
     for playlist in playlists:
-        items.append(serialize_jspf(playlist))
+        items.append(playlist.serialize_jspf())
 
     return {"playlists": items,
             "playlist_count": playlist_count,

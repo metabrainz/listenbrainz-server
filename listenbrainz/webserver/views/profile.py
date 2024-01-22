@@ -1,5 +1,4 @@
 from datetime import datetime
-from time import time
 
 import orjson
 from flask import Blueprint, Response, render_template, request, url_for, \
@@ -17,11 +16,12 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 from listenbrainz.domain.musicbrainz import MusicBrainzService
+from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
 from listenbrainz.webserver import flash
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound
+from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
@@ -321,6 +321,8 @@ def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
             return SpotifyService()
         elif service == ExternalServiceType.CRITIQUEBRAINZ:
             return CritiqueBrainzService()
+        elif service == ExternalServiceType.SOUNDCLOUD:
+            return SoundCloudService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
             return MusicBrainzService()
     except KeyError:
@@ -348,12 +350,17 @@ def music_services_details():
     critiquebrainz_user = critiquebrainz_service.get_user(current_user.id)
     current_critiquebrainz_permissions = "review" if critiquebrainz_user else "disable"
 
+    soundcloud_service = SoundCloudService()
+    soundcloud_user = soundcloud_service.get_user(current_user.id)
+    current_soundcloud_permissions = "listen" if soundcloud_user else "disable"
+
     return render_template(
         'user/music_services.html',
         spotify_user=spotify_user,
         current_spotify_permissions=current_spotify_permissions,
         critiquebrainz_user=critiquebrainz_user,
         current_critiquebrainz_permissions=current_critiquebrainz_permissions,
+        current_soundcloud_permissions=current_soundcloud_permissions,
         active_settings_section="connect-services"
     )
 
@@ -385,8 +392,9 @@ def refresh_service_token(service_name: str):
         try:
             user = service.refresh_access_token(current_user.id, user["refresh_token"])
         except ExternalServiceInvalidGrantError:
-            raise APINotFound("User has revoked authorization to %s" % service_name.capitalize())
+            raise APIForbidden("User has revoked authorization to %s" % service_name.capitalize())
         except Exception:
+            current_app.logger.error("Unable to refresh %s token:", exc_info=True)
             raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
     return jsonify({"access_token": user["access_token"]})
@@ -418,6 +426,8 @@ def music_services_disconnect(service_name: str):
                 permissions = SPOTIFY_LISTEN_PERMISSIONS
             if permissions:
                 return redirect(service.get_authorize_url(permissions))
+        elif service_name == 'soundcloud':
+            return redirect(service.get_authorize_url([]))
         elif service_name == 'critiquebrainz':
             action = request.form.get('critiquebrainz')
             if action:

@@ -2,6 +2,7 @@
 
 DUMP_THREADS=4
 DUMP_BASE_DIR='/mnt/dumps'
+PRIVATE_DUMP_BASE_DIR='/private/dumps'
 
 # Where to back things up to, who should own the backup files, and what mode
 # those files should have.
@@ -11,6 +12,8 @@ BACKUP_USER=root
 BACKUP_GROUP=root
 BACKUP_DIR_MODE=700
 BACKUP_FILE_MODE=600
+
+PRIVATE_BACKUP_DIR=/private/backup
 
 # Same but for the files that need to copied to the FTP server,
 # for public consumption

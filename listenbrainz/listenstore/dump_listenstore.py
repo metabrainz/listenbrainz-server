@@ -19,6 +19,7 @@ from psycopg2.extras import execute_values
 from listenbrainz import DUMP_LICENSE_FILE_PATH, db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db import timescale
+from listenbrainz.db.user import get_all_usernames
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS
@@ -134,12 +135,7 @@ class DumpListenStore:
             temp_dir (str): the dir to use to write files before adding to archive
             full_dump (bool): the type of dump
         """
-        user_id_map = {}
-        query = 'SELECT id, musicbrainz_id FROM "user"'
-        with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query))
-            for row in result:
-                user_id_map[row.id] = row.musicbrainz_id
+        user_id_map = get_all_usernames()
 
         t0 = time.monotonic()
         listen_count = 0

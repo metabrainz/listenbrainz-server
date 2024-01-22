@@ -30,7 +30,9 @@ class ArtViewsTestCase(IntegrationTestCase):
             "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6": {
                 "original_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
                 "caa_id": 6945,
-                "caa_release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"
+                "caa_release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "title": "Release 1",
+                "artist": "Artist 1"
             }
         }
         resp = self.client.get(
@@ -79,7 +81,9 @@ class ArtViewsTestCase(IntegrationTestCase):
             "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6": {
                 "original_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
                 "caa_id": 6945,
-                "caa_release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"
+                "caa_release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "title": "Release 1",
+                "artist": "Artist 1"
             }
         }
         resp = self.client.get(
@@ -101,42 +105,58 @@ class ArtViewsTestCase(IntegrationTestCase):
             "be5f714d-02eb-4c89-9a06-5e544f132604": {
                 "original_mbid": "be5f714d-02eb-4c89-9a06-5e544f132604",
                 "caa_id": 2273480607,
-                "caa_release_mbid": "be5f714d-02eb-4c89-9a06-5e544f132604"
+                "caa_release_mbid": "be5f714d-02eb-4c89-9a06-5e544f132604",
+                "title": "Tales of the Inexpressible",
+                "artist": "Shpongle"
             },
             "4211382c-39e8-4a72-a32d-e4046fd96356": {
                 "original_mbid": "4211382c-39e8-4a72-a32d-e4046fd96356",
                 "caa_id": 8194366407,
-                "caa_release_mbid": "4211382c-39e8-4a72-a32d-e4046fd96356"
+                "caa_release_mbid": "4211382c-39e8-4a72-a32d-e4046fd96356",
+                "title": "Extraordinary Ways",
+                "artist": "Conjure One"
             },
             "773e54bb-3f43-4813-826c-ca762bfa8318": {
                 "original_mbid": "773e54bb-3f43-4813-826c-ca762bfa8318",
                 "caa_id": 9660646535,
-                "caa_release_mbid": "773e54bb-3f43-4813-826c-ca762bfa8318"
+                "caa_release_mbid": "773e54bb-3f43-4813-826c-ca762bfa8318",
+                "title": "That Much Closer to the Sun",
+                "artist": "Abakus"
             },
             "10dffffc-c2aa-4ddd-81fd-42b5e125f240": {
                 "original_mbid": "10dffffc-c2aa-4ddd-81fd-42b5e125f240",
                 "caa_id": 28871824662,
-                "caa_release_mbid": "10dffffc-c2aa-4ddd-81fd-42b5e125f240"
+                "caa_release_mbid": "10dffffc-c2aa-4ddd-81fd-42b5e125f240",
+                "title": "IV",
+                "artist": "dZihan & Kamien"
             },
             "d101e395-0c04-4237-a3d2-167b1d88056c": {
                 "original_mbid": "be5f714d-02eb-4c89-9a06-5e544f132604",
                 "caa_id": 2273480607,
-                "caa_release_mbid": "d101e395-0c04-4237-a3d2-167b1d88056c"
+                "caa_release_mbid": "d101e395-0c04-4237-a3d2-167b1d88056c",
+                "title": "Tales of the Inexpressible",
+                "artist": "Shpongle"
             },
             "3eee4ed1-b48e-4894-8a05-f535f16a4985": {
                 "original_mbid": "3eee4ed1-b48e-4894-8a05-f535f16a4985",
                 "caa_id": 31067711419,
-                "caa_release_mbid": "3eee4ed1-b48e-4894-8a05-f535f16a4985"
+                "caa_release_mbid": "3eee4ed1-b48e-4894-8a05-f535f16a4985",
+                "title": "Changed for the Better",
+                "artist": "Weval"
             },
             "ec782dbe-9204-4ec3-bf50-576c7cf3dfb3": {
                 "original_mbid": "ec782dbe-9204-4ec3-bf50-576c7cf3dfb3",
                 "caa_id": 31206007614,
-                "caa_release_mbid": "ec782dbe-9204-4ec3-bf50-576c7cf3dfb3"
+                "caa_release_mbid": "ec782dbe-9204-4ec3-bf50-576c7cf3dfb3",
+                "title": "Raum",
+                "artist": "Tangerine Dream"
             },
             "6d895dfa-8688-4867-9730-2b98050dae04": {
                 "original_mbid": "6d895dfa-8688-4867-9730-2b98050dae04",
                 "caa_id": None,
-                "caa_release_mbid": None
+                "caa_release_mbid": None,
+                "title": None,
+                "artist": None
             }
         }
         resp = self.client.post(url_for('art_api_v1.cover_art_grid_post'), data=post_json, content_type="application/json")

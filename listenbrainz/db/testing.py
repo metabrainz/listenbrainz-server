@@ -7,7 +7,8 @@ import uuid
 
 from listenbrainz import config
 from listenbrainz import db
-from listenbrainz.db import timescale as ts
+from listenbrainz.db import timescale as ts, create_test_database_connect_strings
+from listenbrainz.db.timescale import create_test_timescale_connect_strings
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'sql')
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
@@ -17,7 +18,8 @@ TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.
 class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
-        db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
+        db_connect = create_test_database_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT"])
 
     def tearDown(self):
         self.reset_db()
@@ -55,7 +57,8 @@ class TimescaleTestCase(unittest.TestCase):
     def setUp(self):
         # Reset the database in setUp, this way if there is a test failure and you want
         # to inspect data, it won't have been cleared away
-        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
+        ts_connect = create_test_timescale_connect_strings()
+        ts.init_db_connection(ts_connect["DB_CONNECT"])
         self.reset_timescale_db()
 
     def reset_timescale_db(self):

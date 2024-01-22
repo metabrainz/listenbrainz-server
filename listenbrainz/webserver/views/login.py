@@ -1,5 +1,7 @@
-from flask import Blueprint, request, redirect, render_template, url_for, session, current_app, Markup
+from flask import Blueprint, request, redirect, render_template, url_for, session, current_app
 from flask_login import login_user, logout_user, login_required
+from markupsafe import Markup
+
 from listenbrainz.webserver.decorators import web_listenstore_needed, web_musicbrainz_needed
 from listenbrainz.webserver.login import login_forbidden, provider, User
 from listenbrainz.webserver import flash
@@ -36,9 +38,11 @@ def musicbrainz_post():
     """Callback endpoint."""
 
     no_email_warning = Markup('You have not provided an email address. Please provide an '
-                              '<a href="https://musicbrainz.org/account/edit">email address</a> ')
+                              '<a href="https://musicbrainz.org/account/edit">email address</a> '
+                              'and make sure you verify the email before proceeding.')
     blog_link = Markup('Read this <a href="https://blog.metabrainz.org/?p=8915">blog post</a> '
-                       'to understand why we need your email.')
+                       'to understand why we need your email. You can provide us with an email on your '
+                       '<a href="https://musicbrainz.org/account/edit">MusicBrainz account</a> page.')
 
     if provider.validate_post_login():
         try:

@@ -38,7 +38,7 @@ MAX_LISTEN_PAYLOAD_SIZE = MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST
 MAX_TAG_SIZE = 64
 
 #: The maximum number of listens returned in a single GET request.
-MAX_ITEMS_PER_GET = 100
+MAX_ITEMS_PER_GET = 1000
 
 #: The default number of listens returned in a single GET request.
 DEFAULT_ITEMS_PER_GET = 25
@@ -416,6 +416,19 @@ def _parse_int_arg(name, default=None):
         try:
             return int(value)
         except ValueError:
+            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
+    else:
+        return default
+
+
+def _parse_bool_arg(name, default=None):
+    value = request.args.get(name)
+    if value:
+        if value.lower() == "true":
+            return True
+        elif value.lower() == "false":
+            return False
+        else:
             raise APIBadRequest("Invalid %s argument: %s" % (name, value))
     else:
         return default

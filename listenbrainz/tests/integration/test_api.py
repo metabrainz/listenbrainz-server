@@ -88,8 +88,9 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # make sure that artist msid, release msid and recording msid are present in data
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
 
-        # check for latest listen timestamp
+        # check for latest and oldest  listen timestamp
         self.assertEqual(data['latest_listen_ts'], ts)
+        self.assertEqual(data['oldest_listen_ts'], ts)
 
         # request with min_ts should work
         response = self.client.get(
@@ -102,6 +103,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertListEqual(response.json['payload']['listens'], [])
         self.assertEqual(response.json['payload']['latest_listen_ts'], ts)
+        self.assertEqual(response.json['payload']['oldest_listen_ts'], ts)
 
         # test request with both max_ts and min_ts is working
         url = url_for('api_v1.get_listens',
@@ -664,7 +666,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         conn = db.engine.raw_connection()
         with conn.cursor() as curs:
-            data = {self.user2['id']: (.123, 0.01)}
+            data = {self.user2['id']: 0.123}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
                          (self.user['id'], json.dumps(data)))
         conn.commit()
@@ -674,7 +676,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data[0]['user_name'], self.user2['musicbrainz_id'])
-        self.assertEqual(data[0]['similarity'], .123)
+        self.assertEqual(data[0]['similarity'], 0.123)
 
         response = self.client.get(url_for(
             'api_v1.get_similar_to_user', user_name=self.user['musicbrainz_id'], other_user_name="muppet"))

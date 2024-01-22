@@ -311,13 +311,13 @@ class StatsAPITestCase(IntegrationTestCase):
 
             # use different user for these subtest because otherwise need to update document
             # in existing database whose data may be needed in other tests.
-            with self.subTest(f"test api returns at most 100 stats in a response for {entity}", entity=entity):
+            with self.subTest(f"test api returns at most 1000 stats in a response for {entity}", entity=entity):
                 with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_too_many.json'), 'r') as f:
                     payload = json.load(f)
                     payload[0]["user_id"] = self.another_user["id"]
                 db_stats.insert(f"{entity}_all_time_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint, user_name=self.another_user['musicbrainz_id']),
-                                           query_string={'count': 200})
+                                           query_string={'count': 100})
                 self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 100,
                                          user_name=self.another_user['musicbrainz_id'])
 
@@ -504,7 +504,7 @@ class StatsAPITestCase(IntegrationTestCase):
                     payload = json.load(f)
                 db_stats.insert_sitewide_stats(f"{entity}_week_20220718", 0, 5, payload)
                 response = self.client.get(url_for(endpoint), query_string={'count': 200, 'range': 'week'})
-                self.assertSitewideStatEqual(payload, response, entity, "week", 100)
+                self.assertSitewideStatEqual(payload, response, entity, "week", 200)
 
     def _setup_listener_stats(self, file) -> dict:
         with open(self.path_to_data_file(file), "r") as f:

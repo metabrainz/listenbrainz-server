@@ -1,5 +1,6 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
+import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
 
 export default class APIService {
@@ -135,6 +136,10 @@ export default class APIService {
     const result = await response.json();
 
     return parseInt(result.payload.count, 10);
+  };
+
+  refreshSoundcloudToken = async (): Promise<string> => {
+    return this.refreshAccessToken("soundcloud");
   };
 
   refreshYoutubeToken = async (): Promise<string> => {
@@ -721,7 +726,12 @@ export default class APIService {
     count: number = 25,
     createdFor: boolean = false,
     collaborator: boolean = false
-  ) => {
+  ): Promise<{
+    playlists: JSPFObject[];
+    playlist_count: number;
+    count: string;
+    offset: string;
+  }> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
@@ -1312,6 +1322,26 @@ export default class APIService {
     return response.json();
   };
 
+  exportJSPFPlaylistToSpotify = async (
+    userToken: string,
+    playlist: JSPFPlaylist
+  ): Promise<any> => {
+    if (!playlist) {
+      throw new Error("Expected a playlist");
+    }
+    const url = `${this.APIBaseURI}/playlist/export-jspf/spotify`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlist),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   exportPlaylistToXSPF = async (
     userToken: string,
     playlist_mbid: string
@@ -1330,6 +1360,9 @@ export default class APIService {
 
   fetchSitewideFreshReleases = async (
     days?: number,
+    past?: boolean,
+    future?: boolean,
+    sort?: SortOption,
     release_date?: string
   ): Promise<any> => {
     let url = `${this.APIBaseURI}/explore/fresh-releases/`;
@@ -1337,6 +1370,15 @@ export default class APIService {
     const queryParams: Array<string> = [];
     if (days) {
       queryParams.push(`days=${days}`);
+    }
+    if (past === false) {
+      queryParams.push(`past=${past}`);
+    }
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (sort) {
+      queryParams.push(`sort=${sort}`);
     }
     if (release_date) {
       queryParams.push(`release_date=${release_date}`);
@@ -1350,11 +1392,32 @@ export default class APIService {
     return response.json();
   };
 
-  fetchUserFreshReleases = async (username: string): Promise<any> => {
+  fetchUserFreshReleases = async (
+    username: string,
+    past?: boolean,
+    future?: boolean,
+    sort?: SortOption
+  ): Promise<any> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
-    const url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+    let url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+
+    const queryParams: Array<string> = [];
+    if (sort) {
+      queryParams.push(`sort=${sort}`);
+    }
+
+    if (past === false) {
+      queryParams.push(`past=${past}`);
+    }
+
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (queryParams.length) {
+      url += `?${queryParams.join("&")}`;
+    }
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

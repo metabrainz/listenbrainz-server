@@ -12,7 +12,7 @@ from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME, \
-    RELEASE_GROUP_METADATA_CACHE_DATAFRAME
+    RELEASE_GROUP_METADATA_CACHE_DATAFRAME, RECORDING_ARTIST_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.stats.user.artist import get_artists
@@ -40,7 +40,7 @@ entity_model_map = {
 entity_cache_map = {
     "artists": [ARTIST_COUNTRY_CODE_DATAFRAME],
     "releases": [RELEASE_METADATA_CACHE_DATAFRAME],
-    "recordings": [RELEASE_METADATA_CACHE_DATAFRAME],
+    "recordings": [RECORDING_ARTIST_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME],
     "release_groups": [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 }
 
@@ -54,6 +54,28 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
+    messages = get_entity_stats_for_range(
+        entity,
+        stats_range,
+        from_date,
+        to_date,
+        message_type,
+        database
+    )
+
+    logger.debug("Done!")
+    return messages
+
+
+def get_entity_stats_for_range(
+    entity: str,
+    stats_range: str,
+    from_date: datetime,
+    to_date: datetime,
+    message_type: str,
+    database: str = None
+):
+    """ Calculate entity stats for all users' listens between the start and the end datetime. """
     listens_df = get_listens_from_dump(from_date, to_date)
     table = f"user_{entity}_{stats_range}"
     listens_df.createOrReplaceTempView(table)
@@ -64,13 +86,9 @@ def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_en
         cache_dfs.append(df_name)
         read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
 
-    messages = calculate_entity_stats(
+    return calculate_entity_stats(
         from_date, to_date, table, cache_dfs, entity, stats_range, message_type, database
     )
-
-    logger.debug("Done!")
-
-    return messages
 
 
 def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, cache_tables: List[str],

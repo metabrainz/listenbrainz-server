@@ -7,3 +7,4 @@ typesense
 unidecode
 python-dateutil==2.8.2
 git+https://github.com/metabrainz/brainzutils-python.git@v2.1.0
+tqdm==4.66.1

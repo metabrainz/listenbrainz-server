@@ -28,7 +28,7 @@ class MBIDMappingReleaseQuery(BaseMBIDMappingQuery):
 
         results = []
         for index, artist_credit_name, recording_name, release_name in args:
-            hit = self.mapper.search(artist_credit_name, recording_name)
+            hit = self.mapper.search(artist_credit_name, recording_name, release_name)
             if hit:
                 hit["artist_credit_arg"] = artist_credit_name
                 hit["recording_arg"] = recording_name

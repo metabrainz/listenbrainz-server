@@ -10,6 +10,8 @@ from io import StringIO
 
 from flask import current_app
 import sqlalchemy
+from sqlalchemy import text
+
 from listenbrainz.listen import Listen
 from listenbrainz.db import timescale
 from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
@@ -122,15 +124,15 @@ class MappingJobQueue(threading.Thread):
         count = 0
         msids = []
         with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(query), args)
+            curs = connection.execute(text(query), args)
             for row in curs.fetchall():
-                msids.append(row["recording_msid"])
+                msids.append(row.recording_msid)
 
         if len(msids) == 0:
             return 0
 
         with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(msb_query), msids=tuple(msids))
+            curs = connection.execute(text(msb_query), {"msids": tuple(msids)})
             while True:
                 result = curs.fetchone()
                 if not result:
@@ -308,7 +310,7 @@ class MappingJobQueue(threading.Thread):
             query = """SELECT COUNT(*), match_type
                          FROM mbid_mapping
                      GROUP BY match_type"""
-            curs = connection.execute(query)
+            curs = connection.execute(text(query))
             while True:
                 result = curs.fetchone()
                 if not result:
@@ -318,7 +320,7 @@ class MappingJobQueue(threading.Thread):
 
             query = """SELECT COUNT(*)
                          FROM mbid_mapping_metadata"""
-            curs = connection.execute(query)
+            curs = connection.execute(text(query))
             while True:
                 result = curs.fetchone()
                 if not result:

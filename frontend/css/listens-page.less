@@ -170,6 +170,33 @@
   }
 }
 
+#listens {
+  @media (min-width: @screen-phone) {
+    padding: 0 10px;
+  }
+}
+#webSocketListens {
+  @media (min-width: @screen-phone) {
+    padding: 0 10px;
+  }
+}
+
+.webSocket-box {
+  max-height: 420px;
+  min-height: 150px;
+  position: relative;
+  overflow: hidden;
+  border-bottom-style: inset;
+  .read-more {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding: 100px 0 20px;
+    background-image: linear-gradient(to bottom, transparent, #fff 80%);
+  }
+}
+
 .card {
   background: white;
   border: 1px solid rgb(238, 238, 238);
@@ -228,6 +255,7 @@
         margin: -10px;
         margin-right: 10px;
         width: 56px;
+        min-width: 56px;
         height: 56px;
         .not-mapped,
         .add-cover-art,
@@ -242,9 +270,10 @@
   }
   .additional-content {
     border-top: 1px solid @gray-lighter;
-    font-style: italic;
     width: 100%;
-
+    .review {
+      font-style: italic;
+    }
     .sent-to {
       padding-bottom: 10px;
     }
@@ -269,10 +298,15 @@
       margin: -10px;
       margin-right: 1em;
       width: @cover-art-thumbnail-size;
-      > * {
+      min-width: @cover-art-thumbnail-size;
+      > *:not(.track-position) {
         height: 100%;
         width: inherit;
         aspect-ratio: 1/1;
+      }
+      > .track-position {
+        padding-left: 1.5em;
+        padding-right: 0.5em;
       }
       .add-cover-art,
       .not-mapped,
@@ -378,8 +412,8 @@
       }
 
       .fa-heart,
-      .fa-heart-broken,
-      .fa-ellipsis-v {
+      .fa-heart-crack,
+      .fa-ellipsis-vertical {
         stroke-width: 40px;
         font-size: 18px;
         margin: 0% 7%;
@@ -387,12 +421,12 @@
       }
 
       .fa-heart,
-      .fa-heart-broken {
+      .fa-heart-crack {
         color: transparent;
         stroke: #8d8d8d;
       }
 
-      .fa-ellipsis-v {
+      .fa-ellipsis-vertical {
         color: #8d8d8d;
         stroke: #ffffff;
 
@@ -412,7 +446,7 @@
         }
       }
 
-      .fa-heart-broken {
+      .fa-heart-crack {
         &:hover {
           stroke: @hate;
         }
@@ -538,28 +572,25 @@
   }
 
   &.deleted {
-    animation: deleted-animation 0.3s linear forwards;
+    animation: deleted-animation 0.6s ease-in-out forwards;
+    transform-origin: center;
   }
 
   @keyframes deleted-animation {
     0% {
       opacity: 1;
-      padding: inherit;
-      height: inherit;
-      margin: inherit;
-      transform: scaleY(1);
+      transform: rotateX(0) scale(1);
     }
 
-    50% {
-      opacity: 0;
+    40% {
+      opacity: 0.3;
+      transform: rotateX(40deg) scale(0.8);
     }
 
     100% {
-      opacity: 0;
-      height: 0px;
       margin-top: -40px;
-      transform: scaleY(0);
-      display: none;
+      margin-bottom: -28px;
+      transform: rotateX(90deg) scale(0.8, 0.4);
     }
   }
 }
@@ -676,4 +707,21 @@
 
 .listen-header {
   display: flex;
+  justify-content: space-between;
+  h3 {
+    display: flex;
+    flex-direction: column;
+    flex: 0.61;
+  }
+}
+
+@media (max-width: 992px) {
+  .listen-header {
+    display: flex;
+    h3 {
+      display: flex;
+      flex-direction: column;
+      flex: 0.99;
+    }
+  }
 }

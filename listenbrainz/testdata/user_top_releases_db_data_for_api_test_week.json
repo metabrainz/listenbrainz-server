@@ -12,18 +12,32 @@
         "listen_count": 10,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_mbids": [
           "6817e85a-f5ae-4479-b73d-e8e320e1b927"
         ],
         "release_mbid": "aec9a871-cd3b-467f-a53d-4ef5bc3bbafe",
-        "release_name": "÷ (Deluxe)",
+        "release_name": "\u00f7 (Deluxe)",
         "listen_count": 9,
         "artist_name": "Ed Sheeran",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ed Sheeran",
+            "join_phrase": "",
+            "artist_mbid": "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -34,7 +48,14 @@
         "listen_count": 9,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       }
     ]
   },
@@ -51,7 +72,14 @@
         "listen_count": 8,
         "artist_name": "The Script",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Script",
+            "join_phrase": "",
+            "artist_mbid": "1871df1a-93b7-4e25-9d60-64102ba89913"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -62,7 +90,14 @@
         "listen_count": 6,
         "artist_name": "Of Monsters and Men",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Of Monsters and Men",
+            "join_phrase": "",
+            "artist_mbid": "8f119e29-922e-42da-a5bf-b062f5261a3d"
+          }
+        ]
       }
     ]
   }

@@ -1,9 +1,11 @@
 import psycopg2
+from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, current_app
 from psycopg2.extras import DictCursor
 
 from listenbrainz.db import popularity
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
@@ -11,6 +13,8 @@ popularity_api_bp = Blueprint('popularity_api_v1', __name__)
 
 
 @popularity_api_bp.get("/top-recordings-for-artist")
+@crossdomain
+@ratelimit()
 def top_recordings():
     """ Get the top recordings by listen count for a given artist. The response is of the following format:
 
@@ -43,28 +47,9 @@ def top_recordings():
     if not is_valid_uuid(artist_mbid):
         raise APIBadRequest(f"artist_mbid: '{artist_mbid}' is not a valid uuid")
 
-    recordings = popularity.get_top_entity_for_artist("recording", artist_mbid)
-    recording_mbids = [str(r["recording_mbid"]) for r in recordings]
-
     try:
-        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
-                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
-            recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, recording_mbids)
+        recordings = popularity.get_top_recordings_for_artist(artist_mbid)
+        return recordings
     except Exception:
         current_app.logger.error("Error while fetching metadata for recordings: ", exc_info=True)
         raise APIInternalServerError("Failed to fetch metadata for recordings. Please try again.")
-
-    for recording, data in zip(recordings, recordings_data):
-        data.pop("artist_credit_id", None)
-        data.pop("canonical_recording_mbid", None)
-        data.pop("original_recording_mbid", None)
-        data.update({
-            "artist_name": data.pop("artist_credit_name"),
-            "artist_mbids": data.pop("[artist_credit_mbids]"),
-            "total_listen_count": recording["total_listen_count"],
-            "total_user_count": recording["total_user_count"]
-        })
-
-    return recordings_data

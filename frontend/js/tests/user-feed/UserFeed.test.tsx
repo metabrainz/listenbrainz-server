@@ -27,12 +27,15 @@ import UserFeedPage, {
   UserFeedPageProps,
   UserFeedPageState,
 } from "../../src/user-feed/UserFeed";
-import UserSocialNetwork from "../../src/follow/UserSocialNetwork";
-import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
+import UserSocialNetwork from "../../src/user/components/follow/UserSocialNetwork";
+import BrainzPlayer from "../../src/common/brainzplayer/BrainzPlayer";
 import * as timelineProps from "../__mocks__/timelineProps.json";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // typescript doesn't recognise string literal values
 const props = {
@@ -40,16 +43,21 @@ const props = {
   events: timelineProps.events as TimelineEvent[],
 };
 
-const GlobalContextMock = {
+const GlobalContextMock: GlobalAppContextT = {
   APIService: new APIService("base-uri"),
+  websocketsUrl: "",
   spotifyAuth: timelineProps.spotify as SpotifyUser,
   youtubeAuth: timelineProps.youtube as YoutubeUser,
   currentUser: timelineProps.currentUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 describe("UserFeed", () => {
   beforeAll(() => {
-    timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
+    jest.spyOn(timeago, "ago").mockImplementation(() => "1 day ago");
     // Font Awesome generates a random hash ID for each icon everytime.
     // Mocking Math.random() fixes this
     // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
@@ -61,25 +69,10 @@ describe("UserFeed", () => {
         <UserFeedPage {...props} />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.html()).toMatchSnapshot();
-  });
-
-  it("contains a UserSocialNetwork component", () => {
-    const wrapper = mount<UserFeedPage>(
-      <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
-      </GlobalAppContext.Provider>
-    );
-    expect(wrapper).toBeTruthy();
+    expect(wrapper.find("#timeline")).toHaveLength(1);
+    // contains a UserSocialNetwork component
     expect(wrapper.find(UserSocialNetwork)).toHaveLength(1);
-  });
-
-  it("contains a BrainzPlayer instance", () => {
-    const wrapper = mount<UserFeedPage>(
-      <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
-      </GlobalAppContext.Provider>
-    );
+    // contains a BrainzPlayer component
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
   });
 

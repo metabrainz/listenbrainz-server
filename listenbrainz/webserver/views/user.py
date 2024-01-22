@@ -12,8 +12,7 @@ from listenbrainz import webserver
 from listenbrainz.db import listens_importer
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.db.playlist import get_playlists_for_user, get_playlists_created_for_user, \
-    get_playlists_collaborated_on, get_recommendation_playlists_for_user
+from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db import year_in_music as db_year_in_music
@@ -24,7 +23,6 @@ from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from werkzeug.exceptions import NotFound, BadRequest
-from listenbrainz.webserver.views.playlist_api import serialize_jspf
 
 LISTENS_PER_PAGE = 25
 DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
@@ -236,7 +234,7 @@ def playlists(user_name: str):
                                                             count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL,
                                                             offset=0)
     for playlist in user_playlists:
-        playlists.append(serialize_jspf(playlist))
+        playlists.append(playlist.serialize_jspf())
 
     props = {
         "playlists": playlists,
@@ -282,7 +280,7 @@ def recommendation_playlists(user_name: str):
     user_playlists = get_recommendation_playlists_for_user(
         user.id)
     for playlist in user_playlists:
-        playlists.append(serialize_jspf(playlist))
+        playlists.append(playlist.serialize_jspf())
 
     props = {
         "playlists": playlists,
@@ -417,9 +415,9 @@ def taste(user_name: str):
 
 @user_bp.route("/<user_name>/year-in-music/")
 @user_bp.route("/<user_name>/year-in-music/<int:year>/")
-def year_in_music(user_name, year: int = 2022):
+def year_in_music(user_name, year: int = 2023):
     """ Year in Music """
-    if year != 2021 and year != 2022:
+    if year != 2021 and year != 2022 and year != 2023:
         raise NotFound(f"Cannot find Year in Music report for year: {year}")
 
     user = _get_user(user_name)
@@ -428,7 +426,7 @@ def year_in_music(user_name, year: int = 2022):
         user_name=user_name,
         year=year,
         props=orjson.dumps({
-            "data": db_year_in_music.get(user.id, year),
+            "data": db_year_in_music.get(user.id, year) or {},
             "user": {
                 "id": user.id,
                 "name": user.musicbrainz_id,

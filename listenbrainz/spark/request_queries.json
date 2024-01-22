@@ -1,4 +1,9 @@
 {
+  "echo.echo": {
+    "name": "echo.echo",
+    "description": "Echos the message passed to it as the response",
+    "params": ["message"]
+  },
   "stats.user.entity": {
     "name": "stats.user.entity",
     "description": "Entity statistics for all users for the requested stats_range",
@@ -104,7 +109,6 @@
     "name": "cf.recommendations.recording.recommendations",
     "description": "Generate recommendations for all active ListenBrainz users.",
     "params": [
-      "recommendation_top_artist_limit",
       "recommendation_raw_limit",
       "users"
     ]
@@ -191,6 +195,21 @@
   "year_in_music.new_artists_discovered_count": {
     "name": "year_in_music.new_artists_discovered_count",
     "description": "Calculate the number of artists the user listened to in the given year",
+    "params": ["year"]
+  },
+  "year_in_music.top_genres": {
+    "name": "year_in_music.top_genres",
+    "description": "Calculate the top genres the user listened to in the given year",
+    "params": ["year"]
+  },
+  "year_in_music.top_discoveries": {
+    "name": "year_in_music.top_discoveries",
+    "description": "Calculate the top discoveries playlists the given year",
+    "params": ["year"]
+  },
+  "year_in_music.top_missed_recordings": {
+    "name": "year_in_music.top_missed_recordings",
+    "description": "Calculate the top missed recordings playlists the given year",
     "params": ["year"]
   },
   "year_in_music.top_stats": {

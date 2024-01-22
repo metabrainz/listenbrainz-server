@@ -6,7 +6,7 @@ from flask import current_app, request
 from flask_login import current_user
 
 from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
-    get_current_critiquebrainz_user, get_current_musicbrainz_user
+    get_current_critiquebrainz_user, get_current_musicbrainz_user, get_current_soundcloud_user
 
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
     'The listens were rejected because the user does not has not provided an email. ' \
@@ -62,12 +62,14 @@ def get_global_props():
 
     props = {
         "api_url": current_app.config["API_URL"],
+        "websockets_url": current_app.config["WEBSOCKETS_SERVER_URL"],
         "sentry_dsn": sentry_config.get("dsn"),
         "current_user": current_user_data,
         "spotify": get_current_spotify_user(),
         "youtube": get_current_youtube_user(),
         "critiquebrainz": get_current_critiquebrainz_user(),
         "musicbrainz": get_current_musicbrainz_user(),
+        "soundcloud": get_current_soundcloud_user(),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
         "user_preferences": {},
     }

@@ -5,11 +5,15 @@ import { act } from "react-dom/test-utils";
 import PinnedRecordingCard, {
   PinnedRecordingCardProps,
   PinnedRecordingCardState,
-} from "../../src/pins/PinnedRecordingCard";
+} from "../../src/user/components/PinnedRecordingCard";
 import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import { waitForComponentToPaint } from "../test-utils";
+import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import ListenCard from "../../src/common/listens/ListenCard";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -22,11 +26,16 @@ const user = {
   auth_token: "auth_token",
 };
 
-const globalProps = {
+const globalProps: GlobalAppContextT = {
   APIService: new APIServiceClass(""),
+  websocketsUrl: "",
   currentUser: user,
   spotifyAuth: {},
   youtubeAuth: {},
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIServiceClass("foo"),
+    { name: "Fnord" }
+  ),
 };
 
 const pinnedRecording: PinnedRecording = {
@@ -49,7 +58,7 @@ const expiredPinnedRecording: PinnedRecording = {
 const props: PinnedRecordingCardProps = {
   pinnedRecording,
   isCurrentUser: true,
-  
+
   removePinFromPinsList: () => {},
 };
 
@@ -58,7 +67,7 @@ describe("PinnedRecordingCard", () => {
     const wrapper = mount<PinnedRecordingCard>(
       <PinnedRecordingCard {...props} />
     );
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.find(ListenCard)).toHaveLength(1);
   });
 
   describe("determineIfCurrentlyPinned", () => {
@@ -90,12 +99,11 @@ describe("PinnedRecordingCard", () => {
     });
   });
 
-
   describe("unpinRecording", () => {
     it("calls API, updates currentlyPinned in state", async () => {
       const wrapper = mount<PinnedRecordingCard>(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard { ...props } />
+          <PinnedRecordingCard {...props} />
         </GlobalAppContext.Provider>
       );
       const instance = wrapper.instance();
@@ -115,7 +123,6 @@ describe("PinnedRecordingCard", () => {
       expect(spy).toHaveBeenCalledWith("auth_token");
 
       expect(wrapper.state("currentlyPinned")).toBeFalsy();
-
     });
 
     it("does nothing if isCurrentUser is false", async () => {

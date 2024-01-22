@@ -53,7 +53,7 @@ def get_following(user_name: str):
     .. code-block:: json
 
         {
-            "followers": ["rob", "mr_monkey", "..."],
+            "following": ["rob", "mr_monkey", "..."],
             "user": "shivam-kapila"
         }
 

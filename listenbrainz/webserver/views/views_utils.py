@@ -4,6 +4,7 @@ from flask_login import current_user
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
+from listenbrainz.domain.soundcloud import SoundCloudService
 
 
 def get_current_spotify_user():
@@ -52,6 +53,20 @@ def get_current_musicbrainz_user():
     if not current_user.is_authenticated:
         return {}
     user = MusicBrainzService().get_user(current_user.id)
+    if user is None:
+        return {}
+    return {
+        "access_token": user["access_token"],
+    }
+
+
+def get_current_soundcloud_user():
+    """Returns the soundcloud access token for the current
+    authenticated user. If the user is unauthenticated or has not
+    linked their soundcloud, returns empty dict."""
+    if not current_user.is_authenticated:
+        return {}
+    user = SoundCloudService().get_user(current_user.id)
     if user is None:
         return {}
     return {
