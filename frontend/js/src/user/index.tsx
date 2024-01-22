@@ -9,10 +9,11 @@ import { ToastContainer } from "react-toastify";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getPageProps } from "../utils/utils";
-import getUserRoutes from "./routes/index";
+import getUserRoutes from "./routes/userRoutes";
+import getRedirectRoutes from "./routes/redirectRoutes";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, globalAppContext, sentryProps } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, globalAppContext, sentryProps } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
@@ -23,7 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const routes = getUserRoutes();
+  const userRoutes = getUserRoutes();
+  const redirectRoutes = getRedirectRoutes(globalAppContext?.currentUser?.name);
+  const routes = [...userRoutes, ...redirectRoutes];
   const router = createBrowserRouter(routes);
 
   const renderRoot = createRoot(domContainer!);

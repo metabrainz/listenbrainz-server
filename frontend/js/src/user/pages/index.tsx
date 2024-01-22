@@ -981,5 +981,5 @@ export const ListensLoader = async ({ request }: { request: Request }) => {
     },
   });
   const data = await response.json();
-  return { ...data };
+  return data;
 };
