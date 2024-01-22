@@ -1,4 +1,3 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
@@ -26,19 +25,15 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import NiceModal from "@ebay/nice-modal-react";
 import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
-import ErrorBoundary from "../../../utils/ErrorBoundary";
+import { useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
-
-import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
 import {
   generateAlbumArtThumbnailLink,
   getArtistLink,
-  getPageProps,
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../../stats/utils";
@@ -118,6 +113,9 @@ export type YearInMusicProps = {
     }>;
   };
 };
+
+type YearInMusicLoaderData = YearInMusicProps;
+
 enum YIM2023Color {
   green = "#4C6C52",
   red = "#BE4A55",
@@ -1492,24 +1490,18 @@ export default class YearInMusic extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, reactProps, globalAppContext } = await getPageProps();
+export function YearInMusicWrapper() {
+  const data = useLoaderData() as YearInMusicLoaderData;
+  return <YearInMusic {...data} />;
+}
 
-  const { user, data: yearInMusicData } = reactProps;
-
-  const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <YearInMusicWithAlertNotifications
-            user={user}
-            yearInMusicData={yearInMusicData}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const YearInMusicLoader = async ({ request }: { request: Request }) => {
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return data;
+};
