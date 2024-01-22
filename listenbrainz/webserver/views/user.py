@@ -5,7 +5,7 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import orjson
 
 from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
@@ -47,20 +47,11 @@ def redirect_user_page(target):
 
     return inner
 
-
-redirect_bp.add_url_rule("/listens/", "redirect_listens",
-                         redirect_user_page("user.profile"))
-redirect_bp.add_url_rule("/stats/", "redirect_stats",
-                         redirect_user_page("user.stats"))
-redirect_bp.add_url_rule("/playlists/", "redirect_playlists",
-                         redirect_user_page("user.playlists"))
-redirect_bp.add_url_rule("/recommendations/",
-                         "redirect_recommendations",
-                         redirect_user_page("user.recommendation_playlists"))
-redirect_bp.add_url_rule("/taste/", "redirect_taste",
-                         redirect_user_page("user.taste"))
-redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
-                         redirect_user_page("user.year_in_music"))
+@redirect_bp.route('/', defaults={'path': ''})
+@redirect_bp.route('/<path:path>/')
+@login_required
+def index(path):
+    return render_template("user/index.html", user=current_user)
 
 
 @user_bp.route("/<user_name>/", methods=['POST'])
@@ -177,7 +168,7 @@ def charts(user_name):
         user=user
     )
 
-@user_bp.route("/<user_name>/reports/")
+@user_bp.route("/<user_name>/reports/", methods=['POST'])
 def reports(user_name):
     """ Redirect to stats page """
     return redirect(url_for('user.stats', user_name=user_name), code=301)
@@ -199,11 +190,6 @@ def stats(user_name: str):
     }
 
     return jsonify(data)
-
-
-@user_bp.route("/<user_name>/collaborations/")
-def collaborations(user_name: str):
-    return redirect(url_for("user.playlists", user_name=user_name))
 
 
 @user_bp.route("/<user_name>/playlists/", methods=['POST'])
@@ -390,27 +376,21 @@ def taste(user_name: str):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/year-in-music/")
-@user_bp.route("/<user_name>/year-in-music/<int:year>/")
+@user_bp.route("/<user_name>/year-in-music/", methods=['POST'])
+@user_bp.route("/<user_name>/year-in-music/<int:year>/", methods=['POST'])
 def year_in_music(user_name, year: int = 2023):
     """ Year in Music """
     if year != 2021 and year != 2022 and year != 2023:
         raise NotFound(f"Cannot find Year in Music report for year: {year}")
 
     user = _get_user(user_name)
-    return render_template(
-        "user/year-in-music.html",
-        user_name=user_name,
-        year=year,
-        props=orjson.dumps({
-            "data": db_year_in_music.get(user.id, year) or {},
-            "user": {
-                "id": user.id,
-                "name": user.musicbrainz_id,
-            }
-        }).decode("utf-8"),
-        year_in_music_js_file=f"yearInMusic{year}.js"
-    )
+    return jsonify({
+        "data": db_year_in_music.get(user.id, year) or {},
+        "user": {
+            "id": user.id,
+            "name": user.musicbrainz_id,
+        },
+    })
 
 
 @user_bp.route("/<user_name>/missing-data/")
@@ -434,8 +414,5 @@ def missing_mb_data(user_name: str):
 @user_bp.route('/<user_name>/<path:path>/')
 @web_listenstore_needed
 def index(user_name, path):
-    current_app.logger.info("User index page accessed")
-    current_app.logger.info("User name: %s" % user_name)
-    current_app.logger.info("Path: %s" % path)
     user = _get_user(user_name)
     return render_template("user/index.html", user=user)
