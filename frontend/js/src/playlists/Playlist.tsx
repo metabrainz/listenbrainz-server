@@ -17,7 +17,7 @@ import { sanitize } from "dompurify";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
@@ -27,8 +27,8 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
 import { getPageProps } from "../utils/utils";
-import PlaylistItemCard from "./PlaylistItemCard";
-import PlaylistMenu from "./PlaylistMenu";
+import PlaylistItemCard from "./components/PlaylistItemCard";
+import PlaylistMenu from "./components/PlaylistMenu";
 import {
   getPlaylistExtension,
   getPlaylistId,

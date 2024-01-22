@@ -1,7 +1,7 @@
 import * as React from "react";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { isFunction } from "lodash";
-import ListenControl from "../listens/ListenControl";
+import ListenControl from "../common/listens/ListenControl";
 
 export type NamePillProps = {
   title: string;

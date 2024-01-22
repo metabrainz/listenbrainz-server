@@ -31,10 +31,10 @@ import NiceModal from "@ebay/nice-modal-react";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
-import ListenCard from "../listens/ListenCard";
+import ListenCard from "../common/listens/ListenCard";
 import {
   getPageProps,
   preciseTimestamp,
@@ -46,8 +46,8 @@ import {
   personalRecommendationEventToListen,
   getPersonalRecommendationEventContent,
 } from "../utils/utils";
-import UserSocialNetwork from "../follow/UserSocialNetwork";
-import ListenControl from "../listens/ListenControl";
+import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
+import ListenControl from "../common/listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
 
 export enum EventType {
