@@ -131,7 +131,7 @@ export function SelectTroiPreferencesWrapper() {
 }
 
 export const SelectTroiPreferencesLoader = async () => {
-  const response = await fetch("/profile/troi/", {
+  const response = await fetch("/settings/troi/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

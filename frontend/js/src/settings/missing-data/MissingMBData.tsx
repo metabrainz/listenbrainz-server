@@ -393,7 +393,7 @@ export function MissingMBDataPageWrapper() {
 }
 
 export const MissingMBDataPageLoader = async () => {
-  const response = await fetch("/profile/missing-data/", {
+  const response = await fetch("/settings/missing-data/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

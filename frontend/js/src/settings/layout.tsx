@@ -51,7 +51,7 @@ function SettingsLayout() {
       <div className="secondary-nav">
         <ol className="breadcrumb">
           <li>
-            <Link to="/profile/">Settings</Link>
+            <Link to="/settings/">Settings</Link>
           </li>
           {activeLabel && <li className="active">{activeLabel}</li>}
         </ol>

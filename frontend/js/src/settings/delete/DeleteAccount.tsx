@@ -34,7 +34,7 @@ export default function DeleteAccount() {
     e.preventDefault();
 
     try {
-      await downloadFile("/profile/export-feedback/");
+      await downloadFile("/settings/export-feedback/");
       toast.success(
         <ToastMsg
           title="Success"
@@ -81,7 +81,7 @@ export default function DeleteAccount() {
         />
       );
 
-      return redirect("/profile/");
+      return redirect("/settings/");
     }
   };
 

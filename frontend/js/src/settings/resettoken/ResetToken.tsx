@@ -23,7 +23,7 @@ export default function ResetToken() {
         />
       );
 
-      redirect("/profile/");
+      redirect("/settings/");
     }
   };
   return (

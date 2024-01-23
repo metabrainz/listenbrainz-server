@@ -41,7 +41,7 @@ export default function Export() {
     e.preventDefault();
 
     try {
-      await downloadFile("/profile/export-feedback/");
+      await downloadFile("/settings/export-feedback/");
     } catch (error) {
       toast.error(
         <ToastMsg

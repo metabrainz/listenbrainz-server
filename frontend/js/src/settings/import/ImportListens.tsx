@@ -112,7 +112,7 @@ export default function Import() {
       <p>If you want to reset your previous import timestamp, click below</p>
       <p>
         <span className="btn btn-info btn-lg" style={{ width: "300px" }}>
-          <Link to="/profile/resetlatestimportts/" style={{ color: "white" }}>
+          <Link to="/settings/resetlatestimportts/" style={{ color: "white" }}>
             Reset Import Timestamp
           </Link>
         </span>
@@ -122,7 +122,7 @@ export default function Import() {
 }
 
 export const ImportLoader = async () => {
-  const response = await fetch("/profile/import/", {
+  const response = await fetch("/settings/import/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

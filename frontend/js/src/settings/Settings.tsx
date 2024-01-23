@@ -91,7 +91,7 @@ export default function Settings() {
       <p>If you want to reset your token, click below</p>
       <p>
         <span className="btn btn-info btn-lg" style={{ width: "200px" }}>
-          <Link to="/profile/resettoken/" style={{ color: "white" }}>
+          <Link to="/settings/resettoken/" style={{ color: "white" }}>
             Reset token
           </Link>
         </span>

@@ -54,7 +54,7 @@ const getSettingsRoutes = () => {
 
   const routes = [
     {
-      path: "/profile",
+      path: "/settings",
       element: <SettingsLayout />,
       children: [
         {

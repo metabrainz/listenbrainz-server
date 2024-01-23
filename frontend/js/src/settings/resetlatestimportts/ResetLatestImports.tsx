@@ -29,7 +29,7 @@ export default function ResetImportTimestamp() {
       );
     }
     setTimeout(() => {
-      redirect("/profile/");
+      redirect("/settings/");
     }, 3000);
   };
   return (

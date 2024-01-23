@@ -143,7 +143,7 @@ export function SelectTimezoneWrapper() {
 }
 
 export const SelectTimezoneLoader = async () => {
-  const response = await fetch("/profile/select_timezone/", {
+  const response = await fetch("/settings/select_timezone/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

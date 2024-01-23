@@ -60,7 +60,7 @@ export default function DeleteListens() {
         />
       );
 
-      return redirect("/profile/");
+      return redirect("/settings/");
     }
   };
 

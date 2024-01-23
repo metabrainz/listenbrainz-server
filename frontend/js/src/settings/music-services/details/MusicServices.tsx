@@ -27,7 +27,7 @@ export default function MusicServices() {
   ) => {
     try {
       const response = await fetch(
-        `/profile/music-services/${serviceName}/disconnect/`,
+        `/settings/music-services/${serviceName}/disconnect/`,
         {
           method: "POST",
           body: JSON.stringify({ action: newValue }),
@@ -246,7 +246,7 @@ export default function MusicServices() {
 }
 
 export const MusicServicesLoader = async () => {
-  const response = await fetch("/profile/music-services/details/", {
+  const response = await fetch("/settings/music-services/details/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
