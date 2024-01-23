@@ -7,6 +7,7 @@ import {
 } from "@nivo/network";
 import { animated, to } from "@react-spring/web";
 import { isFinite } from "lodash";
+import tinycolor from "tinycolor2";
 
 interface GraphProps {
   data: GraphDataType;
@@ -61,6 +62,11 @@ function CustomNodeComponent({
       />
       <animated.foreignObject
         fontSize={to([animatedProps.size], (size) => size / 6)}
+        color={tinycolor
+          .mostReadable(animatedProps.color, [], {
+            includeFallbackColors: true,
+          })
+          .toHexString()}
         width={to([animatedProps.size], (size) => size)}
         height={to([animatedProps.size], (size) => size)}
         x={to([animatedProps.size], (size) => -size / 2)}
