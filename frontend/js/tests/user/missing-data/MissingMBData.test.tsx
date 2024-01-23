@@ -9,7 +9,7 @@ import {
   user,
 } from "../../__mocks__/missingMBDataProps.json";
 
-import MissingMBDataPage from "../../../src/user/missing-data/MissingMBData";
+import MissingMBDataPage from "../../../src/settings/missing-data/MissingMBData";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../src/utils/GlobalAppContext";
