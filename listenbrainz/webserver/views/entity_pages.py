@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import requests
 from flask import Blueprint, render_template, current_app, redirect, url_for
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
@@ -109,57 +110,23 @@ def artist_entity(artist_mbid):
         raise BadRequest("Provided artist mbid is invalid: %s" % artist_mbid)
 
     # Fetch the artist cached data
-    artist_data = get_metadata_for_artist(ts_conn, [artist_mbid])
+    artist_data = requests.get("https://api.listenbrainz.org/1/metadata/artist/?inc=artist%20release%20tag%20release_group&artist_mbids=" + artist_mbid).json()
     if len(artist_data) == 0:
         raise NotFound(f"artist {artist_mbid} not found in the metadata cache")
 
     artist = {
-        "artist_mbid": str(artist_data[0].artist_mbid),
-        **artist_data[0].artist_data,
-        "tag": artist_data[0].tag_data,
+        "artist_mbid": str(artist_data[0]["mbid"]),
+        **artist_data[0],
     }
 
-    popular_recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, 10)
-
-    try:
-        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
-
-            similar_artists = similarity.get_artists(
-                mb_curs,
-                ts_curs,
-                [artist_mbid],
-                "session_based_days_7500_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30",
-                15
-            )
-    except IndexError:
-        similar_artists = []
-
-    release_group_data = artist_data[0].release_group_data
-    release_group_mbids = [rg["mbid"] for rg in release_group_data]
-    popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
-
+    popular_recordings = []
+    similar_artists = []
     release_groups = []
-    for release_group, pop in zip(release_group_data, popularity_data):
-        release_group["total_listen_count"] = pop["total_listen_count"]
-        release_group["total_user_count"] = pop["total_user_count"]
-        release_groups.append(release_group)
-
-    release_groups.sort(key=get_release_group_sort_key, reverse=True)
-
-    listening_stats = get_entity_listener(db_conn, "artists", artist_mbid, "all_time")
-    if listening_stats is None:
-        listening_stats = {
-            "total_listen_count": 0,
-            "listeners": []
-        }
-
-    try:
-        cover_art = get_cover_art_for_artist(release_groups)
-    except Exception:
-        current_app.logger.error("Error generating cover art for artist:", exc_info=True)
-        cover_art = None
+    listening_stats = {
+        "total_listen_count": 0,
+        "listeners": []
+    }
+    cover_art = None
 
     props = {
         "artist_data": artist,
@@ -172,7 +139,7 @@ def artist_entity(artist_mbid):
 
     return render_template("entities/artist.html",
                            props=orjson.dumps(props).decode("utf-8"),
-                           title=artist_data[0].artist_data["name"])
+                           title=artist_data[0]["name"])
 
 
 @album_bp.route("/<release_group_mbid>/", methods=["GET"])
@@ -184,10 +151,7 @@ def album_entity(release_group_mbid):
         raise BadRequest("Provided release group ID is invalid: %s" % release_group_mbid)
 
     # Fetch the release group cached data
-    metadata = fetch_release_group_metadata(
-        [release_group_mbid],
-        ["artist", "tag", "release", "recording"]
-    )
+    metadata = requests.get("https://api.listenbrainz.org/1/metadata/release_group/?inc=recording%20artist%20release%20tag%20release_group&release_group_mbids=" + release_group_mbid).json()
     if len(metadata) == 0:
         raise NotFound(f"Release group mbid {release_group_mbid} not found in the metadata cache")
     release_group = metadata[release_group_mbid]
@@ -198,21 +162,15 @@ def album_entity(release_group_mbid):
     for medium in mediums:
         for track in medium["tracks"]:
             recording_mbids.append(track["recording_mbid"])
-    popularity_data, popularity_index = popularity.get_counts(ts_conn, "recording", recording_mbids)
 
     for medium in mediums:
         for track in medium["tracks"]:
-            track["total_listen_count"], track["total_user_count"] = popularity_index.get(
-                track["recording_mbid"],
-                (None, None)
-            )
+            track["total_listen_count"], track["total_user_count"] = None, None
 
-    listening_stats = get_entity_listener(db_conn, "release_groups", release_group_mbid, "all_time")
-    if listening_stats is None:
-        listening_stats = {
-            "total_listen_count": 0,
-            "listeners": []
-        }
+    listening_stats = {
+        "total_listen_count": 0,
+        "listeners": []
+    }
 
     props = {
         "release_group_mbid": release_group_mbid,
