@@ -22,7 +22,7 @@ class RecordingLookupBaseQuery(Query, ABC):
     def outputs(self):
         return ['index', 'artist_credit_arg', 'recording_arg',
                 'artist_credit_name', 'release_name', 'recording_name',
-                'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid', 'year']
+                'artist_credit_id', 'artist_mbids', 'release_mbid', 'recording_mbid']
 
     def get_debug_log_lines(self):
         lines = self.log_lines
@@ -57,7 +57,6 @@ class RecordingLookupBaseQuery(Query, ABC):
                          , release_mbid
                          , recording_name
                          , recording_mbid::TEXT
-                         , year
                          , combined_lookup
                       FROM {self.get_table_name()}
                      WHERE combined_lookup IN %s""", (lookup_strings,))

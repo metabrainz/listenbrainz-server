@@ -1,4 +1,9 @@
 {
+  "echo.echo": {
+    "name": "echo.echo",
+    "description": "Echos the message passed to it as the response",
+    "params": ["message"]
+  },
   "stats.user.entity": {
     "name": "stats.user.entity",
     "description": "Entity statistics for all users for the requested stats_range",

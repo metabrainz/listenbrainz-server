@@ -44,7 +44,7 @@ from listenbrainz.spark.handlers import (
     handle_troi_playlists_end,
     handle_yim_top_genres,
     handle_yim_playlists,
-    handle_yim_playlists_end
+    handle_yim_playlists_end, handle_echo
 )
 from listenbrainz.spark.spark_dataset import CouchDbDataset
 from listenbrainz.utils import get_fallback_connection_name
@@ -79,6 +79,7 @@ class SparkReader(ConsumerMixin):
             self.response_handlers.update(dataset.get_handlers())
 
         self.response_handlers.update({
+            'echo': handle_echo,
             'user_entity': handle_user_entity,
             'entity_listener': handle_entity_listener,
             'user_listening_activity': handle_user_listening_activity,
@@ -109,7 +110,7 @@ class SparkReader(ConsumerMixin):
             'year_in_music_new_artists_discovered_count': handle_yim_new_artists_discovered_count,
             'year_in_music_top_genres': handle_yim_top_genres,
             'year_in_music_playlists': handle_yim_playlists,
-            'year_in_music_playlists_end':handle_yim_playlists_end,
+            'year_in_music_playlists_end': handle_yim_playlists_end,
             'troi_playlists': handle_troi_playlists,
             'troi_playlists_end': handle_troi_playlists_end,
         })

@@ -6,7 +6,7 @@ import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import NiceModal from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
-import ColorWheel from "./ColorWheel";
+import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext, {
@@ -14,10 +14,10 @@ import GlobalAppContext, {
 } from "../../utils/GlobalAppContext";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import { getPageProps } from "../../utils/utils";
-import ListenCard from "../../listens/ListenCard";
+import ListenCard from "../../common/listens/ListenCard";
 import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -236,8 +236,8 @@ export default class ColorPlay extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalAppContext } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, reactProps, globalAppContext } = await getPageProps();
 
   const { user } = reactProps;
 

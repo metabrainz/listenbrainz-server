@@ -66,43 +66,6 @@ PUBLIC_TABLES_DUMP = {
         SQL('to_timestamp(0)'),  # last_login
         SQL('to_timestamp(0)'),  # latest_import
     ),
-    'statistics.user': (
-        'user_id',
-        'stats_type',
-        'stats_range',
-        'data',
-        'count',
-        'from_ts',
-        'to_ts',
-        'last_updated',
-    ),
-    'statistics.artist': (
-        'id',
-        'msid',
-        'name',
-        'release',
-        'recording',
-        'listener',
-        'listen_count',
-        'last_updated',
-    ),
-    'statistics.release': (
-        'id',
-        'msid',
-        'name',
-        'recording',
-        'listener',
-        'listen_count',
-        'last_updated',
-    ),
-    'statistics.recording': (
-        'id',
-        'msid',
-        'name',
-        'listener',
-        'listen_count',
-        'last_updated',
-    ),
     'recording_feedback': (
         'id',
         'user_id',
@@ -869,22 +832,6 @@ def _update_sequences():
     # session_id_seq
     current_app.logger.info('Updating session_id_seq...')
     _update_sequence(db.engine, 'api_compat.session_id_seq', 'api_compat.session')
-
-    # statistics.user_id_seq
-    current_app.logger.info('Updating statistics.user_id_seq...')
-    _update_sequence(db.engine, 'statistics.user_id_seq', 'statistics.user')
-
-    # artist_id_seq
-    current_app.logger.info('Updating artist_id_seq...')
-    _update_sequence(db.engine, 'statistics.artist_id_seq', 'statistics.artist')
-
-    # release_id_seq
-    current_app.logger.info('Updating release_id_seq...')
-    _update_sequence(db.engine, 'statistics.release_id_seq', 'statistics.release')
-
-    # recording_id_seq
-    current_app.logger.info('Updating recording_id_seq...')
-    _update_sequence(db.engine, 'statistics.recording_id_seq', 'statistics.recording')
 
     # data_dump_id_seq
     current_app.logger.info('Updating data_dump_id_seq...')

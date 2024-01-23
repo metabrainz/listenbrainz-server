@@ -45,7 +45,21 @@
         .dark {
           fill: #253127;
         }
+        .overlay {
+          isolation: isolate;
+        }
+        .overlay .genre-count {
+          mix-blend-mode: overlay;
+        }
+        .value {
+          font-weight: 300;
+        }
     </style>
+    <defs>
+      <mask id="cover-art-mask">
+        <rect x="346" y="373" width="396" height="396" fill="white"/>
+      </mask>
+    </defs>
     <g>
         <g>
             <rect width="924" height="924" fill="#F0EEE2"/>
@@ -62,19 +76,19 @@
         {%- if album_2 -%}
             <g>
                 {% if album_2['cover_art'] %}
-                <image x="171" y="291" width="207" height="207" xlink:href="{{ album_2['cover_art'] }}"/>
+                <image x="171" y="291" width="207" height="207" xlink:href="{{ album_2['cover_art'] }}" preserveAspectRatio="xMidYMid slice"/>
                 {% else %}
                 <rect x="171" y="291" width="207" height="207" fill="#FFC93D"/>
                 <foreignObject x="171" y="498" width="207" height="207" style="transform: rotate(-90deg); transform-origin: 171px 498px;">
                     <div xmlns="http://www.w3.org/1999/xhtml">
-                        <p class="album-name">{{ album_1['title']|upper|e }}</p>
-                        <p class="artist-name">{{ album_1['artist']|upper|e }}</p>
+                        <p class="album-name">{{ album_2['title']|upper|e }}</p>
+                        <p class="artist-name">{{ album_2['artist']|upper|e }}</p>
                     </div>
                 </foreignObject>
                 {% endif %}
                 <text class="listen-count" style="transform: rotate(-90deg); transform-origin: 158px 498px;" x="158" y="498">
                     <tspan>#2:</tspan>
-                    <tspan style="font-weight: 300">{{ "{:,}".format(album_2['listen_count']) }} Listens</tspan>
+                    <tspan class="value">{{ "{:,}".format(album_2['listen_count']) }} Listens</tspan>
                 </text>
             </g>
         {%- endif -%}
@@ -94,14 +108,22 @@
         {%- set y_step = 79 -%}
         {%- for genre in genres -%}
             <text class="genre-count {% if loop.index0 > 0 %}dark{% endif %}" x="70" y="{{ y_start - y_step * loop.index0 }}">
-                <tspan style="font-weight: 300">{{ genre['genre_count_percent'] }}%</tspan>
+                <tspan class="value">{{ genre['genre_count_percent'] }}%</tspan>
                 <tspan dx="6">{{ genre['genre']|upper }}</tspan>
             </text>
         {%- endfor -%}
         {%- if album_1 -%}
             <g>
                 {% if album_1['cover_art'] %}
-                <image x="346" y="373" width="396" height="396" xlink:href="{{ album_1['cover_art'] }}"/>
+                <g class="overlay" mask="url(#cover-art-mask)">
+                  <image x="346" y="373" width="396" height="396" xlink:href="{{ album_1['cover_art'] }}" preserveAspectRatio="xMidYMid slice"/>
+                  {%- for genre in genres -%}
+                    <text class="genre-count dark" x="70" y="{{ y_start - y_step * loop.index0 }}">
+                        <tspan class="value">{{ genre['genre_count_percent'] }}%</tspan>
+                        <tspan dx="6">{{ genre['genre']|upper }}</tspan>
+                    </text>
+                {%- endfor -%}
+                </g>
                 {% else %}
                 <rect x="346" y="373" width="396" height="396" fill="#EB743B"/>
                 <foreignObject x="742" y="373" width="396" height="396" style="transform: rotate(90deg); transform-origin: 742px 373px;">
@@ -113,7 +135,7 @@
                 {% endif %}
                 <text class="listen-count" style="transform: rotate(90deg); transform-origin: 755px 373px;" x="755" y="373">
                     <tspan>#1:</tspan>
-                    <tspan style="font-weight: 300">{{ "{:,}".format(album_1['listen_count']) }} Listens</tspan>
+                    <tspan class="value">{{ "{:,}".format(album_1['listen_count']) }} Listens</tspan>
                 </text>
             </g>
         {%- endif -%}

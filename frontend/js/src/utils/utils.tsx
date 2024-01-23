@@ -4,8 +4,8 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
-import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
-import YoutubePlayer from "../brainzplayer/YoutubePlayer";
+import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
+import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
 import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
@@ -267,14 +267,15 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
   );
 };
 
-const getArtistLink = (listen: Listen) => {
-  const artists = listen.track_metadata?.mbid_mapping?.artists;
+const getStatsArtistLink = (
+  artists?: MBIDMappingArtist[],
+  artist_name?: string,
+  artist_mbids?: string[]
+) => {
   if (artists?.length) {
     return getMBIDMappingArtistLink(artists);
   }
-  const artistName = getArtistName(listen);
-  const artistMbids = getArtistMBIDs(listen);
-  const firstArtist = _.first(artistMbids);
+  const firstArtist = _.first(artist_mbids);
   if (firstArtist) {
     return (
       <a
@@ -282,11 +283,18 @@ const getArtistLink = (listen: Listen) => {
         target="_blank"
         rel="noopener noreferrer"
       >
-        {artistName}
+        {artist_name}
       </a>
     );
   }
-  return artistName;
+  return artist_name;
+};
+
+const getArtistLink = (listen: Listen) => {
+  const artists = listen.track_metadata?.mbid_mapping?.artists;
+  const artist_name = getArtistName(listen);
+  const artist_mbids = getArtistMBIDs(listen);
+  return getStatsArtistLink(artists, artist_name, artist_mbids);
 };
 
 const getTrackLink = (listen: Listen): JSX.Element | string => {
@@ -475,6 +483,52 @@ export function loadScriptAsync(document: any, scriptSrc: string): void {
   el.src = scriptSrc;
   container.appendChild(el);
 }
+export async function fetchMusicBrainzGenres() {
+  // Fetch and save the list of MusicBrainz genres
+  try {
+    const response = await fetch(
+      "https://musicbrainz.org/ws/2/genre/all?fmt=txt"
+    );
+    const genresList = await response.text();
+    const fetchedGenres = Array.from(genresList.split("\n"));
+    if (fetchedGenres.length) {
+      localStorage.setItem(
+        "musicbrainz-genres",
+        JSON.stringify({
+          creation_date: Date.now(),
+          genre_list: fetchedGenres,
+        })
+      );
+      return fetchedGenres;
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+  return [];
+}
+
+async function getOrFetchMBGenres(forceExpiry = false) {
+  // Try to load genres from local storage, fetch them otherwise
+  const localStorageString = localStorage.getItem("musicbrainz-genres");
+  if (localStorageString === null) {
+    // nothing saved, fetch the genres and save them
+    const fetchedGenres = await fetchMusicBrainzGenres();
+    return fetchedGenres;
+  }
+  const localStorageObject = JSON.parse(localStorageString);
+  // expire the list after 2 weeks
+  if (
+    forceExpiry ||
+    !localStorageObject ||
+    Date.now() > localStorageObject.creation_date + 1209000000
+  ) {
+    // If the item is expired, fetch them afresh and save them
+    const fetchedGenres = await fetchMusicBrainzGenres();
+    return fetchedGenres;
+  }
+  return localStorageObject.genre_list;
+}
 
 type SentryProps = {
   sentry_dsn: string;
@@ -493,12 +547,12 @@ type GlobalAppProps = {
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 
-const getPageProps = (): {
+const getPageProps = async (): Promise<{
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
   sentryProps: SentryProps;
   globalAppContext: GlobalAppContextT;
-} => {
+}> => {
   let domContainer = document.getElementById("react-container");
   const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
@@ -561,8 +615,23 @@ const getPageProps = (): {
       youtubeAuth: youtube,
       soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
-      musicbrainzAuth: musicbrainz,
+      musicbrainzAuth: {
+        ...musicbrainz,
+        refreshMBToken: async function refreshMBToken() {
+          try {
+            const newToken = await apiService.refreshMusicbrainzToken();
+            _.set(globalAppContext, "musicbrainzAuth.access_token", newToken);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error(
+              "Could not refresh MusicBrainz auth token:",
+              err.toString()
+            );
+          }
+        },
+      },
       userPreferences: user_preferences,
+      musicbrainzGenres: await getOrFetchMBGenres(),
       recordingFeedbackManager: new RecordingFeedbackManager(
         apiService,
         current_user
@@ -960,6 +1029,7 @@ export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,
   getMBIDMappingArtistLink,
+  getStatsArtistLink,
   getArtistLink,
   getTrackLink,
   formatWSMessageToListen,

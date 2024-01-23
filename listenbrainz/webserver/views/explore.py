@@ -90,16 +90,17 @@ def art_creator():
 
 @explore_bp.route("/cover-art-collage/")
 @explore_bp.route("/cover-art-collage/<int:year>/")
-def cover_art_collage(year: int = 2022):
-    """ A collage of album covers from 2022
+def cover_art_collage(year: int = 2023):
+    """ A collage of album covers from 2022/23
         Raises:
             NotFound if the there is no collage for the year
     """
-    if year != 2022:
-        raise NotFound(f"Cannot find Coveer Art Collage for year: {year}")
+    if year != 2022 and year != 2023:
+        raise NotFound(f"Cannot find Cover Art Collage for year: {year}")
 
     return render_template(
-        "explore/cover-art-collage.html"
+        "explore/cover-art-collage.html",
+        year=year
     )
 
 @explore_bp.route("/ai-brainz/")

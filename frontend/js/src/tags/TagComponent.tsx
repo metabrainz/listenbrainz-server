@@ -1,4 +1,4 @@
-import { noop, upperFirst } from "lodash";
+import { isFinite, noop, upperFirst } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 
@@ -73,10 +73,11 @@ function TagVoteButton(props: {
 
 export default function TagComponent(props: {
   tag: ArtistTag | RecordingTag | ReleaseGroupTag;
-  entityType: "artist" | "release-group" | "recording";
+  entityType: Entity;
   entityMBID?: string;
   isNew?: boolean;
   isOwnTag?: boolean;
+  isDisabled?: boolean;
   deleteCallback: (tag: string) => void;
   initialScore?: UserTagScore;
 }) {
@@ -86,6 +87,7 @@ export default function TagComponent(props: {
     entityMBID,
     isNew,
     isOwnTag,
+    isDisabled,
     deleteCallback,
     initialScore,
   } = props;
@@ -152,9 +154,17 @@ export default function TagComponent(props: {
   let cssClasses = "tag";
   if (userScore === -1) {
     cssClasses += " downvoted";
-  } else if (userScore === 1 || isOwnTag) {
+  } else if (userScore === 1 || isNew) {
     cssClasses += " upvoted";
   }
+  let liveCount = tag.count;
+  if (userScore > (initialScore ?? 0)) {
+    liveCount += 1;
+  }
+  if (userScore < (initialScore ?? 0)) {
+    liveCount -= 1;
+  }
+
   return (
     <span className={cssClasses}>
       <a
@@ -165,7 +175,10 @@ export default function TagComponent(props: {
       >
         {tag.tag}
       </a>
-      {isNew ? (
+      {isFinite(liveCount) && (
+        <span className="small text-muted">{liveCount}</span>
+      )}
+      {!isDisabled && isNew && (
         <TagVoteButton
           action={TagActionType.WITHDRAW}
           actionFunction={(e) => {
@@ -173,7 +186,8 @@ export default function TagComponent(props: {
           }}
           userScore={1}
         />
-      ) : (
+      )}
+      {!isDisabled && !isNew && (
         <>
           <TagVoteButton
             action={TagActionType.UPVOTE}

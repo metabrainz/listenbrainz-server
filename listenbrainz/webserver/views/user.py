@@ -415,9 +415,9 @@ def taste(user_name: str):
 
 @user_bp.route("/<user_name>/year-in-music/")
 @user_bp.route("/<user_name>/year-in-music/<int:year>/")
-def year_in_music(user_name, year: int = 2022):
+def year_in_music(user_name, year: int = 2023):
     """ Year in Music """
-    if year != 2021 and year != 2022:
+    if year != 2021 and year != 2022 and year != 2023:
         raise NotFound(f"Cannot find Year in Music report for year: {year}")
 
     user = _get_user(user_name)
@@ -426,7 +426,7 @@ def year_in_music(user_name, year: int = 2022):
         user_name=user_name,
         year=year,
         props=orjson.dumps({
-            "data": db_year_in_music.get(user.id, year),
+            "data": db_year_in_music.get(user.id, year) or {},
             "user": {
                 "id": user.id,
                 "name": user.musicbrainz_id,
