@@ -23,7 +23,7 @@ import Preview from "./components/Preview";
 import ToggleOption from "./components/ToggleOption";
 import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
-import UserSearch from "../../playlists/UserSearch";
+import UserSearch from "../../common/UserSearch";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -673,8 +673,8 @@ function ArtCreator() {
 
 export default ArtCreator;
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, globalAppContext, sentryProps } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, globalAppContext, sentryProps } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {

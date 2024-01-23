@@ -1,4 +1,4 @@
-import { isUndefined, noop, uniqBy } from "lodash";
+import { isFunction, isUndefined, noop, set, sortBy } from "lodash";
 import * as React from "react";
 import { useCallback, useState, useEffect } from "react";
 import {
@@ -15,10 +15,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TagComponent, { TagActionType } from "./TagComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
+const originalFetch = window.fetch;
+const fetchWithRetry = require("fetch-retry")(originalFetch);
+
+type MBResponseTag = {
+  name: string;
+  count?: number;
+};
+
 type TagOptionType = {
   value: string;
   label: string;
-  isFixed?: boolean;
+  isNew?: boolean;
   isOwnTag?: boolean;
   entityType: Entity;
   entityMBID?: string;
@@ -51,20 +59,22 @@ function MultiValueContainer(props: MultiValueGenericProps<TagOptionType>) {
   const { data, selectProps } = props;
   return (
     <TagComponent
-      tag={data.originalTag ?? { tag: data.value }}
+      isDisabled={selectProps.isDisabled}
+      tag={data.originalTag ?? { tag: data.value, count: 1 }}
       entityType={data.entityType}
       entityMBID={data.entityMBID}
-      isNew={!data.isFixed}
+      isNew={data.isNew}
       isOwnTag={data.isOwnTag}
+      initialScore={data.isOwnTag ? 1 : 0}
       deleteCallback={
-        data.isFixed
-          ? noop
-          : (tagName) => {
+        data.isNew
+          ? (tagName) => {
               selectProps.onChange(selectProps.value, {
                 action: "remove-value",
                 removedValue: data,
               });
             }
+          : noop
       }
     />
   );
@@ -77,7 +87,8 @@ function getOptionFromTag(
   return {
     value: tag.tag,
     label: tag.tag,
-    isFixed: true,
+    isNew: false,
+    isOwnTag: false,
     entityMBID: entityMBID ?? (tag as ArtistTag).artist_mbid ?? undefined,
     entityType,
     originalTag: tag,
@@ -94,47 +105,68 @@ export default function AddTagSelect(props: {
   const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
     GlobalAppContext
   );
-  const { access_token: musicbrainzAuthToken } = musicbrainzAuth ?? {};
+  const { access_token: musicbrainzAuthToken, refreshMBToken } =
+    musicbrainzAuth ?? {};
   const { submitTagToMusicBrainz, MBBaseURI } = APIService;
 
   const [selected, setSelected] = useState<TagOptionType[]>(
     tags?.map((tag) => getOptionFromTag(tag, entityType, entityMBID)) ?? []
   );
+
   const getUserTags = useCallback(async () => {
-    /* Get user's own tags */
+    /* If user is logged in, fetch fresh tags and user's own tags */
     if (!musicbrainzAuthToken || !entityType || !entityMBID) {
       return;
     }
-    const url = `${MBBaseURI}/${entityType}/${entityMBID}?fmt=json&inc=user-tags`;
-    const response = await fetch(encodeURI(url), {
+    const url = `${MBBaseURI}/${entityType}/${entityMBID}?fmt=json&inc=user-tags tags`;
+    const response = await fetchWithRetry(encodeURI(url), {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
         Authorization: `Bearer ${musicbrainzAuthToken}`,
       },
+      async retryOn(attempt: number, error: Error, res: Response) {
+        if (attempt > 3) return false;
+
+        if (error !== null || res.status === 401) {
+          if (isFunction(refreshMBToken)) {
+            try {
+              await refreshMBToken();
+              return true;
+            } catch {
+              return false;
+            }
+          }
+        }
+        return false;
+      },
     });
     if (response.ok) {
       const responseJSON = await response.json();
-      const userTags = responseJSON["user-tags"];
-      if (userTags?.length) {
-        setSelected((prevSelected) => {
-          const tagsArray: TagOptionType[] = userTags
-            .map(
-              (tag: { name: string }): TagOptionType => ({
-                value: tag.name,
-                label: tag.name,
-                entityType,
-                entityMBID,
-                isFixed: false,
-                isOwnTag: true,
-                originalTag: { tag: tag.name, count: 1 },
-              })
-            )
-            .concat(prevSelected);
-          return uniqBy(tagsArray, "value");
+      const userTags: MBResponseTag[] = responseJSON["user-tags"];
+      if (responseJSON.tags?.length || userTags?.length) {
+        const userTagNames: string[] = userTags.map((t) => t.name);
+        const formattedTags: TagOptionType[] = responseJSON.tags?.map(
+          (tag: MBResponseTag) => ({
+            value: tag.name,
+            label: tag.name,
+            entityType,
+            entityMBID,
+            isNew: false,
+            isOwnTag: false,
+            originalTag: { tag: tag.name, count: tag.count },
+          })
+        );
+        // mark the tags that the user has voted on
+        formattedTags.forEach((tag) => {
+          if (userTagNames.includes(tag.value)) {
+            // eslint-disable-next-line no-param-reassign
+            tag.isOwnTag = true;
+          }
         });
+        setSelected(formattedTags);
       }
     }
-  }, [entityType, entityMBID, musicbrainzAuthToken, MBBaseURI]);
+  }, [entityType, entityMBID, musicbrainzAuthToken, MBBaseURI, refreshMBToken]);
 
   if (!isUndefined(entityMBID) && prevEntityMBID !== entityMBID) {
     // Will only run once when the entityMBID changes,
@@ -195,7 +227,23 @@ export default function AddTagSelect(props: {
           if (!success) {
             return;
           }
-          setSelected(selectedTags as TagOptionType[]);
+          const newSelection = [...selectedTags];
+          const newTag = newSelection.find(
+            (tag) => tag.value === callbackValue?.value
+          );
+          if (newTag) {
+            // mark tag as newly created
+            newTag.isNew = true;
+            newTag.isOwnTag = true;
+            // increment the tag count safely
+            set(newTag, "originalTag.tag", callbackValue?.value);
+            set(
+              newTag,
+              "originalTag.count",
+              (newTag.originalTag?.count ?? 0) + 1
+            );
+          }
+          setSelected(newSelection);
           break;
         }
         case "remove-value": {
@@ -223,17 +271,18 @@ export default function AddTagSelect(props: {
   return (
     <div className="add-tag-select">
       <CreatableSelect
-        value={selected}
+        value={sortBy(selected, ["originalTag.count", "isOwnTag"]).reverse()}
         options={musicbrainzGenres?.map((genre) => ({
           value: genre,
           label: genre,
           entityMBID,
           entityType,
         }))}
-        placeholder="Add tag"
+        placeholder="Add genre or tag"
         formatCreateLabel={CreateTagText}
         isSearchable
         isMulti
+        backspaceRemovesValue={false}
         isDisabled={!musicbrainzAuthToken || !entityMBID}
         isClearable={false}
         openMenuOnClick={false}
@@ -243,9 +292,40 @@ export default function AddTagSelect(props: {
           DropdownIndicator,
         }}
         styles={{
+          // @ts-expect-error -> the "!important" in the pointerEvents css rule is not recognized
           container: (baseStyles, state) => ({
             ...baseStyles,
             border: "0px",
+            pointerEvents: "initial !important",
+          }),
+          valueContainer: (styles) => ({
+            ...styles,
+            flexWrap: "nowrap",
+            overflowX: "auto",
+            paddingRight: "3.5em",
+            "::-webkit-scrollbar": {
+              height: "5px",
+              backgroundColor: "#f5f5f5",
+            },
+            "::-webkit-scrollbar-track": {
+              backgroundColor: "#f5f5f5",
+            },
+            ":hover::-webkit-scrollbar-thumb": {
+              backgroundColor: "#ccc",
+            },
+          }),
+          indicatorsContainer: (styles) => ({
+            ...styles,
+            position: "relative",
+            ":before": {
+              content: "''",
+              width: "3em",
+              position: "absolute",
+              height: "100%",
+              left: "-3em",
+              background: "linear-gradient(-90deg, white 10%, transparent)",
+              pointerEvents: "none",
+            },
           }),
         }}
       />

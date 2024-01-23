@@ -170,8 +170,8 @@ export default function CoverArtComposite() {
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer } = await getPageProps();
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(

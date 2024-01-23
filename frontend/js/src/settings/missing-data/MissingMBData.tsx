@@ -8,11 +8,11 @@ import { toast } from "react-toastify";
 
 import NiceModal from "@ebay/nice-modal-react";
 
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
-import ListenCard from "../../listens/ListenCard";
-import ListenControl from "../../listens/ListenControl";
-import MBIDMappingModal from "../../mbid-mapping/MBIDMappingModal";
+import ListenCard from "../../common/listens/ListenCard";
+import ListenControl from "../../common/listens/ListenControl";
+import MBIDMappingModal from "../../common/listens/MBIDMappingModal";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import {

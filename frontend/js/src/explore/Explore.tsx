@@ -131,8 +131,8 @@ function ExplorePage() {
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, globalAppContext } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, globalAppContext } = await getPageProps();
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(

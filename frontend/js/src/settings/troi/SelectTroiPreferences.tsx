@@ -11,10 +11,10 @@ type SelectTroiPreferencesProps = {
 
 type SelectTroiPreferencesLoaderData = SelectTroiPreferencesProps;
 
-interface SelectTroiPreferencesState {
+export interface SelectTroiPreferencesState {
   exportToSpotify: boolean;
 }
-export default class SelectTroiPreferences extends React.Component<
+class SelectTroiPreferences extends React.Component<
   SelectTroiPreferencesProps,
   SelectTroiPreferencesState
 > {

@@ -10,9 +10,9 @@ import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import ErrorBoundary from "../utils/ErrorBoundary";
-import ListenCard from "../listens/ListenCard";
+import ListenCard from "../common/listens/ListenCard";
 
 import {
   getPageProps,
@@ -108,13 +108,13 @@ export default class RecentListens extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const {
     domContainer,
     reactProps,
     globalAppContext,
     sentryProps,
-  } = getPageProps();
+  } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
   if (sentry_dsn) {
     Sentry.init({
