@@ -16,35 +16,12 @@ MAX_QUEUED_JOBS = MAX_THREADS * 2
 SEARCH_TIMEOUT = 3600  # basically, don't have searches timeout.
 
 
-def process_listens(app, listens, priority):
-    """Given a set of listens, look up each one and then save the results to
-       the DB. Note: Legacy listens to not need to be checked to see if
-       a result alrady exists in the DB -- the selection of legacy listens
-       has already taken care of this."""
-
-    from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
-
-    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
-    for typ in MATCH_TYPES:
-        stats[typ] = 0
-
-    msids = {str(listen['recording_msid']): listen for listen in listens}
-    stats["total"] = len(msids)
-    if priority == NEW_LISTEN:
-        stats["listen_count"] += len(msids)
-
-    # To debug the mapping, set this to True or a specific priority
-    # e.g. (priority == RECHECK_LISTEN)
-    debug = False
-
-    if len(msids) == 0:
-        return stats
-
-    listens_to_check = []
-
+def filter_incoming_listens(msids, stats, app, debug):
+    """ Filter incoming to avoid rechecking listens that have been recently checked """
     # Remove msids for which we already have a match, unless its timestamp is 0
     # or if the msid was last checked more than 2 weeks ago and no match was
     # found at that time, which means we should re-check the item
+    listens_to_check = []
     with timescale.engine.connect() as connection:
         query = """
             SELECT t.recording_msid
@@ -76,6 +53,38 @@ def process_listens(app, listens, priority):
             for msid in msids:
                 if msid not in msids_to_check:
                     app.logger.info(f"Remove {msid}, since a match exists")
+
+    return listens_to_check
+
+
+def process_listens(app, listens, priority):
+    """Given a set of listens, look up each one and then save the results to
+       the DB. Note: Legacy listens to not need to be checked to see if
+       a result alrady exists in the DB -- the selection of legacy listens
+       has already taken care of this."""
+
+    from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
+
+    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
+    for typ in MATCH_TYPES:
+        stats[typ] = 0
+
+    msids = {str(listen['recording_msid']): listen for listen in listens}
+    stats["total"] = len(msids)
+    if priority == NEW_LISTEN:
+        stats["listen_count"] += len(msids)
+
+    # To debug the mapping, set this to True or a specific priority
+    # e.g. (priority == RECHECK_LISTEN)
+    debug = False
+
+    if len(msids) == 0:
+        return stats
+
+    if priority == NEW_LISTEN:
+        listens_to_check = filter_incoming_listens(msids, stats, app, debug)
+    else:
+        listens_to_check = msids
 
     if len(listens_to_check) == 0:
         return stats
@@ -167,7 +176,7 @@ def process_listens(app, listens, priority):
                 )
 
         except psycopg2.errors.CardinalityViolation:
-            app.logger.error("CardinalityViolation on insert to mbid mapping\n%s" % str(query))
+            app.logger.error("CardinalityViolation on insert to mbid mapping\n", exc_info=True)
             conn.rollback()
             return
 
@@ -187,7 +196,7 @@ def lookup_listens(app, listens, stats, exact, debug):
         use a typesense fuzzy lookup.
     """
     if len(listens) == 0:
-        return ([], [], stats)
+        return [], [], stats
 
     if debug:
         app.logger.info(f"""Lookup (exact {exact}) '{listens[0]["data"]["artist_name"]}', '{listens[0]["data"]["track_name"]}'""")
