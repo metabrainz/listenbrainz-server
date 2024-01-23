@@ -3,7 +3,7 @@ import psycopg2
 from listenbrainz import db
 from brainzutils import musicbrainz_db as mb_db
 from listenbrainz.db.model.color import ColorResult, ColorCube
-from typing import List
+from typing import List, Dict
 from psycopg2.extensions import adapt, AsIs, register_adapter
 
 # This determines how many releases for a given color are fetched and then randomly chosen from.
@@ -127,3 +127,35 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
                     results[i].rec_metadata = recordings
 
         return results
+
+
+def fetch_color_for_releases(release_mbids: List[str]) -> Dict[str, Dict[str, int]]:
+    """ Fetch the color for a given list of release mbids. If the release does not have a color
+        associated with it, None is returned.
+
+        Args:
+          release_mbids: List[str] -- the mbids for the releases
+        Returns:
+          Returns a dict with the keys red, green and blue or None if no color is found.
+    """
+
+    query = """SELECT release_mbid,
+                      red,
+                      green,
+                      blue
+                 FROM release_color
+                WHERE release_mbid in %s
+             ORDER BY last_updated DESC"""
+
+    conn = db.engine.raw_connection()
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+        curs.execute(query, (tuple(release_mbids),))
+        rows = curs.fetchall()
+        data = {}
+        for row in rows:
+            data[str(row["release_mbid"])] = {
+                "red": row["red"],
+                "green": row["green"],
+                "blue": row["blue"]
+            }
+        return data
