@@ -55,6 +55,7 @@ def process_listens(app, listens, priority):
                 ON t.recording_msid::uuid = mm.recording_msid
              WHERE mm.last_updated = '1970-01-01'  -- msid marked for rechecking manually
                 OR mm.check_again <= NOW()     -- msid not found last time, marked for rechecking
+                OR (mm.check_again IS NULL AND mm.recording_mbid IS NULL)  -- msid not found last time, not marked for rechecking because existed prior to rechecking existed
                 OR mm.recording_msid IS NULL   -- msid seen for first time
         """
         curs = connection.execute(sqlalchemy.text(query), {"msids": list(msids.keys())})
