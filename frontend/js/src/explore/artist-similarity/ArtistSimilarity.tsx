@@ -16,7 +16,7 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchBox from "./artist-search/SearchBox";
 import SimilarArtistsGraph from "./SimilarArtistsGraph";
 import Panel from "./artist-panel/Panel";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import generateTransformedArtists from "./generateTransformedArtists";
 import { downloadComponentAsImage, copyImageToClipboard } from "./utils";
 
@@ -310,13 +310,13 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const {
     domContainer,
     reactProps,
     globalAppContext,
     sentryProps,
-  } = getPageProps();
+  } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {
