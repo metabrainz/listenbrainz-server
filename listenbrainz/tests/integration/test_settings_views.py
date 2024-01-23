@@ -10,7 +10,7 @@ from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import IntegrationTestCase
 
 
-class ProfileViewsTestCase(IntegrationTestCase):
+class SettingsViewsTestCase(IntegrationTestCase):
     def setUp(self):
         super().setUp()
         self.user = db_user.get_or_create(1, 'iliekcomputers')
@@ -19,7 +19,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
 
     def tearDown(self):
         self.redis.flushall()
-        super(ProfileViewsTestCase, self).tearDown()
+        super(SettingsViewsTestCase, self).tearDown()
 
     def send_listens(self):
         with open(self.path_to_data_file('user_export_test.json')) as f:
@@ -40,7 +40,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         """
         # test get requests to export view first
         self.temporary_login(self.user['login_id'])
-        resp = self.client.get(url_for('profile.index', path='export'))
+        resp = self.client.get(url_for('settings.index', path='export'))
         self.assert200(resp)
 
         # send three listens for the user
@@ -48,7 +48,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(resp)
 
         # now export data and check if contains all the listens we just sent
-        resp = self.client.post(url_for('profile.export_data'))
+        resp = self.client.post(url_for('settings.export_data'))
         self.assert200(resp)
         data = json.loads(resp.data)
         self.assertEqual(len(data), 3)
@@ -68,7 +68,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         """
         # test get requests to delete-listens view first
         self.temporary_login(self.user['login_id'])
-        resp = self.client.get(url_for('profile.index', path='delete-listens'))
+        resp = self.client.get(url_for('settings.index', path='delete-listens'))
         self.assert200(resp)
 
         # send three listens for the user
@@ -97,8 +97,8 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertEqual(json.loads(resp.data)['payload']['count'], 3)
 
         # now delete all the listens we just sent
-        self.client.get(url_for('profile.index', path='delete-listens'))
-        resp = self.client.post(url_for('profile.delete_listens'))
+        self.client.get(url_for('settings.index', path='delete-listens'))
+        resp = self.client.post(url_for('settings.delete_listens'))
         self.assertEqual(resp.status_code, 200)
 
         # listen counts are cached for 5 min, so delete key otherwise cached will be returned

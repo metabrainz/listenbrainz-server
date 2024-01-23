@@ -54,7 +54,7 @@ def search_user():
 @ratelimit()
 def submit_listen():
     """
-    Submit listens to the server. A user token (found on  https://listenbrainz.org/profile/ ) must
+    Submit listens to the server. A user token (found on  https://listenbrainz.org/settings/ ) must
     be provided in the Authorization header! Each request should also contain at least one listen
     in the payload.
 
@@ -343,7 +343,7 @@ def latest_import():
     :resheader Content-Type: *application/json*
 
     In order to update the timestamp of a user, you'll have to provide a user token in the Authorization
-    Header. User tokens can be found on https://listenbrainz.org/profile/ .
+    Header. User tokens can be found on https://listenbrainz.org/settings/ .
 
     The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp.
 

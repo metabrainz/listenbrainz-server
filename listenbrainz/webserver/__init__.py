@@ -204,8 +204,8 @@ def create_web_app(debug=None):
     def before_request_gdpr_check():
         # skip certain pages, static content and the API
         if request.path == url_for('index.gdpr_notice') \
-                or request.path == url_for('profile.index', path='delete') \
-                or request.path == url_for('profile.index', path='export') \
+                or request.path == url_for('settings.index', path='delete') \
+                or request.path == url_for('settings.index', path='export') \
                 or request.path == url_for('login.logout') \
                 or request.path.startswith('/static') \
                 or request.path.startswith('/1'):
@@ -276,8 +276,8 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.playlist import playlist_bp
     app.register_blueprint(playlist_bp, url_prefix='/playlist')
 
-    from listenbrainz.webserver.views.profile import profile_bp
-    app.register_blueprint(profile_bp, url_prefix='/profile')
+    from listenbrainz.webserver.views.settings import settings_bp
+    app.register_blueprint(settings_bp, url_prefix='/settings')
 
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
     app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')

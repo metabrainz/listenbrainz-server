@@ -6,7 +6,7 @@
     <!-- Page content -->
 	<div class="secondary-nav">
 		<ol class="breadcrumb">
-			<li {{ 'class=active' if active_about_section == 'about'}}><a href="{{ url_for('profile.index', path='') }}">About</a></li>
+			<li {{ 'class=active' if active_about_section == 'about'}}><a href="{{ url_for('settings.index', path='') }}">About</a></li>
 			{% if not active_about_section == 'about' %}
 			<li class="active">{{ active_about_section|replace("-", " ")|capitalize }}</li>
 			{% endif %}

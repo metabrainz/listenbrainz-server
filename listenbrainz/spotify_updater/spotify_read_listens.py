@@ -36,7 +36,7 @@ def notify_error(musicbrainz_id: str, error: str):
     if not user_email:
         return
 
-    spotify_url = current_app.config['SERVER_ROOT_URL'] + '/profile/music-services/details/'
+    spotify_url = current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/details/'
     text = render_template('emails/spotify_import_error.txt', error=error, link=spotify_url)
     send_mail(
         subject='ListenBrainz Spotify Importer Error',

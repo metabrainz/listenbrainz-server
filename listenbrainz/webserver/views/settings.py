@@ -28,12 +28,12 @@ from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
 
-profile_bp = Blueprint("profile", __name__)
+settings_bp = Blueprint("settings", __name__)
 
 EXPORT_FETCH_COUNT = 5000
 
 
-@profile_bp.route("/resettoken/", methods=["POST"])
+@settings_bp.route("/resettoken/", methods=["POST"])
 @api_login_required
 def reset_token():
     try:
@@ -43,7 +43,7 @@ def reset_token():
         raise APIInternalServerError("Something went wrong! Unable to reset token right now.")
 
 
-@profile_bp.route("/select_timezone/", methods=["POST"])
+@settings_bp.route("/select_timezone/", methods=["POST"])
 @api_login_required
 def select_timezone():
     pg_timezones = db_usersetting.get_pg_timezone()
@@ -56,7 +56,7 @@ def select_timezone():
     return jsonify(data)
 
 
-@profile_bp.route("/troi/", methods=["POST"])
+@settings_bp.route("/troi/", methods=["POST"])
 @login_required
 def set_troi_prefs():
     current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
@@ -66,7 +66,7 @@ def set_troi_prefs():
     return jsonify(data)
 
 
-@profile_bp.route("/resetlatestimportts/", methods=["POST"])
+@settings_bp.route("/resetlatestimportts/", methods=["POST"])
 @api_login_required
 def reset_latest_import_timestamp():
     try:
@@ -76,7 +76,7 @@ def reset_latest_import_timestamp():
         raise APIInternalServerError("Something went wrong! Unable to reset latest import timestamp right now.")
 
 
-@profile_bp.route("/import/", methods=["POST"])
+@settings_bp.route("/import/", methods=["POST"])
 @api_login_required
 def import_data():
     """ Displays the import page to user, giving various options """
@@ -140,7 +140,7 @@ def stream_json_array(elements):
     yield ']'
 
 
-@profile_bp.route("/export/", methods=["POST"])
+@settings_bp.route("/export/", methods=["POST"])
 @api_login_required
 @web_listenstore_needed
 def export_data():
@@ -161,7 +161,7 @@ def export_data():
     return response
 
 
-@profile_bp.route("/export-feedback/", methods=["POST"])
+@settings_bp.route("/export-feedback/", methods=["POST"])
 @login_required
 def export_feedback():
     """ Exporting the feedback data to json """
@@ -180,7 +180,7 @@ def export_feedback():
     return response
 
 
-@profile_bp.route('/delete/', methods=['POST'])
+@settings_bp.route('/delete/', methods=['POST'])
 @api_login_required
 @web_listenstore_needed
 def delete():
@@ -201,7 +201,7 @@ def delete():
         raise APIInternalServerError('Error while deleting user %s, please try again later.' % current_user.musicbrainz_id)
 
 
-@profile_bp.route('/delete-listens/', methods=['POST'])
+@settings_bp.route('/delete-listens/', methods=['POST'])
 @api_login_required
 @web_listenstore_needed
 def delete_listens():
@@ -243,7 +243,7 @@ def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
         raise NotFound("Service %s is invalid." % name)
 
 
-@profile_bp.route('/music-services/details/', methods=['POST'])
+@settings_bp.route('/music-services/details/', methods=['POST'])
 @api_login_required
 def music_services_details():
     spotify_service = SpotifyService()
@@ -277,7 +277,7 @@ def music_services_details():
     return jsonify(data)
 
 
-@profile_bp.route('/music-services/<service_name>/callback/')
+@settings_bp.route('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
     service = _get_service_or_raise_404(service_name)
@@ -286,10 +286,10 @@ def music_services_callback(service_name: str):
         raise BadRequest('missing code')
     token = service.fetch_access_token(code)
     service.add_new_user(current_user.id, token)
-    return redirect(url_for('profile.index', path='music-services/details'))
+    return redirect(url_for('settings.index', path='music-services/details'))
 
 
-@profile_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
+@settings_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
 @api_login_required
 def refresh_service_token(service_name: str):
     service = _get_service_or_raise_404(service_name, include_mb=True)
@@ -309,7 +309,7 @@ def refresh_service_token(service_name: str):
     return jsonify({"access_token": user["access_token"]})
 
 
-@profile_bp.route('/music-services/<service_name>/disconnect/', methods=['POST'])
+@settings_bp.route('/music-services/<service_name>/disconnect/', methods=['POST'])
 @api_login_required
 def music_services_disconnect(service_name: str):
     service = _get_service_or_raise_404(service_name)
@@ -347,7 +347,7 @@ def music_services_disconnect(service_name: str):
     raise BadRequest('Invalid action')
 
 
-@profile_bp.route('/missing-data/', methods=['POST'])
+@settings_bp.route('/missing-data/', methods=['POST'])
 @api_login_required
 def missing_mb_data():
     """ Returns a list of missing data for the user """
@@ -358,8 +358,8 @@ def missing_mb_data():
     return jsonify(data)
 
 
-@profile_bp.route('/', defaults={'path': ''})
-@profile_bp.route('/<path:path>/')
+@settings_bp.route('/', defaults={'path': ''})
+@settings_bp.route('/<path:path>/')
 @login_required
 def index(path):
-    return render_template("profile/index.html")
+    return render_template("settings/index.html")
