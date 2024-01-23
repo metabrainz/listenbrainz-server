@@ -27,10 +27,18 @@ type ArtistSimilarityProps = {
 
 const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
 const BACKGROUND_ALPHA = 0.2;
+const MAXIMUM_LUMINANCE = 0.8;
+const MINIMUM_LUMINANCE = 0.2;
 
 const colorGenerator = (): [tinycolor.Instance, tinycolor.Instance] => {
   const initialColor = tinycolor(`hsv(${Math.random() * 360}, 100%, 90%)`);
   return [initialColor, initialColor.clone().tetrad()[1]];
+};
+const isColorTooLight = (color: tinycolor.Instance): boolean => {
+  return color.getLuminance() > MAXIMUM_LUMINANCE;
+};
+const isColorTooDark = (color: tinycolor.Instance): boolean => {
+  return color.getLuminance() < MINIMUM_LUMINANCE;
 };
 
 function ArtistSimilarity(props: ArtistSimilarityProps) {
@@ -189,22 +197,35 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
 
       const topAlbumReleaseColor = topAlbumsForArtist[0]?.release_color;
       const topRecordingReleaseColor = topRecordingsForArtist[0]?.release_color;
-      if (
-        !topAlbumReleaseColor ||
-        !topRecordingReleaseColor ||
-        isEqual(topAlbumReleaseColor, topRecordingReleaseColor)
-      ) {
-        setColors((prevColors) => [prevColors[1], prevColors[1].tetrad()[1]]);
+      let firstColor;
+      let secondColor;
+      if (topAlbumReleaseColor) {
+        const { red, green, blue } = topAlbumReleaseColor;
+        firstColor = tinycolor({ r: red, g: green, b: blue });
       } else {
-        setColors([
-          tinycolor(
-            `rgb(${topAlbumReleaseColor.red}, ${topAlbumReleaseColor.green}, ${topAlbumReleaseColor.blue})`
-          ),
-          tinycolor(
-            `rgb(${topRecordingReleaseColor.red}, ${topRecordingReleaseColor.green}, ${topRecordingReleaseColor.blue})`
-          ),
-        ]);
+        // Do we want to pick a color from an array of predefined colors instead of random?
+        firstColor = tinycolor.random();
       }
+      if (topRecordingReleaseColor) {
+        const { red, green, blue } = topRecordingReleaseColor;
+        secondColor = tinycolor({ r: red, g: green, b: blue });
+      } else {
+        // If we don't have required release info, base the second color on the first,
+        // randomly picking one of the tetrad complementary colors.
+        const randomTetradColor = Math.round(Math.random() * (3 - 1) + 1);
+        secondColor = tinycolor(firstColor).clone().tetrad()[randomTetradColor];
+      }
+
+      // Adjust the colors if they are too light or too dark
+      [firstColor, secondColor].forEach((color) => {
+        if (isColorTooLight(color)) {
+          color.darken(30).saturate(15);
+        } else if (isColorTooDark(color)) {
+          color.lighten(30).saturate(15);
+        }
+      });
+
+      setColors([firstColor, secondColor]);
 
       return newArtistInfo;
     },
