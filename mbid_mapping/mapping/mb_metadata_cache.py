@@ -191,6 +191,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                     ON l.link_type = lt.id
                                   {values_join}
                                  WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
+                                 -- do not show outdated urls to users
                                    AND NOT l.ended
                               GROUP BY a.gid
                    ), recording_rels AS (
@@ -211,7 +212,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                     ON la.attribute_type = lat.id
                                   {values_join}
                                  WHERE lt.gid IN ({RECORDING_LINK_GIDS_SQL})
-                                   AND NOT l.ended
+                                 -- performer rels are ended by definition (the artist is no longer performing) but they should still be shown to the user
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
