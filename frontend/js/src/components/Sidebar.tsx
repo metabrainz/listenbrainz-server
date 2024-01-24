@@ -1,9 +1,15 @@
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGear, faXmark } from "@fortawesome/free-solid-svg-icons";
+import {
+  IconDefinition,
+  faGear,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 
-function Sidebar(props: React.PropsWithChildren<{}>) {
-  const { children } = props;
+function Sidebar(
+  props: React.PropsWithChildren<{ toggleIcon?: IconDefinition }>
+) {
+  const { children, toggleIcon } = props;
 
   const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);
   const toggleSidebar = () => {
@@ -18,7 +24,10 @@ function Sidebar(props: React.PropsWithChildren<{}>) {
         onClick={toggleSidebar}
         type="button"
       >
-        <FontAwesomeIcon icon={isSidebarOpen ? faXmark : faGear} size="2x" />
+        <FontAwesomeIcon
+          icon={isSidebarOpen ? faXmark : toggleIcon ?? faGear}
+          size="2x"
+        />
       </button>
       {isSidebarOpen && (
         <button

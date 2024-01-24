@@ -1,6 +1,9 @@
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowUpRightFromSquare,
+  faInfo,
+} from "@fortawesome/free-solid-svg-icons";
 import Spinner from "react-loader-spinner";
 import ReleaseCard from "../../fresh-releases/components/ReleaseCard";
 import SideBar from "../../../components/Sidebar";
@@ -16,7 +19,7 @@ function Panel({ artistInfo, loading }: PanelProps) {
 
   return (
     artistInfo && (
-      <SideBar>
+      <SideBar toggleIcon={faInfo}>
         {loading ? (
           <div className="spinner-container">
             <Spinner
