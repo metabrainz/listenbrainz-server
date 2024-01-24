@@ -7,7 +7,7 @@ import Export from "../export/ExportData";
 import Import, { ImportLoader } from "../import/ImportListens";
 import {
   MissingMBDataPageLoader,
-  MissingMBDataPageWrapper,
+  MissingMBDataPageWrapper as MissingMBDataPage,
 } from "../missing-data/MissingMBData";
 import MusicServices, {
   MusicServicesLoader,
@@ -15,96 +15,71 @@ import MusicServices, {
 import ResetToken from "../resettoken/ResetToken";
 import {
   SelectTimezoneLoader,
-  SelectTimezoneWrapper,
+  SelectTimezoneWrapper as SelectTimezone,
 } from "../select_timezone/SelectTimezone";
 import {
   SelectTroiPreferencesLoader,
-  SelectTroiPreferencesWrapper,
+  SelectTroiPreferencesWrapper as SelectTroiPreferences,
 } from "../troi/SelectTroiPreferences";
 import Settings from "../Settings";
 import ResetImportTimestamp from "../resetlatestimportts/ResetLatestImports";
 
 const getSettingsRoutes = () => {
-  const SettingsWithAlertNotifications = withAlertNotifications(Settings);
-  const ResetTokenWithAlertNotifications = withAlertNotifications(ResetToken);
-  const MusicServicesWithAlertNotifications = withAlertNotifications(
-    MusicServices
-  );
-  const ImportWithAlertNotifications = withAlertNotifications(Import);
-  const ResetImportTimestampWithAlertNotifications = withAlertNotifications(
-    ResetImportTimestamp
-  );
-  const SelectTroiPreferencesWithAlertNotifications = withAlertNotifications(
-    SelectTroiPreferencesWrapper
-  );
-  const MissingMBDataPageWithAlertNotification = withAlertNotifications(
-    MissingMBDataPageWrapper
-  );
-  const SelectTimezoneWithAlertNotifications = withAlertNotifications(
-    SelectTimezoneWrapper
-  );
-
-  const ExportWithAlertNotifications = withAlertNotifications(Export);
-  const DeleteListensWithAlertNotifications = withAlertNotifications(
-    DeleteListens
-  );
-  const DeleteAccountWithAlertNotifications = withAlertNotifications(
-    DeleteAccount
-  );
+  const LayoutWithAlertNotifications = withAlertNotifications(SettingsLayout);
 
   const routes = [
     {
       path: "/settings",
-      element: <SettingsLayout />,
+      element: <LayoutWithAlertNotifications />,
       children: [
         {
           index: true,
-          element: <SettingsWithAlertNotifications />,
+          element: <Settings />,
         },
         {
           path: "resettoken/",
-          element: <ResetTokenWithAlertNotifications />,
+          element: <ResetToken />,
         },
         {
           path: "music-services/details/",
           loader: MusicServicesLoader,
-          element: <MusicServicesWithAlertNotifications />,
+          element: <MusicServices />,
         },
         {
           path: "import/",
           loader: ImportLoader,
-          element: <ImportWithAlertNotifications />,
+          element: <Import />,
         },
         {
           path: "resetlatestimportts/",
-          element: <ResetImportTimestampWithAlertNotifications />,
+          element: <ResetImportTimestamp />,
         },
         {
           path: "missing-data/",
           loader: MissingMBDataPageLoader,
-          element: <MissingMBDataPageWithAlertNotification />,
+          element: <MissingMBDataPage />,
         },
         {
           path: "select_timezone/",
           loader: SelectTimezoneLoader,
-          element: <SelectTimezoneWithAlertNotifications />,
+          element: <SelectTimezone />,
         },
         {
           path: "troi/",
           loader: SelectTroiPreferencesLoader,
-          element: <SelectTroiPreferencesWithAlertNotifications />,
+          element: <SelectTroiPreferences />,
         },
         {
           path: "export/",
-          element: <ExportWithAlertNotifications />,
+          element: <Export />,
         },
         {
           path: "delete-listens/",
-          element: <DeleteListensWithAlertNotifications />,
+          element: <DeleteListens />,
         },
         {
           path: "delete/",
-          element: <DeleteAccountWithAlertNotifications />,
+          element: <DeleteAccount />,
         },
       ],
     },

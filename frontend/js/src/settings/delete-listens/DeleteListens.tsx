@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { redirect } from "react-router-dom";
+import { redirect, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -9,11 +9,12 @@ import { downloadFile } from "../export/ExportData";
 export default function DeleteListens() {
   const { currentUser } = React.useContext(GlobalAppContext);
   const { name } = currentUser;
+  const location = useLocation();
   const downloadListens = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      await downloadFile(window.location.href);
+      await downloadFile(location.pathname);
       toast.success(
         <ToastMsg
           title="Success"
@@ -35,7 +36,7 @@ export default function DeleteListens() {
     e.preventDefault();
 
     try {
-      const response = await fetch(window.location.href, {
+      const response = await fetch(location.pathname, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,6 +50,7 @@ export default function DeleteListens() {
         />
       );
 
+      // TODO: Should be replaced by redirect using react-router-dom
       setTimeout(() => {
         window.location.href = `/user/${name}/`;
       }, 3000);

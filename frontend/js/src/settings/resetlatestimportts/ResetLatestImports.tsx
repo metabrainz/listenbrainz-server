@@ -1,13 +1,14 @@
 import * as React from "react";
 
-import { redirect } from "react-router-dom";
+import { redirect, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ToastMsg } from "../../notifications/Notifications";
 
 export default function ResetImportTimestamp() {
+  const location = useLocation();
   const resetToken = async () => {
     try {
-      const response = await fetch(window.location.href, {
+      const response = await fetch(location.pathname, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
