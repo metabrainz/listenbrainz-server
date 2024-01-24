@@ -18,9 +18,6 @@ interface GraphProps {
 
 type OmitHeightWidth<T> = Omit<T, "height" | "width">;
 
-const MAX_LINES = 2;
-const MAX_WORD_LENGTH = 10;
-
 function CustomNodeComponent({
   node,
   animated: animatedProps,
@@ -109,15 +106,21 @@ function SimilarArtistsGraph({
     LinkType
   >> = {
     data,
-    repulsivity: 350,
+    repulsivity: 20,
     iterations: 120,
-    centeringStrength: 0.11,
-    nodeBorderWidth: 5,
-    linkThickness: 2,
+    centeringStrength: 1,
+    nodeBorderWidth: 0,
+    linkThickness: 1,
     distanceMin: 20,
-    distanceMax: 550,
+    distanceMax: Math.min(550, document.body.clientWidth),
     nodeColor: (node) => node.color,
-    linkColor: { from: "source.color", modifiers: [["darker", 1]] },
+    linkColor: {
+      from: "target.color",
+      modifiers: [
+        ["darker", 0.3],
+        ["opacity", 0.7],
+      ],
+    },
     linkDistance: (link) => link.distance,
     nodeSize: (node) => node.size,
     activeNodeSize: (node) => node.size * 1.2,
