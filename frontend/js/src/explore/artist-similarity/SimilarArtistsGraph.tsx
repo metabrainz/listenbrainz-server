@@ -106,13 +106,19 @@ function SimilarArtistsGraph({
     LinkType
   >> = {
     data,
-    repulsivity: 20,
-    iterations: 120,
-    centeringStrength: 1,
+    repulsivity: 180,
+    iterations: 40,
+    centeringStrength: 0.1,
     nodeBorderWidth: 0,
     linkThickness: 1,
     distanceMin: 20,
-    distanceMax: Math.min(550, document.body.clientWidth),
+    distanceMax: graphParentElementRef?.current
+      ? Math.min(
+          550,
+          graphParentElementRef.current.clientWidth / 2,
+          graphParentElementRef.current.clientHeight / 2
+        )
+      : 550,
     nodeColor: (node) => node.color,
     linkColor: {
       from: "target.color",
