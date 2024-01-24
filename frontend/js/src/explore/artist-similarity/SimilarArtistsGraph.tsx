@@ -29,7 +29,6 @@ function CustomNodeComponent({
   onMouseMove,
   onMouseLeave,
 }: NodeProps<NodeType>) {
-  const nodeSize = node.size;
   return (
     <animated.g
       className="artist-similarity-graph-node"
@@ -63,20 +62,14 @@ function CustomNodeComponent({
       <animated.foreignObject
         fontSize={to([animatedProps.size], (size) => size / 6)}
         color={tinycolor
-          .mostReadable(node.color as string, ["#fff", "#000"])
+          .mostReadable(node.color, ["#fff", "#46433a"])
           .toHexString()}
         width={to([animatedProps.size], (size) => size)}
         height={to([animatedProps.size], (size) => size)}
         x={to([animatedProps.size], (size) => -size / 2)}
         y={to([animatedProps.size], (size) => -size / 2)}
       >
-        <div
-          className="centered-text"
-          style={{
-            width: nodeSize * 0.9,
-            height: nodeSize,
-          }}
-        >
+        <div className="centered-text">
           <div className="centered-text-inner ellipsis-3-lines">
             {node.data.artist_name}
           </div>
@@ -91,7 +84,9 @@ function CustomNodeTooltipComponent({ node }: NodeTooltipProps<NodeType>) {
     <div
       style={{
         background: node.color,
-        color: "#ffffff",
+        color: tinycolor
+          .mostReadable(node.color, ["#fff", "#46433a"])
+          .toHexString(),
         padding: "9px 12px",
         borderRadius: "3px",
       }}
@@ -126,7 +121,7 @@ function SimilarArtistsGraph({
     linkDistance: (link) => link.distance,
     nodeSize: (node) => node.size,
     activeNodeSize: (node) => node.size * 1.2,
-    inactiveNodeSize: (node) => node.size / 1.2,
+    inactiveNodeSize: (node) => node.size,
     isInteractive: true,
     onClick: (node) => onArtistChange(node.data.artist_mbid),
     motionConfig: "default",
