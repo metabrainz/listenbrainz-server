@@ -47,6 +47,7 @@ def redirect_user_page(target):
 
     return inner
 
+
 @redirect_bp.route('/', defaults={'path': ''})
 @redirect_bp.route('/<path:path>/')
 @login_required
@@ -167,6 +168,7 @@ def charts(user_name):
         props=orjson.dumps(props).decode("utf-8"),
         user=user
     )
+
 
 @user_bp.route("/<user_name>/reports/", methods=['POST'])
 def reports(user_name):
