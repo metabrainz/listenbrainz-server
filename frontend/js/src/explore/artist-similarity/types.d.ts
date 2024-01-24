@@ -50,6 +50,7 @@ type ReleaseColor = {
 type RecordingType = {
   artist_mbids: Array<string>;
   artist_name: string;
+  artists: Array<MBIDMappingArtist>;
   caa_id: number;
   caa_release_mbid: string;
   length: number;

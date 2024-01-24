@@ -206,7 +206,10 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
         // Do we want to pick a color from an array of predefined colors instead of random?
         firstColor = tinycolor.random();
       }
-      if (topRecordingReleaseColor) {
+      if (
+        topRecordingReleaseColor &&
+        !isEqual(topAlbumReleaseColor, topRecordingReleaseColor)
+      ) {
         const { red, green, blue } = topRecordingReleaseColor;
         secondColor = tinycolor({ r: red, g: green, b: blue });
       } else {

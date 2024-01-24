@@ -2,6 +2,7 @@ import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
+import { PopularRecording } from "../album/utils";
 
 export default class APIService {
   APIBaseURI: string;
@@ -1548,14 +1549,18 @@ export default class APIService {
     return htmlParagraphs?.textContent || "No wiki data found.";
   };
 
-  getTopRecordingsForArtist = async (artistMBID: string): Promise<any> => {
+  getTopRecordingsForArtist = async (
+    artistMBID: string
+  ): Promise<RecordingType[]> => {
     const url = `${this.APIBaseURI}/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
-  getTopReleaseGroupsForArtist = async (artistMBID: string): Promise<any> => {
+  getTopReleaseGroupsForArtist = async (
+    artistMBID: string
+  ): Promise<ReleaseGroupType[]> => {
     const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist?artist_mbid=${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
