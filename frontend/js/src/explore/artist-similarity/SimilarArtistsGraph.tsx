@@ -101,12 +101,11 @@ function SimilarArtistsGraph({
   background,
   graphParentElementRef,
 }: GraphProps) {
-  let biggestDimension = 650;
+  let width = 650;
+  let height = 650;
   if (graphParentElementRef.current) {
-    biggestDimension = Math.max(
-      graphParentElementRef.current.clientHeight,
-      graphParentElementRef.current.clientWidth
-    );
+    width = Math.max(width, graphParentElementRef.current.clientWidth);
+    height = Math.max(height, graphParentElementRef.current.clientHeight);
   }
   const chartProperties: NetworkSvgProps<NodeType, LinkType> = {
     data,
@@ -116,9 +115,9 @@ function SimilarArtistsGraph({
     nodeBorderWidth: 0,
     linkThickness: 1,
     distanceMin: 20,
-    distanceMax: biggestDimension / 2 - 30,
-    width: biggestDimension,
-    height: biggestDimension,
+    distanceMax: Math.min(width, height) / 2,
+    width,
+    height,
     nodeColor: (node) => node.color,
     linkColor: {
       from: "target.color",
