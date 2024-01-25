@@ -212,7 +212,20 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
       ) {
         const { red, green, blue } = topRecordingReleaseColor;
         secondColor = tinycolor({ r: red, g: green, b: blue });
-      } else {
+        // We should consider using another color library that allows us to calculate color distance
+        // better using deltaE algorithms. Looks into color.js and chroma.js for example.
+        const hue1 = firstColor.toHsv().h;
+        const hue2 = secondColor.toHsv().h;
+        const distanceBetweenColors = Math.min(
+          Math.abs(hue2 - hue1),
+          360 - Math.abs(hue2 - hue1)
+        );
+        if (distanceBetweenColors < 25) {
+          // Colors are too similar, set up for picking another color below.
+          secondColor = undefined;
+        }
+      }
+      if (!secondColor) {
         // If we don't have required release info, base the second color on the first,
         // randomly picking one of the tetrad complementary colors.
         const randomTetradColor = Math.round(Math.random() * (3 - 1) + 1);
