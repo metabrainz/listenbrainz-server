@@ -14,7 +14,7 @@
     flex-wrap: wrap;
     padding: 2vh 0;
 
-    @media screen and (max-width: 768px) {
+    @media screen and (max-width: @screen-sm) {
       justify-content: space-between;
     }
 
@@ -68,6 +68,10 @@
     .sidebar {
       width: max(20%, 225px);
       z-index: 2;
+      @media screen and (max-width: @screen-md) {
+        // on mobile, show the sidebar tray above BrainzPlayer; it can be collapsed
+        z-index: 6;
+      }
 
       .sidebar-header {
         background: #353070;
