@@ -235,9 +235,9 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
       // Adjust the colors if they are too light or too dark
       [firstColor, secondColor].forEach((color) => {
         if (isColorTooLight(color)) {
-          color.darken(30).saturate(15);
+          color.darken(20).saturate(30);
         } else if (isColorTooDark(color)) {
-          color.lighten(30).saturate(15);
+          color.lighten(20).saturate(30);
         }
       });
 

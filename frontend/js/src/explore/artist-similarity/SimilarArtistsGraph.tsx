@@ -55,6 +55,7 @@ function CustomNodeComponent({
         strokeWidth={animatedProps.borderWidth}
         stroke={animatedProps.borderColor}
         opacity={animatedProps.opacity}
+        filter="drop-shadow( 0px 4px 3px rgba(0, 0, 0, 0.2))"
       />
       <animated.foreignObject
         fontSize={to([animatedProps.size], (size) => size / 6)}
@@ -109,15 +110,15 @@ function SimilarArtistsGraph({
   }
   const chartProperties: NetworkSvgProps<NodeType, LinkType> = {
     data,
-    repulsivity: 180,
+    repulsivity: Math.min(width, height) / 2,
     iterations: 40,
     centeringStrength: 0.1,
     nodeBorderWidth: 0,
     linkThickness: 1,
     distanceMin: 20,
     distanceMax: Math.min(width, height) / 2,
-    width,
-    height,
+    width: width - 6,
+    height: height - 6,
     nodeColor: (node) => node.color,
     linkColor: {
       from: "target.color",

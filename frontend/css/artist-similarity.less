@@ -149,6 +149,7 @@
     .artist-similarity-graph-container {
       height: calc(100vh - @brainzplayer-height);
       width: 80%;
+      max-height: 1120px; // 80% of the max content width (so we have a square aspect ratio
       overflow: scroll;
 
       .artist-similarity-graph-node {
@@ -173,6 +174,7 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
+            line-height: 1.1em;
           }
         }
       }
