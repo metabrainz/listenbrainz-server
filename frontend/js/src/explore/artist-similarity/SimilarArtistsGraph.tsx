@@ -134,6 +134,7 @@ function SimilarArtistsGraph({
     isInteractive: true,
     onClick: (node) => onArtistChange(node.data.artist_mbid),
     motionConfig: "default",
+    margin: { top: 50 },
   };
 
   return data ? (
