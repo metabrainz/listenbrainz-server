@@ -8,7 +8,7 @@ import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
-import { isEqual } from "lodash";
+import { isEmpty, isEqual } from "lodash";
 import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
@@ -199,7 +199,7 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
       const topRecordingReleaseColor = topRecordingsForArtist[0]?.release_color;
       let firstColor;
       let secondColor;
-      if (topAlbumReleaseColor) {
+      if (!isEmpty(topAlbumReleaseColor)) {
         const { red, green, blue } = topAlbumReleaseColor;
         firstColor = tinycolor({ r: red, g: green, b: blue });
       } else {
@@ -207,7 +207,7 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
         firstColor = tinycolor.random();
       }
       if (
-        topRecordingReleaseColor &&
+        !isEmpty(topRecordingReleaseColor) &&
         !isEqual(topAlbumReleaseColor, topRecordingReleaseColor)
       ) {
         const { red, green, blue } = topRecordingReleaseColor;
