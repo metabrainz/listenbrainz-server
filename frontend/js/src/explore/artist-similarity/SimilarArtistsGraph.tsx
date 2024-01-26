@@ -1,12 +1,7 @@
 import * as React from "react";
-import {
-  ResponsiveNetwork,
-  NodeProps,
-  NodeTooltipProps,
-  NetworkSvgProps,
-} from "@nivo/network";
+import { ResponsiveNetwork, NodeProps, NetworkSvgProps } from "@nivo/network";
 import { animated, to } from "@react-spring/web";
-import { debounce, isFinite, noop } from "lodash";
+import { debounce, noop } from "lodash";
 import tinycolor from "tinycolor2";
 
 interface GraphProps {
@@ -15,8 +10,6 @@ interface GraphProps {
   background: string;
   graphParentElementRef: React.RefObject<HTMLDivElement>;
 }
-
-type OmitHeightWidth<T> = Omit<T, "height" | "width">;
 
 function CustomNodeComponent({
   node,
@@ -74,25 +67,6 @@ function CustomNodeComponent({
         </div>
       </animated.foreignObject>
     </animated.g>
-  );
-}
-
-function CustomNodeTooltipComponent({ node }: NodeTooltipProps<NodeType>) {
-  return (
-    <div
-      style={{
-        background: node.color,
-        color: tinycolor
-          .mostReadable(node.color, ["#fff", "#46433a"])
-          .toHexString(),
-        padding: "9px 12px",
-        borderRadius: "3px",
-      }}
-    >
-      <strong>{node.data.artist_name}</strong>
-      <br />
-      {isFinite(node.data.score) && <>Score: {node.data.score}</>}
-    </div>
   );
 }
 
@@ -178,7 +152,10 @@ function SimilarArtistsGraph({
       <ResponsiveNetwork
         {...chartProperties}
         nodeComponent={CustomNodeComponent}
-        nodeTooltip={CustomNodeTooltipComponent}
+        // We can't set isInteractive to false (need onClick event)
+        // But we don't want to show a tooltip, so this function returns an empty element
+        // eslint-disable-next-line
+        nodeTooltip={() => <></>}
       />
     </div>
   ) : (
