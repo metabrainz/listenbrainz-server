@@ -53,7 +53,7 @@ def fresh_releases():
     )
 
 
-@explore_bp.route("/artist-similarity/")
+@explore_bp.route("/music-neighborhood/")
 def artist_similarity():
     """ Explore artist similarity """
 
@@ -75,7 +75,7 @@ def artist_similarity():
         }
 
         return render_template(
-            "explore/artist-similarity.html",
+            "explore/music-neighborhood.html",
             props=orjson.dumps(props).decode("utf-8")
         )
 

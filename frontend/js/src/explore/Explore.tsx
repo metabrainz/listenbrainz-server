@@ -80,10 +80,10 @@ function ExplorePage() {
         </div>
         <div>
           <ExploreCard
-            name="Music Web"
+            name="Music Neighborhood"
             desc="Visualisation"
             img_name="music-web.jpg"
-            url="/explore/artist-similarity"
+            url="/explore/music-neighborhood"
           />
         </div>
         {currentUser?.name && (
