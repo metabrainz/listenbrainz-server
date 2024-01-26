@@ -115,7 +115,7 @@ module.exports = function (env, argv) {
         jsDir,
         "src/explore/fresh-releases/FreshReleases.tsx"
       ),
-      artistSimilarity: path.resolve(
+      musicNeighborhood: path.resolve(
         jsDir,
         "src/explore/music-neighborhood/MusicNeighborhood.tsx"
       ),
