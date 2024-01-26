@@ -2,6 +2,8 @@ from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, current_app
 
 from listenbrainz.db import popularity
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.db.release import load_releases_from_mbids_with_redirects
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import is_valid_uuid

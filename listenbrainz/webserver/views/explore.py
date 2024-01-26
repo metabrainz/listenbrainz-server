@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, current_app, request
 from flask_login import current_user
 import orjson
 from werkzeug.exceptions import NotFound, BadRequest
+import psycopg2
 
 from listenbrainz.db.similar_users import get_top_similar_users
 
@@ -50,6 +51,34 @@ def fresh_releases():
         "explore/fresh-releases.html",
         props=orjson.dumps({}).decode("utf-8")
     )
+
+
+@explore_bp.route("/music-neighborhood/")
+def artist_similarity():
+    """ Explore artist similarity """
+
+    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            ts_conn.cursor() as ts_curs:
+        ts_curs.execute("""
+                        SELECT artist_mbid::TEXT
+                            FROM popularity.artist
+                            ORDER BY total_listen_count DESC
+                            LIMIT 1
+                            """)
+
+        artist_mbid = ts_curs.fetchone()[0]
+        current_app.logger.info(artist_mbid)
+
+        props = {
+            "algorithm": "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30",
+            "artist_mbid": artist_mbid
+        }
+
+        return render_template(
+            "explore/music-neighborhood.html",
+            props=orjson.dumps(props).decode("utf-8")
+        )
+
 
 @explore_bp.route("/art-creator/")
 def art_creator():
