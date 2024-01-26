@@ -8,7 +8,7 @@ import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
-import { isEmpty, isEqual } from "lodash";
+import { isEmpty, isEqual, kebabCase } from "lodash";
 import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
@@ -20,7 +20,7 @@ import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import generateTransformedArtists from "./generateTransformedArtists";
 import { downloadComponentAsImage, copyImageToClipboard } from "./utils";
 
-type ArtistSimilarityProps = {
+type MusicNeighborhoodProps = {
   algorithm: string;
   artist_mbid: string;
 };
@@ -41,7 +41,7 @@ const isColorTooDark = (color: tinycolor.Instance): boolean => {
   return color.getLuminance() < MINIMUM_LUMINANCE;
 };
 
-function ArtistSimilarity(props: ArtistSimilarityProps) {
+function MusicNeighborhood(props: MusicNeighborhoodProps) {
   const {
     algorithm: DEFAULT_ALGORITHM,
     artist_mbid: DEFAULT_ARTIST_MBID,
@@ -86,7 +86,7 @@ function ArtistSimilarity(props: ArtistSimilarityProps) {
     try {
       downloadComponentAsImage(
         graphParentElementRef.current,
-        `${artistInfo?.name}-similarity-graph.png`
+        `${kebabCase(artistInfo?.name)}-music-neighborhood.png`
       );
     } catch (error) {
       toast.error(
@@ -366,8 +366,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const { algorithm, artist_mbid } = reactProps;
 
-  const ArtistSimilarityPageWithAlertNotifications = withAlertNotifications(
-    ArtistSimilarity
+  const MusicNeighborhoodPageWithAlertNotifications = withAlertNotifications(
+    MusicNeighborhood
   );
 
   const renderRoot = createRoot(domContainer!);
@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
-          <ArtistSimilarityPageWithAlertNotifications
+          <MusicNeighborhoodPageWithAlertNotifications
             algorithm={algorithm}
             artist_mbid={artist_mbid}
           />
