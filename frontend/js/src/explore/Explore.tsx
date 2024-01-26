@@ -82,7 +82,7 @@ function ExplorePage() {
           <ExploreCard
             name="Music Neighborhood"
             desc="Visualisation"
-            img_name="music-web.jpg"
+            img_name="music-neighborhood.jpg"
             url="/explore/music-neighborhood"
           />
         </div>
