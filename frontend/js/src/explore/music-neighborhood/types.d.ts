@@ -33,7 +33,7 @@ type ArtistInfoType = {
   artist_mbid: string;
   born: string | number;
   gender?: string;
-  mbLink: string;
+  link: string;
   name: string;
   topAlbum: ReleaseGroupType | null;
   topTracks: RecordingType[] | null;

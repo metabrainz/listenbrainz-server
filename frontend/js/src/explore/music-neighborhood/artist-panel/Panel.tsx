@@ -54,7 +54,7 @@ function Panel({ artistInfo, loading }: PanelProps) {
               <div className="artist-mb-link">
                 <a
                   id="artist-mb-link-button"
-                  href={artistInfo.mbLink}
+                  href={artistInfo.link}
                   target="_blank"
                   rel="noreferrer"
                 >

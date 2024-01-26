@@ -187,7 +187,7 @@ function MusicNeighborhood(props: MusicNeighborhoodProps) {
         type: artistInformation[0]?.type,
         ...birthAreaData,
         wiki: wikipediaData,
-        mbLink: `https://musicbrainz.org/artist/${artistMBID}`,
+        link: `/artist/${artistMBID}`,
         topTracks: topRecordingsForArtist ?? null,
         topAlbum: topAlbumsForArtist?.[0] ?? null,
         artist_mbid: artistInformation[0]?.artist_mbid,
