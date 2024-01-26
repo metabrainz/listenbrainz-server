@@ -2,18 +2,18 @@ import * as React from "react";
 
 import { Navigate, Outlet } from "react-router-dom";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
-import { UserReportsLoader, UserReportsWrapper } from "../../stats/UserReports";
+import { UserReportsLoader, UserReportsWrapper } from "../stats/UserReports";
 import UserFeedLayout from "../layout";
-import { ListensLoader, ListensWrapper } from "../pages";
-import { UserTasteLoader, UserTastesWrapper } from "../UserTaste";
+import { ListensLoader, ListensWrapper } from "../Dashboard";
+import { UserTasteLoader, UserTastesWrapper } from "../taste/UserTaste";
 import {
   UserPlaylistsLoader,
   UserPlaylistsWrapper,
-} from "../../playlists/Playlists";
+} from "../playlists/Playlists";
 import {
   RecommendationsPageLoader,
   RecommendationsPageWrapper,
-} from "../../recommendations/RecommendationsPage";
+} from "../recommendations/RecommendationsPage";
 import {
   YearInMusicWrapper as YearInMusic2021Wrapper,
   YearInMusicLoader as YearInMusic2021Loader,
@@ -28,43 +28,21 @@ import {
 } from "../year-in-music/2023/YearInMusic2023";
 
 const getUserRoutes = () => {
-  const ListensWithAlertNotifications = withAlertNotifications(ListensWrapper);
-  const UserReportsPageWithAlertNotifications = withAlertNotifications(
-    UserReportsWrapper
-  );
-  const UserTasteWithAlertNotifications = withAlertNotifications(
-    UserTastesWrapper
-  );
-  const UserPlaylistsWithAlertNotifications = withAlertNotifications(
-    UserPlaylistsWrapper
-  );
-  const RecommendationsPageWithAlertNotifications = withAlertNotifications(
-    RecommendationsPageWrapper
-  );
-
-  const YearInMusic2021WithAlertNotifications = withAlertNotifications(
-    YearInMusic2021Wrapper
-  );
-  const YearInMusic2022WithAlertNotifications = withAlertNotifications(
-    YearInMusic2022Wrapper
-  );
-  const YearInMusic2023WithAlertNotifications = withAlertNotifications(
-    YearInMusic2023Wrapper
-  );
+  const LayoutWithAlertNotifications = withAlertNotifications(UserFeedLayout);
 
   const routes = [
     {
       path: "/user/:username/",
-      element: <UserFeedLayout />,
+      element: <LayoutWithAlertNotifications />,
       children: [
         {
           index: true,
-          element: <ListensWithAlertNotifications />,
+          element: <ListensWrapper />,
           loader: ListensLoader,
         },
         {
           path: "stats/",
-          element: <UserReportsPageWithAlertNotifications />,
+          element: <UserReportsWrapper />,
           loader: UserReportsLoader,
         },
         {
@@ -73,12 +51,12 @@ const getUserRoutes = () => {
         },
         {
           path: "taste/",
-          element: <UserTasteWithAlertNotifications />,
+          element: <UserTastesWrapper />,
           loader: UserTasteLoader,
         },
         {
           path: "playlists/",
-          element: <UserPlaylistsWithAlertNotifications />,
+          element: <UserPlaylistsWrapper />,
           loader: UserPlaylistsLoader,
         },
         {
@@ -87,7 +65,7 @@ const getUserRoutes = () => {
         },
         {
           path: "recommendations/",
-          element: <RecommendationsPageWithAlertNotifications />,
+          element: <RecommendationsPageWrapper />,
           loader: RecommendationsPageLoader,
         },
         {
@@ -96,22 +74,22 @@ const getUserRoutes = () => {
           children: [
             {
               index: true,
-              element: <YearInMusic2023WithAlertNotifications />,
+              element: <YearInMusic2023Wrapper />,
               loader: YearInMusic2023Loader,
             },
             {
               path: "2023/",
-              element: <YearInMusic2023WithAlertNotifications />,
+              element: <YearInMusic2023Wrapper />,
               loader: YearInMusic2023Loader,
             },
             {
               path: "2022/",
-              element: <YearInMusic2022WithAlertNotifications />,
+              element: <YearInMusic2022Wrapper />,
               loader: YearInMusic2022Loader,
             },
             {
               path: "2021/",
-              element: <YearInMusic2021WithAlertNotifications />,
+              element: <YearInMusic2021Wrapper />,
               loader: YearInMusic2021Loader,
             },
           ],
