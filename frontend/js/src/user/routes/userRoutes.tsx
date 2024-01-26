@@ -26,6 +26,10 @@ import {
   YearInMusicWrapper as YearInMusic2023Wrapper,
   YearInMusicLoader as YearInMusic2023Loader,
 } from "../year-in-music/2023/YearInMusic2023";
+import {
+  UserEntityChartLoader,
+  UserEntityChartWrapper,
+} from "../charts/UserEntityChart";
 
 const getUserRoutes = () => {
   const LayoutWithAlertNotifications = withAlertNotifications(UserFeedLayout);
@@ -42,8 +46,19 @@ const getUserRoutes = () => {
         },
         {
           path: "stats/",
-          element: <UserReportsWrapper />,
-          loader: UserReportsLoader,
+          element: <Outlet />,
+          children: [
+            {
+              index: true,
+              element: <UserReportsWrapper />,
+              loader: UserReportsLoader,
+            },
+          ],
+        },
+        {
+          path: "charts/",
+          element: <UserEntityChartWrapper />,
+          loader: UserEntityChartLoader,
         },
         {
           path: "reports/",

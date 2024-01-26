@@ -147,7 +147,7 @@ def history(user_name):
     return redirect(url_for('user.charts', user_name=user_name, entity=entity, page=page, range=stats_range), code=301)
 
 
-@user_bp.route("/<user_name>/charts/")
+@user_bp.route("/<user_name>/charts/", methods=['POST'])
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
@@ -162,12 +162,7 @@ def charts(user_name):
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
-    return render_template(
-        "user/charts.html",
-        active_section="stats",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(props)
 
 
 @user_bp.route("/<user_name>/reports/", methods=['POST'])

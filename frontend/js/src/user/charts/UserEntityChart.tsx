@@ -1,21 +1,15 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { createRoot } from "react-dom/client";
 import * as React from "react";
-import * as Sentry from "@sentry/react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
+import { useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 
 import Bar from "./components/Bar";
 import Loader from "../../components/Loader";
-import ErrorBoundary from "../../utils/ErrorBoundary";
 import Pill from "../../components/Pill";
-import { getPageProps } from "../../utils/utils";
 import {
   getAllStatRanges,
   getChartEntityDetails,
@@ -27,6 +21,8 @@ import ListenCard from "../../common/listens/ListenCard";
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
 };
+
+type UserEntityChartLoaderData = UserEntityChartProps;
 
 export type UserEntityChartState = {
   data: UserEntityData;
@@ -683,36 +679,22 @@ export default class UserEntityChart extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function UserEntityChartWrapper() {
+  const data = useLoaderData() as UserEntityChartLoaderData;
+  return <UserEntityChart {...data} />;
+}
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const { user } = reactProps;
-  const UserEntityChartWithAlertNotifications = withAlertNotifications(
-    UserEntityChart
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserEntityChartWithAlertNotifications user={user} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const UserEntityChartLoader = async ({
+  request,
+}: {
+  request: Request;
+}) => {
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return data;
+};
