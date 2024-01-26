@@ -6,7 +6,7 @@ import {
   NetworkSvgProps,
 } from "@nivo/network";
 import { animated, to } from "@react-spring/web";
-import { isFinite } from "lodash";
+import { debounce, isFinite, noop } from "lodash";
 import tinycolor from "tinycolor2";
 
 interface GraphProps {
@@ -102,12 +102,41 @@ function SimilarArtistsGraph({
   background,
   graphParentElementRef,
 }: GraphProps) {
-  let width = 650;
-  let height = 650;
+  const minimalSize = 650;
+  let initialWidth = minimalSize;
+  let initialHeight = minimalSize;
   if (graphParentElementRef.current) {
-    width = Math.max(width, graphParentElementRef.current.clientWidth);
-    height = Math.max(height, graphParentElementRef.current.clientHeight);
+    initialWidth = Math.max(
+      minimalSize,
+      graphParentElementRef.current.clientWidth
+    );
+    initialHeight = Math.max(
+      minimalSize,
+      graphParentElementRef.current.clientHeight
+    );
   }
+  const [width, setWidth] = React.useState(initialWidth);
+  const [height, setHeight] = React.useState(initialHeight);
+
+  React.useEffect(() => {
+    if (!graphParentElementRef.current || !("ResizeObserver" in window))
+      return noop;
+    // Update the width and height on size change
+    const observer = new ResizeObserver(
+      debounce(
+        (entries) => {
+          setWidth(Math.max(minimalSize, entries[0].contentRect.width));
+          setHeight(Math.max(minimalSize, entries[0].contentRect.height));
+        },
+        500,
+        { leading: false }
+      )
+    );
+    const originalRef = graphParentElementRef.current;
+    observer.observe(originalRef);
+    return () => originalRef && observer.unobserve(originalRef);
+  }, [graphParentElementRef]);
+
   const chartProperties: NetworkSvgProps<NodeType, LinkType> = {
     data,
     repulsivity: Math.min(width, height) / 2,
