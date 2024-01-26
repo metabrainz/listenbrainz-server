@@ -33,8 +33,9 @@ export async function componentToImage(
         "artist-similarity-graph-container"
       );
       if (clonedElement) {
-        clonedElement.style.width = "fit-content";
-        clonedElement.style.height = "fit-content";
+        clonedElement.style.width = "100%";
+        clonedElement.style.height = "100%";
+        clonedElement.style.overflow = "visible";
       }
     },
     logging: true,
@@ -45,6 +46,8 @@ export async function componentToImage(
     height: element.scrollHeight,
     x: -element.offsetLeft,
     y: -element.offsetTop,
+    windowWidth: 1600,
+    windowHeight: 900,
     foreignObjectRendering: true,
   });
   return canvas;
