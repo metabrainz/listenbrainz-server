@@ -64,6 +64,7 @@
   .artist-similarity-graph-panel-container {
     display: flex;
     justify-content: space-between;
+    gap: 1em;
 
     .sidebar {
       width: max(20%, 225px);
@@ -147,8 +148,8 @@
     }
 
     .artist-similarity-graph-container {
+      flex: 1;
       height: calc(100vh - @brainzplayer-height);
-      width: 80%;
       max-height: 1120px; // 80% of the max content width (so we have a square aspect ratio
       overflow: scroll;
 
@@ -177,12 +178,6 @@
             line-height: 1.1em;
           }
         }
-      }
-    }
-
-    @media (max-width: @screen-md) {
-      .artist-similarity-graph-container {
-        width: 100%;
       }
     }
   }

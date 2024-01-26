@@ -41,8 +41,10 @@ export async function componentToImage(
     useCORS: true,
     allowTaint: true,
     imageTimeout: 30000,
-    width: element.offsetWidth,
-    height: element.offsetHeight,
+    width: element.scrollWidth,
+    height: element.scrollHeight,
+    x: -element.offsetLeft,
+    y: -element.offsetTop,
     foreignObjectRendering: true,
   });
   return canvas;
