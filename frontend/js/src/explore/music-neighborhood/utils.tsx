@@ -43,6 +43,7 @@ export async function componentToImage(
     imageTimeout: 30000,
     width: element.offsetWidth,
     height: element.offsetHeight,
+    foreignObjectRendering: true,
   });
   return canvas;
 }
