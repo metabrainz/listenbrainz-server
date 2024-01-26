@@ -17,18 +17,18 @@ import {
 } from "lodash";
 import { useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
-import { getEntityLink } from "../../../stats/utils";
+import { getEntityLink } from "../../stats/utils";
 import ComponentToImage from "./components/ComponentToImage";
 
-import ListenCard from "../../../listens/ListenCard";
-import UserListModalEntry from "../../../follow/UserListModalEntry";
+import ListenCard from "../../../common/listens/ListenCard";
+import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../../../playlists/utils";
-import FollowButton from "../../../follow/FollowButton";
+import FollowButton from "../../components/follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import { ToastMsg } from "../../../notifications/Notifications";
 

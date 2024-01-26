@@ -5,7 +5,7 @@ import { merge } from "lodash";
 import * as React from "react";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import {

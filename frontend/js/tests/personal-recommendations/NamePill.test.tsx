@@ -4,7 +4,7 @@ import { mount } from "enzyme";
 import NamePill, {
   NamePillProps,
 } from "../../src/personal-recommendations/NamePill";
-import ListenControl from "../../src/listens/ListenControl";
+import ListenControl from "../../src/common/listens/ListenControl";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this

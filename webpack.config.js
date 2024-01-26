@@ -59,14 +59,17 @@ module.exports = function (env, argv) {
         path.resolve(cssDir, "main.less"),
       ],
       AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/AIBrainz.tsx")],
-      listens: [path.resolve(jsDir, "src/user/index.tsx")],
+      dashboard: [path.resolve(jsDir, "src/user/index.tsx")],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
-      userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
-      userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
-      userTaste: path.resolve(jsDir, "src/user/UserTaste.tsx"),
+      userEntityChart: path.resolve(
+        jsDir,
+        "src/user/charts/UserEntityChart.tsx"
+      ),
+      userReports: path.resolve(jsDir, "src/user/stats/UserReports.tsx"),
+      userTaste: path.resolve(jsDir, "src/user/taste/UserTaste.tsx"),
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
-      playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
+      playlists: path.resolve(jsDir, "src/user/playlists/Playlists.tsx"),
       explore: path.resolve(jsDir, "src/explore/Explore.tsx"),
       huesound: path.resolve(jsDir, "src/explore/huesound/ColorPlay.tsx"),
       lb_radio: path.resolve(jsDir, "src/explore/lb-radio/LBRadio.tsx"),
@@ -81,20 +84,20 @@ module.exports = function (env, argv) {
       homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
       recommendationsPlayground: path.resolve(
         jsDir,
-        "src/recommendations/Recommendations.tsx"
+        "src/recommended/tracks/Recommendations.tsx"
       ),
       recommendations: path.resolve(
         jsDir,
-        "src/recommendations/RecommendationsPage.tsx"
+        "src/user/recommendations/RecommendationsPage.tsx"
       ),
       missingMBData: path.resolve(
         jsDir,
-        "src/missing-mb-data/MissingMBData.tsx"
+        "src/user/missing-data/MissingMBData.tsx"
       ),
-      playerPage: path.resolve(jsDir, "src/player-pages/PlayerPage.tsx"),
+      playerPage: path.resolve(jsDir, "src/player/PlayerPage.tsx"),
       metadataViewer: path.resolve(
         jsDir,
-        "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
+        "src/metadata-viewer/MetadataViewerPage.tsx"
       ),
       freshReleases: path.resolve(
         jsDir,
@@ -109,8 +112,8 @@ module.exports = function (env, argv) {
         "src/user-settings/SelectTroiPreferences.tsx"
       ),
       artCreator: path.resolve(jsDir, "src/explore/art-creator/ArtCreator.tsx"),
-      artistPage: path.resolve(jsDir, "src/entity-pages/ArtistPage.tsx"),
-      albumPage: path.resolve(jsDir, "src/entity-pages/AlbumPage.tsx"),
+      artistPage: path.resolve(jsDir, "src/artist/ArtistPage.tsx"),
+      albumPage: path.resolve(jsDir, "src/album/AlbumPage.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

@@ -25,17 +25,17 @@ import {
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
 import { generateAlbumArtThumbnailLink } from "../../../utils/utils";
-import { getEntityLink } from "../../../stats/utils";
+import { getEntityLink } from "../../stats/utils";
 import MagicShareButton from "./components/MagicShareButton";
 
-import ListenCard from "../../../listens/ListenCard";
-import UserListModalEntry from "../../../follow/UserListModalEntry";
+import ListenCard from "../../../common/listens/ListenCard";
+import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
-import CustomChoropleth from "../../../stats/Choropleth";
+import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 
 export type YearInMusicProps = {
