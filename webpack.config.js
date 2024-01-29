@@ -103,6 +103,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/explore/fresh-releases/FreshReleases.tsx"
       ),
+      musicNeighborhood: path.resolve(
+        jsDir,
+        "src/explore/music-neighborhood/MusicNeighborhood.tsx"
+      ),
       selectTimezone: path.resolve(
         jsDir,
         "src/user-settings/SelectTimezone.tsx"

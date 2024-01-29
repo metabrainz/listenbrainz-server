@@ -72,10 +72,10 @@ function ExplorePage() {
         </div>
         <div>
           <ExploreCard
-            name="Top Similar Users"
-            desc="Social"
-            img_name="similar-users.jpg"
-            url="/explore/similar-users"
+            name="Music Neighborhood"
+            desc="Visualisation"
+            img_name="music-neighborhood.jpg"
+            url="/explore/music-neighborhood"
           />
         </div>
         {currentUser?.name && (
@@ -108,6 +108,14 @@ function ExplorePage() {
             />
           </div>
         )}
+        <div>
+          <ExploreCard
+            name="Top Similar Users"
+            desc="Social"
+            img_name="similar-users.jpg"
+            url="/explore/similar-users"
+          />
+        </div>
       </div>
       <div className="explore-page-divider">
         <h3>Beta</h3>
