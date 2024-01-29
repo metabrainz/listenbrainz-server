@@ -3,9 +3,10 @@ import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, Link } from "react-router-dom";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
+import { getInitData, getData, processData, getURLParams } from "./utils";
 
 import Bar from "./components/Bar";
 import Loader from "../../components/Loader";
@@ -13,675 +14,298 @@ import Pill from "../../components/Pill";
 import {
   getAllStatRanges,
   getChartEntityDetails,
-  isInvalidStatRange,
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
+  entity: Entity;
+  terminology: string;
+  range: UserStatsAPIRange;
+  currPage: number;
 };
 
 type UserEntityChartLoaderData = UserEntityChartProps;
 
-export type UserEntityChartState = {
-  data: UserEntityData;
-  range: UserStatsAPIRange;
-  entity: Entity;
-  currPage: number;
-  entityCount: number;
-  totalPages: number;
-  maxListens: number;
-  startDate: Date;
-  endDate: Date;
-  loading: boolean;
-  listenContainerHeight?: number;
-  hasError: boolean;
-  errorMessage: string;
-  terminology: string;
+export const TERMINOLOGY_ENTITY_MAP: Record<string, Entity> = {
+  artist: "artist",
+  album: "release-group",
+  track: "recording",
 };
 
-export default class UserEntityChart extends React.Component<
-  UserEntityChartProps,
-  UserEntityChartState
-> {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
+const ROWS_PER_PAGE = 25;
 
-  ROWS_PER_PAGE = 25; // Number of rows to be shown on each page
+export default function UserEntityChart() {
+  const loaderData = useLoaderData() as UserEntityChartLoaderData;
+  const { user, entity, terminology, range, currPage } = loaderData;
+  const prevPage = currPage - 1;
+  const nextPage = currPage + 1;
 
-  listenContainer: React.RefObject<HTMLDivElement>;
+  const { APIService } = React.useContext(GlobalAppContext);
 
-  constructor(props: UserEntityChartProps) {
-    super(props);
+  const [loading, setLoading] = React.useState(true);
+  const [listenContainerHeight, setListenContainerHeight] = React.useState<
+    number | undefined
+  >(undefined);
+  const [hasError, setHasError] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState("");
 
-    this.state = {
-      data: [],
-      range: "" as UserStatsAPIRange,
-      entity: "" as Entity,
-      currPage: 1,
-      entityCount: 0,
-      totalPages: 0,
-      maxListens: 0, // Number of listens for first artist used to scale the graph
-      startDate: new Date(),
-      endDate: new Date(),
-      loading: false,
-      hasError: false,
-      errorMessage: "",
-      terminology: "",
+  const [data, setData] = React.useState<UserEntityData>([]);
+  const [maxListens, setMaxListens] = React.useState(0);
+  const [totalPages, setTotalPages] = React.useState(0);
+  const [entityCount, setEntityCount] = React.useState(0);
+  const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setHasError(false);
+
+      try {
+        const [initData, fetchedData] = await Promise.all([
+          getInitData(APIService, entity, range, ROWS_PER_PAGE, user),
+          getData(
+            APIService,
+            entity,
+            currPage,
+            range,
+            ROWS_PER_PAGE,
+            user
+          ).then((dataFetched) => {
+            return processData(dataFetched, currPage, entity, ROWS_PER_PAGE);
+          }),
+        ]);
+
+        setData(fetchedData);
+        setMaxListens(initData.maxListens);
+        setTotalPages(initData.totalPages);
+        setEntityCount(initData.entityCount);
+        setStartDate(initData.startDate);
+        setEndDate(initData.endDate);
+      } catch (error) {
+        setHasError(true);
+        setErrorMessage(error.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    this.listenContainer = React.createRef();
-  }
+    fetchData();
+  }, [APIService, currPage, entity, range, user, loaderData]);
 
-  componentDidMount() {
-    window.addEventListener("popstate", this.syncStateWithURL);
-    window.addEventListener("resize", this.handleResize);
+  const ranges = getAllStatRanges();
+  const listenContainer = React.useRef<HTMLDivElement>(null);
 
-    // Fetch initial data and set URL correspondingly
-    const { page, range, entity } = this.getURLParams();
-    window.history.replaceState(
-      null,
-      "",
-      this.buildURLParams(page, range, entity)
-    );
-    this.syncStateWithURL();
-    this.handleResize();
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("popstate", this.syncStateWithURL);
-    window.removeEventListener("resize", this.handleResize);
-  }
-
-  changePage = (newPage: number): void => {
-    const { entity, range } = this.state;
-    this.setURLParams(newPage, range, entity);
-    this.syncStateWithURL();
+  const handleResize = () => {
+    setListenContainerHeight(listenContainer.current?.offsetHeight);
   };
 
-  changeRange = (newRange: UserStatsAPIRange): void => {
-    const { entity } = this.state;
-    this.setURLParams(1, newRange, entity);
-    this.syncStateWithURL();
-  };
+  React.useEffect(() => {
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  });
 
-  changeEntity = (newEntity: Entity): void => {
-    const { range } = this.state;
-    this.setURLParams(1, range, newEntity);
-    this.syncStateWithURL();
-  };
+  const listenableItems: BaseListenFormat[] =
+    data?.map(userChartEntityToListen).reverse() ?? [];
 
-  getInitData = async (
-    range: UserStatsAPIRange,
-    entity: Entity
-  ): Promise<{
-    maxListens: number;
-    totalPages: number;
-    entityCount: number;
-    startDate: Date;
-    endDate: Date;
-  }> => {
-    const { user } = this.props;
-    const { APIService } = this.context;
-    let data = await APIService.getUserEntity(
-      user?.name,
-      entity,
-      range,
-      undefined,
-      1
-    );
-
-    let maxListens = 0;
-    let totalPages = 0;
-    let entityCount = 0;
-
-    if (entity === "artist") {
-      data = data as UserArtistsResponse;
-      maxListens = data.payload.artists?.[0]?.listen_count;
-      totalPages = Math.ceil(
-        data.payload.total_artist_count / this.ROWS_PER_PAGE
-      );
-      entityCount = data.payload.total_artist_count;
-    } else if (entity === "release") {
-      data = data as UserReleasesResponse;
-      maxListens = data.payload.releases?.[0]?.listen_count;
-      totalPages = Math.ceil(
-        data.payload.total_release_count / this.ROWS_PER_PAGE
-      );
-      entityCount = data.payload.total_release_count;
-    } else if (entity === "recording") {
-      data = data as UserRecordingsResponse;
-      maxListens = data.payload.recordings?.[0]?.listen_count;
-      totalPages = Math.ceil(
-        data.payload.total_recording_count / this.ROWS_PER_PAGE
-      );
-      entityCount = data.payload.total_recording_count;
-    } else if (entity === "release-group") {
-      data = data as UserReleaseGroupsResponse;
-      maxListens = data.payload.release_groups?.[0]?.listen_count;
-      totalPages = Math.ceil(
-        data.payload.total_release_group_count / this.ROWS_PER_PAGE
-      );
-      entityCount = data.payload.total_release_group_count;
-    }
-
-    return {
-      maxListens,
-      totalPages,
-      entityCount,
-      startDate: new Date(data.payload.from_ts * 1000),
-      endDate: new Date(data.payload.to_ts * 1000),
-    };
-  };
-
-  getData = async (
-    page: number,
-    range: UserStatsAPIRange,
-    entity: Entity
-  ): Promise<UserEntityResponse> => {
-    const { user } = this.props;
-    const { APIService } = this.context;
-    const offset = (page - 1) * this.ROWS_PER_PAGE;
-    return APIService.getUserEntity(
-      user?.name,
-      entity,
-      range,
-      offset,
-      this.ROWS_PER_PAGE
-    );
-  };
-
-  processData = (
-    data: UserEntityResponse,
-    page: number,
-    entity?: Entity
-  ): UserEntityData => {
-    if (!entity) {
-      // eslint-disable-next-line no-param-reassign
-      ({ entity } = this.state);
-    }
-    const offset = (page - 1) * this.ROWS_PER_PAGE;
-
-    let result = [] as UserEntityData;
-    if (!data?.payload) {
-      return result;
-    }
-    if (entity === "artist") {
-      result = (data as UserArtistsResponse).payload.artists
-        ?.map((elem, idx: number) => {
-          const entityMBID = elem.artist_mbid ?? undefined;
-          return {
-            id: idx.toString(),
-            entity: elem.artist_name,
-            entityType: entity as Entity,
-            idx: offset + idx + 1,
-            count: elem.listen_count,
-            entityMBID,
-          };
-        })
-        .reverse();
-    } else if (entity === "release") {
-      result = (data as UserReleasesResponse).payload.releases
-        ?.map((elem, idx: number) => {
-          return {
-            id: idx.toString(),
-            entity: elem.release_name,
-            entityType: entity as Entity,
-            entityMBID: elem.release_mbid,
-            artist: elem.artist_name,
-            artistMBID: elem.artist_mbids,
-            idx: offset + idx + 1,
-            count: elem.listen_count,
-            caaID: elem.caa_id,
-            caaReleaseMBID: elem.caa_release_mbid,
-            artists: elem.artists,
-          };
-        })
-        .reverse();
-    } else if (entity === "recording") {
-      result = (data as UserRecordingsResponse).payload.recordings
-        ?.map((elem, idx: number) => {
-          return {
-            id: idx.toString(),
-            entity: elem.track_name,
-            entityType: entity as Entity,
-            entityMBID: elem.recording_mbid,
-            artist: elem.artist_name,
-            artistMBID: elem.artist_mbids,
-            release: elem.release_name,
-            releaseMBID: elem.release_mbid,
-            idx: offset + idx + 1,
-            count: elem.listen_count,
-            caaID: elem.caa_id,
-            caaReleaseMBID: elem.caa_release_mbid,
-            artists: elem.artists,
-          };
-        })
-        .reverse();
-    } else if (entity === "release-group") {
-      result = (data as UserReleaseGroupsResponse).payload.release_groups
-        ?.map((elem, idx: number) => {
-          return {
-            id: idx.toString(),
-            entity: elem.release_group_name,
-            entityType: entity as Entity,
-            entityMBID: elem.release_group_mbid,
-            artist: elem.artist_name,
-            artistMBID: elem.artist_mbids,
-            idx: offset + idx + 1,
-            count: elem.listen_count,
-            caaID: elem.caa_id,
-            caaReleaseMBID: elem.caa_release_mbid,
-            artists: elem.artists,
-          };
-        })
-        .reverse();
-    }
-
-    return result;
-  };
-
-  syncStateWithURL = async (): Promise<void> => {
-    this.setState({ loading: true });
-    const { page, range, entity } = this.getURLParams();
-
-    if (entity === "artist") {
-      this.setState({
-        terminology: "artist",
-      });
-    }
-
-    if (entity === "release-group") {
-      this.setState({
-        terminology: "album",
-      });
-    }
-
-    if (entity === "recording") {
-      this.setState({
-        terminology: "track",
-      });
-    }
-
-    // Check that the given page is an integer
-    if (!Number.isInteger(page)) {
-      this.setState({
-        hasError: true,
-        loading: false,
-        errorMessage: `Invalid page: ${page}`,
-        currPage: page,
-        range,
-        entity,
-      });
-      return;
-    }
-    try {
-      const { range: currRange, entity: currEntity } = this.state;
-      let initData = {};
-      if (range !== currRange || entity !== currEntity) {
-        // Check if given range is valid
-        if (isInvalidStatRange(range)) {
-          this.setState({
-            hasError: true,
-            loading: false,
-            errorMessage: `Invalid range: ${range}`,
-            currPage: page,
-            range,
-            entity,
-          });
-          return;
-        }
-        // Check if given entity is valid
-        if (
-          ["artist", "release", "recording", "release-group"].indexOf(entity) <
-          0
-        ) {
-          this.setState({
-            hasError: true,
-            loading: false,
-            errorMessage: `Invalid entity: ${entity}`,
-            currPage: page,
-            range,
-            entity,
-          });
-          return;
-        }
-        initData = await this.getInitData(range, entity);
-      }
-      const data = await this.getData(page, range, entity);
-      this.setState(
-        {
-          data: this.processData(data, page, entity),
-          currPage: page,
-          loading: false,
-          hasError: false,
-          range,
-          entity,
-          ...initData,
-        },
-        this.handleResize
-      );
-    } catch (error) {
-      if (error.response && error.response?.status === 204) {
-        this.setState({
-          hasError: true,
-          errorMessage:
-            "There are no statistics available for this user for this period",
-          loading: false,
-          currPage: page,
-          entityCount: 0,
-          range,
-          entity,
-        });
-      } else {
-        console.error(error);
-      }
-    }
-  };
-
-  getURLParams = (): {
-    page: number;
-    range: UserStatsAPIRange;
-    entity: Entity;
-  } => {
-    const url = new URL(window.location.href);
-
-    // Get page number from URL
-    let page = 1;
-    if (url.searchParams.get("page")) {
-      page = Number(url.searchParams.get("page"));
-      page = Math.max(page, 1);
-    }
-
-    // Get range from URL
-    let range: UserStatsAPIRange = "all_time";
-    if (url.searchParams.get("range")) {
-      range = url.searchParams.get("range") as UserStatsAPIRange;
-    }
-
-    // Get entity from URL
-    let entity: Entity = "artist";
-    if (url.searchParams.get("entity")) {
-      entity = url.searchParams.get("entity") as Entity;
-    }
-
-    return { page, range, entity };
-  };
-
-  setURLParams = (
-    page: number,
-    range: UserStatsAPIRange,
-    entity: Entity
-  ): void => {
-    window.history.pushState(
-      null,
-      "",
-      this.buildURLParams(page, range, entity)
-    );
-  };
-
-  /*
-  Build a url querystring (including the ?) for a page, range, and entity
-   */
-  buildURLParams = (
-    page: number,
-    range: UserStatsAPIRange,
-    entity: Entity
-  ): string => {
-    return `?page=${page}&range=${range}&entity=${entity}`;
-  };
-
-  handleResize = () => {
-    this.setState({
-      listenContainerHeight: this.listenContainer.current?.offsetHeight,
-    });
-  };
-
-  /*
-  Handle a click on a link that will perform an action
-   - if control is held down, don't prevent the event from firing
-     this will allow ctrl/cmd-click to open links in a new tab
-   - otherwise, prevent the event from happening and call a callback
-     that performs some action (e.g. load a new page)
-   */
-  handleClickEvent = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    callback: () => any
-  ) => {
-    if (!e.ctrlKey) {
-      e.preventDefault();
-      callback();
-    }
-  };
-
-  render() {
-    const {
-      data,
-      range,
-      entity,
-      entityCount,
-      currPage,
-      maxListens,
-      totalPages,
-      startDate,
-      endDate,
-      loading,
-      listenContainerHeight,
-      hasError,
-      errorMessage,
-      terminology,
-    } = this.state;
-    const { APIService } = this.context;
-
-    const prevPage = currPage - 1;
-    const nextPage = currPage + 1;
-
-    const ranges = getAllStatRanges();
-
-    // We receive the items in inverse order so we need to reorder them
-    const listenableItems: BaseListenFormat[] =
-      data?.map(userChartEntityToListen).reverse() ?? [];
-    return (
-      <div role="main">
-        <div style={{ marginTop: "1em", minHeight: 500 }}>
-          <Loader isLoading={loading}>
-            <div className="row">
-              <div className="col-xs-12">
-                <Pill
-                  active={entity === "artist"}
-                  type="secondary"
-                  onClick={() => this.changeEntity("artist")}
+  return (
+    <div role="main">
+      <div style={{ marginTop: "1em", minHeight: 500 }}>
+        <Loader isLoading={loading}>
+          <div className="row">
+            <div className="col-xs-12">
+              <Pill active={entity === "artist"} type="secondary">
+                <Link
+                  to="../top-artists/"
+                  relative="route"
+                  className="user-charts-pill"
+                  replace
                 >
                   Artists
-                </Pill>
-                <Pill
-                  active={entity === "release-group"}
-                  type="secondary"
-                  onClick={() => this.changeEntity("release-group")}
+                </Link>
+              </Pill>
+              <Pill active={entity === "release-group"} type="secondary">
+                <Link
+                  to="../top-albums/"
+                  relative="route"
+                  className="user-charts-pill"
+                  replace
                 >
                   Albums
-                </Pill>
-                <Pill
-                  active={entity === "recording"}
-                  type="secondary"
-                  onClick={() => this.changeEntity("recording")}
+                </Link>
+              </Pill>
+              <Pill active={entity === "recording"} type="secondary">
+                <Link
+                  to="../top-tracks/"
+                  relative="route"
+                  className="user-charts-pill"
+                  replace
                 >
                   Tracks
-                </Pill>
-              </div>
+                </Link>
+              </Pill>
             </div>
-            <div className="row">
-              <div className="col-xs-12">
-                <h3>
-                  Top{" "}
-                  <span style={{ textTransform: "capitalize" }}>
-                    {terminology ? `${terminology}s` : ""}
-                  </span>{" "}
-                  of {range !== "all_time" ? "the" : ""}
-                  <span className="dropdown" style={{ fontSize: 22 }}>
-                    <button
-                      className="dropdown-toggle btn-transparent capitalize-bold"
-                      data-toggle="dropdown"
-                      type="button"
-                    >
-                      {ranges.get(range)}
-                      <span className="caret" />
-                    </button>
-                    <ul className="dropdown-menu" role="menu">
-                      {Array.from(ranges, ([stat_type, stat_name]) => {
-                        return (
-                          <li>
-                            <a
-                              href={this.buildURLParams(1, stat_type, entity)}
-                              role="button"
-                              onClick={(e) => {
-                                this.handleClickEvent(e, () => {
-                                  this.changeRange(stat_type);
-                                });
-                              }}
-                            >
-                              {stat_name}
-                            </a>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </span>
-                  {range !== "all_time" &&
-                    !hasError &&
-                    `(${startDate.toLocaleString("en-us", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    })} - ${endDate.toLocaleString("en-us", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    })})`}
-                </h3>
-              </div>
-            </div>
-            {hasError && (
-              <div className="row mt-15 mb-15">
-                <div className="col-xs-12 text-center">
-                  <span style={{ fontSize: 24 }}>
-                    <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-                    {errorMessage}
-                  </span>
-                </div>
-              </div>
-            )}
-            {!hasError && (
-              <>
-                <div className="row">
-                  <div className="col-xs-12">
-                    <h4 style={{ textTransform: "capitalize" }}>
-                      {terminology} count - <b>{entityCount}</b>
-                    </h4>
-                  </div>
-                </div>
-                <div className="row">
-                  <div className="col-xs-6" ref={this.listenContainer}>
-                    {data
-                      ?.slice()
-                      .reverse()
-                      .map((datum, index) => {
-                        const listen = listenableItems[index];
-                        const listenDetails = getChartEntityDetails(datum);
-                        return (
-                          <ListenCard
-                            key={`${datum.idx + 1}`}
-                            listenDetails={listenDetails}
-                            listen={listen}
-                            showTimestamp={false}
-                            showUsername={false}
-                          />
-                        );
-                      })}
-                  </div>
-                  <div
-                    className="col-xs-6"
-                    style={{
-                      height:
-                        listenContainerHeight ??
-                        `${65 * (data?.length ?? 1)}px`,
-                      paddingLeft: 0,
-                    }}
+          </div>
+          <div className="row">
+            <div className="col-xs-12">
+              <h3>
+                Top{" "}
+                <span style={{ textTransform: "capitalize" }}>
+                  {terminology ? `${terminology}s` : ""}
+                </span>{" "}
+                of {range !== "all_time" ? "the" : ""}
+                <span className="dropdown" style={{ fontSize: 22 }}>
+                  <button
+                    className="dropdown-toggle btn-transparent capitalize-bold"
+                    data-toggle="dropdown"
+                    type="button"
                   >
-                    <Bar data={data} maxValue={maxListens} />
-                  </div>
+                    {ranges.get(range)}
+                    <span className="caret" />
+                  </button>
+                  <ul className="dropdown-menu" role="menu">
+                    {Array.from(ranges, ([stat_type, stat_name]) => {
+                      return (
+                        <li key={`${stat_type}-${stat_name}`}>
+                          <Link
+                            to={{
+                              pathname: window.location.pathname,
+                              search: `?page=1&range=${stat_type}`,
+                            }}
+                            role="button"
+                          >
+                            {stat_name}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </span>
+                {range !== "all_time" &&
+                  !hasError &&
+                  `(${startDate?.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })} - ${endDate?.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })})`}
+              </h3>
+            </div>
+          </div>
+          {hasError && (
+            <div className="row mt-15 mb-15">
+              <div className="col-xs-12 text-center">
+                <span style={{ fontSize: 24 }}>
+                  <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+                  {errorMessage}
+                </span>
+              </div>
+            </div>
+          )}
+          {!hasError && (
+            <>
+              <div className="row">
+                <div className="col-xs-12">
+                  <h4 style={{ textTransform: "capitalize" }}>
+                    {terminology} count - <b>{entityCount}</b>
+                  </h4>
                 </div>
-                {entity === "release-group" && (
-                  <div className="row">
-                    <div className="col-xs-12">
-                      <small>
-                        <sup>*</sup>The listen count denotes the number of times
-                        you have listened to a recording from the release group.
-                      </small>
-                    </div>
-                  </div>
-                )}
+              </div>
+              <div className="row">
+                <div className="col-xs-6" ref={listenContainer}>
+                  {data
+                    ?.slice()
+                    .reverse()
+                    .map((datum, index) => {
+                      const listen = listenableItems[index];
+                      const listenDetails = getChartEntityDetails(datum);
+                      return (
+                        <ListenCard
+                          key={`${datum.idx + 1}`}
+                          listenDetails={listenDetails}
+                          listen={listen}
+                          showTimestamp={false}
+                          showUsername={false}
+                        />
+                      );
+                    })}
+                </div>
+                <div
+                  className="col-xs-6"
+                  style={{
+                    height:
+                      listenContainerHeight ?? `${65 * (data?.length ?? 1)}px`,
+                    paddingLeft: 0,
+                  }}
+                >
+                  <Bar data={data} maxValue={maxListens} />
+                </div>
+              </div>
+              {entity === "release-group" && (
                 <div className="row">
                   <div className="col-xs-12">
-                    <ul className="pager">
-                      <li
-                        className={`previous ${
-                          !(prevPage > 0) ? "disabled" : ""
-                        }`}
-                      >
-                        <a
-                          href={this.buildURLParams(prevPage, range, entity)}
-                          role="button"
-                          onClick={(e) => {
-                            this.handleClickEvent(e, () => {
-                              this.changePage(prevPage);
-                            });
-                          }}
-                        >
-                          &larr; Previous
-                        </a>
-                      </li>
-                      <li
-                        className={`next ${
-                          !(nextPage <= totalPages) ? "disabled" : ""
-                        }`}
-                      >
-                        <a
-                          href={this.buildURLParams(nextPage, range, entity)}
-                          role="button"
-                          onClick={(e) => {
-                            this.handleClickEvent(e, () => {
-                              this.changePage(nextPage);
-                            });
-                          }}
-                        >
-                          Next &rarr;
-                        </a>
-                      </li>
-                    </ul>
+                    <small>
+                      <sup>*</sup>The listen count denotes the number of times
+                      you have listened to a recording from the release group.
+                    </small>
                   </div>
                 </div>
-              </>
-            )}
-          </Loader>
-        </div>
-
-        <BrainzPlayer
-          listens={listenableItems}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
+              )}
+              <div className="row">
+                <div className="col-xs-12">
+                  <ul className="pager">
+                    <li
+                      className={`previous ${
+                        !(prevPage > 0) ? "disabled" : ""
+                      }`}
+                    >
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=${prevPage}&range=${range}`,
+                        }}
+                        role="button"
+                      >
+                        &larr; Previous
+                      </Link>
+                    </li>
+                    <li
+                      className={`next ${
+                        !(nextPage <= totalPages) ? "disabled" : ""
+                      }`}
+                    >
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=${nextPage}&range=${range}`,
+                        }}
+                        role="button"
+                      >
+                        Next &rarr;
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </>
+          )}
+        </Loader>
       </div>
-    );
-  }
-}
 
-export function UserEntityChartWrapper() {
-  const data = useLoaderData() as UserEntityChartLoaderData;
-  return <UserEntityChart {...data} />;
+      <BrainzPlayer
+        listens={listenableItems}
+        listenBrainzAPIBaseURI={APIService.APIBaseURI}
+        refreshSpotifyToken={APIService.refreshSpotifyToken}
+        refreshYoutubeToken={APIService.refreshYoutubeToken}
+        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
+      />
+    </div>
+  );
 }
 
 export const UserEntityChartLoader = async ({
@@ -689,12 +313,29 @@ export const UserEntityChartLoader = async ({
 }: {
   request: Request;
 }) => {
-  const response = await fetch(request.url, {
+  const currentURL = new URL(request.url);
+  const response = await fetch(currentURL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
   });
-  const data = await response.json();
-  return data;
+  const propsData = await response.json();
+  const { user } = propsData;
+  const { page, range } = getURLParams(currentURL.toString());
+
+  const urlEntityName = currentURL.pathname
+    .split("/")[4]
+    .split("-")[1]
+    .replace(/s$/, "");
+
+  const entity = TERMINOLOGY_ENTITY_MAP[urlEntityName];
+
+  return {
+    user,
+    entity,
+    terminology: urlEntityName,
+    currPage: page,
+    range,
+  };
 };

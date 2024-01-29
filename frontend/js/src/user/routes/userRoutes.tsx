@@ -26,9 +26,8 @@ import {
   YearInMusicWrapper as YearInMusic2023Wrapper,
   YearInMusicLoader as YearInMusic2023Loader,
 } from "../year-in-music/2023/YearInMusic2023";
-import {
+import UserEntityChart, {
   UserEntityChartLoader,
-  UserEntityChartWrapper,
 } from "../charts/UserEntityChart";
 
 const getUserRoutes = () => {
@@ -53,12 +52,22 @@ const getUserRoutes = () => {
               element: <UserReportsWrapper />,
               loader: UserReportsLoader,
             },
+            {
+              path: "top-artists/",
+              element: <UserEntityChart />,
+              loader: UserEntityChartLoader,
+            },
+            {
+              path: "top-albums/",
+              element: <UserEntityChart />,
+              loader: UserEntityChartLoader,
+            },
+            {
+              path: "top-tracks/",
+              element: <UserEntityChart />,
+              loader: UserEntityChartLoader,
+            },
           ],
-        },
-        {
-          path: "charts/",
-          element: <UserEntityChartWrapper />,
-          loader: UserEntityChartLoader,
         },
         {
           path: "reports/",
