@@ -276,8 +276,9 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.playlist import playlist_bp
     app.register_blueprint(playlist_bp, url_prefix='/playlist')
 
-    from listenbrainz.webserver.views.settings import settings_bp
+    from listenbrainz.webserver.views.settings import settings_bp, profile_bp
     app.register_blueprint(settings_bp, url_prefix='/settings')
+    app.register_blueprint(profile_bp, url_prefix='/profile')
 
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
     app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')

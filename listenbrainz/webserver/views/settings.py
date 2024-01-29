@@ -29,6 +29,7 @@ from listenbrainz.webserver.views.user import delete_user, delete_listens_histor
 
 
 settings_bp = Blueprint("settings", __name__)
+profile_bp = Blueprint("profile", __name__)
 
 EXPORT_FETCH_COUNT = 5000
 
@@ -278,6 +279,7 @@ def music_services_details():
 
 
 @settings_bp.route('/music-services/<service_name>/callback/')
+@profile_bp.route('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
     service = _get_service_or_raise_404(service_name)
