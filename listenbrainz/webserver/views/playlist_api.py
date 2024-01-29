@@ -143,11 +143,19 @@ def serialize_xspf(playlist: Playlist):
             playlist_extension_collaborator = ET.SubElement(playlist_extension_collaborators, "collaborator")
             playlist_extension_collaborator.text = collaborator
 
-    if playlist.additional_metadata:
-        playlist_extension_additional_metadata = ET.SubElement(playlist_extension, "additional_metadata")
-        for meta_key, meta_value in playlist.additional_metadata:
-            additional_metadata_item = ET.SubElement(playlist_extension_additional_metadata, "item", key=meta_key)
-            additional_metadata_item.text = meta_value
+        if playlist.additional_metadata:
+            playlist_extension_additional_metadata = ET.SubElement(playlist_extension, "additional_metadata")
+            for key, value in playlist.additional_metadata.items():
+                if isinstance(value, dict):
+                    # Handle dictionary-type metadata
+                    dict_metadata_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                    for nested_key, nested_value in value.items():
+                        nested_item = ET.SubElement(dict_metadata_item, nested_key)
+                        nested_item.text = str(nested_value)
+                else:
+                    # Handle simple scalar values
+                    simple_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                    simple_item.text = str(value)
 
     track_list = ET.SubElement(playlist_root, "trackList")
     for rec in playlist.recordings:
