@@ -38,6 +38,7 @@ type BrainzPlayerUIProps = {
   currentListen?: BrainzPlayerQueueItem;
   listenBrainzAPIBaseURI: string;
   queue: BrainzPlayerQueue;
+  ambientQueue: BrainzPlayerQueue;
   removeTrackFromQueue: (track: BrainzPlayerQueueItem) => void;
   moveQueueItem: (evt: any) => void;
   setQueue: (queue: BrainzPlayerQueue) => void;
@@ -171,6 +172,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     playNextTrack,
     seekToPositionMs,
     queue,
+    ambientQueue,
     removeTrackFromQueue,
     moveQueueItem,
     setQueue,
@@ -189,6 +191,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       <div className={`queue ${showQueue ? "show" : ""}`}>
         <Queue
           queue={queue}
+          ambientQueue={ambientQueue}
           removeTrackFromQueue={removeTrackFromQueue}
           moveQueueItem={moveQueueItem}
           setQueue={setQueue}

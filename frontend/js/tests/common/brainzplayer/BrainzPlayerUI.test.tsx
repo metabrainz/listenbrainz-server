@@ -25,6 +25,7 @@ const props = {
   setQueue: (queue: BrainzPlayerQueue) => {},
   clearQueue: () => {},
   queue: [],
+  ambientQueue: [],
   queueRepeatMode: QueueRepeatModes.off,
   toggleRepeatMode: () => {},
 };

@@ -111,6 +111,7 @@ export type BrainzPlayerState = {
   listenSubmitted: boolean;
   continuousPlaybackTime: number;
   queue: BrainzPlayerQueue;
+  ambientQueue: BrainzPlayerQueue;
   queueRepeatMode: QueueRepeatMode;
 };
 
@@ -204,6 +205,7 @@ export default class BrainzPlayer extends React.Component<
       isActivated: false,
       listenSubmitted: false,
       queue: [],
+      ambientQueue: [...props.listens].map(listenOrJSPFTrackToQueueItem),
       queueRepeatMode: QueueRepeatModes.off,
     };
 
@@ -298,6 +300,13 @@ export default class BrainzPlayer extends React.Component<
       currentTrackURL !== prevState.currentTrackURL
     ) {
       this.debounceBrainzPlayerQueueUpdate();
+    }
+
+    const { listens } = this.props;
+    if (listens !== prevProps.listens) {
+      this.setState({
+        ambientQueue: [...listens].map(listenOrJSPFTrackToQueueItem),
+      });
     }
   }
 
@@ -418,7 +427,7 @@ export default class BrainzPlayer extends React.Component<
   };
 
   playNextTrack = (invert: boolean = false): void => {
-    const { queue, queueRepeatMode } = this.state;
+    const { queue, queueRepeatMode, ambientQueue } = this.state;
     const { isActivated } = this.state;
 
     if (!isActivated) {
@@ -440,6 +449,9 @@ export default class BrainzPlayer extends React.Component<
     let nextListenIndex: number;
     if (currentListenIndex === -1) {
       // No current listen index found, default to first item
+      nextListenIndex = 0;
+    } else if (queue.length === 1 && invert === true) {
+      // If there is only one item in the queue, and invert is true, play it again
       nextListenIndex = 0;
     } else {
       if (_isEqual(queueRepeatMode, QueueRepeatModes.one)) {
@@ -465,11 +477,20 @@ export default class BrainzPlayer extends React.Component<
       !nextListen ||
       (_isEqual(queueRepeatMode, QueueRepeatModes.off) && nextListenIndex === 0)
     ) {
-      const { listens } = this.props;
-      listens.forEach((listen) => {
-        this.addTrackToQueue(listen);
-      });
-      nextListen = queue[currentListenIndex + 1];
+      // Add the top of the ambient queue to the end of the queue
+      if (ambientQueue.length === 0) {
+        this.handleWarning(
+          "You can try loading listens or refreshing the page",
+          "No listens to play"
+        );
+        return;
+      }
+      const ambientQueueTop = ambientQueue.shift();
+      if (ambientQueueTop) {
+        this.addTrackToQueue(ambientQueueTop);
+        nextListen = ambientQueueTop;
+      }
+      this.setState({ ambientQueue });
     }
     this.playListen(nextListen, 0);
   };
@@ -986,14 +1007,19 @@ export default class BrainzPlayer extends React.Component<
     this.setQueue(newQueue);
   };
 
-  clearQueue = (): void => {
-    // If a song is playing, keep it in the queue, and clear the songs after it
-    // Otherwise, clear the whole queue
-    const { queue } = this.state;
-    const currentListenIndex = queue.findIndex(this.isCurrentlyPlaying);
-    const updatedQueue =
-      currentListenIndex === -1 ? [] : queue.slice(0, currentListenIndex + 1);
-    this.setQueue(updatedQueue);
+  clearQueue = async (): Promise<void> => {
+    const { isActivated, queue } = this.state;
+
+    // Stop the currently playing song
+    if (isActivated) {
+      await this.togglePlay();
+    } else {
+      this.activatePlayerAndPlay();
+    }
+
+    // Clear the queue by keeping only the currently playing song
+    const currentlyPlayingIndex = queue.findIndex(this.isCurrentlyPlaying);
+    this.setQueue([queue[currentlyPlayingIndex]]);
   };
 
   removeTrackFromQueue = (trackToDelete: BrainzPlayerQueueItem): void => {
@@ -1091,6 +1117,7 @@ export default class BrainzPlayer extends React.Component<
       isActivated,
       currentListen,
       queue,
+      ambientQueue,
       queueRepeatMode,
     } = this.state;
     const {
@@ -1125,6 +1152,7 @@ export default class BrainzPlayer extends React.Component<
             this.dataSources[currentDataSourceIndex]?.current?.name
           }
           queue={queue}
+          ambientQueue={ambientQueue}
           removeTrackFromQueue={this.removeTrackFromQueue}
           moveQueueItem={this.moveQueueItem}
           setQueue={this.setQueue}

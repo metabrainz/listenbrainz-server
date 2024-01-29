@@ -11,6 +11,7 @@ import { getListenCardKey } from "../../utils/utils";
 
 type QueueProps = {
   queue: BrainzPlayerQueue;
+  ambientQueue: BrainzPlayerQueue;
   removeTrackFromQueue: (track: BrainzPlayerQueueItem) => void;
   moveQueueItem: (evt: any) => void;
   setQueue: (queue: BrainzPlayerQueue) => void;
@@ -26,6 +27,7 @@ function Queue(props: QueueProps) {
     moveQueueItem,
     clearQueue,
     currentListen,
+    ambientQueue,
   } = props;
 
   const [queueNextUp, setQueueNextUp] = React.useState<BrainzPlayerQueue>([]);
@@ -41,7 +43,7 @@ function Queue(props: QueueProps) {
   };
 
   React.useEffect(() => {
-    if (currentListen) {
+    if (currentListen && queue.length > 0) {
       const currentListenIndex = queue.findIndex(
         (track) => track.id === currentListen.id
       );
@@ -121,6 +123,23 @@ function Queue(props: QueueProps) {
             <p>Nothing in this queue yet</p>
           </div>
         )}
+      </div>
+      <div className="queue-headers">
+        <h4>Suggested for you:</h4>
+      </div>
+      <div className="queue-list">
+        {ambientQueue.length > 0
+          ? ambientQueue.map((queueItem: BrainzPlayerQueueItem) => {
+              return (
+                <ListenCard
+                  key={queueItem.id}
+                  listen={queueItem as Listen}
+                  showTimestamp={false}
+                  showUsername={false}
+                />
+              );
+            })
+          : null}
       </div>
     </>
   );
