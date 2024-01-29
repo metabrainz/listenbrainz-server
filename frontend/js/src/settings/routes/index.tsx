@@ -1,5 +1,4 @@
 import * as React from "react";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import SettingsLayout from "../layout";
 import DeleteAccount from "../delete/DeleteAccount";
 import DeleteListens from "../delete-listens/DeleteListens";
@@ -25,12 +24,10 @@ import Settings from "../Settings";
 import ResetImportTimestamp from "../resetlatestimportts/ResetLatestImports";
 
 const getSettingsRoutes = () => {
-  const LayoutWithAlertNotifications = withAlertNotifications(SettingsLayout);
-
   const routes = [
     {
       path: "/settings",
-      element: <LayoutWithAlertNotifications />,
+      element: <SettingsLayout />,
       children: [
         {
           index: true,

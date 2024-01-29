@@ -33,8 +33,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     <ErrorBoundary>
       <ToastContainer
         position="bottom-right"
-        autoClose={8000}
+        autoClose={5000}
         hideProgressBar
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnHover
+        theme="light"
       />
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
