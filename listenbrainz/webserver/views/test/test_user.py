@@ -109,7 +109,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        self.assertTemplateUsed('user/profile.html')
+        self.assertTemplateUsed('user/index.html')
         props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
 
@@ -149,7 +149,7 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_logged_in_user_follows_user_props(self, mock_is_following_user):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        self.assertTemplateUsed('user/profile.html')
+        self.assertTemplateUsed('user/index.html')
         props = orjson.loads(self.get_context_variable('props'))
         self.assertIsNone(props['logged_in_user_follows_user'])
 
