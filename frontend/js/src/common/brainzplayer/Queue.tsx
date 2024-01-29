@@ -62,7 +62,7 @@ function Queue(props: QueueProps) {
   }, [queue, currentListen]);
 
   return (
-    <div className="queue">
+    <>
       {currentListen && (
         <>
           <div className="queue-headers">
@@ -122,7 +122,7 @@ function Queue(props: QueueProps) {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
 

@@ -342,7 +342,8 @@
 .queue {
   position: fixed;
   padding: 1em;
-  bottom: 60px;
+  bottom: -100%;
+  transition: bottom 1s ease-in-out;
   width: 100%;
   max-width: 550px;
   height: 500px;
@@ -352,6 +353,9 @@
   overflow-y: auto;
   z-index: 5;
   right: 0;
+  &.show {
+    bottom: @brainzplayer-height;
+  }
 
   .queue-item {
     display: flex;
