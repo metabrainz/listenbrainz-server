@@ -527,8 +527,11 @@ def get_playlist_xspf(playlist_mbid):
 
     if fetch_metadata:
         fetch_playlist_recording_metadata(playlist)
-
-    return serialize_xspf(playlist)
+    
+    xspf_data = serialize_xspf(playlist)
+    serialized_xspf_response = make_response(xspf_data)
+    serialized_xspf_response.content_type = 'text/xml'
+    return serialized_xspf_response
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])
