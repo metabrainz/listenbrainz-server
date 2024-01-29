@@ -10,6 +10,7 @@ import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getPageProps } from "../utils/utils";
 import getSettingsRoutes from "./routes";
+import getRedirectRoutes from "./routes/redirectRoutes";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const { domContainer, globalAppContext, sentryProps } = await getPageProps();
@@ -24,7 +25,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const routes = getSettingsRoutes();
-  const router = createBrowserRouter(routes);
+  const redirectRoutes = getRedirectRoutes();
+  const router = createBrowserRouter([...routes, ...redirectRoutes]);
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
