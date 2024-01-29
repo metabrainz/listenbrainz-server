@@ -57,16 +57,16 @@ def process_listens(app, listens, priority):
                 OR mm.check_again <= NOW()     -- msid not found last time, marked for rechecking
                 OR mm.recording_msid IS NULL   -- msid seen for first time
         """
-        curs = connection.execute(sqlalchemy.text(query), msids=list(msids.keys()))
+        curs = connection.execute(sqlalchemy.text(query), {"msids": list(msids.keys())})
         msids_to_check = curs.fetchall()
 
         rem_msids = []
         for row in msids_to_check:
-            rem_msids.append(row['recording_msid'])
-            listen = msids[row['recording_msid']]
+            rem_msids.append(row.recording_msid)
+            listen = msids[row.recording_msid]
             listens_to_check.append(listen)
 
-            if row['match_type']:
+            if row.match_type:
                 stats["listens_matched"] += 1
 
         stats["processed"] += len(msids_to_check)

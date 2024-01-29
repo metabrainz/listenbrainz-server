@@ -2,6 +2,7 @@ import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
+import { PopularRecording } from "../album/utils";
 
 export default class APIService {
   APIBaseURI: string;
@@ -1092,6 +1093,19 @@ export default class APIService {
     return response.json();
   };
 
+  lookupMBArtist = async (
+    artistMBID: string,
+    inc?: string
+  ): Promise<Array<MusicBrainzArtist>> => {
+    let url = `${this.APIBaseURI}/metadata/artist/?artist_mbids=${artistMBID}`;
+    if (inc) {
+      url += `&inc=${inc}`;
+    }
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"
@@ -1507,5 +1521,49 @@ export default class APIService {
       console.error(err);
       return false;
     }
+  };
+
+  artistLookup = async (searchQuery: string): Promise<any> => {
+    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getArtistWikipediaExtract = async (artistMBID: string): Promise<string> => {
+    const url = `https://musicbrainz.org/artist/${artistMBID}/wikipedia-extract`;
+    const response = await fetch(url);
+    const { wikipediaExtract } = await response.json();
+
+    if (!wikipediaExtract || !wikipediaExtract.content) {
+      return "No wiki data found.";
+    }
+
+    const htmlParser = new DOMParser();
+    const htmlData = htmlParser.parseFromString(
+      wikipediaExtract.content,
+      "text/html"
+    );
+    const htmlParagraphs = htmlData.querySelector("p:not(.mw-empty-elt)");
+
+    return htmlParagraphs?.textContent || "No wiki data found.";
+  };
+
+  getTopRecordingsForArtist = async (
+    artistMBID: string
+  ): Promise<RecordingType[]> => {
+    const url = `${this.APIBaseURI}/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getTopReleaseGroupsForArtist = async (
+    artistMBID: string
+  ): Promise<ReleaseGroupType[]> => {
+    const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist?artist_mbid=${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
   };
 }
