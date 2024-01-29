@@ -360,6 +360,8 @@ def missing_mb_data():
     return jsonify(data)
 
 
+@profile_bp.route('/', defaults={'path': ''})
+@profile_bp.route('/<path:path>/')
 @settings_bp.route('/', defaults={'path': ''})
 @settings_bp.route('/<path:path>/')
 @login_required
