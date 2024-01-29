@@ -111,6 +111,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/explore/fresh-releases/FreshReleases.tsx"
       ),
+      musicNeighborhood: path.resolve(
+        jsDir,
+        "src/explore/music-neighborhood/MusicNeighborhood.tsx"
+      ),
       artCreator: path.resolve(jsDir, "src/explore/art-creator/ArtCreator.tsx"),
       artistPage: path.resolve(jsDir, "src/artist/ArtistPage.tsx"),
       albumPage: path.resolve(jsDir, "src/album/AlbumPage.tsx"),
