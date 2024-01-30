@@ -37,7 +37,7 @@ class TestSparkPlaylists(DatabaseTestCase, TimescaleTestCase):
         )
         db_external_service_oauth.save_token(
             self.user1["id"],
-            ExternalServiceType.MUSICBRAINZ,
+            ExternalServiceType.MUSICBRAINZ_PROD,
             "access_token",
             "refresh_token",
             int(datetime.now().timestamp()),
