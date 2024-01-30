@@ -1,4 +1,15 @@
 {%- extends 'base-react.html' -%}
+
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    /* Allow for full-width homepage  */
+    #react-container {
+        max-width: none;
+    }
+  </style>
+{%- endblock -%}
+
 {%- block content -%}
 
   {{ super() }}

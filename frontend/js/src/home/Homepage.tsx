@@ -25,11 +25,13 @@ import { Integrations } from "@sentry/tracing";
 import { ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
+import { random } from "lodash";
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import NumberCounter from "./NumberCounter";
+import Blob from "./Blob";
 
 type HomePageProps = {
   listenCount: number;
@@ -41,27 +43,42 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
 
   return (
-    <div id="homepage-container" role="main">
+    <div id="homepage-container">
       <div className="homepage-upper" ref={homepageUpperRef}>
-        <img
+        <Blob
+          width={200}
+          height={200}
+          randomness={0.7}
           className="homepage-upper-vector-1"
-          src="/static/img/homepage/Vector-1.svg"
-          alt="ListenBrainz Logo"
+          style={{ animationDelay: "-10s" }}
         />
-        <img
+        <Blob
+          width={300}
+          height={300}
+          randomness={1.5}
           className="homepage-upper-vector-2"
-          src="/static/img/homepage/Vector-2.svg"
-          alt="ListenBrainz Logo"
+          style={{ animationDelay: "-7s" }}
         />
-        <img
+        <Blob
+          width={100}
+          height={100}
+          randomness={0.9}
           className="homepage-upper-vector-3"
-          src="/static/img/homepage/Vector-3.svg"
-          alt="ListenBrainz Logo"
+          style={{
+            animationDelay: "-3s",
+            animationDuration: "10s",
+          }}
         />
-        <img
+        <Blob
+          width={350}
+          height={350}
+          randomness={1.3}
           className="homepage-upper-vector-4"
-          src="/static/img/homepage/Vector-4.svg"
-          alt="ListenBrainz Logo"
+          style={{
+            animationDuration: "30s",
+            width: "350px",
+            height: "200px",
+          }}
         />
         <img
           className="homepage-upper-headphone"
@@ -114,25 +131,35 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
             });
           }}
         />
-        <img
+
+        <Blob
+          width={250}
+          height={250}
+          randomness={0.7}
           className="homepage-lower-vector-1"
-          src="/static/img/homepage/Vector-1.svg"
-          alt="ListenBrainz Logo"
         />
-        <img
+        <Blob
+          width={300}
+          height={300}
+          randomness={1.3}
           className="homepage-lower-vector-2"
-          src="/static/img/homepage/Vector-2.svg"
-          alt="ListenBrainz Logo"
+          style={{ animationDelay: "-7s" }}
         />
-        <img
+        <Blob
+          width={100}
+          height={100}
+          randomness={0.8}
           className="homepage-lower-vector-3"
-          src="/static/img/homepage/Vector-3.svg"
-          alt="ListenBrainz Logo"
+          style={{
+            animationDelay: "-3s",
+            animationDuration: "10s",
+          }}
         />
-        <img
-          className="homepage-lower-vector-5"
-          src="/static/img/homepage/Vector-5.svg"
-          alt="ListenBrainz Logo"
+        <Blob
+          width={250}
+          height={250}
+          randomness={1.5}
+          className="homepage-lower-vector-4"
         />
         <img
           className="homepage-lower-speaker"

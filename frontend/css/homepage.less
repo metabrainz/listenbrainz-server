@@ -44,23 +44,22 @@
 
     .homepage-upper-vector-1 {
       position: absolute;
-      top: 36%;
-      right: 30%;
-      height: 28%;
+      top: 28%;
+      left: 42%;
+      animation: bobble 10s infinite;
     }
 
     .homepage-upper-vector-2 {
       position: absolute;
       top: 4%;
       right: 10%;
-      height: 26%;
       z-index: 2;
     }
 
     .homepage-upper-vector-3 {
       position: absolute;
-      top: 63vh;
-      right: 100px;
+      top: 65vh;
+      right: 150px;
       z-index: 3;
     }
 
@@ -69,7 +68,7 @@
       z-index: 2;
       top: 85%;
       right: 8%;
-      height: 29%;
+      rotate: -35deg;
     }
 
     .homepage-upper-headphone {
@@ -78,6 +77,26 @@
       top: 17%;
       right: 7%;
       z-index: 2;
+    }
+    [class^='homepage-upper-vector-']{
+      animation: bobble 30s infinite;
+      transition: transform; 
+    }
+    @keyframes bobble {
+      0% {
+          transform: translate3d(0px,0px,0);
+          animation-timing-function: ease-in;
+      }
+  
+      50% {
+          transform: translate3d(20%,25%,0);
+          animation-timing-function: ease-out;
+      }
+  
+      100% {
+          transform: translate3d(0px,0px,0);
+          animation-timing-function: ease-in-out;
+      }
     }
   }
 
@@ -90,7 +109,7 @@
 
     .homepage-lower-grey-box {
       background: #e9e9e9;
-      height: 60vh;
+      height: 55vh;
       position: absolute;
       top: 0;
       left: 0;
@@ -133,7 +152,6 @@
     }
 
     .homepage-lower-vector-1 {
-      transform: rotate(133.858deg);
       position: absolute;
       right: 20px;
       top: 35%;
@@ -146,17 +164,16 @@
 
     .homepage-lower-vector-3 {
       position: absolute;
-      rotate: 162.891deg;
       top: 32%;
       right: 37%;
       z-index: 3;
     }
 
-    .homepage-lower-vector-5 {
+    .homepage-lower-vector-4 {
       position: absolute;
       right: 30%;
       bottom: 0;
-      overflow-x: hidden;
+      max-height: 50%;
     }
 
     .homepage-lower-speaker {
@@ -247,10 +264,10 @@
   }
 
   @media (max-width: 1200px) {
+    .listen-container {
+      top: 15vh;
+    }
     .homepage-upper {
-      .homepage-upper-vector-1 {
-        height: 25%;
-      }
 
       .homepage-upper-vector-3 {
         top: 57vh;
@@ -271,10 +288,6 @@
         right: 42%;
       }
 
-      .homepage-lower-vector-5 {
-        right: 25%;
-      }
-
       .homepage-lower-speaker {
         height: min(55%, 460px);
         top: 23%;
@@ -293,12 +306,12 @@
       }
 
       .homepage-upper-vector-1 {
-        left: 24%;
-        height: 12%;
+        left: 23%;
+        height: 15%;
       }
 
       .homepage-upper-vector-2 {
-        top: 20vh;
+        top: min(60px, 10vh);
         right: 15%;
         height: 20%;
       }
@@ -310,13 +323,6 @@
 
       .homepage-upper-vector-4 {
         display: none;
-      }
-
-      .homepage-upper-headphone {
-        left: 0;
-        right: 0;
-        margin-left: auto;
-        margin-right: auto;
       }
     }
 
@@ -338,24 +344,13 @@
         top: 8vh;
       }
 
-      .homepage-upper-vector-1 {
-        left: 22%;
-        height: 10%;
-      }
-
-      .homepage-upper-vector-2 {
-        top: 20vh;
-        right: 20%;
-        height: 15%;
-      }
-
       .homepage-upper-vector-3 {
         right: 20%;
       }
 
       .homepage-upper-headphone {
         height: min(41%, 475px);
-        top: 25%;
+        top: 150px;
       }
     }
 
@@ -386,37 +381,13 @@
   }
 
   @media (max-width: @screen-xs) {
-    .homepage-upper {
-      .listen-container {
-        top: 8vh;
-      }
-
-      .homepage-upper-vector-1 {
-        left: 22%;
-        height: 10%;
-      }
-
-      .homepage-upper-vector-2 {
-        top: 20vh;
-        right: 20%;
-        height: 15%;
-      }
-
-      .homepage-upper-vector-3 {
-        rotate: 30.539deg;
-        height: 7%;
-        top: 54%;
-      }
-
-      .homepage-upper-headphone {
-        height: min(40%, 475px);
-        top: 25%;
-      }
+    .homepage-upper  .homepage-upper-vector-3 {
+      height: 7%;
+      top: 54%;
     }
 
     .homepage-lower {
       .homepage-lower-vector-1 {
-        transform: rotate(35.281deg);
         top: 17%;
         right: 4%;
         z-index: 2;
@@ -425,7 +396,6 @@
       .homepage-lower-vector-2 {
         display: block;
         position: absolute;
-        rotate: 105.901deg;
         top: 52%;
         height: 15%;
         left: 10%;
@@ -436,7 +406,7 @@
         left: 15%;
       }
 
-      .homepage-lower-vector-5 {
+      .homepage-lower-vector-4 {
         display: none;
       }
 
