@@ -28,7 +28,13 @@
 				<li {{ 'class=active' if active_settings_section == 'connect-services'}}><a href="{{ url_for('profile.music_services_details') }}">Connect services</a></li>
 				<li {{ 'class=active' if active_settings_section == 'import'}}><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
 				<li {{ 'class=active' if active_settings_section == 'add-listens'}}><a href="{{ url_for('index.add_data_info') }}">Add listens</a></li>
-				<li {{ 'class=active' if active_settings_section == 'missing-musicbrainz-data'}}><a href="{{ url_for('user.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Missing data</a></li>
+				<li {{ 'class=active' if active_settings_section == 'missing-musicbrainz-data'}}>
+					{% if current_user.musicbrainz_id %}
+						<a href="{{ url_for('user.missing_mb_data', user_name=current_user.musicbrainz_id) }}">Missing data</a>
+					{% else %}
+					<span title="Login to visit this page">Missing data</span>
+					{% endif %}
+				</li>
 			</ul>
 			<p>
 				Account
