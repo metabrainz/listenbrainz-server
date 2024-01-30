@@ -240,7 +240,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response_post)
         playlist_mbid = response_post.json["playlist_mbid"]
-        print(playlist_mbid)
         r = self.client.get(
             url_for("playlist_api_v1.get_playlist_xspf", playlist_mbid=playlist_mbid),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
