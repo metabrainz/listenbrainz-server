@@ -58,7 +58,7 @@ def index():
 @index_bp.route("/import/")
 def import_data():
     if current_user.is_authenticated:
-        return redirect(url_for("profile.import_data"))
+        return redirect(url_for("settings.index", path='import/'))
     else:
         return current_app.login_manager.unauthorized()
 
@@ -75,7 +75,7 @@ def data():
 
 @index_bp.route("/add-data/")
 def add_data_info():
-    return render_template("index/add-data.html", active_settings_section = "add-listens" )
+    return render_template("index/add-data.html", active_about_section="add-listens")
 
 
 @index_bp.route("/import-data/")
@@ -204,7 +204,7 @@ def gdpr_notice():
                 return redirect(next)
             return redirect(url_for('index.index'))
         elif request.form.get('gdpr-options') == 'disagree':
-            return redirect(url_for('profile.delete'))
+            return redirect(url_for('settings.index',  path='delete'))
         else:
             flash.error('You must agree to or decline our terms')
             return render_template('index/gdpr.html', next=request.args.get('next'))

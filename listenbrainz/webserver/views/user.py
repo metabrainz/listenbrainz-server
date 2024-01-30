@@ -434,20 +434,3 @@ def year_in_music(user_name, year: int = 2023):
         }).decode("utf-8"),
         year_in_music_js_file=f"yearInMusic{year}.js"
     )
-
-
-@user_bp.route("/<user_name>/missing-data/")
-def missing_mb_data(user_name: str):
-    """ Shows missing musicbrainz data """
-    user = _get_user(user_name)
-    missing_data, created = get_user_missing_musicbrainz_data(user.id, "cf")
-
-    props = {
-        "missingData": missing_data or [],
-        "user": {
-            "id": user.id,
-            "name": user.musicbrainz_id,
-        }
-    }
-
-    return render_template("user/missing_data.html", user=user, props=orjson.dumps(props).decode("utf-8"), active_settings_section="missing-musicbrainz-data")

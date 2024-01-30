@@ -26,7 +26,7 @@ FEEDBACK_DEFAULT_SCORE = 0
 @ratelimit()
 def recording_feedback():
     """
-    Submit recording feedback (love/hate) to the server. A user token (found on  https://listenbrainz.org/profile/ )
+    Submit recording feedback (love/hate) to the server. A user token (found on  https://listenbrainz.org/settings/ )
     must be provided in the Authorization header! Each request should contain only one feedback in the payload.
 
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`feedback-json-doc`.

@@ -25,7 +25,7 @@ pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 @ratelimit()
 def pin_recording_for_user():
     """
-    Pin a recording for user. A user token (found on  https://listenbrainz.org/profile/)
+    Pin a recording for user. A user token (found on  https://listenbrainz.org/settings/)
     must be provided in the Authorization header! Each request should contain only one pinned recording item in the payload.
 
     The format of the JSON to be POSTed to this endpoint should look like the following:
@@ -77,7 +77,7 @@ def pin_recording_for_user():
 @ratelimit()
 def unpin_recording_for_user():
     """
-    Unpins the currently active pinned recording for the user. A user token (found on  https://listenbrainz.org/profile/)
+    Unpins the currently active pinned recording for the user. A user token (found on  https://listenbrainz.org/settings/)
     must be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>
@@ -106,7 +106,7 @@ def unpin_recording_for_user():
 def delete_pin_for_user(row_id):
     """
     Deletes the pinned recording with given ``row_id`` from the server.
-    A user token (found on  https://listenbrainz.org/profile/) must be provided in the Authorization header!
+    A user token (found on  https://listenbrainz.org/settings/) must be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>
     :param row_id: the row_id of the pinned recording that should be deleted.
