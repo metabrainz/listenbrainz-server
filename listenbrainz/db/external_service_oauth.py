@@ -1,5 +1,7 @@
 from typing import List, Optional, Union
 
+from sqlalchemy import text
+
 from data.model.external_service import ExternalServiceType
 from listenbrainz import db, utils
 import sqlalchemy
@@ -37,12 +39,7 @@ def save_token(user_id: int, service: ExternalServiceType, access_token: str, re
             DO UPDATE SET
                 external_user_id = EXCLUDED.external_user_id,
                 access_token = EXCLUDED.access_token,
-                -- MusicBrainz only returns a refresh token the first time around, ensure that we don't delete
-                -- the refresh token when the user logs in/logs out again.
-                refresh_token = CASE
-                                WHEN eso.service = 'musicbrainz' AND EXCLUDED.refresh_token IS NULL THEN eso.refresh_token
-                                ELSE EXCLUDED.refresh_token
-                                END,
+                refresh_token = EXCLUDED.refresh_token,
                 token_expires = EXCLUDED.token_expires,
                 scopes = EXCLUDED.scopes,
                 last_updated = NOW()
@@ -105,32 +102,45 @@ def delete_token(user_id: int, service: ExternalServiceType, remove_import_log: 
 
 
 def update_token(user_id: int, service: ExternalServiceType, access_token: str,
-                 refresh_token: str, expires_at: int):
+                 refresh_token: str | None, expires_at: int):
     """ Update the token for user with specified LB user ID and external service.
 
     Args:
         user_id: the ListenBrainz row ID of the user
         service: the service for which the token should be updated
         access_token: the new access token
-        refresh_token: the new token used to refresh access tokens
+        refresh_token: the new token used to refresh access tokens, if omitted the old token in the database remains unchanged
         expires_at: the unix timestamp at which the access token expires
     """
     token_expires = utils.unix_timestamp_to_datetime(expires_at)
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text("""
+    params = {
+        "access_token": access_token,
+        "token_expires": token_expires,
+        "user_id": user_id,
+        "service": service.value
+    }
+    if refresh_token:
+        query = """
             UPDATE external_service_oauth
                SET access_token = :access_token
                  , refresh_token = :refresh_token
                  , token_expires = :token_expires
                  , last_updated = now()
-             WHERE user_id = :user_id AND service = :service
-        """), {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_expires": token_expires,
-            "user_id": user_id,
-            "service": service.value
-        })
+             WHERE user_id = :user_id
+               AND service = :service
+        """
+        params["refresh_token"] = refresh_token
+    else:
+        query = """
+            UPDATE external_service_oauth
+               SET access_token = :access_token
+                 , token_expires = :token_expires
+                 , last_updated = now()
+             WHERE user_id = :user_id
+               AND service = :service
+        """
+    with db.engine.begin() as connection:
+        connection.execute(text(query), params)
 
 
 def get_token(user_id: int, service: ExternalServiceType) -> Union[dict, None]:
