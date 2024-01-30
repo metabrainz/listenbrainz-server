@@ -53,6 +53,7 @@
     "@sentry/react": "^7.17.4",
     "@sentry/tracing": "^7.17.4",
     "@types/react-datetime-picker": "^3.4.1",
+    "blobs": "^2.3.0-beta.2",
     "canvg": "^4.0.1",
     "core-js": "^3.26.1",
     "d3-array": "~2.3.3",
