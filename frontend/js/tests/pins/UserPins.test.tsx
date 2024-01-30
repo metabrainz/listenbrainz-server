@@ -13,8 +13,8 @@ import * as APIPins from "../__mocks__/pinProps.json";
 import UserPins, {
   UserPinsProps,
   UserPinsState,
-} from "../../src/pins/UserPins";
-import PinnedRecordingCard from "../../src/pins/PinnedRecordingCard";
+} from "../../src/user/taste/components/UserPins";
+import PinnedRecordingCard from "../../src/user/components/PinnedRecordingCard";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 
 // Font Awesome generates a random hash ID for each icon everytime.

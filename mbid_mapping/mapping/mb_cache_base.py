@@ -15,31 +15,32 @@ import config
 
 
 ARTIST_LINK_GIDS = (
-    '99429741-f3f6-484b-84f8-23af51991770',
-    'fe33d22f-c3b0-4d68-bd53-a856badf2b15',
-    '689870a4-a1e4-4912-b17f-7b2664215698',
-    '93883cf6-e818-4938-990e-75863f8db2d3',
-    '6f77d54e-1d81-4e1a-9ea5-37947577151b',
-    'e4d73442-3762-45a8-905c-401da65544ed',
-    '611b1862-67af-4253-a64f-34adba305d1d',
-    'f8319a2f-f824-4617-81c8-be6560b3b203',
-    '34ae77fe-defb-43ea-95d4-63c7540bac78',
-    '769085a1-c2f7-4c24-a532-2375a77693bd',
-    '63cc5d1f-f096-4c94-a43f-ecb32ea94161',
-    '6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0'
+    '99429741-f3f6-484b-84f8-23af51991770',  # social network
+    'fe33d22f-c3b0-4d68-bd53-a856badf2b15',  # official homepage
+    '689870a4-a1e4-4912-b17f-7b2664215698',  # wikidata
+    '93883cf6-e818-4938-990e-75863f8db2d3',  # crowdfunding
+    '6f77d54e-1d81-4e1a-9ea5-37947577151b',  # patronage
+    'e4d73442-3762-45a8-905c-401da65544ed',  # lyrics
+    '611b1862-67af-4253-a64f-34adba305d1d',  # purchase for mail-order
+    'f8319a2f-f824-4617-81c8-be6560b3b203',  # purchase for download
+    '34ae77fe-defb-43ea-95d4-63c7540bac78',  # download for free
+    '769085a1-c2f7-4c24-a532-2375a77693bd',  # free streaming
+    '63cc5d1f-f096-4c94-a43f-ecb32ea94161',  # streaming
+    '6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0'   # youtube
 )
 ARTIST_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in ARTIST_LINK_GIDS])
 
 RECORDING_LINK_GIDS = (
-    '628a9658-f54c-4142-b0c0-95f031b544da',
-    '59054b12-01ac-43ee-a618-285fd397e461',
-    '0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa',
-    '234670ce-5f22-4fd0-921b-ef1662695c5d',
-    '3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb',
-    '92777657-504c-4acb-bd33-51a201bd57e1',
-    '45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5',
-    '7e41ef12-a124-4324-afdb-fdbae687a89c',
-    'b5f3058a-666c-406f-aafb-f9249fc7b122'
+    '628a9658-f54c-4142-b0c0-95f031b544da',  # performer
+    '59054b12-01ac-43ee-a618-285fd397e461',  # instrument
+    '0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa',  # vocal
+    '234670ce-5f22-4fd0-921b-ef1662695c5d',  # conductor
+    '3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb',  # performing orchestra
+    # TODO: the following URL rels are unused (queries only join artist table)
+    '92777657-504c-4acb-bd33-51a201bd57e1',  # purchase for download
+    '45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5',  # download for free
+    '7e41ef12-a124-4324-afdb-fdbae687a89c',  # free streaming
+    'b5f3058a-666c-406f-aafb-f9249fc7b122'   # streaming
 )
 RECORDING_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in RECORDING_LINK_GIDS])
 
@@ -52,8 +53,8 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
         to the BulkInsertTable docs.
     """
 
-    def __init__(self, table, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__(table, mb_conn, lb_conn, batch_size)
+    def __init__(self, table, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__(table, select_conn, insert_conn, batch_size, unlogged)
         # cache the last updated to avoid calling it millions of times for the entire cache,
         # not initializing it here because there can be a huge time gap between initialization
         # and the actual query to fetch and insert the items in the cache. the pre_insert_queries_db_setup
@@ -61,7 +62,7 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
         self.last_updated = None
 
     def get_insert_queries(self):
-        return [("MB", self.get_metadata_cache_query(with_values=config.USE_MINIMAL_DATASET))]
+        return [self.get_metadata_cache_query(with_values=config.USE_MINIMAL_DATASET)]
 
     def pre_insert_queries_db_setup(self, curs):
         self.config_postgres_join_limit(curs)
@@ -91,7 +92,7 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
             recording_mbids: a list of Recording MBIDs to delete
         """
         query = self.get_delete_rows_query()
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         with conn.cursor() as curs:
             curs.execute(query, (tuple(recording_mbids),))
 
@@ -118,9 +119,9 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
         This process first looks for all recording MIBDs which are dirty, gets updated metadata for them, and then
         in batches deletes the dirty rows and inserts the updated ones.
         """
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
-            with self.mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
+            with self.select_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
                 self.pre_insert_queries_db_setup(mb_curs)
 
                 log(f"{self.table_name} update: Running looooong query on dirty items")
@@ -197,8 +198,10 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
 
     if use_lb_conn:
         mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
+        unlogged = False
     else:
         mb_uri = config.MBID_MAPPING_DATABASE_URI
+        unlogged = True
 
     with psycopg2.connect(mb_uri) as mb_conn:
         lb_conn = None
@@ -206,14 +209,14 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
         for table_cls in required_tables:
-            table = table_cls(mb_conn, lb_conn)
+            table = table_cls(mb_conn, lb_conn, unlogged=unlogged)
 
             if not table.table_exists():
                 log(f"{table.table_name} table does not exist, first create the table normally")
                 return
 
         new_timestamp = datetime.now()
-        cache = cache_cls(mb_conn, lb_conn)
+        cache = cache_cls(mb_conn, lb_conn, unlogged=unlogged)
         cache.run()
         update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, cache_key)
 

@@ -10,7 +10,9 @@ export type GlobalAppContextT = {
   youtubeAuth?: YoutubeUser;
   soundcloudAuth?: SoundCloudUser;
   critiquebrainzAuth?: MetaBrainzProjectUser;
-  musicbrainzAuth?: MetaBrainzProjectUser;
+  musicbrainzAuth?: MetaBrainzProjectUser & {
+    refreshMBToken: () => Promise<void>;
+  };
   userPreferences?: UserPreferences;
   musicbrainzGenres?: string[];
   recordingFeedbackManager: RecordingFeedbackManager;
@@ -25,7 +27,7 @@ const GlobalAppContext = createContext<GlobalAppContextT>({
   youtubeAuth: {},
   soundcloudAuth: {},
   critiquebrainzAuth: {},
-  musicbrainzAuth: {},
+  musicbrainzAuth: { refreshMBToken: async () => {} },
   userPreferences: {},
   musicbrainzGenres: [],
   recordingFeedbackManager: new RecordingFeedbackManager(apiService),

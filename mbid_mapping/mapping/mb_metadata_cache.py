@@ -21,8 +21,8 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         to the BulkInsertTable docs.
     """
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.mb_metadata_cache", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.mb_metadata_cache", select_conn, insert_conn, batch_size, unlogged)
 
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
@@ -191,6 +191,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                     ON l.link_type = lt.id
                                   {values_join}
                                  WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
+                                 -- do not show outdated urls to users
                                    AND NOT l.ended
                               GROUP BY a.gid
                    ), recording_rels AS (
@@ -211,7 +212,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                     ON la.attribute_type = lat.id
                                   {values_join}
                                  WHERE lt.gid IN ({RECORDING_LINK_GIDS_SQL})
-                                   AND NOT l.ended
+                                 -- performer rels are ended by definition (the artist is no longer performing) but they should still be shown to the user
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
@@ -338,11 +339,14 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , crrr.release_mbid::TEXT
                                  , rgca.caa_id
                                  , rgca.caa_release_mbid
+                                 , rfdr.year
                               FROM musicbrainz.recording r
                               JOIN mapping.canonical_recording_release_redirect crrr
                                 ON r.gid = crrr.recording_mbid
                               JOIN musicbrainz.release rel
                                 ON crrr.release_mbid = rel.gid
+                         LEFT JOIN musicbrainz.release_first_release_date rfdr
+                                ON rfdr.release = rel.id     
                               JOIN musicbrainz.artist_credit rac
                                 ON rac.id = rel.artist_credit  
                               JOIN musicbrainz.release_group rg
@@ -367,7 +371,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , rd.album_artist_name
                                  , rd.caa_id
                                  , rd.caa_release_mbid
-                                 , year
+                                 , rd.year
                               FROM musicbrainz.recording r
                               JOIN musicbrainz.artist_credit ac
                                 ON r.artist_credit = ac.id
@@ -383,8 +387,6 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON rts.recording_mbid = r.gid
                          LEFT JOIN release_data rd
                                 ON rd.recording_mbid = r.gid
-                         LEFT JOIN mapping.canonical_musicbrainz_data cmb
-                                ON cmb.recording_mbid = r.gid
                               {values_join}
                           GROUP BY r.gid
                                  , r.name
@@ -402,7 +404,8 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , rd.album_artist_name
                                  , rd.caa_id
                                  , rd.caa_release_mbid
-                                 , year"""
+                                 , rd.year
+                                 """
         return query
 
     def query_last_updated_items(self, timestamp):
@@ -566,7 +569,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         """
 
         try:
-            with self.mb_conn.cursor() as curs:
+            with self.select_conn.cursor() as curs:
                 self.config_postgres_join_limit(curs)
                 recording_mbids = set()
 

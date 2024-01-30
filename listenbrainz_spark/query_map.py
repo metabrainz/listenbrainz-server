@@ -33,8 +33,10 @@ import listenbrainz_spark.tags.tags
 import listenbrainz_spark.mlhd.download
 import listenbrainz_spark.mlhd.similarity
 import listenbrainz_spark.mlhd.popularity
+import listenbrainz_spark.echo.echo
 
 functions = {
+    'echo.echo': listenbrainz_spark.echo.echo.handler,
     'stats.entity.listeners': listenbrainz_spark.stats.listener.entity.get_listener_stats,
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
     'stats.user.listening_activity': listenbrainz_spark.stats.user.listening_activity.get_listening_activity,

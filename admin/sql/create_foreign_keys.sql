@@ -12,18 +12,6 @@ ALTER TABLE api_compat.session
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-ALTER TABLE statistics.user
-    ADD CONSTRAINT user_stats_user_id_foreign_key
-    FOREIGN KEY (user_id)
-    REFERENCES "user" (id)
-    ON DELETE CASCADE;
-
-ALTER TABLE statistics.year_in_music
-    ADD CONSTRAINT user_stats_year_in_music_user_id_foreign_key
-    FOREIGN KEY (user_id)
-    REFERENCES "user" (id)
-    ON DELETE CASCADE;
-
 ALTER TABLE reported_users
     ADD CONSTRAINT  reporter_user_id_foreign_key
     FOREIGN KEY (reporter_user_id)

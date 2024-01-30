@@ -1,16 +1,16 @@
 import json
 from datetime import datetime
 
+from pyspark.sql import Row
+
 import listenbrainz_spark.request_consumer.jobs.utils as import_utils
-from listenbrainz_spark.ftp import DumpType
+from listenbrainz_spark.dump import DumpType
+from listenbrainz_spark.hdfs.utils import (delete_dir, path_exists, rename)
 from listenbrainz_spark.path import IMPORT_METADATA
 from listenbrainz_spark.schema import import_metadata_schema
 from listenbrainz_spark.tests import SparkNewTestCase
 from listenbrainz_spark.utils import (create_dataframe,
-                                   read_files_from_HDFS, save_parquet)
-from listenbrainz_spark.hdfs.utils import (delete_dir, path_exists, rename)
-
-from pyspark.sql import Row
+                                      read_files_from_HDFS, save_parquet)
 
 
 class ImporterUtilsTestCase(SparkNewTestCase):

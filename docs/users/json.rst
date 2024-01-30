@@ -9,7 +9,7 @@ Submission JSON
 ---------------
 
 To submit a listen via our API (see: :doc:`api/core`), ``POST`` a JSON document to
-the ``submit-listens`` endpoint. Submit one of three types JSON documents:
+the ``submit-listens`` endpoint. Submit one of three types of JSON documents:
 
 - ``single``: Submit single listen
 
@@ -25,7 +25,7 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
    - Submitting ``playing_now`` documents is optional
 
-   - Timestamp must be omitted from a ``playing_now`` submission.
+   - Timestamp must be omitted from a ``playing_now`` submission
 
 .. note::
 
@@ -37,7 +37,7 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
    - ``payload`` should contain information about *at least one* track
 
-   - submitting multiple listens in one request is permitted. There are some
+   - Submitting multiple listens in one request is permitted. There are some
      limitations on the size of a submission. A request must be less than
      :data:`~listenbrainz.webserver.views.api_tools.MAX_LISTEN_PAYLOAD_SIZE`
      bytes, and you can only submit up to
@@ -159,7 +159,7 @@ The payload should also include the ``listened_at`` element, which must be an in
 representing the Unix time when the track was listened to. This should be set to
 playback start time of the submitted track. The minimum accepted
 value for this field is :data:`~listenbrainz.webserver.views.api_tools.LISTEN_MINIMUM_TS`.
-playing_now requests should not have a ``listened_at`` field
+``playing_now`` requests should not have a ``listened_at`` field.
 
 Add additional metadata you may have for a track to the ``additional_info``
 element. Any additional information allows us to better correlate your listen
@@ -171,7 +171,7 @@ The following optional elements may also be included in the ``track_metadata`` e
 ======================= ===========  =========================================================
 element                 data type    description
 ======================= ===========  =========================================================
-``release_name``        string       the name of the release this recording was played from.
+``release_name``        string       The name of the release this recording was played from.
 ======================= ===========  =========================================================
 
 The following optional elements may also be included in the ``additional_info`` element.
@@ -216,7 +216,7 @@ The following optional elements may also be included in the ``additional_info`` 
      - The Spotify track URL associated with this recording.  e.g.: http://open.spotify.com/track/1rrgWMXGCGHru5bIRxGFV0
    * - ``tags``
      - array of string
-     - A list of user-defined folksonomy tags to be associated with this recording. For example, you have apply tags such as ``punk``, ``see-live``, ``smelly``. You may submit up to :data:`~listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN` tags and each tag may be up to :data:`~listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE` characters large.
+     - A list of user-defined folksonomy tags to be associated with this recording. For example, you can apply tags such as ``punk``, ``see-live``, ``smelly``. You may submit up to :data:`~listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN` tags and each tag may be up to :data:`~listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE` characters large.
    * - ``media_player``
      - string
      - The name of the program being used to listen to music. Don't include a version number here.
@@ -237,7 +237,7 @@ The following optional elements may also be included in the ``additional_info`` 
      - If the song being listened to comes from an online service and you don't know the canonical domain, a name that represents the service.
    * - ``origin_url``
      - string
-     - If the song of this listen comes from an online source, the URL to the place where it is available. This could be a spotify url (see ``spotify_id``), a YouTube video URL, a Soundcloud recording page URL, or the full URL to a public MP3 file. If there is a webpage for this song (e.g. Youtube page, Soundcloud page) **do not** try and resolve the URL to an actual audio resource.
+     - If the song of this listen comes from an online source, the URL to the place where it is available. This could be a spotify URL (see ``spotify_id``), a YouTube video URL, a Soundcloud recording page URL, or the full URL to a public MP3 file. If there is a webpage for this song (e.g. Youtube page, Soundcloud page) **do not** try and resolve the URL to an actual audio resource.
    * - ``duration_ms`` and ``duration``
      - integer
      - The duration of the track in milliseconds and seconds respectively. You should only include one of ``duration_ms`` or ``duration``.
@@ -329,11 +329,11 @@ to spotify.com (see above note).
   }
 
 
-Using Otter for Funkwhale on android, and submitting with Simple Scrobbler
+Using Otter for Funkwhale on Android, and submitting with Simple Scrobbler
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this case, the media player and submission client are completely separate programs. Because music is being played
-from a user's private collection and not a streaming service, don't include music_service or origin_url.
+from a user's private collection and not a streaming service, don't include ``music_service`` or ``origin_url``.
 
 .. code-block:: JSON
 

@@ -1,4 +1,9 @@
 {
+  "echo.echo": {
+    "name": "echo.echo",
+    "description": "Echos the message passed to it as the response",
+    "params": ["message"]
+  },
   "stats.user.entity": {
     "name": "stats.user.entity",
     "description": "Entity statistics for all users for the requested stats_range",
@@ -52,22 +57,22 @@
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",
-    "params": []
+    "params": ["local"]
   },
   "import.dump.full_id": {
     "name": "import.dump.full_id",
     "description": "Import full dump with the specified ID into the spark cluster",
-    "params": ["dump_id"]
+    "params": ["dump_id", "local"]
   },
   "import.dump.incremental_newest": {
     "name": "import.dump.incremental_newest",
     "description": "Import the newest available incremental dump into the spark cluster",
-    "params": []
+    "params": ["local"]
   },
   "import.dump.incremental_id": {
     "name": "import.dump.incremental_id",
     "description": "Import incremental dump with the specified ID into the spark cluster",
-    "params": ["dump_id"]
+    "params": ["dump_id", "local"]
   },
   "import.dump.mlhd": {
     "name": "import.dump.mlhd",

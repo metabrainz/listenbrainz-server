@@ -8,15 +8,15 @@ from pydantic.generics import GenericModel
 
 
 class StatisticsRange(Enum):
-    week = 'week'
-    month = 'month'
-    quarter = 'quarter'
-    half_yearly = 'half_yearly'
-    year = 'year'
-    all_time = 'all_time'
     this_week = 'this_week'
     this_month = 'this_month'
     this_year = 'this_year'
+    week = 'week'
+    month = 'month'
+    quarter = 'quarter'
+    year = 'year'
+    half_yearly = 'half_yearly'
+    all_time = 'all_time'
 
 
 #: list of allowed value for range param accepted by various statistics endpoints

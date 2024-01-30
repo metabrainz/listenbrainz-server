@@ -211,7 +211,9 @@ class CoverArtGenerator:
         results = self.load_caa_ids(release_mbids)
         covers = [
             {
-                "release_mbid": release_mbid,
+                "entity_mbid": release_mbid,
+                "title": results[release_mbid]["title"],
+                "artist": results[release_mbid]["artist"],
                 "caa_id": results[release_mbid]["caa_id"],
                 "caa_release_mbid": results[release_mbid]["caa_release_mbid"]
             } for release_mbid in release_mbids
@@ -240,6 +242,7 @@ class CoverArtGenerator:
         images = []
         for x1, y1, x2, y2 in tiles:
             while True:
+                cover = {}
                 try:
                     cover = covers.pop(0)
                     if cover["caa_id"] is None:
@@ -262,7 +265,16 @@ class CoverArtGenerator:
                     break
 
             if url is not None:
-                images.append({"x": x1, "y": y1, "width": x2 - x1, "height": y2 - y1, "url": url})
+                images.append({
+                    "x": x1,
+                    "y": y1,
+                    "width": x2 - x1,
+                    "height": y2 - y1,
+                    "url": url,
+                    "entity_mbid": cover.get("entity_mbid"),
+                    "title": cover.get("title"),
+                    "artist": cover.get("artist"),
+                })
 
         return images
 
@@ -293,9 +305,9 @@ class CoverArtGenerator:
         release_mbids = [r.release_mbid for r in releases]
         images = self.load_images(release_mbids, layout=layout)
         if images is None:
-            return None, None
+            return None
 
-        return images, releases
+        return images
 
     def create_artist_stats_cover(self, user_name, time_range):
         """ Given a user name and a stats time range, make an artist stats cover. Return
