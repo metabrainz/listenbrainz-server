@@ -2,15 +2,13 @@ from datetime import datetime
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
-import orjson
 
-from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
+from flask import Blueprint, render_template, request, url_for, redirect, jsonify
 from flask_login import current_user, login_required
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
 from listenbrainz.db import listens_importer
-from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
@@ -29,23 +27,6 @@ DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
 
 user_bp = Blueprint("user", __name__)
 redirect_bp = Blueprint("redirect", __name__)
-
-
-def redirect_user_page(target):
-    """Redirect a well-known url to a user's profile.
-
-    The user-facing informational pages contain a username in the url. This means
-    that we don't have a standard url that we can send any user to (for example a link
-    on twitter). We configure some standardised URLS /my/[page] that will redirect
-    the user to this specific page in their namespace if they are logged in."""
-
-    def inner():
-        if current_user.is_authenticated:
-            return redirect(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
-        else:
-            return current_app.login_manager.unauthorized()
-
-    return inner
 
 
 @redirect_bp.route('/', defaults={'path': ''})

@@ -61,15 +61,7 @@ module.exports = function (env, argv) {
       AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/AIBrainz.tsx")],
       dashboard: [path.resolve(jsDir, "src/user/index.tsx")],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
-      userEntityChart: path.resolve(
-        jsDir,
-        "src/user/charts/UserEntityChart.tsx"
-      ),
-      userReports: path.resolve(jsDir, "src/user/stats/UserReports.tsx"),
-      userTaste: path.resolve(jsDir, "src/user/taste/UserTaste.tsx"),
-      userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
-      playlists: path.resolve(jsDir, "src/user/playlists/Playlists.tsx"),
       explore: path.resolve(jsDir, "src/explore/Explore.tsx"),
       huesound: path.resolve(jsDir, "src/explore/huesound/ColorPlay.tsx"),
       lb_radio: path.resolve(jsDir, "src/explore/lb-radio/LBRadio.tsx"),
