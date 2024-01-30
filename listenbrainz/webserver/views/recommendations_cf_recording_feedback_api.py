@@ -30,7 +30,7 @@ recommendation_feedback_api_bp = Blueprint('recommendation_feedback_api_v1', __n
 @ratelimit()
 def submit_recommendation_feedback():
     """
-    Submit recommendation feedback. A user token (found on  https://listenbrainz.org/profile/ )
+    Submit recommendation feedback. A user token (found on  https://listenbrainz.org/settings/ )
     must be provided in the Authorization header! Each request should contain only one feedback in the payload.
 
     A sample feedback may look like:
@@ -79,7 +79,7 @@ def submit_recommendation_feedback():
 @ratelimit()
 def delete_recommendation_feedback():
     """
-    Delete feedback for a user. A user token (found on  https://listenbrainz.org/profile/ )
+    Delete feedback for a user. A user token (found on  https://listenbrainz.org/settings/ )
     must be provided in the Authorization header! Each request should contain only one recording mbid in the payload.
     A sample feedback may look like:
 

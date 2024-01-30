@@ -236,10 +236,10 @@ export default class YearInMusic extends React.Component<
           </h3>
           <p>
             Check out how you can submit listens by{" "}
-            <a href="/profile/music-services/details/">
+            <a href="/settings/music-services/details/">
               connecting a music service
             </a>{" "}
-            or <a href="/profile/import/">importing your listening history</a>,
+            or <a href="/settings/import/">importing your listening history</a>,
             and come back next year!
           </p>
         </div>
@@ -457,7 +457,7 @@ export default class YearInMusic extends React.Component<
               Double click on any song to start playing it — we will do our best
               to find a matching song to play. If you have a Spotify pro
               account, we recommend{" "}
-              <a href="/profile/music-services/details/">
+              <a href="/settings/music-services/details/">
                 connecting your account
               </a>{" "}
               for a better playback experience.

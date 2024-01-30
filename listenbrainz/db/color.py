@@ -139,6 +139,9 @@ def fetch_color_for_releases(release_mbids: List[str]) -> Dict[str, Dict[str, in
           Returns a dict with the keys red, green and blue or None if no color is found.
     """
 
+    if not release_mbids:
+        return {}
+
     query = """SELECT release_mbid,
                       red,
                       green,

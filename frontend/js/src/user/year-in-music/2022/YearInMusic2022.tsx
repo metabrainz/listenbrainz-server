@@ -338,11 +338,12 @@ export default class YearInMusic extends React.Component<
             </h3>
             <p className="center-p">
               Check out how you can submit listens by{" "}
-              <a href="/profile/music-services/details/">
+              <a href="/settings/music-services/details/">
                 connecting a music service
               </a>{" "}
-              or <a href="/profile/import/">importing your listening history</a>
-              , and come back next year!
+              or{" "}
+              <a href="/settings/import/">importing your listening history</a>,
+              and come back next year!
             </p>
           </div>
         </div>

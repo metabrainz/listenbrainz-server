@@ -4,20 +4,26 @@ from unittest.mock import patch, mock_open, call, MagicMock
 
 import listenbrainz_spark
 from listenbrainz_spark import config
+from listenbrainz_spark.dump import DumpType
 from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.tests import SparkNewTestCase
+
+
+class TestableListenBrainzFTPDownloader(listenbrainz_spark.ftp.ListenBrainzFTPDownloader):
+    def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL):
+        return '', '', 1
 
 
 class FTPTestCase(SparkNewTestCase):
 
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.connect')
     def test_init(self, mock_connect):
-        listenbrainz_spark.ftp.ListenBrainzFTPDownloader()
+        TestableListenBrainzFTPDownloader()
         mock_connect.assert_called_once()
 
     @patch('ftplib.FTP')
     def test_connect(self, mock_ftp_cons):
-        listenbrainz_spark.ftp.ListenBrainzFTPDownloader().connect()
+        TestableListenBrainzFTPDownloader().connect()
         mock_ftp_cons.assert_called_with(config.FTP_SERVER_URI)
         mock_ftp = mock_ftp_cons.return_value
         self.assertTrue(mock_ftp.login.called)
@@ -25,7 +31,7 @@ class FTPTestCase(SparkNewTestCase):
     @patch('ftplib.FTP')
     def test_list(self, mock_ftp_cons):
         mock_ftp = mock_ftp_cons.return_value
-        dirs = listenbrainz_spark.ftp.ListenBrainzFTPDownloader().list_dir()
+        dirs = TestableListenBrainzFTPDownloader().list_dir()
         self.assertTrue(mock_ftp.retrlines.called)
         self.assertEqual(dirs, [])
 
@@ -33,7 +39,7 @@ class FTPTestCase(SparkNewTestCase):
     def test_download_file_binary(self, mock_ftp_cons):
         mock_ftp = mock_ftp_cons.return_value
         with patch('listenbrainz_spark.ftp.open', mock_open(), create=True) as mock_file:
-            listenbrainz_spark.ftp.ListenBrainzFTPDownloader().download_file_binary('fake/src', 'fake/dest')
+            TestableListenBrainzFTPDownloader().download_file_binary('fake/src', 'fake/dest')
         mock_file.assert_called_once_with('fake/dest', 'wb')
         mock_ftp.retrbinary.assert_called_once_with('RETR {}'.format('fake/src'), mock_file().write)
 
@@ -52,7 +58,7 @@ class FTPTestCase(SparkNewTestCase):
         calls = [call(sha_filename, sha_dest_path), call(filename, 'fakedir/' + filename)]
 
         with patch('listenbrainz_spark.ftp.open', mock_open(read_data='test'), create=True) as mock_file:
-            dest_path = listenbrainz_spark.ftp.ListenBrainzFTPDownloader().download_dump(filename, directory)
+            dest_path = TestableListenBrainzFTPDownloader().download_dump(filename, directory)
 
         self.assertEqual(os.path.join(directory, filename), dest_path)
         mock_list_dir.assert_called_once()
@@ -69,8 +75,7 @@ class FTPTestCase(SparkNewTestCase):
         filename = 'fakefile.txt'
         directory = 'fakedir'
 
-        self.assertRaises(DumpInvalidException,
-                          listenbrainz_spark.ftp.ListenBrainzFTPDownloader().download_dump, filename, directory)
+        self.assertRaises(DumpInvalidException, TestableListenBrainzFTPDownloader().download_dump, filename, directory)
 
     @patch('ftplib.FTP')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_file_binary')
@@ -84,13 +89,13 @@ class FTPTestCase(SparkNewTestCase):
         filename = 'fakefile.txt'
         directory = 'fakedir'
 
-        with patch('listenbrainz_spark.ftp.open', mock_open(read_data='test'), create=True) as mock_file:
+        with patch('listenbrainz_spark.dump.open', mock_open(read_data='test'), create=True) as mock_file:
             self.assertRaises(DumpInvalidException,
-                              listenbrainz_spark.ftp.ListenBrainzFTPDownloader().download_dump, filename, directory)
+                              TestableListenBrainzFTPDownloader().download_dump, filename, directory)
 
     @patch('ftplib.FTP')
     def test_read_sha_file_(self, mock_ftp_cons):
         mock_ftp = mock_ftp_cons.return_value
-        with patch('listenbrainz_spark.ftp.open', mock_open(read_data='  test\n filename  \n'), create=True) as mock_file:
-            result = listenbrainz_spark.ftp.ListenBrainzFTPDownloader()._read_sha_file("/sha_file.sha256")
+        with patch('listenbrainz_spark.dump.open', mock_open(read_data='  test\n filename  \n'), create=True) as mock_file:
+            result = TestableListenBrainzFTPDownloader()._read_sha_file("/sha_file.sha256")
             self.assertEqual('test', result)

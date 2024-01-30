@@ -1,24 +1,22 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
+import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
-
-import { getPageProps } from "../utils/utils";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import { ToastMsg } from "../notifications/Notifications";
+import { ToastMsg } from "../../notifications/Notifications";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export type SelectTimezoneProps = {
   pg_timezones: Array<string[]>;
   user_timezone: string;
 };
+
+type SelectTimezoneLoaderData = SelectTimezoneProps;
+
 export interface SelectTimezoneState {
   selectZone: string;
   userTimezone: string;
 }
+
 export default class SelectTimezone extends React.Component<
   SelectTimezoneProps,
   SelectTimezoneState
@@ -28,6 +26,7 @@ export default class SelectTimezone extends React.Component<
 
   constructor(props: SelectTimezoneProps) {
     super(props);
+
     this.state = {
       selectZone: props.user_timezone,
       userTimezone: props.user_timezone,
@@ -89,8 +88,7 @@ export default class SelectTimezone extends React.Component<
   };
 
   render() {
-    const { selectZone, userTimezone } = this.state;
-    // const { APIService } = this.context;
+    const { userTimezone } = this.state;
     const { pg_timezones } = this.props;
 
     return (
@@ -139,37 +137,18 @@ export default class SelectTimezone extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function SelectTimezoneWrapper() {
+  const data = useLoaderData() as SelectTimezoneLoaderData;
+  return <SelectTimezone {...data} />;
+}
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { pg_timezones, user_timezone } = reactProps;
-
-  const SelectTimezoneWithAlertNotifications = withAlertNotifications(
-    SelectTimezone
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <SelectTimezoneWithAlertNotifications
-          pg_timezones={pg_timezones}
-          user_timezone={user_timezone}
-        />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const SelectTimezoneLoader = async () => {
+  const response = await fetch("/settings/select_timezone/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return data;
+};
