@@ -42,6 +42,14 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
   const homepageUpperRef = React.useRef<HTMLDivElement>(null);
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
 
+  const createAccountButton = (
+    <a
+      className="create-account-button"
+      href={`https://musicbrainz.org/register?returnto=${window.document.location.href}`}
+    >
+      Create Account
+    </a>
+  );
   return (
     <div id="homepage-container">
       <div className="homepage-upper" ref={homepageUpperRef}>
@@ -95,7 +103,8 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
           <h1>Listen together</h1>
           <h1>with ListenBrainz</h1>
 
-          <button type="button">Create Account</button>
+          {createAccountButton}
+
           <div className="homepage-info-text">
             <p>Track, explore, visualise and share the music you listen to.</p>
             <p>Follow your favourites and discover great new music.</p>
@@ -178,7 +187,8 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
           <h1>Connect your music</h1>
           <h1>with ListenBrainz</h1>
 
-          <button type="button">Create Account</button>
+          {createAccountButton}
+
           <div className="homepage-info-text">
             <p>
               Discover your music by linking to the largest open source music
