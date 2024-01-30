@@ -157,23 +157,23 @@ WHITELISTED_AUTH_TOKENS = []
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-SPOTIFY_CALLBACK_URL = 'http://localhost:8100/profile/music-services/spotify/callback/'
+SPOTIFY_CALLBACK_URL = 'http://localhost:8100/settings/music-services/spotify/callback/'
 
 # SOUNDCLOUD
 SOUNDCLOUD_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SOUNDCLOUD_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-SOUNDCLOUD_REDIRECT_URI = 'http://localhost:8100/profile/music-services/soundcloud/callback/'
+SOUNDCLOUD_REDIRECT_URI = 'http://localhost:8100/settings/music-services/soundcloud/callback/'
 
 # CRITIQUEBRAINZ
 CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change this'
 CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
+CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/settings/music-services/critiquebrainz/callback/'
 
 # APPLE MUSIC
 APPLE_MUSIC_TEAM_ID = 'needs a non empty default value for tests, change this'
 APPLE_MUSIC_KID = 'needs a non empty default value for tests, change this'
 APPLE_MUSIC_KEY = 'needs a non empty default value for tests, change this'
-APPLE_MUSIC_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
+APPLE_MUSIC_REDIRECT_URI = 'http://localhost:8100/settings/music-services/critiquebrainz/callback/'
 
 # YOUTUBE
 YOUTUBE_API_KEY = 'change me'

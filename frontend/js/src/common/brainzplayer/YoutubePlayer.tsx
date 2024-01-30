@@ -210,7 +210,7 @@ export default class YoutubePlayer
         account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
-        <a href="/profile/music-services/details/" target="_blank">
+        <a href="/settings/music-services/details/" target="_blank">
           link for &quot;playing music&quot; feature
         </a>{" "}
         and refresh this page

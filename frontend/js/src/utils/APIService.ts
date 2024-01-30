@@ -161,7 +161,7 @@ export default class APIService {
 
   refreshAccessToken = async (service: string): Promise<string> => {
     const response = await fetch(
-      `/profile/music-services/${service}/refresh/`,
+      `/settings/music-services/${service}/refresh/`,
       {
         method: "POST",
       }
