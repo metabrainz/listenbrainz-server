@@ -70,8 +70,16 @@ const getUserRoutes = () => {
           ],
         },
         {
+          path: "history/",
+          element: <Navigate to="../stats/top-artists/" />,
+        },
+        {
+          path: "artists/",
+          element: <Navigate to="../stats/top-artists/" />,
+        },
+        {
           path: "reports/",
-          element: <Navigate to="stats/" replace />,
+          element: <Navigate to="../stats/" replace />,
         },
         {
           path: "taste/",

@@ -129,24 +129,6 @@ def profile(user_name):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/artists/")
-def artists(user_name):
-    """ Redirect to charts page """
-    page = request.args.get('page', default=1)
-    stats_range = request.args.get('range', default="all_time")
-    return redirect(url_for('user.charts', user_name=user_name, entity='artist', page=page, range=stats_range),
-                    code=301)
-
-
-@user_bp.route("/<user_name>/history/")
-def history(user_name):
-    """ Redirect to charts page """
-    entity = request.args.get('entity', default="artist")
-    page = request.args.get('page', default=1)
-    stats_range = request.args.get('range', default="all_time")
-    return redirect(url_for('user.charts', user_name=user_name, entity=entity, page=page, range=stats_range), code=301)
-
-
 @user_bp.route("/<user_name>/stats/top-artists/", methods=['POST'])
 @user_bp.route("/<user_name>/stats/top-albums/", methods=['POST'])
 @user_bp.route("/<user_name>/stats/top-tracks/", methods=['POST'])
