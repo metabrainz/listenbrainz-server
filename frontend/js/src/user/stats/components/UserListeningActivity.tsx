@@ -337,7 +337,7 @@ export default class UserListeningActivity extends React.Component<
     let totalYears = 0;
     const allTimeData = [];
     const currYear = new Date().getFullYear();
-    let flag: boolean = false;
+    let encounteredNonEmptyYear: boolean = false;
 
     for (let i = 2002; i <= currYear; i += 1) {
       const yearData = data.payload.listening_activity.filter(
@@ -346,13 +346,13 @@ export default class UserListeningActivity extends React.Component<
       totalYears += 1;
 
       if (yearData) {
-        if (flag === false) {
+        if (encounteredNonEmptyYear === false) {
           if (yearData.listen_count > 0) {
-            flag = true;
+            encounteredNonEmptyYear = true;
           }
         }
         const date = new Date(yearData.from_ts * 1000);
-        if (flag) {
+        if (encounteredNonEmptyYear) {
           allTimeData.push({
             id: date.toLocaleString("en-us", dateFormat),
             thisRangeCount: yearData.listen_count,
