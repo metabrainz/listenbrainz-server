@@ -15,7 +15,7 @@ from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
     _filter_description_html
@@ -510,20 +510,20 @@ def get_playlist_xspf(playlist_mbid):
     """
 
     if not is_valid_uuid(playlist_mbid):
-        log_raise_400("Provided playlist ID is invalid.")
+        return PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400).render_error()
 
     fetch_metadata = parse_boolean_arg("fetch_metadata", True)
-
     playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
     if playlist is None:
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+        return PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404).render_error()
 
     user = validate_auth_header(optional=True)
     user_id = None
     if user:
         user_id = user["id"]
+
     if not playlist.is_visible_by(user_id):
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+        return PlaylistAPIXMLError("Invalid authorization to access playlist: %s" % playlist_mbid, status_code=401).render_error()
 
     if fetch_metadata:
         fetch_playlist_recording_metadata(playlist)
