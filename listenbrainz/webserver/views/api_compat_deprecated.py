@@ -31,6 +31,7 @@ from hashlib import md5
 from flask import current_app, Blueprint, request, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.errors import ListenValidationError
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
@@ -94,9 +95,8 @@ def submit_now_playing():
     if listen is None:
         return 'FAILED Invalid data submitted!\n', 400
 
-
     listens = [listen]
-    user = db_user.get(session.user_id)
+    user = db_user.get(db_conn, session.user_id)
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     insert_payload(listens, user_metadata, LISTEN_TYPE_PLAYING_NOW)
 
@@ -125,7 +125,7 @@ def submit_listens():
     if not listens:
         return 'FAILED Invalid data submitted!\n', 400
 
-    user = db_user.get(session.user_id)
+    user = db_user.get(db_conn, session.user_id)
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     insert_payload(listens, user_metadata)
 

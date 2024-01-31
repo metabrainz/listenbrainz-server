@@ -1,5 +1,4 @@
 from datetime import datetime
-from operator import itemgetter
 
 import psycopg2
 import orjson
@@ -15,7 +14,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
@@ -32,6 +31,7 @@ api_bp = Blueprint('api_v1', __name__)
 DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 SEARCH_USER_LIMIT = 10
+
 
 @api_bp.route('/search/users/', methods=['GET', 'OPTIONS'])
 @crossdomain
@@ -443,7 +443,7 @@ def validate_token():
 
     if not auth_token:
         raise APIBadRequest("You need to provide an Authorization token.")
-    user = db_user.get_by_token(auth_token)
+    user = db_user.get_by_token(db_conn, auth_token)
     if user is None:
         return jsonify({
             'code': 200,
@@ -565,7 +565,7 @@ def get_playlists_for_user(playlist_user_name):
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, ts_conn, playlist_user["id"],
                                                                    include_private=include_private,
                                                                    load_recordings=False, count=count, offset=offset)
 
@@ -632,7 +632,8 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 
     # TODO: This needs to be passed to the DB layer
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(db_conn, ts_conn,
+                                                                          playlist_user["id"],
                                                                           include_private=include_private,
                                                                           load_recordings=False,
                                                                           count=count,
@@ -660,7 +661,7 @@ def user_recommendations(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists = db_playlist.get_recommendation_playlists_for_user(playlist_user.id)
+    playlists = db_playlist.get_recommendation_playlists_for_user(db_conn, ts_conn, playlist_user.id)
     return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
 
 

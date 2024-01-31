@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import json
 
 import listenbrainz.db.user as db_user
@@ -14,7 +13,7 @@ from listenbrainz.db.testing import DatabaseTestCase
 class UserTestCase(DatabaseTestCase):
     def test_create(self):
         user_id = db_user.create(0, "izzy_cheezy")
-        self.assertIsNotNone(db_user.get(user_id))
+        self.assertIsNotNone(db_user.get(self.db_conn, user_id))
 
     def test_get_by_musicbrainz_row_id(self):
         user_id = db_user.create(0, 'frank')
@@ -45,7 +44,7 @@ class UserTestCase(DatabaseTestCase):
                 'id': user['id']
             })
 
-        user = db_user.get(user['id'])
+        user = db_user.get(self.db_conn, user['id'])
         self.assertEqual(int(user['last_login'].strftime('%s')), 0)
 
         db_user.update_last_login(user['musicbrainz_id'])
@@ -57,7 +56,7 @@ class UserTestCase(DatabaseTestCase):
     def test_update_user_details(self):
         user_id = db_user.create(17, "barbazfoo", "barbaz@foo.com")
         db_user.update_user_details(user_id, "hello-world", "hello-world@foo.com")
-        user = db_user.get(user_id, fetch_email=True)
+        user = db_user.get(self.db_conn, user_id, fetch_email=True)
         self.assertEqual(user["id"], user_id)
         self.assertEqual(user["musicbrainz_id"], "hello-world")
         self.assertEqual(user["email"], "hello-world@foo.com")
@@ -95,22 +94,22 @@ class UserTestCase(DatabaseTestCase):
     def test_delete(self):
         user_id = db_user.create(10, 'frank')
 
-        user = db_user.get(user_id)
+        user = db_user.get(self.db_conn, user_id)
         self.assertIsNotNone(user)
 
         db_user.delete(user_id)
-        user = db_user.get(user_id)
+        user = db_user.get(self.db_conn, user_id)
         self.assertIsNone(user)
 
     def test_delete_when_spotify_import_activated(self):
         user_id = db_user.create(11, 'kishore')
-        user = db_user.get(user_id)
+        user = db_user.get(self.db_conn, user_id)
         self.assertIsNotNone(user)
         db_oauth.save_token(user_id, ExternalServiceType.SPOTIFY, 'user token',
                             'refresh token', 0, True, ['user-read-recently-played'])
 
         db_user.delete(user_id)
-        user = db_user.get(user_id)
+        user = db_user.get(self.db_conn, user_id)
         self.assertIsNone(user)
         token = db_oauth.get_token(user_id, ExternalServiceType.SPOTIFY)
         self.assertIsNone(token)
@@ -208,12 +207,12 @@ class UserTestCase(DatabaseTestCase):
         musicbrainz_id = "one"
         email = "one@one.one"
         user_id = db_user.create(1, musicbrainz_id, email)
-        self.assertNotIn("email", db_user.get(user_id))
-        self.assertEqual(email, db_user.get(user_id, fetch_email=True)["email"])
+        self.assertNotIn("email", db_user.get(self.db_conn, user_id))
+        self.assertEqual(email, db_user.get(self.db_conn, user_id, fetch_email=True)["email"])
 
-        token = db_user.get(user_id)["auth_token"]
-        self.assertNotIn("email", db_user.get_by_token(token))
-        self.assertEqual(email, db_user.get_by_token(token, fetch_email=True)["email"])
+        token = db_user.get(self.db_conn, user_id)["auth_token"]
+        self.assertNotIn("email", db_user.get_by_token(self.db_conn, token))
+        self.assertEqual(email, db_user.get_by_token(self.db_conn, token, fetch_email=True)["email"])
 
         self.assertNotIn("email", db_user.get_by_mb_id(musicbrainz_id))
         self.assertEqual(email, db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)["email"])
