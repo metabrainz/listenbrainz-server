@@ -77,25 +77,30 @@
       top: 17%;
       right: 7%;
       z-index: 2;
+      transform: translatey(0px);
+      animation: float 10s ease-in-out infinite;
     }
     [class^='homepage-upper-vector-']{
       animation: bobble 30s infinite;
       transition: transform;
     }
     @keyframes bobble {
-      0% {
+      0%, 100% {
           transform: translate3d(0px,0px,0);
-          animation-timing-function: ease-in;
+          animation-timing-function: ease-in-out;
       }
   
       50% {
           transform: translate3d(20%,25%,0);
-          animation-timing-function: ease-out;
-      }
-  
-      100% {
-          transform: translate3d(0px,0px,0);
           animation-timing-function: ease-in-out;
+      }
+    }
+    @keyframes float {
+      0%, 100% {
+        transform: translatey(0px);
+      }
+      50% {
+        transform: translatey(-20px);
       }
     }
   }
@@ -182,6 +187,8 @@
       right: 100px;
       top: 20%;
       z-index: 2;
+      transform: translatey(0px);
+      animation: float 10s ease-in-out infinite;
     }
   }
 
@@ -243,6 +250,7 @@
     }
 
     .create-account-button {
+      display: inline-block;
       border-radius: 33px;
       background: #f1a026;
       color: #1e1e1e;
