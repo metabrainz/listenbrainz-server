@@ -21,20 +21,8 @@ class TestAPICompatUserClass(DatabaseTestCase):
 
         # Create a user
         uid = db_user.create(1, "test_api_compat_user")
-        self.assertIsNotNone(db_user.get(uid))
-        with db.engine.connect() as connection:
-            result = connection.execute(text("""
-                SELECT *
-                  FROM "user"
-                 WHERE id = :id
-            """), {
-                "id": uid,
-            })
-            row = result.fetchone()
-            self.user = User(row.id, row.created, row.musicbrainz_id, row.auth_token)
-
-    def tearDown(self):
-        super(TestAPICompatUserClass, self).tearDown()
+        user_dict = db_user.get(self.db_conn, uid)
+        self.user = User(user_dict["id"], user_dict["created"], user_dict["musicbrainz_id"], user_dict["auth_token"])
 
     def test_user_get_id(self):
         uid = User.get_id(self.user.name)

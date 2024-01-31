@@ -20,8 +20,10 @@ class DatabaseTestCase(unittest.TestCase):
     def setUp(self):
         db_connect = create_test_database_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
+        self.db_conn = db.engine.connect()
 
     def tearDown(self):
+        self.db_conn.close()
         self.reset_db()
 
     def reset_db(self):

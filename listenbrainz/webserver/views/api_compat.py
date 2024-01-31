@@ -4,7 +4,7 @@ import listenbrainz.db.user as db_user
 from collections import defaultdict
 from yattag import Doc
 import yattag
-from flask import Blueprint, request, render_template, current_app, make_response, Response
+from flask import Blueprint, request, render_template, current_app, Response
 from flask_login import login_required, current_user
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
@@ -12,14 +12,14 @@ from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenVa
 import xmltodict
 
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
+from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_SINGLE, LISTEN_TYPE_PLAYING_NOW
 
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 import calendar
 from datetime import datetime
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn
 
 api_bp = Blueprint('api_compat', __name__)
 
@@ -257,7 +257,7 @@ def record_listens(data):
             raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)   # Invalid API_KEY
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)   # Invalid Session KEY
 
-    user = db_user.get(session.user_id, fetch_email=True)
+    user = db_user.get(db_conn, session.user_id, fetch_email=True)
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
         raise InvalidAPIUsage(CompatError.NO_EMAIL, output_format=output_format)  # No email available for user in LB
 

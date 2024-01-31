@@ -296,7 +296,6 @@ def recommendation_playlists(user_name: str):
     )
 
 
-
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
 @api_login_required
 def report_abuse(user_name):

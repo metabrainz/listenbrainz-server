@@ -9,6 +9,7 @@ from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
+from listenbrainz import db
 from listenbrainz.db import external_service_oauth as db_oauth, timescale
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import EPOCH
@@ -24,10 +25,13 @@ class UserViewsTestCase(IntegrationTestCase):
         self.log = logging.getLogger(__name__)
         self.logstore = timescale_connection._ts
 
+        self.db_conn = db.engine.connect()
+
         user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
+
         # fetch again so that gdpr agreed time is set
-        user = db_user.get(user['id'])
+        user = db_user.get(self.db_conn, user['id'])
         self.user = User.from_dbrow(user)
 
         weirduser = db_user.get_or_create(2, 'weird\\user name')
@@ -38,6 +42,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
     def tearDown(self):
         self.logstore = None
+        self.db_conn.close()
         super().tearDown()
 
     def test_redirects_logged_out(self):

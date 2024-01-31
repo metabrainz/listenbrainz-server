@@ -63,10 +63,11 @@ USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
                     'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
 
 
-def get(id: int, *, fetch_email: bool = False):
+def get(db_conn, id: int, *, fetch_email: bool = False):
     """Get user with a specified ID.
 
     Args:
+        db_conn: database connection
         id: ID of a user.
         fetch_email: whether to return email in response
 
@@ -85,13 +86,12 @@ def get(id: int, *, fetch_email: bool = False):
         }
     """
     columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT {columns}
-              FROM "user"
-             WHERE id = :id
-        """.format(columns=','.join(columns))), {"id": id})
-        return result.mappings().first()
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE id = :id
+    """.format(columns=','.join(columns))), {"id": id})
+    return result.mappings().first()
 
 
 def get_by_login_id(login_id):
@@ -123,10 +123,11 @@ def get_by_login_id(login_id):
         return result.mappings().first()
 
 
-def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
+def get_many_users_by_mb_id(db_conn, musicbrainz_ids: List[str]):
     """Load a list of users given their musicbrainz login name
 
     Args:
+        db_conn: database connection object
         musicbrainz_ids: A list of musicbrainz usernames
 
     Returns:
@@ -134,14 +135,13 @@ def get_many_users_by_mb_id(musicbrainz_ids: List[str]):
         following the same format as `get_by_mb_id`.
         If a provided username doesn't exist, it won't be returned.
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT {columns}
-              FROM "user"
-             WHERE LOWER(musicbrainz_id) in :mb_ids
-        """.format(columns=','.join(USER_GET_COLUMNS))),
-                                    {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
-        return {row["musicbrainz_id"].lower(): row for row in result.mappings()}
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE LOWER(musicbrainz_id) in :mb_ids
+    """.format(columns=','.join(USER_GET_COLUMNS))),
+                                {"mb_ids": tuple([mbname.lower() for mbname in musicbrainz_ids])})
+    return {row["musicbrainz_id"].lower(): row for row in result.mappings()}
 
 
 def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
@@ -175,10 +175,11 @@ def get_by_mb_id(musicbrainz_id, *, fetch_email: bool = False):
         return result.mappings().first()
 
 
-def get_by_token(token: str, *, fetch_email: bool = False):
+def get_by_token(db_conn, token: str, *, fetch_email: bool = False):
     """Get user with a specified authentication token.
 
     Args:
+        db_conn: database connection object
         token: Authentication token associated with user's account.
         fetch_email: whether to return email in response
 
@@ -191,13 +192,12 @@ def get_by_token(token: str, *, fetch_email: bool = False):
         }
     """
     columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT {columns}
-              FROM "user"
-             WHERE auth_token = :auth_token
-        """.format(columns=','.join(columns))), {"auth_token": token})
-        return result.mappings().first()
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE auth_token = :auth_token
+    """.format(columns=','.join(columns))), {"auth_token": token})
+    return result.mappings().first()
 
 
 def get_user_count():
