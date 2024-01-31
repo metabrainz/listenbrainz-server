@@ -56,21 +56,21 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
         <Blob
           width={200}
           height={200}
-          randomness={0.7}
+          randomness={1.5}
           className="homepage-upper-vector-1"
           style={{ animationDelay: "-10s" }}
         />
         <Blob
           width={300}
           height={300}
-          randomness={1.5}
+          randomness={2.5}
           className="homepage-upper-vector-2"
           style={{ animationDelay: "-7s" }}
         />
         <Blob
           width={100}
           height={100}
-          randomness={0.9}
+          randomness={2}
           className="homepage-upper-vector-3"
           style={{
             animationDelay: "-3s",
@@ -80,7 +80,7 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
         <Blob
           width={350}
           height={350}
-          randomness={1.3}
+          randomness={2}
           className="homepage-upper-vector-4"
           style={{
             animationDuration: "30s",
@@ -144,20 +144,20 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
         <Blob
           width={250}
           height={250}
-          randomness={0.7}
+          randomness={1.5}
           className="homepage-lower-vector-1"
         />
         <Blob
           width={300}
           height={300}
-          randomness={1.3}
+          randomness={2}
           className="homepage-lower-vector-2"
           style={{ animationDelay: "-7s" }}
         />
         <Blob
           width={100}
           height={100}
-          randomness={0.8}
+          randomness={1.6}
           className="homepage-lower-vector-3"
           style={{
             animationDelay: "-3s",
@@ -248,9 +248,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     </ErrorBoundary>
   );
 });
-
-const container = document.querySelector(".container-fluid");
-if (container instanceof HTMLElement) {
-  container.style.paddingLeft = "0px";
-  container.style.paddingRight = "0px";
-}

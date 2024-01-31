@@ -48,8 +48,8 @@ export default function Blob({
     blobs2Animate.wigglePreset(
       animation,
       {
-        // seed: Math.round(Math.random() * 1000),
-        extraPoints: Math.round(2 * randomness),
+        seed: Date.now(),
+        extraPoints: 3,
         randomness: randomness * 2,
         size,
       },
