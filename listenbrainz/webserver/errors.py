@@ -241,6 +241,7 @@ class InvalidAPIUsage(Exception):
                 text(self.api_error.message)
         return '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
 
+
 class PlaylistAPIXMLError(Exception):
     """
     Custom error class for Playlist API to render errors in XML format.
