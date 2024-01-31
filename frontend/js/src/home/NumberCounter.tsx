@@ -5,9 +5,9 @@ type NumberCounterProps = {
 };
 
 function NumberCounter({ count }: NumberCounterProps) {
-  const countString = count.toString();
-  const reversedStr = countString.split("").reverse().join("");
-  const groupsOfThree = reversedStr.match(/\d{1,3}/g);
+  const countString = count?.toString();
+  const reversedStr = countString?.split("").reverse().join("");
+  const groupsOfThree = reversedStr?.match(/\d{1,3}/g);
   const reversedGroupsOfCount = groupsOfThree ? groupsOfThree.reverse() : [];
 
   return (
