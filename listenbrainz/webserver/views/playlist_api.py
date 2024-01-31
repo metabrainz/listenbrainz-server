@@ -2,7 +2,7 @@ import datetime
 from uuid import UUID
 
 import psycopg2
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, make_response
 from xml.etree import ElementTree as ET
 import requests
 from psycopg2.extras import DictCursor
@@ -10,7 +10,6 @@ from psycopg2.extras import DictCursor
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
-from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.troi.export import export_to_spotify
 
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -19,17 +18,12 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
     _filter_description_html
-from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording
+from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording, \
+    PLAYLIST_EXTENSION_URI, PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_TRACK_EXTENSION_URI, \
+    PLAYLIST_ARTIST_URI_PREFIX, PLAYLIST_RELEASE_URI_PREFIX
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
-PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
-PLAYLIST_ARTIST_URI_PREFIX = "https://musicbrainz.org/artist/"
-PLAYLIST_RELEASE_URI_PREFIX = "https://musicbrainz.org/release/"
-PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/"
-PLAYLIST_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#playlist"
-PLAYLIST_TRACK_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#track"
-RECORDING_LOOKUP_SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 MAX_RECORDINGS_PER_ADD = 100
 
 
@@ -92,67 +86,6 @@ def validate_playlist(jspf):
             log_raise_400("JSPF playlist track %d does not contain a valid track identifier field." % i)
 
 
-def serialize_jspf(playlist: Playlist):
-    """
-        Given a playlist, return a properly formated dict that can be passed to jsonify.
-    """
-
-    pl = {
-        "creator": playlist.creator,
-        "title": playlist.name,
-        "identifier": PLAYLIST_URI_PREFIX + str(playlist.mbid),
-        "date": playlist.created.astimezone(datetime.timezone.utc).isoformat()
-    }
-    if playlist.description:
-        pl["annotation"] = playlist.description
-
-    extension = {"public": playlist.public, "creator": playlist.creator}
-    if playlist.last_updated:
-        extension["last_modified_at"] = playlist.last_updated.astimezone(datetime.timezone.utc).isoformat()
-    if playlist.copied_from_id is not None:
-        if playlist.copied_from_mbid is None:
-            extension['copied_from_deleted'] = True
-        else:
-            extension['copied_from_mbid'] = PLAYLIST_URI_PREFIX + str(playlist.copied_from_mbid)
-    if playlist.created_for_id:
-        extension['created_for'] = playlist.created_for
-    if playlist.collaborators:
-        extension['collaborators'] = playlist.collaborators
-    if playlist.additional_metadata:
-        extension['additional_metadata'] = playlist.additional_metadata
-
-    pl["extension"] = {PLAYLIST_EXTENSION_URI: extension}
-
-    tracks = []
-    for rec in playlist.recordings:
-        tr = {"identifier": PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid)}
-        if rec.artist_credit:
-            tr["creator"] = rec.artist_credit
-
-        if rec.release_name:
-            tr["album"] = rec.release_name
-
-        if rec.title:
-            tr["title"] = rec.title
-
-        extension = {"added_by": rec.added_by, "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
-        if rec.artist_mbids:
-            extension["artist_identifiers"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
-
-        if rec.release_mbid:
-            extension["release_identifier"] = PLAYLIST_RELEASE_URI_PREFIX + str(rec.release_mbid)
-
-        if rec.additional_metadata:
-            extension["additional_metadata"] = rec.additional_metadata
-
-        tr["extension"] = {PLAYLIST_TRACK_EXTENSION_URI: extension}
-        tracks.append(tr)
-
-    pl["track"] = tracks
-
-    return {"playlist": pl}
-
-
 def serialize_xspf(playlist: Playlist):
     """
         Given a playlist, return a stringified element tree.
@@ -212,9 +145,17 @@ def serialize_xspf(playlist: Playlist):
 
     if playlist.additional_metadata:
         playlist_extension_additional_metadata = ET.SubElement(playlist_extension, "additional_metadata")
-        for meta_key, meta_value in playlist.additional_metadata:
-            additional_metadata_item = ET.SubElement(playlist_extension_additional_metadata, "item", key=meta_key)
-            additional_metadata_item.text = meta_value
+        for key, value in playlist.additional_metadata.items():
+            if isinstance(value, dict):
+                # Handle dictionary-type metadata
+                dict_metadata_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                for nested_key, nested_value in value.items():
+                    nested_item = ET.SubElement(dict_metadata_item, nested_key)
+                    nested_item.text = str(nested_value)
+            else:
+                # Handle simple scalar values
+                simple_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                simple_item.text = str(value)
 
     track_list = ET.SubElement(playlist_root, "trackList")
     for rec in playlist.recordings:
@@ -311,31 +252,10 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
                 psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
                 mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
                 ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
-            rows = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
+            db_playlist.get_playlist_recordings_metadata(mb_curs, ts_curs, playlist)
     except Exception:
         current_app.logger.error("Error while fetching metadata for a playlist: ", exc_info=True)
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
-
-    for rec, row in zip(playlist.recordings, rows):
-        rec.artist_credit = row.get("artist_credit_name", "")
-        if "[artist_credit_mbids]" in row and row["[artist_credit_mbids]"] is not None:
-            rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"]]
-        rec.title = row.get("recording_name", "")
-        rec.release_name = row.get("release_name", "")
-        rec.duration_ms = row.get("length", "")
-
-        caa_id = row.get("caa_id")
-        caa_release_mbid = row.get("caa_release_mbid")
-        additional_metadata = {}
-        if caa_id and caa_release_mbid:
-            additional_metadata["caa_id"] = caa_id
-            additional_metadata["caa_release_mbid"] = caa_release_mbid
-
-        if row.get("artists"):
-            additional_metadata["artists"] = row["artists"]
-
-        if additional_metadata:
-            rec.additional_metadata = additional_metadata
 
 
 @playlist_api_bp.route("/create", methods=["POST", "OPTIONS"])
@@ -568,7 +488,7 @@ def get_playlist(playlist_mbid):
     if fetch_metadata:
         fetch_playlist_recording_metadata(playlist)
 
-    return jsonify(serialize_jspf(playlist))
+    return jsonify(playlist.serialize_jspf())
 
 
 @playlist_api_bp.route("/<playlist_mbid>/xspf", methods=["GET", "OPTIONS"])
@@ -607,8 +527,11 @@ def get_playlist_xspf(playlist_mbid):
 
     if fetch_metadata:
         fetch_playlist_recording_metadata(playlist)
-
-    return serialize_xspf(playlist)
+    
+    xspf_data = serialize_xspf(playlist)
+    serialized_xspf_response = make_response(xspf_data)
+    serialized_xspf_response.content_type = 'text/xml'
+    return serialized_xspf_response
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])

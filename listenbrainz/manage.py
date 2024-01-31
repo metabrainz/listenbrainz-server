@@ -40,7 +40,9 @@ TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.
               "'DEBUG' value in the config file.")
 def run_websockets(host, port, debug=True):
     from listenbrainz.websockets.websockets import run_websockets
-    run_websockets(host=host, port=port, debug=debug)
+    application = webserver.create_app()
+    with application.app_context():
+        run_websockets(application, host=host, port=port, debug=debug)
 
 
 @cli.command(name="init_db")

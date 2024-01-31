@@ -178,7 +178,7 @@ COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.finish /etc/ser
 RUN touch /etc/service/apple_metadata_cache/down
 
 # uwsgi (website)
-COPY ./docker/services/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
+COPY ./docker/services/uwsgi/uwsgi.ini.ctmpl /etc/uwsgi/uwsgi.ini.ctmpl
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf
 COPY ./docker/services/uwsgi/uwsgi.service /etc/service/uwsgi/run
 COPY ./docker/services/uwsgi/uwsgi.finish /etc/service/uwsgi/finish

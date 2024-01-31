@@ -26,7 +26,6 @@ from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
     get_non_negative_param
-from listenbrainz.webserver.views.playlist_api import serialize_jspf
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -55,7 +54,7 @@ def search_user():
 @ratelimit()
 def submit_listen():
     """
-    Submit listens to the server. A user token (found on  https://listenbrainz.org/profile/ ) must
+    Submit listens to the server. A user token (found on  https://listenbrainz.org/settings/ ) must
     be provided in the Authorization header! Each request should also contain at least one listen
     in the payload.
 
@@ -344,7 +343,7 @@ def latest_import():
     :resheader Content-Type: *application/json*
 
     In order to update the timestamp of a user, you'll have to provide a user token in the Authorization
-    Header. User tokens can be found on https://listenbrainz.org/profile/ .
+    Header. User tokens can be found on https://listenbrainz.org/settings/ .
 
     The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp.
 
@@ -530,7 +529,7 @@ def serialize_playlists(playlists, playlist_count, count, offset):
 
     items = []
     for playlist in playlists:
-        items.append(serialize_jspf(playlist))
+        items.append(playlist.serialize_jspf())
 
     return {"playlists": items,
             "playlist_count": playlist_count,

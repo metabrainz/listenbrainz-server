@@ -6,7 +6,7 @@
     <!-- Page content -->
 	<div class="secondary-nav">
 		<ol class="breadcrumb">
-			<li {{ 'class=active' if active_about_section == 'about'}}><a href="{{ url_for('profile.info') }}">About</a></li>
+			<li {{ 'class=active' if active_about_section == 'about'}}><a href="{{ url_for('settings.index', path='') }}">About</a></li>
 			{% if not active_about_section == 'about' %}
 			<li class="active">{{ active_about_section|replace("-", " ")|capitalize }}</li>
 			{% endif %}
@@ -21,6 +21,7 @@
 			</p>
 			<ul>
 				<li {{ 'class=active' if active_about_section == 'about'}}><a href="{{ url_for('index.about') }}">About</a></li>
+				<li {{ 'class=active' if active_about_section == 'about'}}><a href="{{ url_for('index.add_data_info') }}">Add listens</a></li>
 				<li {{ 'class=active' if active_about_section == 'site-status'}}><a href="{{ url_for('index.current_status') }}">Site status</a></li>
 				<li {{ 'class=active' if active_about_section == 'add-listens'}}><a href="{{ url_for('index.add_data_info') }}">Submitting data</a></li>
 				<li {{ 'class=active' if active_about_section == 'using-data'}}><a href="{{ url_for('index.data') }}">Using our data</a></li>

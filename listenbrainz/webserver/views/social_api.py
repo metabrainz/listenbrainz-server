@@ -80,7 +80,7 @@ def get_following(user_name: str):
 @ratelimit()
 def follow_user(user_name: str):
     """
-    Follow the user ``user_name``. A user token (found on  https://listenbrainz.org/profile/ ) must
+    Follow the user ``user_name``. A user token (found on  https://listenbrainz.org/settings/ ) must
     be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>
@@ -118,7 +118,7 @@ def follow_user(user_name: str):
 @ratelimit()
 def unfollow_user(user_name: str):
     """
-    Unfollow the user ``user_name``. A user token (found on  https://listenbrainz.org/profile/ ) must
+    Unfollow the user ``user_name``. A user token (found on  https://listenbrainz.org/settings/ ) must
     be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>

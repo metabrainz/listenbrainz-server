@@ -14,20 +14,21 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
     """
 
     def get_create_table_columns(self):
-        return [("id",                 "SERIAL"),
-                ("artist_credit_id",   "INT NOT NULL"),
-                ("artist_mbids",       "UUID[] NOT NULL"),
-                ("artist_credit_name", "TEXT NOT NULL"),
-                ("release_mbid",       "UUID NOT NULL"),
-                ("release_name",       "TEXT NOT NULL"),
-                ("recording_mbid",     "UUID NOT NULL"),
-                ("recording_name",     "TEXT NOT NULL"),
-                ("combined_lookup",    "TEXT NOT NULL"),
-                ("score",              "INTEGER NOT NULL"),
-                ("year",               "INTEGER")]
+        return [
+            ("id",                 "SERIAL"),
+            ("artist_credit_id",   "INT NOT NULL"),
+            ("artist_mbids",       "UUID[] NOT NULL"),
+            ("artist_credit_name", "TEXT NOT NULL"),
+            ("release_mbid",       "UUID NOT NULL"),
+            ("release_name",       "TEXT NOT NULL"),
+            ("recording_mbid",     "UUID NOT NULL"),
+            ("recording_name",     "TEXT NOT NULL"),
+            ("combined_lookup",    "TEXT NOT NULL"),
+            ("score",              "INTEGER NOT NULL")
+        ]
 
     def get_insert_queries(self):
-        return [("MB", """
+        return ["""
                SELECT ac.id as artist_credit_id
                     , r.name AS recording_name
                     , r.gid AS recording_mbid
@@ -36,7 +37,6 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
                     , rl.name AS release_name
                     , rl.gid AS release_mbid
                     , rpr.id AS score
-                    , date_year AS year
                  FROM musicbrainz.recording r
                  JOIN musicbrainz.artist_credit ac
                    ON r.artist_credit = ac.id
@@ -64,9 +64,9 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
                -- postgres indexing limits. therefore filter out such recordings before-hand, otherwise index creation
                -- may fail
                 WHERE length(concat(ac.name, r.name, rl.name)) < 500 
-             GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name, year
+             GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name
              ORDER BY ac.id, rpr.id
-        """)]
+        """]
 
     def get_combined_lookup(self, row):
         pass
@@ -83,7 +83,6 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
                 row["recording_mbid"],
                 row["recording_name"],
                 combined_lookup,
-                row["score"],
-                row["year"]
+                row["score"]
             )]
         }

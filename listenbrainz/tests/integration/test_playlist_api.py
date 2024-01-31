@@ -212,6 +212,40 @@ class PlaylistAPITestCase(IntegrationTestCase):
         # Make sure the return playlist id is valid
         UUID(response.json["playlist_mbid"])
 
+    def test_playlist_xspf_additional_metadata(self):
+        """ Test for checking that additional meta data field is properly constructed and not causing a crash """
+
+        playlist = {
+            "playlist": {
+                "title": "you're a person",
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True,
+                    }
+                },
+                "additional_metadata": {
+                    "note": "a great playlist",
+                    "details": {
+                         "mood": "varied",
+                         "genre": "eclectic",
+                         "favorite_track": "Random Song"
+                        }
+                    }
+                }
+            }
+        response_post = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response_post)
+        playlist_mbid = response_post.json["playlist_mbid"]
+        r = self.client.get(
+            url_for("playlist_api_v1.get_playlist_xspf", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(r)
+
     def test_playlist_json_with_missing_keys(self):
         """ Test for checking that submitting JSON with missing keys returns 400 """
 

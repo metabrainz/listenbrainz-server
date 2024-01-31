@@ -32,6 +32,17 @@ class BaseBrainzService(ExternalService):
         )
         return True
 
+    def update_user(self, user_id: int, token: dict) -> bool:
+        expires_at = int(time.time()) + token["expires_in"]
+        external_service_oauth.update_token(
+            user_id=user_id,
+            service=self.service,
+            access_token=token["access_token"],
+            refresh_token=token.get("refresh_token"),
+            expires_at=expires_at
+        )
+        return True
+
     def get_authorize_url(self, scopes: list, state: str = None, **kwargs):
         oauth = OAuth2Session(
             client_id=self.client_id,

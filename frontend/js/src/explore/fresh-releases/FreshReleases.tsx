@@ -10,10 +10,10 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";
 import ErrorBoundary from "../../utils/ErrorBoundary";
-import ReleaseFilters from "./ReleaseFilters";
-import ReleaseTimeline from "./ReleaseTimeline";
+import ReleaseFilters from "./components/ReleaseFilters";
+import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
-import ReleaseCardsGrid from "./ReleaseCardsGrid";
+import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
 
 export enum DisplaySettingsPropertiesEnum {
   releaseTitle = "Release Title",
@@ -322,8 +322,8 @@ export default function FreshReleases() {
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, globalAppContext, sentryProps } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, globalAppContext, sentryProps } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {

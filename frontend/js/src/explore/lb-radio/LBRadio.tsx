@@ -5,7 +5,7 @@ import { merge } from "lodash";
 import * as React from "react";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import {
@@ -16,8 +16,8 @@ import {
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
-import { LBRadioFeedback, Playlist } from "./Playlist";
-import Prompt, { Modes } from "./Prompt";
+import { LBRadioFeedback, Playlist } from "./components/Playlist";
+import Prompt, { Modes } from "./components/Prompt";
 
 type LBRadioProps = {
   modeArg: Modes;
@@ -133,8 +133,8 @@ function LBRadio(props: LBRadioProps) {
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalAppContext } = getPageProps();
+document.addEventListener("DOMContentLoaded", async () => {
+  const { domContainer, reactProps, globalAppContext } = await getPageProps();
 
   const { user, mode, prompt, token } = reactProps;
   const renderRoot = createRoot(domContainer!);
