@@ -1,3 +1,6 @@
+{{- define "KEY" -}}
+    {{ key (printf "docker-server-configs/LB/uwsgi.%s.json/%s" (env "DEPLOY_ENV") .) }}
+{{- end -}}
 [uwsgi]
 uid = www-data
 gid = www-data
@@ -7,7 +10,7 @@ module = listenbrainz.server
 callable = application
 chdir = /code/listenbrainz
 enable-threads = true
-processes = 500
+processes = {{template "KEY" "processes"}}
 listen = 1024
 log-x-forwarded-for=true
 disable-logging = true
