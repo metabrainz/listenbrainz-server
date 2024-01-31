@@ -5,12 +5,11 @@ import orjson
 import listenbrainz.db.user as db_user
 from datetime import datetime
 
-from flask import url_for
 from unittest.mock import patch
-from flask import render_template, current_app
+from flask import render_template
+
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.webserver.views.user import _get_user
-from werkzeug.exceptions import BadRequest, InternalServerError
+from listenbrainz.webserver.login import User
 from listenbrainz.webserver.views import recommendations_cf_recording
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
@@ -52,12 +51,12 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         )
 
     def test_info_invalid_user(self):
-        response = self.client.get(url_for('recommendations_cf_recording.info', user_name="invalid"))
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording.info', user_name="invalid"))
         self.assert404(response)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
     def test_info_valid_user(self, mock_user):
-        response = self.client.get(url_for('recommendations_cf_recording.info', user_name="vansika"))
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording.info', user_name="vansika"))
         self.assert200(response)
         self.assertTemplateUsed('recommendations_cf_recording/info.html')
         self.assert_context('active_section', 'info')
@@ -65,7 +64,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_user.assert_called_with("vansika")
 
     def test_raw_invalid_user(self):
-        response = self.client.get(url_for('recommendations_cf_recording.raw', user_name="invalid"))
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording.raw', user_name="invalid"))
         self.assert404(response)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
@@ -79,20 +78,20 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             user=self.user,
             error_msg="test"
         )
-        response = self.client.get(url_for('recommendations_cf_recording.raw', user_name="vansika"))
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording.raw', user_name="vansika"))
         self.assert200(response)
         mock_user.assert_called_with("vansika")
         mock_template.assert_called_with(active_section='raw', user=mock_user.return_value)
 
     def test_get_template_missing_user_from_rec_db(self):
-        user = _get_user('vansika')
+        user = User.from_dbrow(self.user)
         recommendations_cf_recording._get_template(active_section='raw', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'raw')
         self.assert_context('user', user)
 
     def test_get_template_missing_rec_raw(self):
-        user = _get_user('vansika_2')
+        user = User.from_dbrow(self.user2)
         recommendations_cf_recording._get_template(active_section='raw', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'raw')
@@ -101,7 +100,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
     def test_get_template_empty_repsonce_raw(self, mock_get_recommendations, mock_get_rec):
-        user = _get_user('vansika_1')
+        user = User.from_dbrow(self.user2)
 
         mock_get_rec.return_value = UserRecommendationsData(**{
             'recording_mbid': {
@@ -126,7 +125,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
     def test_get_template(self, mock_get_recommendations, mock_get_rec):
         # active_section = 'raw'
-        user = _get_user('vansika_1')
+        user = User.from_dbrow(self.user2)
         created = datetime.utcnow()
 
         mock_get_rec.return_value = UserRecommendationsData(**{

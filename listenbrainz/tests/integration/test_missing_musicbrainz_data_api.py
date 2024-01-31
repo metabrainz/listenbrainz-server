@@ -1,6 +1,4 @@
 import json
-from flask import url_for, current_app
-from redis import Redis
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
@@ -20,30 +18,25 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
 
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
             user_id=self.user['id'],
-            missing_musicbrainz_data=UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
+            missing_musicbrainz_data=UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source='cf'
         )
 
         self.data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user_id=self.user['id'], source='cf')
 
-    def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
-        super(MissingMusicBrainzDataViewsTestCase, self).tearDown()
-
     def test_invalid_user(self):
-        response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
-                                           user_name='invalid_user'))
+        response = self.client.get(self.custom_url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
+                                                       user_name='invalid_user'))
         self.assert404(response)
 
     def test_user_musicbrainz_data_not_calculated(self):
-        response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
-                                           user_name=self.user2['musicbrainz_id']))
+        response = self.client.get(self.custom_url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
+                                                       user_name=self.user2['musicbrainz_id']))
         self.assertEqual(response.status_code, 204)
 
     def test_missing_musicbrainz_data_without_count(self):
-        response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
-                                           user_name=self.user['musicbrainz_id']))
+        response = self.client.get(self.custom_url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
+                                                       user_name=self.user['musicbrainz_id']))
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -69,8 +62,8 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
         self.assertEqual(expected_data, received_data)
 
     def test_missing_musicbrainz_data_with_count(self):
-        response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
-                                           user_name=self.user['musicbrainz_id']),
+        response = self.client.get(self.custom_url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
+                                                       user_name=self.user['musicbrainz_id']),
                                    query_string={'count': 10})
         self.assert200(response)
         data = json.loads(response.data)['payload']
@@ -97,8 +90,8 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
         self.assertEqual(expected_data, received_data)
 
     def test_missing_musicbrainz_data_too_many(self):
-        response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
-                                           user_name=self.user['musicbrainz_id']),
+        response = self.client.get(self.custom_url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
+                                                       user_name=self.user['musicbrainz_id']),
                                    query_string={'count': 100})
         self.assert200(response)
         data = json.loads(response.data)['payload']
@@ -125,8 +118,8 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
         self.assertEqual(expected_data, received_data)
 
     def test_missing_musicbrainz_data_with_offset(self):
-        response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
-                                           user_name=self.user['musicbrainz_id']),
+        response = self.client.get(self.custom_url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
+                                                       user_name=self.user['musicbrainz_id']),
                                    query_string={'offset': 10})
 
         self.assert200(response)

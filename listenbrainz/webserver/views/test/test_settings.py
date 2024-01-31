@@ -5,8 +5,6 @@ import listenbrainz.db.user as db_user
 import time
 import orjson
 
-from flask import url_for, g
-
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
@@ -25,12 +23,13 @@ class SettingsViewsTestCase(IntegrationTestCase):
         db_user.agree_to_gdpr(self.user['musicbrainz_id'])
         self.weirduser = db_user.get_or_create(2, 'weird\\user name')
         db_user.agree_to_gdpr(self.weirduser['musicbrainz_id'])
-        self.service = SpotifyService()
+        with self.app.app_context():
+            self.service = SpotifyService()
 
     def test_settings_view(self):
         """Tests the user info view and makes sure auth token is present there"""
         self.temporary_login(self.user['login_id'])
-        response = self.client.get(url_for('settings.index', path=''))
+        response = self.client.get(self.custom_url_for('settings.index', path=''))
         self.assertTemplateUsed('settings/index.html')
         self.assert200(response)
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
@@ -39,25 +38,25 @@ class SettingsViewsTestCase(IntegrationTestCase):
         val = int(time.time())
         listens_importer.update_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM, val)
         self.temporary_login(self.user['login_id'])
-        response = self.client.get(url_for('settings.index', path='resetlatestimportts'))
+        response = self.client.get(self.custom_url_for('settings.index', path='resetlatestimportts'))
         self.assertTemplateUsed('settings/index.html')
         self.assert200(response)
 
-        response = self.client.post(url_for('settings.reset_latest_import_timestamp'))
+        response = self.client.post(self.custom_url_for('settings.reset_latest_import_timestamp'))
         self.assertDictEqual(response.json, {'success': True})
         ts = listens_importer.get_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM)
         self.assertEqual(int(ts.strftime('%s')), 0)
 
     def test_user_info_not_logged_in(self):
         """Tests user info view when not logged in"""
-        profile_info_url = url_for('settings.index', path='')
+        profile_info_url = self.custom_url_for('settings.index', path='')
         response = self.client.get(profile_info_url)
-        self.assertRedirects(response, url_for('login.index', next=profile_info_url))
+        self.assertRedirects(response, self.custom_url_for('login.index', next=profile_info_url))
 
     def test_delete_listens(self):
         """Tests delete listens end point"""
         self.temporary_login(self.user['login_id'])
-        delete_listens_url = url_for('settings.index', path='delete-listens')
+        delete_listens_url = self.custom_url_for('settings.index', path='delete-listens')
         response = self.client.get(delete_listens_url)
         self.assert200(response)
 
@@ -66,9 +65,9 @@ class SettingsViewsTestCase(IntegrationTestCase):
 
     def test_delete_listens_not_logged_in(self):
         """Tests delete listens view when not logged in"""
-        delete_listens_url = url_for('settings.index', path='delete-listens')
+        delete_listens_url = self.custom_url_for('settings.index', path='delete-listens')
         response = self.client.get(delete_listens_url)
-        self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
+        self.assertRedirects(response, self.custom_url_for('login.index', next=delete_listens_url))
 
         response = self.client.post(delete_listens_url)
         self.assert401(response)
@@ -76,23 +75,23 @@ class SettingsViewsTestCase(IntegrationTestCase):
     def test_select_timezone(self):
         """Tests select timezone end point"""
         self.temporary_login(self.user['login_id'])
-        select_timezone_url = url_for('settings.index', path='select_timezone')
+        select_timezone_url = self.custom_url_for('settings.index', path='select_timezone')
         response = self.client.get(select_timezone_url)
         self.assert200(response)
 
     def test_select_timezone_logged_out(self):
         """Tests select timezone view when not logged in"""
-        select_timezone_url = url_for('settings.index', path='select_timezone')
+        select_timezone_url = self.custom_url_for('settings.index', path='select_timezone')
         response = self.client.get(select_timezone_url)
         self.assertStatus(response, 302)
-        self.assertRedirects(response, url_for('login.index', next=select_timezone_url))
+        self.assertRedirects(response, self.custom_url_for('login.index', next=select_timezone_url))
 
     def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])
-        r = self.client.get(url_for('settings.index', path='music-services/details'))
+        r = self.client.get(self.custom_url_for('settings.index', path='music-services/details'))
         self.assert200(r)
 
-        r = self.client.post(url_for('settings.music_services_disconnect', service_name='spotify'), json={})
+        r = self.client.post(self.custom_url_for('settings.music_services_disconnect', service_name='spotify'), json={})
         self.assertStatus(r, 200)
 
         self.assertIsNone(self.service.get_user(self.user['id']))
@@ -109,7 +108,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         }
         self.temporary_login(self.user['login_id'])
 
-        r = self.client.get(url_for('settings.music_services_callback', service_name='spotify', code='code'))
+        r = self.client.get(self.custom_url_for('settings.music_services_callback', service_name='spotify', code='code'))
 
         self.assertStatus(r, 302)
         mock_fetch_access_token.assert_called_once_with('code')
@@ -119,16 +118,16 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assertEqual('token', user['access_token'])
         self.assertEqual('refresh', user['refresh_token'])
 
-        r = self.client.get(url_for('settings.music_services_callback', service_name='spotify'))
+        r = self.client.get(self.custom_url_for('settings.music_services_callback', service_name='spotify'))
         self.assert400(r)
 
     def test_spotify_refresh_token_logged_out(self):
-        r = self.client.post(url_for('settings.refresh_service_token', service_name='spotify'))
+        r = self.client.post(self.custom_url_for('settings.refresh_service_token', service_name='spotify'))
         self.assert401(r)
 
     def test_spotify_refresh_token_no_token(self):
         self.temporary_login(self.user['login_id'])
-        r = self.client.post(url_for('settings.refresh_service_token', service_name='spotify'))
+        r = self.client.post(self.custom_url_for('settings.refresh_service_token', service_name='spotify'))
         self.assert404(r)
 
     def _create_spotify_user(self, expired):
@@ -144,7 +143,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.temporary_login(self.user['login_id'])
         self._create_spotify_user(expired=False)
 
-        r = self.client.post(url_for('settings.refresh_service_token', service_name='spotify'))
+        r = self.client.post(self.custom_url_for('settings.refresh_service_token', service_name='spotify'))
 
         self.assert200(r)
         mock_refresh_access_token.assert_not_called()
@@ -161,7 +160,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
             'scope': 'user-read-recently-played some-other-permission',
         })
 
-        r = self.client.post(url_for('settings.refresh_service_token', service_name='spotify'))
+        r = self.client.post(self.custom_url_for('settings.refresh_service_token', service_name='spotify'))
 
         self.assert200(r)
         self.assertDictEqual(r.json, {'access_token': 'new-token'})
@@ -172,7 +171,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self._create_spotify_user(expired=True)
         mock_refresh_user_token.side_effect = ExternalServiceInvalidGrantError
 
-        response = self.client.post(url_for('settings.refresh_service_token', service_name='spotify'))
+        response = self.client.post(self.custom_url_for('settings.refresh_service_token', service_name='spotify'))
 
         self.assertEqual(response.json, {'code': 403, 'error': 'User has revoked authorization to Spotify'})
 
@@ -216,7 +215,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         # zero listens in the batch. This tests that we fetch all batches.
         mock_fetch_listens.side_effect = [(listens[0:2], 0, 0), (listens[2:3], 0, 0), ([], 0, 0)]
 
-        r = self.client.post(url_for('settings.index', path='export'))
+        r = self.client.post(self.custom_url_for('settings.index', path='export'))
         self.assert200(r)
 
         # r.json returns None, so we decode the response manually.
@@ -283,7 +282,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         # zero feedback in the batch. This tests that we fetch all batches.
         mock_fetch_feedback.side_effect = [feedback[0:2], feedback[2:3], []]
 
-        r = self.client.post(url_for('settings.index', path='export-feedback'))
+        r = self.client.post(self.custom_url_for('settings.index', path='export-feedback'))
         self.assert200(r)
 
         # r.json returns None, so we decode the response manually.
@@ -315,6 +314,6 @@ class SettingsViewsTestCase(IntegrationTestCase):
         })
 
     def test_export_feedback_streaming_not_logged_in(self):
-        export_feedback_url = url_for('settings.index', path='export-feedback')
+        export_feedback_url = self.custom_url_for('settings.index', path='export-feedback')
         response = self.client.post(export_feedback_url)
-        self.assertRedirects(response, url_for('login.index', next=export_feedback_url))
+        self.assertRedirects(response, self.custom_url_for('login.index', next=export_feedback_url))

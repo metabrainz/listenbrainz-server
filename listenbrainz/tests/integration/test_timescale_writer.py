@@ -4,8 +4,6 @@ from datetime import datetime
 from random import randint
 
 from listenbrainz.db.testing import TimescaleTestCase
-from brainzutils import cache
-from flask import url_for
 
 import listenbrainz.db.user as db_user
 from listenbrainz.listen import Listen
@@ -23,17 +21,17 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.rs = redis_connection._redis
 
     def tearDown(self):
-        super(TimescaleWriterTestCase, self).tearDown()
-        cache._r.flushall()
+        IntegrationTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
             payload = json.load(f)
         response = self.client.post(
-            url_for('api_v1.submit_listen'),
-            data = json.dumps(payload),
-            headers = {'Authorization': 'Token {}'.format(user['auth_token'])},
-            content_type = 'application/json'
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps(payload),
+            headers={'Authorization': 'Token {}'.format(user['auth_token'])},
+            content_type='application/json'
         )
         time.sleep(1)  # sleep to allow timescale-writer to do its thing
         recalculate_all_user_data()
