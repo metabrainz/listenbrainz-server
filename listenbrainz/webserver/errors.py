@@ -241,6 +241,27 @@ class InvalidAPIUsage(Exception):
                 text(self.api_error.message)
         return '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
 
+class PlaylistAPIXMLError(Exception):
+    """
+    Custom error class for Playlist API to render errors in XML format.
+    """
+
+    def __init__(self, message, status_code=404):
+        Exception.__init__(self)
+        self.message = message
+        self.status_code = status_code
+
+    def render_error(self):
+        data = self.to_xml()
+        content_type = "application/xml; charset=utf-8"
+        return Response(data, status=self.status_code, mimetype=content_type)
+
+    def to_xml(self):
+        doc, tag, text = Doc().tagtext()
+        with tag('playlist_error'):
+            with tag('error', code=str(self.status_code)):
+                text(self.message)
+        return '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
 
 class ListenValidationError(Exception):
     """ Error class for raising when the submitted payload does not pass validation.
