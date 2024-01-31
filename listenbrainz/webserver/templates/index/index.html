@@ -15,6 +15,10 @@
   {{ super() }}
 {%- endblock -%}
 
+{%- block footer -%}
+<!-- No footer for the homepage -->
+{%- endblock -%}
+
 {% block scripts %}
 {{ super() }}
 <script src="{{ get_static_path('homepage.js') }}" type="text/javascript"></script>
