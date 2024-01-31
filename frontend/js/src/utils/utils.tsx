@@ -982,7 +982,7 @@ export function getReviewEventContent(
             readonly
             onClick={() => {}}
             className="rating-stars"
-            ratingValue={eventMetadata.rating} // CB stores ratings in 0 - 5 scale but the component requires 0 - 100 UPDATE: component requires 0-5 scale too
+            ratingValue={eventMetadata.rating}
             transition
             size={20}
             iconsCount={5}
