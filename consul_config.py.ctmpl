@@ -106,8 +106,8 @@ SQLALCHEMY_BINDS = {
    'timescale': SQLALCHEMY_TIMESCALE_URI
 }
 
-{{if service "typesense-listenbrainz"}}
-{{with index (service "typesense-listenbrainz") 0}}
+{{if service "typesense-listenbrainz-new"}}
+{{with index (service "typesense-listenbrainz-new") 0}}
 TYPESENSE_HOST = "{{.Address}}"
 TYPESENSE_PORT = {{.Port}}
 {{end}}
