@@ -1,0 +1,50 @@
+import * as React from "react";
+import { useLoaderData } from "react-router-dom";
+
+export default function SimilarUsers() {
+  const { similarUsers } = useLoaderData() as { similarUsers: string[][] };
+  return (
+    <div id="similar-users">
+      <h2 className="page-title">Top Similar Users</h2>
+
+      <p>
+        Below is a list of the top similar users and how similar they are.
+        Sometimes this page can show bugs in how we calculate similar users, but
+        more often it can show that some of our users are behaving in naughty
+        ways: Sockpuppet accounts and listen spammers. This page should help us
+        find these bad actors and let us report them.
+      </p>
+
+      <table className="table table-striped">
+        {similarUsers.length > 0 ? (
+          similarUsers.map((row, index) => (
+            <tr>
+              <td>
+                <a href={`/user/${row[0]}`}>{row[0]}</a>
+              </td>
+              <td>
+                <a href={`/user/${row[1]}`}>{row[1]}</a>
+              </td>
+              <td>{row[2]}</td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td>No similar users to show.</td>
+          </tr>
+        )}
+      </table>
+    </div>
+  );
+}
+
+export const SimilarUsersLoader = async ({ request }: { request: Request }) => {
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return data;
+};

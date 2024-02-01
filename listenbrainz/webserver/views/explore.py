@@ -9,7 +9,7 @@ from listenbrainz.db.similar_users import get_top_similar_users
 explore_bp = Blueprint('explore', __name__)
 
 
-@explore_bp.route("/similar-users/")
+@explore_bp.route("/similar-users/", methods=['POST'])
 def similar_users():
     """ Show all of the users with the highest similarity in order to make
         them visible to all of our users. This view can show bugs in the algorithm
@@ -17,10 +17,10 @@ def similar_users():
     """
 
     similar_users = get_top_similar_users()
-    return render_template(
-        "explore/similar-users.html",
-        similar_users=similar_users
-    )
+
+    return jsonify({
+        "similarUsers": similar_users
+    })
 
 
 @explore_bp.route("/music-neighborhood/")
