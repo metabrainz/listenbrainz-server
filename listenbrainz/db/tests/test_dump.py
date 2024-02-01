@@ -36,7 +36,6 @@ import listenbrainz.db.feedback as db_feedback
 from datetime import datetime
 
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
-from listenbrainz.db import couchdb
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.tests.utils import insert_test_stats, delete_all_couch_databases
 from listenbrainz.webserver import create_app
@@ -161,21 +160,21 @@ class DumpTestCase(DatabaseTestCase):
                     recording_msid="d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
                     score=1
                 )
-            db_feedback.insert(feedback)
+            db_feedback.insert(self.db_conn, feedback)
 
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir, self.tempdir_private)
             self.reset_db()
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 0)
-            self.assertEqual(db_feedback.get_feedback_count_for_user(user_id=one_id), 0)
+            self.assertEqual(db_feedback.get_feedback_count_for_user(self.db_conn, user_id=one_id), 0)
 
             # import the dump and check the records are inserted
             db_dump.import_postgres_dump(private_dump, None, public_dump, None)
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(self.db_conn, user_id=one_id, limit=1, offset=0)
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
@@ -191,7 +190,7 @@ class DumpTestCase(DatabaseTestCase):
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(self.db_conn, user_id=one_id, limit=1, offset=0)
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)

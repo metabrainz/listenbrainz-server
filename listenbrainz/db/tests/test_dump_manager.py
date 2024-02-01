@@ -317,6 +317,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         ]
         for fb in sample_feedback:
             db_feedback.insert(
+                self.db_conn,
                 Feedback(
                     user_id=fb["user_id"],
                     recording_msid=fb["recording_msid"],
