@@ -22,8 +22,8 @@ class TestSparkPlaylists(DatabaseTestCase, TimescaleTestCase):
         self.user4 = db_user.get_or_create(400, "user4")
         self.user5 = db_user.get_or_create(500, "user5")
 
-        db_user_setting.update_troi_prefs(self.user1["id"], True)
-        db_user_setting.update_troi_prefs(self.user2["id"], False)
+        db_user_setting.update_troi_prefs(self.db_conn, self.user1["id"], True)
+        db_user_setting.update_troi_prefs(self.db_conn, self.user2["id"], False)
         
         db_external_service_oauth.save_token(
             self.user1["id"], 

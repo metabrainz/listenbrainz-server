@@ -54,7 +54,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:
         following_user = db_user.get_or_create(mb_row_id, name)
-        db_user_relationship.insert(user, following_user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user, following_user['id'], 'follow')
         return following_user
 
     def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, name: str) -> dict:
@@ -389,7 +389,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
     def test_it_returns_follow_events(self):
         # make a user you're following follow a new user
         new_user_1 = db_user.get_or_create(104, 'new_user_1')
-        db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.following_user_1['id'], new_user_1['id'], 'follow')
 
         # this should show up in the events
         r = self.client.get(
@@ -505,7 +505,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # make a user you're following follow a new user
         new_user_1 = db_user.get_or_create(104, 'new_user_1')
-        db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.following_user_1['id'], new_user_1['id'], 'follow')
 
         time.sleep(1)  # sleep a bit to avoid ordering conflicts, cannot mock this time as it comes from postgres
         self.insert_metadata()
