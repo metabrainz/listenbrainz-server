@@ -1,26 +1,13 @@
-import {
-  faCircleQuestion,
-  faCloudArrowUp,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { debounce, isNaN } from "lodash";
+import { debounce } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
-import NiceModal from "@ebay/nice-modal-react";
-import { createRoot } from "react-dom/client";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
-import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getPageProps } from "../../utils/utils";
 import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
 import IconTray from "./components/IconTray";
 import Preview from "./components/Preview";
-import ToggleOption from "./components/ToggleOption";
 import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
@@ -124,7 +111,7 @@ const DEFAULT_IMAGE_SIZE = 750;
 
 const defaultStyleOnLoad = TemplateEnum["designer-top-5"] as TextTemplateOption;
 
-function ArtCreator() {
+export default function ArtCreator() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   // Add images for the gallery, don't compose them on the fly
   const [userName, setUserName] = useState(currentUser?.name);
@@ -670,33 +657,3 @@ function ArtCreator() {
     </div>
   );
 }
-
-export default ArtCreator;
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, globalAppContext, sentryProps } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const ArtCreatorPageWithAlertNotifications = withAlertNotifications(
-    ArtCreator
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <ArtCreatorPageWithAlertNotifications />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

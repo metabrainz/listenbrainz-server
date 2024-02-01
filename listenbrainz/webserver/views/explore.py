@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, current_app, request
+from flask import Blueprint, render_template, current_app, request, jsonify
 from flask_login import current_user
 import orjson
 from werkzeug.exceptions import NotFound, BadRequest
@@ -9,27 +9,7 @@ from listenbrainz.db.similar_users import get_top_similar_users
 explore_bp = Blueprint('explore', __name__)
 
 
-@explore_bp.route("/")
-def index():
-    """ Main explore page for users to browse the various explore features """
-
-    return render_template(
-        "explore/index.html",
-        props=orjson.dumps({}).decode("utf-8")
-    )
-
-
-@explore_bp.route("/huesound/")
-def huesound():
-    """ Hue Sound browse music by color of cover art """
-
-    return render_template(
-        "explore/huesound.html",
-        props=orjson.dumps({}).decode("utf-8")
-    )
-
-
-@explore_bp.route("/similar-users/")
+@explore_bp.route("/similar-users/", methods=['POST'])
 def similar_users():
     """ Show all of the users with the highest similarity in order to make
         them visible to all of our users. This view can show bugs in the algorithm
@@ -37,23 +17,13 @@ def similar_users():
     """
 
     similar_users = get_top_similar_users()
-    return render_template(
-        "explore/similar-users.html",
-        similar_users=similar_users
-    )
+
+    return jsonify({
+        "similarUsers": similar_users
+    })
 
 
-@explore_bp.route("/fresh-releases/")
-def fresh_releases():
-    """ Explore fresh releases """
-
-    return render_template(
-        "explore/fresh-releases.html",
-        props=orjson.dumps({}).decode("utf-8")
-    )
-
-
-@explore_bp.route("/music-neighborhood/")
+@explore_bp.route("/music-neighborhood/", methods=['POST'])
 def artist_similarity():
     """ Explore artist similarity """
 
@@ -69,39 +39,13 @@ def artist_similarity():
         artist_mbid = ts_curs.fetchone()[0]
         current_app.logger.info(artist_mbid)
 
-        props = {
+        data = {
             "algorithm": "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30",
             "artist_mbid": artist_mbid
         }
 
-        return render_template(
-            "explore/music-neighborhood.html",
-            props=orjson.dumps(props).decode("utf-8")
-        )
+        return jsonify(data)
 
-
-@explore_bp.route("/art-creator/")
-def art_creator():
-
-    return render_template(
-        "explore/stats-art-designer.html",
-        props=orjson.dumps({}).decode("utf-8")
-    )
-
-@explore_bp.route("/cover-art-collage/")
-@explore_bp.route("/cover-art-collage/<int:year>/")
-def cover_art_collage(year: int = 2023):
-    """ A collage of album covers from 2022/23
-        Raises:
-            NotFound if the there is no collage for the year
-    """
-    if year != 2022 and year != 2023:
-        raise NotFound(f"Cannot find Cover Art Collage for year: {year}")
-
-    return render_template(
-        "explore/cover-art-collage.html",
-        year=year
-    )
 
 @explore_bp.route("/ai-brainz/")
 def ai_brainz():
@@ -109,7 +53,8 @@ def ai_brainz():
 
     return render_template("explore/ai-brainz.html")
 
-@explore_bp.route("/lb-radio/")
+
+@explore_bp.route("/lb-radio/", methods=["POST"])
 def lb_radio():
     """ LB Radio view
 
@@ -132,11 +77,22 @@ def lb_radio():
     else:
         user = ""
         token = ""
-    props = {
+    data = {
         "mode": mode,
         "prompt": prompt,
         "user": user,
         "token": token
     }
 
-    return render_template("explore/lb-radio.html", props=orjson.dumps(props).decode("utf-8"))
+    return jsonify(data)
+
+
+@explore_bp.route('/', defaults={'path': ''})
+@explore_bp.route('/<path:path>/')
+def index(path):
+    """ Main explore page for users to browse the various explore features """
+
+    return render_template(
+        "explore/index.html",
+        props=orjson.dumps({}).decode("utf-8")
+    )

@@ -62,9 +62,7 @@ module.exports = function (env, argv) {
       dashboard: [path.resolve(jsDir, "src/user/index.tsx")],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
-      explore: path.resolve(jsDir, "src/explore/Explore.tsx"),
-      huesound: path.resolve(jsDir, "src/explore/huesound/ColorPlay.tsx"),
-      lb_radio: path.resolve(jsDir, "src/explore/lb-radio/LBRadio.tsx"),
+      explore: path.resolve(jsDir, "src/explore/index.tsx"),
       coverArtComposite2022: path.resolve(
         jsDir,
         "src/explore/cover-art-collage/2022/CoverArtComposite.tsx"
@@ -87,15 +85,6 @@ module.exports = function (env, argv) {
         jsDir,
         "src/metadata-viewer/MetadataViewerPage.tsx"
       ),
-      freshReleases: path.resolve(
-        jsDir,
-        "src/explore/fresh-releases/FreshReleases.tsx"
-      ),
-      musicNeighborhood: path.resolve(
-        jsDir,
-        "src/explore/music-neighborhood/MusicNeighborhood.tsx"
-      ),
-      artCreator: path.resolve(jsDir, "src/explore/art-creator/ArtCreator.tsx"),
       artistPage: path.resolve(jsDir, "src/artist/ArtistPage.tsx"),
       albumPage: path.resolve(jsDir, "src/album/AlbumPage.tsx"),
       settingsPage: path.resolve(jsDir, "src/settings/index.tsx"),

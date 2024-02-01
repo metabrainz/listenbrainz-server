@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import panzoom, { PanZoom } from "panzoom";
-import { createRoot } from "react-dom/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHandPointRight, faSyncAlt } from "@fortawesome/free-solid-svg-icons";
 import jsonMap from "./data/rainbow1-100-7.json";
-import { getPageProps } from "../../../utils/utils";
-import ErrorBoundary from "../../../utils/ErrorBoundary";
 
 type CoverDef = {
   x1: number;
@@ -169,14 +166,3 @@ export default function CoverArtComposite() {
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer } = await getPageProps();
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <CoverArtComposite />
-    </ErrorBoundary>
-  );
-});

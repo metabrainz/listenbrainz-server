@@ -1,30 +1,19 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
-import NiceModal from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
-import ErrorBoundary from "../../utils/ErrorBoundary";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../utils/GlobalAppContext";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
-import { getPageProps } from "../../utils/utils";
 import ListenCard from "../../common/listens/ListenCard";
 import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
 import { ToastMsg } from "../../notifications/Notifications";
-
-export type ColorPlayProps = {
-  user: ListenBrainzUser;
-};
 
 export type ColorPlayState = {
   colorReleases: Array<ColorReleaseItem>;
@@ -34,15 +23,12 @@ export type ColorPlayState = {
   gridBackground: string;
 };
 
-export default class ColorPlay extends React.Component<
-  ColorPlayProps,
-  ColorPlayState
-> {
+export default class ColorPlay extends React.Component<{}, ColorPlayState> {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  constructor(props: ColorPlayProps) {
-    super(props);
+  constructor() {
+    super({});
     this.state = {
       colorReleases: [],
       loading: false,
@@ -95,7 +81,6 @@ export default class ColorPlay extends React.Component<
   };
 
   render() {
-    const { user } = this.props;
     const {
       loading,
       colorReleases,
@@ -235,22 +220,3 @@ export default class ColorPlay extends React.Component<
     );
   }
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, reactProps, globalAppContext } = await getPageProps();
-
-  const { user } = reactProps;
-
-  const ColorPlayWithAlertNotifications = withAlertNotifications(ColorPlay);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <ColorPlayWithAlertNotifications user={user} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
