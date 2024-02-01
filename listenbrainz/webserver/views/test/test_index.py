@@ -28,7 +28,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.temporary_login(user['login_id'])
 
         resp = self.client.get(url_for('index.index'))
-        self.assertRedirects(resp, url_for('user.profile', user_name='mr_monkey'))
+        self.assertRedirects(resp, url_for('user.index', path="", user_name='mr_monkey'))
 
     def test_downloads(self):
         resp = self.client.get(url_for('index.downloads'))

@@ -94,7 +94,7 @@ def import_data():
 
     data = {
         "user_has_email": user_has_email,
-        "profile_url": url_for('user.profile', user_name=current_user.musicbrainz_id),
+        "profile_url": url_for('user.index', path="", user_name=current_user.musicbrainz_id),
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
         "librefm_api_url": current_app.config["LIBREFM_API_URL"],

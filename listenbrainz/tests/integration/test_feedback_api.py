@@ -1321,13 +1321,13 @@ class FeedbackAPITestCase(IntegrationTestCase):
         inserted_rows = self._insert_feedback_with_metadata(self.user["id"])
 
         # Fetch loved page
-        r = self.client.get(url_for('user.taste', user_name=self.user['musicbrainz_id']))
+        r = self.client.post(url_for('user.taste', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
-        props = json.loads(self.get_context_variable('props'))
+        json_response = r.json
 
-        self.assertEqual(props['feedback_count'], 1)
-        self.assertEqual(props['active_section'], 'taste')
-        feedback = props["feedback"]
+        self.assertEqual(json_response['feedback_count'], 1)
+        self.assertEqual(json_response['active_section'], 'taste')
+        feedback = json_response["feedback"]
 
         self.assertEqual(len(feedback), 1)
         self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
@@ -1336,13 +1336,13 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertNotEqual(feedback[0]["created"], "")
 
         # Fetch hated page
-        r = self.client.get(url_for('user.taste', user_name=self.user['musicbrainz_id'], score=-1))
+        r = self.client.post(url_for('user.taste', user_name=self.user['musicbrainz_id'], score=-1))
         self.assert200(r)
-        props = json.loads(self.get_context_variable('props'))
+        json_response = r.json
 
-        self.assertEqual(props['feedback_count'], 1)
-        self.assertEqual(props['active_section'], 'taste')
-        feedback = props["feedback"]
+        self.assertEqual(json_response['feedback_count'], 1)
+        self.assertEqual(json_response['active_section'], 'taste')
+        feedback = json_response["feedback"]
 
         self.assertEqual(len(feedback), 1)
         self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])

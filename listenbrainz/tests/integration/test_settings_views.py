@@ -57,7 +57,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         resp = self.send_listens()
         self.assert200(resp)
 
-        r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        r = self.client.get(url_for('user.index', path="", user_name=self.user['musicbrainz_id']))
         self.assert200(r)
         props = json.loads(self.get_context_variable('props'))
         self.assertEqual(props['latest_listen_ts'], 1618500200)

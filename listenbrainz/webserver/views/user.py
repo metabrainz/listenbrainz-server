@@ -101,7 +101,7 @@ def profile(user_name):
         "listens": listens,
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
-        "profile_url": url_for('user.profile', user_name=user_name),
+        "profile_url": url_for('user.index', path="", user_name=user_name),
         "userPinnedRecording": pin,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
@@ -128,12 +128,6 @@ def charts(user_name):
     }
 
     return jsonify(props)
-
-
-@user_bp.route("/<user_name>/reports/", methods=['POST'])
-def reports(user_name):
-    """ Redirect to stats page """
-    return redirect(url_for('user.stats', user_name=user_name), code=301)
 
 
 @user_bp.route("/<user_name>/stats/", methods=['POST'])
@@ -332,7 +326,7 @@ def taste(user_name: str):
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "pins": pins,
         "pin_count": pin_count,
-        "profile_url": url_for('user.profile', user_name=user_name),
+        "profile_url": url_for('user.index', path="", user_name=user_name),
     }
 
     return jsonify(data)
