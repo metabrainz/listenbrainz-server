@@ -292,7 +292,7 @@ def _get_user_count():
 
 @index_bp.route("/similar-users/")
 def similar_users():
-    return redirect(url_for('explore.index', path="similar-users/"))
+    return redirect(url_for('explore.index', path="similar-users"))
 
 
 @index_bp.route("/listens-offline/")
@@ -314,7 +314,7 @@ def musicbrainz_offline():
 def huesound():
     """ Redirect to /explore/huesound """
 
-    return redirect(url_for('explore.index', path="huesound/"))
+    return redirect(url_for('explore.index', path="huesound"))
 
 @index_bp.route("/statistics/charts/")
 def charts():
