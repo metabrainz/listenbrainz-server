@@ -523,7 +523,7 @@ def get_playlist_xspf(playlist_mbid):
         user_id = user["id"]
 
     if not playlist.is_visible_by(user_id):
-        return PlaylistAPIXMLError("Invalid authorization to access playlist: %s" % playlist_mbid, status_code=401).render_error()
+        return PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401).render_error()
 
     if fetch_metadata:
         fetch_playlist_recording_metadata(playlist)

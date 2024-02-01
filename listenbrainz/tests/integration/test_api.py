@@ -1,6 +1,8 @@
 import json
 import time
+from unittest import mock
 from unittest.mock import patch
+from xml.etree import ElementTree as ET
 
 import pytest
 
@@ -11,6 +13,8 @@ from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 import listenbrainz.db.external_service_oauth as db_oauth
+from listenbrainz.webserver.errors import PlaylistAPIXMLError
+from listenbrainz.webserver.views.playlist_api import PLAYLIST_EXTENSION_URI
 
 
 class APITestCase(ListenAPIIntegrationTestCase):
@@ -252,6 +256,65 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
+    
+    @mock.patch('listenbrainz.webserver.views.playlist_api.get_playlist_xspf')
+    def test_playlist_api_xml_error(self, mock_get_playlist_xspf):
+        # Mocking the condition where PlaylistAPIXMLError is raised
+        mock_get_playlist_xspf.side_effect = PlaylistAPIXMLError("Provided playlist ID is invalid.", 400)
+
+        # Making a request that would trigger the mocked error
+        response = self.client.get('/1/playlist/-6924291-8b14-726253c14f12/xspf')
+        self.assertEqual(response.status_code, 400)
+
+        # Checkinging if the response is in XML format and contains the correct error message and code
+        expected_xml = """
+<?xml version="1.0" encoding="utf-8"?>
+<playlist_error>
+<error code="400">Provided playlist ID is invalid.</error>
+</playlist_error>
+""".strip()
+
+        first_xml_str = ''.join(response.data.decode('utf-8').split())
+        second_xml_str = ''.join(expected_xml.split())
+        self.assertEqual(first_xml_str, second_xml_str)
+
+        # Testing for 401: Authorization Error
+
+        playlist = {
+            "playlist": {
+                "title": "you're a person",
+                "extension": {
+                     PLAYLIST_EXTENSION_URI: {
+                         "public": True,
+                    }
+                }
+            }
+        }
+        mock_get_playlist_xspf.side_effect = PlaylistAPIXMLError("Invalid authorization to access playlist.", 401)
+        response_post = self.client.post(
+            url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        playlist_mbid = response_post.json["playlist_mbid"]
+
+        r = self.client.get(
+            url_for('playlist_api_v1.get_playlist_xspf', playlist_mbid=playlist_mbid),
+            headers={'Authorization': 'Token testtokenplsignore'}
+        )
+        self.assertEqual(r.status_code, 401)
+
+        expected_error_xml = """
+<?xml version="1.0" encoding="utf-8"?>
+<playlist_error>
+<error code="401">Invalid authorization to access playlist.</error>
+</playlist_error>
+""".strip()
+        
+        first_xml_str_auth = ''.join(r.data.decode('utf-8').split())
+        second_xml_str_auth = ''.join(expected_error_xml.split())
+        self.assertEqual(first_xml_str_auth, second_xml_str_auth)
+
 
     def test_valid_playing_now(self):
         """ Test for valid submission of listen_type 'playing_now'
