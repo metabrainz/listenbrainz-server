@@ -99,8 +99,8 @@ def profile(user_name):
             "name": user.musicbrainz_id,
         },
         "listens": listens,
-        "latest_listen_ts": max_ts_per_user,
-        "oldest_listen_ts": min_ts_per_user,
+        "latestListenTs": max_ts_per_user,
+        "oldestListenTs": min_ts_per_user,
         "profile_url": url_for('user.index', path="", user_name=user_name),
         "userPinnedRecording": pin,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
@@ -173,8 +173,7 @@ def playlists(user_name: str):
     data = {
         "playlists": playlists,
         "user": user_data,
-        "active_section": "playlists",
-        "playlist_count": playlist_count,
+        "playlistCount": playlist_count,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 

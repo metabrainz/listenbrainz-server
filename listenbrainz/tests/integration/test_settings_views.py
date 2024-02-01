@@ -60,7 +60,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         r = self.client.post(self.custom_url_for('user.profile', path="", user_name=self.user['musicbrainz_id']))
         self.assert200(r)
         json_response = r.json
-        self.assertEqual(json_response['latest_listen_ts'], 1618500200)
+        self.assertEqual(json_response['latestListenTs'], 1618500200)
 
     def test_delete_listens(self):
         """
