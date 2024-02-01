@@ -286,14 +286,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
         }
 
         response_post = self.client.post(
-            url_for("playlist_api_v1.create_playlist"),
+            self.custom_url_for("playlist_api_v1.create_playlist"),
             json=playlist,
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         playlist_mbid = response_post.json["playlist_mbid"]
 
         r = self.client.get(
-            url_for('playlist_api_v1.get_playlist_xspf', playlist_mbid=playlist_mbid),
+            self.custom_url_for('playlist_api_v1.get_playlist_xspf', playlist_mbid=playlist_mbid),
             headers={'Authorization': 'Token testtokenplsignore'}
         )
         self.assertEqual(r.status_code, 401)
