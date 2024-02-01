@@ -6,9 +6,9 @@ import listenbrainz.db.user as db_user
 from datetime import datetime
 
 from unittest.mock import patch
-from flask import render_template
+from flask import render_template, url_for
 
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.views import recommendations_cf_recording
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
@@ -16,7 +16,7 @@ from data.model.user_cf_recommendations_recording_message import (UserRecommenda
                                                                   UserRecommendationsData)
 
 
-class CFRecommendationsViewsTestCase(IntegrationTestCase):
+class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
     def setUp(self):
         self.server_url = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
         super(CFRecommendationsViewsTestCase, self).setUp()
@@ -51,12 +51,12 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         )
 
     def test_info_invalid_user(self):
-        response = self.client.get(self.custom_url_for('recommendations_cf_recording.info', user_name="invalid"))
+        response = self.client.get(url_for('recommendations_cf_recording.info', user_name="invalid"))
         self.assert404(response)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
     def test_info_valid_user(self, mock_user):
-        response = self.client.get(self.custom_url_for('recommendations_cf_recording.info', user_name="vansika"))
+        response = self.client.get(url_for('recommendations_cf_recording.info', user_name="vansika"))
         self.assert200(response)
         self.assertTemplateUsed('recommendations_cf_recording/info.html')
         self.assert_context('active_section', 'info')
@@ -64,7 +64,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_user.assert_called_with("vansika")
 
     def test_raw_invalid_user(self):
-        response = self.client.get(self.custom_url_for('recommendations_cf_recording.raw', user_name="invalid"))
+        response = self.client.get(url_for('recommendations_cf_recording.raw', user_name="invalid"))
         self.assert404(response)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
@@ -78,7 +78,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             user=self.user,
             error_msg="test"
         )
-        response = self.client.get(self.custom_url_for('recommendations_cf_recording.raw', user_name="vansika"))
+        response = self.client.get(url_for('recommendations_cf_recording.raw', user_name="vansika"))
         self.assert200(response)
         mock_user.assert_called_with("vansika")
         mock_template.assert_called_with(active_section='raw', user=mock_user.return_value)
