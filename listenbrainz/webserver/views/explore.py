@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, current_app, request
+from flask import Blueprint, render_template, current_app, request, jsonify
 from flask_login import current_user
 import orjson
 from werkzeug.exceptions import NotFound, BadRequest
@@ -7,26 +7,6 @@ import psycopg2
 from listenbrainz.db.similar_users import get_top_similar_users
 
 explore_bp = Blueprint('explore', __name__)
-
-
-@explore_bp.route("/")
-def index():
-    """ Main explore page for users to browse the various explore features """
-
-    return render_template(
-        "explore/index.html",
-        props=orjson.dumps({}).decode("utf-8")
-    )
-
-
-@explore_bp.route("/huesound/")
-def huesound():
-    """ Hue Sound browse music by color of cover art """
-
-    return render_template(
-        "explore/huesound.html",
-        props=orjson.dumps({}).decode("utf-8")
-    )
 
 
 @explore_bp.route("/similar-users/")
@@ -40,16 +20,6 @@ def similar_users():
     return render_template(
         "explore/similar-users.html",
         similar_users=similar_users
-    )
-
-
-@explore_bp.route("/fresh-releases/")
-def fresh_releases():
-    """ Explore fresh releases """
-
-    return render_template(
-        "explore/fresh-releases.html",
-        props=orjson.dumps({}).decode("utf-8")
     )
 
 
@@ -80,36 +50,14 @@ def artist_similarity():
         )
 
 
-@explore_bp.route("/art-creator/")
-def art_creator():
-
-    return render_template(
-        "explore/stats-art-designer.html",
-        props=orjson.dumps({}).decode("utf-8")
-    )
-
-@explore_bp.route("/cover-art-collage/")
-@explore_bp.route("/cover-art-collage/<int:year>/")
-def cover_art_collage(year: int = 2023):
-    """ A collage of album covers from 2022/23
-        Raises:
-            NotFound if the there is no collage for the year
-    """
-    if year != 2022 and year != 2023:
-        raise NotFound(f"Cannot find Cover Art Collage for year: {year}")
-
-    return render_template(
-        "explore/cover-art-collage.html",
-        year=year
-    )
-
 @explore_bp.route("/ai-brainz/")
 def ai_brainz():
     """ Explore your love of Rick """
 
     return render_template("explore/ai-brainz.html")
 
-@explore_bp.route("/lb-radio/")
+
+@explore_bp.route("/lb-radio/", methods=["POST"])
 def lb_radio():
     """ LB Radio view
 
@@ -132,11 +80,22 @@ def lb_radio():
     else:
         user = ""
         token = ""
-    props = {
+    data = {
         "mode": mode,
         "prompt": prompt,
         "user": user,
         "token": token
     }
 
-    return render_template("explore/lb-radio.html", props=orjson.dumps(props).decode("utf-8"))
+    return jsonify(data)
+
+
+@explore_bp.route('/', defaults={'path': ''})
+@explore_bp.route('/<path:path>/')
+def index(path):
+    """ Main explore page for users to browse the various explore features """
+
+    return render_template(
+        "explore/index.html",
+        props=orjson.dumps({}).decode("utf-8")
+    )

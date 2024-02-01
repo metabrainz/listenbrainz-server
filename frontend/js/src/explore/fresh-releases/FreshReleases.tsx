@@ -1,15 +1,9 @@
 import * as React from "react";
-import * as Sentry from "@sentry/react";
-import { createRoot } from "react-dom/client";
-import { Integrations } from "@sentry/tracing";
 import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
-import { getPageProps } from "../../utils/utils";
-import ErrorBoundary from "../../utils/ErrorBoundary";
 import ReleaseFilters from "./components/ReleaseFilters";
 import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
@@ -206,6 +200,7 @@ export default function FreshReleases() {
     };
     // Call the async function defined above (useEffect can't return a Promise)
     fetchReleases();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageType, range, showPastReleases, showFutureReleases, sort]);
 
   return (
@@ -321,28 +316,3 @@ export default function FreshReleases() {
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, globalAppContext, sentryProps } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const FreshReleasesPageWithAlertNotifications = withAlertNotifications(
-    FreshReleases
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <FreshReleasesPageWithAlertNotifications />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
