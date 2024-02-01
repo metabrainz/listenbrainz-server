@@ -476,7 +476,7 @@ export default class ListenCard extends React.Component<
                 )}
               </div>
               <div
-                className="small text-muted ellipsis-2-lines"
+                className="small text-muted ellipsis"
                 title={artistName}
               >
                 {getArtistLink(listen)}
