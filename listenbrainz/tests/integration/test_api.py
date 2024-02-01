@@ -278,8 +278,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         second_xml_str = ''.join(expected_xml.split())
         self.assertEqual(first_xml_str, second_xml_str)
 
-    @mock.patch('listenbrainz.webserver.views.playlist_api.get_playlist_xspf')
-    def test_playlist_api_xml_auth_error(self, mock_get_playlist_xspf):
+    def test_playlist_api_xml_auth_error(self):
         # Testing for 401: Authorization Error
         playlist = {
             "playlist": {
@@ -291,7 +290,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
                 }
             }
         }
-        mock_get_playlist_xspf.side_effect = PlaylistAPIXMLError("Invalid authorization to access playlist.", 401)
+
         response_post = self.client.post(
             url_for("playlist_api_v1.create_playlist"),
             json=playlist,
@@ -308,9 +307,9 @@ class APITestCase(ListenAPIIntegrationTestCase):
         expected_error_xml = """
 <?xml version="1.0" encoding="utf-8"?>
 <playlist_error>
-<error code="401">Invalid authorization to access playlist.</error>
+<error code="401">Invalid authorization token.</error>
 </playlist_error>
-""".strip()
+""".strip().replace('\n', '').replace('    ', '')
         
         first_xml_str_auth = ''.join(r.data.decode('utf-8').split())
         second_xml_str_auth = ''.join(expected_error_xml.split())
