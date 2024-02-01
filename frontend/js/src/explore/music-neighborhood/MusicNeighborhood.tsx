@@ -13,12 +13,12 @@ import { ToastMsg } from "../../notifications/Notifications";
 import { getPageProps } from "../../utils/utils";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import SearchBox from "./artist-search/SearchBox";
-import SimilarArtistsGraph from "./SimilarArtistsGraph";
-import Panel from "./artist-panel/Panel";
+import SearchBox from "./components/SearchBox";
+import SimilarArtistsGraph from "./components/SimilarArtistsGraph";
+import Panel from "./components/Panel";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import generateTransformedArtists from "./generateTransformedArtists";
-import { downloadComponentAsImage, copyImageToClipboard } from "./utils";
+import generateTransformedArtists from "./utils/generateTransformedArtists";
+import { downloadComponentAsImage, copyImageToClipboard } from "./utils/utils";
 
 type MusicNeighborhoodProps = {
   algorithm: string;
