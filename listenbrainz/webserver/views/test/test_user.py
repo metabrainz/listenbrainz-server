@@ -5,7 +5,6 @@ from datetime import datetime
 from unittest import mock
 
 import orjson
-from flask import url_for
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
@@ -42,10 +41,10 @@ class UserViewsTestCase(IntegrationTestCase):
         super().tearDown()
 
     def test_redirects_logged_out(self):
-        my_listens_url = url_for("redirect.index", path="")
+        my_listens_url = self.custom_url_for("redirect.index", path="")
         # Not logged in
         response = self.client.get(my_listens_url)
-        self.assertRedirects(response, url_for("login.index", next=my_listens_url))
+        self.assertRedirects(response, self.custom_url_for("login.index", next=my_listens_url))
 
     def test_user_redirects(self):
         response = self.client.get('/user/iliekcomputers/')
@@ -84,7 +83,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assertRedirects(response, '/user/iliekcomputers/artists/', permanent=True)
 
     def test_user_page(self):
-        response = self.client.get(url_for('user.index', path="", user_name=self.user.musicbrainz_id))
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertContext('active_section', 'listens')
 
@@ -94,7 +93,7 @@ class UserViewsTestCase(IntegrationTestCase):
                             token_expires_ts=int(time.time()) + 1000, record_listens=True,
                             scopes=['user-read-recently-played', 'streaming'])
 
-        response = self.client.get(url_for('user.index', path="", user_name=self.user.musicbrainz_id))
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('index.html')
         props = orjson.loads(self.get_context_variable("global_props"))
@@ -102,7 +101,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
     def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
-        response = self.client.get(url_for('user.index', path="", user_name=self.user.musicbrainz_id))
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {})
@@ -115,7 +114,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         self.temporary_login(self.user.login_id)
 
-        response = self.client.get(url_for('user.index', path="", user_name=self.user.musicbrainz_id))
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.user.musicbrainz_id))
         self.assert200(response)
 
         props = orjson.loads(self.get_context_variable("global_props"))
@@ -124,7 +123,7 @@ class UserViewsTestCase(IntegrationTestCase):
             'permission': ['user-read-recently-played', 'streaming'],
         })
 
-        response = self.client.get(url_for('user.index', path="", user_name=self.weirduser.musicbrainz_id))
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.weirduser.musicbrainz_id))
         self.assert200(response)
         props = orjson.loads(self.get_context_variable("global_props"))
         self.assertDictEqual(props['spotify'], {
@@ -134,7 +133,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
     @mock.patch('listenbrainz.webserver.views.user.db_user_relationship.is_following_user')
     def test_logged_in_user_follows_user_props(self, mock_is_following_user):
-        response = self.client.get(url_for('user.index', path="", user_name=self.user.musicbrainz_id))
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('index.html')
         props = orjson.loads(self.get_context_variable('props'))
@@ -142,7 +141,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         self.temporary_login(self.user.login_id)
         mock_is_following_user.return_value = False
-        response = self.client.get(url_for('user.index', path="", user_name=self.user.musicbrainz_id))
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.user.musicbrainz_id))
         self.assert200(response)
         props = orjson.loads(self.get_context_variable('props'))
         self.assertFalse(props['logged_in_user_follows_user'])
@@ -164,9 +163,9 @@ class UserViewsTestCase(IntegrationTestCase):
         """Tests that the username in URL is case insensitive"""
         self._create_test_data('iliekcomputers')
 
-        response1 = self.client.get(url_for('user.index', path="", user_name='iliekcomputers'))
+        response1 = self.client.get(self.custom_url_for('user.index', path="", user_name='iliekcomputers'))
         self.assertContext('user', self.user)
-        response2 = self.client.get(url_for('user.index', path="", user_name='IlieKcomPUteRs'))
+        response2 = self.client.get(self.custom_url_for('user.index', path="", user_name='IlieKcomPUteRs'))
         self.assertContext('user', self.user)
         self.assert200(response1)
         self.assert200(response2)
@@ -177,25 +176,25 @@ class UserViewsTestCase(IntegrationTestCase):
         user = self.user.to_dict()
         timescale.return_value = ([], EPOCH, EPOCH)
 
-        self.client.get(url_for('user.index', path="", user_name='iliekcomputers'))
+        self.client.get(self.custom_url_for('user.index', path="", user_name='iliekcomputers'))
         req_call = mock.call(user, limit=25)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # max_ts query param -> to_ts timescale param
-        self.client.get(url_for('user.index', path="", user_name='iliekcomputers'), query_string={'max_ts': 1520946000})
+        self.client.get(self.custom_url_for('user.index', path="", user_name='iliekcomputers'), query_string={'max_ts': 1520946000})
         req_call = mock.call(user, limit=25, to_ts=datetime.utcfromtimestamp(1520946000))
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # min_ts query param -> from_ts timescale param
-        self.client.get(url_for('user.index', path="", user_name='iliekcomputers'), query_string={'min_ts': 1520941000})
+        self.client.get(self.custom_url_for('user.index', path="", user_name='iliekcomputers'), query_string={'min_ts': 1520941000})
         req_call = mock.call(user, limit=25, from_ts=datetime.utcfromtimestamp(1520941000))
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # If max_ts and min_ts set, only max_ts is used
-        self.client.get(url_for('user.index', path="", user_name='iliekcomputers'),
+        self.client.get(self.custom_url_for('user.index', path="", user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
         req_call = mock.call(user, limit=25, to_ts=datetime.utcfromtimestamp(1520946000))
         timescale.assert_has_calls([req_call])
@@ -205,12 +204,12 @@ class UserViewsTestCase(IntegrationTestCase):
         """If max_ts and min_ts are not integers, show an error page"""
         (min_ts, max_ts) = self._create_test_data('iliekcomputers')
 
-        response = self.client.get(url_for('user.index', path="", user_name='iliekcomputers'),
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name='iliekcomputers'),
                                    query_string={'max_ts': 'a'})
         self.assert400(response)
         self.assertIn(b'Incorrect timestamp argument max_ts: a', response.data)
 
-        response = self.client.get(url_for('user.index', path="", user_name='iliekcomputers'),
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name='iliekcomputers'),
                                    query_string={'min_ts': 'b'})
         self.assert400(response)
         self.assertIn(b'Incorrect timestamp argument min_ts: b', response.data)
@@ -228,7 +227,7 @@ class UserViewsTestCase(IntegrationTestCase):
             'reason': 'This user is cramping my style and I dont like it'
         }
         response = self.client.post(
-            url_for('user.report_abuse', user_name=self.abuser.musicbrainz_id),
+            self.custom_url_for('user.report_abuse', user_name=self.abuser.musicbrainz_id),
             json=data,
         )
         self.assert200(response, "%s has been reported successfully." % self.abuser.musicbrainz_id)
@@ -237,7 +236,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         # Assert a user cannot report themselves
         response = self.client.post(
-            url_for('user.report_abuse', user_name=self.user.musicbrainz_id),
+            self.custom_url_for('user.report_abuse', user_name=self.user.musicbrainz_id),
             json=data,
         )
         self.assert400(response, "You cannot report yourself.")
@@ -249,7 +248,7 @@ class UserViewsTestCase(IntegrationTestCase):
             'reason': {'youDoneGoofed': 1234}
         }
         response = self.client.post(
-            url_for('user.report_abuse', user_name=self.abuser.musicbrainz_id),
+            self.custom_url_for('user.report_abuse', user_name=self.abuser.musicbrainz_id),
             json=data,
         )
         self.assert400(response, "Reason must be a string.")
@@ -283,7 +282,7 @@ class UserViewsTestCase(IntegrationTestCase):
             "blurb_content": "Amazing first recording"
         }
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(pinned_rec),
             headers={"Authorization": f"Token {self.user.auth_token}"},
             content_type="application/json",
@@ -311,7 +310,7 @@ class UserViewsTestCase(IntegrationTestCase):
             }
         }
 
-        response = self.client.get(url_for('user.index', path="taste", user_name=self.user.musicbrainz_id))
+        response = self.client.get(self.custom_url_for('user.index', path="taste", user_name=self.user.musicbrainz_id))
         self.assert200(response)
 
         props = json.loads(self.get_context_variable("props"))

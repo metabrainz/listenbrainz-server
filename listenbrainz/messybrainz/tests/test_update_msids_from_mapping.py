@@ -175,7 +175,8 @@ class MsidUpdaterTestCase(IntegrationTestCase):
 
     def test_msid_updater(self):
         self.create_dummy_data()
-        update_msids_from_mapping.run_all_updates()
+        with self.app.app_context():
+            update_msids_from_mapping.run_all_updates()
 
         expected_feedback = [
             {

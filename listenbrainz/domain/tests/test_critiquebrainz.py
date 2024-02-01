@@ -6,10 +6,10 @@ import listenbrainz.db.user as db_user
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, OAUTH_TOKEN_URL
 from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError
 
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 
 
-class CritiqueBrainzTestCase(IntegrationTestCase):
+class CritiqueBrainzTestCase(NonAPIIntegrationTestCase):
 
     def setUp(self):
         super(CritiqueBrainzTestCase, self).setUp()

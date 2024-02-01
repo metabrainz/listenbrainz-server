@@ -2,7 +2,7 @@ import datetime
 from uuid import UUID
 
 import psycopg2
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, make_response
 from xml.etree import ElementTree as ET
 import requests
 from psycopg2.extras import DictCursor
@@ -145,9 +145,17 @@ def serialize_xspf(playlist: Playlist):
 
     if playlist.additional_metadata:
         playlist_extension_additional_metadata = ET.SubElement(playlist_extension, "additional_metadata")
-        for meta_key, meta_value in playlist.additional_metadata:
-            additional_metadata_item = ET.SubElement(playlist_extension_additional_metadata, "item", key=meta_key)
-            additional_metadata_item.text = meta_value
+        for key, value in playlist.additional_metadata.items():
+            if isinstance(value, dict):
+                # Handle dictionary-type metadata
+                dict_metadata_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                for nested_key, nested_value in value.items():
+                    nested_item = ET.SubElement(dict_metadata_item, nested_key)
+                    nested_item.text = str(nested_value)
+            else:
+                # Handle simple scalar values
+                simple_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                simple_item.text = str(value)
 
     track_list = ET.SubElement(playlist_root, "trackList")
     for rec in playlist.recordings:
@@ -519,8 +527,11 @@ def get_playlist_xspf(playlist_mbid):
 
     if fetch_metadata:
         fetch_playlist_recording_metadata(playlist)
-
-    return serialize_xspf(playlist)
+    
+    xspf_data = serialize_xspf(playlist)
+    serialized_xspf_response = make_response(xspf_data)
+    serialized_xspf_response.content_type = 'text/xml'
+    return serialized_xspf_response
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])

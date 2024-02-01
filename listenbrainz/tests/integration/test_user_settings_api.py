@@ -1,7 +1,6 @@
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.db import user as db_user
 from listenbrainz.db import user_setting as db_user_setting
-from flask import url_for
 
 
 class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
@@ -12,21 +11,21 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_validates_auth_header(self):
         """ Test the preferences endpoints validate auth header """
-        response = self.client.post(url_for("user_settings_api_v1.reset_timezone"), json={})
+        response = self.client.post(self.custom_url_for("user_settings_api_v1.reset_timezone"), json={})
         self.assert401(response)
 
-        response = self.client.post(url_for("user_settings_api_v1.update_troi_prefs"), json={})
+        response = self.client.post(self.custom_url_for("user_settings_api_v1.update_troi_prefs"), json={})
         self.assert401(response)
 
         response = self.client.post(
-            url_for("user_settings_api_v1.reset_timezone"),
+            self.custom_url_for("user_settings_api_v1.reset_timezone"),
             json={},
             headers={"Authorization": "Token invalid"}
         )
         self.assert401(response)
 
         response = self.client.post(
-            url_for("user_settings_api_v1.update_troi_prefs"),
+            self.custom_url_for("user_settings_api_v1.update_troi_prefs"),
             json={},
             headers={"Authorization": "Token invalid"}
         )
@@ -34,7 +33,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_invalid_update_timezone(self):
         response = self.client.post(
-            url_for("user_settings_api_v1.reset_timezone"),
+            self.custom_url_for("user_settings_api_v1.reset_timezone"),
             json={},
             headers={"Authorization": f"Token {self.user['auth_token']}"}
         )
@@ -42,7 +41,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json["error"], "JSON document must contain zonename")
 
         response = self.client.post(
-            url_for("user_settings_api_v1.reset_timezone"),
+            self.custom_url_for("user_settings_api_v1.reset_timezone"),
             json={"zonename": "invalid time zone"},
             headers={"Authorization": f"Token {self.user['auth_token']}"}
         )
@@ -54,7 +53,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(tz["timezone_name"], "UTC")
 
         response = self.client.post(
-            url_for("user_settings_api_v1.reset_timezone"),
+            self.custom_url_for("user_settings_api_v1.reset_timezone"),
             json={"zonename": "Europe/Madrid"},
             headers={"Authorization": f"Token {self.user['auth_token']}"}
         )
@@ -65,7 +64,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_invalid_troi_prefs(self):
         response = self.client.post(
-            url_for("user_settings_api_v1.update_troi_prefs"),
+            self.custom_url_for("user_settings_api_v1.update_troi_prefs"),
             json={},
             headers={"Authorization": f"Token {self.user['auth_token']}"}
         )
@@ -73,7 +72,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json["error"], "JSON document must contain export_to_spotify key")
 
         response = self.client.post(
-            url_for("user_settings_api_v1.update_troi_prefs"),
+            self.custom_url_for("user_settings_api_v1.update_troi_prefs"),
             json={"export_to_spotify": "on"},
             headers={"Authorization": f"Token {self.user['auth_token']}"}
         )
@@ -85,7 +84,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(prefs, None)
 
         response = self.client.post(
-            url_for("user_settings_api_v1.update_troi_prefs"),
+            self.custom_url_for("user_settings_api_v1.update_troi_prefs"),
             json={"export_to_spotify": True},
             headers={"Authorization": f"Token {self.user['auth_token']}"}
         )

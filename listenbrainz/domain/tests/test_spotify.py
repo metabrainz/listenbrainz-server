@@ -9,10 +9,10 @@ import listenbrainz.db.user as db_user
 from listenbrainz.domain.external_service import ExternalServiceAPIError, ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
 
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 
 
-class SpotifyServiceTestCase(IntegrationTestCase):
+class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
 
     def setUp(self):
         super(SpotifyServiceTestCase, self).setUp()

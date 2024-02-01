@@ -34,7 +34,7 @@ SEARCH_USER_LIMIT = 100  # max number of users to return in search username resu
 @index_bp.route("/")
 def index():
     if current_user.is_authenticated and request.args.get("redirect", "true") == "true":
-        return redirect( url_for("user.index", path="",user_name=current_user.musicbrainz_id))
+        return redirect(url_for("user.index", path="", user_name=current_user.musicbrainz_id))
 
     if _ts:
         try:

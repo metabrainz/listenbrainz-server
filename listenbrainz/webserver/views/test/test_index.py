@@ -1,7 +1,6 @@
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
-from flask import url_for
 from flask_login import login_required
 from requests.exceptions import HTTPError
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
@@ -17,7 +16,7 @@ from listenbrainz.webserver.testing import ServerAppPerTestTestCase
 class IndexViewsTestCase(IntegrationTestCase):
 
     def test_index(self):
-        resp = self.client.get(url_for('index.index'))
+        resp = self.client.get(self.custom_url_for('index.index'))
         self.assert200(resp)
     
     def test_index_logged_in_redirect(self):
@@ -27,31 +26,31 @@ class IndexViewsTestCase(IntegrationTestCase):
         user = db_user.get_or_create(1, 'mr_monkey')
         self.temporary_login(user['login_id'])
 
-        resp = self.client.get(url_for('index.index'))
-        self.assertRedirects(resp, url_for('user.index', path="", user_name='mr_monkey'))
+        resp = self.client.get(self.custom_url_for('index.index'))
+        self.assertRedirects(resp, self.custom_url_for('user.profile', user_name='mr_monkey'))
 
     def test_downloads(self):
-        resp = self.client.get(url_for('index.downloads'))
-        self.assertRedirects(resp, url_for('index.data'))
+        resp = self.client.get(self.custom_url_for('index.downloads'))
+        self.assertRedirects(resp, self.custom_url_for('index.data'))
 
     def test_data(self):
-        resp = self.client.get(url_for('index.data'))
+        resp = self.client.get(self.custom_url_for('index.data'))
         self.assert200(resp)
 
     def test_about(self):
-        resp = self.client.get(url_for('index.about'))
+        resp = self.client.get(self.custom_url_for('index.about'))
         self.assert200(resp)
 
     def test_terms_of_service(self):
-        resp = self.client.get(url_for('index.terms_of_service'))
+        resp = self.client.get(self.custom_url_for('index.terms_of_service'))
         self.assert200(resp)
 
     def test_add_data_info(self):
-        resp = self.client.get(url_for('index.add_data_info'))
+        resp = self.client.get(self.custom_url_for('index.add_data_info'))
         self.assert200(resp)
 
     def test_import_data_info(self):
-        resp = self.client.get(url_for('index.import_data_info'))
+        resp = self.client.get(self.custom_url_for('index.import_data_info'))
         self.assert200(resp)
 
     def test_404(self):
@@ -60,7 +59,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assertIn('Not Found', resp.data.decode('utf-8'))
 
     def test_lastfm_proxy(self):
-        resp = self.client.get(url_for('index.proxy'))
+        resp = self.client.get(self.custom_url_for('index.proxy'))
         self.assert200(resp)
 
     def test_flask_debugtoolbar(self):
@@ -75,12 +74,12 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assertIn('flDebug', str(resp.data))
 
     def test_current_status(self):
-        resp = self.client.get(url_for('index.current_status'))
+        resp = self.client.get(self.custom_url_for('index.current_status'))
         self.assert200(resp)
 
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_not_logged_in(self, mock_user_get):
-        resp = self.client.get(url_for('index.index'))
+        resp = self.client.get(self.custom_url_for('index.index'))
         data = resp.data.decode('utf-8')
         self.assertIn('id="side-nav"', data)
         self.assertIn('Sign in', data)
@@ -97,7 +96,7 @@ class IndexViewsTestCase(IntegrationTestCase):
 
         mock_user_get.return_value = user
         self.temporary_login(user['login_id'])
-        resp = self.client.get(url_for('index.recent_listens'))
+        resp = self.client.get(self.custom_url_for('index.recent_listens'))
         data = resp.data.decode('utf-8')
 
         # username & logout link in sidenav menu
@@ -112,7 +111,7 @@ class IndexViewsTestCase(IntegrationTestCase):
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
     def test_mb_user_deleter_valid_account(self, mock_delete_user, mock_authorize_mb_user_deleter):
         user_id = db_user.create(1, 'iliekcomputers')
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_authorize_mb_user_deleter.assert_called_once_with('132')
         mock_delete_user.assert_called_once_with(user_id)
@@ -121,7 +120,7 @@ class IndexViewsTestCase(IntegrationTestCase):
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
     def test_mb_user_deleter_not_found(self, mock_delete_user, mock_authorize_mb_user_deleter):
         # no user in the db with musicbrainz_row_id = 2
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=2, access_token='312421'))
+        r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=2, access_token='312421'))
         self.assert404(r)
         mock_authorize_mb_user_deleter.assert_called_with('312421')
         mock_delete_user.assert_not_called()
@@ -135,7 +134,7 @@ class IndexViewsTestCase(IntegrationTestCase):
             'metabrainz_user_id': 2007538,
         }
         user_id = db_user.create(1, 'iliekcomputers')
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_requests_get.assert_called_with(
             'https://musicbrainz.org/oauth2/userinfo',
@@ -152,7 +151,7 @@ class IndexViewsTestCase(IntegrationTestCase):
             'metabrainz_user_id': 2007531, # incorrect musicbrainz row id for UserDeleter
         }
         user_id = db_user.create(1, 'iliekcomputers')
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
 
@@ -160,7 +159,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         mock_requests_get.return_value.json.return_value = {
             'metabrainz_user_id': 2007538,
         }
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
 
@@ -168,7 +167,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         mock_requests_get.return_value.json.return_value = {
             'sub': 'UserDeleter',
         }
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
 
@@ -177,7 +176,7 @@ class IndexViewsTestCase(IntegrationTestCase):
             'sub': 'iliekcomputers',
             'metabrainz_user_id': 2007538
         }
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
 
@@ -186,18 +185,18 @@ class IndexViewsTestCase(IntegrationTestCase):
             'sub': 'iliekcomputers',
             'metabrainz_user_id': 1,
         }
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
 
         # HTTPError while getting userinfo from MusicBrainz
         mock_requests_get.return_value.raise_for_status.side_effect = HTTPError
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
 
     def test_recent_listens_page(self):
-        response = self.client.get(url_for('index.recent_listens'))
+        response = self.client.get(self.custom_url_for('index.recent_listens'))
         self.assert200(response)
         self.assertTemplateUsed('index/recent.html')
 
@@ -209,16 +208,16 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assert200(r)
 
     def test_similar_users(self):
-        resp = self.client.get(url_for('index.similar_users'))
+        resp = self.client.get(self.custom_url_for('index.similar_users'))
         self.assertStatus(resp, 302)
 
     @patch("listenbrainz.webserver.views.player.fetch_playlist_recording_metadata")
     def test_instant_playlist(self, mock_recording_metadata):
-        resp = self.client.get(url_for('player.load_instant', recording_mbids="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
+        resp = self.client.get(self.custom_url_for('player.load_instant', recording_mbids="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
         self.assert200(resp)
 
     def test_release_playlist(self):
-        resp = self.client.get(url_for('player.load_release', release_mbid="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
+        resp = self.client.get(self.custom_url_for('player.load_release', release_mbid="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
         self.assert200(resp)
 
 
