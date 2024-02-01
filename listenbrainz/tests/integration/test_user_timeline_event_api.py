@@ -67,6 +67,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
 
         events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            self.db_conn,
             user_ids=[self.user['id']],
             min_ts=0,
             max_ts=int(time.time()) + 1000,
@@ -87,6 +88,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
 
         events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            self.db_conn,
             user_ids=[self.user['id']],
             min_ts=0,
             max_ts=int(time.time()) + 1000,
@@ -121,6 +123,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # check that no events were created in the database
         events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            self.db_conn,
             user_ids=[self.user['id']],
             min_ts=0,
             max_ts=int(time.time()) + 1000,
@@ -378,6 +381,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -409,6 +413,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -439,6 +444,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -474,6 +480,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -505,6 +512,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         new_user = db_user.get_or_create(2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -530,6 +538,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_unhide_events(self):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.db_conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -552,6 +561,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_unhide_events_for_authorization(self):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.db_conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -573,6 +583,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_unhide_events_for_bad_request(self):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.db_conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -604,6 +615,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.db_conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -642,6 +654,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(review_id, data["metadata"]["review_id"])
 
         events = db_user_timeline_event.get_cb_review_events(
+            self.db_conn,
             user_ids=[self.user['id']],
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -671,6 +684,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # check that no events were created in the database
         events = db_user_timeline_event.get_cb_review_events(
+            self.db_conn,
             user_ids=[self.user['id']],
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -869,6 +883,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
 
         events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            self.db_conn,
             user_id=self.user['id'],
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -1041,6 +1056,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.delete(user_two['id'], self.user['id'], 'follow')
 
         events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            self.db_conn,
             user_id=self.user['id'],
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -1078,6 +1094,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
 
         events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            self.db_conn,
             user_id=self.user['id'],
             min_ts=0,
             max_ts=int(time.time()) + 10,

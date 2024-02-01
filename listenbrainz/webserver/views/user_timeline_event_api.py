@@ -37,7 +37,7 @@ from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
@@ -96,7 +96,7 @@ def create_user_recording_recommendation_event(user_name):
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
     try:
-        event = db_user_timeline_event.create_user_track_recommendation_event(user['id'], metadata)
+        event = db_user_timeline_event.create_user_track_recommendation_event(db_conn, user['id'], metadata)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
@@ -152,7 +152,7 @@ def create_user_notification_event(user_name):
     metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
 
     try:
-        event = db_user_timeline_event.create_user_notification_event(user['id'], metadata)
+        event = db_user_timeline_event.create_user_notification_event(db_conn, user['id'], metadata)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
@@ -221,7 +221,7 @@ def create_user_cb_review_event(user_name):
         entity_id=review.entity_id,
         entity_name=review.name
     )
-    event = db_user_timeline_event.create_user_cb_review_event(user["id"], metadata)
+    event = db_user_timeline_event.create_user_cb_review_event(db_conn, user["id"], metadata)
 
     event_data = event.dict()
     event_data["created"] = event_data["created"].timestamp()
@@ -316,7 +316,7 @@ def user_feed(user_name: str):
         count=count,
     )
 
-    hidden_events = db_user_timeline_event.get_hidden_timeline_events(user['id'], count)
+    hidden_events = db_user_timeline_event.get_hidden_timeline_events(db_conn, user['id'], count)
     hidden_events_pin = {}
     hidden_events_recommendation = {}
 
@@ -506,7 +506,7 @@ def delete_feed_events(user_name):
         if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
                 UserTimelineEventType.NOTIFICATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
             try:
-                event_deleted = db_user_timeline_event.delete_user_timeline_event(event["id"], user["id"])
+                event_deleted = db_user_timeline_event.delete_user_timeline_event(db_conn, event["id"], user["id"])
             except Exception as e:
                 raise APIInternalServerError("Something went wrong. Please try again")
             if not event_deleted:
@@ -570,7 +570,7 @@ def hide_user_timeline_event(user_name):
 
     row_id = data["event_id"]
     if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
-        result = db_user_timeline_event.get_user_timeline_event_by_id(row_id)
+        result = db_user_timeline_event.get_user_timeline_event_by_id(db_conn, row_id)
     elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
         result = get_pin_by_id(row_id)
     else:
@@ -580,7 +580,7 @@ def hide_user_timeline_event(user_name):
         raise APIBadRequest(f"{data['event_type']} event with id {row_id} not found")
 
     if db_user_relationship.is_following_user(user['id'], result.user_id):
-        db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"])
+        db_user_timeline_event.hide_user_timeline_event(db_conn, user['id'], data["event_type"], data["event_id"])
         return jsonify({"status": "ok"})
     else:
         raise APIUnauthorized("You cannot hide events of this user")
@@ -624,7 +624,7 @@ def unhide_user_timeline_event(user_name):
     if 'event_type' not in data or 'event_id' not in data:
         raise APIBadRequest("JSON document must contain both event_type and event_id", data)
 
-    db_user_timeline_event.unhide_timeline_event(user['id'], data['event_type'], data['event_id'])
+    db_user_timeline_event.unhide_timeline_event(db_conn, user['id'], data['event_type'], data['event_id'])
     return jsonify({"status": "ok"})
 
 
@@ -680,7 +680,7 @@ def create_personal_recommendation_event(user_name):
                 non_followers.append(follower)
         if non_followers:
             raise APIBadRequest(f"You cannot recommend tracks to non-followers! These people don't follow you {str(non_followers)}")
-        event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata)
+        event = db_user_timeline_event.create_personal_recommendation_event(db_conn, user['id'], metadata)
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
     except DatabaseException:
@@ -836,6 +836,7 @@ def get_follow_events(users_for_events: Iterable[dict], min_ts: int, max_ts: int
 def get_notification_events(user: dict, min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets notification events for the user in the feed."""
     notification_events_db = db_user_timeline_event.get_user_notification_events(
+        db_conn,
         user_ids=[user["id"]],
         min_ts=min_ts,
         max_ts=max_ts,
@@ -865,6 +866,7 @@ def get_recording_recommendation_events(
 
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     recording_recommendation_events_db = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+        db_conn,
         user_ids=(user['id'] for user in users_for_events),
         min_ts=min_ts,
         max_ts=max_ts,
@@ -899,6 +901,7 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
     """
     id_username_map = {user["id"]: user["musicbrainz_id"] for user in users_for_events}
     cb_review_events_db = db_user_timeline_event.get_cb_review_events(
+        db_conn,
         user_ids=[user["id"] for user in users_for_events],
         min_ts=min_ts,
         max_ts=max_ts,
@@ -994,6 +997,7 @@ def get_personal_recording_recommendation_events(
     """
 
     personal_recording_recommendation_events_db = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+        db_conn,
         user_id=user['id'],
         min_ts=min_ts,
         max_ts=max_ts,

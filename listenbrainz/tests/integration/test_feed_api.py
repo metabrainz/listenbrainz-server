@@ -428,12 +428,14 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         msid = self.insert_metadata()
         # create a recording recommendation ourselves
         db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=self.main_user['id'],
             metadata=RecordingRecommendationMetadata(recording_msid=msid)
         )
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=self.following_user_1['id'],
             metadata=RecordingRecommendationMetadata(recording_mbid="34c208ee-2de7-4d38-b47e-907074866dd3")
         )
@@ -510,6 +512,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=self.following_user_1['id'],
             metadata=RecordingRecommendationMetadata(recording_mbid="34c208ee-2de7-4d38-b47e-907074866dd3")
         )
