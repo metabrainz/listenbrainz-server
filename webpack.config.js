@@ -71,8 +71,6 @@ module.exports = function (env, argv) {
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
       playlists: path.resolve(jsDir, "src/user/playlists/Playlists.tsx"),
       explore: path.resolve(jsDir, "src/explore/index.tsx"),
-      huesound: path.resolve(jsDir, "src/explore/huesound/ColorPlay.tsx"),
-      lb_radio: path.resolve(jsDir, "src/explore/lb-radio/LBRadio.tsx"),
       yearInMusic2021: path.resolve(
         jsDir,
         "src/user/year-in-music/2021/YearInMusic2021.tsx"
@@ -107,15 +105,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/metadata-viewer/MetadataViewerPage.tsx"
       ),
-      freshReleases: path.resolve(
-        jsDir,
-        "src/explore/fresh-releases/FreshReleases.tsx"
-      ),
       musicNeighborhood: path.resolve(
         jsDir,
         "src/explore/music-neighborhood/MusicNeighborhood.tsx"
       ),
-      artCreator: path.resolve(jsDir, "src/explore/art-creator/ArtCreator.tsx"),
       artistPage: path.resolve(jsDir, "src/artist/ArtistPage.tsx"),
       albumPage: path.resolve(jsDir, "src/album/AlbumPage.tsx"),
       settingsPage: path.resolve(jsDir, "src/settings/index.tsx"),
