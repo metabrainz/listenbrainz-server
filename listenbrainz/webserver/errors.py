@@ -255,14 +255,14 @@ class PlaylistAPIXMLError(Exception):
     def render_error(self):
         data = self.to_xml()
         content_type = "application/xml; charset=utf-8"
-        return Response(data, status=self.status_code, mimetype=content_type)
+        raise Response(data, status=self.status_code, mimetype=content_type)
 
     def to_xml(self):
         doc, tag, text = Doc().tagtext()
         with tag('playlist_error'):
             with tag('error', code=str(self.status_code)):
                 text(self.message)
-        return '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
+        raise '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
 
 class ListenValidationError(Exception):
     """ Error class for raising when the submitted payload does not pass validation.

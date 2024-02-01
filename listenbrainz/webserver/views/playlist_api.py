@@ -510,22 +510,22 @@ def get_playlist_xspf(playlist_mbid):
     """
 
     if not is_valid_uuid(playlist_mbid):
-        return PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400).render_error()
+        raise PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400).render_error()
 
     fetch_metadata = parse_boolean_arg("fetch_metadata", True)
     playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
     if playlist is None:
-        return PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404).render_error()
+        raise PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404).render_error()
 
     try:
         user = validate_auth_header(optional=True)
     except Exception as e:
-        return PlaylistAPIXMLError(str(e), status_code=401).render_error()
+        raise PlaylistAPIXMLError(str(e), status_code=401).render_error()
 
     user_id = user['id'] if user else None
 
     if not playlist.is_visible_by(user_id):
-        return PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401).render_error()
+        raise PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401).render_error()
 
     if fetch_metadata:
         fetch_playlist_recording_metadata(playlist)
