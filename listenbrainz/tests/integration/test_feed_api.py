@@ -22,14 +22,12 @@ from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from flask import url_for, current_app
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 import time
 import json
-import uuid
 from listenbrainz.webserver.views.user_timeline_event_api import DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
 
@@ -116,7 +114,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         time.sleep(2)
 
         response = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(response)
@@ -188,7 +186,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         time.sleep(2)
 
         response = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed_listens_similar', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed_listens_similar',
+                                user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(response)
@@ -249,7 +248,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assertEqual(response.json['status'], 'ok')
 
         from datetime import timedelta
-        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(seconds=1))
+        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW / timedelta(seconds=1))
 
         # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
         payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
@@ -268,7 +267,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         time.sleep(2)
 
         response = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed_listens_following', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed_listens_following',
+                                user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(response)
@@ -327,7 +327,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # max_ts = 2, should have sent back 2 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'max_ts': ts + 2}
         )
@@ -339,7 +339,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # max_ts = 4, should have sent back 4 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'max_ts': ts + 4}
         )
@@ -349,7 +349,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # min_ts = 1, should have sent back 4 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'min_ts': ts + 1}
         )
@@ -359,7 +359,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # min_ts = 2, should have sent back 2 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'min_ts': ts + 2}
         )
@@ -369,7 +369,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # min_ts = 1, max_ts = 3, should have sent back 2 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'min_ts': ts + 1, 'max_ts': ts + 3}
         )
@@ -379,7 +379,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # should honor count
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'count': 1}
         )
@@ -393,7 +393,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # this should show up in the events
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'max_ts': int(time.time()) + 1}
         )
@@ -440,7 +440,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # this should show up in the events
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'max_ts': int(time.time()) + 1}
         )
@@ -484,7 +484,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
     def test_it_returns_empty_list_if_user_does_not_follow_anyone(self):
         new_user = db_user.get_or_create(111, 'totally_new_user_with_no_friends')
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
             headers={'Authorization': f"Token {new_user['auth_token']}"},
         )
         self.assert200(r)
@@ -517,7 +517,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         time.sleep(1)
 
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(r)
