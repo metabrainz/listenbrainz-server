@@ -23,7 +23,7 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
@@ -1161,7 +1161,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <a href="/explore/cover-art-collage/2022">
+            <Link to="/explore/cover-art-collage/2022/">
               <LazyLoadImage
                 src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
                 placeholderSrc="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
@@ -1172,7 +1172,7 @@ export default class YearInMusic extends React.Component<
                 loading="lazy"
                 decoding="async"
               />
-            </a>
+            </Link>
           </div>
           <div className="container closing-remarks">
             <span className="bold">
@@ -1216,7 +1216,7 @@ export default class YearInMusic extends React.Component<
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <a href={`/user/${user.name}/year-in-music/2021`}>2021</a>
+            <Link to={`/user/${user.name}/year-in-music/2021/`}>2021</Link>
           </div>
           <div className="thanks-kc-green">
             With thanks to KC Green for the original &apos;this is fine&apos;

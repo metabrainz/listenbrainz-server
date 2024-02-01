@@ -12,7 +12,6 @@ const links: NavbarLink[] = [
   { to: "music-neighborhood/", label: "Music Neighborhood" },
   { to: "similar-users/", label: "Similar Users" },
   { to: "lb-radio/", label: "LB Radio" },
-  { to: "similar-users/", label: "Similar Users" },
   { to: "art-creator/", label: "Art Creator" },
 ];
 

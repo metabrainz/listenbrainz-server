@@ -27,7 +27,7 @@ import {
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
@@ -525,9 +525,13 @@ export default class YearInMusic extends React.Component<
               loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
             />
           )}
-          <a href={linkToUserProfile} role="button" className="btn btn-info">
+          <Link
+            to={`/user/${user.name}/`}
+            role="button"
+            className="btn btn-info"
+          >
             ListenBrainz Profile
-          </a>
+          </Link>
           <div className="input-group">
             <input
               type="text"
@@ -1351,9 +1355,9 @@ export default class YearInMusic extends React.Component<
               >
                 {followingList.slice(0, 15).map((followedUser, index) => {
                   return (
-                    <a
+                    <Link
                       className="buddy content-card card"
-                      href={`/user/${followedUser}/year-in-music/2023`}
+                      to={`/user/${followedUser}/year-in-music/2023/`}
                     >
                       <div className="img-container">
                         <img
@@ -1364,7 +1368,7 @@ export default class YearInMusic extends React.Component<
                       <div className="small-stat">
                         <div className="value">{followedUser}</div>
                       </div>
-                    </a>
+                    </Link>
                   );
                 })}
               </div>
@@ -1390,7 +1394,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <a href="/explore/cover-art-collage/2023">
+            <Link to="/explore/cover-art-collage/2023/">
               <LazyLoadImage
                 src="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
                 placeholderSrc="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
@@ -1402,7 +1406,7 @@ export default class YearInMusic extends React.Component<
                 loading="lazy"
                 decoding="async"
               />
-            </a>
+            </Link>
           </div>
 
           <div className="section">
@@ -1467,7 +1471,7 @@ export default class YearInMusic extends React.Component<
               <br />
               <br />
               Feeling nostalgic? See your previous Year in Music:{" "}
-              <a href={`/user/${user.name}/year-in-music/2022`}>2022</a>
+              <Link to={`/user/${user.name}/year-in-music/2022/`}>2022</Link>
             </div>
           </div>
         </div>

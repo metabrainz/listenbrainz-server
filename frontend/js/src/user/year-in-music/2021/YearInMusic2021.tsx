@@ -15,7 +15,7 @@ import {
   capitalize,
   toPairs,
 } from "lodash";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
@@ -365,12 +365,10 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   Share your year with your friends
                   <p id="share-link">
-                    <a
-                      href={`https://listenbrainz.org/user/${user.name}/year-in-music/2021/`}
-                    >
+                    <Link to={`/user/${user.name}/year-in-music/2021/`}>
                       https://listenbrainz.org/user/{user.name}
                       /year-in-music/2021/
-                    </a>
+                    </Link>
                   </p>
                 </div>
               </h4>
@@ -390,9 +388,7 @@ export default class YearInMusic extends React.Component<
             <p>
               See profile on&nbsp;
               <img src="/static/img/favicon-16.png" alt="ListenBrainz Logo" />
-              <a href={`https://listenbrainz.org/user/${user.name}/`}>
-                ListenBrainz
-              </a>
+              <Link to={`/user/${user.name}/`}>ListenBrainz</Link>
               &nbsp;and&nbsp;
               <img
                 src="/static/img/musicbrainz-16.svg"

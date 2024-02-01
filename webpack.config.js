@@ -58,11 +58,10 @@ module.exports = function (env, argv) {
         path.resolve(jsDir, "src/recent/RecentListens.tsx"),
         path.resolve(cssDir, "main.less"),
       ],
+      index: [path.resolve(jsDir, "src/index.tsx")],
       AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/AIBrainz.tsx")],
-      dashboard: [path.resolve(jsDir, "src/user/index.tsx")],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
-      explore: path.resolve(jsDir, "src/explore/index.tsx"),
       coverArtComposite2022: path.resolve(
         jsDir,
         "src/explore/cover-art-collage/2022/CoverArtComposite.tsx"
