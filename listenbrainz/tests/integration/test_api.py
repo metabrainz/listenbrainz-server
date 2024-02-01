@@ -278,8 +278,9 @@ class APITestCase(ListenAPIIntegrationTestCase):
         second_xml_str = ''.join(expected_xml.split())
         self.assertEqual(first_xml_str, second_xml_str)
 
+    @mock.patch('listenbrainz.webserver.views.playlist_api.get_playlist_xspf')
+    def test_playlist_api_xml_auth_error(self, mock_get_playlist_xspf):
         # Testing for 401: Authorization Error
-
         playlist = {
             "playlist": {
                 "title": "you're a person",
