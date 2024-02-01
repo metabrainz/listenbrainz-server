@@ -344,7 +344,7 @@ def year_in_music(user_name, year: int = 2023):
     """ Year in Music """
     if year != 2021 and year != 2022 and year != 2023:
         raise NotFound(f"Cannot find Year in Music report for year: {year}")
-    
+
     user = _get_user(user_name)
     try:
         yearInMusicData = db_year_in_music.get(user.id, year) or {}
