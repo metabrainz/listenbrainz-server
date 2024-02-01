@@ -105,10 +105,6 @@ module.exports = function (env, argv) {
         jsDir,
         "src/metadata-viewer/MetadataViewerPage.tsx"
       ),
-      musicNeighborhood: path.resolve(
-        jsDir,
-        "src/explore/music-neighborhood/MusicNeighborhood.tsx"
-      ),
       artistPage: path.resolve(jsDir, "src/artist/ArtistPage.tsx"),
       albumPage: path.resolve(jsDir, "src/album/AlbumPage.tsx"),
       settingsPage: path.resolve(jsDir, "src/settings/index.tsx"),

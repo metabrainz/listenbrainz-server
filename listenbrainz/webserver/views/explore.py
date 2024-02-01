@@ -23,7 +23,7 @@ def similar_users():
     })
 
 
-@explore_bp.route("/music-neighborhood/")
+@explore_bp.route("/music-neighborhood/", methods=['POST'])
 def artist_similarity():
     """ Explore artist similarity """
 
@@ -39,15 +39,12 @@ def artist_similarity():
         artist_mbid = ts_curs.fetchone()[0]
         current_app.logger.info(artist_mbid)
 
-        props = {
+        data = {
             "algorithm": "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30",
             "artist_mbid": artist_mbid
         }
 
-        return render_template(
-            "explore/music-neighborhood.html",
-            props=orjson.dumps(props).decode("utf-8")
-        )
+        return jsonify(data)
 
 
 @explore_bp.route("/ai-brainz/")

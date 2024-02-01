@@ -11,6 +11,9 @@ import LBRadio, { LBRadioLoader } from "../lb-radio/LBRadio";
 import SimilarUsers, {
   SimilarUsersLoader,
 } from "../similar-users/SimilarUsers";
+import MusicNeighborhood, {
+  MusicNeighborhoodLoader,
+} from "../music-neighborhood/MusicNeighborhood";
 
 const getExploreRoutes = () => {
   const routes = [
@@ -61,6 +64,11 @@ const getExploreRoutes = () => {
           path: "similar-users/",
           element: <SimilarUsers />,
           loader: SimilarUsersLoader,
+        },
+        {
+          path: "music-neighborhood/",
+          element: <MusicNeighborhood />,
+          loader: MusicNeighborhoodLoader,
         },
       ],
     },

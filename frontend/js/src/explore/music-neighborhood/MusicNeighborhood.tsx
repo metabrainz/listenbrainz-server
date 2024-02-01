@@ -1,17 +1,11 @@
 import * as React from "react";
-import NiceModal from "@ebay/nice-modal-react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import { ErrorBoundary } from "@sentry/react";
 import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { isEmpty, isEqual, kebabCase } from "lodash";
+import { useLoaderData } from "react-router-dom";
 import { ToastMsg } from "../../notifications/Notifications";
-import { getPageProps } from "../../utils/utils";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchBox from "./components/SearchBox";
 import SimilarArtistsGraph from "./components/SimilarArtistsGraph";
@@ -20,7 +14,7 @@ import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import generateTransformedArtists from "./utils/generateTransformedArtists";
 import { downloadComponentAsImage, copyImageToClipboard } from "./utils/utils";
 
-type MusicNeighborhoodProps = {
+type MusicNeighborhoodLoaderData = {
   algorithm: string;
   artist_mbid: string;
 };
@@ -41,11 +35,11 @@ const isColorTooDark = (color: tinycolor.Instance): boolean => {
   return color.getLuminance() < MINIMUM_LUMINANCE;
 };
 
-function MusicNeighborhood(props: MusicNeighborhoodProps) {
+export default function MusicNeighborhood() {
   const {
     algorithm: DEFAULT_ALGORITHM,
     artist_mbid: DEFAULT_ARTIST_MBID,
-  } = props;
+  } = useLoaderData() as MusicNeighborhoodLoaderData;
 
   const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbid=`;
   const DEFAULT_COLORS = colorGenerator();
@@ -347,40 +341,17 @@ function MusicNeighborhood(props: MusicNeighborhoodProps) {
   );
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const { algorithm, artist_mbid } = reactProps;
-
-  const MusicNeighborhoodPageWithAlertNotifications = withAlertNotifications(
-    MusicNeighborhood
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <MusicNeighborhoodPageWithAlertNotifications
-            algorithm={algorithm}
-            artist_mbid={artist_mbid}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const MusicNeighborhoodLoader = async ({
+  request,
+}: {
+  request: Request;
+}) => {
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return data;
+};
