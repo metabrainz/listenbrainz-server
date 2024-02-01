@@ -1,8 +1,6 @@
 import json
 import time
-from unittest import mock
 from unittest.mock import patch
-from xml.etree import ElementTree as ET
 
 import pytest
 
@@ -13,7 +11,6 @@ from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 import listenbrainz.db.external_service_oauth as db_oauth
-from listenbrainz.webserver.errors import PlaylistAPIXMLError
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_EXTENSION_URI
 
 
