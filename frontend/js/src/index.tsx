@@ -6,10 +6,10 @@ import { Integrations } from "@sentry/tracing";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import { getPageProps } from "../utils/utils";
-import getExploreRoutes from "./routes/index";
+import ErrorBoundary from "./utils/ErrorBoundary";
+import GlobalAppContext from "./utils/GlobalAppContext";
+import { getPageProps } from "./utils/utils";
+import getRoutes from "./routes";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const { domContainer, globalAppContext, sentryProps } = await getPageProps();
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  const routes = getExploreRoutes();
+  const routes = getRoutes(globalAppContext?.currentUser?.name);
   const router = createBrowserRouter(routes);
 
   const renderRoot = createRoot(domContainer!);
@@ -31,13 +31,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     <ErrorBoundary>
       <ToastContainer
         position="bottom-right"
-        autoClose={5000}
+        autoClose={8000}
         hideProgressBar
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnHover
-        theme="light"
       />
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>

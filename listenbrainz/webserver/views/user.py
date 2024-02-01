@@ -3,7 +3,7 @@ from datetime import datetime
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 
-from flask import Blueprint, render_template, request, url_for, redirect, jsonify
+from flask import Blueprint, render_template, request, url_for, redirect, jsonify, current_app
 from flask_login import current_user, login_required
 
 from data.model.external_service import ExternalServiceType
@@ -33,7 +33,7 @@ redirect_bp = Blueprint("redirect", __name__)
 @redirect_bp.route('/<path:path>/')
 @login_required
 def index(path):
-    return render_template("user/index.html", user=current_user)
+    return render_template("index.html", user=current_user)
 
 
 @user_bp.route("/<user_name>/", methods=['POST'])
@@ -344,10 +344,16 @@ def year_in_music(user_name, year: int = 2023):
     """ Year in Music """
     if year != 2021 and year != 2022 and year != 2023:
         raise NotFound(f"Cannot find Year in Music report for year: {year}")
-
+    
     user = _get_user(user_name)
+    try:
+        yearInMusicData = db_year_in_music.get(user.id, year) or {}
+    except Exception as e:
+        yearInMusicData = {}
+        current_app.logger.error(f"Error getting Year in Music data for user {user_name}: {e}")
+
     return jsonify({
-        "data": db_year_in_music.get(user.id, year) or {},
+        "data": yearInMusicData,
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
@@ -360,4 +366,4 @@ def year_in_music(user_name, year: int = 2023):
 @web_listenstore_needed
 def index(user_name, path):
     user = _get_user(user_name)
-    return render_template("user/index.html", user=user)
+    return render_template("index.html", user=user)

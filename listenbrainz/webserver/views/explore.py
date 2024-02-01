@@ -93,6 +93,6 @@ def index(path):
     """ Main explore page for users to browse the various explore features """
 
     return render_template(
-        "explore/index.html",
+        "index.html",
         props=orjson.dumps({}).decode("utf-8")
     )
