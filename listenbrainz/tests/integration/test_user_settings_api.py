@@ -49,7 +49,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json["error"], "Something went wrong! Unable to update timezone right now.")
 
     def test_valid_update_timezone(self):
-        tz = db_user_setting.get(self.user["id"])
+        tz = db_user_setting.get(self.db_conn, self.user["id"])
         self.assertEqual(tz["timezone_name"], "UTC")
 
         response = self.client.post(
@@ -59,7 +59,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(response)
 
-        tz = db_user_setting.get(self.user["id"])
+        tz = db_user_setting.get(self.db_conn, self.user["id"])
         self.assertEqual(tz["timezone_name"], "Europe/Madrid")
 
     def test_invalid_troi_prefs(self):
@@ -80,7 +80,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json["error"], "export_to_spotify key in the JSON document must be a boolean")
 
     def test_valid_troi_prefs(self):
-        prefs = db_user_setting.get_troi_prefs(self.user["id"])
+        prefs = db_user_setting.get_troi_prefs(self.db_conn, self.user["id"])
         self.assertEqual(prefs, None)
 
         response = self.client.post(
@@ -90,5 +90,5 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(response)
 
-        prefs = db_user_setting.get_troi_prefs(self.user["id"])
+        prefs = db_user_setting.get_troi_prefs(self.db_conn, self.user["id"])
         self.assertEqual(prefs, {"troi": {"export_to_spotify": True}})

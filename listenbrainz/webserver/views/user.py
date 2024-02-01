@@ -17,7 +17,7 @@ from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_c
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver import timescale_connection
@@ -180,6 +180,7 @@ def charts(user_name):
         user=user
     )
 
+
 @user_bp.route("/<user_name>/reports/")
 def reports(user_name):
     """ Redirect to stats page """
@@ -228,11 +229,10 @@ def playlists(user_name: str):
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_for_user(user.id,
-                                                            include_private=include_private,
-                                                            load_recordings=False,
-                                                            count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL,
-                                                            offset=0)
+    user_playlists, playlist_count = get_playlists_for_user(
+        db_conn, ts_conn, user.id, include_private=include_private,
+        load_recordings=False, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=0
+    )
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
@@ -277,8 +277,7 @@ def recommendation_playlists(user_name: str):
     }
 
     playlists = []
-    user_playlists = get_recommendation_playlists_for_user(
-        user.id)
+    user_playlists = get_recommendation_playlists_for_user(db_conn, user.id)
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
@@ -356,7 +355,7 @@ def logged_in_user_follows_user(user):
 
     if current_user.is_authenticated:
         return db_user_relationship.is_following_user(
-            current_user.id, user.id
+            db_conn, current_user.id, user.id
         )
     return None
 
@@ -368,7 +367,7 @@ def taste(user_name: str):
     Feedback has filter on score (1 or -1).
 
     Args:
-        musicbrainz_id (str): the MusicBrainz ID of the user
+        user_name (str): the MusicBrainz ID of the user
     Raises:
         NotFound if user isn't present in the database
     """

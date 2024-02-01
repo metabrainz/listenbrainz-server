@@ -5,7 +5,6 @@ import json
 from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
-from flask_wtf import FlaskForm
 from werkzeug.exceptions import NotFound, BadRequest
 
 import listenbrainz.db.feedback as db_feedback
@@ -20,7 +19,7 @@ from listenbrainz.domain.external_service import ExternalService, ExternalServic
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.webserver import flash
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError
@@ -47,8 +46,8 @@ def reset_token():
 @settings_bp.route("/select_timezone/", methods=["POST"])
 @api_login_required
 def select_timezone():
-    pg_timezones = db_usersetting.get_pg_timezone()
-    user_settings = db_usersetting.get(current_user.id)
+    pg_timezones = db_usersetting.get_pg_timezone(db_conn)
+    user_settings = db_usersetting.get(db_conn, current_user.id)
     user_timezone = user_settings['timezone_name']
     data = {
         "pg_timezones": pg_timezones,
@@ -60,7 +59,7 @@ def select_timezone():
 @settings_bp.route("/troi/", methods=["POST"])
 @login_required
 def set_troi_prefs():
-    current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
+    current_troi_prefs = db_usersetting.get_troi_prefs(db_conn, current_user.id)
     data = {
         "troi_prefs": current_troi_prefs,
     }
@@ -81,7 +80,7 @@ def reset_latest_import_timestamp():
 @api_login_required
 def import_data():
     """ Displays the import page to user, giving various options """
-    user = db_user.get(current_user.id, fetch_email=True)
+    user = db_user.get(db_conn, current_user.id, fetch_email=True)
     # if the flag is turned off (local development) then do not perform email check
     if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
         user_has_email = user["email"] is not None

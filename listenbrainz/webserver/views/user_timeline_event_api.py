@@ -18,7 +18,7 @@
 
 import time
 from datetime import datetime, timedelta
-from typing import List, Tuple, Dict, Iterable
+from typing import List, Dict, Iterable
 
 import pydantic
 import orjson
@@ -262,7 +262,7 @@ def user_feed(user_name: str):
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
-    users_following = db_user_relationship.get_following_for_user(user['id'])
+    users_following = db_user_relationship.get_following_for_user(db_conn, user['id'])
 
     # TODO: Remove these listen events from event list after listen events endpoint is active.
     # get all listen events
@@ -385,7 +385,7 @@ def user_feed_listens_following(user_name: str):
     
     min_ts, max_ts, count = _validate_get_endpoint_params()
 
-    users_following = db_user_relationship.get_following_for_user(user['id'])
+    users_following = db_user_relationship.get_following_for_user(db_conn, user['id'])
 
     # Get all listen events
     if len(users_following) == 0:
@@ -579,7 +579,7 @@ def hide_user_timeline_event(user_name):
     if not result:
         raise APIBadRequest(f"{data['event_type']} event with id {row_id} not found")
 
-    if db_user_relationship.is_following_user(user['id'], result.user_id):
+    if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
         db_user_timeline_event.hide_user_timeline_event(db_conn, user['id'], data["event_type"], data["event_id"])
         return jsonify({"status": "ok"})
     else:
@@ -673,7 +673,11 @@ def create_personal_recommendation_event(user_name):
 
     try:
         metadata = PersonalRecordingRecommendationMetadata(**metadata)
-        follower_results = db_user_relationship.multiple_users_by_username_following_user(user['id'], metadata.users)
+        follower_results = db_user_relationship.multiple_users_by_username_following_user(
+            db_conn,
+            user['id'],
+            metadata.users
+        )
         non_followers = []
         for follower in metadata.users:
             if not follower_results or not follower_results[follower]:
@@ -805,6 +809,7 @@ def get_follow_events(users_for_events: Iterable[dict], min_ts: int, max_ts: int
     """ Gets all follow events in the feed.
     """
     follow_events_db = db_user_relationship.get_follow_events(
+        db_conn,
         user_ids=(user['id'] for user in users_for_events),
         min_ts=min_ts,
         max_ts=max_ts,

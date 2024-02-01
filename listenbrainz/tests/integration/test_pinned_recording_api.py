@@ -467,8 +467,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_get_pins_for_user_following(self):
         """Test that valid response is received with 200 code"""
         # user follows followed_user_1 and followed_user_2
-        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
-        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_1["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
 
         pin1 = self.pin_single_sample(self.followed_user_1["id"], 0)  # pin recording for followed_user_1
         pin2 = self.pin_single_sample(self.followed_user_2["id"], 1)  # pin recording for followed_user_2
@@ -511,8 +511,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_get_pins_for_user_count_param_2(self):
         """Tests that valid response is received honoring count parameter"""
         # user follows followed_user_1 and followed_user_2
-        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
-        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_1["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
 
         self.pin_single_sample(self.followed_user_1["id"], 0)  # pin recording for followed_user_1
         included_pin = self.pin_single_sample(self.followed_user_2["id"], 1)  # pin recording for followed_user_2
@@ -562,8 +562,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_get_pins_for_user_following_offset_param(self):
         """Tests that valid response is received honoring offset parameter"""
         # user follows followed_user_1 and followed_user_2
-        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
-        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_1["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
 
         included_pin = self.pin_single_sample(self.followed_user_1["id"], 0)  # pin recording for followed_user_1
         self.pin_single_sample(self.followed_user_2["id"], 1)  # pin recording for followed_user_2

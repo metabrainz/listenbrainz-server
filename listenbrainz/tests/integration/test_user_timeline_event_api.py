@@ -391,7 +391,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
@@ -423,7 +423,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
@@ -490,7 +490,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
@@ -522,7 +522,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
@@ -828,7 +828,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             }
         })
 
-        db_user_relationship.insert(self.user['id'], user_2['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], user_2['id'], 'follow')
 
         r = self.client.get(
             self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
@@ -865,8 +865,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
@@ -899,8 +899,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
             "track_name": "Natkhat",
             "artist_name": "Seedhe Maut",
@@ -922,8 +922,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {}
 
         r = self.client.post(
@@ -940,8 +940,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
@@ -963,8 +963,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
@@ -987,7 +987,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_two = db_user.get_or_create(3, "hrik2001")
 
         # Only riksucks is following
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
 
         metadata = {
             "recording_mbid": str(uuid.uuid4()),
@@ -1011,7 +1011,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
 
         metadata = {
             "recording_mbid": str(uuid.uuid4()),
@@ -1035,8 +1035,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
 
         metadata = {
             "recording_mbid": str(uuid.uuid4()),
@@ -1053,7 +1053,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         self.assert200(r)
-        db_user_relationship.delete(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.delete(self.db_conn, user_two['id'], self.user['id'], 'follow')
 
         events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
             self.db_conn,
@@ -1077,8 +1077,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         user_one = db_user.get_or_create(2, "riksucks")
         user_two = db_user.get_or_create(3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
             "recording_mbid": "34c208ee-2de7-4d38-b47e-907074866dd3",
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
