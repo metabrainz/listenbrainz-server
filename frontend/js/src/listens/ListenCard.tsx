@@ -100,7 +100,6 @@ export default class ListenCard extends React.Component<
   declare context: React.ContextType<typeof GlobalAppContext>;
   constructor(props: ListenCardProps) {
     super(props);
-    console.log("STATE CHANGEF");
     this.state = {
       listen: props.listen,
       isCurrentlyPlaying: false,
@@ -118,10 +117,9 @@ export default class ListenCard extends React.Component<
   ) {
     const { listen: oldListen } = oldState;
     const { listen, customThumbnail } = this.props;
-    if (!isEqual(listen, oldListen)) {
+    if (Boolean(listen) && !isEqual(listen, oldListen)) {
       this.setState({ listen });
     }
-    // const { listen } = this.state;
     if (!customThumbnail && Boolean(listen) && !isEqual(listen, oldListen)) {
       await this.getCoverArt();
     }
