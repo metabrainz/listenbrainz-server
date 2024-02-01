@@ -92,7 +92,10 @@ export type YearInMusicProps = {
   };
 };
 
-type YearInMusicLoaderData = YearInMusicProps;
+type YearInMusicLoaderData = {
+  user: YearInMusicProps["user"];
+  data: YearInMusicProps["yearInMusicData"];
+};
 
 export type YearInMusicState = {
   followingList: Array<string>;
@@ -1233,8 +1236,9 @@ export default class YearInMusic extends React.Component<
 }
 
 export function YearInMusicWrapper() {
-  const data = useLoaderData() as YearInMusicLoaderData;
-  return <YearInMusic {...data} />;
+  const props = useLoaderData() as YearInMusicLoaderData;
+  const { user, data: yearInMusicData } = props;
+  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
 }
 
 export const YearInMusicLoader = async ({ request }: { request: Request }) => {
