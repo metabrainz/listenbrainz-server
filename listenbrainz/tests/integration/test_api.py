@@ -257,12 +257,9 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
     
-    @mock.patch('listenbrainz.webserver.views.playlist_api.get_playlist_xspf')
-    def test_playlist_api_xml_error(self, mock_get_playlist_xspf):
-        # Mocking the condition where PlaylistAPIXMLError is raised
-        mock_get_playlist_xspf.side_effect = PlaylistAPIXMLError("Provided playlist ID is invalid.", 400)
+    def test_playlist_api_xml_error(self):
 
-        # Making a request that would trigger the mocked error
+        # Making a request that would trigger the error
         response = self.client.get('/1/playlist/-6924291-8b14-726253c14f12/xspf')
         self.assertEqual(response.status_code, 400)
 
