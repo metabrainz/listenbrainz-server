@@ -6,10 +6,9 @@ type NavbarLink = { to: string; label: string };
 const links: NavbarLink[] = [
   { to: "fresh-releases/", label: "Fresh Releases" },
   { to: "huesound/", label: "Huesound" },
-  { to: "cover-art-collage/", label: "Cover Art Collage 2023" },
-  { to: "cover-art-collage/", label: "Cover Art Collage 2023" },
   { to: "cover-art-collage/2023/", label: "Cover Art Collage 2023" },
   { to: "cover-art-collage/2022/", label: "Cover Art Collage 2022" },
+  { to: "cover-art-collage/", label: "Cover Art Collage 2023" },
   { to: "music-neighborhood/", label: "Music Neighborhood" },
   { to: "similar-users/", label: "Similar Users" },
   { to: "lb-radio/", label: "LB Radio" },
