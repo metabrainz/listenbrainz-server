@@ -54,6 +54,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         for fb in self.sample_feedback:
             db_feedback.insert(
+                self.db_conn,
                 Feedback(
                     user_id=user_id,
                     recording_msid=fb["recording_msid"],
@@ -95,6 +96,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         for fb in self.sample_feedback_with_metadata:
             db_feedback.insert(
+                self.db_conn,
                 Feedback(
                     user_id=user_id,
                     recording_mbid=fb["recording_mbid"],
@@ -106,14 +108,14 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def test_insert(self):
         count = self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), count)
 
     def test_update_score_when_feedback_already_exist(self):
         update_fb = self.sample_feedback[0]
 
         count = self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), count)
 
         self.assertEqual(result[3].recording_msid, update_fb["recording_msid"])
@@ -123,6 +125,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         # update a record by inserting a record with updated score value
         db_feedback.insert(
+            self.db_conn,
             Feedback(
                 user_id=self.user["id"],
                 recording_msid=update_fb["recording_msid"],
@@ -130,7 +133,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             )
         )
 
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), count)
 
         self.assertEqual(result[0].recording_msid, update_fb["recording_msid"])
@@ -140,12 +143,13 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         del_fb = self.sample_feedback[0]
 
         count = self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), count)
         self.assertEqual(result[3].recording_msid, del_fb["recording_msid"])
 
         # delete one record for the user using msid
         db_feedback.delete(
+            self.db_conn,
             Feedback(
                 user_id=self.user["id"],
                 recording_msid=del_fb["recording_msid"],
@@ -153,24 +157,26 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             )
         )
 
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 3)
         self.assertNotIn(del_fb["recording_msid"], [x.recording_msid for x in result])
 
         # delete using mbid
         db_feedback.delete(
+            self.db_conn,
             Feedback(
                 user_id=self.user["id"],
                 recording_mbid=self.sample_feedback[2]["recording_mbid"],
                 score=self.sample_feedback[2]["score"]
             )
         )
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 2)
         self.assertNotIn(self.sample_feedback[2]["recording_mbid"], [x.recording_mbid for x in result])
 
         # delete using mbid and msid both
         db_feedback.delete(
+            self.db_conn,
             Feedback(
                 user_id=self.user["id"],
                 recording_mbid=self.sample_feedback[3]["recording_mbid"],
@@ -178,13 +184,13 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
                 score=self.sample_feedback[2]["score"]
             )
         )
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertNotIn(self.sample_feedback[3]["recording_mbid"], [x.recording_mbid for x in result])
 
     def test_get_feedback_for_user(self):
         count = self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), count)
 
         self.assertEqual(result[0].user_id, self.user["id"])
@@ -212,27 +218,30 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(result[3].score, self.sample_feedback[0]["score"])
 
         # test the score argument
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0, score=1)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0, score=1)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].score, 1)
         self.assertEqual(result[1].score, 1)
 
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0, score=-1)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=0, score=-1)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].score, -1)
         self.assertEqual(result[1].score, -1)
 
         # test the limit argument
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=1, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=1, offset=0)
         self.assertEqual(len(result), 1)
 
         # test the offset argument
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=1)
+        result = db_feedback.get_feedback_for_user(self.db_conn, user_id=self.user["id"], limit=25, offset=1)
         self.assertEqual(len(result), 3)
 
     def test_get_feedback_for_user_with_metadata(self):
         count = self.insert_test_data_with_metadata(self.user["id"])
-        result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0, score=1, metadata=True)
+        result = db_feedback.get_feedback_for_user(
+            self.db_conn, user_id=self.user["id"], limit=25,
+            offset=0, score=1, metadata=True
+        )
         self.assertEqual(len(result), 1)
 
         self.assertEqual(result[0].user_id, self.user["id"])
@@ -245,20 +254,23 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def test_get_feedback_count_for_user(self):
         count = self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_count_for_user(user_id=self.user["id"])
+        result = db_feedback.get_feedback_count_for_user(self.db_conn, user_id=self.user["id"])
         self.assertEqual(result, count)
 
-        result = db_feedback.get_feedback_count_for_user(user_id=self.user["id"], score=1)
+        result = db_feedback.get_feedback_count_for_user(self.db_conn, user_id=self.user["id"], score=1)
         self.assertEqual(result, 2)
 
-        result = db_feedback.get_feedback_count_for_user(user_id=self.user["id"], score=-1)
+        result = db_feedback.get_feedback_count_for_user(self.db_conn, user_id=self.user["id"], score=-1)
         self.assertEqual(result, 2)
 
     def test_get_feedback_for_recording(self):
         fb_msid_1 = self.sample_feedback[0]["recording_msid"]
 
         self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_for_recording("recording_msid", fb_msid_1, limit=25, offset=0)
+        result = db_feedback.get_feedback_for_recording(
+            self.db_conn, "recording_msid",
+            fb_msid_1, limit=25, offset=0
+        )
         self.assertEqual(len(result), 1)
 
         self.assertEqual(result[0].user_id, self.user["id"])
@@ -267,7 +279,10 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(result[0].score, self.sample_feedback[0]["score"])
 
         fb_mbid = self.sample_feedback[3]["recording_mbid"]
-        result = db_feedback.get_feedback_for_recording("recording_mbid", fb_mbid, limit=25, offset=0)
+        result = db_feedback.get_feedback_for_recording(
+            self.db_conn, "recording_mbid",
+            fb_mbid, limit=25, offset=0
+        )
         self.assertEqual(len(result), 1)
 
         self.assertEqual(result[0].user_id, self.user["id"])
@@ -279,7 +294,10 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         user2 = db_user.get_or_create(2, "recording_feedback_other_user")
         self.insert_test_data(user2["id"])
 
-        result = db_feedback.get_feedback_for_recording("recording_msid", fb_msid_1, limit=25, offset=0)
+        result = db_feedback.get_feedback_for_recording(
+            self.db_conn, "recording_msid",
+            fb_msid_1, limit=25, offset=0
+        )
         self.assertEqual(len(result), 2)
 
         self.assertEqual(result[0].user_id, user2["id"])
@@ -293,20 +311,32 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(result[1].score, self.sample_feedback[0]["score"])
 
         # test the score argument
-        result = db_feedback.get_feedback_for_recording("recording_msid", fb_msid_1, limit=25, offset=0, score=1)
+        result = db_feedback.get_feedback_for_recording(
+            self.db_conn, "recording_msid",
+            fb_msid_1, limit=25, offset=0, score=1
+        )
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].score, 1)
         self.assertEqual(result[1].score, 1)
 
-        result = db_feedback.get_feedback_for_recording("recording_msid", fb_msid_1, limit=25, offset=0, score=-1)
+        result = db_feedback.get_feedback_for_recording(
+            self.db_conn, "recording_msid",
+            fb_msid_1, limit=25, offset=0, score=-1
+        )
         self.assertEqual(len(result), 0)
 
         # test the limit argument
-        result = db_feedback.get_feedback_for_recording("recording_msid", fb_msid_1, limit=1, offset=0)
+        result = db_feedback.get_feedback_for_recording(
+            self.db_conn, "recording_msid",
+            fb_msid_1, limit=1, offset=0
+        )
         self.assertEqual(len(result), 1)
 
         # test the offset argument
-        result = db_feedback.get_feedback_for_recording("recording_msid", fb_msid_1, limit=25, offset=1)
+        result = db_feedback.get_feedback_for_recording(
+            self.db_conn, "recording_msid",
+            fb_msid_1, limit=25, offset=1
+        )
         self.assertEqual(len(result), 1)
 
     def test_get_feedback_count_for_recording(self):
@@ -314,19 +344,19 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         fb_mbid = self.sample_feedback[2]["recording_mbid"]
 
         self.insert_test_data(self.user["id"])
-        result = db_feedback.get_feedback_count_for_recording("recording_msid", fb_msid_1)
+        result = db_feedback.get_feedback_count_for_recording(self.db_conn, "recording_msid", fb_msid_1)
         self.assertEqual(result, 1)
 
-        result = db_feedback.get_feedback_count_for_recording("recording_mbid", fb_mbid)
+        result = db_feedback.get_feedback_count_for_recording(self.db_conn, "recording_mbid", fb_mbid)
         self.assertEqual(result, 1)
 
         user2 = db_user.get_or_create(2, "recording_feedback_other_user")
         self.insert_test_data(user2["id"])
 
-        result = db_feedback.get_feedback_count_for_recording("recording_msid", fb_msid_1)
+        result = db_feedback.get_feedback_count_for_recording(self.db_conn, "recording_msid", fb_msid_1)
         self.assertEqual(result, 2)
 
-        result = db_feedback.get_feedback_count_for_recording("recording_mbid", fb_mbid)
+        result = db_feedback.get_feedback_count_for_recording(self.db_conn, "recording_mbid", fb_mbid)
         self.assertEqual(result, 2)
 
     def test_get_feedback_for_multiple_recordings_for_user(self):
@@ -342,6 +372,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         recording_list.append("b83fd3c3-449c-49be-a874-31d7cf26d946")
 
         result = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            self.db_conn,
             user_id=self.user["id"],
             user_name=self.user["musicbrainz_id"],
             recording_msids=recording_list,
@@ -376,6 +407,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         ]
 
         result = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            self.db_conn,
             user_id=self.user["id"],
             user_name=self.user["musicbrainz_id"],
             recording_msids=[],
@@ -404,6 +436,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
 
         result = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            self.db_conn,
             user_id=self.user["id"],
             user_name=self.user["musicbrainz_id"],
             recording_msids=recording_list,

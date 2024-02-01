@@ -35,6 +35,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         ]
         for fb in sample_feedback:
             db_feedback.insert(
+                self.db_conn,
                 Feedback(
                     user_id=user_id,
                     recording_msid=fb["recording_msid"],
@@ -65,6 +66,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         ]
         for fb in sample_feedback:
             db_feedback.insert(
+                self.db_conn,
                 Feedback(
                     user_id=user_id,
                     recording_msid=fb.get("recording_msid"),
@@ -294,7 +296,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_msid, feedback["recording_msid"])
@@ -316,7 +318,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets updated
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_msid, updated_feedback["recording_msid"])
@@ -343,7 +345,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, feedback["recording_mbid"])
@@ -365,7 +367,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets updated
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, updated_feedback["recording_mbid"])
@@ -392,7 +394,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_msid, feedback["recording_msid"])
@@ -414,7 +416,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets deleted
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 0)
 
     def test_recording_mbid_feedback_delete_when_score_is_zero(self):
@@ -438,7 +440,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, feedback["recording_mbid"])
@@ -460,7 +462,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets deleted
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 0)
 
     def test_get_feedback_for_user(self):
@@ -1329,6 +1331,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         ]
         for fb in sample_feedback:
             db_feedback.insert(
+                self.db_conn,
                 Feedback(
                     user_id=user_id,
                     recording_msid=fb["recording_msid"],
