@@ -82,6 +82,10 @@ Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
 
+.. note::
+
+    If the values of MUSICBRAINZ_CLIENT_ID and MUSICBRAINZ_CLIENT_SECRET are missing or incorrect, the browser may display a login page indicating a 401 or 403 error; clicking "cancel" may redirect to a more informative error page.
+
 To use the Last.fm importer you need an API account at Last.fm. You can
 register for one at the `Last.fm API page`_. Look for the following section in ``config.py``.
 
