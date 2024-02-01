@@ -80,10 +80,10 @@ class UserViewsTestCase(IntegrationTestCase):
 
     def test_spotify_token_access_unlinked(self):
         self.temporary_login(self.user.login_id)
-        response = self.client.post(self.custom_url_for('user.profile', user_name=self.user.musicbrainz_id))
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        json_response = response.json
-        self.assertDictEqual(json_response['spotify'], {})
+        props = orjson.loads(self.get_context_variable("global_props"))
+        self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access(self):
         db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
