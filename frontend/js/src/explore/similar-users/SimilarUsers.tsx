@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 
 export default function SimilarUsers() {
   const { similarUsers } = useLoaderData() as { similarUsers: string[][] };
@@ -20,10 +20,10 @@ export default function SimilarUsers() {
           similarUsers.map((row, index) => (
             <tr>
               <td>
-                <a href={`/user/${row[0]}`}>{row[0]}</a>
+                <Link to={`/user/${row[0]}`}>{row[0]}</Link>
               </td>
               <td>
-                <a href={`/user/${row[1]}`}>{row[1]}</a>
+                <Link to={`/user/${row[1]}`}>{row[1]}</Link>
               </td>
               <td>{row[2]}</td>
             </tr>
