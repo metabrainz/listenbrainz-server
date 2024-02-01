@@ -22,6 +22,7 @@ import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 
 import { act } from "react-dom/test-utils";
+import { BrowserRouter } from "react-router-dom";
 import UserSocialNetwork, {
   UserSocialNetworkProps,
   UserSocialNetworkState,
@@ -36,7 +37,7 @@ import GlobalAppContext, {
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 
-jest.useFakeTimers({advanceTimers: true});
+jest.useFakeTimers({ advanceTimers: true });
 
 const { loggedInUser, ...otherProps } = userSocialNetworkProps;
 const props = {
@@ -102,12 +103,16 @@ describe("<UserSocialNetwork />", () => {
   it("initializes by calling the API to get data", async () => {
     const consoleErrorSpy = jest.spyOn(console, "error");
 
-    const wrapper = mount<UserSocialNetwork>(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <UserSocialNetwork {...props} />
+        <BrowserRouter>
+          <UserSocialNetwork {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
-    const instance = wrapper.instance();
+    const instance = wrapper
+      .find(UserSocialNetwork)
+      .instance() as UserSocialNetwork;
 
     await act(async () => {
       await instance.componentDidMount();
@@ -138,10 +143,14 @@ describe("<UserSocialNetwork />", () => {
 
   describe("updateFollowingList", () => {
     it("updates the state when called with action follow", async () => {
-      const wrapper = mount<UserSocialNetwork>(
-        <UserSocialNetwork {...props} />
+      const wrapper = mount(
+        <BrowserRouter>
+          <UserSocialNetwork {...props} />
+        </BrowserRouter>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(UserSocialNetwork)
+        .instance() as UserSocialNetwork;
       await act(async () => {
         await instance.componentDidMount();
       });
@@ -155,10 +164,14 @@ describe("<UserSocialNetwork />", () => {
     });
 
     it("updates the state when called with action unfollow", async () => {
-      const wrapper = mount<UserSocialNetwork>(
-        <UserSocialNetwork {...props} />
+      const wrapper = mount(
+        <BrowserRouter>
+          <UserSocialNetwork {...props} />
+        </BrowserRouter>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(UserSocialNetwork)
+        .instance() as UserSocialNetwork;
       await act(async () => {
         await instance.componentDidMount();
       });
@@ -172,10 +185,14 @@ describe("<UserSocialNetwork />", () => {
     });
 
     it("only allows adding a user once", async () => {
-      const wrapper = mount<UserSocialNetwork>(
-        <UserSocialNetwork {...props} />
+      const wrapper = mount(
+        <BrowserRouter>
+          <UserSocialNetwork {...props} />
+        </BrowserRouter>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(UserSocialNetwork)
+        .instance() as UserSocialNetwork;
       await act(async () => {
         await instance.componentDidMount();
       });
@@ -192,10 +209,14 @@ describe("<UserSocialNetwork />", () => {
     });
 
     it("does nothing when trying to unfollow a user that is not followed", async () => {
-      const wrapper = mount<UserSocialNetwork>(
-        <UserSocialNetwork {...props} />
+      const wrapper = mount(
+        <BrowserRouter>
+          <UserSocialNetwork {...props} />
+        </BrowserRouter>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(UserSocialNetwork)
+        .instance() as UserSocialNetwork;
       await act(async () => {
         await instance.componentDidMount();
       });
@@ -211,25 +232,33 @@ describe("<UserSocialNetwork />", () => {
   describe("loggedInUserFollowsUser", () => {
     it("returns false if there is no logged in user", () => {
       // server sends an empty object in case no user is logged in
-      const wrapper = mount<UserSocialNetwork>(
+      const wrapper = mount(
         <GlobalAppContext.Provider
           value={{ ...globalContext, currentUser: {} as ListenBrainzUser }}
         >
-          <UserSocialNetwork {...props} />
+          <BrowserRouter>
+            <UserSocialNetwork {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(UserSocialNetwork)
+        .instance() as UserSocialNetwork;
 
       expect(instance.loggedInUserFollowsUser({ name: "bob" })).toEqual(false);
     });
 
     it("returns false if user is not in followingList", async () => {
-      const wrapper = mount<UserSocialNetwork>(
+      const wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
-          <UserSocialNetwork {...props} />
+          <BrowserRouter>
+            <UserSocialNetwork {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(UserSocialNetwork)
+        .instance() as UserSocialNetwork;
       await act(async () => {
         await instance.componentDidMount();
       });
@@ -242,10 +271,14 @@ describe("<UserSocialNetwork />", () => {
     it("returns true if user is in followingList", async () => {
       const wrapper = mount<UserSocialNetwork>(
         <GlobalAppContext.Provider value={globalContext}>
-          <UserSocialNetwork {...props} />
+          <BrowserRouter>
+            <UserSocialNetwork {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(UserSocialNetwork)
+        .instance() as UserSocialNetwork;
       await act(async () => {
         await instance.componentDidMount();
       });
