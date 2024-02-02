@@ -314,15 +314,11 @@ def musicbrainz_offline():
 def huesound():
     """ Redirect to /explore/huesound """
 
-    return redirect(url_for('explore.index', path="huesound"))
-
-@index_bp.route("/statistics/charts/")
-def charts():
-    """ Show the top sitewide entities. """
-    return render_template("index/charts.html")
+    return redirect(url_for('explore', path="huesound"))
 
 
-@index_bp.route("/statistics/")
-def stats():
+@index_bp.route("/statistics/",  defaults={'path': ''})
+@index_bp.route('/statistics/<path:path>/')
+def stats(path):
     """ Show sitewide stats """
-    return render_template("index/stats.html")
+    return render_template("index.html")

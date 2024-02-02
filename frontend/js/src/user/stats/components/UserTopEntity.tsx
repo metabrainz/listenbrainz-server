@@ -106,11 +106,11 @@ export default class UserTopEntity extends React.Component<
 
     let statsUrl;
     if (user) {
-      statsUrl = `${window.location.origin}/user/${user.name}`;
+      statsUrl = `${window.location.origin}/user/${user.name}/stats`;
     } else {
       statsUrl = `${window.location.origin}/statistics`;
     }
-    statsUrl += `/stats/top-${terminology}s/?range=${range}`;
+    statsUrl += `/top-${terminology}s/?range=${range}`;
 
     const entityTextOnCard = `${terminology}s`;
     if (hasError) {

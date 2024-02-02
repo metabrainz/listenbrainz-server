@@ -1,5 +1,6 @@
 import * as React from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 function NavItem({
   label,
@@ -24,12 +25,13 @@ function NavItem({
 function UserFeedLayout() {
   const location = useLocation();
   const locationArr = location?.pathname?.split("/");
+  const { currentUser } = React.useContext(GlobalAppContext);
+  const sitewide = locationArr[1] !== "user";
+  const userName = sitewide ? currentUser?.name : locationArr[2];
+
   const [activeSection, setActiveSection] = React.useState<string>(
-    locationArr[3]
+    sitewide ? locationArr[2] : locationArr[3]
   );
-  const user = {
-    musicbrainz_id: locationArr[2],
-  };
 
   React.useEffect(() => {
     setActiveSection(locationArr[3]);
@@ -40,8 +42,8 @@ function UserFeedLayout() {
       <div className="secondary-nav dragscroll nochilddrag">
         <ul className="nav nav-tabs" role="tablist">
           <li className="username">
-            {user ? (
-              <div>{user.musicbrainz_id}</div>
+            {userName ? (
+              <div>{userName}</div>
             ) : (
               <div>
                 <a href="/login">Sign in</a>
@@ -50,32 +52,32 @@ function UserFeedLayout() {
           </li>
           <NavItem
             label="Listens"
-            url={user ? `/user/${user.musicbrainz_id}/` : "#"}
-            isActive={activeSection === ""}
-            isDisabled={!user}
+            url={userName ? `/user/${userName}/` : "#"}
+            isActive={activeSection === "" && !sitewide}
+            isDisabled={!userName}
           />
           <NavItem
             label="Stats"
-            url={user ? `/user/${user.musicbrainz_id}/stats/` : "/index/stats"}
-            isActive={activeSection === "stats"}
+            url={userName ? `/user/${userName}/stats/` : "/statistics/"}
+            isActive={activeSection === "stats" || sitewide}
           />
           <NavItem
             label="Taste"
-            url={user ? `/user/${user.musicbrainz_id}/taste/` : "#"}
+            url={userName ? `/user/${userName}/taste/` : "#"}
             isActive={activeSection === "taste"}
-            isDisabled={!user}
+            isDisabled={!userName}
           />
           <NavItem
             label="Playlists"
-            url={user ? `/user/${user.musicbrainz_id}/playlists/` : "#"}
+            url={userName ? `/user/${userName}/playlists/` : "#"}
             isActive={activeSection === "playlists"}
-            isDisabled={!user}
+            isDisabled={!userName}
           />
           <NavItem
             label="Created for you"
-            url={user ? `/user/${user.musicbrainz_id}/recommendations/` : "#"}
+            url={userName ? `/user/${userName}/recommendations/` : "#"}
             isActive={activeSection === "recommendations"}
-            isDisabled={!user}
+            isDisabled={!userName}
           />
         </ul>
       </div>

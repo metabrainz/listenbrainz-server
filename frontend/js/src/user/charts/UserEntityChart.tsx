@@ -339,3 +339,27 @@ export const UserEntityChartLoader = async ({
     range,
   };
 };
+
+export const StatisticsChartLoader = async ({
+  request,
+}: {
+  request: Request;
+}) => {
+  const currentURL = new URL(request.url);
+  const { page, range } = getURLParams(currentURL.toString());
+
+  const urlEntityName = currentURL.pathname
+    .split("/")[2]
+    .split("-")[1]
+    .replace(/s$/, "");
+
+  const entity = TERMINOLOGY_ENTITY_MAP[urlEntityName];
+
+  return {
+    user: undefined,
+    entity,
+    terminology: urlEntityName,
+    currPage: page,
+    range,
+  };
+};
