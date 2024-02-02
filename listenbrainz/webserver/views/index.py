@@ -155,8 +155,10 @@ def current_status():
     )
 
 
-@index_bp.route("/recent/")
+@index_bp.route("/recent/", methods=['GET', 'POST'])
 def recent_listens():
+    if request.method == 'GET':
+        return render_template('index.html')
 
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
@@ -179,13 +181,13 @@ def recent_listens():
         "globalUserCount": user_count
     }
 
-    return render_template("index/recent.html", props=orjson.dumps(props).decode("utf-8"))
+    return jsonify(props)
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required
 @web_listenstore_needed
 def feed():
-    return render_template('index/feed.html')
+    return render_template('index.html')
 
 
 @index_bp.route('/agree-to-terms/', methods=['GET', 'POST'])

@@ -1,33 +1,60 @@
 import * as React from "react";
+import UserEntityChart, {
+  StatisticsChartLoader,
+} from "../user/charts/UserEntityChart";
+import { StatisticsPage } from "../user/stats/UserReports";
+import UserDashboardLayout from "../user/layout";
+import UserFeedPage from "../user-feed/UserFeed";
+import {
+  RecentListensLoader,
+  RecentListensWrapper,
+} from "../recent/RecentListens";
+import UserFeedLayout from "../user-feed/UserFeedLayout";
 
-import { Outlet } from "react-router-dom";
-import getExploreRoutes from "../explore/routes";
-import getUserRedirectRoutes from "../user/routes/redirectRoutes";
-import getUserRoutes from "../user/routes/userRoutes";
-import getStatisticsRoutes from "./statisticsRoutes";
-
-const getRoutes = (musicbrainzID?: string) => {
-  const exploreRoutes = getExploreRoutes();
-  const userRoutes = getUserRoutes();
-  const redirectRoutes = getUserRedirectRoutes(musicbrainzID);
-
-  const statisticsRoutes = getStatisticsRoutes();
-  const indexRoutes = [...statisticsRoutes];
-
+const getStatisticsRoutes = () => {
   const routes = [
     {
-      path: "/",
-      element: <Outlet />,
+      path: "/statistics/",
+      element: <UserDashboardLayout />,
       children: [
-        ...indexRoutes,
-        ...exploreRoutes,
-        ...userRoutes,
-        ...redirectRoutes,
+        {
+          index: true,
+          element: <StatisticsPage />,
+        },
+        {
+          path: "top-artists/",
+          element: <UserEntityChart />,
+          loader: StatisticsChartLoader,
+        },
+        {
+          path: "top-albums/",
+          element: <UserEntityChart />,
+          loader: StatisticsChartLoader,
+        },
+        {
+          path: "top-tracks/",
+          element: <UserEntityChart />,
+          loader: StatisticsChartLoader,
+        },
+      ],
+    },
+    {
+      path: "/",
+      element: <UserFeedLayout />,
+      children: [
+        {
+          path: "/feed/",
+          element: <UserFeedPage events={[]} />,
+        },
+        {
+          path: "/recent/",
+          element: <RecentListensWrapper />,
+          loader: RecentListensLoader,
+        },
       ],
     },
   ];
-
   return routes;
 };
 
-export default getRoutes;
+export default getStatisticsRoutes;

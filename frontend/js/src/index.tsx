@@ -9,7 +9,7 @@ import { ToastContainer } from "react-toastify";
 import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
 import { getPageProps } from "./utils/utils";
-import getRoutes from "./routes";
+import getRoutes from "./routes/routes";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const { domContainer, globalAppContext, sentryProps } = await getPageProps();
