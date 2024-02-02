@@ -155,7 +155,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             )
 
         pins = db_pinned_rec.get_pin_history_for_user(self.db_conn, self.user["id"], 5, 0)
-        pins_with_metadata = fetch_track_metadata_for_items(pins)
+        pins_with_metadata = fetch_track_metadata_for_items(self.ts_conn, pins)
 
         received = [x.dict() for x in pins_with_metadata]
         # pinned recs returned in reverse order of submitted because order newest to oldest

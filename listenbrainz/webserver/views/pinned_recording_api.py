@@ -4,7 +4,7 @@ import listenbrainz.db.pinned_recording as db_pinned_rec
 from flask import Blueprint, current_app, jsonify, request
 
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound
 from brainzutils.ratelimit import ratelimit
@@ -194,7 +194,7 @@ def get_pins_for_user(user_name):
         current_app.logger.error("Error while retrieving pins for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
-    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
     total_count = db_pinned_rec.get_pin_count_for_user(db_conn, user_id=user["id"])
 
@@ -269,7 +269,7 @@ def get_pins_for_user_following(user_name):
     pinned_recordings = db_pinned_rec.get_pins_for_user_following(
         db_conn, user_id=user["id"], count=count, offset=offset
     )
-    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
 
     return jsonify(
@@ -323,7 +323,7 @@ def get_current_pin_for_user(user_name):
 
     pin = db_pinned_rec.get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items([pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(ts_conn, [pin])[0].to_api()
 
     return jsonify({
         "pinned_recording": pin,

@@ -118,7 +118,7 @@ def profile(user_name):
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items([pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(ts_conn, [pin])[0].to_api()
 
     props = {
         "user": {
@@ -387,12 +387,12 @@ def taste(user_name: str):
 
     feedback_count = get_feedback_count_for_user(db_conn, user.id, score)
     feedback = get_feedback_for_user(
-        db_conn, user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL,
+        db_conn, ts_conn, user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL,
         offset=0, score=score, metadata=True
     )
     
     pins = get_pin_history_for_user(db_conn, user_id=user.id, count=25, offset=0)
-    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(pins)]
+    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, pins)]
     pin_count = get_pin_count_for_user(db_conn, user_id=user.id)
 
     props = {
