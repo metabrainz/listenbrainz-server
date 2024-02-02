@@ -6,10 +6,10 @@ class AdminTestCase(IntegrationTestCase):
 
     def setUp(self):
         IntegrationTestCase.setUp(self)
-        self.authorized_user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(self.authorized_user['musicbrainz_id'])
-        self.unauthorized_user = db_user.get_or_create(2, 'blahblahblah')
-        db_user.agree_to_gdpr(self.unauthorized_user['musicbrainz_id'])
+        self.authorized_user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, self.authorized_user['musicbrainz_id'])
+        self.unauthorized_user = db_user.get_or_create(self.db_conn, 2, 'blahblahblah')
+        db_user.agree_to_gdpr(self.db_conn, self.unauthorized_user['musicbrainz_id'])
 
     def test_admin_views_when_not_logged_in(self):
         r = self.client.get('/admin', follow_redirects=True)

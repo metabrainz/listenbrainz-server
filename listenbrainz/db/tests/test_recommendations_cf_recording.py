@@ -11,7 +11,7 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, 'vansika')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'vansika')
 
     def test_insert_user_recommendation(self):
         raw_recording_mbids = [
@@ -75,6 +75,9 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
         )
 
     def test_get_timestamp_for_last_recording_recommended(self):
+        # get_or_create starts a transaction, and NOW() uses that value in insert so need to commit here so that
+        # the insert starts a new transaction
+        self.db_conn.commit()
         ts = datetime.now(timezone.utc)
         self.insert_test_data()
         received_ts = db_recommendations_cf_recording.get_timestamp_for_last_recording_recommended(self.db_conn)

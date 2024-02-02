@@ -4,7 +4,7 @@ from markupsafe import Markup
 
 from listenbrainz.webserver.decorators import web_listenstore_needed, web_musicbrainz_needed
 from listenbrainz.webserver.login import login_forbidden, provider, User
-from listenbrainz.webserver import flash
+from listenbrainz.webserver import flash, db_conn
 import listenbrainz.db.user as db_user
 import datetime
 
@@ -51,7 +51,7 @@ def musicbrainz_post():
                 # existing user without email, show a warning
                 flash.warning(no_email_warning + 'to submit listens. ' + blog_link)
 
-            db_user.update_last_login(user["musicbrainz_id"])
+            db_user.update_last_login(db_conn, user["musicbrainz_id"])
             login_user(User.from_dbrow(user),
                        remember=True,
                        duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))

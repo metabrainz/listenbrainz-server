@@ -182,7 +182,7 @@ def get_pins_for_user(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -262,7 +262,7 @@ def get_pins_for_user_following(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -317,7 +317,7 @@ def get_current_pin_for_user(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 

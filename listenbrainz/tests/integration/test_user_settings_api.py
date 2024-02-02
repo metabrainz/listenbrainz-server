@@ -7,7 +7,7 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(UserSettingsAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(271, 'unfriendly neighborhood spider-man')
+        self.user = db_user.get_or_create(self.db_conn, 271, 'unfriendly neighborhood spider-man')
 
     def test_validates_auth_header(self):
         """ Test the preferences endpoints validate auth header """

@@ -35,7 +35,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(UserTimelineEventDatabaseTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'friendly neighborhood spider-man')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'friendly neighborhood spider-man')
 
     def test_it_adds_rows_to_the_database(self):
         recording_msid = str(uuid.uuid4())
@@ -112,7 +112,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
                 recording_msid=str(uuid.uuid4()),
             )
         )
-        new_user = db_user.get_or_create(2, 'captain america')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'captain america')
         db_user_timeline_event.create_user_track_recommendation_event(
             self.db_conn,
             user_id=new_user['id'],
@@ -143,7 +143,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
 
-        new_user = db_user.get_or_create(2, 'superman')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'superman')
         db_user_timeline_event.create_user_track_recommendation_event(
             self.db_conn,
             user_id=new_user['id'],
@@ -187,7 +187,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         )
 
         ts2 = time.time()
-        new_user = db_user.get_or_create(4, 'new_user')
+        new_user = db_user.get_or_create(self.db_conn, 4, 'new_user')
         db_user_timeline_event.create_user_track_recommendation_event(
             self.db_conn,
             user_id=new_user['id'],
@@ -256,7 +256,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(self.user['id'], event_rec.user_id)
 
         # creating a new user for notification
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'riksucks')
         message = 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'
         event_not = db_user_timeline_event.create_user_notification_event(
             self.db_conn,
@@ -323,7 +323,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
 
     def test_hide_feed_events(self):
         # creating a user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'riksucks')
 
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
@@ -355,7 +355,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
 
     def test_hide_feed_events_honors_count_parameter(self):
         # creating a user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'riksucks')
 
         # creating an event
         event1 = db_user_timeline_event.create_user_track_recommendation_event(
@@ -416,7 +416,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
 
     def test_unhide_events(self):
         # creating a user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'riksucks')
 
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(

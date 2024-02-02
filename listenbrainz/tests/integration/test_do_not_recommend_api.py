@@ -10,7 +10,7 @@ class DoNotRecommendAPITestCase(IntegrationTestCase):
 
     def setUp(self):
         super(DoNotRecommendAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "test_user_1")
+        self.user = db_user.get_or_create(self.db_conn, 1, "test_user_1")
 
         self.items = [
             {

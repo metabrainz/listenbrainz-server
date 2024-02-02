@@ -134,7 +134,7 @@ def create_user_notification_event(user_name):
     if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
         raise APIForbidden("Only approved users are allowed to post a message on a user's timeline.")
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound(f"Cannot find user: {user_name}")
 
@@ -437,7 +437,7 @@ def user_feed_listens_similar(user_name: str):
 
     # Here, list is in descending order as we want similar_users with 
     # highest similarity to be processed first and lowest at last.
-    similar_users = db_user.get_similar_users(user_id=user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user_id=user['id'])
 
     # Get all listen events
     if len(similar_users) == 0:

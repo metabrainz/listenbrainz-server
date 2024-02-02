@@ -7,7 +7,7 @@ from listenbrainz.db.testing import DatabaseTestCase
 class UserSettingTestCase(DatabaseTestCase):
     def setUp(self):
         DatabaseTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, "user_setting_user")
+        self.user = db_user.get_or_create(self.db_conn, 1, "user_setting_user")
 
     def test_set_timezone(self):
         # test if timezone is not null

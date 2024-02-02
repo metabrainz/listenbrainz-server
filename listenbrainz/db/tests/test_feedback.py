@@ -13,7 +13,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, "recording_feedback_user")
+        self.user = db_user.get_or_create(self.db_conn, 1, "recording_feedback_user")
 
         self.sample_feedback = [
             {
@@ -49,6 +49,10 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             }
         ]
 
+    def tearDown(self):
+        DatabaseTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
+
     def insert_test_data(self, user_id):
         """ Insert test data into the database """
 
@@ -67,7 +71,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def insert_test_data_with_metadata(self, user_id):
         """ Insert test data with metadata into the database """
-        msid = msb_db.insert_all_in_transaction([self.sample_recording])[0]
+        msid = msb_db.insert_all_in_transaction(self.ts_conn, [self.sample_recording])[0]
         mbid = "2f3d422f-8890-41a1-9762-fbe16f107c31"
         self.sample_feedback_with_metadata[0]["recording_msid"] = msid
         self.sample_feedback_with_metadata[0]["recording_mbid"] = mbid
@@ -316,7 +320,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(result[0].recording_msid, self.sample_feedback[3]["recording_msid"])
         self.assertEqual(result[0].score, self.sample_feedback[3]["score"])
 
-        user2 = db_user.get_or_create(2, "recording_feedback_other_user")
+        user2 = db_user.get_or_create(self.db_conn, 2, "recording_feedback_other_user")
         self.insert_test_data(user2["id"])
 
         result = db_feedback.get_feedback_for_recording(
@@ -375,7 +379,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         result = db_feedback.get_feedback_count_for_recording(self.db_conn, "recording_mbid", fb_mbid)
         self.assertEqual(result, 1)
 
-        user2 = db_user.get_or_create(2, "recording_feedback_other_user")
+        user2 = db_user.get_or_create(self.db_conn, 2, "recording_feedback_other_user")
         self.insert_test_data(user2["id"])
 
         result = db_feedback.get_feedback_count_for_recording(self.db_conn, "recording_msid", fb_msid_1)

@@ -22,9 +22,9 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
     def setUp(self):
         super(PinnedRecAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "test_user_1")
-        self.followed_user_1 = db_user.get_or_create(2, "followed_user_1")
-        self.followed_user_2 = db_user.get_or_create(3, "followed_user_2")
+        self.user = db_user.get_or_create(self.db_conn, 1, "test_user_1")
+        self.followed_user_1 = db_user.get_or_create(self.db_conn, 2, "followed_user_1")
+        self.followed_user_2 = db_user.get_or_create(self.db_conn, 3, "followed_user_2")
 
         self.pinned_rec_samples = [
             {

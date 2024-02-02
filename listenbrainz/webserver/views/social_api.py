@@ -29,7 +29,7 @@ def get_followers(user_name: str):
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
 
     if not user:
         raise APINotFound("User %s not found" % user_name)
@@ -61,7 +61,7 @@ def get_following(user_name: str):
     :statuscode 200: Yay, you have data!
     :statuscode 404: User not found
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
 
     if not user:
         raise APINotFound("User %s not found" % user_name)
@@ -94,7 +94,7 @@ def follow_user(user_name: str):
     :resheader Content-Type: *application/json*
     """
     current_user = validate_auth_header()
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
 
     if not user:
         raise APINotFound("User %s not found" % user_name)
@@ -129,7 +129,7 @@ def unfollow_user(user_name: str):
     :resheader Content-Type: *application/json*
     """
     current_user = validate_auth_header()
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
 
     if not user:
         raise APINotFound("User %s not found" % user_name)

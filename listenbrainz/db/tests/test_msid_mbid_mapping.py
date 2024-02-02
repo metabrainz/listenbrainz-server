@@ -130,7 +130,7 @@ class MappingTestCase(TimescaleTestCase):
                 "release": None
             }
         ]
-        submitted = messybrainz.insert_all_in_transaction(recordings)
+        submitted = messybrainz.insert_all_in_transaction(self.ts_conn, recordings)
         # data sent to msb cannot contain nulls but we want it when inserting in mapping
         recordings[2].update(**{
             "recording_mbid": None,

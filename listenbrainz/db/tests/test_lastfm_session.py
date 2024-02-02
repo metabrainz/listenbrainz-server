@@ -18,7 +18,7 @@ class TestAPICompatSessionClass(DatabaseTestCase):
         super(TestAPICompatSessionClass, self).tearDown()
 
     def test_session_create(self):
-        user = User.load_by_id(db_user.create(1, "test"))
+        user = User.load_by_id(db_user.create(self.db_conn, 1, "test"))
         token = Token.generate(user.api_key)
         token.approve(user.name)
         session = Session.create(token)
@@ -26,7 +26,7 @@ class TestAPICompatSessionClass(DatabaseTestCase):
         self.assertDictEqual(user.__dict__, session.user.__dict__)
 
     def test_session_load(self):
-        user = User.load_by_id(db_user.create(1, "test"))
+        user = User.load_by_id(db_user.create(self.db_conn, 1, "test"))
         token = Token.generate(user.api_key)
         token.approve(user.name)
         session = Session.create(token)

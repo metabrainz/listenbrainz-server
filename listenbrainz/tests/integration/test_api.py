@@ -17,7 +17,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APITestCase, self).setUp()
-        self.followed_user = db_user.get_or_create(3, 'followed_user')
+        self.followed_user = db_user.get_or_create(self.db_conn, 3, 'followed_user')
         self.follow_user_url = self.custom_url_for("social_api_v1.follow_user",
                                                    user_name=self.followed_user["musicbrainz_id"])
         self.follow_user_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
@@ -147,7 +147,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         # send three listens
         ts = 1400000000
-        user = db_user.get_or_create(1, 'test_order')
+        user = db_user.get_or_create(self.db_conn, 1, 'test_order')
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts + (100 * i)
             response = self.send_data(payload, user, recalculate=True)

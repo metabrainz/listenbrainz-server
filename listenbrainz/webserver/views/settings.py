@@ -37,7 +37,7 @@ EXPORT_FETCH_COUNT = 5000
 @api_login_required
 def reset_token():
     try:
-        db_user.update_token(current_user.id)
+        db_user.update_token(db_conn, current_user.id)
         return jsonify({"success": True})
     except DatabaseException:
         raise APIInternalServerError("Something went wrong! Unable to reset token right now.")

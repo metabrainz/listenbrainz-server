@@ -19,10 +19,10 @@ class SettingsViewsTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(SettingsViewsTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(self.user['musicbrainz_id'])
-        self.weirduser = db_user.get_or_create(2, 'weird\\user name')
-        db_user.agree_to_gdpr(self.weirduser['musicbrainz_id'])
+        self.user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, self.user['musicbrainz_id'])
+        self.weirduser = db_user.get_or_create(self.db_conn, 2, 'weird\\user name')
+        db_user.agree_to_gdpr(self.db_conn, self.weirduser['musicbrainz_id'])
         with self.app.app_context():
             self.service = SpotifyService()
 

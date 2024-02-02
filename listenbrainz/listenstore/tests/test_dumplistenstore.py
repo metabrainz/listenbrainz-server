@@ -26,7 +26,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         self.app = create_app()
         self.logstore = TimescaleListenStore(self.app.logger)
         self.dumpstore = DumpListenStore(self.app)
-        self.testuser = db_user.get_or_create(1, "test")
+        self.testuser = db_user.get_or_create(self.db_conn, 1, "test")
         self.testuser_name = self.testuser["musicbrainz_id"]
         self.testuser_id = self.testuser["id"]
 
@@ -157,7 +157,7 @@ class TestDumpListenStore(DatabaseTestCase, TimescaleTestCase):
         shutil.rmtree(temp_dir)
 
     def test_dump_and_import_listens_escaped(self):
-        user = db_user.get_or_create(3, 'i have a\\weird\\user, na/me"\n')
+        user = db_user.get_or_create(self.db_conn, 3, 'i have a\\weird\\user, na/me"\n')
         self._create_test_data(user['musicbrainz_id'], user['id'])
 
         self._create_test_data(self.testuser_name, self.testuser_id)

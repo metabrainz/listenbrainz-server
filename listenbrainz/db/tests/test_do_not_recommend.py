@@ -11,7 +11,7 @@ class DoNotRecommendDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(DoNotRecommendDatabaseTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "test_user")
+        self.user = db_user.get_or_create(self.db_conn, 1, "test_user")
         self.items = [
             {
                 "entity": "release",

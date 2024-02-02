@@ -67,7 +67,7 @@ def get_recommendations(user_name):
         :statuscode 404: User not found.
         :statuscode 204: Recommendations for the user haven't been generated, empty response will be returned
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: {}".format(user_name))
 

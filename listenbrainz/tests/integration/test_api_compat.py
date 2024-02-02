@@ -36,7 +36,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APICompatTestCase, self).setUp()
-        self.lb_user = db_user.get_or_create(1, 'apicompattestuser')
+        self.lb_user = db_user.get_or_create(self.db_conn, 1, 'apicompattestuser')
         self.lfm_user = User(
             self.lb_user['id'],
             self.lb_user['created'],

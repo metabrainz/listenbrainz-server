@@ -49,7 +49,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.tempdir_private = tempfile.mkdtemp()
         self.runner = CliRunner()
         self.listenstore = timescale_connection._ts
-        self.user_id = db_user.create(1, 'iliekcomputers')
+        self.user_id = db_user.create(self.db_conn, 1, 'iliekcomputers')
         self.user_name = db_user.get(self.db_conn, self.user_id)['musicbrainz_id']
 
     def tearDown(self):
@@ -301,8 +301,8 @@ class DumpManagerTestCase(DatabaseTestCase):
 
     def test_create_feedback(self):
 
-        self.user = db_user.get_or_create(1, "ernie")
-        self.user2 = db_user.get_or_create(2, "bert")
+        self.user = db_user.get_or_create(self.db_conn, 1, "ernie")
+        self.user2 = db_user.get_or_create(self.db_conn, 2, "bert")
         sample_feedback = [
             {
                 "user_id": self.user['id'],

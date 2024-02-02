@@ -33,8 +33,8 @@ class HandlersTestCase(DatabaseTestCase):
     def setUp(self):
         super(HandlersTestCase, self).setUp()
         self.app = create_app()
-        self.user1 = db_user.get_or_create(1, 'iliekcomputers')
-        self.user2 = db_user.get_or_create(2, 'lucifer')
+        self.user1 = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        self.user2 = db_user.get_or_create(self.db_conn, 2, 'lucifer')
 
     def tearDown(self):
         super(HandlersTestCase, self).tearDown()

@@ -123,38 +123,38 @@ class DumpTestCase(DatabaseTestCase):
 
         # create a user
         with self.app.app_context():
-            one_id = db_user.create(1, 'test_user')
-            user_count = db_user.get_user_count()
+            one_id = db_user.create(self.db_conn, 1, 'test_user')
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir, self.tempdir_private)
             self.reset_db()
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
 
             # import the dump
             db_dump.import_postgres_dump(private_dump, None, public_dump, None)
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             # reset again, and use more threads to import
             self.reset_db()
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
 
             db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
-            two_id = db_user.create(2, 'vnskprk')
+            two_id = db_user.create(self.db_conn, 2, 'vnskprk')
             self.assertGreater(two_id, one_id)
 
     def test_dump_recording_feedback(self):
 
         # create a user
         with self.app.app_context():
-            one_id = db_user.create(1, 'test_user')
-            user_count = db_user.get_user_count()
+            one_id = db_user.create(self.db_conn, 1, 'test_user')
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             # insert a feedback record
@@ -168,13 +168,13 @@ class DumpTestCase(DatabaseTestCase):
             # do a db dump and reset the db
             private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir, self.tempdir_private)
             self.reset_db()
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
             self.assertEqual(db_feedback.get_feedback_count_for_user(self.db_conn, user_id=one_id), 0)
 
             # import the dump and check the records are inserted
             db_dump.import_postgres_dump(private_dump, None, public_dump, None)
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             dumped_feedback = db_feedback.get_feedback_for_user(
@@ -187,12 +187,12 @@ class DumpTestCase(DatabaseTestCase):
 
             # reset again, and use more threads to import
             self.reset_db()
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
             dumped_feedback = []
 
             db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             dumped_feedback = db_feedback.get_feedback_for_user(

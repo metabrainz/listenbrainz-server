@@ -58,9 +58,9 @@ class StatsAPITestCase(IntegrationTestCase):
         # app context
         super(StatsAPITestCase, self).setUp()
         self.app.config["DEBUG"] = True
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
-        self.another_user = db_user.get_or_create(1999, 'another_user')
-        self.no_stat_user = db_user.get_or_create(222222, 'nostatuser')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'testuserpleaseignore')
+        self.another_user = db_user.get_or_create(self.db_conn, 1999, 'another_user')
+        self.no_stat_user = db_user.get_or_create(self.db_conn, 222222, 'nostatuser')
 
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             self.user_artist_payload = json.load(f)

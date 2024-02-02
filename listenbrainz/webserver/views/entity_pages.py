@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, current_app, redirect, url_for
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
@@ -145,7 +146,7 @@ def artist_entity(artist_mbid):
 
     release_groups.sort(key=get_release_group_sort_key, reverse=True)
 
-    listening_stats = get_entity_listener("artists", artist_mbid, "all_time")
+    listening_stats = get_entity_listener(db_conn, "artists", artist_mbid, "all_time")
     if listening_stats is None:
         listening_stats = {
             "total_listen_count": 0,
@@ -204,7 +205,7 @@ def album_entity(release_group_mbid):
                 (None, None)
             )
 
-    listening_stats = get_entity_listener("release_groups", release_group_mbid, "all_time")
+    listening_stats = get_entity_listener(db_conn, "release_groups", release_group_mbid, "all_time")
     if listening_stats is None:
         listening_stats = {
             "total_listen_count": 0,

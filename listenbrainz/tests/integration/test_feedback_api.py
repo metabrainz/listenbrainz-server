@@ -14,8 +14,8 @@ from listenbrainz.tests.integration import IntegrationTestCase
 class FeedbackAPITestCase(IntegrationTestCase):
     def setUp(self):
         super(FeedbackAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "testuserpleaseignore")
-        self.user2 = db_user.get_or_create(2, "anothertestuserpleaseignore")
+        self.user = db_user.get_or_create(self.db_conn, 1, "testuserpleaseignore")
+        self.user2 = db_user.get_or_create(self.db_conn, 2, "anothertestuserpleaseignore")
         self.ts_conn = timescale.engine.connect()
 
     def tearDown(self):
@@ -1317,7 +1317,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
                 "release": "Lucifer"
             }
         ]
-        submitted_data = messybrainz.insert_all_in_transaction(recordings)
+        submitted_data = messybrainz.insert_all_in_transaction(self.ts_conn, recordings)
 
         sample_feedback = [
             {
