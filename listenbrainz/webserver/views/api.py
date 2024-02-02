@@ -43,7 +43,7 @@ def search_user():
     """
     search_term = request.args.get("search_term")
     if search_term:
-        users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT)
+        users = db_user.search_user_name(db_conn, search_term, SEARCH_USER_LIMIT)
     else:
         users = []
     return jsonify({'users': users})
@@ -152,7 +152,7 @@ def get_listens(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -194,7 +194,7 @@ def get_listen_count(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -227,7 +227,7 @@ def get_playing_now(user_name):
     :resheader Content-Type: *application/json*
     """
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -268,11 +268,11 @@ def get_similar_users(user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    similar_users = db_user.get_similar_users(user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user['id'])
     return jsonify({
         "payload": [
             {
@@ -305,11 +305,11 @@ def get_similar_to_user(user_name, other_user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    similar_users = db_user.get_similar_users(user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user['id'])
 
     # Constructing an id-similarity map
     id_similarity_map = {r["musicbrainz_id"]: r["similarity"] for r in similar_users}
@@ -361,7 +361,7 @@ def latest_import():
             service = ExternalServiceType[service_name.upper()]
         except KeyError:
             raise APINotFound("Service does not exist: {}".format(service_name))
-        user = db_user.get_by_mb_id(user_name)
+        user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
         latest_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
@@ -560,7 +560,7 @@ def get_playlists_for_user(playlist_user_name):
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
@@ -593,7 +593,7 @@ def get_playlists_created_for_user(playlist_user_name):
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
@@ -626,7 +626,7 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
@@ -657,7 +657,7 @@ def user_recommendations(playlist_user_name):
     :resheader Content-Type: *application/json*
     """
 
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 

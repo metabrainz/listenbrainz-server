@@ -20,7 +20,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
         self.logstore = timescale_connection._ts
 
         # Create a user
-        uid = db_user.create(1, "test_api_compat_user")
+        uid = db_user.create(self.db_conn, 1, "test_api_compat_user")
         user_dict = db_user.get(self.db_conn, uid)
         self.user = User(user_dict["id"], user_dict["created"], user_dict["musicbrainz_id"], user_dict["auth_token"])
 
@@ -40,7 +40,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
 
     def test_user_get_play_count(self):
         date = datetime(2015, 9, 3, 0, 0, 0)
-        test_data = generate_data(date, 5, self.user.name)
+        test_data = generate_data(self.db_conn, date, 5, self.user.name)
         self.assertEqual(len(test_data), 5)
         self.logstore.insert(test_data)
         count = User.get_play_count(self.user.id, self.logstore)

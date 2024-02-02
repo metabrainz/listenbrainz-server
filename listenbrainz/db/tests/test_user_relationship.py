@@ -26,9 +26,9 @@ import listenbrainz.db.user_relationship as db_user_relationship
 class UserRelationshipTestCase(DatabaseTestCase):
     def setUp(self):
         super(UserRelationshipTestCase, self).setUp()
-        self.main_user = db_user.get_or_create(1, 'iliekcomputers')
-        self.followed_user_1 = db_user.get_or_create(2, 'followed_user_1')
-        self.followed_user_2 = db_user.get_or_create(3, 'followed_user_2')
+        self.main_user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        self.followed_user_1 = db_user.get_or_create(self.db_conn, 2, 'followed_user_1')
+        self.followed_user_2 = db_user.get_or_create(self.db_conn, 3, 'followed_user_2')
 
     def test_insert(self):
         db_user_relationship.insert(
@@ -125,7 +125,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
             self.followed_user_1['id'],
             'follow'
         )
-        self.following_user_1 = db_user.get_or_create(3, 'following_user_1')
+        self.following_user_1 = db_user.get_or_create(self.db_conn, 3, 'following_user_1')
         db_user_relationship.insert(
             self.db_conn,
             self.following_user_1['id'],
@@ -157,7 +157,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
         self.assertEqual(1, len(following))
 
         # make it so that the main user follows two users, followed_user_1 and followed_user_2
-        self.followed_user_2 = db_user.get_or_create(3, 'followed_user_2')
+        self.followed_user_2 = db_user.get_or_create(self.db_conn, 3, 'followed_user_2')
         db_user_relationship.insert(self.db_conn, self.main_user['id'], self.followed_user_2['id'], 'follow')
 
         # the list of users main_user is following should have 2 elements now
@@ -168,7 +168,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
         db_user_relationship.insert(self.db_conn, self.main_user['id'], self.followed_user_1['id'], 'follow')
         db_user_relationship.insert(self.db_conn, self.main_user['id'], self.followed_user_2['id'], 'follow')
 
-        new_user = db_user.get_or_create(4, 'new_user')
+        new_user = db_user.get_or_create(self.db_conn, 4, 'new_user')
         db_user_relationship.insert(self.db_conn, self.followed_user_1['id'], new_user['id'], 'follow')
 
         events = db_user_relationship.get_follow_events(
@@ -196,7 +196,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
 
         ts2 = time.time()
 
-        new_user = db_user.get_or_create(4, 'new_user')
+        new_user = db_user.get_or_create(self.db_conn, 4, 'new_user')
         db_user_relationship.insert(self.db_conn, self.followed_user_1['id'], new_user['id'], 'follow')
 
         # max_ts is too low, won't return anything
@@ -223,7 +223,7 @@ class UserRelationshipTestCase(DatabaseTestCase):
         db_user_relationship.insert(self.db_conn, self.main_user['id'], self.followed_user_1['id'], 'follow')
         db_user_relationship.insert(self.db_conn, self.main_user['id'], self.followed_user_2['id'], 'follow')
 
-        new_user = db_user.get_or_create(4, 'new_user')
+        new_user = db_user.get_or_create(self.db_conn, 4, 'new_user')
         db_user_relationship.insert(self.db_conn, self.followed_user_1['id'], new_user['id'], 'follow')
 
         events = db_user_relationship.get_follow_events(

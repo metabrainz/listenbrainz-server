@@ -27,7 +27,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.log = logging.getLogger(__name__)
         self.logstore = TimescaleListenStore(self.log)
 
-        self.testuser = db_user.get_or_create(1, "test")
+        self.testuser = db_user.get_or_create(self.db_conn, 1, "test")
         self.testuser_id = self.testuser["id"]
         self.testuser_name = self.testuser["musicbrainz_id"]
 
@@ -179,7 +179,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def test_get_listen_count_for_user(self):
         uid = random.randint(2000, 1 << 31)
-        testuser = db_user.get_or_create(uid, "user_%d" % uid)
+        testuser = db_user.get_or_create(self.db_conn, uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
 
         count = self._create_test_data(testuser_name, testuser["id"])
@@ -187,11 +187,11 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(count, listen_count)
 
     def test_fetch_recent_listens(self):
-        user = db_user.get_or_create(2, 'someuser')
+        user = db_user.get_or_create(self.db_conn, 2, 'someuser')
         user_name = user['musicbrainz_id']
         self._create_test_data(user_name, user["id"])
 
-        user2 = db_user.get_or_create(3, 'otheruser')
+        user2 = db_user.get_or_create(self.db_conn, 3, 'otheruser')
         user_name2 = user2['musicbrainz_id']
         self._create_test_data(user_name2, user2["id"])
 
@@ -208,7 +208,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def test_listen_counts_in_cache(self):
         uid = random.randint(2000, 1 << 31)
-        testuser = db_user.get_or_create(uid, "user_%d" % uid)
+        testuser = db_user.get_or_create(self.db_conn, uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
         count = self._create_test_data(testuser_name, testuser["id"])
         user_key = REDIS_USER_LISTEN_COUNT + str(testuser["id"])
@@ -217,7 +217,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def test_delete_listens(self):
         uid = random.randint(2000, 1 << 31)
-        testuser = db_user.get_or_create(uid, "user_%d" % uid)
+        testuser = db_user.get_or_create(self.db_conn, uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
         self._create_test_data(testuser_name, testuser["id"])
 
@@ -238,7 +238,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
     def test_delete_single_listen(self):
         uid = random.randint(2000, 1 << 31)
-        testuser = db_user.get_or_create(uid, "user_%d" % uid)
+        testuser = db_user.get_or_create(self.db_conn, uid, "user_%d" % uid)
         testuser_name = testuser['musicbrainz_id']
         self._create_test_data(testuser_name, testuser["id"])
 
@@ -299,7 +299,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
     def test_for_empty_timestamps(self):
         """Test newly created user has empty timestamps and count stored in the database."""
         uid = random.randint(2000, 1 << 31)
-        testuser = db_user.get_or_create(uid, "user_%d" % uid)
+        testuser = db_user.get_or_create(self.db_conn, uid, "user_%d" % uid)
         self.logstore.set_empty_values_for_user(testuser["id"])
         data = self._get_count_and_timestamps(testuser["id"])
         self.assertEqual(data["count"], 0)
@@ -312,7 +312,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
         count_user_1 = self._create_test_data(self.testuser["musicbrainz_id"], self.testuser["id"])
         uid = random.randint(2000, 1 << 31)
-        testuser2 = db_user.get_or_create(uid, f"user_{uid}")
+        testuser2 = db_user.get_or_create(self.db_conn, uid, f"user_{uid}")
         count_user_2 = self._create_test_data(testuser2["musicbrainz_id"], testuser2["id"])
 
         cache.delete(REDIS_TOTAL_LISTEN_COUNT)

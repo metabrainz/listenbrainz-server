@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.fresh_releases import get_fresh_releases
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINoContent, APINotFound, APIBadRequest
 from listenbrainz.webserver.views.api_tools import _parse_bool_arg
@@ -46,7 +47,7 @@ def get_releases(user_name):
     :statuscode 400: invalid date or number of days passed.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 

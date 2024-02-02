@@ -24,17 +24,17 @@ class UserViewsTestCase(IntegrationTestCase):
         self.log = logging.getLogger(__name__)
         self.logstore = timescale_connection._ts
 
-        user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, user['musicbrainz_id'])
 
         # fetch again so that gdpr agreed time is set
         user = db_user.get(self.db_conn, user['id'])
         self.user = User.from_dbrow(user)
 
-        weirduser = db_user.get_or_create(2, 'weird\\user name')
+        weirduser = db_user.get_or_create(self.db_conn, 2, 'weird\\user name')
         self.weirduser = User.from_dbrow(weirduser)
 
-        abuser = db_user.get_or_create(3, 'abuser')
+        abuser = db_user.get_or_create(self.db_conn, 3, 'abuser')
         self.abuser = User.from_dbrow(abuser)
 
     def tearDown(self):
@@ -234,7 +234,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
     def test_report_abuse(self):
         # Assert user is not already reported by current user
-        already_reported_user = db_user.is_user_reported(self.user.id, self.abuser.id)
+        already_reported_user = db_user.is_user_reported(self.db_conn, self.user.id, self.abuser.id)
         self.assertFalse(already_reported_user)
 
         self.temporary_login(self.user.login_id)
@@ -247,7 +247,7 @@ class UserViewsTestCase(IntegrationTestCase):
             json=data,
         )
         self.assert200(response, "%s has been reported successfully." % self.abuser.musicbrainz_id)
-        already_reported_user = db_user.is_user_reported(self.user.id, self.abuser.id)
+        already_reported_user = db_user.is_user_reported(self.db_conn, self.user.id, self.abuser.id)
         self.assertTrue(already_reported_user)
 
         # Assert a user cannot report themselves
@@ -256,7 +256,7 @@ class UserViewsTestCase(IntegrationTestCase):
             json=data,
         )
         self.assert400(response, "You cannot report yourself.")
-        already_reported_user = db_user.is_user_reported(self.user.id, self.user.id)
+        already_reported_user = db_user.is_user_reported(self.db_conn, self.user.id, self.user.id)
         self.assertFalse(already_reported_user)
 
         # Assert reason must be of type string

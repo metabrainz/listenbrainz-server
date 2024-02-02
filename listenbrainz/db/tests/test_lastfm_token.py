@@ -19,7 +19,7 @@ class TestAPICompatTokenClass(DatabaseTestCase):
         self.log = logging.getLogger(__name__)
 
         # Create a user
-        uid = db_user.create(1, "test")
+        uid = db_user.create(self.db_conn, 1, "test")
         user_dict = db_user.get(self.db_conn, uid)
         self.user = User(user_dict["id"], user_dict["created"], user_dict["musicbrainz_id"], user_dict["auth_token"])
 

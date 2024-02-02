@@ -111,7 +111,7 @@ def import_user_similarities(data):
     return user_count, target_user_count / user_count, ""
 
 
-def get_top_similar_users(count: int = 200):
+def get_top_similar_users(db_conn, count: int = 200):
     """
         Fetch the count top similar users and return a tuple(user1, user2, score(0.0-1.0))
         If global_similarity is True, the return the user similarity on a global (not
@@ -119,30 +119,29 @@ def get_top_similar_users(count: int = 200):
     """
     similar_users = {}
     try:
-        with db.engine.connect() as connection:
-            result = connection.execute(text("""
-                SELECT u.musicbrainz_id AS user_name
-                     , ou.musicbrainz_id AS other_user_name
-                     , value AS similarity -- first element of array is similarity, second is global_similarity
-                  FROM recommendation.similar_user r 
-                  JOIN jsonb_each(r.similar_users) j
-                    ON TRUE
-                  JOIN "user" ou
-                    ON j.key::int = ou.id  -- user_name of other user stored in jsonb
-                  JOIN "user" u
-                   ON r.user_id = u.id -- user_name of the user_id stored directly in column
-            """))
-            while True:
-                row = result.fetchone()
-                if not row:
-                    break
-                user = row.user_name
-                other_user = row.other_user_name
-                similarity = "%.3f" % row.similarity
-                if user < other_user:
-                    similar_users[user + other_user] = (user, other_user, similarity)
-                else:
-                    similar_users[other_user + user] = (other_user, user, similarity)
+        result = db_conn.execute(text("""
+            SELECT u.musicbrainz_id AS user_name
+                 , ou.musicbrainz_id AS other_user_name
+                 , value AS similarity -- first element of array is similarity, second is global_similarity
+              FROM recommendation.similar_user r 
+              JOIN jsonb_each(r.similar_users) j
+                ON TRUE
+              JOIN "user" ou
+                ON j.key::int = ou.id  -- user_name of other user stored in jsonb
+              JOIN "user" u
+               ON r.user_id = u.id -- user_name of the user_id stored directly in column
+        """))
+        while True:
+            row = result.fetchone()
+            if not row:
+                break
+            user = row.user_name
+            other_user = row.other_user_name
+            similarity = "%.3f" % row.similarity
+            if user < other_user:
+                similar_users[user + other_user] = (user, other_user, similarity)
+            else:
+                similar_users[other_user + user] = (other_user, user, similarity)
     except psycopg2.errors.OperationalError as err:
         current_app.logger.error("Error: Failed to fetch top similar users %s" % str(err))
         return []

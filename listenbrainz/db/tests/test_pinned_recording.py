@@ -14,7 +14,6 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
-from listenbrainz.db import timescale as ts
 from listenbrainz import messybrainz as msb_db
 
 
@@ -23,9 +22,9 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, "test_user")
-        self.followed_user_1 = db_user.get_or_create(2, "followed_user_1")
-        self.followed_user_2 = db_user.get_or_create(3, "followed_user_2")
+        self.user = db_user.get_or_create(self.db_conn, 1, "test_user")
+        self.followed_user_1 = db_user.get_or_create(self.db_conn, 2, "followed_user_1")
+        self.followed_user_2 = db_user.get_or_create(self.db_conn, 3, "followed_user_2")
 
         self.pinned_rec_samples = [
             {
@@ -49,6 +48,10 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
                 "blurb_content": "Great fourth recording",
             },
         ]
+
+    def tearDown(self):
+        DatabaseTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
 
     def insert_test_data(self, user_id: int, limit: int = 4):
         """Inserts test data into the database.
@@ -107,28 +110,27 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             }
         ]
 
-        msids = msb_db.insert_all_in_transaction(recordings)
+        msids = msb_db.insert_all_in_transaction(self.ts_conn, recordings)
 
-        with ts.engine.begin() as connection:
-            query = """
-                    INSERT INTO mapping.mb_metadata_cache
-                               (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
-                        VALUES ('2f3d422f-8890-41a1-9762-fbe16f107c31'
-                              , '{8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11}'::UUID[]
-                              , '76df3287-6cda-33eb-8e9a-044b5e15ffdd'
-                              , '{"name": "Strangers", "rels": [], "length": 291160}'
-                              , '{"name": "Portishead", "artist_credit_id": 204, "artists": [{"area": "United Kingdom", "rels": {"lyrics": "https://muzikum.eu/en/122-6105/portishead/lyrics.html", "youtube": "https://www.youtube.com/user/portishead1002", "wikidata": "https://www.wikidata.org/wiki/Q191352", "streaming": "https://tidal.com/artist/27441", "free streaming": "https://www.deezer.com/artist/1069", "social network": "https://www.facebook.com/portishead", "official homepage": "http://www.portishead.co.uk/", "purchase for download": "https://www.junodownload.com/artists/Portishead/releases/"}, "type": "Group", "begin_year": 1991, "name": "Portishead", "join_phrase": ""}]}'
-                              , '{"artist": [], "recording": [], "release_group": []}'
-                              , '{"mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd", "name": "Dummy"}'
-                              , 'f'
-                               )
-            """
-            connection.execute(sqlalchemy.text(query))
+        query = """
+                INSERT INTO mapping.mb_metadata_cache
+                           (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                    VALUES ('2f3d422f-8890-41a1-9762-fbe16f107c31'
+                          , '{8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11}'::UUID[]
+                          , '76df3287-6cda-33eb-8e9a-044b5e15ffdd'
+                          , '{"name": "Strangers", "rels": [], "length": 291160}'
+                          , '{"name": "Portishead", "artist_credit_id": 204, "artists": [{"area": "United Kingdom", "rels": {"lyrics": "https://muzikum.eu/en/122-6105/portishead/lyrics.html", "youtube": "https://www.youtube.com/user/portishead1002", "wikidata": "https://www.wikidata.org/wiki/Q191352", "streaming": "https://tidal.com/artist/27441", "free streaming": "https://www.deezer.com/artist/1069", "social network": "https://www.facebook.com/portishead", "official homepage": "http://www.portishead.co.uk/", "purchase for download": "https://www.junodownload.com/artists/Portishead/releases/"}, "type": "Group", "begin_year": 1991, "name": "Portishead", "join_phrase": ""}]}'
+                          , '{"artist": [], "recording": [], "release_group": []}'
+                          , '{"mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd", "name": "Dummy"}'
+                          , 'f'
+                           )
+        """
+        self.ts_conn.execute(sqlalchemy.text(query))
 
-            query = """INSERT INTO mbid_mapping
-                                   (recording_msid, recording_mbid, match_type, last_updated)
-                            VALUES (:msid, '2f3d422f-8890-41a1-9762-fbe16f107c31', 'exact_match', now())"""
-            connection.execute(sqlalchemy.text(query), {"msid": msids[0]})
+        query = """INSERT INTO mbid_mapping
+                               (recording_msid, recording_mbid, match_type, last_updated)
+                        VALUES (:msid, '2f3d422f-8890-41a1-9762-fbe16f107c31', 'exact_match', now())"""
+        self.ts_conn.execute(sqlalchemy.text(query), {"msid": msids[0]})
 
         pinned_recs = [
             {

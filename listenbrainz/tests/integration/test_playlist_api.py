@@ -45,10 +45,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
     def setUp(self):
         super(PlaylistAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "testuserpleaseignore")
-        self.user2 = db_user.get_or_create(2, "anothertestuserpleaseignore")
-        self.user3 = db_user.get_or_create(3, "troi-bot")
-        self.user4 = db_user.get_or_create(4, "iloveassgaskets")
+        self.user = db_user.get_or_create(self.db_conn, 1, "testuserpleaseignore")
+        self.user2 = db_user.get_or_create(self.db_conn, 2, "anothertestuserpleaseignore")
+        self.user3 = db_user.get_or_create(self.db_conn, 3, "troi-bot")
+        self.user4 = db_user.get_or_create(self.db_conn, 4, "iloveassgaskets")
 
     def test_filter_description(self):
         """Check that non-approved html tags are filtered from descriptions"""

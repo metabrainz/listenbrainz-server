@@ -27,7 +27,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
 
         self.log = logging.getLogger()
         self._redis = init_redis_connection(self.log)
-        self.testuser = db_user.get_or_create(1, "test")
+        self.testuser = db_user.get_or_create(self.db_conn, 1, "test")
 
     def tearDown(self):
         cache._r.flushdb()

@@ -15,7 +15,7 @@ class MsidUpdaterTestCase(IntegrationTestCase):
 
     def setUp(self):
         IntegrationTestCase.setUp(self)
-        self.user = db_user.get_or_create(1111, "msid-updater-user")
+        self.user = db_user.get_or_create(self.db_conn, 1111, "msid-updater-user")
 
     def create_dummy_data(self):
         mapping = [

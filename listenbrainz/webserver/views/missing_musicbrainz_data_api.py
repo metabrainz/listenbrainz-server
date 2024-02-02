@@ -88,7 +88,7 @@ def get_missing_musicbrainz_data(user_name):
     # The source may change in future
     source = 'cf'
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: {}".format(user_name))
 

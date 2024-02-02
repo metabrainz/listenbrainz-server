@@ -10,9 +10,9 @@ from listenbrainz.tests.integration import IntegrationTestCase
 class RecommendationFeedbackAPITestCase(IntegrationTestCase):
     def setUp(self):
         super(RecommendationFeedbackAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "vansika")
-        self.user1 = db_user.get_or_create(2, "vansika_1")
-        self.user2 = db_user.get_or_create(3, "vansika_2")
+        self.user = db_user.get_or_create(self.db_conn, 1, "vansika")
+        self.user1 = db_user.get_or_create(self.db_conn, 2, "vansika_1")
+        self.user2 = db_user.get_or_create(self.db_conn, 3, "vansika_2")
 
     def insert_test_data(self):
         sample_feedback = [

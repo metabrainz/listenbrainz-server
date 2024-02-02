@@ -292,7 +292,7 @@ def submit_release(user, token, releasembid):
         import listenbrainz.db.user
         application = webserver.create_app()
         with application.app_context():
-            user_ob = listenbrainz.db.user.get_by_mb_id(user)
+            user_ob = listenbrainz.db.user.get_by_mb_id(webserver.db_conn, user)
             if user_ob is None:
                 raise click.ClickException(f"No such user: {user}")
             token = user_ob["auth_token"]
@@ -319,7 +319,7 @@ def run_daily_jams(create_all):
     method and not a core function of troi.
     """
     with create_app().app_context():
-        run_daily_jams_troi_bot(create_all)
+        run_daily_jams_troi_bot(webserver.db_conn, create_all)
 
 
 @cli.command()

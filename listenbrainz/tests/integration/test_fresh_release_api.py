@@ -10,7 +10,7 @@ class FreshReleasesTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(FreshReleasesTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "testuserpleaseignore")
+        self.user = db_user.get_or_create(self.db_conn, 1, "testuserpleaseignore")
 
         with open(self.path_to_data_file("user_fresh_releases.json")) as f:
             self.expected = json.load(f)

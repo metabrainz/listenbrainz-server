@@ -13,7 +13,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(OAuthDatabaseTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testspotifyuser')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'testspotifyuser')
         db_oauth.save_token(
             user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
@@ -26,7 +26,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         )
 
     def test_create_oauth(self):
-        user2 = db_user.get_or_create(2, 'spotify')
+        user2 = db_user.get_or_create(self.db_conn, 2, 'spotify')
         db_oauth.save_token(
             user_id=user2['id'],
             service=ExternalServiceType.SPOTIFY,
@@ -107,7 +107,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
 
     def test_musicbrainz_oauth(self):
         """ Test that the refresh token is not deleted on subsequent updates. """
-        user = db_user.get_or_create(3, 'musicbrainz')
+        user = db_user.get_or_create(self.db_conn, 3, 'musicbrainz')
         db_oauth.save_token(
             user_id=user['id'],
             service=ExternalServiceType.MUSICBRAINZ_PROD,

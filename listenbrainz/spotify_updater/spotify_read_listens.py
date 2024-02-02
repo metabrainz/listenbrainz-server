@@ -25,6 +25,7 @@ METRIC_UPDATE_INTERVAL = 60  # seconds
 _listens_imported_since_last_update = 0  # number of listens imported since last metric update was submitted
 _metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
 
+
 def notify_error(musicbrainz_id: str, error: str):
     """ Notifies specified user via email about error during Spotify import.
 
@@ -32,7 +33,7 @@ def notify_error(musicbrainz_id: str, error: str):
         musicbrainz_id: the MusicBrainz ID of the user
         error: a description of the error encountered.
     """
-    user_email = db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)["email"]
+    user_email = db_user.get_by_mb_id(listenbrainz.webserver.db_conn, musicbrainz_id, fetch_email=True)["email"]
     if not user_email:
         return
 

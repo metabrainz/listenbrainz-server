@@ -15,7 +15,7 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(ListensImporterDatabaseTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testspotifyuser')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'testspotifyuser')
         db_oauth.save_token(
             user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
@@ -48,7 +48,7 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
         self.assertIsNotNone(spotify_user['last_updated'])
 
     def test_update_latest_import(self):
-        user = db_user.get_or_create(3, 'updatelatestimportuser')
+        user = db_user.get_or_create(self.db_conn, 3, 'updatelatestimportuser')
 
         val = int(time.time())
         listens_importer.update_latest_listened_at(user['id'], ExternalServiceType.LASTFM, val)

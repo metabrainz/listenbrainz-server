@@ -5,6 +5,7 @@ from werkzeug.exceptions import NotFound, BadRequest
 import psycopg2
 
 from listenbrainz.db.similar_users import get_top_similar_users
+from listenbrainz.webserver import db_conn
 
 explore_bp = Blueprint('explore', __name__)
 
@@ -36,7 +37,7 @@ def similar_users():
         and spammers as well.
     """
 
-    similar_users = get_top_similar_users()
+    similar_users = get_top_similar_users(db_conn)
     return render_template(
         "explore/similar-users.html",
         similar_users=similar_users

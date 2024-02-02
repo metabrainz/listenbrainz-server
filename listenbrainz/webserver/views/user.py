@@ -114,7 +114,7 @@ def profile(user_name):
 
     already_reported_user = False
     if current_user.is_authenticated:
-        already_reported_user = db_user.is_user_reported(current_user.id, user.id)
+        already_reported_user = db_user.is_user_reported(db_conn, current_user.id, user.id)
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
@@ -304,9 +304,9 @@ def report_abuse(user_name):
         reason = data.get("reason")
         if not isinstance(reason, str):
             raise APIBadRequest("Reason must be a string.")
-    user_to_report = db_user.get_by_mb_id(user_name)
+    user_to_report = db_user.get_by_mb_id(db_conn, user_name)
     if current_user.id != user_to_report["id"]:
-        db_user.report_user(current_user.id, user_to_report["id"], reason)
+        db_user.report_user(db_conn, current_user.id, user_to_report["id"], reason)
         return jsonify({"status": "%s has been reported successfully." % user_name})
     else:
         raise APIBadRequest("You cannot report yourself.")
@@ -318,7 +318,7 @@ def _get_user(user_name):
             current_user.musicbrainz_id == user_name:
         return current_user
     else:
-        user = db_user.get_by_mb_id(user_name)
+        user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise NotFound("Cannot find user: %s" % user_name)
         return User.from_dbrow(user)
@@ -332,7 +332,7 @@ def delete_user(user_id: int):
         user_id: the LB row ID of the user
     """
     timescale_connection._ts.delete(user_id)
-    db_user.delete(user_id)
+    db_user.delete(db_conn, user_id)
 
 
 def delete_listens_history(user_id: int):

@@ -53,12 +53,12 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             return msid
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:
-        following_user = db_user.get_or_create(mb_row_id, name)
+        following_user = db_user.get_or_create(self.db_conn, mb_row_id, name)
         db_user_relationship.insert(self.db_conn, user, following_user['id'], 'follow')
         return following_user
 
     def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, name: str) -> dict:
-        similar_user = db_user.get_or_create(mb_row_id, name)
+        similar_user = db_user.get_or_create(self.db_conn, mb_row_id, name)
         self.similar_user_data[similar_user['id']] = similarity
         with db.engine.begin() as connection:
             connection.execute(text("""
@@ -85,7 +85,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(FeedAPITestCase, self).setUp()
-        self.main_user = db_user.get_or_create(100, 'param')
+        self.main_user = db_user.get_or_create(self.db_conn, 100, 'param')
         self.following_user_1 = self.create_and_follow_user(self.main_user['id'], 102, 'following_1')
         self.following_user_2 = self.create_and_follow_user(self.main_user['id'], 103, 'following_2')
 
@@ -388,7 +388,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_it_returns_follow_events(self):
         # make a user you're following follow a new user
-        new_user_1 = db_user.get_or_create(104, 'new_user_1')
+        new_user_1 = db_user.get_or_create(self.db_conn, 104, 'new_user_1')
         db_user_relationship.insert(self.db_conn, self.following_user_1['id'], new_user_1['id'], 'follow')
 
         # this should show up in the events
@@ -484,7 +484,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(msid, payload['events'][1]['metadata']['track_metadata']['additional_info']['recording_msid'])
 
     def test_it_returns_empty_list_if_user_does_not_follow_anyone(self):
-        new_user = db_user.get_or_create(111, 'totally_new_user_with_no_friends')
+        new_user = db_user.get_or_create(self.db_conn, 111, 'totally_new_user_with_no_friends')
         r = self.client.get(
             self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
             headers={'Authorization': f"Token {new_user['auth_token']}"},
@@ -504,7 +504,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['status'], 'ok')
 
         # make a user you're following follow a new user
-        new_user_1 = db_user.get_or_create(104, 'new_user_1')
+        new_user_1 = db_user.get_or_create(self.db_conn, 104, 'new_user_1')
         db_user_relationship.insert(self.db_conn, self.following_user_1['id'], new_user_1['id'], 'follow')
 
         time.sleep(1)  # sleep a bit to avoid ordering conflicts, cannot mock this time as it comes from postgres

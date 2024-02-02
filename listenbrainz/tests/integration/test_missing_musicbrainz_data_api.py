@@ -11,8 +11,8 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
     def setUp(self):
         IntegrationTestCase.setUp(self)
 
-        self.user = db_user.get_or_create(1, 'vansika_1')
-        self.user2 = db_user.get_or_create(2, 'vansika_2')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'vansika_1')
+        self.user2 = db_user.get_or_create(self.db_conn, 2, 'vansika_2')
 
         with open(self.path_to_data_file('missing_musicbrainz_data.json'), 'r') as f:
             missing_musicbrainz_data = json.load(f)

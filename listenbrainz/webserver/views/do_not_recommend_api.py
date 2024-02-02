@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db import do_not_recommend
+from listenbrainz.webserver import db_conn
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIBadRequest
@@ -50,7 +51,7 @@ def get_do_not_recommends(user_name):
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
     count = min(count, MAX_ITEMS_PER_GET)
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 

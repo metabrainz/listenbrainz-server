@@ -13,7 +13,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(SpotifyDatabaseTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testspotifyuser')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'testspotifyuser')
         db_oauth.save_token(
             user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
@@ -25,7 +25,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         )
 
     def test_get_active_users_to_process(self):
-        user2 = db_user.get_or_create(2, 'newspotifyuser')
+        user2 = db_user.get_or_create(self.db_conn, 2, 'newspotifyuser')
         db_oauth.save_token(
             user_id=user2['id'],
             service=ExternalServiceType.SPOTIFY,
@@ -43,7 +43,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(users[1]['musicbrainz_row_id'], 2)
 
         # check order, the users should be sorted by latest_listened_at timestamp
-        user3 = db_user.get_or_create(3, 'newnewspotifyuser')
+        user3 = db_user.get_or_create(self.db_conn, 3, 'newnewspotifyuser')
         db_oauth.save_token(
             user_id=user3['id'],
             service=ExternalServiceType.SPOTIFY,

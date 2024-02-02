@@ -103,7 +103,7 @@ def get_feedback_for_user(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -256,7 +256,7 @@ def get_feedback_for_recordings_for_user(user_name):
     if not recording_msids and not recording_mbids:
         log_raise_400("No valid recording msid or recording mbid found.")
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 

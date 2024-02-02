@@ -54,7 +54,7 @@ def handshake():
     if request.args.get('hs', '') != 'true':
         return redirect('https://listenbrainz.org/lastfm-proxy')
 
-    user = db_user.get_by_mb_id(request.args.get('u'), fetch_email=True)
+    user = db_user.get_by_mb_id(db_conn, request.args.get('u'), fetch_email=True)
     if user is None:
         return 'BADAUTH\n', 401
 

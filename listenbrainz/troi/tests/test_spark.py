@@ -16,11 +16,11 @@ class TestSparkPlaylists(DatabaseTestCase, TimescaleTestCase):
 
     def test_get_user_details(self):
         self.maxDiff = None
-        self.user1 = db_user.get_or_create(100, "user1")
-        self.user2 = db_user.get_or_create(200, "user2")
-        self.user3 = db_user.get_or_create(300, "user3")
-        self.user4 = db_user.get_or_create(400, "user4")
-        self.user5 = db_user.get_or_create(500, "user5")
+        self.user1 = db_user.get_or_create(self.db_conn, 100, "user1")
+        self.user2 = db_user.get_or_create(self.db_conn, 200, "user2")
+        self.user3 = db_user.get_or_create(self.db_conn, 300, "user3")
+        self.user4 = db_user.get_or_create(self.db_conn, 400, "user4")
+        self.user5 = db_user.get_or_create(self.db_conn, 500, "user5")
 
         db_user_setting.update_troi_prefs(self.db_conn, self.user1["id"], True)
         db_user_setting.update_troi_prefs(self.db_conn, self.user2["id"], False)

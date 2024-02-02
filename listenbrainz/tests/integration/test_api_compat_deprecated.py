@@ -38,7 +38,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def setUp(self):
         super(APICompatDeprecatedTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'apicompatoldtestuser')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'apicompatoldtestuser')
 
         self.log = logging.getLogger(__name__)
         self.ls = timescale_connection._ts

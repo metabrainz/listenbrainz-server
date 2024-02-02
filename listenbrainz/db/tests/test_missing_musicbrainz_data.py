@@ -11,7 +11,7 @@ class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase, TimescaleTestCase
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, 'vansika')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'vansika')
 
     def tearDown(self):
         TimescaleTestCase.tearDown(self)
