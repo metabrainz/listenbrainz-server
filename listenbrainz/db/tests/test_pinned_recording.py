@@ -63,6 +63,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         for data in self.pinned_rec_samples[:limit]:
             db_pinned_rec.pin(
+                self.db_conn,
                 WritablePinnedRecording(
                     user_id=user_id,
                     recording_msid=data["recording_msid"],
@@ -89,7 +90,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             blurb_content=self.pinned_rec_samples[index]["blurb_content"],
         )
 
-        db_pinned_rec.pin(recording_to_pin)
+        db_pinned_rec.pin(self.db_conn, recording_to_pin)
         return recording_to_pin
 
     def test_pinned_recording_with_metadata(self):
@@ -144,6 +145,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         for data in pinned_recs:
             db_pinned_rec.pin(
+                self.db_conn,
                 WritablePinnedRecording(
                     user_id=self.user["id"],
                     recording_msid=data["recording_msid"],
@@ -152,7 +154,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
                 )
             )
 
-        pins = db_pinned_rec.get_pin_history_for_user(self.user["id"], 5, 0)
+        pins = db_pinned_rec.get_pin_history_for_user(self.db_conn, self.user["id"], 5, 0)
         pins_with_metadata = fetch_track_metadata_for_items(pins)
 
         received = [x.dict() for x in pins_with_metadata]
@@ -272,13 +274,17 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def test_pin(self):
         count = self.insert_test_data(self.user["id"])
-        pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
+        pin_history = db_pinned_rec.get_pin_history_for_user(
+            self.db_conn, user_id=self.user["id"], count=50, offset=0
+        )
         self.assertEqual(len(pin_history), count)
 
     def test_unpin_if_active_currently_pinned(self):
         original_pinned = self.pin_single_sample(self.user["id"], 0)
         new_pinned = self.pin_single_sample(self.user["id"], 1)
-        original_unpinned = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)[1]
+        original_unpinned = db_pinned_rec.get_pin_history_for_user(
+            self.db_conn, user_id=self.user["id"], count=50, offset=0
+        )[1]
 
         # only the pinned_until value of the record should be updated
         self.assertEqual(original_unpinned.user_id, original_pinned.user_id)
@@ -292,11 +298,11 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def test_unpin(self):
         pinned = self.pin_single_sample(self.user["id"], 0)
-        db_pinned_rec.unpin(self.user["id"])
-        self.assertIsNone(db_pinned_rec.get_current_pin_for_user(self.user["id"]))
+        db_pinned_rec.unpin(self.db_conn, self.user["id"])
+        self.assertIsNone(db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"]))
 
         # test that the pinned_until value was updated
-        unpinned = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)[0]
+        unpinned = db_pinned_rec.get_pin_history_for_user(self.db_conn, user_id=self.user["id"], count=50, offset=0)[0]
         self.assertGreater(pinned.pinned_until, unpinned.pinned_until)
 
     def test_delete(self):
@@ -305,30 +311,32 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         # insert two records and delete the newer one
         self.pin_single_sample(self.user["id"], keptIndex)
         self.pin_single_sample(self.user["id"], 1)
-        old_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
+        old_pin_history = db_pinned_rec.get_pin_history_for_user(self.db_conn, user_id=self.user["id"], count=50, offset=0)
         pin_to_delete = old_pin_history[0]
-        db_pinned_rec.delete(pin_to_delete.row_id, self.user["id"])
+        db_pinned_rec.delete(self.db_conn, pin_to_delete.row_id, self.user["id"])
 
         # test that only the older pin remained in the database
-        pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
+        pin_history = db_pinned_rec.get_pin_history_for_user(self.db_conn, user_id=self.user["id"], count=50, offset=0)
         pin_remaining = pin_history[0]
         self.assertEqual(len(pin_history), len(old_pin_history) - 1)
         self.assertEqual(pin_remaining.blurb_content, self.pinned_rec_samples[keptIndex]["blurb_content"])
 
         # delete the remaining pin
-        db_pinned_rec.delete(pin_remaining.row_id, self.user["id"])
-        pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
+        db_pinned_rec.delete(self.db_conn, pin_remaining.row_id, self.user["id"])
+        pin_history = db_pinned_rec.get_pin_history_for_user(self.db_conn, user_id=self.user["id"], count=50, offset=0)
         self.assertFalse(pin_history)
 
     def test_get_current_pin_for_user(self):
         self.pin_single_sample(self.user["id"], 0)
-        expected_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
-        recieved_pinned = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)[0]
+        expected_pinned = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+        recieved_pinned = db_pinned_rec.get_pin_history_for_user(
+            self.db_conn, user_id=self.user["id"], count=50, offset=0
+        )[0]
         self.assertEqual(recieved_pinned, expected_pinned)
 
         self.pin_single_sample(self.user["id"], 1)
-        expected_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
-        recieved_pinned = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        expected_pinned = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+        recieved_pinned = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
         self.assertEqual(recieved_pinned, expected_pinned)
 
     def test_get_pin_history_for_user(self):
@@ -336,9 +344,9 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.insert_test_data(self.user["id"], count)
 
         # test that pin history includes unpinned recordings
-        pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
-        db_pinned_rec.unpin(user_id=self.user["id"])
-        new_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
+        pin_history = db_pinned_rec.get_pin_history_for_user(self.db_conn, user_id=self.user["id"], count=50, offset=0)
+        db_pinned_rec.unpin(self.db_conn, user_id=self.user["id"])
+        new_pin_history = db_pinned_rec.get_pin_history_for_user(self.db_conn, user_id=self.user["id"], count=50, offset=0)
         self.assertEqual(len(new_pin_history), len(pin_history))
 
         # test that the list was returned in descending order of creation date
@@ -346,37 +354,45 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         # test the limit argument
         limit = 1
-        limited_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=limit, offset=0)
+        limited_pin_history = db_pinned_rec.get_pin_history_for_user(
+            self.db_conn, user_id=self.user["id"], count=limit, offset=0
+        )
         self.assertEqual(len(limited_pin_history), limit)
 
         limit = 999
-        limited_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=limit, offset=0)
+        limited_pin_history = db_pinned_rec.get_pin_history_for_user(
+            self.db_conn, user_id=self.user["id"], count=limit, offset=0
+        )
         self.assertEqual(len(limited_pin_history), count)
 
         # test the offset argument
         offset = 1
-        offset_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=offset)
+        offset_pin_history = db_pinned_rec.get_pin_history_for_user(
+            self.db_conn, user_id=self.user["id"], count=50, offset=offset
+        )
         self.assertEqual(len(offset_pin_history), count - offset)
 
         offset = 999
-        offset_pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=offset)
+        offset_pin_history = db_pinned_rec.get_pin_history_for_user(
+            self.db_conn, user_id=self.user["id"], count=50, offset=offset
+        )
         self.assertFalse(offset_pin_history)
 
     def test_get_pin_count_for_user(self):
         self.insert_test_data(self.user["id"])
-        pin_history = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=0)
-        pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
+        pin_history = db_pinned_rec.get_pin_history_for_user(self.db_conn, user_id=self.user["id"], count=50, offset=0)
+        pin_count = db_pinned_rec.get_pin_count_for_user(self.db_conn, user_id=self.user["id"])
         self.assertEqual(pin_count, len(pin_history))
 
         # test that pin_count includes unpinned recordings
-        db_pinned_rec.unpin(user_id=self.user["id"])
-        pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
+        db_pinned_rec.unpin(self.db_conn, user_id=self.user["id"])
+        pin_count = db_pinned_rec.get_pin_count_for_user(self.db_conn, user_id=self.user["id"])
         self.assertEqual(pin_count, len(pin_history))
 
         # test that pin_count excludes deleted recordings
         pin_to_delete = pin_history[1]
-        db_pinned_rec.delete(pin_to_delete.row_id, self.user["id"])
-        pin_count = db_pinned_rec.get_pin_count_for_user(user_id=self.user["id"])
+        db_pinned_rec.delete(self.db_conn, pin_to_delete.row_id, self.user["id"])
+        pin_count = db_pinned_rec.get_pin_count_for_user(self.db_conn, user_id=self.user["id"])
         self.assertEqual(pin_count, len(pin_history) - 1)
 
     def test_get_pins_for_user_following(self):
@@ -392,7 +408,9 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         # test that followed_pins contains followed_user_1's pinned recording
         self.pin_single_sample(self.followed_user_1["id"], 0)
-        followed_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=50, offset=0)
+        followed_pins = db_pinned_rec.get_pins_for_user_following(
+            self.db_conn, user_id=self.user["id"], count=50, offset=0
+        )
         self.assertEqual(len(followed_pins), 1)
         self.assertEqual(followed_pins[0].user_name, "followed_user_1")
 
@@ -402,7 +420,9 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         # test that followed_user_2's pin is included after user follows
         db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
-        followed_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=50, offset=0)
+        followed_pins = db_pinned_rec.get_pins_for_user_following(
+            self.db_conn, user_id=self.user["id"], count=50, offset=0
+        )
         self.assertEqual(len(followed_pins), 2)
         self.assertEqual(followed_pins[0].user_name, "followed_user_2")
 
@@ -412,20 +432,28 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         # test the limit argument
         limit = 1
-        limited_following_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=limit, offset=0)
+        limited_following_pins = db_pinned_rec.get_pins_for_user_following(
+            self.db_conn, user_id=self.user["id"], count=limit, offset=0
+        )
         self.assertEqual(len(limited_following_pins), limit)
 
         limit = 999
-        limited_following_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=limit, offset=0)
+        limited_following_pins = db_pinned_rec.get_pins_for_user_following(
+            self.db_conn, user_id=self.user["id"], count=limit, offset=0
+        )
         self.assertEqual(len(limited_following_pins), 2)
 
         # test the offset argument
         offset = 1
-        offset_following_pins = db_pinned_rec.get_pins_for_user_following(user_id=self.user["id"], count=50, offset=offset)
+        offset_following_pins = db_pinned_rec.get_pins_for_user_following(
+            self.db_conn, user_id=self.user["id"], count=50, offset=offset
+        )
         self.assertEqual(len(offset_following_pins), 2 - offset)
 
         offset = 999
-        offset_following_pins = db_pinned_rec.get_pin_history_for_user(user_id=self.user["id"], count=50, offset=offset)
+        offset_following_pins = db_pinned_rec.get_pin_history_for_user(
+            self.db_conn, user_id=self.user["id"], count=50, offset=offset
+        )
         self.assertFalse(offset_following_pins)
 
     def get_pins_for_feed(self):
@@ -434,6 +462,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.pin_single_sample(self.followed_user_1["id"])  # pin 1 recording for followed_user_1
 
         feedPins = db_pinned_rec.get_pins_for_feed(
+            self.db_conn,
             user_ids=(self.user["id"],),
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -444,6 +473,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         # test that user_ids param is honored
         feedPins = db_pinned_rec.get_pins_for_feed(
+            self.db_conn,
             user_ids=(self.user["id"], self.followed_user_1["id"]),
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -455,6 +485,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         # test that count parameter is honored
         limit = 1
         feedPins = db_pinned_rec.get_pins_for_feed(
+            self.db_conn,
             user_ids=(self.user["id"], self.followed_user_1["id"]),
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -463,6 +494,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(len(feedPins), limit)
 
         feedPins = db_pinned_rec.get_pins_for_feed(
+            self.db_conn,
             user_ids=(self.user["id"], self.followed_user_1["id"]),
             min_ts=0,
             max_ts=0,  # too low, nothing is returned.
@@ -471,6 +503,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(len(feedPins), 0)
 
         feedPins = db_pinned_rec.get_pins_for_feed(
+            self.db_conn,
             user_ids=(self.user["id"], self.followed_user_1["id"]),
             min_ts=9999,  # too high, nothing is returned.
             max_ts=9999,

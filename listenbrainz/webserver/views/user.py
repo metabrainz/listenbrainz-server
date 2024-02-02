@@ -67,7 +67,7 @@ redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
-    db_conn = webserver.timescale_connection._ts
+    ts_conn = webserver.timescale_connection._ts
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
 
@@ -96,8 +96,8 @@ def profile(user_name):
     if max_ts:
         args['to_ts'] = datetime.utcfromtimestamp(max_ts)
     elif min_ts:
-        args['from_ts'] =  datetime.utcfromtimestamp(min_ts)
-    data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
+        args['from_ts'] = datetime.utcfromtimestamp(min_ts)
+    data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
     min_ts_per_user = int(min_ts_per_user.timestamp())
     max_ts_per_user = int(max_ts_per_user.timestamp())
@@ -116,7 +116,7 @@ def profile(user_name):
     if current_user.is_authenticated:
         already_reported_user = db_user.is_user_reported(current_user.id, user.id)
 
-    pin = get_current_pin_for_user(user_id=user.id)
+    pin = get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
         pin = fetch_track_metadata_for_items([pin])[0].to_api()
 
@@ -277,7 +277,7 @@ def recommendation_playlists(user_name: str):
     }
 
     playlists = []
-    user_playlists = get_recommendation_playlists_for_user(db_conn, user.id)
+    user_playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, user.id)
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
@@ -391,9 +391,9 @@ def taste(user_name: str):
         offset=0, score=score, metadata=True
     )
     
-    pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
+    pins = get_pin_history_for_user(db_conn, user_id=user.id, count=25, offset=0)
     pins = [pin.to_api() for pin in fetch_track_metadata_for_items(pins)]
-    pin_count = get_pin_count_for_user(user_id=user.id)
+    pin_count = get_pin_count_for_user(db_conn, user_id=user.id)
 
     props = {
         "feedback": [f.to_api() for f in feedback],
