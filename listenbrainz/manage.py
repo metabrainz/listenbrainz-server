@@ -8,14 +8,13 @@ import sqlalchemy
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.db import timescale as ts, do_not_recommend
-from listenbrainz.listenstore import timescale_fill_userid, timescale_listens_migrate
+
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
     delete_listens as ts_delete_listens, \
     refresh_top_manual_mappings as ts_refresh_top_manual_mappings
-from listenbrainz.domain import spotify_fill_user_id
-from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping, deduplicate, replace_duplicates
+from listenbrainz.messybrainz import update_msids_from_mapping
 from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
@@ -309,57 +308,6 @@ def notify_yim_users(year: int):
     with application.app_context():
         from listenbrainz.db import year_in_music
         year_in_music.notify_yim_users(year)
-
-
-@cli.command()
-def listen_add_userid():
-    """
-        Fill in the listen.user_id field based on user_name.
-    """
-    app = create_app()
-    with app.app_context():
-        timescale_fill_userid.fill_userid()
-
-
-@cli.command()
-def spotify_add_userid():
-    """
-        Fill in the spotify user id using the connected user's oauth token.
-    """
-    app = create_app()
-    with app.app_context():
-        spotify_fill_user_id.main()
-
-
-@cli.command()
-def listen_migrate():
-    """ Migrate the listens table to new schema. """
-    app = create_app()
-    with app.app_context():
-        timescale_listens_migrate.migrate_listens()
-
-
-@cli.command()
-def deduplicate_msb_listens():
-    """ Migrate the listens table to new schema. """
-    app = create_app()
-    with app.app_context():
-        deduplicate.deduplicate_listens()
-
-
-@cli.command()
-def fixup_recording_msid_tables():
-    """ Migrate the listens table to new schema. """
-    app = create_app()
-    with app.app_context():
-        replace_duplicates.main()
-
-
-@cli.command()
-def msb_transfer_db():
-    """ Transfer MsB tables from MsB DB to TS DB"""
-    with create_app().app_context():
-        transfer_to_timescale.run()
 
 
 @cli.command()
