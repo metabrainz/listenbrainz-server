@@ -61,15 +61,8 @@ module.exports = function (env, argv) {
       index: [path.resolve(jsDir, "src/index.tsx")],
       AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/AIBrainz.tsx")],
       import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
+      userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
-      coverArtComposite2022: path.resolve(
-        jsDir,
-        "src/explore/cover-art-collage/2022/CoverArtComposite.tsx"
-      ),
-      coverArtComposite2023: path.resolve(
-        jsDir,
-        "src/explore/cover-art-collage/2023/CoverArtComposite.tsx"
-      ),
       homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
       recommendationsPlayground: path.resolve(
         jsDir,
