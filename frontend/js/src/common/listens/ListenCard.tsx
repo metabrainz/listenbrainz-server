@@ -98,10 +98,8 @@ export default class ListenCard extends React.Component<
   static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-
   constructor(props: ListenCardProps) {
     super(props);
-
     this.state = {
       listen: props.listen,
       isCurrentlyPlaying: false,
@@ -118,8 +116,10 @@ export default class ListenCard extends React.Component<
     oldState: ListenCardState
   ) {
     const { listen: oldListen } = oldState;
-    const { customThumbnail } = this.props;
-    const { listen } = this.state;
+    const { listen, customThumbnail } = this.props;
+    if (Boolean(listen) && !isEqual(listen, oldListen)) {
+      this.setState({ listen });
+    }
     if (!customThumbnail && Boolean(listen) && !isEqual(listen, oldListen)) {
       await this.getCoverArt();
     }
