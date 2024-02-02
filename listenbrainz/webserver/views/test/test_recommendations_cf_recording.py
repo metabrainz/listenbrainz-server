@@ -37,6 +37,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
             )
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user2["id"],
             UserRecommendationsJson(**{
                 'raw': data['recording_mbid']
@@ -44,6 +45,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         )
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user3["id"],
             UserRecommendationsJson(**{
                 'raw': [],
@@ -154,7 +156,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         mock_get_recommendations.return_value = recommendations
 
         recommendations_cf_recording._get_template(active_section='raw', user=user)
-        mock_get_rec.assert_called_with(user.id)
+        mock_get_rec.assert_called_with(mock.ANY, user.id)
         mock_get_recommendations.assert_called_once()
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'raw')

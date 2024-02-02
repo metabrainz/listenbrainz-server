@@ -24,18 +24,24 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             recordings.append({"recording_mbid": str(uuid.uuid4()), "score": score})
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user['id'],
             UserRecommendationsJson(raw=recordings)
         )
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user2['id'],
             UserRecommendationsJson(raw=[])
         )
 
         # get recommendations
-        self.user_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.user['id'])
-        self.user2_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.user2['id'])
+        self.user_recommendations = db_recommendations_cf_recording.get_user_recommendation(
+            self.db_conn, self.user['id']
+        )
+        self.user2_recommendations = db_recommendations_cf_recording.get_user_recommendation(
+            self.db_conn, self.user2['id']
+        )
 
     def test_invalid_user(self):
         response = self.client.get(
