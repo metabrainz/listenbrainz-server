@@ -1,17 +1,14 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
-import * as Sentry from "@sentry/react";
-import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { Integrations } from "@sentry/tracing";
-import { capitalize } from "lodash";
-import { ToastContainer, toast } from "react-toastify";
 import { faHeart } from "@fortawesome/free-regular-svg-icons";
+import { faCheck, faSpinner, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { capitalize } from "lodash";
+import { toast } from "react-toastify";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
-import { getPageProps } from "../utils/utils";
 
 export const LASTFM_RETRIES = 3;
 
@@ -668,55 +665,3 @@ export default class LastFmImporter extends React.Component<
     );
   }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const {
-    user,
-    profile_url,
-    lastfm_api_url,
-    lastfm_api_key,
-    librefm_api_url,
-    librefm_api_key,
-  } = reactProps;
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnHover
-        theme="light"
-      />
-      <LastFmImporter
-        user={user}
-        profileUrl={profile_url}
-        apiUrl={globalAppContext.APIService.APIBaseURI}
-        lastfmApiKey={lastfm_api_key}
-        lastfmApiUrl={lastfm_api_url}
-        librefmApiKey={librefm_api_key}
-        librefmApiUrl={librefm_api_url}
-      />
-    </>
-  );
-});

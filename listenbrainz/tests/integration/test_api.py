@@ -3,7 +3,6 @@ import time
 from unittest.mock import patch
 
 import pytest
-from flask import url_for
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
@@ -19,20 +18,21 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(APITestCase, self).setUp()
         self.followed_user = db_user.get_or_create(3, 'followed_user')
-        self.follow_user_url = url_for("social_api_v1.follow_user", user_name=self.followed_user["musicbrainz_id"])
+        self.follow_user_url = self.custom_url_for("social_api_v1.follow_user",
+                                                   user_name=self.followed_user["musicbrainz_id"])
         self.follow_user_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
 
     def test_get_listens_invalid_count(self):
         """If the count argument is negative, the API should raise HTTP 400"""
-        url = url_for('api_v1.get_listens',
-                      user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
         response = self.client.get(url, query_string={'count': '-1'})
         self.assert400(response)
 
     def test_get_listens_ts_order(self):
         """If min_ts is greater than max_ts, the API should raise HTTP 400"""
-        url = url_for('api_v1.get_listens',
-                      user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
         response = self.client.get(
             url, query_string={'max_ts': '1400000000', 'min_ts': '1500000000'})
         self.assert400(response)
@@ -40,8 +40,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
     @patch("listenbrainz.webserver.timescale_connection._ts", None)
     def test_get_listens_ts_unavailable(self):
         """Check that an error message is returned if the listenstore is unavailable"""
-        url = url_for('api_v1.get_listens',
-                      user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
         response = self.client.get(url)
         self.assertStatus(response, 503)
 
@@ -58,8 +58,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        url = url_for('api_v1.get_listens',
-                      user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
         response = self.wait_for_query_to_have_items(
             url, 1, query_string={'count': '1'})
         data = json.loads(response.data)['payload']
@@ -106,8 +106,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['payload']['oldest_listen_ts'], ts)
 
         # test request with both max_ts and min_ts is working
-        url = url_for('api_v1.get_listens',
-                      user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
 
         response = self.client.get(
             url, query_string={'max_ts': ts + 1000, 'min_ts': ts - 1000})
@@ -128,14 +128,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['listens'][0]['track_metadata']
                          ['release_name'], 'The Life of Pablo')
 
-        url = url_for('api_v1.get_listen_count',
-                      user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listen_count',
+                                  user_name=self.user['musicbrainz_id'])
         response = self.client.get(url)
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 1)
 
-        url = url_for('api_v1.get_listen_count', user_name="sir_dumpsterfire")
+        url = self.custom_url_for('api_v1.get_listen_count', user_name="sir_dumpsterfire")
         response = self.client.get(url)
         self.assert404(response)
 
@@ -155,7 +155,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             self.assertEqual(response.json['status'], 'ok')
 
         expected_count = 3
-        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
         response = self.wait_for_query_to_have_items(url, expected_count)
         data = json.loads(response.data)['payload']
 
@@ -166,10 +166,10 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
 
         # Fetch the listens with from_ts and make sure the order is descending
-        url = url_for('api_v1.get_listens',
-                      user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
         response = self.client.get(
-            url, query_string={'count': '3', 'from_ts': ts-500})
+            url, query_string={'count': '3', 'from_ts': ts - 500})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -218,7 +218,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         # request with no authorization header
         response = self.client.post(
-            url_for('api_v1.submit_listen'),
+            self.custom_url_for('api_v1.submit_listen'),
             data=json.dumps(payload),
             content_type='application/json'
         )
@@ -227,7 +227,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         # request with invalid authorization header
         response = self.client.post(
-            url_for('api_v1.submit_listen'),
+            self.custom_url_for('api_v1.submit_listen'),
             data=json.dumps(payload),
             headers={'Authorization': 'Token testtokenplsignore'},
             content_type='application/json'
@@ -262,8 +262,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        r = self.client.get(url_for('api_v1.get_playing_now',
-                                    user_name=self.user['musicbrainz_id']))
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
+                                                user_name=self.user['musicbrainz_id']))
         self.assert200(r)
         self.assertEqual(r.json['payload']['count'], 1)
 
@@ -276,8 +276,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        r = self.client.get(url_for('api_v1.get_playing_now',
-                                    user_name=self.user['musicbrainz_id']))
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
+                                                user_name=self.user['musicbrainz_id']))
         self.assertEqual(r.json['payload']['count'], 1)
         self.assertEqual(r.json['payload']['listens'][0]
                          ['track_metadata']['track_name'], 'Fade')
@@ -285,7 +285,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         time.sleep(1.1)
 
         # should have expired by now
-        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
         self.assertEqual(r.json['payload']['count'], 0)
 
     def test_playing_now_with_duration_ms(self):
@@ -297,8 +297,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        r = self.client.get(url_for('api_v1.get_playing_now',
-                                    user_name=self.user['musicbrainz_id']))
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
+                                                user_name=self.user['musicbrainz_id']))
         self.assertEqual(r.json['payload']['count'], 1)
         self.assertEqual(r.json['payload']['listens'][0]
                          ['track_metadata']['track_name'], 'Fade')
@@ -306,8 +306,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         time.sleep(1.1)
 
         # should have expired by now
-        r = self.client.get(url_for('api_v1.get_playing_now',
-                                    user_name=self.user['musicbrainz_id']))
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
+                                                user_name=self.user['musicbrainz_id']))
         self.assertEqual(r.json['payload']['count'], 0)
 
     def test_playing_now_with_ts(self):
@@ -515,7 +515,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
-    
+
     def test_multi_duration(self):
         """ Test for duration and duration_ms both given """
         with open(self.path_to_data_file('multi_duration.json'), 'r') as f:
@@ -547,7 +547,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
-        self.assertEqual('Value for duration_ms is too large, max permitted value is 2073600000', response.json['error'])
+        self.assertEqual('Value for duration_ms is too large, max permitted value is 2073600000',
+                         response.json['error'])
 
     def test_valid_duration(self):
         """ Test for valid submission in which a listen contains a valid duration_ms field
@@ -569,10 +570,11 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
         response = self.wait_for_query_to_have_items(url, 1, query_string={'count': '1'})
         self.assert200(response)
-        self.assertEqual(300000, response.json["payload"]["listens"][0]["track_metadata"]["additional_info"]["duration_ms"])
+        self.assertEqual(300000,
+                         response.json["payload"]["listens"][0]["track_metadata"]["additional_info"]["duration_ms"])
 
     def test_unicode_null_error(self):
         with open(self.path_to_data_file('listen_having_unicode_null.json'), 'r') as f:
@@ -595,8 +597,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['status'], 'ok')
 
         expected_length = 1
-        url = url_for('api_v1.get_listens',
-                      user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
         response = self.wait_for_query_to_have_items(
             url, expected_length, query_string={'count': '1'})
         data = json.loads(response.data)['payload']
@@ -644,7 +646,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
         response = self.wait_for_query_to_have_items(url, num_items=2, query_string={'count': '2'})
         listens = json.loads(response.data)['payload']['listens']
 
@@ -661,7 +663,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def test_similar_users(self):
 
         response = self.client.get(
-            url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
+            self.custom_url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
         self.assert404(response)
 
         conn = db.engine.raw_connection()
@@ -672,18 +674,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
         conn.commit()
 
         response = self.client.get(
-            url_for('api_v1.get_similar_users', user_name=self.user['musicbrainz_id']))
+            self.custom_url_for('api_v1.get_similar_users', user_name=self.user['musicbrainz_id']))
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data[0]['user_name'], self.user2['musicbrainz_id'])
         self.assertEqual(data[0]['similarity'], 0.123)
 
-        response = self.client.get(url_for(
+        response = self.client.get(self.custom_url_for(
             'api_v1.get_similar_to_user', user_name=self.user['musicbrainz_id'], other_user_name="muppet"))
         self.assert404(response)
 
-        response = self.client.get(url_for(
-            'api_v1.get_similar_to_user', user_name=self.user['musicbrainz_id'], other_user_name=self.user2['musicbrainz_id']))
+        response = self.client.get(self.custom_url_for(
+            'api_v1.get_similar_to_user', user_name=self.user['musicbrainz_id'],
+            other_user_name=self.user2['musicbrainz_id']))
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data['user_name'], self.user2['musicbrainz_id'])
@@ -693,8 +696,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test for api.latest_import """
 
         # initially the value of latest_import will be 0
-        response = self.client.get(url_for('api_v1.latest_import'), query_string={
-                                   'user_name': self.user['musicbrainz_id']})
+        response = self.client.get(self.custom_url_for('api_v1.latest_import'), query_string={
+            'user_name': self.user['musicbrainz_id']})
         self.assert200(response)
         data = json.loads(response.data)
         self.assertEqual(data['musicbrainz_id'], self.user['musicbrainz_id'])
@@ -703,7 +706,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # now an update
         val = int(time.time())
         response = self.client.post(
-            url_for('api_v1.latest_import'),
+            self.custom_url_for('api_v1.latest_import'),
             data=json.dumps({'ts': val}),
             headers={'Authorization': 'Token {token}'.format(
                 token=self.user['auth_token'])}
@@ -712,8 +715,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['status'], 'ok')
 
         # now the value must have changed
-        response = self.client.get(url_for('api_v1.latest_import'), query_string={
-                                   'user_name': self.user['musicbrainz_id']})
+        response = self.client.get(self.custom_url_for('api_v1.latest_import'), query_string={
+            'user_name': self.user['musicbrainz_id']})
         self.assert200(response)
         data = json.loads(response.data)
         self.assertEqual(data['musicbrainz_id'], self.user['musicbrainz_id'])
@@ -724,7 +727,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         val = int(time.time())
         response = self.client.post(
-            url_for('api_v1.latest_import'),
+            self.custom_url_for('api_v1.latest_import'),
             data=json.dumps({'ts': val}),
             headers={'Authorization': 'Token thisisinvalid'}
         )
@@ -734,7 +737,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def test_latest_import_unknown_user(self):
         """Tests api.latest_import without a valid username"""
         response = self.client.get(
-            url_for('api_v1.latest_import'), query_string={'user_name': ''})
+            self.custom_url_for('api_v1.latest_import'), query_string={'user_name': ''})
         self.assert404(response)
         self.assertEqual(response.json['code'], 404)
 
@@ -754,7 +757,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         with open(self.path_to_data_file('timestamp_in_ns.json'), 'r') as f:
             payload = json.load(f)
-        payload['listened_at'] = int(time.time()) * 10**9
+        payload['listened_at'] = int(time.time()) * 10 ** 9
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
@@ -773,7 +776,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def test_invalid_token_validation(self):
         """Sends an invalid token to api.validate_token"""
-        url = url_for('api_v1.validate_token')
+        url = self.custom_url_for('api_v1.validate_token')
         response = self.client.get(url, query_string={"token": "invalidtoken"})
         self.assert200(response)
         self.assertEqual(response.json['code'], 200)
@@ -783,7 +786,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def test_valid_token_validation(self):
         """Sends a valid token to api.validate_token"""
-        url = url_for('api_v1.validate_token')
+        url = self.custom_url_for('api_v1.validate_token')
         response = self.client.get(
             url, query_string={"token": self.user['auth_token']})
         self.assert200(response)
@@ -795,7 +798,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def test_token_validation_auth_header(self):
         """Sends a valid token to api.validate_token in the Authorization header"""
-        url = url_for('api_v1.validate_token')
+        url = self.custom_url_for('api_v1.validate_token')
         response = self.client.get(url, headers={
             "Authorization": "Token {}".format(self.user['auth_token'])
         })
@@ -805,16 +808,15 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertTrue(response.json['valid'])
         self.assertEqual(response.json['user_name'], self.user['musicbrainz_id'])
 
-
     def test_get_playing_now(self):
         """ Test for valid submission and retrieval of listen_type 'playing_now'
         """
-        r = self.client.get(url_for('api_v1.get_playing_now',
-                                    user_name='thisuserdoesnotexist'))
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
+                                                user_name='thisuserdoesnotexist'))
         self.assert404(r)
 
-        r = self.client.get(url_for('api_v1.get_playing_now',
-                                    user_name=self.user['musicbrainz_id']))
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
+                                                user_name=self.user['musicbrainz_id']))
         self.assertEqual(r.json['payload']['count'], 0)
         self.assertEqual(len(r.json['payload']['listens']), 0)
 
@@ -824,8 +826,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        r = self.client.get(url_for('api_v1.get_playing_now',
-                                    user_name=self.user['musicbrainz_id']))
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
+                                                user_name=self.user['musicbrainz_id']))
         self.assertTrue(r.json['payload']['playing_now'])
         self.assertEqual(r.json['payload']['count'], 1)
         self.assertEqual(len(r.json['payload']['listens']), 1)
@@ -851,13 +853,13 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        url = url_for('api_v1.get_listens',
-                      user_name=self.user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
         response = self.wait_for_query_to_have_items(url, 1)
         data = json.loads(response.data)['payload']
         self.assertEqual(len(data['listens']), 1)
 
-        delete_listen_url = url_for('api_v1.delete_listen')
+        delete_listen_url = self.custom_url_for('api_v1.delete_listen')
         data = {
             "listened_at": ts,
             "recording_msid": payload['payload'][0]['track_metadata']['additional_info']['recording_msid']
@@ -874,7 +876,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
     def test_delete_listen_not_logged_in(self):
-        delete_listen_url = url_for('api_v1.delete_listen')
+        delete_listen_url = self.custom_url_for('api_v1.delete_listen')
         data = {
             "listened_at": 1486449409,
             "recording_msid": "2cfad207-3f55-4aec-8120-86cf66e34d59"
@@ -899,7 +901,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert401(response)
 
     def test_delete_listen_missing_keys(self):
-        delete_listen_url = url_for('api_v1.delete_listen')
+        delete_listen_url = self.custom_url_for('api_v1.delete_listen')
 
         # send request without listened_at
         data = {
@@ -932,7 +934,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json["error"], "Recording MSID missing.")
 
     def test_delete_listen_invalid_keys(self):
-        delete_listen_url = url_for('api_v1.delete_listen')
+        delete_listen_url = self.custom_url_for('api_v1.delete_listen')
 
         # send request with invalid listened_at
         data = {
@@ -971,7 +973,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
 
-        r = self.client.get(url_for("social_api_v1.get_followers", user_name=self.followed_user["musicbrainz_id"]))
+        r = self.client.get(
+            self.custom_url_for("social_api_v1.get_followers", user_name=self.followed_user["musicbrainz_id"]))
         self.assert200(r)
         self.assertListEqual([self.user["musicbrainz_id"]], r.json['followers'])
 
@@ -979,7 +982,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
 
-        r = self.client.get(url_for("social_api_v1.get_following", user_name=self.user["musicbrainz_id"]))
+        r = self.client.get(self.custom_url_for("social_api_v1.get_following", user_name=self.user["musicbrainz_id"]))
         self.assert200(r)
         self.assertListEqual(['followed_user'], r.json['following'])
 
@@ -993,12 +996,12 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert401(r)
 
     def test_following_a_nonexistent_user_errors_out(self):
-        r = self.client.post(url_for("social_api_v1.follow_user", user_name="user_doesnt_exist_lol"),
+        r = self.client.post(self.custom_url_for("social_api_v1.follow_user", user_name="user_doesnt_exist_lol"),
                              headers=self.follow_user_headers)
         self.assert404(r)
 
     def test_following_yourself_errors_out(self):
-        r = self.client.post(url_for("social_api_v1.follow_user", user_name=self.user["musicbrainz_id"]),
+        r = self.client.post(self.custom_url_for("social_api_v1.follow_user", user_name=self.user["musicbrainz_id"]),
                              headers=self.follow_user_headers)
         self.assert400(r)
 
@@ -1018,19 +1021,22 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertTrue(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
 
         # now, unfollow and check the db
-        r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
-                             headers=self.follow_user_headers)
+        r = self.client.post(
+            self.custom_url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
+            headers=self.follow_user_headers)
         self.assert200(r)
         self.assertFalse(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
 
     def test_unfollow_not_following_user(self):
-        r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
-                             headers=self.follow_user_headers)
+        r = self.client.post(
+            self.custom_url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
+            headers=self.follow_user_headers)
         self.assert200(r)
         self.assertFalse(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
 
     def test_unfollow_user_requires_login(self):
-        r = self.client.post(url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]))
+        r = self.client.post(
+            self.custom_url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]))
         self.assert401(r)
 
     def test_get_user_services(self):
@@ -1044,7 +1050,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             scopes=['user-read-recently-played']
         )
         response = self.client.get(
-            url_for("api_v1.get_service_details", user_name=self.user["musicbrainz_id"]),
+            self.custom_url_for("api_v1.get_service_details", user_name=self.user["musicbrainz_id"]),
             headers={"Authorization": f"Token {self.user['auth_token']}"},
             content_type="application/json"
         )
@@ -1055,21 +1061,22 @@ class APITestCase(ListenAPIIntegrationTestCase):
         )
 
         response = self.client.get(
-            url_for("api_v1.get_service_details", user_name=self.user["musicbrainz_id"]),
+            self.custom_url_for("api_v1.get_service_details", user_name=self.user["musicbrainz_id"]),
             content_type="application/json"
         )
         self.assert401(response)
 
         response = self.client.get(
-            url_for("api_v1.get_service_details", user_name=self.followed_user["musicbrainz_id"]),
+            self.custom_url_for("api_v1.get_service_details", user_name=self.followed_user["musicbrainz_id"]),
             headers={"Authorization": f"Token {self.user['auth_token']}"},
             content_type="application/json"
         )
         self.assert403(response)
 
     def test_user_recommendations(self):
-        r = self.client.get(url_for("api_v1.user_recommendations", playlist_user_name=self.followed_user["musicbrainz_id"]))
+        r = self.client.get(
+            self.custom_url_for("api_v1.user_recommendations", playlist_user_name=self.followed_user["musicbrainz_id"]))
         self.assert200(r)
 
-        r = self.client.get(url_for("api_v1.user_recommendations", playlist_user_name="does not exist"))
+        r = self.client.get(self.custom_url_for("api_v1.user_recommendations", playlist_user_name="does not exist"))
         self.assert404(r)

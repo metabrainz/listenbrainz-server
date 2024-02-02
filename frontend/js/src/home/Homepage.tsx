@@ -26,9 +26,9 @@ import { getPageProps } from "../utils/utils";
 import Blog from "./Blog";
 import ErrorBoundary from "../utils/ErrorBoundary";
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const domContainer = document.querySelector("#blogs");
-  const { globalAppContext, sentryProps } = getPageProps();
+  const { globalAppContext, sentryProps } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
 
   if (sentry_dsn) {

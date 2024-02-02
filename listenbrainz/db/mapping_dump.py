@@ -1,7 +1,7 @@
 """ This module contains data dump creation and import functions.
 
 Read more about the data dumps in our documentation here:
-https://listenbrainz.readthedocs.io/en/production/dev/listenbrainz-dumps.html
+https://listenbrainz.readthedocs.io/en/latest/users/listenbrainz-dumps.html
 """
 
 # listenbrainz-server - Server for the ListenBrainz project
@@ -57,7 +57,6 @@ PUBLIC_TABLES_MAPPING = {
             'recording_name',
             'combined_lookup',
             'score',
-            'year',
         ),
     },
     'mapping.canonical_recording_redirect': {
@@ -70,7 +69,7 @@ PUBLIC_TABLES_MAPPING = {
         )
     },
     'mapping.canonical_release_redirect': {
-        'engine': 'mb',
+        'engine': 'lb_if_set',
         'filename': 'canonical_release_redirect.csv',
         'columns': (
             'release_mbid',

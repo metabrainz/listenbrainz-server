@@ -1,10 +1,9 @@
-import time
-from uuid import UUID
-
-from psycopg2.extras import execute_values, DictCursor
+from flask import current_app
+from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Literal, Identifier
 
 from listenbrainz.db import timescale
+from listenbrainz.db.artist import load_artists_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset
 
 
@@ -104,3 +103,17 @@ def get(curs, table, mbids, algorithm, count):
         score_index[similar_mbid] = row["score"]
         mbids.append(similar_mbid)
     return mbids, score_index, similar_mbid_index
+
+
+def get_artists(mb_curs, ts_curs, mbids, algorithm, count):
+    """ For the given artist mbids, fetch at most `count` number of similar artists using the given algorithm
+        along with their metadata. """
+    similar_mbids, score_idx, mbid_idx = get(ts_curs, "artist_credit_mbids_dev", mbids, algorithm, count)
+    if not similar_mbids:
+        return []
+
+    metadata = load_artists_from_mbids_with_redirects(mb_curs, similar_mbids)
+    for item in metadata:
+        item["score"] = score_idx.get(item["artist_mbid"])
+        item["reference_mbid"] = mbid_idx.get(item["artist_mbid"])
+    return metadata

@@ -126,10 +126,10 @@ def create_personal_recommendation_event(user_id: int, metadata: PersonalRecordi
                             'recording_mbid', :recording_mbid,
                             'recording_msid', :recording_msid,
                             'users', (
-                                SELECT jsonb_agg("user".id) as users
-                                  FROM unnest(:users) as arr
+                                SELECT jsonb_agg("user".id ORDER BY idx) as users
+                                  FROM unnest(:users) WITH ORDINALITY as arr (value, idx)
                             INNER JOIN "user"
-                                    ON "user".musicbrainz_id = arr
+                                    ON "user".musicbrainz_id = value
                             ),
                             'blurb_content', :blurb_content
                         )

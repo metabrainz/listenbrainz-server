@@ -18,7 +18,7 @@ user_settings_api_bp = Blueprint('user_settings_api_v1', __name__)
 @ratelimit()
 def reset_timezone():
     """
-    Reset local timezone for user. A user token (found on https://listenbrainz.org/profile/)
+    Reset local timezone for user. A user token (found on https://listenbrainz.org/settings/)
     must be provided in the Authorization header! 
 
     :reqheader Authorization: Token <user token>
@@ -49,7 +49,7 @@ def reset_timezone():
 @ratelimit()
 def update_troi_prefs():
     """
-    Update troi preferences for the user. A user token (found on https://listenbrainz.org/profile/)
+    Update troi preferences for the user. A user token (found on https://listenbrainz.org/settings/)
     must be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>

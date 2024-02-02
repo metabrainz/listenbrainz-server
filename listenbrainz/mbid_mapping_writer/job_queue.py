@@ -10,6 +10,8 @@ from io import StringIO
 
 from flask import current_app
 import sqlalchemy
+from sqlalchemy import text
+
 from listenbrainz.listen import Listen
 from listenbrainz.db import timescale
 from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
@@ -67,7 +69,7 @@ class MappingJobQueue(threading.Thread):
         self.unmatched_listens_complete_time = 0
         self.legacy_load_thread = None
         self.legacy_next_run = 0
-        self.legacy_listens_index_date = EPOCH
+        self.legacy_listens_index_date = None
         self.num_legacy_listens_loaded = 0
         self.last_processed = 0
 
@@ -122,15 +124,15 @@ class MappingJobQueue(threading.Thread):
         count = 0
         msids = []
         with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(query), args)
+            curs = connection.execute(text(query), args)
             for row in curs.fetchall():
-                msids.append(row["recording_msid"])
+                msids.append(row.recording_msid)
 
         if len(msids) == 0:
             return 0
 
         with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(msb_query), msids=tuple(msids))
+            curs = connection.execute(text(msb_query), {"msids": tuple(msids)})
             while True:
                 result = curs.fetchone()
                 if not result:
@@ -156,10 +158,10 @@ class MappingJobQueue(threading.Thread):
            Listens are added to the queue with a low priority."""
 
         # Find listens that have no entry in the mapping yet.
-        legacy_query = """SELECT data->'additional_info'->>'recording_msid'::TEXT AS recording_msid
-                            FROM listen
+        legacy_query = """SELECT l.recording_msid::TEXT AS recording_msid
+                            FROM listen l
                        LEFT JOIN mbid_mapping m
-                              ON data->'additional_info'->>'recording_msid' = m.recording_msid::text
+                              ON l.recording_msid = m.recording_msid
                            WHERE m.recording_mbid IS NULL
                              AND listened_at <= :max_ts
                              AND listened_at > :min_ts"""
@@ -168,7 +170,11 @@ class MappingJobQueue(threading.Thread):
         recheck_query = """SELECT recording_msid
                              FROM mbid_mapping
                             WHERE last_updated = '1970-01-01'
-                            LIMIT %d""" % RECHECK_BATCH_SIZE
+                               OR check_again <= NOW()
+                               OR (check_again IS NULL AND recording_mbid IS NULL)
+                         ORDER BY check_again NULLS FIRST
+                            LIMIT %d
+                            """ % RECHECK_BATCH_SIZE
 
         # Check to see where we need to pick up from, or start new
         if not self.legacy_listens_index_date:
@@ -308,7 +314,7 @@ class MappingJobQueue(threading.Thread):
             query = """SELECT COUNT(*), match_type
                          FROM mbid_mapping
                      GROUP BY match_type"""
-            curs = connection.execute(query)
+            curs = connection.execute(text(query))
             while True:
                 result = curs.fetchone()
                 if not result:
@@ -318,7 +324,7 @@ class MappingJobQueue(threading.Thread):
 
             query = """SELECT COUNT(*)
                          FROM mbid_mapping_metadata"""
-            curs = connection.execute(query)
+            curs = connection.execute(text(query))
             while True:
                 result = curs.fetchone()
                 if not result:

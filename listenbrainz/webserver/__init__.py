@@ -204,8 +204,8 @@ def create_web_app(debug=None):
     def before_request_gdpr_check():
         # skip certain pages, static content and the API
         if request.path == url_for('index.gdpr_notice') \
-                or request.path == url_for('profile.delete') \
-                or request.path == url_for('profile.export_data') \
+                or request.path == url_for('settings.index', path='delete') \
+                or request.path == url_for('settings.index', path='export') \
                 or request.path == url_for('login.logout') \
                 or request.path.startswith('/static') \
                 or request.path.startswith('/1'):
@@ -276,7 +276,8 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.playlist import playlist_bp
     app.register_blueprint(playlist_bp, url_prefix='/playlist')
 
-    from listenbrainz.webserver.views.profile import profile_bp
+    from listenbrainz.webserver.views.settings import settings_bp, profile_bp
+    app.register_blueprint(settings_bp, url_prefix='/settings')
     app.register_blueprint(profile_bp, url_prefix='/profile')
 
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
@@ -350,3 +351,9 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.popularity_api import popularity_api_bp
     app.register_blueprint(popularity_api_bp, url_prefix=API_PREFIX+"/popularity")
+
+    from listenbrainz.webserver.views.entity_pages import artist_bp, album_bp, release_bp, release_group_bp
+    app.register_blueprint(artist_bp, url_prefix='/artist')
+    app.register_blueprint(album_bp, url_prefix='/album')
+    app.register_blueprint(release_bp, url_prefix='/release')
+    app.register_blueprint(release_group_bp, url_prefix='/release-group')

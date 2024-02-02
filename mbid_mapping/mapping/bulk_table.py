@@ -2,8 +2,8 @@ from abc import abstractmethod
 from itertools import zip_longest
 
 import psycopg2
+from psycopg2.extras import DictCursor, execute_values
 from tqdm import tqdm
-from psycopg2.errors import OperationalError
 from mapping.utils import insert_rows, log
 
 BATCH_SIZE = 5000
@@ -17,12 +17,13 @@ class BulkInsertTable:
         on the temp table and finally swapping the table into production seamlessly.
     """
 
-    def __init__(self, table_name, mb_conn, lb_conn=None, batch_size=None):
+    def __init__(self, table_name, select_conn, insert_conn=None, batch_size=None, unlogged=None):
         """
-            This init function expects to be passed a database connection (usually to MB)
-            and an optional DB connection to ListenBrainz. If the lb_conn is passed in,
-            the newly written table will be written to that database and the mb_conn connection
-            will only be used to fetch the data.
+            This init function expects to be passed a database connection to read data from (usually MB)
+            and an optional DB connection to write data to (usually ListenBrainz). If the insert_conn is
+            passed in, the newly written table will be written to that database and the select_conn connection
+            will only be used to fetch the data. However, if insert_conn is not passed in, the select_conn
+            will also be used to write the data.
 
             batch_size can also be specified, which controls how often to insert collected
             rows into the DB and the commit. The default setting should be fine in most cases.
@@ -30,8 +31,8 @@ class BulkInsertTable:
 
         self.table_name = table_name
         self.temp_table_name = table_name + "_TMP"
-        self.mb_conn = mb_conn
-        self.lb_conn = lb_conn
+        self.select_conn = select_conn
+        self.insert_conn = insert_conn if insert_conn is not None else select_conn
         self.insert_columns = []
 
         # For use with additional tables
@@ -42,6 +43,8 @@ class BulkInsertTable:
             batch_size = BATCH_SIZE
         self.batch_size = batch_size
         self.total_rows = 0
+
+        self.unlogged = unlogged
 
     def add_additional_bulk_table(self, bulk_table):
         """
@@ -65,12 +68,11 @@ class BulkInsertTable:
     @abstractmethod
     def get_insert_queries(self):
         """
-            Returns a list of tuples with DB nick to connect to and data insert queries to run.
+            Returns a list of data insert queries to run.
             The process_row function will be called for each of the rows resulting from the queries.
 
             Example:
-                [("MB", "SELECT * from ..."),    # Select data from MB
-                 ("LB", "SELECT * from ... ")]   # Select data from LB
+                ["SELECT * from ...", "SELECT * from ... "]
         """
         return []
 
@@ -143,7 +145,7 @@ class BulkInsertTable:
             True if it exists and has data in it
             False if it doesn't exist or is empty
         """
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         try:
             with conn.cursor() as curs:
                 query = f"SELECT 1 FROM {self.table_name} LIMIT 1"
@@ -159,12 +161,7 @@ class BulkInsertTable:
         """
             This function creates the temp table, given the provided specification.
         """
-        if self.lb_conn is not None:
-            conn = self.lb_conn
-            unlogged = False
-        else:
-            conn = self.mb_conn
-            unlogged = True
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
 
         # drop/create finished table
         try:
@@ -192,7 +189,7 @@ class BulkInsertTable:
                 columns = ", ".join(columns)
 
                 curs.execute(f"DROP TABLE IF EXISTS {self.temp_table_name}")
-                curs.execute(f"CREATE {'UNLOGGED' if unlogged else ''} TABLE {self.temp_table_name} ({columns})")
+                curs.execute(f"CREATE {'UNLOGGED' if self.unlogged else ''} TABLE {self.temp_table_name} ({columns})")
                 conn.commit()
 
         except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
@@ -210,7 +207,7 @@ class BulkInsertTable:
             ANALYZE the created table.
         """
 
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         try:
             with conn.cursor() as curs:
                 for name, column_def, unique in self.get_index_names():
@@ -247,7 +244,7 @@ class BulkInsertTable:
             BEFORE indexes are created. Can be used for deduping created data, for instance.
         """
 
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         try:
             with conn.cursor() as curs:
                 for query in self.get_post_process_queries():
@@ -282,7 +279,7 @@ class BulkInsertTable:
             schema = ""
             simple_table_name = self.table_name
 
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         conn = swap_conn if swap_conn is not None else conn
         try:
             with conn.cursor() as curs:
@@ -298,7 +295,7 @@ class BulkInsertTable:
                 if not no_swap_transaction:
                     conn.commit()
 
-        except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
+        except psycopg2.Error as err:
             log(f"{self.table_name}: failed to swap into production", err)
             if not no_swap_transaction:
                 conn.rollback()
@@ -327,7 +324,7 @@ class BulkInsertTable:
             This function will flush out any remaining rows in ram to the DB.
         """
 
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
             insert_rows(ins_curs, self.temp_table_name, self.insert_rows, cols=self.insert_columns)
         conn.commit()
@@ -375,37 +372,26 @@ class BulkInsertTable:
 
         total_row_count = 0
         rows = []
-        inserted = 0
         inserted_total = 0
         batch_count = 0
 
-        ins_conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
-        with ins_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
+        with self.insert_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ins_curs:
             queries = self.get_insert_queries()
             values = self.get_insert_queries_test_values()
 
             for i, db_query_vals in enumerate(zip_longest(queries, values)):
-                db = db_query_vals[0][0]
-                query = db_query_vals[0][1]
+                query = db_query_vals[0]
                 vals = db_query_vals[1]
-                select_conn = None
-                if db == "MB":
-                    select_conn = self.mb_conn
-                elif db == "LB":
-                    select_conn = self.lb_conn
-                else:
-                    log("Invalid DB provided in create table data: '%s'" % query)
+
+                if self.select_conn is None:
+                    log("You need to provide a DB connections string.")
                     raise RuntimeError
 
-                if select_conn is None:
-                    log("You need to provide a LB DB connections string.")
-                    raise RuntimeError
-
-                with select_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+                with self.select_conn.cursor(cursor_factory=DictCursor) as curs:
                     log(f"{self.table_name}: execute query {i+1} of {len(queries)}")
                     self.pre_insert_queries_db_setup(curs)
                     if vals:
-                        psycopg2.extras.execute_values(curs, query, vals, page_size=len(vals))
+                        execute_values(curs, query, vals, page_size=len(vals))
                     else:
                         curs.execute(query)
 
@@ -428,7 +414,7 @@ class BulkInsertTable:
 
                         if len(rows) >= self.batch_size:
                             insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
-                            ins_conn.commit()
+                            self.insert_conn.commit()
                             rows = []
                             batch_count += 1
                             inserted += self.batch_size
@@ -443,7 +429,7 @@ class BulkInsertTable:
                 rows.extend(self._handle_result(self.process_row_complete()))
                 if rows:
                     insert_rows(ins_curs, self.temp_table_name, rows, cols=self.insert_columns)
-                    ins_conn.commit()
+                    self.insert_conn.commit()
                     inserted_total += len(rows)
                     rows = []
 

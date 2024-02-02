@@ -23,7 +23,6 @@ import logging
 import time
 from datetime import datetime
 
-from flask import url_for
 from werkzeug.exceptions import BadRequest
 
 import listenbrainz.db.user as db_user
@@ -135,7 +134,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'i[0]': int(time.time()),
         }
 
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert200(r)
         self.assertEqual(r.data.decode('utf-8'), 'OK\n')
 
@@ -159,7 +158,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'i[0]': int(time.time()),
         }
 
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert401(r)
         self.assertEqual(r.data.decode('utf-8'), 'BADSESSION\n')
 
@@ -185,27 +184,27 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'i[0]': int(time.time()),
         }
 
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
         # add artist and remove track name
         data['a[0]'] = 'Kishore Kumar'
         del data['t[0]']
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
         # add track name and remove timestamp
         data['t[0]'] = 'Saamne Ye Kaun Aya'
         del data['i[0]']
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
         # re-add a timestamp in ns
         data['i[0]'] = int(time.time()) * 10**9
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
@@ -227,7 +226,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'b': 'Jawani Diwani',
         }
 
-        r = self.client.post(url_for('api_compat_old.submit_now_playing'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_now_playing'), data=data)
         self.assert200(r)
         self.assertEqual(r.data.decode('utf-8'), 'OK\n')
 

@@ -15,7 +15,7 @@ ListenBrainz can understand requests sent to both these APIs and use their data 
 AudioScrobbler API v1.2
 =======================
 
-Clients supporting the old version of the AudioScrobbler API (such as VLC and Spotify) can be configured to work with ListenBrainz by making the client point to ``http://proxy.listenbrainz.org`` and using your MusicBrainz ID as username and the `LB Authorization Token <https://listenbrainz.org/profile/>`_ as password.
+Clients supporting the old version of the AudioScrobbler API (such as VLC and Spotify) can be configured to work with ListenBrainz by making the client point to ``http://proxy.listenbrainz.org`` and using your MusicBrainz ID as username and the `LB Authorization Token <https://listenbrainz.org/settings/>`_ as password.
 
 If the software you are using doesn't support changing where the client submits info (like Spotify), you can edit your ``/etc/hosts`` file as follows::
 

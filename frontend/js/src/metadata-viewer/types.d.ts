@@ -1,12 +1,18 @@
 /** Main entities */
 declare type MusicBrainzArtist = {
   name: string;
-  join_phrase: string;
+  artist_mbid: string;
+  join_phrase?: string;
   area: string;
-  begin_year: number;
+  begin_year?: number;
+  end_year?: number;
   rels: { [key: string]: string };
   //   rels: Record<string, string>;
   type: string;
+  tag?: {
+    artist: Array<ArtistTag>;
+  };
+  gender: string;
 };
 
 declare type MusicBrainzArtistCredit = {
@@ -92,6 +98,14 @@ declare type MusicBrainzRecordingRel = {
   type: string;
 };
 
+declare type WikipediaExtract = {
+  url: string;
+  content: string; // HTML string
+  title: string;
+  canonical: string;
+  language: string;
+};
+
 /** Tags / Genres / Moods */
 declare type EntityTag = {
   count: number;
@@ -140,4 +154,28 @@ declare type MetadataLookup = {
   recording_name: string;
   release_mbid: string;
   release_name: string;
+};
+declare type ReleaseGroupMetadataLookupResponse = {
+  [string]: ReleaseGroupMetadataLookup;
+};
+declare type ReleaseGroupMetadataLookup = {
+  artist: {
+    artist_credit_id: number;
+    artists: MusicBrainzArtist[];
+    name: string;
+  };
+  release: {
+    name: string;
+    rels: { [key: string]: string };
+  };
+  release_group: {
+    name: string;
+    date: string;
+    type: string;
+    rels: { [key: string]: string };
+  };
+  tag?: {
+    artist?: Array<ArtistTag>;
+    release_group?: Array<ReleaseGroupTag>;
+  };
 };

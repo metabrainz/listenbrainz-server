@@ -26,6 +26,9 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
         DatabaseTestCase.setUp(self)
 
     def tearDown(self):
+        with self.app.app_context():
+            r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
+            r.flushall()
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
@@ -33,6 +36,32 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
     def tearDownClass(cls):
         ServerTestCase.tearDownClass()
         DatabaseTestCase.tearDownClass()
+
+
+class NonAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
+    """ Integration test class for non-api services that require app context.
+    Avoid using this for testing API endpoints. """
+
+    @classmethod
+    def setUpClass(cls):
+        IntegrationTestCase.setUpClass()
+        TimescaleTestCase.setUpClass()
+
+    def setUp(self):
+        IntegrationTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
+        self.ctx = self.app.test_request_context()
+        self.ctx.push()
+
+    def tearDown(self):
+        self.ctx.pop()
+        IntegrationTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
+
+    @classmethod
+    def tearDownClass(cls):
+        IntegrationTestCase.tearDownClass()
+        TimescaleTestCase.tearDownClass()
 
 
 class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
@@ -44,8 +73,6 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         self.user2 = db_user.get_or_create(2, 'all_muppets_all_of_them')
 
     def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
         IntegrationTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
 
@@ -80,7 +107,7 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         if not user:
             user = self.user
         response = self.client.post(
-            url_for('api_v1.submit_listen'),
+            self.custom_url_for('api_v1.submit_listen'),
             data=json.dumps(payload),
             headers={'Authorization': 'Token {}'.format(user['auth_token'])},
             content_type='application/json'

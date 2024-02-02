@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 
 from flask import current_app
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_values, DictCursor
 from psycopg2.sql import SQL, Literal
 from spotipy import Spotify
 from sqlalchemy import text
@@ -25,13 +25,26 @@ def get_user_details(slug, user_ids):
     details = {}
 
     query = """
-        SELECT "user".id as user_id
-             , "user".musicbrainz_id AS musicbrainz_id
-             , COALESCE(us.troi->>:export_preference, 'f')::bool AS export_to_spotify
-          FROM "user"
-     LEFT JOIN user_setting us
-            ON us.user_id = "user".id
-         WHERE "user".id = ANY(:user_ids)
+          WITH spotify_exports AS (
+                SELECT u.id as user_id
+                     , true AS export
+                  FROM "user" u
+                  JOIN user_setting us
+                    ON us.user_id = u.id
+                  JOIN external_service_oauth eso
+                    ON u.id = eso.user_id
+                 WHERE u.id = ANY(:user_ids)
+                   AND eso.service = 'spotify'
+                   AND eso.scopes @> ARRAY['playlist-modify-public']
+                   AND (us.troi->:export_preference)::bool
+             )
+                SELECT u.id as user_id
+                     , u.musicbrainz_id AS musicbrainz_id
+                     , coalesce(se.export, false) AS export_to_spotify
+                  FROM "user" u
+             LEFT JOIN spotify_exports se
+                    ON u.id = se.user_id
+                 WHERE u.id = ANY(:user_ids)
     """
     with db.engine.connect() as conn:
         results = conn.execute(text(query), {"user_ids": user_ids, "export_preference": SPOTIFY_EXPORT_PREFERENCE})
@@ -95,12 +108,12 @@ def insert_playlists(cursor, playlists):
     query = """
         INSERT INTO playlist.playlist (creator_id, name, description, public, created_for_id, additional_metadata)
              VALUES %s
-          RETURNING created_for_id, id
+          RETURNING created_for_id, id, mbid, created
     """
     template = SQL("""({creator_id}, %s, %s, 't', %s, %s)""").format(creator_id=Literal(LISTENBRAINZ_USER_ID))
     values = [(p["name"], p["description"], p["user_id"], json.dumps(p["additional_metadata"])) for p in playlists]
     results = execute_values(cursor, query, values, template, fetch=True)
-    return {r[0]: r[1] for r in results}
+    return {r["created_for_id"]: r for r in results}
 
 
 def exclude_playlists_from_deleted_users(slug, jam_name, all_playlists):
@@ -137,12 +150,13 @@ def batch_process_playlists(all_playlists, playlists_to_export):
 
     conn = timescale.engine.raw_connection()
     try:
-        with conn.cursor() as curs:
+        with conn.cursor(cursor_factory=DictCursor) as curs:
             playlist_ids = insert_playlists(curs, all_playlists)
             for playlist in all_playlists:
                 created_for = playlist["user_id"]
-                playlist_id = playlist_ids[created_for]
-                insert_recordings(curs, playlist_id, playlist["recordings"])
+                generated_data = playlist_ids[created_for]
+                playlist.update(generated_data)
+                insert_recordings(curs, playlist["id"], playlist["recordings"])
         conn.commit()
     except Exception:
         current_app.logger.error("Error while batch inserting playlists:", exc_info=True)

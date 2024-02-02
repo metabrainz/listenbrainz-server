@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 
-export function formatReleaseDate(releaseDate: string) {
-  return new Intl.DateTimeFormat("en-US", {
+export function formatReleaseDate(
+  releaseDate: string,
+  formatOptions: Intl.DateTimeFormatOptions = {
     month: "short",
     day: "numeric",
-  })
-    .formatToParts(new Date(Date.parse(releaseDate)))
-    .reverse()
-    .map((date_parts) => date_parts.value)
-    .join("");
+  }
+) {
+  if (!releaseDate) {
+    return "-";
+  }
+  return new Intl.DateTimeFormat(undefined, formatOptions).format(
+    new Date(Date.parse(releaseDate))
+  );
 }
 
 export function formatListenCount(listenCount: number) {
