@@ -3,6 +3,8 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording_feedback as db_feedback
 
 from flask import Blueprint, current_app, jsonify, request
+
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIInternalServerError,
                                            APINotFound,
@@ -66,7 +68,7 @@ def submit_recommendation_feedback():
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
     try:
-        db_feedback.insert(feedback_submit)
+        db_feedback.insert(db_conn, feedback_submit)
     except Exception as e:
         current_app.logger.error("Error while inserting recommendation feedback: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -111,7 +113,7 @@ def delete_recommendation_feedback():
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
     try:
-        db_feedback.delete(feedback_delete)
+        db_feedback.delete(db_conn, feedback_delete)
     except Exception as e:
         current_app.logger.error("Error while deleting recommendation feedback: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -177,8 +179,13 @@ def get_feedback_for_user(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, rating=rating)
-    total_count = db_feedback.get_feedback_count_for_user(user["id"])
+    feedback = db_feedback.get_feedback_for_user(
+        db_conn, user_id=user["id"], limit=count, offset=offset, rating=rating
+    )
+    total_count = db_feedback.get_feedback_count_for_user(
+        db_conn,
+        user["id"]
+    )
 
     feedback = [_format_feedback(fb) for fb in feedback]
 
@@ -241,7 +248,9 @@ def get_feedback_for_recordings_for_user(user_name):
         raise APIBadRequest("Please provide comma separated recording mbids!")
 
     try:
-        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
+        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            db_conn, user_id=user["id"], recording_list=recording_list
+        )
     except ValidationError as e:
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       request.args)

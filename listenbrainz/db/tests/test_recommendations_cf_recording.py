@@ -28,13 +28,14 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
         ]
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user['id'],
             UserRecommendationsJson(**{
                 'raw': raw_recording_mbids,
             })
         )
 
-        result = db_recommendations_cf_recording.get_user_recommendation(self.user['id'])
+        result = db_recommendations_cf_recording.get_user_recommendation(self.db_conn, self.user['id'])
         self.assertEqual(getattr(result, 'recording_mbid').dict()['raw'], raw_recording_mbids)
         self.assertGreater(int(getattr(result, 'created').strftime('%s')), 0)
 
@@ -53,6 +54,7 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
         ]
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user['id'],
             UserRecommendationsJson(**{
                 'raw': raw_recording_mbids,
@@ -66,7 +68,7 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
     def test_get_user_recommendation(self):
         data_inserted = self.insert_test_data()
 
-        data_received = db_recommendations_cf_recording.get_user_recommendation(self.user['id'])
+        data_received = db_recommendations_cf_recording.get_user_recommendation(self.db_conn, self.user['id'])
         self.assertEqual(
             getattr(data_received, 'recording_mbid').dict()['raw'],
             data_inserted['raw_recording_mbids']
@@ -75,5 +77,5 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
     def test_get_timestamp_for_last_recording_recommended(self):
         ts = datetime.now(timezone.utc)
         self.insert_test_data()
-        received_ts = db_recommendations_cf_recording.get_timestamp_for_last_recording_recommended()
+        received_ts = db_recommendations_cf_recording.get_timestamp_for_last_recording_recommended(self.db_conn)
         self.assertGreaterEqual(received_ts, ts)
