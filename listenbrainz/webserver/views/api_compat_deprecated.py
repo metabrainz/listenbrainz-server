@@ -69,7 +69,7 @@ def handshake():
     if auth_token != _get_audioscrobbler_auth_token(user['auth_token'], timestamp):
         return 'BADAUTH\n', 401
 
-    session = Session.create_by_user_id(user['id'])
+    session = Session.create_by_user_id(db_conn, user['id'])
     current_app.logger.info('New session created with id: {}'.format(session.sid))
 
     return '\n'.join([
@@ -87,7 +87,7 @@ def submit_now_playing():
     current_app.logger.info(json.dumps(request.form, indent=4))
 
     try:
-        session = _get_session(request.form.get('s', ''))
+        session = _get_session(db_conn, request.form.get('s', ''))
     except BadRequest:
         return 'BADSESSION\n', 401
 
@@ -108,7 +108,7 @@ def submit_listens():
     """ Submit listens received from clients into the listenstore after validating them. """
 
     try:
-        session = _get_session(request.form.get('s', ''))
+        session = _get_session(db_conn, request.form.get('s', ''))
     except BadRequest:
         return 'BADSESSION\n', 401
 
@@ -200,14 +200,14 @@ def _to_native_api(data, append_key):
     return listen
 
 
-def _get_session(session_id):
+def _get_session(conn, session_id):
     """ Get the session with the passed session id.
 
         Returns: Session object with given session id
                  If session is not present in db, raises BadRequest
     """
 
-    session = Session.load(session_id)
+    session = Session.load(conn, session_id)
     if session is None:
         raise BadRequest("Session not found")
     return session

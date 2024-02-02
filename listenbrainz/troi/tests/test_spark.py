@@ -26,6 +26,7 @@ class TestSparkPlaylists(DatabaseTestCase, TimescaleTestCase):
         db_user_setting.update_troi_prefs(self.db_conn, self.user2["id"], False)
         
         db_external_service_oauth.save_token(
+            self.db_conn,
             self.user1["id"], 
             ExternalServiceType.SPOTIFY,
             "access_token",
@@ -36,6 +37,7 @@ class TestSparkPlaylists(DatabaseTestCase, TimescaleTestCase):
             "spotify_user_id"
         )
         db_external_service_oauth.save_token(
+            self.db_conn,
             self.user1["id"],
             ExternalServiceType.MUSICBRAINZ_PROD,
             "access_token",
@@ -46,6 +48,7 @@ class TestSparkPlaylists(DatabaseTestCase, TimescaleTestCase):
             "musicbrainz_user_id"
         )
         db_external_service_oauth.save_token(
+            self.db_conn,
             self.user1["id"],
             ExternalServiceType.LASTFM,
             "access_token",
@@ -57,6 +60,7 @@ class TestSparkPlaylists(DatabaseTestCase, TimescaleTestCase):
         )
 
         db_external_service_oauth.save_token(
+            self.db_conn,
             self.user2["id"],
             ExternalServiceType.SPOTIFY,
             "access_token",
@@ -68,6 +72,7 @@ class TestSparkPlaylists(DatabaseTestCase, TimescaleTestCase):
         )
 
         db_external_service_oauth.save_token(
+            self.db_conn,
             self.user4["id"],
             ExternalServiceType.SPOTIFY,
             "access_token",
@@ -79,6 +84,7 @@ class TestSparkPlaylists(DatabaseTestCase, TimescaleTestCase):
         )
 
         db_external_service_oauth.save_token(
+            self.db_conn,
             self.user5["id"],
             ExternalServiceType.LASTFM,
             "access_token",

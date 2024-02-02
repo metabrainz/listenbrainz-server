@@ -104,13 +104,13 @@ class UserTestCase(DatabaseTestCase):
         user_id = db_user.create(self.db_conn, 11, 'kishore')
         user = db_user.get(self.db_conn, user_id)
         self.assertIsNotNone(user)
-        db_oauth.save_token(user_id, ExternalServiceType.SPOTIFY, 'user token',
+        db_oauth.save_token(self.db_conn, user_id, ExternalServiceType.SPOTIFY, 'user token',
                             'refresh token', 0, True, ['user-read-recently-played'])
 
         db_user.delete(self.db_conn, user_id)
         user = db_user.get(self.db_conn, user_id)
         self.assertIsNone(user)
-        token = db_oauth.get_token(user_id, ExternalServiceType.SPOTIFY)
+        token = db_oauth.get_token(self.db_conn, user_id, ExternalServiceType.SPOTIFY)
         self.assertIsNone(token)
 
     def test_get_similar_users(self):

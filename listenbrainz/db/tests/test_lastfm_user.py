@@ -2,10 +2,7 @@
 import logging
 from datetime import datetime
 
-from sqlalchemy import text
-
 import listenbrainz.db.user as db_user
-from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.tests.utils import generate_data
@@ -25,16 +22,16 @@ class TestAPICompatUserClass(DatabaseTestCase):
         self.user = User(user_dict["id"], user_dict["created"], user_dict["musicbrainz_id"], user_dict["auth_token"])
 
     def test_user_get_id(self):
-        uid = User.get_id(self.user.name)
+        uid = User.get_id(self.db_conn, self.user.name)
         self.assertEqual(uid, self.user.id)
 
     def test_user_load_by_name(self):
-        user = User.load_by_name(self.user.name)
+        user = User.load_by_name(self.db_conn, self.user.name)
         self.assertTrue(isinstance(user, User))
         self.assertDictEqual(user.__dict__, self.user.__dict__)
 
     def test_user_load_by_id(self):
-        user = User.load_by_id(self.user.id)
+        user = User.load_by_id(self.db_conn, self.user.id)
         self.assertTrue(isinstance(user, User))
         self.assertDictEqual(user.__dict__, self.user.__dict__)
 
@@ -43,5 +40,5 @@ class TestAPICompatUserClass(DatabaseTestCase):
         test_data = generate_data(self.db_conn, date, 5, self.user.name)
         self.assertEqual(len(test_data), 5)
         self.logstore.insert(test_data)
-        count = User.get_play_count(self.user.id, self.logstore)
+        count = User.get_play_count(self.db_conn, self.user.id, self.logstore)
         self.assertIsInstance(count, int)

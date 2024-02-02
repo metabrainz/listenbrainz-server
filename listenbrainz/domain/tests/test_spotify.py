@@ -19,7 +19,7 @@ class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
         self.user_id = db_user.create(self.db_conn, 312, 'spotify_user')
         self.service = SpotifyService()
         
-        with mock.patch.object(spotipy.Spotify, 'current_user', return_value = {"id": "test_user_id"}):
+        with mock.patch.object(spotipy.Spotify, 'current_user', return_value={"id": "test_user_id"}):
             self.service.add_new_user(self.user_id, {
                 'access_token': 'old-token',
                 'refresh_token': 'old-refresh-token',
@@ -134,7 +134,6 @@ class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
         self.assertEqual(user['refresh_token'], 'old-refresh-token')
         self.assertIsNotNone(user['last_updated'])
 
-    
     @mock.patch.object(spotipy.Spotify, 'current_user')
     @mock.patch('time.time')
     def test_add_new_user(self, mock_time, mock_current_user):

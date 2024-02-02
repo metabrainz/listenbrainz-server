@@ -36,8 +36,10 @@ class UserViewsTestCase(IntegrationTestCase):
 
         abuser = db_user.get_or_create(self.db_conn, 3, 'abuser')
         self.abuser = User.from_dbrow(abuser)
+        self.ts_conn = timescale.engine.connect()
 
     def tearDown(self):
+        self.ts_conn.close()
         self.logstore = None
         super().tearDown()
 
@@ -102,7 +104,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assertContext('active_section', 'listens')
 
     def test_spotify_token_access_no_login(self):
-        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+        db_oauth.save_token(self.db_conn, user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
                             access_token='token', refresh_token='refresh',
                             token_expires_ts=int(time.time()) + 1000, record_listens=True,
                             scopes=['user-read-recently-played', 'streaming'])
@@ -121,7 +123,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assertDictEqual(props['spotify'], {})
 
     def test_spotify_token_access(self):
-        db_oauth.save_token(user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
+        db_oauth.save_token(self.db_conn, user_id=self.user.id, service=ExternalServiceType.SPOTIFY,
                             access_token='token', refresh_token='refresh',
                             token_expires_ts=int(time.time()) + 1000, record_listens=True,
                             scopes=['user-read-recently-played', 'streaming'])
@@ -270,27 +272,27 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assert400(response, "Reason must be a string.")
 
     def test_user_pins(self):
-        with timescale.engine.begin() as connection:
-            connection.execute(text("""
-                INSERT INTO mapping.mb_metadata_cache
-                                   (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
-                    VALUES ('1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
-                          , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'::UUID[]
-                          , '607cc05a-e462-4f39-91b5-e9322544e0a6'
-                          , '{"name": "The Final Confrontation, Part 1", "rels": [], "length": 312000}'
-                          , '{"name": "Danny Elfman", "artist_credit_id": 204, "artists": [{"area": "United States", "rels": {"youtube": "https://www.youtube.com/channel/UCjhIy2xUURhJvN0S7s_ztuw", "wikidata": "https://www.wikidata.org/wiki/Q193338", "streaming": "https://music.apple.com/gb/artist/486493", "free streaming": "https://www.deezer.com/artist/760", "social network": "https://www.instagram.com/dannyelfman/", "official homepage": "https://www.dannyelfman.com/", "purchase for download": "https://itunes.apple.com/us/artist/id486493"}, "type": "Person", "gender": "Male", "begin_year": 1953, "name": "Danny Elfman", "join_phrase": ""}]}'
-                          , '{"artist": [], "recording": [], "release_group": []}'
-                          , '{"mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6", "name": "Danny Elfman & Tim Burton 25th Anniversary Music Box", "year": 2011}'
-                          , 'f'
-                           );
+        self.ts_conn.execute(text("""
+            INSERT INTO mapping.mb_metadata_cache
+                               (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                VALUES ('1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
+                      , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'::UUID[]
+                      , '607cc05a-e462-4f39-91b5-e9322544e0a6'
+                      , '{"name": "The Final Confrontation, Part 1", "rels": [], "length": 312000}'
+                      , '{"name": "Danny Elfman", "artist_credit_id": 204, "artists": [{"area": "United States", "rels": {"youtube": "https://www.youtube.com/channel/UCjhIy2xUURhJvN0S7s_ztuw", "wikidata": "https://www.wikidata.org/wiki/Q193338", "streaming": "https://music.apple.com/gb/artist/486493", "free streaming": "https://www.deezer.com/artist/760", "social network": "https://www.instagram.com/dannyelfman/", "official homepage": "https://www.dannyelfman.com/", "purchase for download": "https://itunes.apple.com/us/artist/id486493"}, "type": "Person", "gender": "Male", "begin_year": 1953, "name": "Danny Elfman", "join_phrase": ""}]}'
+                      , '{"artist": [], "recording": [], "release_group": []}'
+                      , '{"mbid": "607cc05a-e462-4f39-91b5-e9322544e0a6", "name": "Danny Elfman & Tim Burton 25th Anniversary Music Box", "year": 2011}'
+                      , 'f'
+                       );
 
-                INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
-                 VALUES (
-                    'b7ffd2af-418f-4be2-bdd1-22f8b48613da'
-                  , '1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
-                  , 'exact_match'
-                );
-            """))
+            INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+             VALUES (
+                'b7ffd2af-418f-4be2-bdd1-22f8b48613da'
+              , '1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
+              , 'exact_match'
+            );
+        """))
+        self.ts_conn.commit()
 
         pinned_rec = {
             "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",

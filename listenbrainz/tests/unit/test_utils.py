@@ -26,6 +26,7 @@ from datetime import datetime
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
+
 class ListenBrainzUtilsTestCase(unittest.TestCase):
 
     def setUp(self):

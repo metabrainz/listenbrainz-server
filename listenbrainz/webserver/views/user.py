@@ -342,7 +342,7 @@ def delete_listens_history(user_id: int):
         user_id: the LB row ID of the user
     """
     timescale_connection._ts.delete(user_id)
-    listens_importer.update_latest_listened_at(user_id, ExternalServiceType.LASTFM, 0)
+    listens_importer.update_latest_listened_at(db_conn, user_id, ExternalServiceType.LASTFM, 0)
 
 
 def logged_in_user_follows_user(user):

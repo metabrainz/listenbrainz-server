@@ -1160,6 +1160,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["error"], "Service spotify is not linked. Please link your spotify account first.")
 
         db_oauth.save_token(
+            self.db_conn,
             user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
             access_token='token',
@@ -1182,9 +1183,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
             " to use this feature."
         )
 
-        db_oauth.delete_token(self.user['id'], ExternalServiceType.SPOTIFY, True)
+        db_oauth.delete_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY, True)
 
         db_oauth.save_token(
+            self.db_conn,
             user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
             access_token='token',

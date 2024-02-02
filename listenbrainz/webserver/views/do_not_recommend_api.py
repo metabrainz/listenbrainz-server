@@ -55,8 +55,8 @@ def get_do_not_recommends(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    results = do_not_recommend.get(user["id"], count, offset)
-    total_count = do_not_recommend.get_total_count(user["id"])
+    results = do_not_recommend.get(db_conn, user["id"], count, offset)
+    total_count = do_not_recommend.get_total_count(db_conn, user["id"])
 
     return jsonify({
         "offset": offset,
@@ -93,7 +93,7 @@ def add_do_not_recommend():
     :resheader Content-Type: *application/json*
     """
     user, entity, entity_mbid, until = _parse_json_params()
-    do_not_recommend.insert(user["id"], entity, entity_mbid, until)
+    do_not_recommend.insert(db_conn, user["id"], entity, entity_mbid, until)
     return jsonify({"status": "ok"})
 
 
@@ -120,7 +120,7 @@ def delete_do_not_recommend():
     :resheader Content-Type: *application/json*
     """
     user, entity, entity_mbid, until = _parse_json_params()
-    do_not_recommend.delete(user["id"], entity, entity_mbid)
+    do_not_recommend.delete(db_conn, user["id"], entity, entity_mbid)
     return jsonify({"status": "ok"})
 
 

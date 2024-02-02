@@ -364,7 +364,7 @@ def latest_import():
         user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
-        latest_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
+        latest_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
         return jsonify({
             'musicbrainz_id': user['musicbrainz_id'],
             'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
@@ -381,10 +381,10 @@ def latest_import():
             raise APIBadRequest('Invalid data sent')
 
         try:
-            last_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
+            last_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
             last_import_ts = 0 if not last_import_ts else int(last_import_ts.strftime('%s'))
             if ts > last_import_ts:
-                listens_importer.update_latest_listened_at(user["id"], service, ts)
+                listens_importer.update_latest_listened_at(db_conn, user["id"], service, ts)
         except DatabaseException:
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
@@ -597,8 +597,9 @@ def get_playlists_created_for_user(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"],
-                                                                           load_recordings=False, count=count, offset=offset)
+    playlists, playlist_count = db_playlist.get_playlists_created_for_user(
+        db_conn, ts_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset
+    )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
@@ -690,7 +691,7 @@ def get_service_details(user_name):
     if user_name != user['musicbrainz_id']:
         raise APIForbidden("You don't have permissions to view this user's information.")
 
-    services = db_external_service_oauth.get_services(user["id"])
+    services = db_external_service_oauth.get_services(db_conn, user["id"])
     return jsonify({'user_name': user_name, 'services': services})
 
 

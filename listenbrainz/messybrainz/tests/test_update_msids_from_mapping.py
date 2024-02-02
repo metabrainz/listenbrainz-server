@@ -3,10 +3,8 @@ from datetime import datetime
 
 from sqlalchemy import text
 
-from listenbrainz import db
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale
-from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.messybrainz import update_msids_from_mapping
 from listenbrainz.tests.integration import IntegrationTestCase
 
@@ -159,19 +157,19 @@ class MsidUpdaterTestCase(IntegrationTestCase):
             INSERT INTO user_timeline_event (user_id, event_type, metadata)
                  VALUES (:user_id, :event_type, :metadata)
         """
-        with db.engine.begin() as conn:
-            for item in pinned_recs:
-                conn.execute(text(pin_rec_query), {"user_id": self.user["id"], "pinned_until": datetime.now(), **item})
+        for item in pinned_recs:
+            self.db_conn.execute(text(pin_rec_query), {"user_id": self.user["id"], "pinned_until": datetime.now(), **item})
 
-            for item in recording_feedback:
-                conn.execute(text(feedback_query), {"user_id": self.user["id"], **item})
+        for item in recording_feedback:
+            self.db_conn.execute(text(feedback_query), {"user_id": self.user["id"], **item})
 
-            for item in user_timeline_event:
-                conn.execute(text(timeline_query), {
-                    "user_id": self.user["id"],
-                    "event_type": item["event_type"],
-                    "metadata": json.dumps(item["metadata"])
-                })
+        for item in user_timeline_event:
+            self.db_conn.execute(text(timeline_query), {
+                "user_id": self.user["id"],
+                "event_type": item["event_type"],
+                "metadata": json.dumps(item["metadata"])
+            })
+        self.db_conn.commit()
 
     def test_msid_updater(self):
         self.create_dummy_data()
@@ -280,14 +278,11 @@ class MsidUpdaterTestCase(IntegrationTestCase):
             }
         ]
 
-        self.maxDiff = None
+        result = self.db_conn.execute(text("SELECT recording_msid::text, recording_mbid::text, score FROM recording_feedback"))
+        self.assertCountEqual(result.mappings().all(), expected_feedback)
 
-        with db.engine.connect() as conn:
-            result = conn.execute(text("SELECT recording_msid::text, recording_mbid::text, score FROM recording_feedback"))
-            self.assertCountEqual(result.mappings().all(), expected_feedback)
+        result = self.db_conn.execute(text("SELECT recording_msid::text, recording_mbid::text, blurb_content FROM pinned_recording"))
+        self.assertCountEqual(result.mappings().all(), expected_pinned_recs)
 
-            result = conn.execute(text("SELECT recording_msid::text, recording_mbid::text, blurb_content FROM pinned_recording"))
-            self.assertCountEqual(result.mappings().all(), expected_pinned_recs)
-
-            result = conn.execute(text("SELECT event_type, metadata FROM user_timeline_event"))
-            self.assertCountEqual(result.mappings().all(), expected_timeline_event)
+        result = self.db_conn.execute(text("SELECT event_type, metadata FROM user_timeline_event"))
+        self.assertCountEqual(result.mappings().all(), expected_timeline_event)

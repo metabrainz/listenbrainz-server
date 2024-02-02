@@ -13,7 +13,6 @@ from werkzeug.local import LocalProxy
 from listenbrainz import db
 from listenbrainz.db import create_test_database_connect_strings, timescale
 from listenbrainz.db.timescale import create_test_timescale_connect_strings
-from listenbrainz.webserver.utils import get_global_props
 
 API_PREFIX = '/1'
 
@@ -130,10 +129,12 @@ def create_app(debug=None):
         _db_conn = getattr(g, "_db_conn", None)
         if _db_conn is not None:
             _db_conn.close()
+            del g._db_conn
 
         _ts_conn = getattr(g, "_ts_conn", None)
         if _ts_conn is not None:
             _ts_conn.close()
+            del g._ts_conn
 
     # Redis connection
     from listenbrainz.webserver.redis_connection import init_redis_connection
@@ -195,6 +196,7 @@ def create_web_app(debug=None):
     static_manager.read_manifest()
     app.static_folder = '/static'
 
+    from listenbrainz.webserver.utils import get_global_props
     app.context_processor(lambda: dict(
         get_static_path=static_manager.get_static_path,
         global_props=get_global_props()
