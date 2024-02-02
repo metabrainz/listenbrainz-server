@@ -316,7 +316,7 @@ def musicbrainz_offline():
 def huesound():
     """ Redirect to /explore/huesound """
 
-    return redirect(url_for('explore', path="huesound"))
+    return redirect(url_for('explore.index', path="huesound"))
 
 
 @index_bp.route("/statistics/",  defaults={'path': ''})

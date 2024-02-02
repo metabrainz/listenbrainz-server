@@ -198,7 +198,7 @@ class IndexViewsTestCase(IntegrationTestCase):
     def test_recent_listens_page(self):
         response = self.client.get(self.custom_url_for('index.recent_listens'))
         self.assert200(response)
-        self.assertTemplateUsed('index/recent.html')
+        self.assertTemplateUsed('index.html')
 
     def test_feed_page(self):
         user = db_user.get_or_create(1, 'iliekcomputers')
