@@ -37,7 +37,7 @@ from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
-from listenbrainz.webserver import timescale_connection, db_conn
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
@@ -572,7 +572,7 @@ def hide_user_timeline_event(user_name):
     if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
         result = db_user_timeline_event.get_user_timeline_event_by_id(db_conn, row_id)
     elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
-        result = get_pin_by_id(row_id)
+        result = get_pin_by_id(db_conn, row_id)
     else:
         raise APIBadRequest("This event type is not supported for hiding")
 
@@ -877,7 +877,7 @@ def get_recording_recommendation_events(
         max_ts=max_ts,
         count=count,
     )
-    _ = fetch_track_metadata_for_items([e.metadata for e in recording_recommendation_events_db])
+    _ = fetch_track_metadata_for_items(ts_conn, [e.metadata for e in recording_recommendation_events_db])
 
     events = []
     for event in recording_recommendation_events_db:
@@ -962,12 +962,13 @@ def get_recording_pin_events(
 
     id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
     recording_pin_events_db = get_pins_for_feed(
+        db_conn,
         user_ids=id_username_map.keys(),
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
     )
-    recording_pin_events_db = fetch_track_metadata_for_items(recording_pin_events_db)
+    recording_pin_events_db = fetch_track_metadata_for_items(ts_conn, recording_pin_events_db)
 
     events = []
     for pin in recording_pin_events_db:
@@ -1008,7 +1009,7 @@ def get_personal_recording_recommendation_events(
         max_ts=max_ts,
         count=count,
     )
-    _ = fetch_track_metadata_for_items([e.metadata for e in personal_recording_recommendation_events_db])
+    _ = fetch_track_metadata_for_items(ts_conn, [e.metadata for e in personal_recording_recommendation_events_db])
 
     events = []
     for event in personal_recording_recommendation_events_db:

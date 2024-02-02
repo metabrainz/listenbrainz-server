@@ -7,7 +7,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db.model.feedback import Feedback
 
 from listenbrainz.domain import lastfm
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIBadRequest
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -111,7 +111,7 @@ def get_feedback_for_user(user_name):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_user(db_conn, user_id=user["id"], limit=count,
+    feedback = db_feedback.get_feedback_for_user(db_conn, ts_conn, user_id=user["id"], limit=count,
                                                  offset=offset, score=score, metadata=metadata)
     total_count = db_feedback.get_feedback_count_for_user(db_conn, user["id"], score)
 

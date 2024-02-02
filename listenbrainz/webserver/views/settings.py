@@ -19,7 +19,7 @@ from listenbrainz.domain.external_service import ExternalService, ExternalServic
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError
@@ -125,7 +125,13 @@ def fetch_feedback(user_id):
     batch = []
     offset = 0
     while True:
-        batch = db_feedback.get_feedback_for_user(user_id=current_user.id, limit=EXPORT_FETCH_COUNT, offset=offset)
+        batch = db_feedback.get_feedback_for_user(
+            db_conn,
+            ts_conn,
+            user_id=current_user.id,
+            limit=EXPORT_FETCH_COUNT,
+            offset=offset
+        )
         if not batch:
             break
         yield from batch

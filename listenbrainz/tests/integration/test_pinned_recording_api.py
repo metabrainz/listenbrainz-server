@@ -14,7 +14,7 @@ from listenbrainz.db.model.pinned_recording import (
 import json
 
 
-def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
+def fetch_track_metadata_for_pins(ts_conn, pins: List[PinnedRecording]) -> List[PinnedRecording]:
     return pins
 
 

@@ -36,6 +36,7 @@ import listenbrainz.db.feedback as db_feedback
 from datetime import datetime
 
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
+from listenbrainz.db import timescale
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.tests.utils import insert_test_stats, delete_all_couch_databases
 from listenbrainz.webserver import create_app
@@ -49,10 +50,12 @@ class DumpTestCase(DatabaseTestCase):
         self.tempdir = tempfile.mkdtemp()
         self.tempdir_private = tempfile.mkdtemp()
         self.app = create_app()
+        self.ts_conn = timescale.engine.connect()
 
     def tearDown(self):
-        super().tearDown()
+        self.ts_conn.close()
         shutil.rmtree(self.tempdir)
+        super().tearDown()
 
     def test_create_private_dump(self):
         time_now = datetime.today()
@@ -174,7 +177,9 @@ class DumpTestCase(DatabaseTestCase):
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(self.db_conn, user_id=one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(
+                self.db_conn, self.ts_conn, user_id=one_id, limit=1, offset=0
+            )
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
@@ -190,7 +195,9 @@ class DumpTestCase(DatabaseTestCase):
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(self.db_conn, user_id=one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(
+                self.db_conn, self.ts_conn, user_id=one_id, limit=1, offset=0
+            )
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
