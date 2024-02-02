@@ -34,23 +34,23 @@ from listenbrainz.webserver.views.user_timeline_event_api import DEFAULT_LISTEN_
 class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def insert_metadata(self):
-        with timescale.engine.begin() as connection:
-            query = """
-                INSERT INTO mapping.mb_metadata_cache
-                           (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
-                    VALUES ('34c208ee-2de7-4d38-b47e-907074866dd3'
-                          , '{4a779683-5404-4b90-a0d7-242495158265}'::UUID[]
-                          , '1390f1b7-7851-48ae-983d-eb8a48f78048'
-                          , '{"name": "52 Bars", "rels": [], "length": 214024}'
-                          , '{"name": "Karan Aujla", "artists": [{"area": "Punjab", "name": "Karan Aujla", "rels": {"wikidata": "https://www.wikidata.org/wiki/Q58008320", "social network": "https://www.instagram.com/karanaujla_official/"}, "type": "Person", "gender": "Male", "begin_year": 1997, "join_phrase": ""}], "artist_credit_id": 2892477}'
-                          , '{"artist": [], "recording": [], "release_group": []}'
-                          , '{"mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "name": "Four You", "year": 2023, "caa_id": 34792503592, "caa_release_mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "album_artist_name": "Karan Aujla", "release_group_mbid": "eb8734c9-127d-495e-b908-9194cdbac45d"}'
-                          , 'f'
-                           )
-            """
-            connection.execute(text(query))
-            msid = messybrainz.submit_recording(connection, "Strangers", "Portishead", "Dummy", None, 291160)
-            return msid
+        query = """
+            INSERT INTO mapping.mb_metadata_cache
+                       (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                VALUES ('34c208ee-2de7-4d38-b47e-907074866dd3'
+                      , '{4a779683-5404-4b90-a0d7-242495158265}'::UUID[]
+                      , '1390f1b7-7851-48ae-983d-eb8a48f78048'
+                      , '{"name": "52 Bars", "rels": [], "length": 214024}'
+                      , '{"name": "Karan Aujla", "artists": [{"area": "Punjab", "name": "Karan Aujla", "rels": {"wikidata": "https://www.wikidata.org/wiki/Q58008320", "social network": "https://www.instagram.com/karanaujla_official/"}, "type": "Person", "gender": "Male", "begin_year": 1997, "join_phrase": ""}], "artist_credit_id": 2892477}'
+                      , '{"artist": [], "recording": [], "release_group": []}'
+                      , '{"mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "name": "Four You", "year": 2023, "caa_id": 34792503592, "caa_release_mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "album_artist_name": "Karan Aujla", "release_group_mbid": "eb8734c9-127d-495e-b908-9194cdbac45d"}'
+                      , 'f'
+                       )
+        """
+        self.ts_conn.execute(text(query))
+        msid = messybrainz.submit_recording(self.ts_conn, "Strangers", "Portishead", "Dummy", None, 291160)
+        self.ts_conn.commit()
+        return msid
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:
         following_user = db_user.get_or_create(self.db_conn, mb_row_id, name)
@@ -60,17 +60,17 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
     def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, name: str) -> dict:
         similar_user = db_user.get_or_create(self.db_conn, mb_row_id, name)
         self.similar_user_data[similar_user['id']] = similarity
-        with db.engine.begin() as connection:
-            connection.execute(text("""
-                INSERT INTO recommendation.similar_user (user_id, similar_users)
-                     VALUES (:similar_to_user, :similar_users)
-                ON CONFLICT (user_id)
-                  DO UPDATE
-                        SET similar_users = EXCLUDED.similar_users
-                """), {
-                "similar_to_user": similar_to_user,
-                "similar_users": json.dumps(self.similar_user_data)
-            })
+        self.db_conn.execute(text("""
+            INSERT INTO recommendation.similar_user (user_id, similar_users)
+                 VALUES (:similar_to_user, :similar_users)
+            ON CONFLICT (user_id)
+              DO UPDATE
+                    SET similar_users = EXCLUDED.similar_users
+            """), {
+            "similar_to_user": similar_to_user,
+            "similar_users": json.dumps(self.similar_user_data)
+        })
+        self.db_conn.commit()
         return similar_user
 
     def remove_own_follow_events(self, payload: dict) -> dict:
@@ -447,6 +447,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'max_ts': int(time.time()) + 1}
         )
         self.assert200(r)
+        print(json.dumps(r.json['payload'], indent=4))
 
         # first, let's remove the own follow events, we don't care about those in this test.
         payload = self.remove_own_follow_events(r.json['payload'])

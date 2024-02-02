@@ -21,7 +21,7 @@ def adapt_cube(cube):
 register_adapter(ColorCube, adapt_cube)
 
 
-def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[ColorResult]:
+def get_releases_for_color(db_conn, red: int, green: int, blue: int, count: int) -> List[ColorResult]:
     """ Fetch matching releases, their euclidian distance in RGB space and the
         release_name and artist_name for the returned releases.
 
@@ -77,9 +77,7 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
                 GROUP BY r.gid, r.name, t.position, rec.gid, rec.name, ac.name
                 ORDER BY r.gid, t.position"""
 
-    conn = db.engine.raw_connection()
-    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-
+    with db_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         results = []
         mbids = []
         index = {}
@@ -129,11 +127,12 @@ def get_releases_for_color(red: int, green: int, blue: int, count: int) -> List[
         return results
 
 
-def fetch_color_for_releases(release_mbids: List[str]) -> Dict[str, Dict[str, int]]:
+def fetch_color_for_releases(db_conn, release_mbids: List[str]) -> Dict[str, Dict[str, int]]:
     """ Fetch the color for a given list of release mbids. If the release does not have a color
         associated with it, None is returned.
 
         Args:
+          db_conn: database connection
           release_mbids: List[str] -- the mbids for the releases
         Returns:
           Returns a dict with the keys red, green and blue or None if no color is found.
@@ -150,8 +149,7 @@ def fetch_color_for_releases(release_mbids: List[str]) -> Dict[str, Dict[str, in
                 WHERE release_mbid in %s
              ORDER BY last_updated DESC"""
 
-    conn = db.engine.raw_connection()
-    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+    with db_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         curs.execute(query, (tuple(release_mbids),))
         rows = curs.fetchall()
         data = {}

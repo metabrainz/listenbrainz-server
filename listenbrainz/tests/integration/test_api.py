@@ -666,12 +666,11 @@ class APITestCase(ListenAPIIntegrationTestCase):
             self.custom_url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
         self.assert404(response)
 
-        conn = db.engine.raw_connection()
-        with conn.cursor() as curs:
+        with self.db_conn.connection.cursor() as curs:
             data = {self.user2['id']: 0.123}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
                          (self.user['id'], json.dumps(data)))
-        conn.commit()
+        self.db_conn.commit()
 
         response = self.client.get(
             self.custom_url_for('api_v1.get_similar_users', user_name=self.user['musicbrainz_id']))
@@ -1054,6 +1053,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def test_get_user_services(self):
         db_oauth.save_token(
+            self.db_conn,
             user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
             access_token='token',

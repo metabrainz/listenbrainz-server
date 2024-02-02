@@ -40,7 +40,7 @@ class DoNotRecommendAPITestCase(IntegrationTestCase):
             limit = len(self.items)
 
         for item in self.items[:limit]:
-            do_not_recommend.insert(self.user["id"], item["entity"], item["entity_mbid"], item["until"])
+            do_not_recommend.insert(self.db_conn, self.user["id"], item["entity"], item["entity_mbid"], item["until"])
 
     def _check_response(self, response, expected, offset=0, total_count=None):
         self.assert200(response)

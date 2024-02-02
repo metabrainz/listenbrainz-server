@@ -3,6 +3,7 @@ from typing import List, Union
 
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceError
 from listenbrainz.db import listens_importer
+from listenbrainz.webserver import db_conn
 
 
 class ImporterService(ExternalService, ABC):
@@ -22,7 +23,7 @@ class ImporterService(ExternalService, ABC):
             user_id (int): the ListenBrainz row ID of the user
             error (str): the user-friendly error message to be displayed.
         """
-        listens_importer.update_import_status(user_id, self.service, error)
+        listens_importer.update_import_status(db_conn, user_id, self.service, error)
 
     def update_latest_listen_ts(self, user_id: int, timestamp: Union[int, float]):
         """ Update the latest_listened_at field for user with specified ListenBrainz user ID.
@@ -31,7 +32,7 @@ class ImporterService(ExternalService, ABC):
             user_id: the ListenBrainz row ID of the user
             timestamp: the unix timestamp of the latest listen imported for the user
         """
-        listens_importer.update_latest_listened_at(user_id, self.service, timestamp)
+        listens_importer.update_latest_listened_at(db_conn, user_id, self.service, timestamp)
 
 
 class ExternalServiceImporterError(ExternalServiceError):

@@ -24,7 +24,7 @@ class ConvertListensTestCase(DatabaseTestCase):
         self.user = db_user.get_or_create(self.db_conn, 1, 'testuserpleaseignore')
 
         self.DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-        db_oauth.save_token(user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
+        db_oauth.save_token(self.db_conn, user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
                             access_token='token', refresh_token='refresh',
                             token_expires_ts=int(time.time()) + 1000, record_listens=True,
                             scopes=['user-read-recently-played'])

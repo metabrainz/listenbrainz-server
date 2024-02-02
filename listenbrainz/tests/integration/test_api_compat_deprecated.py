@@ -232,17 +232,14 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def test_get_session(self):
         """ Tests _get_session method in api_compat_deprecated """
-
-        s = Session.create_by_user_id(self.user['id'])
-
-        session = _get_session(s.sid)
+        s = Session.create_by_user_id(self.db_conn, self.user['id'])
+        session = _get_session(self.db_conn, s.sid)
         self.assertEqual(s.sid, session.sid)
 
     def test_get_session_which_doesnt_exist(self):
         """ Make sure BadRequest is raised when we try to get a session that doesn't exists """
-
         with self.assertRaises(BadRequest):
-            session = _get_session('')
+            session = _get_session(self.db_conn, '')
 
     def test_404(self):
 

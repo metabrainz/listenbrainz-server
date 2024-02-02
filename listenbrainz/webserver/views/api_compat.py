@@ -44,14 +44,14 @@ def api_auth():
 def api_auth_approve():
     """ Authenticate the user token provided.
     """
-    user = User.load_by_name(current_user.musicbrainz_id)
+    user = User.load_by_name(db_conn, current_user.musicbrainz_id)
     if "token" not in request.form:
         return render_template(
             "user/auth.html",
             user_id=current_user.musicbrainz_id,
             msg="Missing required parameters. Please provide correct parameters and try again."
         )
-    token = Token.load(request.form['token'])
+    token = Token.load(db_conn, request.form['token'])
     if not token:
         return render_template(
             "user/auth.html",
@@ -70,7 +70,7 @@ def api_auth_approve():
             user_id=current_user.musicbrainz_id,
             msg="This token has expired. Please create a new token and try again."
         )
-    token.approve(user.name)
+    token.approve(db_conn, user.name)
     return render_template(
         "user/auth.html",
         user_id=current_user.musicbrainz_id,
@@ -117,8 +117,8 @@ def session_info(data):
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)        # Missing Required Params
 
-    session = Session.load(sk)
-    if (not session) or User.load_by_name(username).id != session.user.id:
+    session = Session.load(db_conn, sk)
+    if (not session) or User.load_by_name(db_conn, username).id != session.user.id:
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)       # Invalid Session KEY
 
     print("SESSION INFO for session %s, user %s" % (session.id, session.user.name))
@@ -151,7 +151,7 @@ def get_token(data):
     if not Token.is_valid_api_key(api_key):
         raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)      # Invalid API_KEY
 
-    token = Token.generate(api_key)
+    token = Token.generate(db_conn, api_key)
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
@@ -167,7 +167,7 @@ def get_session(data):
     output_format = data.get('format', 'xml')
     try:
         api_key = data['api_key']
-        token = Token.load(data['token'], api_key)
+        token = Token.load(db_conn, data['token'], api_key)
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)   # Missing Required Params
 
@@ -180,7 +180,7 @@ def get_session(data):
     if not token.user:
         raise InvalidAPIUsage(CompatError.UNAUTHORIZED_TOKEN, output_format=output_format)   # Unauthorized token
 
-    session = Session.create(token)
+    session = Session.create(db_conn, token)
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
@@ -251,7 +251,7 @@ def record_listens(data):
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)    # Invalid parameters
 
-    session = Session.load(sk)
+    session = Session.load(db_conn, sk)
     if not session:
         if not Token.is_valid_api_key(api_key):
             raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)   # Invalid API_KEY
@@ -427,11 +427,11 @@ def user_info(data):
         if not Token.is_valid_api_key(api_key):
             raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)     # Invalid API key
 
-        user = User.load_by_sessionkey(sk, api_key)
+        user = User.load_by_sessionkey(db_conn, sk, api_key)
         if not user:
             raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)  # Invalid Session key
 
-        query_user = User.load_by_name(username) if (username and username != user.name) else user
+        query_user = User.load_by_name(db_conn, username) if (username and username != user.name) else user
         if not query_user:
             raise InvalidAPIUsage(CompatError.INVALID_RESOURCE, output_format=output_format)     # Invalid resource specified
 
@@ -448,7 +448,7 @@ def user_info(data):
             with tag('url'):
                 text('http://listenbrainz.org/user/' + query_user.name)
             with tag('playcount'):
-                text(User.get_play_count(query_user.id, timescale_connection._ts))
+                text(User.get_play_count(db_conn, query_user.id, timescale_connection._ts))
             with tag('registered', unixtime=str(query_user.created.strftime("%s"))):
                 text(str(query_user.created))
 

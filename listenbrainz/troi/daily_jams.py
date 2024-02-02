@@ -19,13 +19,14 @@ from listenbrainz.troi.utils import get_existing_playlist_urls, SPOTIFY_EXPORT_P
 def run_post_recommendation_troi_bot():
     """ Top level function called after spark CF recommendations have been completed. """
     # Save playlists for just a handful of people
-    users = get_followers_of_user(TROI_BOT_DEBUG_USER_ID)
+    with db.engine.connect() as conn:
+        users = get_followers_of_user(conn, TROI_BOT_DEBUG_USER_ID)
     users = [user["musicbrainz_id"] for user in users]
     for user in users:
         make_playlist_from_recommendations(user)
 
 
-def run_daily_jams_troi_bot(db_conn, create_all):
+def run_daily_jams_troi_bot(db_conn, ts_conn, create_all):
     """ Top level function called hourly to generate daily jams playlists for users
 
     Args:
@@ -35,7 +36,7 @@ def run_daily_jams_troi_bot(db_conn, create_all):
     """
     # Now generate daily jams (and other in the future) for users who follow troi bot
     users = get_users_for_daily_jams(db_conn, create_all)
-    existing_urls = get_existing_playlist_urls([x["id"] for x in users], "daily-jams")
+    existing_urls = get_existing_playlist_urls(ts_conn, [x["id"] for x in users], "daily-jams")
     service = SpotifyService()
     for user in users:
         try:

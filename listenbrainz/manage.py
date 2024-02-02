@@ -307,7 +307,7 @@ def notify_yim_users(year: int):
     application = webserver.create_app()
     with application.app_context():
         from listenbrainz.db import year_in_music
-        year_in_music.notify_yim_users(year)
+        year_in_music.notify_yim_users(webserver.db_conn, webserver.ts_conn, year)
 
 
 @cli.command()
@@ -319,7 +319,7 @@ def run_daily_jams(create_all):
     method and not a core function of troi.
     """
     with create_app().app_context():
-        run_daily_jams_troi_bot(webserver.db_conn, create_all)
+        run_daily_jams_troi_bot(webserver.db_conn, webserver.ts_conn, create_all)
 
 
 @cli.command()
@@ -341,7 +341,7 @@ def clear_expired_do_not_recommends():
     app = create_app()
     with app.app_context():
         app.logger.info("Starting process to clean up expired do not recommends")
-        do_not_recommend.clear_expired()
+        do_not_recommend.clear_expired(webserver.db_conn)
         app.logger.info("Completed process to clean up expired do not recommends")
 
 

@@ -7,6 +7,7 @@ from sqlalchemy import text
 from listenbrainz.db import timescale, color
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset
+from listenbrainz.webserver import ts_conn, db_conn
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
 
 class PopularityDataset(DatabaseDataset):
@@ -142,12 +143,11 @@ def get_top_recordings_for_artist(artist_mbid, count=None):
     recordings = get_top_entity_for_artist("recording", artist_mbid, count)
     recording_mbids = [str(r["recording_mbid"]) for r in recordings]
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-            ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+            ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
         recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, recording_mbids)
         release_mbids = [str(r["release_mbid"]) for r in recordings_data if r["release_mbid"] is not None]
-        releases_color = color.fetch_color_for_releases(release_mbids)
+        releases_color = color.fetch_color_for_releases(db_conn, release_mbids)
 
         for recording, data in zip(recordings, recordings_data):
             data.pop("artist_credit_id", None)
@@ -185,7 +185,7 @@ def get_top_release_groups_for_artist(artist_mbid: str, count=None):
     release_mbids = [str(r["release"]['caa_release_mbid']) for r in release_groups_data
                      if r["release"] is not None and r["release"]['caa_release_mbid'] is not None]
 
-    releases_color = color.fetch_color_for_releases(release_mbids)
+    releases_color = color.fetch_color_for_releases(db_conn, release_mbids)
 
     for release_group, pop in zip(release_groups_data, release_groups):
         release_group.update({

@@ -70,7 +70,7 @@ def set_troi_prefs():
 @api_login_required
 def reset_latest_import_timestamp():
     try:
-        listens_importer.update_latest_listened_at(current_user.id, ExternalServiceType.LASTFM, 0)
+        listens_importer.update_latest_listened_at(db_conn, current_user.id, ExternalServiceType.LASTFM, 0)
         return jsonify({"success": True})
     except DatabaseException:
         raise APIInternalServerError("Something went wrong! Unable to reset latest import timestamp right now.")

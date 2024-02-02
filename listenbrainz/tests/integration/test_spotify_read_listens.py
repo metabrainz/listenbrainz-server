@@ -20,7 +20,7 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
         self.ctx = self.app.test_request_context()
         self.ctx.push()
 
-        external_service_oauth.save_token(user_id=self.user['id'],
+        external_service_oauth.save_token(self.db_conn, user_id=self.user['id'],
                                           service=ExternalServiceType.SPOTIFY,
                                           access_token='token', refresh_token='refresh',
                                           token_expires_ts=int(time.time()) + 3000,
