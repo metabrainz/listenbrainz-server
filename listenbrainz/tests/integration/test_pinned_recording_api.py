@@ -1,5 +1,3 @@
-from brainzutils import cache
-from brainzutils.ratelimit import set_rate_limits
 from typing import List
 from unittest.mock import patch
 
@@ -21,16 +19,6 @@ def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRec
 
 
 class PinnedRecAPITestCase(IntegrationTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(PinnedRecAPITestCase, cls).setUpClass()
-        set_rate_limits(5000, 50000, 10)
-
-    @classmethod
-    def tearDownClass(cls):
-        cache._r.flushdb()
-        super(PinnedRecAPITestCase, cls).tearDownClass()
 
     def setUp(self):
         super(PinnedRecAPITestCase, self).setUp()
@@ -74,6 +62,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         for data in self.pinned_rec_samples[:limit]:
             db_pinned_rec.pin(
+                self.db_conn,
                 WritablePinnedRecording(
                     user_id=user_id,
                     recording_msid=data["recording_msid"],
@@ -100,7 +89,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
             blurb_content=self.pinned_rec_samples[index]["blurb_content"],
         )
 
-        db_pinned_rec.pin(recording_to_pin)
+        db_pinned_rec.pin(self.db_conn, recording_to_pin)
         return recording_to_pin
 
     def test_pin(self):
@@ -253,7 +242,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
             content_type="application/json",
         )
 
-        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
 
         response = self.client.post(
             self.custom_url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
@@ -274,7 +263,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         )
 
         # attempt to delete
-        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
 
         response = self.client.post(
             self.custom_url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
