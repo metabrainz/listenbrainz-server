@@ -1,4 +1,5 @@
-import orjson
+import json
+
 from more_itertools import chunked
 
 import listenbrainz_spark
@@ -30,5 +31,5 @@ def get_listening_time(year):
         yield {
             "type": "year_in_music_listening_time",
             "year": year,
-            "data": orjson.dumps({r.user_id: r.value for r in entry}).decode("utf-8")
+            "data": json.dumps({r.user_id: r.value for r in entry})
         }
