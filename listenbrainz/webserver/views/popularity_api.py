@@ -2,8 +2,7 @@ from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, current_app
 
 from listenbrainz.db import popularity
-from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
-from listenbrainz.db.release import load_releases_from_mbids_with_redirects
+from listenbrainz.webserver import ts_conn, db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
@@ -52,7 +51,7 @@ def top_recordings():
         raise APIBadRequest(f"artist_mbid: '{artist_mbid}' is not a valid uuid")
 
     try:
-        recordings = popularity.get_top_recordings_for_artist(artist_mbid)
+        recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid)
         return recordings
     except Exception:
         current_app.logger.error("Error while fetching metadata for recordings: ", exc_info=True)
@@ -112,7 +111,7 @@ def top_release_groups():
         raise APIBadRequest(f"artist_mbid: '{artist_mbid}' is not a valid uuid")
 
     try:
-        releases = popularity.get_top_release_groups_for_artist(artist_mbid)
+        releases = popularity.get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid)
         return releases
     except Exception:
         current_app.logger.error("Error while fetching metadata for release groups: ", exc_info=True)

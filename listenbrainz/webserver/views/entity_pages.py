@@ -106,7 +106,7 @@ def artist_entity(artist_mbid):
         raise BadRequest("Provided artist mbid is invalid: %s" % artist_mbid)
 
     # Fetch the artist cached data
-    artist_data = get_metadata_for_artist([artist_mbid])
+    artist_data = get_metadata_for_artist(ts_conn, [artist_mbid])
     if len(artist_data) == 0:
         raise NotFound(f"artist {artist_mbid} not found in the metadata cache")
 
