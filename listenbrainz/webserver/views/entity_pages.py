@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, current_app, redirect, url_for
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
@@ -116,13 +116,12 @@ def artist_entity(artist_mbid):
         "tag": artist_data[0].tag_data,
     }
 
-    popular_recordings = popularity.get_top_recordings_for_artist(artist_mbid, 10)
+    popular_recordings = popularity.get_top_recordings_for_artist(ts_conn, artist_mbid, 10)
 
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
                 mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+                ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
 
             similar_artists = similarity.get_artists(
                 mb_curs,
@@ -136,7 +135,7 @@ def artist_entity(artist_mbid):
 
     release_group_data = artist_data[0].release_group_data
     release_group_mbids = [rg["mbid"] for rg in release_group_data]
-    popularity_data, _ = popularity.get_counts("release_group", release_group_mbids)
+    popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
 
     release_groups = []
     for release_group, pop in zip(release_group_data, popularity_data):
@@ -196,7 +195,7 @@ def album_entity(release_group_mbid):
     for medium in mediums:
         for track in medium["tracks"]:
             recording_mbids.append(track["recording_mbid"])
-    popularity_data, popularity_index = popularity.get_counts("recording", recording_mbids)
+    popularity_data, popularity_index = popularity.get_counts(ts_conn, "recording", recording_mbids)
 
     for medium in mediums:
         for track in medium["tracks"]:

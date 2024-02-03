@@ -38,20 +38,19 @@ class DatabaseTestCase(unittest.TestCase):
         """
         return os.path.join(TEST_DATA_PATH, file_name)
 
-    @classmethod
-    def create_user_with_id(cls, lb_id: int, musicbrainz_row_id: int, musicbrainz_id: str):
+    def create_user_with_id(self, lb_id: int, musicbrainz_row_id: int, musicbrainz_id: str):
         """ Create a new user with the specified LB id. """
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text("""
-                INSERT INTO "user" (id, musicbrainz_id, musicbrainz_row_id, auth_token)
-                     VALUES (:id, :mb_id, :mb_row_id, :token)
-                ON CONFLICT (musicbrainz_id) DO NOTHING 
-            """), {
-                "id": lb_id,
-                "mb_id": musicbrainz_id,
-                "token": str(uuid.uuid4()),
-                "mb_row_id": musicbrainz_row_id,
-            })
+        self.db_conn.execute(sqlalchemy.text("""
+            INSERT INTO "user" (id, musicbrainz_id, musicbrainz_row_id, auth_token)
+                 VALUES (:id, :mb_id, :mb_row_id, :token)
+            ON CONFLICT (musicbrainz_id) DO NOTHING 
+        """), {
+            "id": lb_id,
+            "mb_id": musicbrainz_id,
+            "token": str(uuid.uuid4()),
+            "mb_row_id": musicbrainz_row_id,
+        })
+        self.db_conn.commit()
 
 
 class TimescaleTestCase(unittest.TestCase):
