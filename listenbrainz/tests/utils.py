@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from datetime import datetime
+from datetime import datetime, date
 import time
 import sys
 import os
@@ -12,12 +12,9 @@ import listenbrainz.db.user as db_user
 
 def generate_data(db_conn, from_date, num_records, user_name):
     test_data = []
-    current_date = to_epoch(from_date)
+    current_date = int(time.mktime(from_date.timetuple()))
 
-    user = db_user.get_by_mb_id(db_conn, user_name)
-    if not user:
-        db_user.create(db_conn, 1000, user_name)
-        user = db_user.get_by_mb_id(db_conn, user_name)
+    user = db_user.get_or_create(db_conn, 1000, user_name)
 
     for i in range(num_records):
         current_date += 1   # Add one second
@@ -34,7 +31,3 @@ def generate_data(db_conn, from_date, num_records, user_name):
         )
         test_data.append(item)
     return test_data
-
-
-def to_epoch(date):
-    return int(time.mktime(date.timetuple()))
