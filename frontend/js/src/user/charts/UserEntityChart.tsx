@@ -3,10 +3,10 @@ import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { useLoaderData, Link } from "react-router-dom";
+import { useLoaderData, Link, useNavigate } from "react-router-dom";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import { getInitData, getData, processData, getURLParams } from "./utils";
+import { getInitData, getData, processData } from "./utils";
 
 import Bar from "./components/Bar";
 import Loader from "../../components/Loader";
@@ -14,6 +14,7 @@ import Pill from "../../components/Pill";
 import {
   getAllStatRanges,
   getChartEntityDetails,
+  isInvalidStatRange,
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
@@ -43,6 +44,7 @@ export default function UserEntityChart() {
   const nextPage = currPage + 1;
 
   const { APIService } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
 
   const [loading, setLoading] = React.useState(true);
   const [listenContainerHeight, setListenContainerHeight] = React.useState<
@@ -57,11 +59,17 @@ export default function UserEntityChart() {
   const [entityCount, setEntityCount] = React.useState(0);
   const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
+  const ranges = getAllStatRanges();
 
   React.useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setHasError(false);
+
+      if (isInvalidStatRange(range)) {
+        navigate(window.location.pathname);
+        return;
+      }
 
       try {
         const [initData, fetchedData] = await Promise.all([
@@ -93,9 +101,8 @@ export default function UserEntityChart() {
     };
 
     fetchData();
-  }, [APIService, currPage, entity, range, user, loaderData]);
+  }, [APIService, currPage, entity, range, user, loaderData, navigate]);
 
-  const ranges = getAllStatRanges();
   const listenContainer = React.useRef<HTMLDivElement>(null);
 
   const handleResize = () => {
@@ -322,13 +329,17 @@ export const UserEntityChartLoader = async ({
   });
   const propsData = await response.json();
   const { user } = propsData;
-  const { page, range } = getURLParams(currentURL.toString());
 
-  const urlEntityName = currentURL.pathname
-    .split("/")[4]
-    .split("-")[1]
-    .replace(/s$/, "");
+  const page = Math.max(Number(currentURL.searchParams.get("page")), 1);
+  const range: UserStatsAPIRange =
+    (currentURL.searchParams.get("range") as UserStatsAPIRange) ?? "all_time";
 
+  const reg = new RegExp(
+    `/user/${user?.name}/stats/top-(artist|album|track)s`,
+    "gm"
+  );
+  const match = reg.exec(currentURL.pathname);
+  const urlEntityName = match?.[1] ?? "artist";
   const entity = TERMINOLOGY_ENTITY_MAP[urlEntityName];
 
   return {
@@ -346,13 +357,14 @@ export const StatisticsChartLoader = async ({
   request: Request;
 }) => {
   const currentURL = new URL(request.url);
-  const { page, range } = getURLParams(currentURL.toString());
+  const page = Math.max(Number(currentURL.searchParams.get("page")), 1);
+  const range: UserStatsAPIRange =
+    (currentURL.searchParams.get("range") as UserStatsAPIRange) ?? "all_time";
 
-  const urlEntityName = currentURL.pathname
-    .split("/")[2]
-    .split("-")[1]
-    .replace(/s$/, "");
-
+  const match = /\/statistics\/top-(artist|album|track)s/gm.exec(
+    currentURL.pathname
+  );
+  const urlEntityName = match?.[1] ?? "artist";
   const entity = TERMINOLOGY_ENTITY_MAP[urlEntityName];
 
   return {

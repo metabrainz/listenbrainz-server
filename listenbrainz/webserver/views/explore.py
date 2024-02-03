@@ -92,7 +92,4 @@ def lb_radio():
 def index(path):
     """ Main explore page for users to browse the various explore features """
 
-    return render_template(
-        "index.html",
-        props=orjson.dumps({}).decode("utf-8")
-    )
+    return render_template("index.html")

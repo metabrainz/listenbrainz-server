@@ -53,23 +53,17 @@ module.exports = function (env, argv) {
     entry: {
       // Importing main.less file here so that it gets compiled.
       // Otherwise with a standalone entrypoint Webpack would generate a superfluous js file.
-      // All the Less/CSS will be exported separately to a main.css file and not appear in the recentListens module
-      recentListens: [
-        path.resolve(jsDir, "src/recent/RecentListens.tsx"),
+      // All the Less/CSS will be exported separately to a main.css file and not appear in the index module
+      index: [
+        path.resolve(jsDir, "src/index.tsx"),
         path.resolve(cssDir, "main.less"),
       ],
-      index: [path.resolve(jsDir, "src/index.tsx")],
       AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/AIBrainz.tsx")],
-      import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
       playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
       homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
       recommendationsPlayground: path.resolve(
         jsDir,
         "src/recommended/tracks/Recommendations.tsx"
-      ),
-      recommendations: path.resolve(
-        jsDir,
-        "src/user/recommendations/RecommendationsPage.tsx"
       ),
       playerPage: path.resolve(jsDir, "src/player/PlayerPage.tsx"),
       metadataViewer: path.resolve(
