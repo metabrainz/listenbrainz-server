@@ -4,6 +4,7 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
+import removeMarkdown from "remove-markdown";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
@@ -968,6 +969,7 @@ export function getReviewEventContent(
   const additionalContent = getAdditionalContent(
     eventMetadata as CritiqueBrainzReview
   );
+  const strippedAdditionalContent = removeMarkdown(additionalContent);
   const reviewID =
     _.get(eventMetadata, "review_mbid") ?? _.get(eventMetadata, "id");
   const userName =
@@ -989,7 +991,7 @@ export function getReviewEventContent(
           />
         </div>
       )}
-      <div className="text">{additionalContent}</div>
+      <div className="text">{strippedAdditionalContent}</div>
       <div className="author read-more">
         by {userName}
         <a
