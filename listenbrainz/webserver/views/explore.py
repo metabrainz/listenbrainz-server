@@ -57,14 +57,14 @@ def fresh_releases():
 @explore_bp.route("/music-neighborhood/")
 def artist_similarity():
     """ Explore artist similarity """
-    ts_conn.execute(text("""
-        SELECT artist_mbid::TEXT
-          FROM popularity.artist
-      ORDER BY total_listen_count DESC
-         LIMIT 1
-    """))
+    result = ts_conn.execute(text("""
+         SELECT artist_mbid::TEXT
+           FROM popularity.artist
+       ORDER BY total_listen_count DESC
+          LIMIT 1
+     """))
 
-    artist_mbid = ts_conn.fetchone()[0]
+    artist_mbid = result.fetchone()[0]
     props = {
         "algorithm": "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30",
         "artist_mbid": artist_mbid

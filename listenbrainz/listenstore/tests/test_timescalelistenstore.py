@@ -27,11 +27,15 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.log = logging.getLogger(__name__)
         self.logstore = TimescaleListenStore(self.log)
 
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+
         self.testuser = db_user.get_or_create(self.db_conn, 1, "test")
         self.testuser_id = self.testuser["id"]
         self.testuser_name = self.testuser["musicbrainz_id"]
 
     def tearDown(self):
+        self.ctx.pop()
         self.logstore = None
         DatabaseTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)

@@ -10,7 +10,6 @@ from flask_login import current_user
 from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
 from listenbrainz.db import listens_importer
-from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
@@ -118,7 +117,7 @@ def profile(user_name):
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items(ts_conn, [pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(webserver.ts_conn, [pin])[0].to_api()
 
     props = {
         "user": {

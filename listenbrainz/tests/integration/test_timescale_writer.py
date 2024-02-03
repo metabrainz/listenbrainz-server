@@ -3,26 +3,19 @@ import time
 from datetime import datetime
 from random import randint
 
-from listenbrainz.db.testing import TimescaleTestCase
-
 import listenbrainz.db.user as db_user
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 from listenbrainz.webserver import redis_connection, timescale_connection
 
 
-class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
+class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
 
     def setUp(self):
-        IntegrationTestCase.setUp(self)
-        TimescaleTestCase.setUp(self)
+        super(TimescaleWriterTestCase, self).setUp()
         self.ls = timescale_connection._ts
         self.rs = redis_connection._redis
-
-    def tearDown(self):
-        IntegrationTestCase.tearDown(self)
-        TimescaleTestCase.tearDown(self)
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
@@ -69,7 +62,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assertEqual(min_ts, datetime.utcfromtimestamp(1486449409))
         self.assertEqual(max_ts, datetime.utcfromtimestamp(1486449409))
 
-
     def test_dedup_user_special_characters(self):
 
         user = db_user.get_or_create(self.db_conn, 2, 'i have a\\weird\\user, name"\n')
@@ -83,7 +75,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-
     def test_dedup_same_batch(self):
 
         user = db_user.get_or_create(self.db_conn, 3, 'phifedawg')
@@ -93,7 +84,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         to_ts = datetime.utcnow()
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
-
 
     def test_dedup_different_users(self):
         """
@@ -115,7 +105,6 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
 
         listens, _, _ = self.ls.fetch_listens(user2, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
-
 
     def test_dedup_same_timestamp_different_tracks(self):
         """ Test to check that if there are two tracks w/ the same timestamp,
