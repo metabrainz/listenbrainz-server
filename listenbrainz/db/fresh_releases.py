@@ -13,6 +13,7 @@ from listenbrainz.db.model.fresh_releases import FreshRelease
 
 
 def get_sitewide_fresh_releases(
+        ts_conn,
         pivot_release_date: date,
         release_date_window_days: int,
         sort: str,
@@ -22,6 +23,7 @@ def get_sitewide_fresh_releases(
         of days into the past and days number of days into the future.
 
         Args:
+            ts_conn: timescale database connection
             pivot_release_date: The release_date around which to fetch the fresh releases.
             release_date_window_days: The number of days into the past and future to show releases for. Must be
                                       between 1 and 90 days. If an invalid value is passed, 90 days is used.
@@ -123,9 +125,8 @@ def get_sitewide_fresh_releases(
     fresh_releases = []
     total_count = 0
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
             mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
-            ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+            ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
         mb_curs.execute(query, (from_date, to_date))
         result = {str(row["release_mbid"]): dict(row)
                   for row in mb_curs.fetchall()}

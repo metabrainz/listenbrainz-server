@@ -94,8 +94,8 @@ class FeedbackDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
                                (recording_msid, recording_mbid, match_type, last_updated)
                         VALUES (:msid, :mbid, :match_type, now())"""
 
-        with ts.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(query), {"msid": msid, "mbid": mbid, "match_type": "exact_match"})
+        self.ts_conn.execute(sqlalchemy.text(query), {"msid": msid, "mbid": mbid, "match_type": "exact_match"})
+        self.ts_conn.commit()
 
         for fb in self.sample_feedback_with_metadata:
             db_feedback.insert(
