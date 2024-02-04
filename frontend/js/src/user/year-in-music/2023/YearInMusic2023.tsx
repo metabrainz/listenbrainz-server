@@ -45,6 +45,7 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../components/follow/FollowButton";
+import SEO, { YIMYearMetaTags } from "../SEO";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -563,6 +564,8 @@ export default class YearInMusic extends React.Component<
         role="main"
         style={{ ["--selectedColor" as any]: selectedColor }}
       >
+        <SEO year={2023} userName={user?.name} />
+        <YIMYearMetaTags year={2023} />
         <div id="main-header">
           <div className="color-picker">
             <img

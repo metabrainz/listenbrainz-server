@@ -37,6 +37,7 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
+import SEO, { YIMYearMetaTags } from "../SEO";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -327,6 +328,8 @@ export default class YearInMusic extends React.Component<
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
         <div id="year-in-music" className="yim-2022 container">
+          <SEO year={2022} userName={user?.name} />
+          <YIMYearMetaTags year={2022} />
           <div id="main-header" className="flex-center">
             <img
               className="img-responsive header-image"
@@ -476,6 +479,8 @@ export default class YearInMusic extends React.Component<
     const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2022`;
     return (
       <div id="year-in-music" className="yim-2022">
+        <SEO year={2022} userName={user?.name} />
+        <YIMYearMetaTags year={2022} />
         <div id="main-header" className="flex-center">
           <img
             className="img-responsive header-image"

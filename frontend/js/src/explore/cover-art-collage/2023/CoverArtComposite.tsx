@@ -3,6 +3,7 @@ import panzoom, { PanZoom } from "panzoom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHandPointRight, faSyncAlt } from "@fortawesome/free-solid-svg-icons";
 import jsonMap from "./data/mosaic-2023.json";
+import SEO, { CACYearMetaTags } from "../SEO";
 
 type CoverDef = {
   x1: number;
@@ -69,6 +70,8 @@ export default function CoverArtComposite() {
         WebkitOverflowScrolling: "auto", // See https://github.com/anvaka/panzoom/issues/235#issuecomment-1207341563
       }}
     >
+      <SEO year={2023} />
+      <CACYearMetaTags year={2023} />
       <div
         className="header"
         style={{ paddingTop: "1em", marginBottom: "0.5em" }}

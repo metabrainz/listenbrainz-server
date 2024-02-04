@@ -29,6 +29,7 @@ import {
 import UserEntityChart, {
   UserEntityChartLoader,
 } from "../charts/UserEntityChart";
+import ExploreLayout from "../../explore/layout";
 
 const getUserRoutes = () => {
   const LayoutWithAlertNotifications = withAlertNotifications(UserFeedLayout);
@@ -100,31 +101,31 @@ const getUserRoutes = () => {
           element: <RecommendationsPageWrapper />,
           loader: RecommendationsPageLoader,
         },
+      ],
+    },
+    {
+      path: "/user/:username/year-in-music/",
+      element: <ExploreLayout />,
+      children: [
         {
-          path: "year-in-music/",
-          element: <Outlet />,
-          children: [
-            {
-              index: true,
-              element: <YearInMusic2023Wrapper />,
-              loader: YearInMusic2023Loader,
-            },
-            {
-              path: "2023/",
-              element: <YearInMusic2023Wrapper />,
-              loader: YearInMusic2023Loader,
-            },
-            {
-              path: "2022/",
-              element: <YearInMusic2022Wrapper />,
-              loader: YearInMusic2022Loader,
-            },
-            {
-              path: "2021/",
-              element: <YearInMusic2021Wrapper />,
-              loader: YearInMusic2021Loader,
-            },
-          ],
+          index: true,
+          element: <YearInMusic2023Wrapper />,
+          loader: YearInMusic2023Loader,
+        },
+        {
+          path: "2023/",
+          element: <YearInMusic2023Wrapper />,
+          loader: YearInMusic2023Loader,
+        },
+        {
+          path: "2022/",
+          element: <YearInMusic2022Wrapper />,
+          loader: YearInMusic2022Loader,
+        },
+        {
+          path: "2021/",
+          element: <YearInMusic2021Wrapper />,
+          loader: YearInMusic2021Loader,
         },
       ],
     },

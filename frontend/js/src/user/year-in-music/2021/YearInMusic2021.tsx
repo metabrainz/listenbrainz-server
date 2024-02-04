@@ -31,6 +31,7 @@ import {
 import FollowButton from "../../components/follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import { ToastMsg } from "../../../notifications/Notifications";
+import SEO, { YIMYearMetaTags } from "../SEO";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -228,6 +229,8 @@ export default class YearInMusic extends React.Component<
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
         <div className="flex-center flex-wrap">
+          <SEO year={2021} userName={user?.name} />
+          <YIMYearMetaTags year={2021} />
           <h3>
             We don&apos;t have enough listening data for {user.name} to produce
             any statistics or playlists. (If you received an email from us
@@ -353,6 +356,8 @@ export default class YearInMusic extends React.Component<
     );
     return (
       <div role="main" id="year-in-music">
+        <SEO year={2021} userName={user?.name} />
+        <YIMYearMetaTags year={2021} />
         <div className="flex flex-wrap" id="header">
           <div className="content-card flex-center flex-wrap">
             <img
