@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import UserPins from "./components/UserPins";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -55,6 +56,11 @@ export default class UserTaste extends React.Component<UserTasteProps> {
     const listenables = [...listensFromFeedback, ...listensFromPins];
     return (
       <div role="main">
+        <Helmet>
+          <title>{`${
+            user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
+          } Tastes - ListenBrainz`}</title>
+        </Helmet>
         <div className="row">
           <div className="col-md-7">
             <UserFeedback

@@ -4,6 +4,7 @@ import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getInitData, getData, processData } from "./utils";
@@ -43,7 +44,7 @@ export default function UserEntityChart() {
   const prevPage = currPage - 1;
   const nextPage = currPage + 1;
 
-  const { APIService } = React.useContext(GlobalAppContext);
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
 
   const [loading, setLoading] = React.useState(true);
@@ -117,8 +118,20 @@ export default function UserEntityChart() {
   const listenableItems: BaseListenFormat[] =
     data?.map(userChartEntityToListen).reverse() ?? [];
 
+  const userOrLoggedInUser: string | undefined =
+    user?.name ?? currentUser?.name;
+
+  const userStatsTitle =
+    user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
+
   return (
     <div role="main">
+      <Helmet>
+        <title>
+          {user?.name ? userStatsTitle : "Sitewide"} top {terminology}s -
+          ListenBrainz
+        </title>
+      </Helmet>
       <div style={{ marginTop: "1em", minHeight: 500 }}>
         <Loader isLoading={loading}>
           <div className="row">

@@ -13,6 +13,7 @@ import { isUndefined, set, throttle } from "lodash";
 import { useLoaderData } from "react-router-dom";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
@@ -372,6 +373,11 @@ export default class RecommendationsPage extends React.Component<
       selectedPlaylist?.track.map(JSPFTrackToListen) ?? [];
     return (
       <div id="recommendations">
+        <Helmet>
+          <title>{`Created for ${
+            user?.name === currentUser?.name ? "you" : `${user?.name}`
+          } - ListenBrainz`}</title>
+        </Helmet>
         <h3>Created for {user.name}</h3>
 
         <Loader isLoading={loading} />

@@ -13,6 +13,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import Card from "../../components/Card";
 import Pill from "../../components/Pill";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -126,9 +127,15 @@ export default class UserPlaylists extends React.Component<
   render() {
     const { user } = this.props;
     const { playlists, playlistCount, playlistType } = this.state;
+    const { currentUser } = this.context;
 
     return (
       <div role="main" id="playlists-page">
+        <Helmet>
+          <title>{`${
+            user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
+          } Playlists - ListenBrainz`}</title>
+        </Helmet>
         <div style={{ marginTop: "1em" }}>
           <Pill
             active={playlistType === PlaylistType.playlists}

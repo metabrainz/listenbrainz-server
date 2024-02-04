@@ -105,13 +105,13 @@ export default class UserReports extends React.Component<
       user?.name ?? currentUser?.name;
 
     const userStatsTitle =
-      user?.name === currentUser?.name ? `${userOrLoggedInUser}'s` : "Your";
+      user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
 
     return (
       <div>
         <Helmet>
           <title>
-            {userOrLoggedInUser ? "Sitewide" : userStatsTitle} Stats -
+            {userOrLoggedInUser ? userStatsTitle : "Sitewide"} Stats -
             ListenBrainz
           </title>
         </Helmet>

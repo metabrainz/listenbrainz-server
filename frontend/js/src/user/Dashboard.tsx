@@ -17,6 +17,7 @@ import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
 import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "./components/AddListenModal";
@@ -689,6 +690,11 @@ export default class Listens extends React.Component<
     const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
       <div role="main">
+        <Helmet>
+          <title>{`${
+            user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
+          } Listens - ListenBrainz`}</title>
+        </Helmet>
         <div className="row">
           <div className="col-md-4 col-md-push-8 mt-15">
             <div className="mb-15">
