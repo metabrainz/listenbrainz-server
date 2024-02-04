@@ -2,6 +2,7 @@ import * as React from "react";
 import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import ReleaseFilters from "./components/ReleaseFilters";
@@ -204,115 +205,122 @@ export default function FreshReleases() {
   }, [pageType, range, showPastReleases, showFutureReleases, sort]);
 
   return (
-    <div className="releases-page-container">
-      <div className="releases-page">
-        <div
-          className="fresh-releases-pill-row"
-          style={!isLoggedIn ? { justifyContent: "flex-end" } : {}}
-        >
-          {isLoggedIn ? (
-            <div className="fresh-releases-row">
-              <Pill
-                id="sitewide-releases"
-                onClick={() => {
-                  setPageType(PAGE_TYPE_SITEWIDE);
-                  setSort("release_date");
-                }}
-                active={pageType === PAGE_TYPE_SITEWIDE}
-                type="secondary"
-              >
-                All
-              </Pill>
-              <Pill
-                id="user-releases"
-                onClick={() => setPageType(PAGE_TYPE_USER)}
-                active={pageType === PAGE_TYPE_USER}
-                type="secondary"
-              >
-                For You
-              </Pill>
-            </div>
-          ) : null}
-          <div className="fresh-releases-row">
-            <span>Sort By:</span>{" "}
-            <div className="input-group">
-              <select
-                id="fresh-releases-sort-select"
-                className="form-control"
-                value={sort}
-                onChange={(event) => setSort(event.target.value as SortOption)}
-              >
-                {availableSortOptions.map((option) => (
-                  <option value={option.value} key={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-        {isLoading ? (
-          <div className="spinner-container">
-            <Spinner
-              type="Grid"
-              color="#eb743b"
-              height={100}
-              width={100}
-              visible
-            />
-            <div
-              className="text-muted"
-              style={{ fontSize: "2rem", margin: "1rem" }}
-            >
-              Loading Fresh Releases&#8230;
-            </div>
-          </div>
-        ) : (
-          <div id="release-card-grids" ref={releaseCardGridRef}>
-            {filteredList.length === 0 ? (
-              <div className="no-release">
-                <img
-                  src="/static/img/recommendations/no-freshness.png"
-                  alt={
-                    releases.length === 0
-                      ? "No releases"
-                      : "No filtered releases"
-                  }
-                />
-                <div className="text-muted">
-                  {releases.length === 0
-                    ? "No releases"
-                    : `0/${releases.length} releases match your filters.`}
-                </div>
+    <>
+      <Helmet>
+        <title>Fresh releases - ListenBrainz</title>
+      </Helmet>
+      <div className="releases-page-container">
+        <div className="releases-page">
+          <div
+            className="fresh-releases-pill-row"
+            style={!isLoggedIn ? { justifyContent: "flex-end" } : {}}
+          >
+            {isLoggedIn ? (
+              <div className="fresh-releases-row">
+                <Pill
+                  id="sitewide-releases"
+                  onClick={() => {
+                    setPageType(PAGE_TYPE_SITEWIDE);
+                    setSort("release_date");
+                  }}
+                  active={pageType === PAGE_TYPE_SITEWIDE}
+                  type="secondary"
+                >
+                  All
+                </Pill>
+                <Pill
+                  id="user-releases"
+                  onClick={() => setPageType(PAGE_TYPE_USER)}
+                  active={pageType === PAGE_TYPE_USER}
+                  type="secondary"
+                >
+                  For You
+                </Pill>
               </div>
-            ) : (
-              <ReleaseCardsGrid
-                filteredList={filteredList}
-                displaySettings={displaySettings}
-                order={sort}
-              />
-            )}
+            ) : null}
+            <div className="fresh-releases-row">
+              <span>Sort By:</span>{" "}
+              <div className="input-group">
+                <select
+                  id="fresh-releases-sort-select"
+                  className="form-control"
+                  value={sort}
+                  onChange={(event) =>
+                    setSort(event.target.value as SortOption)
+                  }
+                >
+                  {availableSortOptions.map((option) => (
+                    <option value={option.value} key={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
+          {isLoading ? (
+            <div className="spinner-container">
+              <Spinner
+                type="Grid"
+                color="#eb743b"
+                height={100}
+                width={100}
+                visible
+              />
+              <div
+                className="text-muted"
+                style={{ fontSize: "2rem", margin: "1rem" }}
+              >
+                Loading Fresh Releases&#8230;
+              </div>
+            </div>
+          ) : (
+            <div id="release-card-grids" ref={releaseCardGridRef}>
+              {filteredList.length === 0 ? (
+                <div className="no-release">
+                  <img
+                    src="/static/img/recommendations/no-freshness.png"
+                    alt={
+                      releases.length === 0
+                        ? "No releases"
+                        : "No filtered releases"
+                    }
+                  />
+                  <div className="text-muted">
+                    {releases.length === 0
+                      ? "No releases"
+                      : `0/${releases.length} releases match your filters.`}
+                  </div>
+                </div>
+              ) : (
+                <ReleaseCardsGrid
+                  filteredList={filteredList}
+                  displaySettings={displaySettings}
+                  order={sort}
+                />
+              )}
+            </div>
+          )}
+        </div>
+        {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 && (
+          <ReleaseTimeline releases={filteredList} order={sort} />
         )}
+        <ReleaseFilters
+          allFilters={allFilters}
+          releases={releases}
+          setFilteredList={setFilteredList}
+          range={range}
+          handleRangeChange={setRange}
+          displaySettings={displaySettings}
+          toggleSettings={toggleSettings}
+          showPastReleases={showPastReleases}
+          setShowPastReleases={setShowPastReleases}
+          showFutureReleases={showFutureReleases}
+          setShowFutureReleases={setShowFutureReleases}
+          releaseCardGridRef={releaseCardGridRef}
+          pageType={pageType}
+        />
       </div>
-      {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 && (
-        <ReleaseTimeline releases={filteredList} order={sort} />
-      )}
-      <ReleaseFilters
-        allFilters={allFilters}
-        releases={releases}
-        setFilteredList={setFilteredList}
-        range={range}
-        handleRangeChange={setRange}
-        displaySettings={displaySettings}
-        toggleSettings={toggleSettings}
-        showPastReleases={showPastReleases}
-        setShowPastReleases={setShowPastReleases}
-        showFutureReleases={showFutureReleases}
-        setShowFutureReleases={setShowFutureReleases}
-        releaseCardGridRef={releaseCardGridRef}
-        pageType={pageType}
-      />
-    </div>
+    </>
   );
 }

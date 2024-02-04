@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
@@ -44,6 +45,9 @@ export default class RecentListens extends React.Component<
 
     return (
       <div role="main">
+        <Helmet>
+          <title>Recent listens - ListenBrainz</title>
+        </Helmet>
         <h3>Global listens</h3>
         <div className="row">
           <div className="col-md-4 col-md-push-8">

@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { isEmpty, isEqual, kebabCase } from "lodash";
 import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchBox from "./components/SearchBox";
@@ -295,49 +296,54 @@ export default function MusicNeighborhood() {
   const browserHasClipboardAPI = "clipboard" in navigator;
 
   return (
-    <div className="artist-similarity-main-container">
-      <div className="artist-similarity-header">
-        <SearchBox
-          onArtistChange={onArtistChange}
-          onSimilarArtistsLimitChange={updateSimilarArtistsLimit}
-          currentSimilarArtistsLimit={similarArtistsLimit}
-        />
-        <div className="share-buttons">
-          <button
-            type="button"
-            className="btn btn-icon btn-info"
-            onClick={onClickDownload}
-          >
-            <FontAwesomeIcon icon={faDownload} color="white" />
-          </button>
-          {browserHasClipboardAPI && (
+    <>
+      <Helmet>
+        <title>Music Neighborhood - ListenBrainz</title>
+      </Helmet>
+      <div className="artist-similarity-main-container">
+        <div className="artist-similarity-header">
+          <SearchBox
+            onArtistChange={onArtistChange}
+            onSimilarArtistsLimitChange={updateSimilarArtistsLimit}
+            currentSimilarArtistsLimit={similarArtistsLimit}
+          />
+          <div className="share-buttons">
             <button
               type="button"
               className="btn btn-icon btn-info"
-              onClick={copyImage}
+              onClick={onClickDownload}
             >
-              <FontAwesomeIcon icon={faCopy} color="white" />
+              <FontAwesomeIcon icon={faDownload} color="white" />
             </button>
-          )}
+            {browserHasClipboardAPI && (
+              <button
+                type="button"
+                className="btn btn-icon btn-info"
+                onClick={copyImage}
+              >
+                <FontAwesomeIcon icon={faCopy} color="white" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-      <div className="artist-similarity-graph-panel-container">
-        <SimilarArtistsGraph
-          onArtistChange={onArtistChange}
-          data={transformedArtists}
-          background={backgroundGradient}
-          graphParentElementRef={graphParentElementRef}
+        <div className="artist-similarity-graph-panel-container">
+          <SimilarArtistsGraph
+            onArtistChange={onArtistChange}
+            data={transformedArtists}
+            background={backgroundGradient}
+            graphParentElementRef={graphParentElementRef}
+          />
+          {artistInfo && <Panel artistInfo={artistInfo} loading={loading} />}
+        </div>
+        <BrainzPlayer
+          listens={currentTracks ?? []}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
         />
-        {artistInfo && <Panel artistInfo={artistInfo} loading={loading} />}
       </div>
-      <BrainzPlayer
-        listens={currentTracks ?? []}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
-    </div>
+    </>
   );
 }
 

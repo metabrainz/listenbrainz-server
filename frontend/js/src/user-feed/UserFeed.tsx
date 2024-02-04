@@ -23,6 +23,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
+import { Helmet } from "react-helmet";
 
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
@@ -649,6 +650,9 @@ export default class UserFeedPage extends React.Component<
       (earliestEventTs && events?.[0]?.created >= earliestEventTs);
     return (
       <>
+        <Helmet>
+          <title>Feed - ListenBrainz</title>
+        </Helmet>
         <div
           style={{
             display: "flex",

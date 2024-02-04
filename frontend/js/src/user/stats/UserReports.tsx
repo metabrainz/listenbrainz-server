@@ -7,6 +7,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
+
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import Pill from "../../components/Pill";
 import UserListeningActivity from "./components/UserListeningActivity";
@@ -102,8 +104,17 @@ export default class UserReports extends React.Component<
     const userOrLoggedInUser: string | undefined =
       user?.name ?? currentUser?.name;
 
+    const userStatsTitle =
+      user?.name === currentUser?.name ? `${userOrLoggedInUser}'s` : "Your";
+
     return (
       <div>
+        <Helmet>
+          <title>
+            {userOrLoggedInUser ? "Sitewide" : userStatsTitle} Stats -
+            ListenBrainz
+          </title>
+        </Helmet>
         <div className="tertiary-nav dragscroll">
           <div>
             {Array.from(ranges, ([stat_type, stat_name]) => {

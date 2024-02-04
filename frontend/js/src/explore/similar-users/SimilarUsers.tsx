@@ -1,10 +1,14 @@
 import * as React from "react";
+import { Helmet } from "react-helmet";
 import { Link, useLoaderData } from "react-router-dom";
 
 export default function SimilarUsers() {
   const { similarUsers } = useLoaderData() as { similarUsers: string[][] };
   return (
     <div id="similar-users">
+      <Helmet>
+        <title>Top Similar Users - ListenBrainz</title>
+      </Helmet>
       <h2 className="page-title">Top Similar Users</h2>
 
       <p>

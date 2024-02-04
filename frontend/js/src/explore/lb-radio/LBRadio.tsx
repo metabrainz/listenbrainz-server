@@ -4,6 +4,7 @@ import { merge } from "lodash";
 import * as React from "react";
 import { useState } from "react";
 import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import {
@@ -102,6 +103,9 @@ export default function LBRadio() {
 
   return (
     <>
+      <Helmet>
+        <title>LB Radio - ListenBrainz</title>
+      </Helmet>
       <div className="row">
         <div className="col-sm-12">
           <Prompt

@@ -4,6 +4,7 @@ import * as React from "react";
 import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -92,6 +93,9 @@ export default class ColorPlay extends React.Component<{}, ColorPlayState> {
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     return (
       <div role="main">
+        <Helmet>
+          <title>Huesound - ListenBrainz</title>
+        </Helmet>
         <div>
           <h1 className="text-center">
             Huesound<span className="beta">beta</span>

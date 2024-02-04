@@ -4,6 +4,7 @@ import * as React from "react";
 import { useContext } from "react";
 
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 type ExploreCardProps = {
@@ -43,6 +44,9 @@ export default function ExplorePage() {
   const { currentUser } = useContext(GlobalAppContext);
   return (
     <>
+      <Helmet>
+        <title>Explore - ListenBrainz</title>
+      </Helmet>
       <div className="row">
         <div>
           <ExploreCard
