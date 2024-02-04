@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { redirect } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { downloadFile } from "../export/ExportData";
@@ -87,6 +88,9 @@ export default function DeleteAccount() {
 
   return (
     <>
+      <Helmet>
+        <title>Delete Account - ListenBrainz</title>
+      </Helmet>
       <h3 className="page-title">Delete your account</h3>
       <p>
         Hi {name}, are you sure you want to delete your ListenBrainz account?

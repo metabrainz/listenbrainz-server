@@ -1,7 +1,9 @@
 import * as React from "react";
 
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export const downloadFile = async (url: string) => {
   const response = await fetch(url, {
@@ -22,6 +24,7 @@ export const downloadFile = async (url: string) => {
 };
 
 export default function Export() {
+  const { currentUser } = React.useContext(GlobalAppContext);
   const downloadListens = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -54,6 +57,9 @@ export default function Export() {
 
   return (
     <>
+      <Helmet>
+        <title>Export for {currentUser?.name} - ListenBrainz</title>
+      </Helmet>
       <h3>Export from ListenBrainz</h3>
       <p>
         <strong> Notes about the ListenBrainz export process : </strong>

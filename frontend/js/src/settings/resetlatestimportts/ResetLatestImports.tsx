@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { redirect, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 
 export default function ResetImportTimestamp() {
@@ -35,6 +36,9 @@ export default function ResetImportTimestamp() {
   };
   return (
     <>
+      <Helmet>
+        <title>Reset import timestamp- ListenBrainz</title>
+      </Helmet>
       <h3 className="page-title">Reset Import Timestamp</h3>
       <p>Are you sure you want to reset your token? </p>
 

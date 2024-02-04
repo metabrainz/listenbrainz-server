@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { redirect, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 
 export default function ResetToken() {
@@ -29,6 +30,9 @@ export default function ResetToken() {
   };
   return (
     <>
+      <Helmet>
+        <title>Reset token - ListenBrainz</title>
+      </Helmet>
       <h3 className="page-title">Reset token</h3>
       <p>Are you sure you want to reset your token? </p>
 

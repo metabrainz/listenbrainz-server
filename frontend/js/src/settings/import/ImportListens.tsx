@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { Link, useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import LastFmImporter from "../../lastfm/LastFMImporter";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
@@ -29,6 +30,9 @@ export default function Import() {
 
   return (
     <>
+      <Helmet>
+        <title>Import for {name} - ListenBrainz</title>
+      </Helmet>
       <h2 className="page-title">Import to user {name}</h2>
       {!userHasEmail && (
         <div className="alert alert-danger">

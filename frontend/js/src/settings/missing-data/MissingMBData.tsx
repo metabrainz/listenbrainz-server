@@ -5,6 +5,7 @@ import * as React from "react";
 import { faLink, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 
 import NiceModal from "@ebay/nice-modal-react";
 
@@ -227,6 +228,11 @@ export default class MissingMBDataPage extends React.Component<
     });
     return (
       <>
+        <Helmet>
+          <title>
+            Missing MusicBrainz Data of {currentUser?.name} - ListenBrainz
+          </title>
+        </Helmet>
         <h2 className="page-title">
           Missing MusicBrainz Data of {currentUser?.name}
         </h2>

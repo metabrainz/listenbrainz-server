@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
@@ -86,6 +87,9 @@ class SelectTroiPreferences extends React.Component<
 
     return (
       <>
+        <Helmet>
+          <title>Select Playlist Preferences - ListenBrainz</title>
+        </Helmet>
         <h3>Configure auto export of generated playlists</h3>
         <p>
           If this setting is turned on, ListenBrainz will automatically export
