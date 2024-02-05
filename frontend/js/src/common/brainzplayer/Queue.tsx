@@ -125,7 +125,7 @@ function Queue(props: QueueProps) {
         )}
       </div>
       <div className="queue-headers">
-        <h4>Suggested for you:</h4>
+        <h4>On this page:</h4>
       </div>
       <div className="queue-list">
         {ambientQueue.length > 0

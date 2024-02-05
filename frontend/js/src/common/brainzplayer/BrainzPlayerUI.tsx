@@ -265,11 +265,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           )}
           <FontAwesomeIcon
             icon={faBarsStaggered}
+            style={{ color: showQueue ? "green" : "" }}
             onClick={() => setShowQueue(!showQueue)}
           />
           <FontAwesomeIcon
             icon={queueRepeatMode.icon}
             title={queueRepeatMode.title}
+            style={{ color: queueRepeatMode.color }}
             onClick={toggleRepeatMode}
           />
           {showFeedback && (

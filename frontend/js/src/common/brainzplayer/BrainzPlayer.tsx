@@ -73,16 +73,19 @@ export type DataSourceProps = {
 
 export const QueueRepeatModes = {
   off: {
-    icon: faBan,
+    icon: faRepeatOnce,
     title: "Repeat off",
+    color: undefined,
   },
   one: {
     icon: faRepeatOnce,
     title: "Repeat one",
+    color: "green",
   },
   all: {
     icon: faRepeat,
     title: "Repeat all",
+    color: "green",
   },
 } as const;
 
@@ -269,9 +272,6 @@ export default class BrainzPlayer extends React.Component<
         const { listens } = this.props;
         this.replaceQueue(listens);
       }
-    } else {
-      const { listens } = this.props;
-      this.replaceQueue(listens);
     }
   }
 
