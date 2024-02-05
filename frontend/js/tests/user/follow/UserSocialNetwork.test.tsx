@@ -101,6 +101,7 @@ describe("<UserSocialNetwork />", () => {
   });
 
   it("initializes by calling the API to get data", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error");
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
         <BrowserRouter>
@@ -115,6 +116,8 @@ describe("<UserSocialNetwork />", () => {
     await act(async () => {
       await instance.componentDidMount();
     });
+
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
 
     const similarUsersInState = [
       {
