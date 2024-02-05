@@ -1,5 +1,3 @@
-from brainzutils import cache
-from brainzutils.ratelimit import set_rate_limits
 from typing import List
 from unittest.mock import patch
 
@@ -16,27 +14,17 @@ from listenbrainz.db.model.pinned_recording import (
 import json
 
 
-def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
+def fetch_track_metadata_for_pins(ts_conn, pins: List[PinnedRecording]) -> List[PinnedRecording]:
     return pins
 
 
 class PinnedRecAPITestCase(IntegrationTestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        super(PinnedRecAPITestCase, cls).setUpClass()
-        set_rate_limits(5000, 50000, 10)
-
-    @classmethod
-    def tearDownClass(cls):
-        cache._r.flushdb()
-        super(PinnedRecAPITestCase, cls).tearDownClass()
-
     def setUp(self):
         super(PinnedRecAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "test_user_1")
-        self.followed_user_1 = db_user.get_or_create(2, "followed_user_1")
-        self.followed_user_2 = db_user.get_or_create(3, "followed_user_2")
+        self.user = db_user.get_or_create(self.db_conn, 1, "test_user_1")
+        self.followed_user_1 = db_user.get_or_create(self.db_conn, 2, "followed_user_1")
+        self.followed_user_2 = db_user.get_or_create(self.db_conn, 3, "followed_user_2")
 
         self.pinned_rec_samples = [
             {
@@ -74,6 +62,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         for data in self.pinned_rec_samples[:limit]:
             db_pinned_rec.pin(
+                self.db_conn,
                 WritablePinnedRecording(
                     user_id=user_id,
                     recording_msid=data["recording_msid"],
@@ -100,7 +89,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
             blurb_content=self.pinned_rec_samples[index]["blurb_content"],
         )
 
-        db_pinned_rec.pin(recording_to_pin)
+        db_pinned_rec.pin(self.db_conn, recording_to_pin)
         return recording_to_pin
 
     def test_pin(self):
@@ -253,7 +242,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
             content_type="application/json",
         )
 
-        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
 
         response = self.client.post(
             self.custom_url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
@@ -274,7 +263,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         )
 
         # attempt to delete
-        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
 
         response = self.client.post(
             self.custom_url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
@@ -467,8 +456,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_get_pins_for_user_following(self):
         """Test that valid response is received with 200 code"""
         # user follows followed_user_1 and followed_user_2
-        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
-        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_1["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
 
         pin1 = self.pin_single_sample(self.followed_user_1["id"], 0)  # pin recording for followed_user_1
         pin2 = self.pin_single_sample(self.followed_user_2["id"], 1)  # pin recording for followed_user_2
@@ -511,8 +500,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_get_pins_for_user_count_param_2(self):
         """Tests that valid response is received honoring count parameter"""
         # user follows followed_user_1 and followed_user_2
-        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
-        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_1["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
 
         self.pin_single_sample(self.followed_user_1["id"], 0)  # pin recording for followed_user_1
         included_pin = self.pin_single_sample(self.followed_user_2["id"], 1)  # pin recording for followed_user_2
@@ -562,8 +551,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_get_pins_for_user_following_offset_param(self):
         """Tests that valid response is received honoring offset parameter"""
         # user follows followed_user_1 and followed_user_2
-        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
-        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_1["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
 
         included_pin = self.pin_single_sample(self.followed_user_1["id"], 0)  # pin recording for followed_user_1
         self.pin_single_sample(self.followed_user_2["id"], 1)  # pin recording for followed_user_2

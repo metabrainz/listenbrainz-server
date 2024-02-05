@@ -1,10 +1,12 @@
-from flask import Blueprint, render_template, current_app, request, jsonify
+from flask import Blueprint, render_template, request, jsonify
 from flask_login import current_user
 import orjson
+from sqlalchemy import text
 from werkzeug.exceptions import NotFound, BadRequest
 import psycopg2
 
 from listenbrainz.db.similar_users import get_top_similar_users
+from listenbrainz.webserver import db_conn, ts_conn
 
 explore_bp = Blueprint('explore', __name__)
 
@@ -16,7 +18,7 @@ def similar_users():
         and spammers as well.
     """
 
-    similar_users = get_top_similar_users()
+    similar_users = get_top_similar_users(db_conn)
 
     return jsonify({
         "similarUsers": similar_users
@@ -27,24 +29,20 @@ def similar_users():
 def artist_similarity():
     """ Explore artist similarity """
 
-    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
-            ts_conn.cursor() as ts_curs:
-        ts_curs.execute("""
-                        SELECT artist_mbid::TEXT
-                            FROM popularity.artist
-                            ORDER BY total_listen_count DESC
-                            LIMIT 1
-                            """)
+    result = ts_conn.execute(text("""
+         SELECT artist_mbid::TEXT
+           FROM popularity.artist
+       ORDER BY total_listen_count DESC
+          LIMIT 1
+     """))
 
-        artist_mbid = ts_curs.fetchone()[0]
-        current_app.logger.info(artist_mbid)
+    artist_mbid = result.fetchone()[0]
+    data = {
+        "algorithm": "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30",
+        "artist_mbid": artist_mbid
+    }
 
-        data = {
-            "algorithm": "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30",
-            "artist_mbid": artist_mbid
-        }
-
-        return jsonify(data)
+    return jsonify(data)
 
 
 @explore_bp.route("/ai-brainz/")

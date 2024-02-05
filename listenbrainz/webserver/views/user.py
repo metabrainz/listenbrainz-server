@@ -15,7 +15,7 @@ from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_c
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver import timescale_connection
@@ -40,7 +40,7 @@ def index(path):
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
-    db_conn = webserver.timescale_connection._ts
+    ts_conn = webserver.timescale_connection._ts
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
 
@@ -69,8 +69,8 @@ def profile(user_name):
     if max_ts:
         args['to_ts'] = datetime.utcfromtimestamp(max_ts)
     elif min_ts:
-        args['from_ts'] =  datetime.utcfromtimestamp(min_ts)
-    data, min_ts_per_user, max_ts_per_user = db_conn.fetch_listens(
+        args['from_ts'] = datetime.utcfromtimestamp(min_ts)
+    data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
     min_ts_per_user = int(min_ts_per_user.timestamp())
     max_ts_per_user = int(max_ts_per_user.timestamp())
@@ -87,11 +87,11 @@ def profile(user_name):
 
     already_reported_user = False
     if current_user.is_authenticated:
-        already_reported_user = db_user.is_user_reported(current_user.id, user.id)
+        already_reported_user = db_user.is_user_reported(db_conn, current_user.id, user.id)
 
-    pin = get_current_pin_for_user(user_id=user.id)
+    pin = get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items([pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(webserver.ts_conn, [pin])[0].to_api()
 
     data = {
         "user": {
@@ -162,11 +162,10 @@ def playlists(user_name: str):
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_for_user(user.id,
-                                                            include_private=include_private,
-                                                            load_recordings=False,
-                                                            count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL,
-                                                            offset=0)
+    user_playlists, playlist_count = get_playlists_for_user(
+        db_conn, ts_conn, user.id, include_private=include_private,
+        load_recordings=False, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=0
+    )
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
@@ -205,8 +204,7 @@ def recommendation_playlists(user_name: str):
     }
 
     playlists = []
-    user_playlists = get_recommendation_playlists_for_user(
-        user.id)
+    user_playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, user.id)
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
@@ -219,7 +217,6 @@ def recommendation_playlists(user_name: str):
     return jsonify(data)
 
 
-
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
 @api_login_required
 def report_abuse(user_name):
@@ -229,9 +226,9 @@ def report_abuse(user_name):
         reason = data.get("reason")
         if not isinstance(reason, str):
             raise APIBadRequest("Reason must be a string.")
-    user_to_report = db_user.get_by_mb_id(user_name)
+    user_to_report = db_user.get_by_mb_id(db_conn, user_name)
     if current_user.id != user_to_report["id"]:
-        db_user.report_user(current_user.id, user_to_report["id"], reason)
+        db_user.report_user(db_conn, current_user.id, user_to_report["id"], reason)
         return jsonify({"status": "%s has been reported successfully." % user_name})
     else:
         raise APIBadRequest("You cannot report yourself.")
@@ -243,7 +240,7 @@ def _get_user(user_name):
             current_user.musicbrainz_id == user_name:
         return current_user
     else:
-        user = db_user.get_by_mb_id(user_name)
+        user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise NotFound("Cannot find user: %s" % user_name)
         return User.from_dbrow(user)
@@ -257,7 +254,7 @@ def delete_user(user_id: int):
         user_id: the LB row ID of the user
     """
     timescale_connection._ts.delete(user_id)
-    db_user.delete(user_id)
+    db_user.delete(db_conn, user_id)
 
 
 def delete_listens_history(user_id: int):
@@ -267,7 +264,7 @@ def delete_listens_history(user_id: int):
         user_id: the LB row ID of the user
     """
     timescale_connection._ts.delete(user_id)
-    listens_importer.update_latest_listened_at(user_id, ExternalServiceType.LASTFM, 0)
+    listens_importer.update_latest_listened_at(db_conn, user_id, ExternalServiceType.LASTFM, 0)
 
 
 def logged_in_user_follows_user(user):
@@ -280,7 +277,7 @@ def logged_in_user_follows_user(user):
 
     if current_user.is_authenticated:
         return db_user_relationship.is_following_user(
-            current_user.id, user.id
+            db_conn, current_user.id, user.id
         )
     return None
 
@@ -292,7 +289,7 @@ def taste(user_name: str):
     Feedback has filter on score (1 or -1).
 
     Args:
-        musicbrainz_id (str): the MusicBrainz ID of the user
+        user_name (str): the MusicBrainz ID of the user
     Raises:
         NotFound if user isn't present in the database
     """
@@ -310,12 +307,15 @@ def taste(user_name: str):
         "id": user.id,
     }
 
-    feedback_count = get_feedback_count_for_user(user.id, score)
-    feedback = get_feedback_for_user(user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL, offset=0, score=score, metadata=True)
+    feedback_count = get_feedback_count_for_user(db_conn, user.id, score)
+    feedback = get_feedback_for_user(
+        db_conn, ts_conn, user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL,
+        offset=0, score=score, metadata=True
+    )
     
-    pins = get_pin_history_for_user(user_id=user.id, count=25, offset=0)
-    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(pins)]
-    pin_count = get_pin_count_for_user(user_id=user.id)
+    pins = get_pin_history_for_user(db_conn, user_id=user.id, count=25, offset=0)
+    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, pins)]
+    pin_count = get_pin_count_for_user(db_conn, user_id=user.id)
 
     data = {
         "feedback": [f.to_api() for f in feedback],

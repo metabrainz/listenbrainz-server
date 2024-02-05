@@ -19,10 +19,10 @@ class SettingsViewsTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(SettingsViewsTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(self.user['musicbrainz_id'])
-        self.weirduser = db_user.get_or_create(2, 'weird\\user name')
-        db_user.agree_to_gdpr(self.weirduser['musicbrainz_id'])
+        self.user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, self.user['musicbrainz_id'])
+        self.weirduser = db_user.get_or_create(self.db_conn, 2, 'weird\\user name')
+        db_user.agree_to_gdpr(self.db_conn, self.weirduser['musicbrainz_id'])
         with self.app.app_context():
             self.service = SpotifyService()
 
@@ -36,7 +36,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
 
     def test_reset_import_timestamp(self):
         val = int(time.time())
-        listens_importer.update_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM, val)
+        listens_importer.update_latest_listened_at(self.db_conn, self.user['id'], ExternalServiceType.LASTFM, val)
         self.temporary_login(self.user['login_id'])
         response = self.client.get(self.custom_url_for('settings.index', path='resetlatestimportts'))
         self.assertTemplateUsed('settings/index.html')
@@ -44,7 +44,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
 
         response = self.client.post(self.custom_url_for('settings.reset_latest_import_timestamp'))
         self.assertDictEqual(response.json, {'success': True})
-        ts = listens_importer.get_latest_listened_at(self.user['id'], ExternalServiceType.LASTFM)
+        ts = listens_importer.get_latest_listened_at(self.db_conn, self.user['id'], ExternalServiceType.LASTFM)
         self.assertEqual(int(ts.strftime('%s')), 0)
 
     def test_user_info_not_logged_in(self):
@@ -94,7 +94,8 @@ class SettingsViewsTestCase(IntegrationTestCase):
         r = self.client.post(self.custom_url_for('settings.music_services_disconnect', service_name='spotify'), json={})
         self.assertStatus(r, 200)
 
-        self.assertIsNone(self.service.get_user(self.user['id']))
+        with self.app.app_context():
+            self.assertIsNone(self.service.get_user(self.user['id']))
 
     @patch('listenbrainz.domain.spotify.SpotifyService.fetch_access_token')
     @patch.object(spotipy.Spotify, 'current_user')
@@ -113,7 +114,8 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assertStatus(r, 302)
         mock_fetch_access_token.assert_called_once_with('code')
 
-        user = self.service.get_user(self.user['id'])
+        with self.app.app_context():
+            user = self.service.get_user(self.user['id'])
         self.assertEqual(self.user['id'], user['user_id'])
         self.assertEqual('token', user['access_token'])
         self.assertEqual('refresh', user['refresh_token'])
@@ -133,7 +135,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
     def _create_spotify_user(self, expired):
         offset = -1000 if expired else 1000
         expires = int(time.time()) + offset
-        db_oauth.save_token(user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
+        db_oauth.save_token(self.db_conn, user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
                             access_token='old-token', refresh_token='old-refresh-token',
                             token_expires_ts=expires, record_listens=False,
                             scopes=['user-read-recently-played', 'some-other-permission'])

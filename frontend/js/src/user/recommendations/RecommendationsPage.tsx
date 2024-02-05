@@ -268,7 +268,7 @@ export default class RecommendationsPage extends React.Component<
     const playlistId = getPlaylistId(playlist);
     const extension = getPlaylistExtension(playlist);
     const expiryDate = extension?.additional_metadata?.expires_at;
-    let percentTimeLeft;
+    let percentElapsed;
     if (expiryDate) {
       const start = new Date(playlist.date).getTime();
       const end = new Date(expiryDate).getTime();
@@ -276,7 +276,7 @@ export default class RecommendationsPage extends React.Component<
 
       const elapsed = Math.abs(today - start);
       const total = Math.abs(end - start);
-      percentTimeLeft = Math.round((elapsed / total) * 100);
+      percentElapsed = Math.round((elapsed / total) * 100);
     }
     return (
       <div
@@ -292,15 +292,15 @@ export default class RecommendationsPage extends React.Component<
         role="button"
         tabIndex={0}
       >
-        {!isUndefined(percentTimeLeft) && (
+        {!isUndefined(percentElapsed) && (
           <div
             className={`playlist-timer ${
-              percentTimeLeft > 75 ? "pressing" : ""
+              percentElapsed > 75 ? "pressing" : ""
             }`}
             title={`Deleted in ${preciseTimestamp(expiryDate!, "timeAgo")}`}
             style={{
               ["--degrees-progress" as any]: `${
-                (percentTimeLeft / 100) * 360
+                (percentElapsed / 100) * 360
               }deg`,
             }}
           />

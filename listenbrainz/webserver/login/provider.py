@@ -3,6 +3,7 @@ from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.musicbrainz_db import editor as mb_editor
 
 from listenbrainz.domain.musicbrainz import MusicBrainzService, MUSICBRAINZ_SCOPES
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.utils import generate_string
 from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
@@ -33,7 +34,7 @@ def get_user():
         # get_auth_session raises a KeyError if it was unable to get the required data from `code`
         raise MusicBrainzAuthSessionError()
 
-    user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
+    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id)
     user_email = None
     if mb_engine:
         user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)["email"]
@@ -42,8 +43,8 @@ def get_user():
         if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and user_email is None:
             # if flag is set to True and the user does not have an email do not allow to sign up
             raise MusicBrainzAuthNoEmailError()
-        db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
-        user = db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)
+        db_user.create(db_conn, musicbrainz_row_id, musicbrainz_id, email=user_email)
+        user = db_user.get_by_mb_id(db_conn, musicbrainz_id, fetch_email=True)
         ts.set_empty_values_for_user(user["id"])
         # add new oauth token for the user
         service.add_new_user(user["id"], token)

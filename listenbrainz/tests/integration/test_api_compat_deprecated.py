@@ -38,7 +38,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def setUp(self):
         super(APICompatDeprecatedTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'apicompatoldtestuser')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'apicompatoldtestuser')
 
         self.log = logging.getLogger(__name__)
         self.ls = timescale_connection._ts
@@ -141,7 +141,8 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         time.sleep(1)
         recalculate_all_user_data()
         to_ts = datetime.utcnow()
-        listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
+        with self.app.app_context():
+            listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
     def test_submit_listen_invalid_sid(self):
@@ -232,17 +233,14 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def test_get_session(self):
         """ Tests _get_session method in api_compat_deprecated """
-
-        s = Session.create_by_user_id(self.user['id'])
-
-        session = _get_session(s.sid)
+        s = Session.create_by_user_id(self.db_conn, self.user['id'])
+        session = _get_session(self.db_conn, s.sid)
         self.assertEqual(s.sid, session.sid)
 
     def test_get_session_which_doesnt_exist(self):
         """ Make sure BadRequest is raised when we try to get a session that doesn't exists """
-
         with self.assertRaises(BadRequest):
-            session = _get_session('')
+            session = _get_session(self.db_conn, '')
 
     def test_404(self):
 

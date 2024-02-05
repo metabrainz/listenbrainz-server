@@ -21,9 +21,9 @@ class IndexViewsTestCase(IntegrationTestCase):
     
     def test_index_logged_in_redirect(self):
         """ If the user is logged in, redirect from the index to their profile page """
-        user = db_user.get_or_create(1, 'mr_monkey')
-        db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create(1, 'mr_monkey')
+        user = db_user.get_or_create(self.db_conn, 1, 'mr_monkey')
+        db_user.agree_to_gdpr(self.db_conn, user['musicbrainz_id'])
+        user = db_user.get_or_create(self.db_conn, 1, 'mr_monkey')
         self.temporary_login(user['login_id'])
 
         resp = self.client.get(self.custom_url_for('index.index'))
@@ -90,9 +90,9 @@ class IndexViewsTestCase(IntegrationTestCase):
     @mock.patch('listenbrainz.db.user.get_by_login_id')
     def test_menu_logged_in(self, mock_user_get):
         """ If the user is logged in, check that we perform a database query to get user data """
-        user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create(1, 'iliekcomputers')
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, user['musicbrainz_id'])
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
 
         mock_user_get.return_value = user
         self.temporary_login(user['login_id'])
@@ -105,12 +105,12 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assertIn('Logout', data)
         self.assertNotIn('Sign in', data)
 
-        mock_user_get.assert_called_with(user['login_id'])
+        mock_user_get.assert_called_with(mock.ANY, user['login_id'])
 
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
     def test_mb_user_deleter_valid_account(self, mock_delete_user, mock_authorize_mb_user_deleter):
-        user_id = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(self.db_conn, 1, 'iliekcomputers')
         r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_authorize_mb_user_deleter.assert_called_once_with('132')
@@ -133,7 +133,7 @@ class IndexViewsTestCase(IntegrationTestCase):
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007538,
         }
-        user_id = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(self.db_conn,1, 'iliekcomputers')
         r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
         mock_requests_get.assert_called_with(
@@ -150,7 +150,7 @@ class IndexViewsTestCase(IntegrationTestCase):
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007531, # incorrect musicbrainz row id for UserDeleter
         }
-        user_id = db_user.create(1, 'iliekcomputers')
+        user_id = db_user.create(self.db_conn,1, 'iliekcomputers')
         r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
@@ -201,8 +201,8 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assertTemplateUsed('index.html')
 
     def test_feed_page(self):
-        user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, user['musicbrainz_id'])
         self.temporary_login(user['login_id'])
         r = self.client.get('/feed/')
         self.assert200(r)
@@ -253,9 +253,9 @@ class IndexViewsTestCase2(ServerAppPerTestTestCase, DatabaseTestCase):
         def view404():
             raise NotFound('not found')
 
-        user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create(1, 'iliekcomputers')
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, user['musicbrainz_id'])
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
         mock_user_get.return_value = user
         self.temporary_login(user['login_id'])
         resp = self.client.get('/page_that_returns_400')
@@ -268,7 +268,7 @@ class IndexViewsTestCase2(ServerAppPerTestTestCase, DatabaseTestCase):
         self.assertIn('Logout', data)
         self.assertNotIn('Sign in', data)
 
-        mock_user_get.assert_called_with(user['login_id'])
+        mock_user_get.assert_called_with(mock.ANY, user['login_id'])
 
         resp = self.client.get('/page_that_returns_404')
         data = resp.data.decode('utf-8')
@@ -279,7 +279,7 @@ class IndexViewsTestCase2(ServerAppPerTestTestCase, DatabaseTestCase):
         self.assertIn('Logout', data)
         self.assertNotIn('Sign in', data)
 
-        mock_user_get.assert_called_with(user['login_id'])
+        mock_user_get.assert_called_with(mock.ANY, user['login_id'])
 
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_logged_in_error_dont_show_no_user(self, mock_user_get):
@@ -290,9 +290,9 @@ class IndexViewsTestCase2(ServerAppPerTestTestCase, DatabaseTestCase):
         def view500():
             raise InternalServerError('error')
 
-        user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create(1, 'iliekcomputers')
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, user['musicbrainz_id'])
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
         mock_user_get.return_value = user
         self.temporary_login(user['login_id'])
         resp = self.client.get('/page_that_returns_500')
@@ -309,9 +309,9 @@ class IndexViewsTestCase2(ServerAppPerTestTestCase, DatabaseTestCase):
         loaded while rendering the template"""
         self.app.config["TESTING"] = False
 
-        user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create(1, 'iliekcomputers')
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, user['musicbrainz_id'])
+        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
 
         mock_user_get.return_value = user
 

@@ -17,7 +17,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APITestCase, self).setUp()
-        self.followed_user = db_user.get_or_create(3, 'followed_user')
+        self.followed_user = db_user.get_or_create(self.db_conn, 3, 'followed_user')
         self.follow_user_url = self.custom_url_for("social_api_v1.follow_user",
                                                    user_name=self.followed_user["musicbrainz_id"])
         self.follow_user_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
@@ -147,7 +147,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         # send three listens
         ts = 1400000000
-        user = db_user.get_or_create(1, 'test_order')
+        user = db_user.get_or_create(self.db_conn, 1, 'test_order')
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts + (100 * i)
             response = self.send_data(payload, user, recalculate=True)
@@ -666,12 +666,11 @@ class APITestCase(ListenAPIIntegrationTestCase):
             self.custom_url_for('api_v1.get_similar_users', user_name='my_dear_muppet'))
         self.assert404(response)
 
-        conn = db.engine.raw_connection()
-        with conn.cursor() as curs:
+        with self.db_conn.connection.cursor() as curs:
             data = {self.user2['id']: 0.123}
             curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
                          (self.user['id'], json.dumps(data)))
-        conn.commit()
+        self.db_conn.commit()
 
         response = self.client.get(
             self.custom_url_for('api_v1.get_similar_users', user_name=self.user['musicbrainz_id']))
@@ -989,7 +988,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def test_follow_user(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.db_conn, self.user["id"], self.followed_user['id']))
 
     def test_follow_user_requires_login(self):
         r = self.client.post(self.follow_user_url)
@@ -1008,7 +1007,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
     def test_follow_user_twice_leads_to_error(self):
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.db_conn, self.user["id"], self.followed_user['id']))
 
         # now, try to follow again, this time expecting a 400
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
@@ -1018,21 +1017,34 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # first, follow the user
         r = self.client.post(self.follow_user_url, headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertTrue(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
+        self.assertTrue(db_user_relationship.is_following_user(self.db_conn, self.user["id"], self.followed_user['id']))
 
         # now, unfollow and check the db
         r = self.client.post(
             self.custom_url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
-            headers=self.follow_user_headers)
+            headers=self.follow_user_headers
+        )
         self.assert200(r)
-        self.assertFalse(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
+        self.assertFalse(
+            db_user_relationship.is_following_user(
+                self.db_conn,
+                self.user["id"],
+                self.followed_user['id']
+            )
+        )
 
     def test_unfollow_not_following_user(self):
         r = self.client.post(
             self.custom_url_for("social_api_v1.unfollow_user", user_name=self.followed_user["musicbrainz_id"]),
             headers=self.follow_user_headers)
         self.assert200(r)
-        self.assertFalse(db_user_relationship.is_following_user(self.user["id"], self.followed_user['id']))
+        self.assertFalse(
+            db_user_relationship.is_following_user(
+                self.db_conn,
+                self.user["id"],
+                self.followed_user['id']
+            )
+        )
 
     def test_unfollow_user_requires_login(self):
         r = self.client.post(
@@ -1041,6 +1053,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def test_get_user_services(self):
         db_oauth.save_token(
+            self.db_conn,
             user_id=self.user['id'],
             service=ExternalServiceType.SPOTIFY,
             access_token='token',

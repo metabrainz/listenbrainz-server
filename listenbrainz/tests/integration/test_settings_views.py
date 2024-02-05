@@ -12,8 +12,8 @@ from listenbrainz.tests.integration import IntegrationTestCase
 class SettingsViewsTestCase(IntegrationTestCase):
     def setUp(self):
         super().setUp()
-        self.user = db_user.get_or_create(1, 'iliekcomputers')
-        db_user.agree_to_gdpr(self.user['musicbrainz_id'])
+        self.user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        db_user.agree_to_gdpr(self.db_conn, self.user['musicbrainz_id'])
         self.redis = cache._r
 
     def tearDown(self):

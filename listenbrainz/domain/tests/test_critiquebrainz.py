@@ -13,7 +13,7 @@ class CritiqueBrainzTestCase(NonAPIIntegrationTestCase):
 
     def setUp(self):
         super(CritiqueBrainzTestCase, self).setUp()
-        self.user_id = db_user.create(211, 'critiquebrainz_user')
+        self.user_id = db_user.create(self.db_conn, 211, 'critiquebrainz_user')
         self.service = CritiqueBrainzService()
         self.service.add_new_user(self.user_id, {
             'access_token': 'access-token',
