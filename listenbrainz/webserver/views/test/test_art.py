@@ -1,7 +1,5 @@
 from unittest.mock import patch
 
-from flask import url_for
-
 from data.model.user_artist_stat import ArtistRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
@@ -11,7 +9,7 @@ from listenbrainz.tests.integration import IntegrationTestCase
 class ArtViewsTestCase(IntegrationTestCase):
 
     def test_index(self):
-        resp = self.client.get(url_for('art.index'))
+        resp = self.client.get(self.custom_url_for('art.index'))
         self.assert200(resp)
 
     @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
@@ -38,12 +36,12 @@ class ArtViewsTestCase(IntegrationTestCase):
         }
         mock_get_release_group_caa_ids.return_value = {}
         resp = self.client.get(
-            url_for('art_api_v1.cover_art_grid_stats',
-                    user_name="rob",
-                    time_range="week",
-                    dimension=4,
-                    layout=0,
-                    image_size=500))
+            self.custom_url_for('art_api_v1.cover_art_grid_stats',
+                                user_name="rob",
+                                time_range="week",
+                                dimension=4,
+                                layout=0,
+                                image_size=500))
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
 
@@ -57,11 +55,11 @@ class ArtViewsTestCase(IntegrationTestCase):
             for _ in range(5)
         ], 5
         resp = self.client.get(
-            url_for('art_api_v1.cover_art_custom_stats',
-                    custom_name="designer-top-5",
-                    user_name="rob",
-                    time_range="week",
-                    image_size=500))
+            self.custom_url_for('art_api_v1.cover_art_custom_stats',
+                                custom_name="designer-top-5",
+                                user_name="rob",
+                                time_range="week",
+                                image_size=500))
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
         self.assertNotEqual(resp.text.find("ROB"), -1)
@@ -91,11 +89,11 @@ class ArtViewsTestCase(IntegrationTestCase):
         }
         mock_get_release_group_caa_ids.return_value = {}
         resp = self.client.get(
-            url_for('art_api_v1.cover_art_custom_stats',
-                    custom_name="designer-top-10",
-                    user_name="rob",
-                    time_range="week",
-                    image_size=500))
+            self.custom_url_for('art_api_v1.cover_art_custom_stats',
+                                custom_name="designer-top-10",
+                                user_name="rob",
+                                time_range="week",
+                                image_size=500))
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
         self.assertNotEqual(resp.text.find("ROB"), -1)
@@ -164,8 +162,10 @@ class ArtViewsTestCase(IntegrationTestCase):
                 "artist": None
             }
         }
+        
         mock_get_release_group_caa_ids.return_value = {}
-        resp = self.client.post(url_for('art_api_v1.cover_art_grid_post'), data=post_json, content_type="application/json")
+        resp = self.client.post(self.custom_url_for('art_api_v1.cover_art_grid_post'), data=post_json,
+                                content_type="application/json")
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
         self.assertNotEqual(resp.text.find("2273480607"), -1)

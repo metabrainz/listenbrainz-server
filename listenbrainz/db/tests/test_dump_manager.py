@@ -49,8 +49,8 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.tempdir_private = tempfile.mkdtemp()
         self.runner = CliRunner()
         self.listenstore = timescale_connection._ts
-        self.user_id = db_user.create(1, 'iliekcomputers')
-        self.user_name = db_user.get(self.user_id)['musicbrainz_id']
+        self.user_id = db_user.create(self.db_conn, 1, 'iliekcomputers')
+        self.user_name = db_user.get(self.db_conn, self.user_id)['musicbrainz_id']
 
     def tearDown(self):
         super().tearDown()
@@ -301,8 +301,8 @@ class DumpManagerTestCase(DatabaseTestCase):
 
     def test_create_feedback(self):
 
-        self.user = db_user.get_or_create(1, "ernie")
-        self.user2 = db_user.get_or_create(2, "bert")
+        self.user = db_user.get_or_create(self.db_conn, 1, "ernie")
+        self.user2 = db_user.get_or_create(self.db_conn, 2, "bert")
         sample_feedback = [
             {
                 "user_id": self.user['id'],
@@ -317,6 +317,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         ]
         for fb in sample_feedback:
             db_feedback.insert(
+                self.db_conn,
                 Feedback(
                     user_id=fb["user_id"],
                     recording_msid=fb["recording_msid"],
@@ -343,6 +344,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         ]
         for fb in rec_feedback:
             db_rec_feedback.insert(
+                self.db_conn,
                 RecommendationFeedbackSubmit(
                     user_id=fb['user_id'],
                     recording_mbid=fb["recording_mbid"],

@@ -22,12 +22,12 @@ jobs:
 
       steps:
       # Run only if we are deploying a branch or tag from this repo
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         # empty strings evaluate to 0
         if: ${{ github.event.inputs.pr == 0}}
         
       # Run only if we are deploying a PR (may be in a forked repo)
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: ${{ github.event.inputs.pr != 0}}
         with:
           ref: ${{ format('refs/pull/{0}/head', github.event.inputs.pr) }}

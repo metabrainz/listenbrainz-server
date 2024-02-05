@@ -6,9 +6,9 @@ from psycopg2.extras import execute_values
 from requests.adapters import HTTPAdapter, Retry
 from sqlalchemy import text
 
-from listenbrainz import db
 from brainzutils import musicbrainz_db
 
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.errors import APINotFound
 
 
@@ -26,11 +26,10 @@ def bulk_insert_loved_tracks(user_id: int, feedback: list[tuple[int, str]]):
         INSERT INTO recording_feedback (user_id, created, recording_mbid, score)
              VALUES %s
     """
-    connection = db.engine.raw_connection()
-    with connection.cursor() as cursor:
+    with db_conn.connection.cursor() as cursor:
         execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
         execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
-    connection.commit()
+        db_conn.commit()
 
 
 def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:

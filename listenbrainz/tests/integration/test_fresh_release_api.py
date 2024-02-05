@@ -1,7 +1,5 @@
 import json
 
-from flask import url_for
-
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.db import user as db_user
 from listenbrainz.db import fresh_releases as db_fresh
@@ -12,7 +10,7 @@ class FreshReleasesTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(FreshReleasesTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "testuserpleaseignore")
+        self.user = db_user.get_or_create(self.db_conn, 1, "testuserpleaseignore")
 
         with open(self.path_to_data_file("user_fresh_releases.json")) as f:
             self.expected = json.load(f)
@@ -25,7 +23,9 @@ class FreshReleasesTestCase(IntegrationTestCase):
         }])
 
     def test_fetch_fresh_releases(self):
-        r = self.client.get(url_for("fresh_releases_v1.get_releases", user_name=self.user["musicbrainz_id"]))
+        r = self.client.get(
+            self.custom_url_for("fresh_releases_v1.get_releases", user_name=self.user["musicbrainz_id"])
+        )
         self.assert200(r)
 
         self.assertEqual(r.json, {"payload": {

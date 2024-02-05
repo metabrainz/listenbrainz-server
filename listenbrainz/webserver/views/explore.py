@@ -1,9 +1,11 @@
-from flask import Blueprint, render_template, current_app, request
+from flask import Blueprint, render_template, request
 from flask_login import current_user
 import orjson
+from sqlalchemy import text
 from werkzeug.exceptions import NotFound, BadRequest
 
 from listenbrainz.db.similar_users import get_top_similar_users
+from listenbrainz.webserver import db_conn, ts_conn
 
 explore_bp = Blueprint('explore', __name__)
 
@@ -35,7 +37,7 @@ def similar_users():
         and spammers as well.
     """
 
-    similar_users = get_top_similar_users()
+    similar_users = get_top_similar_users(db_conn)
     return render_template(
         "explore/similar-users.html",
         similar_users=similar_users
@@ -51,13 +53,36 @@ def fresh_releases():
         props=orjson.dumps({}).decode("utf-8")
     )
 
+
+@explore_bp.route("/music-neighborhood/")
+def artist_similarity():
+    """ Explore artist similarity """
+    result = ts_conn.execute(text("""
+         SELECT artist_mbid::TEXT
+           FROM popularity.artist
+       ORDER BY total_listen_count DESC
+          LIMIT 1
+     """))
+
+    artist_mbid = result.fetchone()[0]
+    props = {
+        "algorithm": "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30",
+        "artist_mbid": artist_mbid
+    }
+
+    return render_template(
+        "explore/music-neighborhood.html",
+        props=orjson.dumps(props).decode("utf-8")
+    )
+
+
 @explore_bp.route("/art-creator/")
 def art_creator():
-
     return render_template(
         "explore/stats-art-designer.html",
         props=orjson.dumps({}).decode("utf-8")
     )
+
 
 @explore_bp.route("/cover-art-collage/")
 @explore_bp.route("/cover-art-collage/<int:year>/")
@@ -74,11 +99,13 @@ def cover_art_collage(year: int = 2023):
         year=year
     )
 
+
 @explore_bp.route("/ai-brainz/")
 def ai_brainz():
     """ Explore your love of Rick """
 
     return render_template("explore/ai-brainz.html")
+
 
 @explore_bp.route("/lb-radio/")
 def lb_radio():

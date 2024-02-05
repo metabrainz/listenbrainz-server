@@ -57,7 +57,6 @@ PUBLIC_TABLES_MAPPING = {
             'recording_name',
             'combined_lookup',
             'score',
-            'year',
         ),
     },
     'mapping.canonical_recording_redirect': {
@@ -70,7 +69,7 @@ PUBLIC_TABLES_MAPPING = {
         )
     },
     'mapping.canonical_release_redirect': {
-        'engine': 'mb',
+        'engine': 'lb_if_set',
         'filename': 'canonical_release_redirect.csv',
         'columns': (
             'release_mbid',

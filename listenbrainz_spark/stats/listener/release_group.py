@@ -1,10 +1,10 @@
 from typing import Iterator, List
 
-from data.model.entity_listener_stat import ArtistListenerRecord
+from data.model.entity_listener_stat import ReleaseGroupListenerRecord
 from listenbrainz_spark.stats import run_query
 
 
-def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -> Iterator[ArtistListenerRecord]:
+def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -> Iterator[ReleaseGroupListenerRecord]:
     """ Get information about top listeners of a release group.
 
         Args:

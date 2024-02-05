@@ -9,6 +9,7 @@ from data.model.common_stat import StatisticsRange
 from data.model.user_entity import EntityRecord
 
 from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids, get_caa_ids_for_release_group_mbids
+from listenbrainz.webserver import db_conn
 
 #: Minimum image size
 MIN_IMAGE_SIZE = 128
@@ -301,7 +302,7 @@ class CoverArtGenerator:
         if entity not in ("artists", "releases", "recordings"):
             raise ValueError("Stats entity must be one of artist, release or recording.")
 
-        user = db_user.get_by_mb_id(user_name)
+        user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise ValueError(f"User {user_name} not found")
 

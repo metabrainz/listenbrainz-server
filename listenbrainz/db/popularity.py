@@ -1,13 +1,13 @@
+import psycopg2
 from flask import current_app
 from psycopg2.extras import DictCursor, execute_values
 from psycopg2.sql import SQL, Identifier
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
+from listenbrainz.db import color
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset
-
-import psycopg2
+from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
 
 
 class PopularityDataset(DatabaseDataset):
@@ -70,7 +70,7 @@ TopReleasePopularityDataset = PopularityTopDataset("release")
 TopReleaseGroupPopularityDataset = PopularityTopDataset("release_group")
 
 
-def get_top_entity_for_artist(entity, artist_mbid, count=None):
+def get_top_entity_for_artist(ts_conn, entity, artist_mbid, count=None):
     """ Get the top 'count' recordings, releases or release-groups for a given artist mbid
 
         By default running all recordings (entities) of the artist returned.
@@ -97,12 +97,11 @@ def get_top_entity_for_artist(entity, artist_mbid, count=None):
          WHERE artist_mbid = :artist_mbid
       ORDER BY total_listen_count DESC
     """ + limit
-    with timescale.engine.begin() as connection:
-        results = connection.execute(text(query), {"artist_mbid": artist_mbid, "count": count})
-        return results.mappings().all()
+    results = ts_conn.execute(text(query), {"artist_mbid": artist_mbid, "count": count})
+    return results.mappings().all()
 
 
-def get_counts(entity, mbids):
+def get_counts(ts_conn, entity, mbids):
     """ Get the total listen and user counts for a given entity and list of mbids """
     if entity == "recording":
         entity_mbid = "recording_mbid"
@@ -122,10 +121,9 @@ def get_counts(entity, mbids):
           JOIN mbids
             ON {entity_mbid} = mbid::UUID
     """).format(entity_mbid=Identifier(entity_mbid), table=Identifier("popularity", entity))
-    with timescale.engine.begin() as connection:
-        ts_curs = connection.connection.cursor()
-        results = execute_values(ts_curs, query, [(mbid,) for mbid in mbids], fetch=True)
-        index = {row[0]: (row[1], row[2]) for row in results}
+    ts_curs = ts_conn.connection.cursor()
+    results = execute_values(ts_curs, query, [(mbid,) for mbid in mbids], fetch=True)
+    index = {row[0]: (row[1], row[2]) for row in results}
 
     entity_data = []
     for mbid in mbids:
@@ -138,15 +136,16 @@ def get_counts(entity, mbids):
     return entity_data, index
 
 
-def get_top_recordings_for_artist(artist_mbid, count=None):
+def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
     """ Get the top recordings for a given artist mbid """
-    recordings = get_top_entity_for_artist("recording", artist_mbid, count)
+    recordings = get_top_entity_for_artist(ts_conn, "recording", artist_mbid, count)
     recording_mbids = [str(r["recording_mbid"]) for r in recordings]
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-            ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+            ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
         recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, recording_mbids)
+        release_mbids = [str(r["release_mbid"]) for r in recordings_data if r["release_mbid"] is not None]
+        releases_color = color.fetch_color_for_releases(db_conn, release_mbids)
 
         for recording, data in zip(recordings, recordings_data):
             data.pop("artist_credit_id", None)
@@ -156,7 +155,42 @@ def get_top_recordings_for_artist(artist_mbid, count=None):
                 "artist_name": data.pop("artist_credit_name"),
                 "artist_mbids": data.pop("[artist_credit_mbids]"),
                 "total_listen_count": recording["total_listen_count"],
-                "total_user_count": recording["total_user_count"]
+                "total_user_count": recording["total_user_count"],
+                "release_color": releases_color.get(str(data["release_mbid"]), {})
             })
 
         return recordings_data
+
+
+def get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid: str, count=None):
+    """ Get the top releases for a given artist mbid """
+    release_groups = get_top_entity_for_artist(ts_conn, "release_group", artist_mbid, count)
+    release_group_mbids = [str(r["release_group_mbid"]) for r in release_groups]
+
+    release_groups_data = []
+    for i in range(0, len(release_group_mbids), 50):
+        fetched_data = fetch_release_group_metadata(release_group_mbids[i:i + 50], incs=["artist", "release", "tag"])
+
+        release_group_data_list = []
+        for release_group_mbid, release_group_data in fetched_data.items():
+            release_group_data["release_group_mbid"] = release_group_mbid
+            release_group_data_list.append(release_group_data)
+
+        release_groups_data.extend(release_group_data_list)
+
+    release_groups_data.sort(key=lambda x: release_group_mbids.index(x["release_group_mbid"]))
+
+    release_mbids = [str(r["release"]['caa_release_mbid']) for r in release_groups_data
+                     if r["release"] is not None and r["release"]['caa_release_mbid'] is not None]
+
+    releases_color = color.fetch_color_for_releases(db_conn, release_mbids)
+
+    for release_group, pop in zip(release_groups_data, release_groups):
+        release_group.update({
+            "total_listen_count": pop["total_listen_count"],
+            "total_user_count": pop["total_user_count"],
+            "release_color": releases_color.get(str(release_group["release"]["caa_release_mbid"]
+                                                    if release_group["release"] is not None else None), {})
+        })
+
+    return release_groups_data

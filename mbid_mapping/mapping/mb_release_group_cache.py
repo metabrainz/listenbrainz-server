@@ -30,8 +30,8 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
         to the BulkInsertTable docs.
     """
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.mb_release_group_cache", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.mb_release_group_cache", select_conn, insert_conn, batch_size, unlogged)
 
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
@@ -212,6 +212,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                     ON l.link_type = lt.id
                                   {values_join}
                                  WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
+                                 -- do not show outdated urls to users
                                    AND NOT l.ended
                               GROUP BY a.gid
                    ), release_group_rels AS (
@@ -232,7 +233,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                     ON la.attribute_type = lat.id
                                   {values_join}
                                  WHERE lt.gid IN ({RELEASE_GROUP_LINK_GIDS_SQL})
-                                   AND NOT l.ended
+                                 -- the release group rels we use make sense to be shown to the user even if they have been marked as ended
                                GROUP BY rg.gid
                    ), artist_data AS (
                             SELECT rg.gid
@@ -615,7 +616,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
         """
 
         try:
-            with self.mb_conn.cursor() as curs:
+            with self.select_conn.cursor() as curs:
                 self.config_postgres_join_limit(curs)
                 release_group_mbids = set()
 

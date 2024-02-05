@@ -9,6 +9,7 @@ from brainzutils.ratelimit import ratelimit
 from flask import request, render_template, Blueprint, current_app
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg
@@ -592,7 +593,7 @@ def _cover_art_yim_overview(user_name, stats, year):
 @ratelimit()
 def cover_art_yim(user_name, year: int = 2023):
     """ Create the shareable svg image using YIM stats """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APIBadRequest(f"User {user_name} not found")
 

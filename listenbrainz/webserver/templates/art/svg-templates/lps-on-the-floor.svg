@@ -13,7 +13,7 @@
     >
         {% if image.title and image.artist %}
         <title>
-          {{ image.title|escape ~ " - " ~ image.artist|escape }}
+          {{- image.title|escape ~ " - " ~ image.artist|escape -}}
         </title>
         {% endif %}
     </image>

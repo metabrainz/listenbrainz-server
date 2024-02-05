@@ -25,8 +25,8 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
     def get_post_process_queries(self):
         return []
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.mb_artist_metadata_cache", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.mb_artist_metadata_cache", select_conn, insert_conn, batch_size, unlogged)
 
     def get_create_table_columns(self):
         # this table is created in local development and tables using admin/timescale/create_tables.sql
@@ -283,7 +283,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
             DELETE FROM {self.table_name}
                   WHERE artist_mbid IN %s
         """
-        conn = self.lb_conn if self.lb_conn is not None else self.mb_conn
+        conn = self.insert_conn if self.insert_conn is not None else self.select_conn
         with conn.cursor() as curs:
             curs.execute(query, (tuple(artist_mbids), ))
 
@@ -373,7 +373,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
         """
 
         try:
-            with self.mb_conn.cursor() as curs:
+            with self.select_conn.cursor() as curs:
                 self.config_postgres_join_limit(curs)
                 artist_mbids = set()
 
