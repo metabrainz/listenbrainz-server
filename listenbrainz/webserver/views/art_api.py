@@ -64,13 +64,13 @@ def cover_art_grid_post():
     :type tiles: ``list``
     :param release_mbids: An ordered list of release_mbids. The images will be loaded and processed
                           in the order that this list is in. The cover art for the release_mbids will be placed
-                          on the tiles defined by the tiles parameter. If release_group_mbids are supplied as well, cover arts
-                          for release_group_mbids will be processed after release_mbids.
+                          on the tiles defined by the tiles parameter. If release_group_mbids are supplied as well, ONLY cover arts
+                          for release_group_mbids will be processed.
     :type release_mbids: ``list``
     :param release_group_mbids: An ordered list of release_group_mbids. The images will be loaded and processed
                           in the order that this list is in. The cover art for the release_group_mbids will be placed
-                          on the tiles defined by the tiles parameter. If release_mbids are supplied as well, cover arts
-                          for release_mbids will be processed first.
+                          on the tiles defined by the tiles parameter. If release_mbids are supplied as well, ONLY cover arts
+                          for release_mbids will be processed.
     :type release_group_mbids: ``list``
     :param cover_art_size: Size in pixels of each cover art in the composited image. Can be either 250 or 500
     :type cover_art_size: ``int``
@@ -116,18 +116,31 @@ def cover_art_grid_post():
 
     # Get release_mbids or release_group_mbids
     mbids = []
+    entity = "release"
+    
+    def look_for_release_group_mbids():
+        if "release_group_mbids" not in r:
+            return
+        
+        if not isinstance(r["release_group_mbids"], list):
+            raise APIBadRequest("release_group_mbids must be a list of strings specifying release_group_mbids")
+
+        nonlocal mbids 
+        nonlocal entity
+        
+        mbids = list(r["release_group_mbids"])
+        entity = "release_group"
+    
+    
     if "release_mbids" in r:
         if not isinstance(r["release_mbids"], list):
             raise APIBadRequest("release_mbids must be a list of strings specifying release_mbids")
-
-        mbids = list(r["release_mbids"]) 
-        entity = "release"
-    elif "release_group_mbids" in r:
-        if not isinstance(r["release_group_mbids"], list):
-            raise APIBadRequest("release_group_mbids must be a list of strings specifying release_mbids")
-
-        mbids = list(r["release_group_mbids"])
-        entity = "release_group"
+        
+        mbids = list(r["release_mbids"])
+        if (len(r["release_mbids"]) == 0):
+            look_for_release_group_mbids()
+    else:       
+        look_for_release_group_mbids()
 
     if len(mbids) > 100:
         mbids = mbids[:100]
