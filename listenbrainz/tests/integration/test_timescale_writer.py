@@ -3,44 +3,35 @@ import time
 from datetime import datetime
 from random import randint
 
-from listenbrainz.db.testing import TimescaleTestCase
-from brainzutils import cache
-from flask import url_for
-
 import listenbrainz.db.user as db_user
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 from listenbrainz.webserver import redis_connection, timescale_connection
 
 
-class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
+class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
 
     def setUp(self):
-        IntegrationTestCase.setUp(self)
-        TimescaleTestCase.setUp(self)
+        super(TimescaleWriterTestCase, self).setUp()
         self.ls = timescale_connection._ts
         self.rs = redis_connection._redis
-
-    def tearDown(self):
-        super(TimescaleWriterTestCase, self).tearDown()
-        cache._r.flushall()
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
             payload = json.load(f)
         response = self.client.post(
-            url_for('api_v1.submit_listen'),
-            data = json.dumps(payload),
-            headers = {'Authorization': 'Token {}'.format(user['auth_token'])},
-            content_type = 'application/json'
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps(payload),
+            headers={'Authorization': 'Token {}'.format(user['auth_token'])},
+            content_type='application/json'
         )
         time.sleep(1)  # sleep to allow timescale-writer to do its thing
         recalculate_all_user_data()
         return response
 
     def test_dedup(self):
-        user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1,50000))
+        user = db_user.get_or_create(self.db_conn, 1, 'testtimescaleuser %d' % randint(1,50000))
 
         # send the same listen twice
         r = self.send_listen(user, 'valid_single.json')
@@ -61,7 +52,7 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         day in redis for each successful batch written and to see if the user
         timestamps via the timescale listen store are updated in redis.
         """
-        user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1, 50000))
+        user = db_user.get_or_create(self.db_conn, 1, 'testtimescaleuser %d' % randint(1, 50000))
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
 
@@ -71,10 +62,9 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assertEqual(min_ts, datetime.utcfromtimestamp(1486449409))
         self.assertEqual(max_ts, datetime.utcfromtimestamp(1486449409))
 
-
     def test_dedup_user_special_characters(self):
 
-        user = db_user.get_or_create(2, 'i have a\\weird\\user, name"\n')
+        user = db_user.get_or_create(self.db_conn, 2, 'i have a\\weird\\user, name"\n')
 
         # send the same listen twice
         r = self.send_listen(user, 'valid_single.json')
@@ -85,10 +75,9 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-
     def test_dedup_same_batch(self):
 
-        user = db_user.get_or_create(3, 'phifedawg')
+        user = db_user.get_or_create(self.db_conn, 3, 'phifedawg')
         r = self.send_listen(user, 'same_batch_duplicates.json')
         self.assert200(r)
 
@@ -96,15 +85,14 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-
     def test_dedup_different_users(self):
         """
         Test to make sure timescale writer doesn't confuse listens with same timestamps
         but different users to be duplicates
         """
 
-        user1 = db_user.get_or_create(1, 'testuser1')
-        user2 = db_user.get_or_create(2, 'testuser2')
+        user1 = db_user.get_or_create(self.db_conn, 1, 'testuser1')
+        user2 = db_user.get_or_create(self.db_conn, 2, 'testuser2')
 
         r = self.send_listen(user1, 'valid_single.json')
         self.assert200(r)
@@ -118,13 +106,12 @@ class TimescaleWriterTestCase(IntegrationTestCase, TimescaleTestCase):
         listens, _, _ = self.ls.fetch_listens(user2, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-
     def test_dedup_same_timestamp_different_tracks(self):
         """ Test to check that if there are two tracks w/ the same timestamp,
             they don't get considered as duplicates
         """
 
-        user = db_user.get_or_create(1, 'difftracksametsuser')
+        user = db_user.get_or_create(self.db_conn, 1, 'difftracksametsuser')
 
         # send four different tracks with the same timestamp
         r = self.send_listen(user, 'valid_single.json')

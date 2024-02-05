@@ -2,7 +2,7 @@ import datetime
 from uuid import UUID
 
 import psycopg2
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, make_response
 from xml.etree import ElementTree as ET
 import requests
 from psycopg2.extras import DictCursor
@@ -11,6 +11,7 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.troi.export import export_to_spotify
+from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
@@ -145,9 +146,17 @@ def serialize_xspf(playlist: Playlist):
 
     if playlist.additional_metadata:
         playlist_extension_additional_metadata = ET.SubElement(playlist_extension, "additional_metadata")
-        for meta_key, meta_value in playlist.additional_metadata:
-            additional_metadata_item = ET.SubElement(playlist_extension_additional_metadata, "item", key=meta_key)
-            additional_metadata_item.text = meta_value
+        for key, value in playlist.additional_metadata.items():
+            if isinstance(value, dict):
+                # Handle dictionary-type metadata
+                dict_metadata_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                for nested_key, nested_value in value.items():
+                    nested_item = ET.SubElement(dict_metadata_item, nested_key)
+                    nested_item.text = str(nested_value)
+            else:
+                # Handle simple scalar values
+                simple_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                simple_item.text = str(value)
 
     track_list = ET.SubElement(playlist_root, "trackList")
     for rec in playlist.recordings:
@@ -241,9 +250,8 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
                 mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+                ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
             db_playlist.get_playlist_recordings_metadata(mb_curs, ts_curs, playlist)
     except Exception:
         current_app.logger.error("Error while fetching metadata for a playlist: ", exc_info=True)
@@ -307,7 +315,7 @@ def create_playlist():
 
     users = {}
     if username_lookup:
-        users = db_user.get_many_users_by_mb_id(username_lookup)
+        users = db_user.get_many_users_by_mb_id(db_conn, username_lookup)
 
     collaborator_ids = []
     for collaborator in collaborators:
@@ -355,7 +363,7 @@ def create_playlist():
                 log_raise_400("Invalid recording MBID found in submitted recordings")
 
     try:
-        playlist = db_playlist.create(playlist)
+        playlist = db_playlist.create(db_conn, ts_conn, playlist)
     except Exception as e:
         current_app.logger.error("Error while creating new playlist: {}".format(e))
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
@@ -389,7 +397,7 @@ def edit_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, False)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, False)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -427,7 +435,7 @@ def edit_playlist(playlist_mbid):
         collaborators.remove(user["musicbrainz_id"])
 
     if collaborators:
-        users = db_user.get_many_users_by_mb_id(collaborators)
+        users = db_user.get_many_users_by_mb_id(db_conn, collaborators)
 
     collaborator_ids = []
     for collaborator in collaborators:
@@ -438,7 +446,7 @@ def edit_playlist(playlist_mbid):
     playlist.collaborators = collaborators
     playlist.collaborator_ids = collaborator_ids
 
-    db_playlist.update_playlist(playlist)
+    db_playlist.update_playlist(db_conn, ts_conn, playlist)
 
     return jsonify({'status': 'ok'})
 
@@ -466,7 +474,7 @@ def get_playlist(playlist_mbid):
 
     fetch_metadata = parse_boolean_arg("fetch_metadata", True)
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -506,7 +514,7 @@ def get_playlist_xspf(playlist_mbid):
 
     fetch_metadata = parse_boolean_arg("fetch_metadata", True)
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -519,8 +527,11 @@ def get_playlist_xspf(playlist_mbid):
 
     if fetch_metadata:
         fetch_playlist_recording_metadata(playlist)
-
-    return serialize_xspf(playlist)
+    
+    xspf_data = serialize_xspf(playlist)
+    serialized_xspf_response = make_response(xspf_data)
+    serialized_xspf_response.content_type = 'text/xml'
+    return serialized_xspf_response
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])
@@ -555,7 +566,7 @@ def add_playlist_item(playlist_mbid, offset):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -578,7 +589,7 @@ def add_playlist_item(playlist_mbid, offset):
             precordings.append(WritablePlaylistRecording(mbid=mbid, added_by_id=user["id"]))
 
     try:
-        db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
+        db_playlist.add_recordings_to_playlist(db_conn, ts_conn, playlist, precordings, offset)
     except Exception as e:
         current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
         raise APIInternalServerError("Failed to add recordings to the playlist. Please try again.")
@@ -619,7 +630,7 @@ def move_playlist_item(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -630,7 +641,7 @@ def move_playlist_item(playlist_mbid):
     validate_move_data(data)
 
     try:
-        db_playlist.move_recordings(playlist, data['from'], data['to'], data['count'])
+        db_playlist.move_recordings(db_conn, ts_conn, playlist, data['from'], data['to'], data['count'])
     except Exception as e:
         current_app.logger.error("Error while moving recordings in the playlist: {}".format(e))
         raise APIInternalServerError("Failed to move recordings in the playlist. Please try again.")
@@ -669,7 +680,7 @@ def delete_playlist_item(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -680,7 +691,7 @@ def delete_playlist_item(playlist_mbid):
     validate_delete_data(data)
 
     try:
-        db_playlist.delete_recordings_from_playlist(playlist, data['index'], data['count'])
+        db_playlist.delete_recordings_from_playlist(ts_conn, playlist, data['index'], data['count'])
     except Exception as e:
         current_app.logger.error("Error while deleting recordings from playlist: {}".format(e))
         raise APIInternalServerError("Failed to deleting recordings from the playlist. Please try again.")
@@ -710,7 +721,7 @@ def delete_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -718,7 +729,7 @@ def delete_playlist(playlist_mbid):
         raise APIForbidden("You are not allowed to delete this playlist.")
 
     try:
-        db_playlist.delete_playlist(playlist)
+        db_playlist.delete_playlist(ts_conn, playlist)
     except Exception as e:
         current_app.logger.error("Error deleting playlist: {}".format(e))
         raise APIInternalServerError("Failed to delete the playlist. Please try again.")
@@ -748,12 +759,12 @@ def copy_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     try:
-        new_playlist = db_playlist.copy_playlist(playlist, user["id"])
+        new_playlist = db_playlist.copy_playlist(db_conn, ts_conn, playlist, user["id"])
     except Exception as e:
         current_app.logger.error("Error copying playlist: {}".format(e))
         raise APIInternalServerError("Failed to copy the playlist. Please try again.")

@@ -35,12 +35,13 @@ DELETE_QUERIES = {
 }
 
 
-def insert(feedback: Feedback):
+def insert(db_conn, feedback: Feedback):
     """ Inserts a feedback record for a user's loved/hated recording into the database.
         If the record is already present for the user, the score is updated to the new
         value passed.
 
         Args:
+            db_conn: database connection
             feedback: An object of class Feedback
     """
 
@@ -64,18 +65,19 @@ def insert(feedback: Feedback):
         delete_query = DELETE_QUERIES["msid"]
         insert_query = INSERT_QUERIES["msid"]
 
-    with db.engine.begin() as connection:
-        # delete the existing feedback and then insert new feedback. we cannot use ON CONFLICT DO UPDATE
-        # because it is possible for a user to submit the feedback using recording_msid only and then using
-        # both recording_msid and recording_mbid at once in which case the ON CONFLICT doesn't work well.
-        connection.execute(text(delete_query), params)
-        connection.execute(text(insert_query), params)
+    # delete the existing feedback and then insert new feedback. we cannot use ON CONFLICT DO UPDATE
+    # because it is possible for a user to submit the feedback using recording_msid only and then using
+    # both recording_msid and recording_mbid at once in which case the ON CONFLICT doesn't work well.
+    db_conn.execute(text(delete_query), params)
+    db_conn.execute(text(insert_query), params)
+    db_conn.commit()
 
 
-def delete(feedback: Feedback):
+def delete(db_conn, feedback: Feedback):
     """ Deletes the feedback record for a given recording for the user from the database
 
         Args:
+            db_conn: database connection
             feedback: An object of class Feedback
     """
     params = {"user_id": feedback.user_id}
@@ -92,14 +94,17 @@ def delete(feedback: Feedback):
         params['recording_msid'] = feedback.recording_msid
         query = DELETE_QUERIES["msid"]
 
-    with db.engine.begin() as connection:
-        connection.execute(text(query), params)
+    db_conn.execute(text(query), params)
+    db_conn.commit()
 
 
-def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None, metadata: bool = False) -> List[Feedback]:
+def get_feedback_for_user(db_conn, ts_conn, user_id: int, limit: int, offset: int,
+                          score: int = None, metadata: bool = False) -> List[Feedback]:
     """ Get a list of recording feedback given by the user in descending order of their creation
 
         Args:
+            db_conn: database connection
+            ts_conn: timescale database connection
             user_id: the row ID of the user in the DB
             score: the score value by which the results are to be filtered. If 1 then returns the loved recordings,
                    if -1 returns hated recordings.
@@ -131,20 +136,20 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
     query += """ ORDER BY recording_feedback.created DESC
                  LIMIT :limit OFFSET :offset """
 
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), args)
-        feedback = [Feedback(**row) for row in result.mappings()]
+    result = db_conn.execute(sqlalchemy.text(query), args)
+    feedback = [Feedback(**row) for row in result.mappings()]
 
     if metadata and len(feedback) > 0:
-        feedback = fetch_track_metadata_for_items(feedback)
+        feedback = fetch_track_metadata_for_items(ts_conn, feedback)
 
     return feedback
 
 
-def get_feedback_count_for_user(user_id: int, score=None) -> int:
+def get_feedback_count_for_user(db_conn, user_id: int, score=None) -> int:
     """ Get total number of recording feedback given by the user
 
         Args:
+            db_conn: database connection
             user_id: the row ID of the user in the DB
             score: If 1, fetch count for all the loved feedback,
                    if -1 fetch count for all the hated feedback,
@@ -161,18 +166,18 @@ def get_feedback_count_for_user(user_id: int, score=None) -> int:
         query += " AND score = :score"
         args['score'] = score
 
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text(query), args)
-        count = int(result.fetchone().value)
+    result = db_conn.execute(text(query), args)
+    count = int(result.fetchone().value)
 
     return count
 
 
-def get_feedback_for_recording(recording_type: str, recording: str, limit: int, offset: int, score: int = None)\
-        -> List[Feedback]:
+def get_feedback_for_recording(db_conn, recording_type: str, recording: str, limit: int,
+                               offset: int, score: int = None) -> List[Feedback]:
     """ Get a list of recording feedback for a given recording in descending order of their creation
 
         Args:
+            db_conn: database connection
             recording_type: type of id, recording_msid or recording_mbid
             recording: the msid or mbid of the recording
             score: the score value by which the results are to be filtered. If 1 then returns the loved recordings,
@@ -204,15 +209,15 @@ def get_feedback_for_recording(recording_type: str, recording: str, limit: int, 
     query += """ ORDER BY recording_feedback.created DESC
                  LIMIT :limit OFFSET :offset """
 
-    with db.engine.connect() as connection:
-        result = connection.execute(text(query), args)
-        return [Feedback(**row) for row in result.mappings()]
+    result = db_conn.execute(text(query), args)
+    return [Feedback(**row) for row in result.mappings()]
 
 
-def get_feedback_count_for_recording(recording_type: str, recording: str) -> int:
+def get_feedback_count_for_recording(db_conn, recording_type: str, recording: str) -> int:
     """ Get total number of recording feedback for a given recording
 
         Args:
+            db_conn: database connection
             recording_type: type of id, recording_msid or recording_mbid
             recording: the ID of the recording
 
@@ -220,13 +225,12 @@ def get_feedback_count_for_recording(recording_type: str, recording: str) -> int
             The total number of recording feedback for a given recording
     """
     query = "SELECT count(*) AS value FROM recording_feedback WHERE " + recording_type + " = :recording"
-    with db.engine.connect() as connection:
-        result = connection.execute(text(query), {"recording": recording})
-        count = int(result.fetchone().value)
+    result = db_conn.execute(text(query), {"recording": recording})
+    count = int(result.fetchone().value)
     return count
 
 
-def get_feedback_for_multiple_recordings_for_user(user_id: int, user_name: str, recording_msids: List[str],
+def get_feedback_for_multiple_recordings_for_user(db_conn, user_id: int, user_name: str, recording_msids: List[str],
                                                   recording_mbids: List[str]) -> List[Feedback]:
     """ Get a list of recording feedback given by the user for given recordings
 
@@ -235,6 +239,7 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, user_name: str, 
             - if record is not present then return a pseudo record with score = 0
 
         Args:
+            db_conn: database connection
             user_id: the row ID of the user in the DB
             user_name: the user name of the user, not used in the query but only for creating the
                 response to be returned from the api
@@ -288,6 +293,5 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, user_name: str, 
         query_remaining = query_mbid
 
     query = query_base + query_remaining
-    with db.engine.connect() as connection:
-        result = connection.execute(text(query), params)
-        return [Feedback(user_id=user_id, user_name=user_name, **row) for row in result.mappings()]
+    result = db_conn.execute(text(query), params)
+    return [Feedback(user_id=user_id, user_name=user_name, **row) for row in result.mappings()]

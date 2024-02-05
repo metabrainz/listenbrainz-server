@@ -2,7 +2,6 @@ from operator import attrgetter
 
 import sqlalchemy
 
-from listenbrainz import db
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.model.color import ColorCube
 from listenbrainz.db.color import get_releases_for_color
@@ -11,18 +10,17 @@ from listenbrainz.db.color import get_releases_for_color
 class HuesoundTestCase(DatabaseTestCase):
 
     def insert_test_data(self):
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text("""INSERT INTO release_color (caa_id, release_mbid, red, green, blue, color)
-                                                       VALUES (1, 'e97f805a-ab48-4c52-855e-07049142113d', 0, 0, 255, '(0, 0, 255)')"""))
-            connection.execute(sqlalchemy.text("""INSERT INTO release_color (caa_id, release_mbid, red, green, blue, color)
-                                                       VALUES (2, '7ffff8fc-cd98-47af-9805-5fac5f9d2e04', 255,  0, 255, '(255, 0, 255)')"""))
-            connection.execute(sqlalchemy.text("""INSERT INTO release_color (caa_id, release_mbid, red, green, blue, color)
-                                                       VALUES (3, '8c276439-d5e8-4560-8df0-2b7c996fd1a4', 255, 0, 0, '(255, 0, 0)')"""))
+        self.db_conn.execute(sqlalchemy.text("""INSERT INTO release_color (caa_id, release_mbid, red, green, blue, color)
+                                                VALUES (1, 'e97f805a-ab48-4c52-855e-07049142113d', 0, 0, 255, '(0, 0, 255)')"""))
+        self.db_conn.execute(sqlalchemy.text("""INSERT INTO release_color (caa_id, release_mbid, red, green, blue, color)
+                                                VALUES (2, '7ffff8fc-cd98-47af-9805-5fac5f9d2e04', 255,  0, 255, '(255, 0, 255)')"""))
+        self.db_conn.execute(sqlalchemy.text("""INSERT INTO release_color (caa_id, release_mbid, red, green, blue, color)
+                                                VALUES (3, '8c276439-d5e8-4560-8df0-2b7c996fd1a4', 255, 0, 0, '(255, 0, 0)')"""))
 
     def test_get_releases_for_color(self):
 
         self.insert_test_data()
-        r = get_releases_for_color(255, 0, 0, 3)
+        r = get_releases_for_color(self.db_conn, 255, 0, 0, 3)
 
         # Results need to be sorted in order to undo the randomness of this function.
         r = sorted(r, key=attrgetter("caa_id"))

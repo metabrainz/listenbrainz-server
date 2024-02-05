@@ -98,10 +98,8 @@ export default class ListenCard extends React.Component<
   static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-
   constructor(props: ListenCardProps) {
     super(props);
-
     this.state = {
       listen: props.listen,
       isCurrentlyPlaying: false,
@@ -500,7 +498,10 @@ export default class ListenCard extends React.Component<
                   </div>
                 )}
               </div>
-              <div className="small text-muted ellipsis" title={artistName}>
+              <div
+                className="small text-muted ellipsis"
+                title={artistName}
+              >
                 {getArtistLink(listen)}
               </div>
             </div>
