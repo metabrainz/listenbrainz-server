@@ -114,39 +114,31 @@ def cover_art_grid_post():
     else:
         cover_art_size = 500
 
-    # Get release_mbids
-    release_mbids = []
+    # Get release_mbids or release_group_mbids
+    mbids = []
     if "release_mbids" in r:
         if not isinstance(r["release_mbids"], list):
             raise APIBadRequest("release_mbids must be a list of strings specifying release_mbids")
 
-        release_mbids = list(r["release_mbids"])
-
-    # Get release_group_mbids
-    release_group_mbids = []
-    if "release_group_mbids" in r:
+        mbids = list(r["release_mbids"]) 
+        entity = "release"
+    elif "release_group_mbids" in r:
         if not isinstance(r["release_group_mbids"], list):
             raise APIBadRequest("release_group_mbids must be a list of strings specifying release_mbids")
 
-        release_group_mbids = list(r["release_group_mbids"])
+        mbids = list(r["release_group_mbids"])
+        entity = "release_group"
 
-    # If someone inputs a lot of mbids, it can lead to excessive search while fetching
-    # caa_ids from database, hence, we will make sure mbids does not exceed 100.
-    if len(release_mbids) + len(release_group_mbids) > 100:
-        if len(release_mbids) > 100:
-            release_mbids = release_mbids[:100]
-            release_group_mbids = []
-        else:
-            required_rg_mbids = 100 - len(release_mbids)
-            release_group_mbids = release_group_mbids[:required_rg_mbids]
+    if len(mbids) > 100:
+        mbids = mbids[:100]
 
     # Validate mbids
-    for mbid in release_mbids + release_group_mbids:
+    for mbid in mbids:
         if not is_valid_uuid(mbid):
             raise APIBadRequest(f"Invalid release_mbid {mbid} specified.")
 
-    images = cac.load_images(release_mbids=release_mbids,
-                             release_group_mbids=release_group_mbids,
+    images = cac.load_images(release_mbids=mbids if entity == "release" else [],
+                             release_group_mbids=mbids if entity == "release_group" else [],
                              tile_addrs=tiles,
                              layout=layout,
                              cover_art_size=cover_art_size)
@@ -156,7 +148,7 @@ def cover_art_grid_post():
     return render_template("art/svg-templates/simple-grid.svg",
                            background=r["background"],
                            images=images,
-                           entity="release",
+                           entity=entity,
                            width=r["image_size"],
                            height=r["image_size"]), 200, {
                                'Content-Type': 'image/svg+xml'

@@ -218,11 +218,13 @@ class CoverArtGenerator:
             all the cover art to be used and then return the list of images and locations where they should be
             placed. Return an array of dicts containing the image coordinates and the URL of the image. """
 
-        release_mbids = [mbid for mbid in release_mbids if mbid]
-        release_group_mbids = [mbid for mbid in release_group_mbids if mbid]
-
-        results = self.load_release_caa_ids(release_mbids)
-        results.update(self.load_release_group_caa_ids(release_group_mbids))
+        results = {}
+        if release_mbids and len(release_mbids) != 0:
+            mbids = [mbid for mbid in release_mbids if mbid]
+            results = self.load_release_caa_ids(mbids)
+        elif release_group_mbids:
+            mbids = [mbid for mbid in release_group_mbids if mbid]
+            results = self.load_release_group_caa_ids(mbids)
         
         covers = [
             {
@@ -231,7 +233,7 @@ class CoverArtGenerator:
                 "artist": results[mbid]["artist"],
                 "caa_id": results[mbid]["caa_id"],
                 "caa_release_mbid": results[mbid]["caa_release_mbid"]
-            } for mbid in release_mbids + release_group_mbids
+            } for mbid in mbids
         ]
         return self.generate_from_caa_ids(covers, tile_addrs, layout, cover_art_size)
 
