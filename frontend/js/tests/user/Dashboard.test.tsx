@@ -78,7 +78,8 @@ describe("Listens page", () => {
     );
     await findByTestId("listens");
     // 25 listens + one pinned recording listen
-    expect(getAllByTestId("listen")).toHaveLength(26);
+    // Due to BrainzPlayer Queue, there are 26 listens more
+    expect(getAllByTestId("listen")).toHaveLength(26 * 2);
     /* eslint-enable testing-library/prefer-screen-queries */
   });
 
@@ -173,7 +174,8 @@ describe("Listens page", () => {
       await websocketServer.connected;
 
       expect(screen.queryByTestId("webSocketListens")).not.toBeInTheDocument();
-      expect(screen.queryAllByTestId("listen")).toHaveLength(26);
+      // Due to BrainzPlayer Queue, there are 26 listens more
+      expect(screen.queryAllByTestId("listen")).toHaveLength(26 * 2);
       // send the message to the client
 
       await act(async () => {
@@ -187,7 +189,8 @@ describe("Listens page", () => {
         "listen"
       );
       expect(wsListens).toHaveLength(1);
-      expect(screen.queryAllByTestId("listen")).toHaveLength(27);
+      // Due to BrainzPlayer Queue, there are 26 listens more
+      expect(screen.queryAllByTestId("listen")).toHaveLength(27 + 26);
     });
 
     it('calls correct event for "playing_now" event', async () => {
@@ -195,7 +198,8 @@ describe("Listens page", () => {
         renderWithProviders(<Listens {...props} />);
       });
       await websocketServer.connected;
-      expect(screen.queryAllByTestId("listen")).toHaveLength(26);
+      // Due to BrainzPlayer Queue, there are 26 listens more
+      expect(screen.queryAllByTestId("listen")).toHaveLength(26 * 2);
 
       const playingNowListen: Listen = {
         ...mockListen,
@@ -210,7 +214,8 @@ describe("Listens page", () => {
         );
       });
       const listenCards = screen.queryAllByTestId("listen");
-      expect(listenCards).toHaveLength(27);
+      // Due to BrainzPlayer Queue, there are 26 listens more
+      expect(listenCards).toHaveLength(27 + 26);
       await screen.findByTitle(playingNowListen.track_metadata.track_name, {});
     });
 
@@ -278,7 +283,8 @@ describe("Listens page", () => {
         });
       });
 
-      expect(await screen.findAllByTestId("listen")).toHaveLength(26);
+      // Due to BrainzPlayer Queue, there are 26 listens more
+      expect(await screen.findAllByTestId("listen")).toHaveLength(26 * 2);
 
       const listensContainer = await screen.findByTestId("listens");
       const listenCards = await within(listensContainer).findAllByTestId(
@@ -303,7 +309,8 @@ describe("Listens page", () => {
         "973e5620-829d-46dd-89a8-760d87076287",
         1586523524
       );
-      expect(await screen.findAllByTestId("listen")).toHaveLength(25);
+      // Due to BrainzPlayer Queue, there are 25 listens more
+      expect(await screen.findAllByTestId("listen")).toHaveLength(25 * 2);
     });
 
     it("does not render delete button if user is not logged in", async () => {
@@ -506,7 +513,7 @@ describe("Listens page", () => {
           undefined,
           expectedNextListenTimestamp
         );
-        await screen.findByText("A unique track name");
+        await screen.findAllByText("A unique track name");
       });
 
       it("prevents further navigation if it receives not enough listens from API", async () => {
@@ -620,7 +627,7 @@ describe("Listens page", () => {
           expectedPreviousListenTimestamp,
           undefined
         );
-        await screen.findByText("Another unique track name");
+        await screen.findAllByText("Another unique track name");
       });
 
       it("prevents further navigation if it receives not enough listens from API", async () => {
