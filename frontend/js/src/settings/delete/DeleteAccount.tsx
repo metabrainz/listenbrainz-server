@@ -89,7 +89,7 @@ export default function DeleteAccount() {
   return (
     <>
       <Helmet>
-        <title>Delete Account - ListenBrainz</title>
+        <title>Delete Account</title>
       </Helmet>
       <h3 className="page-title">Delete your account</h3>
       <p>

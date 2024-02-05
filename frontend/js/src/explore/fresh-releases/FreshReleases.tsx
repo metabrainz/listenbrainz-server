@@ -207,7 +207,7 @@ export default function FreshReleases() {
   return (
     <>
       <Helmet>
-        <title>Fresh releases - ListenBrainz</title>
+        <title>Fresh releases</title>
       </Helmet>
       <div className="releases-page-container">
         <div className="releases-page">

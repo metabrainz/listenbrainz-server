@@ -111,8 +111,7 @@ export default class UserReports extends React.Component<
       <div>
         <Helmet>
           <title>
-            {userOrLoggedInUser ? userStatsTitle : "Sitewide"} Stats -
-            ListenBrainz
+            {userOrLoggedInUser ? userStatsTitle : "Sitewide"} Stats
           </title>
         </Helmet>
         <div className="tertiary-nav dragscroll">

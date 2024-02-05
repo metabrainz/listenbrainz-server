@@ -7,7 +7,7 @@ export default function SimilarUsers() {
   return (
     <div id="similar-users">
       <Helmet>
-        <title>Top Similar Users - ListenBrainz</title>
+        <title>Top Similar Users</title>
       </Helmet>
       <h2 className="page-title">Top Similar Users</h2>
 

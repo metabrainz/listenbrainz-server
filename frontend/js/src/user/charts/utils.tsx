@@ -162,27 +162,3 @@ export const processData = (
 
   return result;
 };
-
-export const getURLParams = (
-  currentURL: string
-): {
-  page: number;
-  range: UserStatsAPIRange;
-} => {
-  const url = new URL(currentURL);
-
-  // Get page number from URL
-  let page = 1;
-  if (url.searchParams.get("page")) {
-    page = Number(url.searchParams.get("page"));
-    page = Math.max(page, 1);
-  }
-
-  // Get range from URL
-  let range: UserStatsAPIRange = "all_time";
-  if (url.searchParams.get("range")) {
-    range = url.searchParams.get("range") as UserStatsAPIRange;
-  }
-
-  return { page, range };
-};

@@ -229,9 +229,7 @@ export default class MissingMBDataPage extends React.Component<
     return (
       <>
         <Helmet>
-          <title>
-            Missing MusicBrainz Data of {currentUser?.name} - ListenBrainz
-          </title>
+          <title>Missing MusicBrainz Data of {currentUser?.name}</title>
         </Helmet>
         <h2 className="page-title">
           Missing MusicBrainz Data of {currentUser?.name}

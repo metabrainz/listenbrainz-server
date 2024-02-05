@@ -298,7 +298,7 @@ export default function MusicNeighborhood() {
   return (
     <>
       <Helmet>
-        <title>Music Neighborhood - ListenBrainz</title>
+        <title>Music Neighborhood</title>
       </Helmet>
       <div className="artist-similarity-main-container">
         <div className="artist-similarity-header">

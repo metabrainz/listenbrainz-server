@@ -58,7 +58,7 @@ export default function Export() {
   return (
     <>
       <Helmet>
-        <title>Export for {currentUser?.name} - ListenBrainz</title>
+        <title>Export for {currentUser?.name}</title>
       </Helmet>
       <h3>Export from ListenBrainz</h3>
       <p>

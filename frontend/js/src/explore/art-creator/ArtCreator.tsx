@@ -352,7 +352,7 @@ export default function ArtCreator() {
   return (
     <>
       <Helmet>
-        <title>Art Creator - ListenBrainz</title>
+        <title>Art Creator</title>
       </Helmet>
       <div id="stats-art-creator">
         <div className="artwork-container">

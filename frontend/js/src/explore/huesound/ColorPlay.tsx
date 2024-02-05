@@ -94,7 +94,7 @@ export default class ColorPlay extends React.Component<{}, ColorPlayState> {
     return (
       <div role="main">
         <Helmet>
-          <title>Huesound - ListenBrainz</title>
+          <title>Huesound</title>
         </Helmet>
         <div>
           <h1 className="text-center">

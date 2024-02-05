@@ -46,7 +46,7 @@ export default class RecentListens extends React.Component<
     return (
       <div role="main">
         <Helmet>
-          <title>Recent listens - ListenBrainz</title>
+          <title>Recent listens</title>
         </Helmet>
         <h3>Global listens</h3>
         <div className="row">

@@ -5,7 +5,7 @@ type CACProps = {
   year: number;
 };
 
-export function CACYearMetaTags({ year }: { year: number }) {
+export function CACYearStyleTags({ year }: CACProps) {
   if (year === 2022) {
     return (
       <Helmet>
@@ -33,7 +33,7 @@ export default function SEO(props: CACProps) {
 
   return (
     <Helmet>
-      <title>{`Album covers of ${year} - ListenBrainz`}</title>
+      <title>{`Album covers of ${year}`}</title>
       <style type="text/css">
         {`body {
             padding-bottom: 0;

@@ -95,7 +95,7 @@ export default class SelectTimezone extends React.Component<
     return (
       <>
         <Helmet>
-          <title>Select Timezone- ListenBrainz</title>
+          <title>Select Timezone</title>
         </Helmet>
         <h3>Select Timezone</h3>
         <p>

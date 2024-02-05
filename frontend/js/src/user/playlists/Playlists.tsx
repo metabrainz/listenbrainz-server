@@ -134,7 +134,7 @@ export default class UserPlaylists extends React.Component<
         <Helmet>
           <title>{`${
             user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
-          } Playlists - ListenBrainz`}</title>
+          } Playlists`}</title>
         </Helmet>
         <div style={{ marginTop: "1em" }}>
           <Pill

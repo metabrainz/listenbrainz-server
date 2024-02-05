@@ -88,7 +88,7 @@ class SelectTroiPreferences extends React.Component<
     return (
       <>
         <Helmet>
-          <title>Select Playlist Preferences - ListenBrainz</title>
+          <title>Select Playlist Preferences</title>
         </Helmet>
         <h3>Configure auto export of generated playlists</h3>
         <p>

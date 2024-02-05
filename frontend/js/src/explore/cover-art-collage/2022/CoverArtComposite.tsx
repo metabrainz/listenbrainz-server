@@ -3,7 +3,7 @@ import panzoom, { PanZoom } from "panzoom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHandPointRight, faSyncAlt } from "@fortawesome/free-solid-svg-icons";
 import jsonMap from "./data/rainbow1-100-7.json";
-import SEO, { CACYearMetaTags } from "../SEO";
+import SEO, { CACYearStyleTags } from "../SEO";
 
 type CoverDef = {
   x1: number;
@@ -70,7 +70,7 @@ export default function CoverArtComposite() {
       }}
     >
       <SEO year={2022} />
-      <CACYearMetaTags year={2022} />
+      <CACYearStyleTags year={2022} />
       <div className="red-section">
         <div
           className="header"

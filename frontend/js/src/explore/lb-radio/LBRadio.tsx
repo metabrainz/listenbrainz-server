@@ -104,7 +104,7 @@ export default function LBRadio() {
   return (
     <>
       <Helmet>
-        <title>LB Radio - ListenBrainz</title>
+        <title>LB Radio</title>
       </Helmet>
       <div className="row">
         <div className="col-sm-12">

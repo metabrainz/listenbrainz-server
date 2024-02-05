@@ -82,7 +82,7 @@ export default function SEO(props: SEOProps) {
 
   return (
     <Helmet>
-      <title>{`Year in Music ${year} for ${userName} - ListenBrainz`}</title>
+      <title>{`Year in Music ${year} for ${userName}`}</title>
       <meta
         name="description"
         content={`Check out the music review for ${year} that @ListenBrainz created from my listening history!`}

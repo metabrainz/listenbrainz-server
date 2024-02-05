@@ -128,8 +128,7 @@ export default function UserEntityChart() {
     <div role="main">
       <Helmet>
         <title>
-          {user?.name ? userStatsTitle : "Sitewide"} top {terminology}s -
-          ListenBrainz
+          {user?.name ? userStatsTitle : "Sitewide"} top {terminology}s
         </title>
       </Helmet>
       <div style={{ marginTop: "1em", minHeight: 500 }}>

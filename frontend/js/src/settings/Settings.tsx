@@ -53,7 +53,7 @@ export default function Settings() {
   return (
     <>
       <Helmet>
-        <title>User {currentUser?.name} - ListenBrainz</title>
+        <title>User {currentUser?.name}</title>
       </Helmet>
       <div id="user-profile">
         <h2 className="page-title">{name}</h2>

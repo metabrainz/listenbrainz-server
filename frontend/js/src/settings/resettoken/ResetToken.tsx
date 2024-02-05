@@ -31,7 +31,7 @@ export default function ResetToken() {
   return (
     <>
       <Helmet>
-        <title>Reset token - ListenBrainz</title>
+        <title>Reset token</title>
       </Helmet>
       <h3 className="page-title">Reset token</h3>
       <p>Are you sure you want to reset your token? </p>

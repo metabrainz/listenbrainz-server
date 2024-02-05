@@ -31,7 +31,7 @@ export default function Import() {
   return (
     <>
       <Helmet>
-        <title>Import for {name} - ListenBrainz</title>
+        <title>Import for {name}</title>
       </Helmet>
       <h2 className="page-title">Import to user {name}</h2>
       {!userHasEmail && (

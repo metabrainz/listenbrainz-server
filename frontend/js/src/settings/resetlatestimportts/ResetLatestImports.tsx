@@ -37,7 +37,7 @@ export default function ResetImportTimestamp() {
   return (
     <>
       <Helmet>
-        <title>Reset import timestamp- ListenBrainz</title>
+        <title>Reset import timestamp</title>
       </Helmet>
       <h3 className="page-title">Reset Import Timestamp</h3>
       <p>Are you sure you want to reset your token? </p>

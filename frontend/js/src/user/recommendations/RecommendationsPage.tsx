@@ -376,7 +376,7 @@ export default class RecommendationsPage extends React.Component<
         <Helmet>
           <title>{`Created for ${
             user?.name === currentUser?.name ? "you" : `${user?.name}`
-          } - ListenBrainz`}</title>
+          }`}</title>
         </Helmet>
         <h3>Created for {user.name}</h3>
 

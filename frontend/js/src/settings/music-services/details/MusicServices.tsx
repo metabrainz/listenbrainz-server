@@ -74,7 +74,7 @@ export default function MusicServices() {
   return (
     <>
       <Helmet>
-        <title>External Music Services - ListenBrainz</title>
+        <title>External Music Services</title>
       </Helmet>
       <div id="user-profile">
         <h2 className="page-title">Connect with third-party music services</h2>

@@ -693,7 +693,7 @@ export default class Listens extends React.Component<
         <Helmet>
           <title>{`${
             user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
-          } Listens - ListenBrainz`}</title>
+          } Listens`}</title>
         </Helmet>
         <div className="row">
           <div className="col-md-4 col-md-push-8 mt-15">

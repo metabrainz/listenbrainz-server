@@ -6,6 +6,7 @@ import { Integrations } from "@sentry/tracing";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { Helmet } from "react-helmet";
 import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
 import { getPageProps } from "./utils/utils";
@@ -36,6 +37,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       />
       <GlobalAppContext.Provider value={globalAppContext}>
         <NiceModal.Provider>
+          <Helmet
+            defaultTitle="ListenBrainz"
+            titleTemplate="%s - ListenBrainz"
+          />
           <RouterProvider router={router} />
         </NiceModal.Provider>
       </GlobalAppContext.Provider>

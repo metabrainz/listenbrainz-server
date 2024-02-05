@@ -70,7 +70,7 @@ export default function DeleteListens() {
   return (
     <>
       <Helmet>
-        <title>Delete Listens - ListenBrainz</title>
+        <title>Delete Listens</title>
       </Helmet>
       <h3 className="page-title">Delete your listens</h3>
       <p>

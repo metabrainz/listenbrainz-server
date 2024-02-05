@@ -651,7 +651,7 @@ export default class UserFeedPage extends React.Component<
     return (
       <>
         <Helmet>
-          <title>Feed - ListenBrainz</title>
+          <title>Feed</title>
         </Helmet>
         <div
           style={{

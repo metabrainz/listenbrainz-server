@@ -59,7 +59,7 @@ export default class UserTaste extends React.Component<UserTasteProps> {
         <Helmet>
           <title>{`${
             user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
-          } Tastes - ListenBrainz`}</title>
+          } Tastes`}</title>
         </Helmet>
         <div className="row">
           <div className="col-md-7">

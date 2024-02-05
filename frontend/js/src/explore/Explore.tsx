@@ -45,7 +45,7 @@ export default function ExplorePage() {
   return (
     <>
       <Helmet>
-        <title>Explore - ListenBrainz</title>
+        <title>Explore</title>
       </Helmet>
       <div className="row">
         <div>
