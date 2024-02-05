@@ -436,7 +436,7 @@ export default class BrainzPlayer extends React.Component<
     }
     this.debouncedCheckProgressAndSubmitListen.flush();
 
-    if (queue.length === 0) {
+    if (queue.length === 0 && ambientQueue.length === 0) {
       this.handleWarning(
         "You can try loading listens or refreshing the page",
         "No listens to play"
@@ -1008,18 +1008,18 @@ export default class BrainzPlayer extends React.Component<
   };
 
   clearQueue = async (): Promise<void> => {
-    const { isActivated, queue } = this.state;
+    const { playerPaused, queue } = this.state;
 
     // Stop the currently playing song
-    if (isActivated) {
+    if (!playerPaused) {
       await this.togglePlay();
-    } else {
-      this.activatePlayerAndPlay();
     }
 
     // Clear the queue by keeping only the currently playing song
     const currentlyPlayingIndex = queue.findIndex(this.isCurrentlyPlaying);
-    this.setQueue([queue[currentlyPlayingIndex]]);
+    this.setQueue(
+      queue[currentlyPlayingIndex] ? [queue[currentlyPlayingIndex]] : []
+    );
   };
 
   removeTrackFromQueue = (trackToDelete: BrainzPlayerQueueItem): void => {

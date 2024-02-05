@@ -656,7 +656,9 @@ describe("BrainzPlayer", () => {
       expect(playNextTrackSpy).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledWith(
-        instance.state.queue[1],
+        expect.objectContaining({
+          track_metadata: instance.state.queue[0].track_metadata,
+        }),
         0
       );
     });
@@ -889,7 +891,7 @@ describe("BrainzPlayer", () => {
       );
       expect(wrapper.state("queue")).toEqual([]);
     });
-    it("if the localstorage queue is empty then add listen to queue", () => {
+    it("if the localstorage queue is empty then there is no element in the queue", () => {
       const mockProps = {
         ...props,
         listens: [listen, listen2],
@@ -898,7 +900,7 @@ describe("BrainzPlayer", () => {
         <BrainzPlayer {...mockProps} />,
         GlobalContextMock
       );
-      expect(wrapper.state("queue")).toHaveLength(2);
+      expect(wrapper.state("queue")).toHaveLength(0);
     });
     it("on recieving a play message, adds it to the queue", async () => {
       const wrapper = mount<BrainzPlayer>(
@@ -932,8 +934,8 @@ describe("BrainzPlayer", () => {
         instance.addTrackToQueue(listen, false);
       });
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(instance.state.queue).toHaveLength(3);
-      expect(instance.state.queue[2].track_metadata).toEqual(
+      expect(instance.state.queue).toHaveLength(1);
+      expect(instance.state.queue[0].track_metadata).toEqual(
         listen.track_metadata
       );
 
@@ -941,7 +943,7 @@ describe("BrainzPlayer", () => {
         instance.addTrackToQueue(listen2, true);
       });
 
-      expect(instance.state.queue).toHaveLength(4);
+      expect(instance.state.queue).toHaveLength(2);
       expect(instance.state.queue[0].track_metadata).toEqual(
         listen2.track_metadata
       );
