@@ -54,7 +54,7 @@ def get_user():
         user = dict(user)
         user["email"] = user_email
         # every time a user logs in, update the email in LB.
-        db_user.update_user_details(user["id"], musicbrainz_id, user_email)
+        db_user.update_user_details(db_conn, user["id"], musicbrainz_id, user_email)
         # update oauth token for the user
         service.update_user(user["id"], token)
 
