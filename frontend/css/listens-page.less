@@ -246,7 +246,7 @@
       .right-section {
         flex: 0;
         .listen-controls {
-          flex-grow: 0;
+          // flex-grow: 0;
           margin: unset;
         }
       }
@@ -386,6 +386,7 @@
 
       .listen-controls {
         margin-left: 1.5em;
+        margin-right: 1em;
       }
       > *:not(.dropdown-menu) {
         min-width: 1.5em;
@@ -413,22 +414,21 @@
 
       .fa-heart,
       .fa-heart-crack,
-      .fa-ellipsis-vertical {
-        stroke-width: 40px;
-        font-size: 18px;
+      .fa-bars{
+        font-size: 21px;
         margin: 0% 7%;
         width: 1em;
       }
 
       .fa-heart,
       .fa-heart-crack {
+        stroke-width: 40px;
         color: transparent;
         stroke: #8d8d8d;
       }
 
-      .fa-ellipsis-vertical {
+      .fa-bars {
         color: #8d8d8d;
-        stroke: #ffffff;
 
         &:hover {
           color: #46433a;
@@ -554,7 +554,7 @@
       color: #8d8d8d;
       width: 2em;
       min-width: 2em;
-      margin-left: 0;
+      margin-left: 0.4em;
       margin-right: 0.5em;
       padding: 0;
     }

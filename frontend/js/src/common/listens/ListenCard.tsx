@@ -3,7 +3,7 @@ import * as React from "react";
 import {
   faCode,
   faCommentDots,
-  faEllipsisVertical,
+  faBars,
   faExternalLinkAlt,
   faImage,
   faLink,
@@ -475,10 +475,7 @@ export default class ListenCard extends React.Component<
                   </div>
                 )}
               </div>
-              <div
-                className="small text-muted ellipsis"
-                title={artistName}
-              >
+              <div className="small text-muted ellipsis" title={artistName}>
                 {getArtistLink(listen)}
               </div>
             </div>
@@ -507,7 +504,7 @@ export default class ListenCard extends React.Component<
               {hideActionsMenu ? null : (
                 <>
                   <FontAwesomeIcon
-                    icon={faEllipsisVertical as IconProp}
+                    icon={faBars}
                     title="More actions"
                     className="dropdown-toggle"
                     id="listenControlsDropdown"
