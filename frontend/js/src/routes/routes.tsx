@@ -1,10 +1,10 @@
 import * as React from "react";
 
-import { Outlet } from "react-router-dom";
 import getExploreRoutes from "../explore/routes";
 import getUserRedirectRoutes from "../user/routes/redirectRoutes";
 import getUserRoutes from "../user/routes/userRoutes";
 import getStatisticsRoutes from ".";
+import Layout from "../layout";
 
 const getRoutes = (musicbrainzID?: string) => {
   const exploreRoutes = getExploreRoutes();
@@ -17,7 +17,7 @@ const getRoutes = (musicbrainzID?: string) => {
   const routes = [
     {
       path: "/",
-      element: <Outlet />,
+      element: <Layout />,
       children: [
         ...indexRoutes,
         ...exploreRoutes,
