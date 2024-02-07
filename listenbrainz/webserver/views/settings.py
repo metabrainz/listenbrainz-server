@@ -358,7 +358,7 @@ def music_services_disconnect(service_name: str):
 @api_login_required
 def missing_mb_data():
     """ Returns a list of missing data for the user """
-    missing_data, created = get_user_missing_musicbrainz_data(current_user.id, "cf")
+    missing_data, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
     data = {
         "missing_data": missing_data or [],
     }
