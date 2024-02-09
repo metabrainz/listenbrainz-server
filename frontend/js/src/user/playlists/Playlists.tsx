@@ -191,14 +191,3 @@ export function UserPlaylistsWrapper() {
   const data = useLoaderData() as UserPlaylistsLoaderData;
   return <UserPlaylists {...data} />;
 }
-
-export const UserPlaylistsLoader = async ({ request }: { request: any }) => {
-  const response = await fetch(request.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return { ...data };
-};

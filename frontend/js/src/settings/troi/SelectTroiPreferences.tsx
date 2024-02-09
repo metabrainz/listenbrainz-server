@@ -10,7 +10,13 @@ type SelectTroiPreferencesProps = {
   exportToSpotify: boolean;
 };
 
-type SelectTroiPreferencesLoaderData = SelectTroiPreferencesProps;
+type SelectTroiPreferencesLoaderData = {
+  troi_prefs: {
+    troi: {
+      export_to_spotify: boolean;
+    };
+  };
+};
 
 export interface SelectTroiPreferencesState {
   exportToSpotify: boolean;
@@ -131,18 +137,7 @@ class SelectTroiPreferences extends React.Component<
 
 export function SelectTroiPreferencesWrapper() {
   const data = useLoaderData() as SelectTroiPreferencesLoaderData;
-  return <SelectTroiPreferences {...data} />;
-}
-
-export const SelectTroiPreferencesLoader = async () => {
-  const response = await fetch("/settings/troi/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
   const { troi_prefs } = data;
   const exportToSpotify = troi_prefs?.troi?.export_to_spotify ?? false;
-  return { exportToSpotify };
-};
+  return <SelectTroiPreferences exportToSpotify={exportToSpotify} />;
+}

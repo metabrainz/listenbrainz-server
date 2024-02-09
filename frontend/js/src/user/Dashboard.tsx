@@ -979,14 +979,3 @@ export function ListensWrapper() {
   const data = useLoaderData() as ListenLoaderData;
   return <Listens {...data} />;
 }
-
-export const ListensLoader = async ({ request }: { request: Request }) => {
-  const response = await fetch(request.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-};

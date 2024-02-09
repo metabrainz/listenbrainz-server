@@ -54,16 +54,16 @@ def profile(user_name):
         try:
             max_ts = int(max_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument max_ts: %s" %
-                             request.args.get("max_ts"))
+            return jsonify({"error": "Incorrect timestamp argument max_ts: %s" % 
+                            request.args.get("max_ts")}), 400
 
     min_ts = request.args.get("min_ts")
     if min_ts is not None:
         try:
             min_ts = int(min_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument min_ts: %s" %
-                             request.args.get("min_ts"))
+            return jsonify({"error": "Incorrect timestamp argument min_ts: %s" % 
+                            request.args.get("min_ts")}), 400
 
     args = {}
     if max_ts:
@@ -188,15 +188,15 @@ def recommendation_playlists(user_name: str):
     try:
         offset = int(offset)
     except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" %
-                         request.args.get("offset"))
+        return jsonify({"error": "Incorrect int argument offset: %s" %
+                        request.args.get("offset")}), 400
 
     count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" %
-                         request.args.get("count"))
+        return jsonify({"error": "Incorrect int argument count: %s" %
+                        request.args.get("count")}), 400
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
@@ -298,8 +298,8 @@ def taste(user_name: str):
     try:
         score = int(score)
     except ValueError:
-        raise BadRequest("Incorrect int argument score: %s" %
-                         request.args.get("score"))
+        return jsonify({"error": "Incorrect int argument score: %s" %
+                        request.args.get("score")}), 400
 
     user = _get_user(user_name)
     user_data = {
@@ -336,7 +336,7 @@ def taste(user_name: str):
 def year_in_music(user_name, year: int = 2023):
     """ Year in Music """
     if year != 2021 and year != 2022 and year != 2023:
-        raise NotFound(f"Cannot find Year in Music report for year: {year}")
+        return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
 
     user = _get_user(user_name)
     try:

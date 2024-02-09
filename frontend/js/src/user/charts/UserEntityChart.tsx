@@ -3,7 +3,7 @@ import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { useLoaderData, Link, useNavigate } from "react-router-dom";
+import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
@@ -340,6 +340,9 @@ export const UserEntityChartLoader = async ({
     },
   });
   const propsData = await response.json();
+  if (!response.ok) {
+    throw json(propsData, { status: response.status });
+  }
   const { user } = propsData;
 
   const page = Math.max(Number(currentURL.searchParams.get("page")), 1);

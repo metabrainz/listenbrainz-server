@@ -2,34 +2,20 @@ import * as React from "react";
 
 import { Navigate, Outlet } from "react-router-dom";
 import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
-import { UserReportsLoader, UserReportsWrapper } from "../stats/UserReports";
+import { UserReportsWrapper } from "../stats/UserReports";
 import UserFeedLayout from "../layout";
-import { ListensLoader, ListensWrapper } from "../Dashboard";
-import { UserTasteLoader, UserTastesWrapper } from "../taste/UserTaste";
-import {
-  UserPlaylistsLoader,
-  UserPlaylistsWrapper,
-} from "../playlists/Playlists";
-import {
-  RecommendationsPageLoader,
-  RecommendationsPageWrapper,
-} from "../recommendations/RecommendationsPage";
-import {
-  YearInMusicWrapper as YearInMusic2021Wrapper,
-  YearInMusicLoader as YearInMusic2021Loader,
-} from "../year-in-music/2021/YearInMusic2021";
-import {
-  YearInMusicWrapper as YearInMusic2022Wrapper,
-  YearInMusicLoader as YearInMusic2022Loader,
-} from "../year-in-music/2022/YearInMusic2022";
-import {
-  YearInMusicWrapper as YearInMusic2023Wrapper,
-  YearInMusicLoader as YearInMusic2023Loader,
-} from "../year-in-music/2023/YearInMusic2023";
+import { ListensWrapper } from "../Dashboard";
+import { UserTastesWrapper } from "../taste/UserTaste";
+import { UserPlaylistsWrapper } from "../playlists/Playlists";
+import { RecommendationsPageWrapper } from "../recommendations/RecommendationsPage";
+import { YearInMusicWrapper as YearInMusic2021Wrapper } from "../year-in-music/2021/YearInMusic2021";
+import { YearInMusicWrapper as YearInMusic2022Wrapper } from "../year-in-music/2022/YearInMusic2022";
+import { YearInMusicWrapper as YearInMusic2023Wrapper } from "../year-in-music/2023/YearInMusic2023";
 import UserEntityChart, {
   UserEntityChartLoader,
 } from "../charts/UserEntityChart";
 import ExploreLayout from "../../explore/layout";
+import RouteLoader from "../../utils/Loader";
 
 const getUserRoutes = () => {
   const LayoutWithAlertNotifications = withAlertNotifications(UserFeedLayout);
@@ -42,7 +28,7 @@ const getUserRoutes = () => {
         {
           index: true,
           element: <ListensWrapper />,
-          loader: ListensLoader,
+          loader: RouteLoader,
         },
         {
           path: "stats/",
@@ -51,7 +37,7 @@ const getUserRoutes = () => {
             {
               index: true,
               element: <UserReportsWrapper />,
-              loader: UserReportsLoader,
+              loader: RouteLoader,
             },
             {
               path: "top-artists/",
@@ -85,12 +71,12 @@ const getUserRoutes = () => {
         {
           path: "taste/",
           element: <UserTastesWrapper />,
-          loader: UserTasteLoader,
+          loader: RouteLoader,
         },
         {
           path: "playlists/",
           element: <UserPlaylistsWrapper />,
-          loader: UserPlaylistsLoader,
+          loader: RouteLoader,
         },
         {
           path: "collaborations/",
@@ -99,7 +85,7 @@ const getUserRoutes = () => {
         {
           path: "recommendations/",
           element: <RecommendationsPageWrapper />,
-          loader: RecommendationsPageLoader,
+          loader: RouteLoader,
         },
       ],
     },
@@ -110,22 +96,22 @@ const getUserRoutes = () => {
         {
           index: true,
           element: <YearInMusic2023Wrapper />,
-          loader: YearInMusic2023Loader,
+          loader: RouteLoader,
         },
         {
           path: "2023/",
           element: <YearInMusic2023Wrapper />,
-          loader: YearInMusic2023Loader,
+          loader: RouteLoader,
         },
         {
           path: "2022/",
           element: <YearInMusic2022Wrapper />,
-          loader: YearInMusic2022Loader,
+          loader: RouteLoader,
         },
         {
           path: "2021/",
           element: <YearInMusic2021Wrapper />,
-          loader: YearInMusic2021Loader,
+          loader: RouteLoader,
         },
       ],
     },

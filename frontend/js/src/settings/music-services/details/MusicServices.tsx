@@ -251,14 +251,3 @@ export default function MusicServices() {
     </>
   );
 }
-
-export const MusicServicesLoader = async () => {
-  const response = await fetch("/settings/music-services/details/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-};

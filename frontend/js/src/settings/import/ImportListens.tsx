@@ -124,14 +124,3 @@ export default function Import() {
     </>
   );
 }
-
-export const ImportLoader = async () => {
-  const response = await fetch("/settings/import/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-};

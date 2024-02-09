@@ -89,14 +89,3 @@ export function UserTastesWrapper() {
   const data = useLoaderData() as UserTasteLoaderData;
   return <UserTaste {...data} />;
 }
-
-export const UserTasteLoader = async ({ request }: { request: Request }) => {
-  const response = await fetch(request.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return { ...data };
-};

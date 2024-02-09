@@ -7,13 +7,10 @@ import ArtCreator from "../art-creator/ArtCreator";
 import CoverArtComposite2023 from "../cover-art-collage/2023/CoverArtComposite";
 import CoverArtComposite2022 from "../cover-art-collage/2022/CoverArtComposite";
 import FreshReleases from "../fresh-releases/FreshReleases";
-import LBRadio, { LBRadioLoader } from "../lb-radio/LBRadio";
-import SimilarUsers, {
-  SimilarUsersLoader,
-} from "../similar-users/SimilarUsers";
-import MusicNeighborhood, {
-  MusicNeighborhoodLoader,
-} from "../music-neighborhood/MusicNeighborhood";
+import LBRadio from "../lb-radio/LBRadio";
+import SimilarUsers from "../similar-users/SimilarUsers";
+import MusicNeighborhood from "../music-neighborhood/MusicNeighborhood";
+import RouteLoader from "../../utils/Loader";
 
 const getExploreRoutes = () => {
   const routes = [
@@ -58,17 +55,17 @@ const getExploreRoutes = () => {
         {
           path: "lb-radio/",
           element: <LBRadio />,
-          loader: LBRadioLoader,
+          loader: RouteLoader,
         },
         {
           path: "similar-users/",
           element: <SimilarUsers />,
-          loader: SimilarUsersLoader,
+          loader: RouteLoader,
         },
         {
           path: "music-neighborhood/",
           element: <MusicNeighborhood />,
-          loader: MusicNeighborhoodLoader,
+          loader: RouteLoader,
         },
       ],
     },

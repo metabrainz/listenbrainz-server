@@ -1,9 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import current_user
-import orjson
 from sqlalchemy import text
-from werkzeug.exceptions import NotFound, BadRequest
-import psycopg2
 
 from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.webserver import db_conn, ts_conn
@@ -63,11 +60,11 @@ def lb_radio():
 
     mode = request.args.get("mode", "")
     if mode != "" and mode not in ("easy", "medium", "hard"):
-        raise BadRequest("mode parameter is required and must be one of 'easy', 'medium' or 'hard'")
+        return jsonify({"error": "mode parameter is required and must be one of 'easy', 'medium' or 'hard'."}), 400
 
     prompt = request.args.get("prompt", "")
     if prompt != "" and prompt == "":
-        raise BadRequest("prompt parameter is required and must be non-zero length.")
+        return jsonify({"error": "prompt parameter is required and must be non-zero length."}), 400
 
     if current_user.is_authenticated:
         user = current_user.musicbrainz_id

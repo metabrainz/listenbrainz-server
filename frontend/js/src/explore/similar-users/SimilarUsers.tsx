@@ -41,14 +41,3 @@ export default function SimilarUsers() {
     </div>
   );
 }
-
-export const SimilarUsersLoader = async ({ request }: { request: Request }) => {
-  const response = await fetch(request.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-};

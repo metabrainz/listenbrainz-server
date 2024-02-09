@@ -979,14 +979,3 @@ export function YearInMusicWrapper() {
   const data = useLoaderData() as YearInMusicLoaderData;
   return <YearInMusic {...data} />;
 }
-
-export const YearInMusicLoader = async ({ request }: { request: Request }) => {
-  const response = await fetch(request.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-};

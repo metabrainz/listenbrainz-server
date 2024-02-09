@@ -494,18 +494,3 @@ export function RecommendationsPageWrapper() {
   const data = useLoaderData() as RecommendationsPageLoaderData;
   return <RecommendationsPage {...data} />;
 }
-
-export const RecommendationsPageLoader = async ({
-  request,
-}: {
-  request: Request;
-}) => {
-  const response = await fetch(request.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return { ...data };
-};

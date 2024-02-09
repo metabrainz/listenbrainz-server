@@ -145,14 +145,3 @@ export function SelectTimezoneWrapper() {
   const data = useLoaderData() as SelectTimezoneLoaderData;
   return <SelectTimezone {...data} />;
 }
-
-export const SelectTimezoneLoader = async () => {
-  const response = await fetch("/settings/select_timezone/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-};
