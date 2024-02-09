@@ -37,6 +37,9 @@ module.exports = {
   testEnvironmentOptions: {
     url: "http://localhost",
   },
+  moduleNameMapper: {
+    'react-markdown': '<rootDir>/node_modules/react-markdown/react-markdown.min.js',
+  },
   transform: {
     "\\.[jt]sx?$": "ts-jest",
     "^.+\\.(js|jsx)$": "babel-jest"
@@ -46,6 +49,7 @@ module.exports = {
   // Re-include d3 packages
   transformIgnorePatterns: [
     "<rootDir>/node_modules/(?!(d3-color|d3-scale-chromatic))",
+    "<rootDir>/node_modules/(?!react-markdown/)",
   ],
 
   // Indicates whether each individual test should be reported during the run
