@@ -44,7 +44,7 @@ export function ErrorBoundary() {
       <Helmet>
         <title>Error</title>
       </Helmet>
-      <div>Error Occured!</div>
+      <h2 className="page-title">Error Occured!</h2>
     </>
   );
 }
