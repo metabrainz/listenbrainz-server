@@ -991,11 +991,7 @@ export function getReviewEventContent(
         </div>
       )}
       <div className="text">
-	<ReactMarkdown
-          children={additionalContent}
-          disallowedElements={['h1','h2','h3','h4','h5', 'h6']} 
-          unwrapDisallowed
-        />
+	<ReactMarkdown disallowedElements={['h1','h2','h3','h4','h5', 'h6']} unwrapDisallowed>{additionalContent}</ReactMarkdown>
       </div>
       <div className="author read-more">
         by {userName}
