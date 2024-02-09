@@ -54,7 +54,7 @@ def profile(user_name):
         try:
             max_ts = int(max_ts)
         except ValueError:
-            return jsonify({"error": "Incorrect timestamp argument max_ts: %s" % 
+            return jsonify({"error": "Incorrect timestamp argument max_ts: %s" %
                             request.args.get("max_ts")}), 400
 
     min_ts = request.args.get("min_ts")
@@ -62,7 +62,7 @@ def profile(user_name):
         try:
             min_ts = int(min_ts)
         except ValueError:
-            return jsonify({"error": "Incorrect timestamp argument min_ts: %s" % 
+            return jsonify({"error": "Incorrect timestamp argument min_ts: %s" %
                             request.args.get("min_ts")}), 400
 
     args = {}
