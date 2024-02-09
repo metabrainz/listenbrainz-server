@@ -99,7 +99,7 @@ def release_redirect(release_mbid):
         result = mb_curs.fetchone()
         if result is None:
             return jsonify({"error": f"Release {release_mbid} not found in the MusicBrainz database"}), 404
-        
+
         return jsonify({"releaseGroupMBID": result["release_group_mbid"]})
 
 
