@@ -217,7 +217,7 @@ def search():
     search_term = request.args.get("search_term")
     user_id = current_user.id if current_user.is_authenticated else None
     if search_term:
-        users = db_user.search(search_term, SEARCH_USER_LIMIT, user_id)
+        users = db_user.search(db_conn, search_term, SEARCH_USER_LIMIT, user_id)
     else:
         users = []
     return render_template("index/search-users.html", search_term=search_term, users=users)

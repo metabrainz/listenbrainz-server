@@ -15,7 +15,7 @@ export default function DeleteListens() {
     e.preventDefault();
 
     try {
-      await downloadFile(location.pathname);
+      await downloadFile("/settings/export/");
       toast.success(
         <ToastMsg
           title="Success"

@@ -14,7 +14,7 @@ export default function DeleteAccount() {
     e.preventDefault();
 
     try {
-      await downloadFile(window.location.href);
+      await downloadFile("/settings/export/");
       toast.success(
         <ToastMsg
           title="Success"

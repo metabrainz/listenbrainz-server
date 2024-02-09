@@ -80,16 +80,22 @@ MB_DATABASE_URI = ""
 SQLALCHEMY_TIMESCALE_URI = """postgresql://listenbrainz_ts:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
 TIMESCALE_ADMIN_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
 TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_URI
+}
     {{end}}
     {{else}}
 SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
+SQLALCHEMY_BINDS = {}
     {{end}}
 {{else}}
 SQLALCHEMY_TIMESCALE_URI = ""
 TIMESCALE_ADMIN_URI=""
 TIMESCALE_ADMIN_LB_URI=""
+SQLALCHEMY_BINDS = {}
 {{end}}
 
 
@@ -100,11 +106,6 @@ MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host=
 {{else}}
 MBID_MAPPING_DATABASE_URI = ""
 {{end}}
-
-# for use in playlists admin view
-SQLALCHEMY_BINDS = {
-   'timescale': SQLALCHEMY_TIMESCALE_URI
-}
 
 {{if service "typesense-listenbrainz-new"}}
 {{with index (service "typesense-listenbrainz-new") 0}}
