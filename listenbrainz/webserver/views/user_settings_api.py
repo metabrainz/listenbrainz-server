@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.user_setting as db_usersetting
 from listenbrainz.troi.daily_jams import SPOTIFY_EXPORT_PREFERENCE
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIInternalServerError, APIBadRequest
 from listenbrainz.webserver.views.api_tools import (
@@ -38,7 +39,7 @@ def reset_timezone():
 
     zonename = data["zonename"]
     try:
-        db_usersetting.set_timezone(user["id"], zonename)
+        db_usersetting.set_timezone(db_conn, user["id"], zonename)
     except Exception as e:
         raise APIInternalServerError("Something went wrong! Unable to update timezone right now.")
     return jsonify({"status": "ok"})
@@ -71,5 +72,5 @@ def update_troi_prefs():
     if type(export_to_spotify) != bool:
         raise APIBadRequest(f"{SPOTIFY_EXPORT_PREFERENCE} key in the JSON document must be a boolean", data)
 
-    db_usersetting.update_troi_prefs(user["id"], export_to_spotify)
+    db_usersetting.update_troi_prefs(db_conn, user["id"], export_to_spotify)
     return jsonify({"status": "ok"})

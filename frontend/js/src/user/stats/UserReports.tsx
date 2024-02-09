@@ -98,7 +98,7 @@ export default class UserReports extends React.Component<
 
   render() {
     const { range, user } = this.state;
-    const { apiUrl } = this.props;
+    const { apiUrl, user: initialUser } = this.props;
     const { currentUser } = this.context;
 
     const ranges = getAllStatRanges();
@@ -126,12 +126,12 @@ export default class UserReports extends React.Component<
               <button
                 type="button"
                 onClick={() => {
-                  this.setUser(user?.name ?? currentUser?.name);
+                  this.setUser(initialUser?.name ?? currentUser?.name);
                 }}
                 className={`pill secondary ${user ? "active" : ""}`}
               >
                 <FontAwesomeIcon icon={faUser} />{" "}
-                {user?.name ?? currentUser?.name}
+                {initialUser?.name ?? currentUser?.name}
               </button>
             )}
             <button

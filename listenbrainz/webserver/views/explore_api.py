@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request, current_app
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
 import listenbrainz.db.fresh_releases
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg
@@ -79,10 +80,10 @@ def get_fresh_releases():
 
     try:
         db_releases, total_count = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(
-            release_date, days, sort, past, future)
+            ts_conn, release_date, days, sort, past, future
+        )
     except Exception as e:
-        current_app.logger.error(
-            "Server failed to get latest release: {}".format(e))
+        current_app.logger.error("Server failed to get latest release: {}".format(e))
         raise APIInternalServerError("Server failed to get latest release")
 
     return jsonify({
@@ -137,7 +138,7 @@ def huesound(color):
     cache_key = HUESOUND_PAGE_CACHE_KEY % (color, count)
     results = cache.get(cache_key, decode=True)
     if not results:
-        results = get_releases_for_color(*color_tuple, count)
+        results = get_releases_for_color(db_conn, *color_tuple, count)
         results = [c.to_api() for c in results]
         cache.set(cache_key, results, DEFAULT_CACHE_EXPIRE_TIME, encode=True)
 

@@ -3,26 +3,37 @@ import json
 import listenbrainz.db.user as db_user
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
+from listenbrainz.db import timescale
 from listenbrainz.tests.integration import IntegrationTestCase
 
 
 class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
     def setUp(self):
-        super(MissingMusicBrainzDataViewsTestCase, self).setUp()
+        IntegrationTestCase.setUp(self)
 
-        self.user = db_user.get_or_create(1, 'vansika_1')
-        self.user2 = db_user.get_or_create(2, 'vansika_2')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'vansika_1')
+        self.user2 = db_user.get_or_create(self.db_conn, 2, 'vansika_2')
 
         with open(self.path_to_data_file('missing_musicbrainz_data.json'), 'r') as f:
             missing_musicbrainz_data = json.load(f)
 
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            self.db_conn,
             user_id=self.user['id'],
             missing_musicbrainz_data=UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source='cf'
         )
+        self.ts_conn = timescale.engine.connect()
+        self.data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
+            self.db_conn,
+            self.ts_conn,
+            user_id=self.user['id'],
+            source='cf'
+        )
 
-        self.data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user_id=self.user['id'], source='cf')
+    def tearDown(self):
+        self.ts_conn.close()
+        IntegrationTestCase.tearDown(self)
 
     def test_invalid_user(self):
         response = self.client.get(self.custom_url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',

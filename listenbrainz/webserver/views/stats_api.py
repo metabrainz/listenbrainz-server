@@ -18,6 +18,7 @@ from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -713,7 +714,7 @@ def _get_entity_listeners(entity, mbid):
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    stats = db_stats.get_entity_listener(entity, mbid, stats_range)
+    stats = db_stats.get_entity_listener(db_conn, entity, mbid, stats_range)
     if stats is None:
         raise APINoContent("")
 
@@ -1201,7 +1202,7 @@ def year_in_music(user_name: str, year: int = 2023):
     if year != 2021 and year != 2022 and year != 2023:
         raise APINotFound(f"Cannot find Year in Music report for year: {year}")
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound(f"Cannot find user: {user_name}")
 
@@ -1237,7 +1238,7 @@ def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int) 
 
 def _validate_stats_user_params(user_name) -> Tuple[Dict, str]:
     """ Validate and return the user and common stats params """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound(f"Cannot find user: {user_name}")
 

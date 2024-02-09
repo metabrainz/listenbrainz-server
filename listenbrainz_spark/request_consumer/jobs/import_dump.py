@@ -71,7 +71,7 @@ def import_incremental_dump_to_hdfs(dump_id: int = None, local: bool = False) ->
     return dump_name
 
 
-def import_newest_full_dump_handler(local: bool):
+def import_newest_full_dump_handler(local: bool = False):
     errors = []
     dumps = []
     try:
@@ -87,7 +87,7 @@ def import_newest_full_dump_handler(local: bool):
     }]
 
 
-def import_full_dump_by_id_handler(dump_id: int, local: bool):
+def import_full_dump_by_id_handler(dump_id: int, local: bool = False):
     errors = []
     dumps = []
     try:
@@ -103,7 +103,7 @@ def import_full_dump_by_id_handler(dump_id: int, local: bool):
     }]
 
 
-def import_newest_incremental_dump_handler(local: bool):
+def import_newest_incremental_dump_handler(local: bool = False):
     errors = []
     imported_dumps = []
     latest_full_dump = utils.get_latest_full_dump()
@@ -139,7 +139,7 @@ def import_newest_incremental_dump_handler(local: bool):
     }]
 
 
-def import_incremental_dump_by_id_handler(dump_id: int, local: bool):
+def import_incremental_dump_by_id_handler(dump_id: int, local: bool = False):
     errors = []
     dumps = []
     try:

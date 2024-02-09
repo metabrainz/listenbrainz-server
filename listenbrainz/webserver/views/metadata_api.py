@@ -1,15 +1,14 @@
 from brainzutils.ratelimit import ratelimit
-from flask import Blueprint, request, jsonify,current_app
+from flask import Blueprint, request, jsonify, current_app
 
 from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
 from listenbrainz.db.metadata import get_metadata_for_recording, get_metadata_for_artist, get_metadata_for_release_group
-from listenbrainz.db.model.metadata import ReleaseGroupMetadata
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup import \
     ArtistCreditRecordingReleaseLookupQuery
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
-from listenbrainz.mbid_mapping_writer.mbid_mapper_metadata_api import MBIDMapperMetadataAPI
+from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -33,7 +32,7 @@ def parse_incs():
 
 
 def fetch_metadata(recording_mbids, incs):
-    metadata = get_metadata_for_recording(recording_mbids)
+    metadata = get_metadata_for_recording(ts_conn, recording_mbids)
     result = {}
     for entry in metadata:
         data = {"recording": entry.recording_data}
@@ -52,7 +51,7 @@ def fetch_metadata(recording_mbids, incs):
 
 
 def fetch_release_group_metadata(release_group_mbids, incs):
-    metadata = get_metadata_for_release_group(release_group_mbids)
+    metadata = get_metadata_for_release_group(ts_conn, release_group_mbids)
     result = {}
     for entry in metadata:
         data = {"release_group": entry.release_group_data}
@@ -277,7 +276,7 @@ def submit_manual_mapping():
         user_id=user["id"]
     )
 
-    create_mbid_manual_mapping(mapping)
+    create_mbid_manual_mapping(ts_conn, mapping)
 
     return jsonify({"status": "ok"})
 
@@ -301,7 +300,7 @@ def get_manual_mapping():
     if not recording_msid or not is_valid_uuid(recording_msid):
         raise APIBadRequest("recording_msid is invalid or not present in arguments")
 
-    existing_mapping = get_mbid_manual_mapping(recording_msid=recording_msid, user_id=user["id"])
+    existing_mapping = get_mbid_manual_mapping(ts_conn, recording_msid=recording_msid, user_id=user["id"])
 
     if existing_mapping:
         return jsonify({
@@ -352,7 +351,7 @@ def metadata_artist():
         artist_mbids.append(mbid_clean)
 
     results = []
-    for row in get_metadata_for_artist(artist_mbids):
+    for row in get_metadata_for_artist(ts_conn, artist_mbids):
         item = {"artist_mbid": row.artist_mbid}
         item.update(**row.artist_data)
         if "tag" in incs:

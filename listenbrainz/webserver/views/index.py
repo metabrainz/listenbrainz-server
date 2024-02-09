@@ -1,8 +1,6 @@
-import json
 import locale
 import os
 import requests
-import subprocess
 
 from brainzutils import cache
 from datetime import datetime
@@ -17,7 +15,7 @@ from werkzeug.exceptions import Unauthorized, NotFound
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import flash
+from listenbrainz.webserver import flash, db_conn
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
@@ -30,6 +28,7 @@ CACHE_TIME = 10 * 60 # time in seconds we cache the stats
 NUMBER_OF_RECENT_LISTENS = 50
 
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
+
 
 @index_bp.route("/")
 def index():
@@ -54,6 +53,7 @@ def index():
         listen_count=format(int(listen_count), ",d") if listen_count else "0",
         user_count=user_count,
     )
+
 
 @index_bp.route("/import/")
 def import_data():
@@ -196,7 +196,7 @@ def gdpr_notice():
     elif request.method == 'POST':
         if request.form.get('gdpr-options') == 'agree':
             try:
-                db_user.agree_to_gdpr(current_user.musicbrainz_id)
+                db_user.agree_to_gdpr(db_conn, current_user.musicbrainz_id)
             except DatabaseException as e:
                 flash.error('Could not store agreement to GDPR terms')
             next = request.form.get('next')
@@ -215,7 +215,7 @@ def search():
     search_term = request.args.get("search_term")
     user_id = current_user.id if current_user.is_authenticated else None
     if search_term:
-        users = db_user.search(search_term, SEARCH_USER_LIMIT, user_id)
+        users = db_user.search(db_conn, search_term, SEARCH_USER_LIMIT, user_id)
     else:
         users = []
     return render_template("index/search-users.html", search_term=search_term, users=users)
@@ -242,7 +242,7 @@ def mb_user_deleter(musicbrainz_row_id):
         Unauthorized if the MusicBrainz access token provided with the query is invalid
     """
     _authorize_mb_user_deleter(request.args.get('access_token', ''))
-    user = db_user.get_by_mb_row_id(musicbrainz_row_id)
+    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id)
     if user is None:
         raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
     delete_user(user['id'])
@@ -283,7 +283,7 @@ def _get_user_count():
         return user_count
     else:
         try:
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(db_conn)
         except DatabaseException as e:
             raise
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
@@ -315,6 +315,7 @@ def huesound():
     """ Redirect to /explore/huesound """
 
     return redirect(url_for("explore.huesound"))
+
 
 @index_bp.route("/statistics/charts/")
 def charts():

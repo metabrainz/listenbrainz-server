@@ -36,7 +36,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APICompatTestCase, self).setUp()
-        self.lb_user = db_user.get_or_create(1, 'apicompattestuser')
+        self.lb_user = db_user.get_or_create(self.db_conn, 1, 'apicompattestuser')
         self.lfm_user = User(
             self.lb_user['id'],
             self.lb_user['created'],
@@ -138,9 +138,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             if valid information is provided.
         """
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         data = {
             'method': 'track.updateNowPlaying',
@@ -174,14 +174,14 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
 
-        token = Token.load(response['lfm']['token'], api_key=self.lfm_user.api_key)
+        token = Token.load(self.db_conn, response['lfm']['token'], api_key=self.lfm_user.api_key)
         self.assertIsNotNone(token)
 
     def test_get_session(self):
         """ Tests if the session key is valid and session is established correctly. """
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
 
         data = {
             'method': 'auth.getsession',
@@ -196,7 +196,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response['lfm']['@status'], 'ok')
         self.assertEqual(response['lfm']['session']['name'], self.lfm_user.name)
 
-        session_key = Session.load(response['lfm']['session']['key'])
+        session_key = Session.load(self.db_conn, response['lfm']['session']['key'])
         self.assertIsNotNone(session_key)
 
     def test_get_session_invalid_token(self):
@@ -223,9 +223,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
            requested format"""
         timescale_connection._ts = None
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         data = {
             'method': 'user.getInfo',
@@ -246,9 +246,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
     def test_record_listen(self):
         """ Tests if listen is recorded correctly if valid information is provided. """
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         timestamp = int(time.time())
         data = {
@@ -281,9 +281,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
     def test_record_invalid_listen(self):
         """ Tests that error is raised if submited data contains unicode null """
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         timestamp = int(time.time())
         data = {
@@ -306,9 +306,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             is provided.
         """
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         timestamp = int(time.time())
         data = {
