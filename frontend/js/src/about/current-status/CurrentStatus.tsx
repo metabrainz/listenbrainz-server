@@ -106,14 +106,3 @@ export default function CurrentStatus() {
     </>
   );
 }
-
-export async function CurrentStatusLoader({ request }: { request: Request }) {
-  const response = await fetch(request.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-}
