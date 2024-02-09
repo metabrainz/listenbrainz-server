@@ -6,7 +6,6 @@
     "type": "git",
     "url": "git+https://github.com/metabrainz/listenbrainz-server.git"
   },
-  "type": "module",
   "scripts": {
     "build:dev": "webpack --mode=development --watch --progress --color",
     "build:prod": "webpack --mode=production --no-watch --color",
