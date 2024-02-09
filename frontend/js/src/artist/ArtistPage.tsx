@@ -1,10 +1,6 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
@@ -13,11 +9,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import { getPageProps, getReviewEventContent } from "../utils/utils";
+import { getReviewEventContent } from "../utils/utils";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -27,7 +23,11 @@ import {
   ListeningStats,
   popularRecordingToListen,
 } from "../album/utils";
-import type { PopularRecording, ReleaseGroup, SimilarArtist } from "../album/utils";
+import type {
+  PopularRecording,
+  ReleaseGroup,
+  SimilarArtist,
+} from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 
 export type ArtistPageProps = {
@@ -39,7 +39,7 @@ export type ArtistPageProps = {
   coverArt?: string;
 };
 
-export default function ArtistPage(props: ArtistPageProps): JSX.Element {
+export default function ArtistPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
   const {
     artist: initialArtist,
@@ -48,7 +48,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     similarArtists,
     listeningStats,
     coverArt: coverArtSVG,
-  } = props;
+  } = useLoaderData() as ArtistPageProps;
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
@@ -166,6 +166,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
 
   return (
     <div id="entity-page" className="artist-page">
+      <Helmet>
+        <title>{artist?.name}</title>
+      </Helmet>
       <Loader isLoading={loading} />
       <div className="entity-page-header flex">
         <div
@@ -480,54 +483,3 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const {
-    artist_data,
-    popular_recordings,
-    release_groups,
-    similar_artists,
-    listening_stats,
-    cover_art,
-  } = reactProps;
-
-  const ArtistPageWithAlertNotifications = withAlertNotifications(ArtistPage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <ArtistPageWithAlertNotifications
-            artist={artist_data}
-            popularRecordings={popular_recordings}
-            releaseGroups={release_groups}
-            similarArtists={similar_artists}
-            listeningStats={listening_stats}
-            coverArt={cover_art}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

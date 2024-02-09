@@ -1,10 +1,6 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
@@ -13,20 +9,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import tinycolor from "tinycolor2";
+import { Helmet } from "react-helmet";
+import { useLoaderData } from "react-router-dom";
 import {
   getRelIconLink,
   ListeningStats,
   popularRecordingToListen,
 } from "./utils";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import {
   generateAlbumArtThumbnailLink,
   getAlbumArtFromReleaseGroupMBID,
   getAverageRGBOfImage,
-  getPageProps,
   getReviewEventContent,
 } from "../utils/utils";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
@@ -62,7 +57,7 @@ export type AlbumPageProps = {
   listening_stats: ListeningStats;
 };
 
-export default function AlbumPage(props: AlbumPageProps): JSX.Element {
+export default function AlbumPage(): JSX.Element {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const {
     release_group_metadata: initialReleaseGroupMetadata,
@@ -73,7 +68,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     caa_release_mbid,
     type,
     listening_stats,
-  } = props;
+  } = useLoaderData() as AlbumPageProps;
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
@@ -204,6 +199,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
       className="album-page"
       style={{ ["--bg-color" as string]: adjustedAlbumColor }}
     >
+      <Helmet>
+        <title>{album?.name}</title>
+      </Helmet>
       <Loader isLoading={loading} />
       <div className="entity-page-header flex">
         <div className="cover-art">
@@ -482,60 +480,3 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const {
-    recordings_release_mbid,
-    mediums,
-    release_group_mbid,
-    caa_id,
-    caa_release_mbid,
-    type,
-    release_group_metadata,
-    listening_stats,
-  } = reactProps;
-
-  const AlbumPageWithAlertNotifications = withAlertNotifications(AlbumPage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <AlbumPageWithAlertNotifications
-            release_group_metadata={
-              release_group_metadata as ReleaseGroupMetadataLookup
-            }
-            recordings_release_mbid={recordings_release_mbid}
-            mediums={mediums}
-            release_group_mbid={release_group_mbid}
-            caa_id={caa_id}
-            caa_release_mbid={caa_release_mbid}
-            type={type}
-            listening_stats={listening_stats}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

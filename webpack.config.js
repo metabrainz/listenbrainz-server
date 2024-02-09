@@ -116,9 +116,8 @@ module.exports = function (env, argv) {
         "src/explore/music-neighborhood/MusicNeighborhood.tsx"
       ),
       artCreator: path.resolve(jsDir, "src/explore/art-creator/ArtCreator.tsx"),
-      artistPage: path.resolve(jsDir, "src/artist/ArtistPage.tsx"),
-      albumPage: path.resolve(jsDir, "src/album/AlbumPage.tsx"),
       settingsPage: path.resolve(jsDir, "src/settings/index.tsx"),
+      indexPage: path.resolve(jsDir, "src/index.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
