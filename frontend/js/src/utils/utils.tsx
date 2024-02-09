@@ -4,7 +4,7 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
-import * as Markdown from 'react-markdown';
+import Markdown from 'react-markdown';
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
