@@ -4,6 +4,7 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
+import Markdown from "react-markdown";
 import removeMarkdown from "remove-markdown";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
@@ -991,7 +992,7 @@ export function getReviewEventContent(
           />
         </div>
       )}
-      <div className="text">{strippedAdditionalContent}</div>
+      <div className="text"><Markdown disallowedElements={['h1','h2','h3','h4','h5', 'h6']} unwrapDisallowed>{additionalContent}</Markdown></div>
       <div className="author read-more">
         by {userName}
         <a
