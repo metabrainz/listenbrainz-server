@@ -7,6 +7,7 @@ import MusicBrainzOffline from "../musicbrainz-offline/MusicBrainzOffline";
 import SearchResults from "../search/UserSearch";
 import MessyBrainz from "../messybrainz/MessyBrainz";
 import RouteLoader from "../utils/Loader";
+import { PlaylistPageWrapper } from "../playlists/Playlist";
 
 const getIndexRoutes = () => {
   const routes = [
@@ -37,6 +38,11 @@ const getIndexRoutes = () => {
         {
           path: "search/",
           element: <SearchResults />,
+          loader: RouteLoader,
+        },
+        {
+          path: "playlist/:playlistID/",
+          element: <PlaylistPageWrapper />,
           loader: RouteLoader,
         },
       ],

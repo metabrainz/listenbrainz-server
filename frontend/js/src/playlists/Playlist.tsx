@@ -3,30 +3,25 @@
 import { saveAs } from "file-saver";
 import { findIndex } from "lodash";
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
 import { faCog, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { sanitizeUrl } from "@braintree/sanitize-url";
-import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
 import { sanitize } from "dompurify";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
+import { Helmet } from "react-helmet";
+import { useLoaderData } from "react-router-dom";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import { ToastMsg } from "../notifications/Notifications";
 import APIServiceClass from "../utils/APIService";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
-import { getPageProps } from "../utils/utils";
 import PlaylistItemCard from "./components/PlaylistItemCard";
 import PlaylistMenu from "./components/PlaylistMenu";
 import {
@@ -333,6 +328,9 @@ export default class PlaylistPage extends React.Component<
 
     return (
       <div role="main">
+        <Helmet>
+          <title>{playlist.title} - Playlist</title>
+        </Helmet>
         <Loader
           isLoading={loading}
           loaderText="Exporting playlist…"
@@ -488,36 +486,7 @@ export default class PlaylistPage extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { playlist } = reactProps;
-
-  const PlaylistPageWithAlertNotifications = withAlertNotifications(
-    PlaylistPage
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <PlaylistPageWithAlertNotifications playlist={playlist} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function PlaylistPageWrapper() {
+  const { playlist } = useLoaderData() as PlaylistPageProps;
+  return <PlaylistPage playlist={playlist} />;
+}

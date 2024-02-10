@@ -68,7 +68,6 @@ module.exports = function (env, argv) {
       userReports: path.resolve(jsDir, "src/user/stats/UserReports.tsx"),
       userTaste: path.resolve(jsDir, "src/user/taste/UserTaste.tsx"),
       userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
-      playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
       playlists: path.resolve(jsDir, "src/user/playlists/Playlists.tsx"),
       explore: path.resolve(jsDir, "src/explore/Explore.tsx"),
       huesound: path.resolve(jsDir, "src/explore/huesound/ColorPlay.tsx"),
