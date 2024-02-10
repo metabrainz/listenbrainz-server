@@ -8,6 +8,7 @@ import SearchResults from "../search/UserSearch";
 import MessyBrainz from "../messybrainz/MessyBrainz";
 import RouteLoader from "../utils/Loader";
 import { PlaylistPageWrapper } from "../playlists/Playlist";
+import { PlayingNowPageWrapper } from "../metadata-viewer/MetadataViewerPage";
 
 const getIndexRoutes = () => {
   const routes = [
@@ -43,6 +44,11 @@ const getIndexRoutes = () => {
         {
           path: "playlist/:playlistID/",
           element: <PlaylistPageWrapper />,
+          loader: RouteLoader,
+        },
+        {
+          path: "listening-now/",
+          element: <PlayingNowPageWrapper />,
           loader: RouteLoader,
         },
       ],
