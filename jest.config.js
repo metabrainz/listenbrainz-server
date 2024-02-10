@@ -49,7 +49,6 @@ module.exports = {
   // Re-include d3 packages
   transformIgnorePatterns: [
     "<rootDir>/node_modules/(?!(d3-color|d3-scale-chromatic))",
-    "[/\\\\]node_modules[/\\\\](?!(react-markdown|vfile|vfile-message|markdown-table|unist-.*|unified|bail|is-plain-obj|trough|remark-.*|rehype-.*|html-void-elements|hast-util-.*|zwitch|hast-to-hyperscript|hastscript|web-namespaces|mdast-util-.*|escape-string-regexp|micromark.*|decode-named-character-reference|character-entities|property-information|hast-util-whitespace|space-separated-tokens|comma-separated-tokens|pretty-bytes|ccount|mdast-util-gfm|gemoji)).+\\.(js|jsx|mjs|cjs|ts|tsx)$",
   ],
 
   // Indicates whether each individual test should be reported during the run
