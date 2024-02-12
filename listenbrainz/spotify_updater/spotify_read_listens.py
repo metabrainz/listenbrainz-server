@@ -8,6 +8,7 @@ from brainzutils.mail import send_mail
 from dateutil import parser
 from flask import current_app, render_template
 from spotipy import SpotifyException
+from sqlalchemy.exc import DatabaseError, SQLAlchemyError
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
 import listenbrainz.webserver
@@ -372,6 +373,7 @@ def process_all_spotify_users():
     try:
         users = service.get_active_users_to_process()
     except DatabaseException as e:
+        listenbrainz.webserver.db_conn.rollback()
         current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)
         return 0, 0
 
@@ -385,9 +387,13 @@ def process_all_spotify_users():
         try:
             _listens_imported_since_last_update += process_one_user(u, service)
             success += 1
+        except (DatabaseException, DatabaseError, SQLAlchemyError):
+            listenbrainz.webserver.db_conn.rollback()
+            current_app.logger.error('spotify_reader could not import listens for user %s:',
+                                     u['musicbrainz_id'], exc_info=True)
         except Exception:
-            current_app.logger.critical('spotify_reader could not import listens for user %s:',
-                                        u['musicbrainz_id'], exc_info=True)
+            current_app.logger.error('spotify_reader could not import listens for user %s:',
+                                     u['musicbrainz_id'], exc_info=True)
             failure += 1
 
         if time.monotonic() > _metric_submission_time:
