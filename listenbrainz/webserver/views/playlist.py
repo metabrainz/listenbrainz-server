@@ -3,6 +3,8 @@ from werkzeug.exceptions import NotFound, BadRequest
 
 from flask import Blueprint, render_template, current_app
 from flask_login import current_user
+
+from listenbrainz.webserver import ts_conn, db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
@@ -24,7 +26,7 @@ def load_playlist(playlist_mbid: str):
     if current_user.is_authenticated:
         current_user_id = current_user.id
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
     if playlist is None or not playlist.is_visible_by(current_user_id):
         raise NotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -35,7 +37,7 @@ def load_playlist(playlist_mbid: str):
         "playlist": playlist.serialize_jspf(),
     }
 
-    playlist_creator = db_user.get(playlist.creator_id)
+    playlist_creator = db_user.get(db_conn, playlist.creator_id)
 
     return render_template(
         "playlists/playlist.html",

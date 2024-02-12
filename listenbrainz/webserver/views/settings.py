@@ -5,7 +5,6 @@ import json
 from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, jsonify, stream_with_context
 from flask_login import current_user, login_required
-from flask_wtf import FlaskForm
 from werkzeug.exceptions import NotFound, BadRequest
 
 import listenbrainz.db.feedback as db_feedback
@@ -20,7 +19,7 @@ from listenbrainz.domain.external_service import ExternalService, ExternalServic
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.webserver import flash
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError
@@ -38,7 +37,7 @@ EXPORT_FETCH_COUNT = 5000
 @api_login_required
 def reset_token():
     try:
-        db_user.update_token(current_user.id)
+        db_user.update_token(db_conn, current_user.id)
         return jsonify({"success": True})
     except DatabaseException:
         raise APIInternalServerError("Something went wrong! Unable to reset token right now.")
@@ -47,8 +46,8 @@ def reset_token():
 @settings_bp.route("/select_timezone/", methods=["POST"])
 @api_login_required
 def select_timezone():
-    pg_timezones = db_usersetting.get_pg_timezone()
-    user_settings = db_usersetting.get(current_user.id)
+    pg_timezones = db_usersetting.get_pg_timezone(db_conn)
+    user_settings = db_usersetting.get(db_conn, current_user.id)
     user_timezone = user_settings['timezone_name']
     data = {
         "pg_timezones": pg_timezones,
@@ -60,7 +59,7 @@ def select_timezone():
 @settings_bp.route("/troi/", methods=["POST"])
 @login_required
 def set_troi_prefs():
-    current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
+    current_troi_prefs = db_usersetting.get_troi_prefs(db_conn, current_user.id)
     data = {
         "troi_prefs": current_troi_prefs,
     }
@@ -71,7 +70,7 @@ def set_troi_prefs():
 @api_login_required
 def reset_latest_import_timestamp():
     try:
-        listens_importer.update_latest_listened_at(current_user.id, ExternalServiceType.LASTFM, 0)
+        listens_importer.update_latest_listened_at(db_conn, current_user.id, ExternalServiceType.LASTFM, 0)
         return jsonify({"success": True})
     except DatabaseException:
         raise APIInternalServerError("Something went wrong! Unable to reset latest import timestamp right now.")
@@ -81,7 +80,7 @@ def reset_latest_import_timestamp():
 @api_login_required
 def import_data():
     """ Displays the import page to user, giving various options """
-    user = db_user.get(current_user.id, fetch_email=True)
+    user = db_user.get(db_conn, current_user.id, fetch_email=True)
     # if the flag is turned off (local development) then do not perform email check
     if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
         user_has_email = user["email"] is not None
@@ -126,7 +125,13 @@ def fetch_feedback(user_id):
     batch = []
     offset = 0
     while True:
-        batch = db_feedback.get_feedback_for_user(user_id=current_user.id, limit=EXPORT_FETCH_COUNT, offset=offset)
+        batch = db_feedback.get_feedback_for_user(
+            db_conn,
+            ts_conn,
+            user_id=current_user.id,
+            limit=EXPORT_FETCH_COUNT,
+            offset=offset
+        )
         if not batch:
             break
         yield from batch
@@ -353,7 +358,7 @@ def music_services_disconnect(service_name: str):
 @api_login_required
 def missing_mb_data():
     """ Returns a list of missing data for the user """
-    missing_data, created = get_user_missing_musicbrainz_data(current_user.id, "cf")
+    missing_data, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
     data = {
         "missing_data": missing_data or [],
     }

@@ -3,8 +3,8 @@ from flask import Blueprint, render_template
 from psycopg2.extras import DictCursor
 
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
-from listenbrainz.db import timescale
 from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mbids
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.views.user import _get_user
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
@@ -47,7 +47,7 @@ def _get_template(active_section, user):
             Template to render.
     """
 
-    data = db_recommendations_cf_recording.get_user_recommendation(user.id)
+    data = db_recommendations_cf_recording.get_user_recommendation(db_conn, user.id)
 
     if data is None:
         return render_template(
@@ -120,7 +120,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                 }
     """
     mbids = [r['recording_mbid'] for r in mbids_and_ratings_list]
-    with timescale.engine.connect() as ts_conn, ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_cursor:
+    with ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_cursor:
         data = load_recordings_from_mbids(ts_cursor, mbids)
 
     recommendations = []

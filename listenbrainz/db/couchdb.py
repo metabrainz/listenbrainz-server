@@ -140,6 +140,44 @@ def insert_data(database: str, data: list[dict]):
         response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
         response.raise_for_status()
 
+    with start_span(op="deserializing", description="checking response for conflicts"):
+        conflict_doc_ids = []
+        for doc_status in response.json():
+            if doc_status.get("error") == "conflict":
+                conflict_doc_ids.append(doc_status["id"])
+
+        if not conflict_doc_ids:
+            return
+
+        conflict_docs = orjson.dumps({"docs": [{"id": doc_id} for doc_id in conflict_doc_ids]})
+
+    with start_span(op="http", description="retrieving conflicts from database"):
+        response = requests.post(
+            f"{get_base_url()}/{database}/_bulk_get",
+            data=conflict_docs,
+            headers={"Content-Type": "application/json"}
+        )
+        response.raise_for_status()
+
+    with start_span(op="deserializing", description="processing conflicting revisions"):
+        revs_map = {}
+        for result in response.json()["results"]:
+            existing_doc = result["docs"][0]["ok"]
+            revs_map[existing_doc["_id"]] = existing_doc["_rev"]
+
+        docs_to_update = []
+        for doc in data:
+            if doc["_id"] in revs_map:
+                doc["_rev"] = revs_map[doc["_id"]]
+            docs_to_update.append(doc)
+
+    with start_span(op="serializing", description="serialize conflicting docs to update"):
+        docs_to_update = orjson.dumps({"docs": docs_to_update})
+
+    with start_span(op="http", description="retry updating conflicts in database"):
+        response = requests.post(couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"})
+        response.raise_for_status()
+
 
 def delete_data(database: str, doc_id: int | str):
     """ Delete the given document from couchdb database.

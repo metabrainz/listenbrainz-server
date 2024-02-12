@@ -5,26 +5,25 @@ import orjson
 import listenbrainz.db.user as db_user
 from datetime import datetime
 
-from flask import url_for
 from unittest.mock import patch
-from flask import render_template, current_app
-from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.webserver.views.user import _get_user
-from werkzeug.exceptions import BadRequest, InternalServerError
+from flask import render_template, url_for
+
+from listenbrainz.tests.integration import NonAPIIntegrationTestCase
+from listenbrainz.webserver.login import User
 from listenbrainz.webserver.views import recommendations_cf_recording
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
                                                                   UserRecommendationsData)
 
 
-class CFRecommendationsViewsTestCase(IntegrationTestCase):
+class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
     def setUp(self):
         self.server_url = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
         super(CFRecommendationsViewsTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'vansika')
-        db_user.agree_to_gdpr(self.user['musicbrainz_id'])
-        self.user2 = db_user.get_or_create(2, 'vansika_1')
-        self.user3 = db_user.get_or_create(3, 'vansika_2')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'vansika')
+        db_user.agree_to_gdpr(self.db_conn, self.user['musicbrainz_id'])
+        self.user2 = db_user.get_or_create(self.db_conn, 2, 'vansika_1')
+        self.user3 = db_user.get_or_create(self.db_conn, 3, 'vansika_2')
 
         # generate test data
         data = {"recording_mbid": []}
@@ -38,6 +37,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             )
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user2["id"],
             UserRecommendationsJson(**{
                 'raw': data['recording_mbid']
@@ -45,6 +45,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         )
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user3["id"],
             UserRecommendationsJson(**{
                 'raw': [],
@@ -85,14 +86,14 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_template.assert_called_with(active_section='raw', user=mock_user.return_value)
 
     def test_get_template_missing_user_from_rec_db(self):
-        user = _get_user('vansika')
+        user = User.from_dbrow(self.user)
         recommendations_cf_recording._get_template(active_section='raw', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'raw')
         self.assert_context('user', user)
 
     def test_get_template_missing_rec_raw(self):
-        user = _get_user('vansika_2')
+        user = User.from_dbrow(self.user2)
         recommendations_cf_recording._get_template(active_section='raw', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'raw')
@@ -101,7 +102,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
     def test_get_template_empty_repsonce_raw(self, mock_get_recommendations, mock_get_rec):
-        user = _get_user('vansika_1')
+        user = User.from_dbrow(self.user2)
 
         mock_get_rec.return_value = UserRecommendationsData(**{
             'recording_mbid': {
@@ -126,7 +127,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
     def test_get_template(self, mock_get_recommendations, mock_get_rec):
         # active_section = 'raw'
-        user = _get_user('vansika_1')
+        user = User.from_dbrow(self.user2)
         created = datetime.utcnow()
 
         mock_get_rec.return_value = UserRecommendationsData(**{
@@ -155,7 +156,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         mock_get_recommendations.return_value = recommendations
 
         recommendations_cf_recording._get_template(active_section='raw', user=user)
-        mock_get_rec.assert_called_with(user.id)
+        mock_get_rec.assert_called_with(mock.ANY, user.id)
         mock_get_recommendations.assert_called_once()
         self.assertTemplateUsed('recommendations_cf_recording/base.html')
         self.assert_context('active_section', 'raw')

@@ -69,7 +69,7 @@ class MappingJobQueue(threading.Thread):
         self.unmatched_listens_complete_time = 0
         self.legacy_load_thread = None
         self.legacy_next_run = 0
-        self.legacy_listens_index_date = EPOCH
+        self.legacy_listens_index_date = None
         self.num_legacy_listens_loaded = 0
         self.last_processed = 0
 
@@ -158,10 +158,10 @@ class MappingJobQueue(threading.Thread):
            Listens are added to the queue with a low priority."""
 
         # Find listens that have no entry in the mapping yet.
-        legacy_query = """SELECT data->'additional_info'->>'recording_msid'::TEXT AS recording_msid
-                            FROM listen
+        legacy_query = """SELECT l.recording_msid::TEXT AS recording_msid
+                            FROM listen l
                        LEFT JOIN mbid_mapping m
-                              ON data->'additional_info'->>'recording_msid' = m.recording_msid::text
+                              ON l.recording_msid = m.recording_msid
                            WHERE m.recording_mbid IS NULL
                              AND listened_at <= :max_ts
                              AND listened_at > :min_ts"""
@@ -170,7 +170,11 @@ class MappingJobQueue(threading.Thread):
         recheck_query = """SELECT recording_msid
                              FROM mbid_mapping
                             WHERE last_updated = '1970-01-01'
-                            LIMIT %d""" % RECHECK_BATCH_SIZE
+                               OR check_again <= NOW()
+                               OR (check_again IS NULL AND recording_mbid IS NULL)
+                         ORDER BY check_again NULLS FIRST
+                            LIMIT %d
+                            """ % RECHECK_BATCH_SIZE
 
         # Check to see where we need to pick up from, or start new
         if not self.legacy_listens_index_date:
