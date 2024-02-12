@@ -6,7 +6,11 @@
   scroll-snap-type: y mandatory;
 
   .homepage-upper {
-    background: linear-gradient(288deg, @dark-grey 16.96%, @even-darker-grey 98.91%);
+    background: linear-gradient(
+      288deg,
+      @dark-grey 16.96%,
+      @even-darker-grey 98.91%
+    );
     height: 100vh;
     position: relative;
     padding-left: 50px;
@@ -77,23 +81,25 @@
       transform: translatey(0px);
       animation: float 10s ease-in-out infinite;
     }
-    [class^='homepage-upper-vector-']{
+    [class^="homepage-upper-vector-"] {
       animation: bobble 30s infinite;
       transition: transform;
     }
     @keyframes bobble {
-      0%, 100% {
-          transform: translate3d(0px,0px,0);
-          animation-timing-function: ease-in-out;
+      0%,
+      100% {
+        transform: translate3d(0px, 0px, 0);
+        animation-timing-function: ease-in-out;
       }
-  
+
       50% {
-          transform: translate3d(20%,25%,0);
-          animation-timing-function: ease-in-out;
+        transform: translate3d(20%, 25%, 0);
+        animation-timing-function: ease-in-out;
       }
     }
     @keyframes float {
-      0%, 100% {
+      0%,
+      100% {
         transform: translatey(0px);
       }
       50% {
@@ -103,7 +109,11 @@
   }
 
   .homepage-lower {
-    background: linear-gradient(288deg, @dark-grey 16.96%, @even-darker-grey 98.91%);
+    background: linear-gradient(
+      288deg,
+      @dark-grey 16.96%,
+      @even-darker-grey 98.91%
+    );
     height: 100vh;
     position: relative;
     padding-left: 50px;
@@ -134,7 +144,6 @@
         margin-right: 10px;
       }
     }
-
 
     .homepage-info {
       color: white;
@@ -183,8 +192,8 @@
       animation: float 10s ease-in-out infinite;
     }
   }
-  
-  .homepage-upper-grey-box, 
+
+  .homepage-upper-grey-box,
   .homepage-lower-grey-box {
     background: #e9e9e9;
     position: absolute;
@@ -276,7 +285,6 @@
       top: 15vh;
     }
     .homepage-upper {
-
       .homepage-upper-vector-3 {
         top: 57vh;
         right: 100px;
@@ -340,7 +348,6 @@
         height: min(55%, 460px);
         top: 23%;
       }
-
     }
   }
 
@@ -387,7 +394,7 @@
   }
 
   @media (max-width: @screen-xs) {
-    .homepage-upper  {
+    .homepage-upper {
       .homepage-upper-vector-3 {
         height: 7%;
         top: 54%;
