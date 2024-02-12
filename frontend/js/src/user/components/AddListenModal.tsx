@@ -52,7 +52,7 @@ export default NiceModal.create(() => {
 
   const closeModal = useCallback(() => {
     modal.hide();
-    setTimeout(modal.remove, 3000);
+    setTimeout(modal.remove, 200);
   }, [modal]);
 
   const handleError = useCallback(
