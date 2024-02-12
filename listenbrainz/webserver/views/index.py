@@ -1,7 +1,6 @@
 import locale
 import os
 import requests
-import psycopg2
 
 from brainzutils import cache
 from datetime import datetime
@@ -14,18 +13,20 @@ import orjson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
+from data.model.user_entity import EntityRecord
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash, db_conn
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
+import listenbrainz.db.stats as db_stats
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
 
-STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
-CACHE_TIME = 10 * 60 # time in seconds we cache the stats
+STATS_PREFIX = 'listenbrainz.stats'  # prefix used in key to cache stats
+CACHE_TIME = 10 * 60  # time in seconds we cache the stats
 NUMBER_OF_RECENT_LISTENS = 50
 
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
@@ -34,7 +35,7 @@ SEARCH_USER_LIMIT = 100  # max number of users to return in search username resu
 @index_bp.route("/")
 def index():
     if current_user.is_authenticated and request.args.get("redirect", "true") == "true":
-        return redirect( url_for("user.profile", user_name=current_user.musicbrainz_id))
+        return redirect(url_for("user.profile", user_name=current_user.musicbrainz_id))
 
     if _ts:
         try:
@@ -42,17 +43,16 @@ def index():
         except Exception as e:
             current_app.logger.error('Error while trying to get total listen count: %s', str(e))
             listen_count = 0
-
     else:
         listen_count = 0
 
     artist_count = 0
-    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
-            ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
-
-        ts_curs.execute(
-            "SELECT COUNT(DISTINCT artist_mbid) FROM popularity.artist")
-        artist_count = ts_curs.fetchone()[0]
+    try:
+        artist_stats = db_stats.get(db_stats.SITEWIDE_STATS_USER_ID, "artists", "all_time", EntityRecord)
+        if artist_stats is not None:
+            artist_count = artist_stats.count
+    except Exception as e:
+        current_app.logger.error('Error while trying to get total artist count: %s', str(e))
 
     props = {
         "listen_count": listen_count,
@@ -185,11 +185,12 @@ def recent_listens():
 
     props = {
         "listens": recent,
-        "globalListenCount":listen_count,
+        "globalListenCount": listen_count,
         "globalUserCount": user_count
     }
 
     return render_template("index/recent.html", props=orjson.dumps(props).decode("utf-8"))
+
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required
