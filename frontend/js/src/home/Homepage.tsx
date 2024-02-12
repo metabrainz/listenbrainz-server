@@ -95,13 +95,16 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
         />
         <div className="homepage-upper-grey-box" />
 
-        <div className="listen-container">
+        <h1 className="listen-container">
           <NumberCounter count={listenCount} />
-          <h1>global listens.</h1>
-        </div>
+          global listens.
+        </h1>
         <div className="homepage-info">
-          <h1>Listen together</h1>
-          <h1>with ListenBrainz</h1>
+          <h1>
+            Listen together
+            <br />
+            with ListenBrainz
+          </h1>
 
           {createAccountButton}
 
@@ -177,15 +180,18 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
         />
         <div className="homepage-lower-grey-box" />
 
-        <div className="listen-container">
-          <h1>Dig deeper with</h1>
+        <h1 className="listen-container">
+          Dig deeper with
           <div id="artist-count-container">
-            <NumberCounter count={artistCount} /> <h1>artists.</h1>
+            <NumberCounter count={artistCount} /> artists.
           </div>
-        </div>
+        </h1>
         <div className="homepage-info">
-          <h1>Connect your music</h1>
-          <h1>with ListenBrainz</h1>
+          <h1>
+            Connect your music
+            <br />
+            with ListenBrainz
+          </h1>
 
           {createAccountButton}
 
