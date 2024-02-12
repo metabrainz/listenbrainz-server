@@ -282,10 +282,7 @@ def _get_user_count():
     if user_count:
         return user_count
     else:
-        try:
-            user_count = db_user.get_user_count(db_conn)
-        except DatabaseException as e:
-            raise
+        user_count = db_user.get_user_count(db_conn)
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
 
