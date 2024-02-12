@@ -49,12 +49,11 @@ def index():
 
     artist_count = 0
     with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
-        ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+            ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
 
-        ts_curs.execute("SELECT COUNT(DISTINCT artist_mbid) FROM popularity.artist")
+        ts_curs.execute(
+            "SELECT COUNT(DISTINCT artist_mbid) FROM popularity.artist")
         artist_count = ts_curs.fetchone()[0]
-
-    
 
     props = {
         "listen_count": listen_count,
