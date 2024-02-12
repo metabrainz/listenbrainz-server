@@ -16,7 +16,7 @@ import sentry_sdk
 from flask import current_app, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
-from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
+from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
 
@@ -477,7 +477,7 @@ def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
     except IndexError:
         raise APIUnauthorized("Provided Authorization header is invalid.")
 
-    user = db_user.get_by_token(auth_token, fetch_email=fetch_email)
+    user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
     if user is None:
         raise APIUnauthorized("Invalid authorization token.")
 

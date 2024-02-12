@@ -84,7 +84,7 @@ def process_listens(app, listens, priority):
     if priority == NEW_LISTEN:
         listens_to_check = filter_incoming_listens(msids, stats, app, debug)
     else:
-        listens_to_check = msids
+        listens_to_check = list(msids.values())
 
     if len(listens_to_check) == 0:
         return stats

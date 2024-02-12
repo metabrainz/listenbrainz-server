@@ -90,8 +90,9 @@
       height: 25px;
       border-radius: 50%;
       background: conic-gradient(
+        from 0deg,
         fade(white, 15%) var(--degrees-progress),
-        var(--timer-color) calc(360deg - var(--degrees-progress))
+        var(--timer-color) var(--degrees-progress)
       );
       align-self: flex-start;
       order: 3;
@@ -102,7 +103,7 @@
       &.pressing {
         animation: blink 1s ease-out alternate infinite;
         --timer-color: fade(red, 70%);
-        background-color: fade(white, 50%);
+        background-color: fade(white, 20%);
       }
       @keyframes blink {
         0% {

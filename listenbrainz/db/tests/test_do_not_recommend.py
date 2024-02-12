@@ -4,14 +4,13 @@ from sqlalchemy import text
 
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import user as db_user, do_not_recommend
-from listenbrainz import db
 
 
 class DoNotRecommendDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(DoNotRecommendDatabaseTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "test_user")
+        self.user = db_user.get_or_create(self.db_conn, 1, "test_user")
         self.items = [
             {
                 "entity": "release",
@@ -31,16 +30,15 @@ class DoNotRecommendDatabaseTestCase(DatabaseTestCase):
         ]
 
     def _get_all_entries(self):
-        with db.engine.connect() as conn:
-            results = conn.execute(text("""
-                SELECT entity, entity_mbid::text, extract(epoch from until)::int as until
-                  FROM recommendation.do_not_recommend
-            """))
-            return results.mappings().all()
+        results = self.db_conn.execute(text("""
+            SELECT entity, entity_mbid::text, extract(epoch from until)::int as until
+              FROM recommendation.do_not_recommend
+        """))
+        return results.mappings().all()
 
     def create_dummy_data(self):
         for item in self.items:
-            do_not_recommend.insert(self.user["id"], item["entity"], item["entity_mbid"], item["until"])
+            do_not_recommend.insert(self.db_conn, self.user["id"], item["entity"], item["entity_mbid"], item["until"])
 
     def test_clear_expired(self):
         self.create_dummy_data()
@@ -50,7 +48,7 @@ class DoNotRecommendDatabaseTestCase(DatabaseTestCase):
         self.assertCountEqual(found, self.items)
 
         # deleted expired item
-        do_not_recommend.clear_expired()
+        do_not_recommend.clear_expired(self.db_conn)
 
         # expired item not found but non-expired items exist
         found = self._get_all_entries()
@@ -58,6 +56,6 @@ class DoNotRecommendDatabaseTestCase(DatabaseTestCase):
 
     def test_get_total_count(self):
         self.create_dummy_data()
-        received = do_not_recommend.get_total_count(self.user["id"])
+        received = do_not_recommend.get_total_count(self.db_conn, self.user["id"])
         # inserted 3 pins but one is expired so don't include it in total count
         self.assertEqual(2, received)

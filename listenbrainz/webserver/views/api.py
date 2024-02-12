@@ -1,5 +1,4 @@
 from datetime import datetime
-from operator import itemgetter
 
 import psycopg2
 import orjson
@@ -15,7 +14,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
@@ -33,6 +32,7 @@ DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 SEARCH_USER_LIMIT = 10
 
+
 @api_bp.route('/search/users/', methods=['GET', 'OPTIONS'])
 @crossdomain
 @ratelimit()
@@ -43,7 +43,7 @@ def search_user():
     """
     search_term = request.args.get("search_term")
     if search_term:
-        users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT)
+        users = db_user.search_user_name(db_conn, search_term, SEARCH_USER_LIMIT)
     else:
         users = []
     return jsonify({'users': users})
@@ -152,7 +152,7 @@ def get_listens(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -194,7 +194,7 @@ def get_listen_count(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -227,7 +227,7 @@ def get_playing_now(user_name):
     :resheader Content-Type: *application/json*
     """
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -268,11 +268,11 @@ def get_similar_users(user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    similar_users = db_user.get_similar_users(user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user['id'])
     return jsonify({
         "payload": [
             {
@@ -305,11 +305,11 @@ def get_similar_to_user(user_name, other_user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    similar_users = db_user.get_similar_users(user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user['id'])
 
     # Constructing an id-similarity map
     id_similarity_map = {r["musicbrainz_id"]: r["similarity"] for r in similar_users}
@@ -361,10 +361,10 @@ def latest_import():
             service = ExternalServiceType[service_name.upper()]
         except KeyError:
             raise APINotFound("Service does not exist: {}".format(service_name))
-        user = db_user.get_by_mb_id(user_name)
+        user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
-        latest_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
+        latest_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
         return jsonify({
             'musicbrainz_id': user['musicbrainz_id'],
             'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
@@ -381,10 +381,10 @@ def latest_import():
             raise APIBadRequest('Invalid data sent')
 
         try:
-            last_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
+            last_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
             last_import_ts = 0 if not last_import_ts else int(last_import_ts.strftime('%s'))
             if ts > last_import_ts:
-                listens_importer.update_latest_listened_at(user["id"], service, ts)
+                listens_importer.update_latest_listened_at(db_conn, user["id"], service, ts)
         except DatabaseException:
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
@@ -443,7 +443,7 @@ def validate_token():
 
     if not auth_token:
         raise APIBadRequest("You need to provide an Authorization token.")
-    user = db_user.get_by_token(auth_token)
+    user = db_user.get_by_token(db_conn, auth_token)
     if user is None:
         return jsonify({
             'code': 200,
@@ -560,12 +560,12 @@ def get_playlists_for_user(playlist_user_name):
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, ts_conn, playlist_user["id"],
                                                                    include_private=include_private,
                                                                    load_recordings=False, count=count, offset=offset)
 
@@ -593,12 +593,13 @@ def get_playlists_created_for_user(playlist_user_name):
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"],
-                                                                           load_recordings=False, count=count, offset=offset)
+    playlists, playlist_count = db_playlist.get_playlists_created_for_user(
+        db_conn, ts_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset
+    )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
@@ -626,13 +627,14 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     # TODO: This needs to be passed to the DB layer
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(db_conn, ts_conn,
+                                                                          playlist_user["id"],
                                                                           include_private=include_private,
                                                                           load_recordings=False,
                                                                           count=count,
@@ -656,11 +658,11 @@ def user_recommendations(playlist_user_name):
     :resheader Content-Type: *application/json*
     """
 
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists = db_playlist.get_recommendation_playlists_for_user(playlist_user.id)
+    playlists = db_playlist.get_recommendation_playlists_for_user(db_conn, ts_conn, playlist_user.id)
     return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
 
 
@@ -689,7 +691,7 @@ def get_service_details(user_name):
     if user_name != user['musicbrainz_id']:
         raise APIForbidden("You don't have permissions to view this user's information.")
 
-    services = db_external_service_oauth.get_services(user["id"])
+    services = db_external_service_oauth.get_services(db_conn, user["id"])
     return jsonify({'user_name': user_name, 'services': services})
 
 

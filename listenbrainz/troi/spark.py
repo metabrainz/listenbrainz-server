@@ -53,8 +53,8 @@ def get_user_details(slug, user_ids):
 
             if r.export_to_spotify:
                 users_for_urls.append(r.user_id)
-
-    existing_urls = get_existing_playlist_urls(users_for_urls, slug)
+    with timescale.engine.connect() as ts_conn:
+        existing_urls = get_existing_playlist_urls(ts_conn, users_for_urls, slug)
     for user_id, detail in details.items():
         detail["existing_url"] = existing_urls.get(user_id)
 

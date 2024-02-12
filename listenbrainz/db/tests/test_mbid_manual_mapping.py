@@ -5,7 +5,9 @@ import listenbrainz.db.mbid_manual_mapping as db_mbid_manual_mapping
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.db.testing import TimescaleTestCase
 
+
 class MbidManualMappingDatabaseTestCase(TimescaleTestCase):
+
     def test_add_get_mapping(self):
         """Add and get a mapping"""
         msid = "597fa2f2-8cf4-4566-a307-dbfb5aa35ec4"
@@ -13,9 +15,9 @@ class MbidManualMappingDatabaseTestCase(TimescaleTestCase):
         user_id = 1
 
         mapping = MbidManualMapping(recording_msid=msid, recording_mbid=mbid, user_id=user_id)
-        db_mbid_manual_mapping.create_mbid_manual_mapping(mapping)
+        db_mbid_manual_mapping.create_mbid_manual_mapping(self.ts_conn, mapping)
         
-        new_mapping = db_mbid_manual_mapping.get_mbid_manual_mapping(msid, user_id)
+        new_mapping = db_mbid_manual_mapping.get_mbid_manual_mapping(self.ts_conn, msid, user_id)
         assert new_mapping.recording_mbid == mapping.recording_mbid
         assert new_mapping.recording_msid == mapping.recording_msid
         assert new_mapping.user_id == mapping.user_id
@@ -28,16 +30,15 @@ class MbidManualMappingDatabaseTestCase(TimescaleTestCase):
         user_id = 1
 
         mapping1 = MbidManualMapping(recording_msid=msid, recording_mbid=mbid1, user_id=user_id)
-        db_mbid_manual_mapping.create_mbid_manual_mapping(mapping1)
-        new_mapping = db_mbid_manual_mapping.get_mbid_manual_mapping(msid, user_id)
+        db_mbid_manual_mapping.create_mbid_manual_mapping(self.ts_conn, mapping1)
+        new_mapping = db_mbid_manual_mapping.get_mbid_manual_mapping(self.ts_conn, msid, user_id)
         assert new_mapping.recording_mbid == mbid1
 
         mapping2 = MbidManualMapping(recording_msid=msid, recording_mbid=mbid2, user_id=user_id)
-        db_mbid_manual_mapping.create_mbid_manual_mapping(mapping2)
+        db_mbid_manual_mapping.create_mbid_manual_mapping(self.ts_conn, mapping2)
 
-        new_mapping = db_mbid_manual_mapping.get_mbid_manual_mapping(msid, user_id)
+        new_mapping = db_mbid_manual_mapping.get_mbid_manual_mapping(self.ts_conn, msid, user_id)
         assert new_mapping.recording_mbid == mbid2
-
 
     def test_add_mapping_different_users(self):
         """Add a mapping for the same msid by different users and get them"""
@@ -48,10 +49,10 @@ class MbidManualMappingDatabaseTestCase(TimescaleTestCase):
         user_id2 = 2
 
         mapping1 = MbidManualMapping(recording_msid=msid, recording_mbid=mbid1, user_id=user_id1)
-        db_mbid_manual_mapping.create_mbid_manual_mapping(mapping1)
+        db_mbid_manual_mapping.create_mbid_manual_mapping(self.ts_conn, mapping1)
 
         mapping2 = MbidManualMapping(recording_msid=msid, recording_mbid=mbid2, user_id=user_id2)
-        db_mbid_manual_mapping.create_mbid_manual_mapping(mapping2)
+        db_mbid_manual_mapping.create_mbid_manual_mapping(self.ts_conn, mapping2)
 
-        new_mappings = db_mbid_manual_mapping.get_mbid_manual_mappings(msid)
+        new_mappings = db_mbid_manual_mapping.get_mbid_manual_mappings(self.ts_conn, msid)
         assert len(new_mappings) == 2

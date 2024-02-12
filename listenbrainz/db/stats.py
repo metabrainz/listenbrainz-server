@@ -96,10 +96,11 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
     return None
 
 
-def get_entity_listener(entity, entity_id, stats_range) -> Optional[dict]:
+def get_entity_listener(db_conn, entity, entity_id, stats_range) -> Optional[dict]:
     """ Retrieve stats for the given entity, stats range and stats type.
 
         Args:
+            db_conn: database connection
             entity: the type of stat entity
             entity_id: the mbid of the particular entity item
             stats_range: time period to retrieve stats for
@@ -116,7 +117,7 @@ def get_entity_listener(entity, entity_id, stats_range) -> Optional[dict]:
         doc.pop("_revisions", None)
 
         user_id_listeners = doc.pop("listeners", [])
-        users_map = get_users_by_id([x["user_id"] for x in user_id_listeners])
+        users_map = get_users_by_id(db_conn, [x["user_id"] for x in user_id_listeners])
         user_name_listeners = []
         for x in user_id_listeners:
             user_name = users_map.get(x["user_id"])
