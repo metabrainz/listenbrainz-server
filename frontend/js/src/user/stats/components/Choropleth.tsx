@@ -15,6 +15,7 @@ import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
+import { Link } from "react-router-dom";
 import * as worldCountries from "../data/world_countries.json";
 import { COLOR_BLACK } from "../../../utils/constants";
 
@@ -222,13 +223,13 @@ export default function CustomChoropleth(props: ChoroplethProps) {
               />
               {artist.listen_count}
             </span>
-            <a
-              href={`/artist/${artist.artist_mbid}`}
+            <Link
+              to={`/artist/${artist.artist_mbid}/`}
               target="_blank"
               rel="noopener noreferrer"
             >
               {artist.artist_name}
-            </a>
+            </Link>
             <br />
           </div>
         ))}

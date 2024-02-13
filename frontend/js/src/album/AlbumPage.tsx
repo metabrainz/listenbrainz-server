@@ -10,7 +10,7 @@ import {
 import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import tinycolor from "tinycolor2";
 import { Helmet } from "react-helmet";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import {
   getRelIconLink,
   ListeningStats,
@@ -219,7 +219,7 @@ export default function AlbumPage(): JSX.Element {
               {artist.artists.map((ar) => {
                 return (
                   <span key={ar.artist_mbid}>
-                    <a href={`/artist/${ar.artist_mbid}`}>{ar?.name}</a>
+                    <Link to={`/artist/${ar.artist_mbid}/`}>{ar?.name}</Link>
                     {ar.join_phrase}
                   </span>
                 );
@@ -244,15 +244,15 @@ export default function AlbumPage(): JSX.Element {
             />
           </div>
           <div className="btn-group lb-radio-button">
-            <a
+            <Link
               type="button"
               className="btn btn-info"
-              href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+              to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                 artistName
               )})&mode=easy`}
             >
               <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
-            </a>
+            </Link>
             <button
               type="button"
               className="btn btn-info dropdown-toggle"
@@ -265,33 +265,33 @@ export default function AlbumPage(): JSX.Element {
             </button>
             <ul className="dropdown-menu">
               <li>
-                <a
+                <Link
                   target="_blank"
                   rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                     artistName
                   )})::nosim&mode=easy`}
                 >
                   This artist
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   target="_blank"
                   rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                     artistName
                   )})&mode=easy`}
                 >
                   Similar artists
-                </a>
+                </Link>
               </li>
               {Boolean(filteredTags?.length) && (
                 <li>
-                  <a
+                  <Link
                     target="_blank"
                     rel="noopener noreferrer"
-                    href={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
                       filteredTags
                         .map((filteredTag) => filteredTag.tag)
                         .join(",")
@@ -304,7 +304,7 @@ export default function AlbumPage(): JSX.Element {
                         .join(",")}
                     </span>
                     )
-                  </a>
+                  </Link>
                 </li>
               )}
             </ul>
@@ -426,13 +426,13 @@ export default function AlbumPage(): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <a
-                          href={`/user/${listener.user_name}/`}
+                        <Link
+                          to={`/user/${listener.user_name}/`}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
                           {listener.user_name}
-                        </a>
+                        </Link>
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;

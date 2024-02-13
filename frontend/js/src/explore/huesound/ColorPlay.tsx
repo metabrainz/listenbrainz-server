@@ -5,6 +5,7 @@ import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { Link } from "react-router-dom";
 import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -173,23 +174,23 @@ export default class ColorPlay extends React.Component<{}, ColorPlayState> {
                   />
                   <div style={{ flex: 3, padding: "0.5em 2em" }}>
                     <div className="h3">
-                      <a href={`/release/${selectedRelease.release_mbid}`}>
+                      <Link to={`/release/${selectedRelease.release_mbid}/`}>
                         {selectedRelease.release_name}
-                      </a>
+                      </Link>
                     </div>
                     <div className="h4">
                       {has(
                         selectedRelease,
                         "recordings[0].track_metadata.additional_info.artist_mbids[0]"
                       ) ? (
-                        <a
-                          href={`/artist/${get(
+                        <Link
+                          to={`/artist/${get(
                             selectedRelease,
                             "recordings[0].track_metadata.additional_info.artist_mbids[0]"
                           )}`}
                         >
                           {selectedRelease.artist_name}
-                        </a>
+                        </Link>
                       ) : (
                         selectedRelease.artist_name
                       )}

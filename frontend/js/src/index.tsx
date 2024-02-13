@@ -24,7 +24,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  const routes = getRoutes();
+  const { currentUser } = globalAppContext;
+
+  const routes = getRoutes(currentUser?.name);
   const router = createBrowserRouter(routes);
 
   const renderRoot = createRoot(domContainer!);

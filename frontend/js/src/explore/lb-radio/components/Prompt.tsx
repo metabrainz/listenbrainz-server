@@ -1,5 +1,6 @@
 import { isString } from "lodash";
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 export enum Modes {
   "easy" = "easy",
@@ -108,14 +109,18 @@ function Prompt(props: PromptProps) {
         <div>
           <div id="examples">
             Examples:
-            <a href="/explore/lb-radio?prompt=artist:(radiohead)&mode=easy">
+            <Link to="/explore/lb-radio/?prompt=artist:(radiohead)&mode=easy">
               artist:(radiohead)
-            </a>
-            <a href="/explore/lb-radio?prompt=tag:(trip hop)&mode=easy">
+            </Link>
+            <Link to="/explore/lb-radio/?prompt=tag:(trip hop)&mode=easy">
               tag:(trip hop)
-            </a>
-            <a href="/explore/lb-radio?prompt=%23metal&mode=easy">#metal</a>
-            <a href="/explore/lb-radio?prompt=stats:rob&mode=easy">stats:rob</a>
+            </Link>
+            <Link to="/explore/lb-radio/?prompt=%23metal&mode=easy">
+              #metal
+            </Link>
+            <Link to="/explore/lb-radio/?prompt=stats:rob&mode=easy">
+              stats:rob
+            </Link>
           </div>
           <div id="made-with-postgres">
             <img

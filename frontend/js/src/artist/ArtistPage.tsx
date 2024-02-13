@@ -9,7 +9,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
@@ -224,15 +224,15 @@ export default function ArtistPage(): JSX.Element {
             />
           </div>
           <div className="btn-group lb-radio-button">
-            <a
+            <Link
               type="button"
               className="btn btn-info"
-              href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+              to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                 artist.name
               )})&mode=easy`}
             >
               <FontAwesomeIcon icon={faPlayCircle} /> Radio
-            </a>
+            </Link>
             <button
               type="button"
               className="btn btn-info dropdown-toggle"
@@ -245,39 +245,39 @@ export default function ArtistPage(): JSX.Element {
             </button>
             <ul className="dropdown-menu">
               <li>
-                <a
+                <Link
                   target="_blank"
                   rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                     artist.name
                   )})::nosim&mode=easy`}
                 >
                   This artist
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   target="_blank"
                   rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                     artist.name
                   )})&mode=easy`}
                 >
                   Similar artists
-                </a>
+                </Link>
               </li>
               {Boolean(filteredTags?.length) && (
                 <li>
-                  <a
+                  <Link
                     target="_blank"
                     rel="noopener noreferrer"
-                    href={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
                       filteredTagsAsString
                     )})::or&mode=easy`}
                   >
                     Tags (
                     <span className="tags-list">{filteredTagsAsString}</span>)
-                  </a>
+                  </Link>
                 </li>
               )}
             </ul>
@@ -377,13 +377,13 @@ export default function ArtistPage(): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <a
-                          href={`/user/${listener.user_name}/`}
+                        <Link
+                          to={`/user/${listener.user_name}/`}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
                           {listener.user_name}
-                        </a>
+                        </Link>
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
@@ -418,9 +418,9 @@ export default function ArtistPage(): JSX.Element {
               .map((similarArtist) => {
                 const listenDetails = (
                   <div>
-                    <a href={`/artist/${similarArtist.artist_mbid}`}>
+                    <Link to={`/artist/${similarArtist.artist_mbid}`}>
                       {similarArtist.name}
-                    </a>
+                    </Link>
                   </div>
                 );
                 const artistAsListen: BaseListenFormat = {

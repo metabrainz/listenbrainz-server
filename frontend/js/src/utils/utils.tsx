@@ -4,6 +4,7 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
@@ -252,14 +253,14 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
     <>
       {artists.map((artist) => (
         <>
-          <a
-            href={`/artist/${artist.artist_mbid}`}
+          <Link
+            to={`/artist/${artist.artist_mbid}/`}
             target="_blank"
             rel="noopener noreferrer"
             title={artist.artist_credit_name}
           >
             {artist.artist_credit_name}
-          </a>
+          </Link>
           {artist.join_phrase}
         </>
       ))}
@@ -278,13 +279,13 @@ const getStatsArtistLink = (
   const firstArtist = _.first(artist_mbids);
   if (firstArtist) {
     return (
-      <a
-        href={`/artist/${firstArtist}`}
+      <Link
+        to={`/artist/${firstArtist}/`}
         target="_blank"
         rel="noopener noreferrer"
       >
         {artist_name}
-      </a>
+      </Link>
     );
   }
   return artist_name;
