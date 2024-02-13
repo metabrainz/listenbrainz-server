@@ -47,7 +47,7 @@ added the argument before redirecting):
 
 .. code:: bash
 
-    flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental --last-dump-id 700 >> /logs/dumps.log 2>&1
+    flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental --dump-id 700 >> /logs/dumps.log 2>&1
 
 .. note::
 
