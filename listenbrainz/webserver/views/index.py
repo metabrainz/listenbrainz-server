@@ -63,12 +63,6 @@ def import_data():
         return current_app.login_manager.unauthorized()
 
 
-@index_bp.route("/",  defaults={'path': ''})
-@index_bp.route('/<path:path>/')
-def index_react(path):
-    return render_template("index.html")
-
-
 @index_bp.route("/blog-data/")
 def blog_data():
     """Proxy to the MetaBrainz blog to get recent posts so that user IP addresses are not leaked to wordpress"""
@@ -260,3 +254,9 @@ def _get_user_count():
             raise
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
+
+
+@index_bp.route("/",  defaults={'path': ''})
+@index_bp.route('/<path:path>/')
+def index_pages(path):
+    return render_template("index.html")

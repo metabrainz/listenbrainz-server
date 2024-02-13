@@ -64,13 +64,10 @@ module.exports = function (env, argv) {
         jsDir,
         "src/recommended/tracks/Recommendations.tsx"
       ),
-      playerPage: path.resolve(jsDir, "src/player/PlayerPage.tsx"),
       metadataViewer: path.resolve(
         jsDir,
         "src/metadata-viewer/MetadataViewerPage.tsx"
       ),
-      artistPage: path.resolve(jsDir, "src/artist/ArtistPage.tsx"),
-      albumPage: path.resolve(jsDir, "src/album/AlbumPage.tsx"),
       settingsPage: path.resolve(jsDir, "src/settings/index.tsx"),
       indexPage: path.resolve(jsDir, "src/index.tsx"),
     },
