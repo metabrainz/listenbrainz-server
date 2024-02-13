@@ -15,7 +15,7 @@ from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
     _filter_description_html
@@ -519,7 +519,7 @@ def get_playlist_xspf(playlist_mbid):
 
     try:
         user = validate_auth_header(optional=True)
-    except Exception as e:
+    except APIUnauthorized as e:
         raise PlaylistAPIXMLError(str(e), status_code=401)
 
     user_id = user['id'] if user else None
