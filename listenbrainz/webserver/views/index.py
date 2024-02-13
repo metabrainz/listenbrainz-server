@@ -33,7 +33,7 @@ SEARCH_USER_LIMIT = 100  # max number of users to return in search username resu
 @index_bp.route("/")
 def index():
     if current_user.is_authenticated and request.args.get("redirect", "true") == "true":
-        return redirect( url_for("user.profile", user_name=current_user.musicbrainz_id))
+        return redirect(url_for("user.index", path="", user_name=current_user.musicbrainz_id))
 
     if _ts:
         try:
@@ -126,8 +126,10 @@ def current_status():
     return jsonify(data)
 
 
-@index_bp.route("/recent/")
+@index_bp.route("/recent/", methods=['GET', 'POST'])
 def recent_listens():
+    if request.method == 'GET':
+        return render_template('index.html')
 
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
@@ -150,13 +152,13 @@ def recent_listens():
         "globalUserCount": user_count
     }
 
-    return render_template("index/recent.html", props=orjson.dumps(props).decode("utf-8"))
+    return jsonify(props)
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required
 @web_listenstore_needed
 def feed():
-    return render_template('index/feed.html')
+    return render_template('index.html')
 
 
 @index_bp.route('/agree-to-terms/', methods=['GET', 'POST'])
@@ -258,15 +260,3 @@ def _get_user_count():
             raise
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
-
-
-@index_bp.route("/statistics/charts/")
-def charts():
-    """ Show the top sitewide entities. """
-    return render_template("index/charts.html")
-
-
-@index_bp.route("/statistics/")
-def stats():
-    """ Show sitewide stats """
-    return render_template("index/stats.html")

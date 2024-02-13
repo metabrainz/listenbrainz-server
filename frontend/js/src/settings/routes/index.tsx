@@ -3,31 +3,23 @@ import SettingsLayout from "../layout";
 import DeleteAccount from "../delete/DeleteAccount";
 import DeleteListens from "../delete-listens/DeleteListens";
 import Export from "../export/ExportData";
-import Import, { ImportLoader } from "../import/ImportListens";
-import {
-  MissingMBDataPageLoader,
-  MissingMBDataPageWrapper as MissingMBDataPage,
-} from "../missing-data/MissingMBData";
-import MusicServices, {
-  MusicServicesLoader,
-} from "../music-services/details/MusicServices";
+import Import from "../import/ImportListens";
+import { MissingMBDataPageWrapper as MissingMBDataPage } from "../missing-data/MissingMBData";
+import MusicServices from "../music-services/details/MusicServices";
 import ResetToken from "../resettoken/ResetToken";
-import {
-  SelectTimezoneLoader,
-  SelectTimezoneWrapper as SelectTimezone,
-} from "../select_timezone/SelectTimezone";
-import {
-  SelectTroiPreferencesLoader,
-  SelectTroiPreferencesWrapper as SelectTroiPreferences,
-} from "../troi/SelectTroiPreferences";
+import { SelectTimezoneWrapper as SelectTimezone } from "../select_timezone/SelectTimezone";
+import { SelectTroiPreferencesWrapper as SelectTroiPreferences } from "../troi/SelectTroiPreferences";
 import Settings from "../Settings";
 import ResetImportTimestamp from "../resetlatestimportts/ResetLatestImports";
+import RouteLoader from "../../utils/Loader";
+import ErrorBoundary from "../../error/ErrorBoundary";
 
 const getSettingsRoutes = () => {
   const routes = [
     {
       path: "/settings",
       element: <SettingsLayout />,
+      errorElement: <ErrorBoundary />,
       children: [
         {
           index: true,
@@ -39,12 +31,12 @@ const getSettingsRoutes = () => {
         },
         {
           path: "music-services/details/",
-          loader: MusicServicesLoader,
+          loader: RouteLoader,
           element: <MusicServices />,
         },
         {
           path: "import/",
-          loader: ImportLoader,
+          loader: RouteLoader,
           element: <Import />,
         },
         {
@@ -53,17 +45,17 @@ const getSettingsRoutes = () => {
         },
         {
           path: "missing-data/",
-          loader: MissingMBDataPageLoader,
+          loader: RouteLoader,
           element: <MissingMBDataPage />,
         },
         {
           path: "select_timezone/",
-          loader: SelectTimezoneLoader,
+          loader: RouteLoader,
           element: <SelectTimezone />,
         },
         {
           path: "troi/",
-          loader: SelectTroiPreferencesLoader,
+          loader: RouteLoader,
           element: <SelectTroiPreferences />,
         },
         {

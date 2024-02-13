@@ -1,4 +1,3 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
@@ -24,19 +23,11 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import NiceModal from "@ebay/nice-modal-react";
-import ErrorBoundary from "../../../utils/ErrorBoundary";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../../utils/GlobalAppContext";
+import { Link, useLoaderData } from "react-router-dom";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
-import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
-
-import {
-  generateAlbumArtThumbnailLink,
-  getPageProps,
-} from "../../../utils/utils";
+import { generateAlbumArtThumbnailLink } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
 import MagicShareButton from "./components/MagicShareButton";
 
@@ -46,6 +37,7 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
+import SEO, { YIMYearMetaTags } from "../SEO";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -99,6 +91,11 @@ export type YearInMusicProps = {
       artists: Array<UserArtistMapArtist>;
     }>;
   };
+};
+
+type YearInMusicLoaderData = {
+  user: YearInMusicProps["user"];
+  data: YearInMusicProps["yearInMusicData"];
 };
 
 export type YearInMusicState = {
@@ -331,6 +328,8 @@ export default class YearInMusic extends React.Component<
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
         <div id="year-in-music" className="yim-2022 container">
+          <SEO year={2022} userName={user?.name} />
+          <YIMYearMetaTags year={2022} />
           <div id="main-header" className="flex-center">
             <img
               className="img-responsive header-image"
@@ -480,6 +479,8 @@ export default class YearInMusic extends React.Component<
     const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2022`;
     return (
       <div id="year-in-music" className="yim-2022">
+        <SEO year={2022} userName={user?.name} />
+        <YIMYearMetaTags year={2022} />
         <div id="main-header" className="flex-center">
           <img
             className="img-responsive header-image"
@@ -1165,7 +1166,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <a href="/explore/cover-art-collage/2022">
+            <Link to="/explore/cover-art-collage/2022/">
               <LazyLoadImage
                 src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
                 placeholderSrc="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
@@ -1176,7 +1177,7 @@ export default class YearInMusic extends React.Component<
                 loading="lazy"
                 decoding="async"
               />
-            </a>
+            </Link>
           </div>
           <div className="container closing-remarks">
             <span className="bold">
@@ -1220,7 +1221,7 @@ export default class YearInMusic extends React.Component<
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <a href={`/user/${user.name}/year-in-music/2021`}>2021</a>
+            <Link to={`/user/${user.name}/year-in-music/2021/`}>2021</Link>
           </div>
           <div className="thanks-kc-green">
             With thanks to KC Green for the original &apos;this is fine&apos;
@@ -1239,24 +1240,8 @@ export default class YearInMusic extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, reactProps, globalAppContext } = await getPageProps();
-
-  const { user, data: yearInMusicData } = reactProps;
-
-  const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <YearInMusicWithAlertNotifications
-            user={user}
-            yearInMusicData={yearInMusicData}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function YearInMusicWrapper() {
+  const props = useLoaderData() as YearInMusicLoaderData;
+  const { user, data: yearInMusicData } = props;
+  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
+}

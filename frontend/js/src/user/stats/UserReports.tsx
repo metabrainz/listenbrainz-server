@@ -1,24 +1,21 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
 import {
   faGlobe,
   faInfoCircle,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
+
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import Pill from "../../components/Pill";
 import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
 import UserDailyActivity from "./components/UserDailyActivity";
 import UserArtistMap from "./components/UserArtistMap";
-import { getPageProps } from "../../utils/utils";
 import { getAllStatRanges } from "./utils";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export type UserReportsProps = {
@@ -30,6 +27,8 @@ export type UserReportsState = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
 };
+
+type UserReportsLoaderData = UserReportsProps;
 
 export default class UserReports extends React.Component<
   UserReportsProps,
@@ -105,8 +104,16 @@ export default class UserReports extends React.Component<
     const userOrLoggedInUser: string | undefined =
       user?.name ?? currentUser?.name;
 
+    const userStatsTitle =
+      user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
+
     return (
       <div>
+        <Helmet>
+          <title>
+            {userOrLoggedInUser ? userStatsTitle : "Sitewide"} Stats
+          </title>
+        </Helmet>
         <div className="tertiary-nav dragscroll">
           <div>
             {Array.from(ranges, ([stat_type, stat_name]) => {
@@ -215,38 +222,13 @@ export default class UserReports extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function UserReportsWrapper() {
+  const data = useLoaderData() as UserReportsLoaderData;
+  const { APIService } = React.useContext(GlobalAppContext);
+  return <UserReports {...data} apiUrl={APIService.APIBaseURI} />;
+}
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { user } = reactProps;
-  const UserReportsPageWithAlertNotifications = withAlertNotifications(
-    UserReports
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserReportsPageWithAlertNotifications
-            apiUrl={globalAppContext.APIService.APIBaseURI}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function StatisticsPage() {
+  const { APIService } = React.useContext(GlobalAppContext);
+  return <UserReports apiUrl={APIService.APIBaseURI} />;
+}
