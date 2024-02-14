@@ -6,11 +6,13 @@
   height: calc(var(--vh, 1vh) * 100px); // fallback if svh units not available
   height: 100svh; // using more modern css SVH unit
   scroll-snap-type: y mandatory;
-  
+
   @media (max-width: @screen-md) {
-      // calculate available height minus the navbar
-      height: calc(var(--vh, 1vh) * 100px - @navbar-height); // fallback if svh units not available
-      height: calc(100svh - @navbar-height); // using more modern css SVH unit
+    // calculate available height minus the navbar
+    height: calc(
+      var(--vh, 1vh) * 100px - @navbar-height
+    ); // fallback if svh units not available
+    height: calc(100svh - @navbar-height); // using more modern css SVH unit
   }
 
   .homepage-upper {
