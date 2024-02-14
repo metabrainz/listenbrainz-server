@@ -9,6 +9,9 @@ import getRedirectRoutes from "./redirectRoutes";
 import getEntityPages from "./EntityPages";
 import Layout from "../layout";
 import ErrorBoundary from "../error/ErrorBoundary";
+import ProtectedRoutes from "../utils/ProtectedRoutes";
+import getSettingsRoutes from "../settings/routes";
+import getSettingsRedirectRoutes from "../settings/routes/redirectRoutes";
 
 const getRoutes = (musicbrainzID?: string) => {
   const exploreRoutes = getExploreRoutes();
@@ -18,6 +21,8 @@ const getRoutes = (musicbrainzID?: string) => {
   const aboutRedirectRoutes = getRedirectRoutes();
   const entityPages = getEntityPages();
   const indexRoutes = getIndexRoutes();
+  const settingsRoutes = getSettingsRoutes();
+  const settingsRedirectRoutes = getSettingsRedirectRoutes();
 
   const routes = [
     {
@@ -33,6 +38,10 @@ const getRoutes = (musicbrainzID?: string) => {
         ...userRoutes,
         ...redirectRoutes,
       ],
+    },
+    {
+      element: <ProtectedRoutes />,
+      children: [...settingsRoutes, ...settingsRedirectRoutes],
     },
   ];
 

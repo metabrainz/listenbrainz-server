@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 
 export default function ImportData() {
   return (
@@ -15,12 +16,12 @@ export default function ImportData() {
         Last.fm. To proceed, you will need a MusicBrainz account.
       </p>
       <div className="well" style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <a
-          href="/settings/import/"
+        <Link
+          to="/settings/import/"
           className="btn btn-primary btn-lg btn-block"
         >
           Import my listen history
-        </a>
+        </Link>
       </div>
     </>
   );

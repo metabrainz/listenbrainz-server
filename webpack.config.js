@@ -68,7 +68,6 @@ module.exports = function (env, argv) {
         jsDir,
         "src/metadata-viewer/MetadataViewerPage.tsx"
       ),
-      settingsPage: path.resolve(jsDir, "src/settings/index.tsx"),
       indexPage: path.resolve(jsDir, "src/index.tsx"),
     },
     output: {

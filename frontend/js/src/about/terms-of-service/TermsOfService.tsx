@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 
 export default function TermsOfService() {
   return (
@@ -45,9 +46,9 @@ export default function TermsOfService() {
             </a>
           </b>
           : Only loaded if you{" "}
-          <a href="/settings/music-services/details/">
+          <Link to="/settings/music-services/details/">
             linked you Spotify pro account
-          </a>
+          </Link>
         </li>
         <li>
           <b>

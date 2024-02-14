@@ -17,6 +17,7 @@ import {
   faWindowMinimize,
 } from "@fortawesome/free-solid-svg-icons";
 import { faYoutube } from "@fortawesome/free-brands-svg-icons";
+import { Link } from "react-router-dom";
 import {
   getArtistName,
   getTrackName,
@@ -210,9 +211,9 @@ export default class YoutubePlayer
         account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
-        <a href="/settings/music-services/details/" target="_blank">
+        <Link to="/settings/music-services/details/" target="_blank">
           link for &quot;playing music&quot; feature
-        </a>{" "}
+        </Link>{" "}
         and refresh this page
       </p>
     );

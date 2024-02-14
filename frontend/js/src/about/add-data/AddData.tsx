@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 
 export default function AddData() {
   return (
@@ -274,9 +275,9 @@ export default function AddData() {
         while we find better ways to deduplicate listens.
       </p>
       <p>
-        <a href="/settings/music-services/details/">
+        <Link to="/settings/music-services/details/">
           Connect your Spotify account to ListenBrainz.
-        </a>
+        </Link>
       </p>
 
       <h3>Playlist submissions and tools</h3>

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 
 export default function LastfmProxy() {
   return (
@@ -39,7 +40,7 @@ export default function LastfmProxy() {
           http://proxy.listenbrainz.org
         </a>{" "}
         and using MusicBrainz ID as username and the{" "}
-        <a href="/settings/">LB auth token</a> as password.
+        <Link to="/settings/">LB auth token</Link> as password.
       </p>
 
       <p>
