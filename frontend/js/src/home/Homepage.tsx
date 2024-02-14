@@ -25,7 +25,7 @@ import { Integrations } from "@sentry/tracing";
 import { ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
-import { random } from "lodash";
+import { throttle } from "lodash";
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -42,6 +42,23 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
   const homepageUpperRef = React.useRef<HTMLDivElement>(null);
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
 
+  const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
+
+  React.useEffect(() => {
+    const handleResize = throttle(
+      () => {
+        setWindowHeight(window.innerHeight);
+      },
+      300,
+      { leading: true }
+    );
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   const createAccountButton = (
     <a
       className="create-account-button"
@@ -50,8 +67,13 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
       Create Account
     </a>
   );
+  // Calculate available screen real estate
+  // This allows us to ensure that each page takes full height taking mobile browser toolbars into account
+  const styles = {
+    "--vh": windowHeight * 0.01,
+  } as React.CSSProperties;
   return (
-    <div id="homepage-container">
+    <div id="homepage-container" style={styles}>
       <div className="homepage-upper" ref={homepageUpperRef}>
         <Blob
           width={200}

@@ -2,8 +2,16 @@
 @even-darker-grey: #353070;
 #homepage-container {
   overflow-y: scroll;
-  height: 100vh;
+  height: 100vh; // absolute fallback
+  height: calc(var(--vh, 1vh) * 100px); // fallback if svh units not available
+  height: 100svh; // using more modern css SVH unit
   scroll-snap-type: y mandatory;
+  
+  @media (max-width: @screen-md) {
+      // calculate available height minus the navbar
+      height: calc(var(--vh, 1vh) * 100px - @navbar-height); // fallback if svh units not available
+      height: calc(100svh - @navbar-height); // using more modern css SVH unit
+  }
 
   .homepage-upper {
     background: linear-gradient(
@@ -11,7 +19,7 @@
       @dark-grey 16.96%,
       @even-darker-grey 98.91%
     );
-    height: 100vh;
+    height: 100%;
     position: relative;
     padding-left: 50px;
     scroll-snap-align: start;
@@ -114,7 +122,7 @@
       @dark-grey 16.96%,
       @even-darker-grey 98.91%
     );
-    height: 100vh;
+    height: 100%;
     position: relative;
     padding-left: 50px;
     scroll-snap-align: start;
@@ -432,17 +440,6 @@
       .homepage-lower-speaker {
         height: min(30%, 275px);
       }
-    }
-  }
-}
-
-@media (max-width: @screen-md) {
-  #homepage-container {
-    height: calc(100vh - 72px);
-
-    .homepage-upper,
-    .homepage-lower {
-      height: calc(100vh - 72px);
     }
   }
 }
