@@ -509,31 +509,38 @@ def get_playlist_xspf(playlist_mbid):
     :resheader Content-Type: *application/xspf+xml*
     """
 
-    if not is_valid_uuid(playlist_mbid):
-        raise PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400)
+    try:
+        if not is_valid_uuid(playlist_mbid):
+            raise PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400)
 
     fetch_metadata = parse_boolean_arg("fetch_metadata", True)
     playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
-    if playlist is None:
-        raise PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404)
 
-    try:
-        user = validate_auth_header(optional=True)
-    except APIUnauthorized as e:
-        raise PlaylistAPIXMLError(str(e), status_code=401)
+        if playlist is None:
+            raise PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404)
 
-    user_id = user['id'] if user else None
+        try:
+            user = validate_auth_header(optional=True)
+        except APIUnauthorized as e:
+            raise PlaylistAPIXMLError(str(e), status_code=401)
 
-    if not playlist.is_visible_by(user_id):
-        raise PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401)
+        user_id = user['id'] if user else None
 
-    if fetch_metadata:
-        fetch_playlist_recording_metadata(playlist)
-    
-    xspf_data = serialize_xspf(playlist)
-    serialized_xspf_response = make_response(xspf_data)
-    serialized_xspf_response.content_type = 'text/xml'
-    return serialized_xspf_response
+        if not playlist.is_visible_by(user_id):
+            raise PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401)
+
+        if fetch_metadata:
+            fetch_playlist_recording_metadata(playlist)
+
+        xspf_data = serialize_xspf(playlist)
+        serialized_xspf_response = make_response(xspf_data)
+        serialized_xspf_response.content_type = 'text/xml'
+        return serialized_xspf_response
+
+    except Exception as e:
+        # Catch any other exceptions like database connectivity issues etc.
+        current_app.logger.error("Failed to export playlist XSPF:", exc_info=True)
+        raise PlaylistAPIXMLError("Internal server error occurred.", status_code=500)
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])
