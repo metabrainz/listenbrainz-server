@@ -513,8 +513,9 @@ def get_playlist_xspf(playlist_mbid):
         if not is_valid_uuid(playlist_mbid):
             raise PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400)
 
-    fetch_metadata = parse_boolean_arg("fetch_metadata", True)
-    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+        fetch_metadata = parse_boolean_arg("fetch_metadata", True)
+
+        playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
 
         if playlist is None:
             raise PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404)
