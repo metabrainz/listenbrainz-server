@@ -5,6 +5,7 @@ import {
   faListAlt,
   faPlusCircle,
   faUsers,
+  faFileImport,
 } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -23,6 +24,7 @@ import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPageProps } from "../../utils/utils";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
+import ImportPlaylistModal from "../../playlists/components/ImportPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import { getPlaylistId, PlaylistType } from "../../playlists/utils";
 
@@ -158,8 +160,9 @@ export default class UserPlaylists extends React.Component<
           onPlaylistEdited={this.onPlaylistEdited}
           onPlaylistDeleted={this.onPlaylistDeleted}
         >
-          {this.isCurrentUserPage() && (
+          {this.isCurrentUserPage() && [
             <Card
+              key="new-playlist"
               className="new-playlist"
               data-toggle="modal"
               data-target="#CreateOrEditPlaylistModal"
@@ -175,8 +178,26 @@ export default class UserPlaylists extends React.Component<
                 <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
                 <span>Create new playlist</span>
               </div>
-            </Card>
-          )}
+            </Card>,
+            <Card
+              key="import-playlist"
+              className="import-playlist"
+              data-toggle="modal"
+              data-target="#ImportPlaylistModal"
+              onClick={() => {
+                NiceModal.show(ImportPlaylistModal)
+                  // @ts-ignore
+                  .then((playlist: JSPFPlaylist) => {
+                    this.onPlaylistCreated(playlist);
+                  });
+              }}
+            >
+              <div>
+                <FontAwesomeIcon icon={faFileImport as IconProp} size="2x" />
+                <span>Import Playlist</span>
+              </div>
+            </Card>,
+          ]}
         </PlaylistsList>
       </div>
     );
