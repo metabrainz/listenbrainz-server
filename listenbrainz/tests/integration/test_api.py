@@ -11,7 +11,7 @@ from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 import listenbrainz.db.external_service_oauth as db_oauth
-from listenbrainz.webserver.views.playlist_api import PLAYLIST_EXTENSION_URI
+from listenbrainz.webserver.views.playlist_api import PLAYLIST_EXTENSION_URI, PlaylistAPIXMLError
 
 
 class APITestCase(ListenAPIIntegrationTestCase):
@@ -308,6 +308,44 @@ class APITestCase(ListenAPIIntegrationTestCase):
         first_xml_str_auth = ''.join(r.data.decode('utf-8').split())
         second_xml_str_auth = ''.join(expected_error_xml.split())
         self.assertEqual(first_xml_str_auth, second_xml_str_auth)
+
+    def test_playlist_api_xml_internal_server_error(self):
+        
+        playlist = {
+            "playlist": {
+                "title": "you're a person",
+                "extension": {
+                     PLAYLIST_EXTENSION_URI: {
+                         "public": True,
+                    }
+                }
+            }
+        }
+
+        response_post = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        playlist_mbid = response_post.json["playlist_mbid"]
+
+        with patch('listenbrainz.webserver.views.playlist_api.fetch_playlist_recording_metadata') as mock_fetch_metadata:
+            mock_fetch_metadata.side_effect = PlaylistAPIXMLError("Internal server error occurred.")
+
+            # Request that would trigger mocked error
+            response = self.client.get(f'/1/playlist/{playlist_mbid}/xspf')
+
+            # Assert that a 500 Internal Server Error is returned
+            self.assertEqual(response.status_code, 500)
+
+            # The expected XML error response
+            expected_error_xml = """<?xml version="1.0" encoding="utf-8"?>
+<playlist_error>
+  <error code="500">Internal server error occurred.</error>
+</playlist_error>"""
+            
+            actual_xml = response.data.decode('utf-8')
+            self.assertEqual(actual_xml, expected_error_xml)
 
 
     def test_valid_playing_now(self):
