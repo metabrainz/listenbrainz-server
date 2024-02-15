@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useLoaderData, useNavigate } from "react-router-dom";
+import { Link, useLoaderData, useNavigate } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 type SearchResultsLoaderData = {
@@ -74,7 +74,7 @@ export default function SearchResults() {
               <tr key={`similar-user-${row[0]}`}>
                 <td>{index + 1}</td>
                 <td>
-                  <a href={`/user/${row[0]}/`}>{row[0]}</a>
+                  <Link to={`/user/${row[0]}/`}>{row[0]}</Link>
                 </td>
                 {username && (
                   <td>
