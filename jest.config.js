@@ -37,8 +37,12 @@ module.exports = {
   testEnvironmentOptions: {
     url: "http://localhost",
   },
+  moduleNameMapper: {
+    'react-markdown': '<rootDir>/node_modules/react-markdown/react-markdown.min.js',
+  },
   transform: {
     "\\.[jt]sx?$": "ts-jest",
+    "^.+\\.(js|jsx)$": "babel-jest"
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation

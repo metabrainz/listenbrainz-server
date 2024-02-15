@@ -13,6 +13,8 @@ import orjson
 import uuid
 import sentry_sdk
 
+from typing import NoReturn
+
 from flask import current_app, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
@@ -248,7 +250,7 @@ def _get_augmented_listens(payload, user: SubmitListenUserMetadata):
     return payload
 
 
-def log_raise_400(msg, data=""):
+def log_raise_400(msg, data="") -> NoReturn:
     """ Helper function for logging issues with request data and showing error page.
         Logs the message and data, raises BadRequest exception which shows 400 Bad
         Request to the user.

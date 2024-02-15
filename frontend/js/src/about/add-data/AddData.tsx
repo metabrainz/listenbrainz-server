@@ -225,6 +225,13 @@ export default function AddData() {
           </em>
           , a free, web-based media streamer
         </li>
+        <li>
+          <em>
+            <a href="https://github.com/PKBeam/AMWin-RP">AMWin-RP</a>
+          </em>
+          , a Discord Rich Presence client for Apple Music&apos;s native Windows
+          app.
+        </li>
       </ul>
 
       <h4>Browser extensions</h4>

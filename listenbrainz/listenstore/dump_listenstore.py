@@ -456,7 +456,7 @@ class DumpListenStore:
                 # Create a pandas dataframe, then write that to a parquet files
                 df = pd.DataFrame(data, dtype=object)
                 table = pa.Table.from_pandas(df, schema=SPARK_LISTENS_SCHEMA, preserve_index=False)
-                pq.write_table(table, filename)
+                pq.write_table(table, filename, flavor="spark")
                 file_size = os.path.getsize(filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
                 os.unlink(filename)
