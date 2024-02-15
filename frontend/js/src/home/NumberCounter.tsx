@@ -6,13 +6,11 @@ type NumberCounterProps = {
 
 function NumberCounter({ count }: NumberCounterProps) {
   const countString = count?.toString();
-  const reversedStr = countString?.split("").reverse().join("");
-  const groupsOfThree = reversedStr?.match(/\d{1,3}/g);
-  const reversedGroupsOfCount = groupsOfThree ? groupsOfThree.reverse() : [];
+  const groupsOfThree = countString?.match(/(\d+?)(?=(\d{3})+(?!\d)|$)/g) ?? [];
 
   return (
     <div className="number-count">
-      {reversedGroupsOfCount.map((group, idx) => {
+      {groupsOfThree.map((group, idx) => {
         return (
           <div
             key={`listen-group-${idx.toString()}`}
