@@ -59,14 +59,6 @@ def index():
     return jsonify(props)
 
 
-@index_bp.route("/import/")
-def import_data():
-    if current_user.is_authenticated:
-        return redirect(url_for("settings.index", path='import/'))
-    else:
-        return current_app.login_manager.unauthorized()
-
-
 @index_bp.route("/blog-data/")
 def blog_data():
     """Proxy to the MetaBrainz blog to get recent posts so that user IP addresses are not leaked to wordpress"""
@@ -124,11 +116,8 @@ def current_status():
     return jsonify(data)
 
 
-@index_bp.route("/recent/", methods=['GET', 'POST'])
+@index_bp.route("/recent/", methods=['POST'])
 def recent_listens():
-    if request.method == 'GET':
-        return render_template('index.html')
-
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
         recent.append({
@@ -151,13 +140,6 @@ def recent_listens():
     }
 
     return jsonify(props)
-
-
-@index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
-@login_required
-@web_listenstore_needed
-def feed():
-    return render_template('index.html')
 
 
 @index_bp.route('/agree-to-terms/', methods=['GET', 'POST'])
@@ -260,5 +242,6 @@ def _get_user_count():
 
 @index_bp.route("/",  defaults={'path': ''})
 @index_bp.route('/<path:path>/')
+@web_listenstore_needed
 def index_pages(path):
     return render_template("index.html")
