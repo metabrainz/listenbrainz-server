@@ -15,7 +15,7 @@ from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
     _filter_description_html
@@ -510,28 +510,38 @@ def get_playlist_xspf(playlist_mbid):
     """
 
     if not is_valid_uuid(playlist_mbid):
-        log_raise_400("Provided playlist ID is invalid.")
+        raise PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400)
 
     fetch_metadata = parse_boolean_arg("fetch_metadata", True)
 
     playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+
     if playlist is None:
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+        raise PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404)
 
-    user = validate_auth_header(optional=True)
-    user_id = None
-    if user:
-        user_id = user["id"]
+    try:
+        user = validate_auth_header(optional=True)
+    except APIUnauthorized as e:
+        raise PlaylistAPIXMLError(str(e), status_code=401)
+
+    user_id = user['id'] if user else None
+
     if not playlist.is_visible_by(user_id):
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+        raise PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401)
 
-    if fetch_metadata:
-        fetch_playlist_recording_metadata(playlist)
-    
-    xspf_data = serialize_xspf(playlist)
-    serialized_xspf_response = make_response(xspf_data)
-    serialized_xspf_response.content_type = 'text/xml'
-    return serialized_xspf_response
+    try:
+        if fetch_metadata:
+            fetch_playlist_recording_metadata(playlist)
+
+        xspf_data = serialize_xspf(playlist)
+        serialized_xspf_response = make_response(xspf_data)
+        serialized_xspf_response.content_type = 'text/xml'
+        return serialized_xspf_response
+
+    except Exception as e:
+        # Catch any other exceptions like database connectivity issues etc.
+        current_app.logger.error("Failed to export playlist XSPF:", exc_info=True)
+        raise PlaylistAPIXMLError("Internal server error occurred.", status_code=500)
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])
