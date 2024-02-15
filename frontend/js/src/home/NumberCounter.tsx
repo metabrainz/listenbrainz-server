@@ -6,7 +6,7 @@ type NumberCounterProps = {
 
 function NumberCounter({ count }: NumberCounterProps) {
   const countString = count?.toString();
-  const groupsOfThree = countString?.match(/\d{1,3}/g) ?? [];
+  const groupsOfThree = countString?.match(/(\d+?)(?=(\d{3})+(?!\d)|$)/g) ?? [];
 
   return (
     <div className="number-count">
