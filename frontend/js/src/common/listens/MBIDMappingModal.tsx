@@ -42,16 +42,16 @@ function getListenFromSelectedRecording(
 
 export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   const modal = useModal();
-  const { hide, remove, resolve, visible } = modal;
+  const { resolve, visible } = modal;
   const [copyTextClickCounter, setCopyTextClickCounter] = React.useState(0);
   const [selectedRecording, setSelectedRecording] = React.useState<
     TrackMetadata
   >();
 
   const closeModal = React.useCallback(() => {
-    hide();
-    setTimeout(remove, 500);
-  }, [hide, remove]);
+    modal.hide();
+    setTimeout(modal.remove, 200);
+  }, [modal]);
 
   React.useEffect(() => {
     const closeOnEscape = (e: KeyboardEvent) => {

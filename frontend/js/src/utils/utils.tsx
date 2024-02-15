@@ -4,6 +4,7 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
+import ReactMarkdown from "react-markdown";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import SpotifyAPIService from "./SpotifyAPIService";
@@ -492,7 +493,7 @@ export async function fetchMusicBrainzGenres() {
     const genresList = await response.text();
     const fetchedGenres = Array.from(genresList.split("\n"));
     if (fetchedGenres.length) {
-      localStorage.setItem(
+      localStorage?.setItem(
         "musicbrainz-genres",
         JSON.stringify({
           creation_date: Date.now(),
@@ -510,8 +511,8 @@ export async function fetchMusicBrainzGenres() {
 
 async function getOrFetchMBGenres(forceExpiry = false) {
   // Try to load genres from local storage, fetch them otherwise
-  const localStorageString = localStorage.getItem("musicbrainz-genres");
-  if (localStorageString === null) {
+  const localStorageString = localStorage?.getItem("musicbrainz-genres");
+  if (!localStorageString) {
     // nothing saved, fetch the genres and save them
     const fetchedGenres = await fetchMusicBrainzGenres();
     return fetchedGenres;
@@ -642,6 +643,8 @@ const getPageProps = async (): Promise<{
       sentry_traces_sample_rate,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err);
     // Show error to the user and ask to reload page
     const errorMessage = `Please refresh the page.
 	If the problem persists, please contact us.
@@ -989,7 +992,14 @@ export function getReviewEventContent(
           />
         </div>
       )}
-      <div className="text">{additionalContent}</div>
+      <div className="text">
+        <ReactMarkdown
+          disallowedElements={["h1", "h2", "h3", "h4", "h5", "h6"]}
+          unwrapDisallowed
+        >
+          {additionalContent}
+        </ReactMarkdown>
+      </div>
       <div className="author read-more">
         by {userName}
         <a

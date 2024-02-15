@@ -312,6 +312,7 @@ export default class UserFeedPage extends React.Component<
     const { events } = this.state;
     if (
       event.event_type === EventType.RECORDING_RECOMMENDATION ||
+      event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
       event.event_type === EventType.NOTIFICATION
     ) {
       try {
@@ -466,6 +467,7 @@ export default class UserFeedPage extends React.Component<
     const { currentUser } = this.context;
     if (
       ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
+        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
         event.event_type === EventType.RECORDING_PIN) &&
         event.user_name === currentUser.name) ||
       event.event_type === EventType.NOTIFICATION
@@ -538,6 +540,7 @@ export default class UserFeedPage extends React.Component<
       let additionalMenuItems;
       if (
         (event.event_type === EventType.RECORDING_RECOMMENDATION ||
+          event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
           event.event_type === EventType.RECORDING_PIN) &&
         event.user_name === currentUser.name
       ) {
