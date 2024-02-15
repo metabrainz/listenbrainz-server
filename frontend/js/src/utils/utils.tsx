@@ -663,6 +663,18 @@ const getPageProps = async (): Promise<{
   };
 };
 
+const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
+  const pinnedRecListen: Listen = {
+    listened_at: 0,
+    ...pinnedRecording,
+  };
+  _.set(
+    pinnedRecListen,
+    "track_metadata.additional_info.recording_msid",
+    pinnedRecording.recording_msid
+  );
+  return pinnedRecListen;
+};
 
 const countWords = (str: string): number => {
   // Credit goes to iamwhitebox https://stackoverflow.com/a/39125279/14911205
