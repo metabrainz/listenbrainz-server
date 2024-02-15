@@ -20,6 +20,7 @@ import {
   RecentListensWrapper,
 } from "../recent/RecentListens";
 import UserFeedLayout from "../user-feed/UserFeedLayout";
+import HomePage from "../home/Homepage";
 
 const getIndexRoutes = () => {
   const routes = [
@@ -27,6 +28,11 @@ const getIndexRoutes = () => {
       path: "/",
       element: <Outlet />,
       children: [
+        {
+          index: true,
+          element: <HomePage />,
+          loader: RouteLoader,
+        },
         {
           path: "import-data/",
           element: <ImportData />,

@@ -30,13 +30,13 @@ function Navbar() {
           <span className="icon-bar" />
           <span className="icon-bar" />
         </button>
-        <a className="navbar-logo" href="/?redirect=false">
+        <Link className="navbar-logo" to="/?redirect=false">
           <img
             src="/static/img/navbar_logo.svg"
             alt="ListenBrainz"
             height="31"
           />
-        </a>
+        </Link>
       </div>
 
       <div id="side-nav" className="collapse">

@@ -32,11 +32,8 @@ NUMBER_OF_RECENT_LISTENS = 50
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
 
-@index_bp.route("/")
+@index_bp.route("/", methods=['POST'])
 def index():
-    if current_user.is_authenticated and request.args.get("redirect", "true") == "true":
-        return redirect(url_for("user.index", path="", user_name=current_user.musicbrainz_id))
-
     if _ts:
         try:
             listen_count = _ts.get_total_listen_count()
@@ -55,14 +52,11 @@ def index():
         current_app.logger.error('Error while trying to get total artist count: %s', str(e))
 
     props = {
-        "listen_count": listen_count,
-        "artist_count": artist_count,
+        "listenCount": listen_count,
+        "artistCount": artist_count,
     }
 
-    return render_template(
-        "index/index.html",
-        props=orjson.dumps(props).decode("utf-8")
-    )
+    return jsonify(props)
 
 
 @index_bp.route("/import/")

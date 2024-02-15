@@ -59,7 +59,6 @@ module.exports = function (env, argv) {
         path.resolve(cssDir, "main.less"),
       ],
       AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/AIBrainz.tsx")],
-      homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
       recommendationsPlayground: path.resolve(
         jsDir,
         "src/recommended/tracks/Recommendations.tsx"

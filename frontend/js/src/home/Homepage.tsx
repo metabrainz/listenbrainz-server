@@ -19,30 +19,41 @@
  */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import { ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
 import { throttle } from "lodash";
-import { getPageProps } from "../utils/utils";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { useLoaderData, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import NumberCounter from "./NumberCounter";
 import Blob from "./Blob";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 type HomePageProps = {
   listenCount: number;
   artistCount: number;
 };
 
-function HomePage({ listenCount, artistCount }: HomePageProps) {
+function HomePage() {
+  const { listenCount, artistCount } = useLoaderData() as HomePageProps;
   const homepageUpperRef = React.useRef<HTMLDivElement>(null);
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
+  const { currentUser } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
 
   const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
+
+  React.useEffect(() => {
+    const redirectParam = new URLSearchParams(window.location.search).get(
+      "redirect"
+    );
+
+    if (
+      currentUser?.name &&
+      (redirectParam === "true" || redirectParam === null)
+    ) {
+      navigate(`/user/${currentUser.name}`);
+    }
+  }, [currentUser, navigate]);
 
   React.useEffect(() => {
     const handleResize = throttle(
@@ -74,6 +85,20 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
   } as React.CSSProperties;
   return (
     <div id="homepage-container" style={styles}>
+      <Helmet>
+        <style type="text/css">
+          {`.container-react {
+            padding-bottom: 0 !important;
+          }
+          .container-react-main {
+            padding: 0;
+            max-width: none !important;
+          }
+          .footer {
+            display: none;
+          }`}
+        </style>
+      </Helmet>
       <div className="homepage-upper" ref={homepageUpperRef}>
         <Blob
           width={200}
@@ -238,41 +263,4 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
   );
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const { listen_count, artist_count } = reactProps;
-
-  const HomePageWithAlertNotifications = withAlertNotifications(HomePage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <HomePageWithAlertNotifications
-          listenCount={listen_count}
-          artistCount={artist_count}
-        />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export default HomePage;
