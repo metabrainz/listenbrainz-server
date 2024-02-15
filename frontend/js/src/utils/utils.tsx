@@ -621,6 +621,7 @@ const getPageProps = async (): Promise<{
           try {
             const newToken = await apiService.refreshMusicbrainzToken();
             _.set(globalAppContext, "musicbrainzAuth.access_token", newToken);
+            return newToken;
           } catch (err) {
             // eslint-disable-next-line no-console
             console.error(
@@ -628,6 +629,7 @@ const getPageProps = async (): Promise<{
               err.toString()
             );
           }
+          return undefined;
         },
       },
       userPreferences: user_preferences,
@@ -661,18 +663,6 @@ const getPageProps = async (): Promise<{
   };
 };
 
-const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
-  const pinnedRecListen: Listen = {
-    listened_at: 0,
-    ...pinnedRecording,
-  };
-  _.set(
-    pinnedRecListen,
-    "track_metadata.additional_info.recording_msid",
-    pinnedRecording.recording_msid
-  );
-  return pinnedRecListen;
-};
 
 const countWords = (str: string): number => {
   // Credit goes to iamwhitebox https://stackoverflow.com/a/39125279/14911205

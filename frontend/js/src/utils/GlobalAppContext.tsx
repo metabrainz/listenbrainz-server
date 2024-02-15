@@ -1,4 +1,4 @@
-import { createContext, createRef } from "react";
+import { createContext } from "react";
 import APIService from "./APIService";
 import RecordingFeedbackManager from "./RecordingFeedbackManager";
 
@@ -11,7 +11,7 @@ export type GlobalAppContextT = {
   soundcloudAuth?: SoundCloudUser;
   critiquebrainzAuth?: MetaBrainzProjectUser;
   musicbrainzAuth?: MetaBrainzProjectUser & {
-    refreshMBToken: () => Promise<void>;
+    refreshMBToken: () => Promise<string | undefined>;
   };
   userPreferences?: UserPreferences;
   musicbrainzGenres?: string[];
@@ -27,7 +27,11 @@ const GlobalAppContext = createContext<GlobalAppContextT>({
   youtubeAuth: {},
   soundcloudAuth: {},
   critiquebrainzAuth: {},
-  musicbrainzAuth: { refreshMBToken: async () => {} },
+  musicbrainzAuth: {
+    refreshMBToken: async () => {
+      return undefined;
+    },
+  },
   userPreferences: {},
   musicbrainzGenres: [],
   recordingFeedbackManager: new RecordingFeedbackManager(apiService),
