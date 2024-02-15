@@ -9,7 +9,6 @@ and the incremental data dumps twice a week.
 Each dump contains a number of different files. Depending on your use cases,
 you may or may not require all of them.
 
-
 We have a bunch of :ref:`commands <Dump Manager>` which may be useful in interacting with dumps
 during local development as well.
 
@@ -69,13 +68,13 @@ Each of the .listens files contains one JSON document per line -- each
 of the JSON documents is one listen, formatted in the standard listens format.
 
 Incremental dumps
-========================
+=================
 
 ListenBrainz provides incremental data dumps that you can use to keep up to date with
 the ListenBrainz dataset without needing to download the full dumps everytime. These
 dumps have the same structure as the corresponding full dumps, but only contain
-data that has been submitted since the creation of the previous dump.
-Reflected the new frequency of the dumps which is daily.
+data that has been submitted since the creation of the previous dump. We create
+incremental data dumps daily.
 
 The basic idea here is that dumps create a linear timeline of the dataset
 based on the time of submission of data. In order to use the incremental dumps,
