@@ -371,4 +371,4 @@ def missing_mb_data():
 @settings_bp.route('/<path:path>/')
 @login_required
 def index(path):
-    return render_template("settings/index.html")
+    return render_template("index.html")
