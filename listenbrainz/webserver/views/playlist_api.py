@@ -509,27 +509,27 @@ def get_playlist_xspf(playlist_mbid):
     :resheader Content-Type: *application/xspf+xml*
     """
 
+    if not is_valid_uuid(playlist_mbid):
+        raise PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400)
+
+    fetch_metadata = parse_boolean_arg("fetch_metadata", True)
+
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+
+    if playlist is None:
+        raise PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404)
+
     try:
-        if not is_valid_uuid(playlist_mbid):
-            raise PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400)
+        user = validate_auth_header(optional=True)
+    except APIUnauthorized as e:
+        raise PlaylistAPIXMLError(str(e), status_code=401)
 
-        fetch_metadata = parse_boolean_arg("fetch_metadata", True)
+    user_id = user['id'] if user else None
 
-        playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+    if not playlist.is_visible_by(user_id):
+        raise PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401)
 
-        if playlist is None:
-            raise PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404)
-
-        try:
-            user = validate_auth_header(optional=True)
-        except APIUnauthorized as e:
-            raise PlaylistAPIXMLError(str(e), status_code=401)
-
-        user_id = user['id'] if user else None
-
-        if not playlist.is_visible_by(user_id):
-            raise PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401)
-
+    try:
         if fetch_metadata:
             fetch_playlist_recording_metadata(playlist)
 
