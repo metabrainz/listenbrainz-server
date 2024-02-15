@@ -152,6 +152,19 @@ module.exports = function (env, argv) {
             },
           },
         },
+        {
+          // Supportthis library used by markdown-react, needs nodeJS style `process`
+          test: /node_modules\/kleur\/index\.js/,
+          use: [
+            {
+              loader: "imports-loader",
+              options: {
+                type: "commonjs",
+                imports: ["single process/browser process", "kleur"],
+              },
+            },
+          ],
+        },
       ],
     },
     resolve: {
