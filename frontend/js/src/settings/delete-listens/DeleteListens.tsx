@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { redirect, useLocation } from "react-router-dom";
+import { redirect, useLocation, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -75,6 +75,10 @@ export default function DeleteListens() {
       </p>
 
       <p>Once deleted, all your listens data will be removed PERMANENTLY.</p>
+
+      <p>
+        Warning: if you are still connected to Spotify, the last 50 Spotify tracks might be auto-reimported. <Link to="/settings/music-services/details/">Disconnect</Link> before deleting. 
+      </p>
 
       <p>
         Note: you can export your ListenBrainz data before deleting your
