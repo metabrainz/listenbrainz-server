@@ -196,7 +196,6 @@ COPY --from=listenbrainz-frontend-prod /code/frontend/sound /static/sound
 COPY --from=listenbrainz-frontend-prod /code/frontend/fonts /static/fonts
 COPY --from=listenbrainz-frontend-prod /code/frontend/img /static/img
 COPY --from=listenbrainz-frontend-prod /code/frontend/js/lib /static/js/lib
-COPY --from=listenbrainz-frontend-prod /code/frontend/js/info.js /static/js/
 COPY --from=listenbrainz-frontend-prod /code/frontend/dist /static/dist
 
 # Now install our code, which may change frequently

@@ -103,7 +103,7 @@ export default NiceModal.create(
 
     const closeModal = () => {
       modal.hide();
-      setTimeout(modal.remove, 3000);
+      setTimeout(modal.remove, 200);
     };
 
     const submitPersonalRecommendation = React.useCallback(

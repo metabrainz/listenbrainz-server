@@ -1,108 +1,25 @@
 {%- extends 'base-react.html' -%}
+
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    /* Allow for full-width homepage  */
+    #react-container {
+        max-width: none;
+    }
+    body > .container-fluid {
+      padding: 0;
+    }
+  </style>
+{%- endblock -%}
+
 {%- block content -%}
-  <div id="homepage" role="main">
-      <h2 class="page-title">
-        Visualize and share your music listening history
-      </h2>
-      <p>
-        ListenBrainz keeps track of music you listen to and
-        provides you with insights into your listening habits.
-        <br>
-        We're completely open-source and publish our data as open data.
-      </p>
-      <p>
-        You can use ListenBrainz to track your music listening habits and
-        share your taste with others using our visualizations.
-        <br>
-        We also have an
-        <a href="https://listenbrainz.readthedocs.io/en/latest/users/api/index.html">API</a>
-        if you want to do more with our data.
-      </p>
-      <p>
-        To get started, you'll need to <a href="{{ url_for('login.index') }}">sign in</a> with
-        a <a href="https://musicbrainz.org">MusicBrainz</a> account. If you don't have a MusicBrainz
-        account, you can <a href="https://musicbrainz.org/register">create one</a>!
-        <br>
-        Once you have an
-        account, you can <a href="{{ url_for('settings.index', path='import') }}">import</a>
-        data from Last.FM, <a href="{{ url_for('settings.index', path='music-services/details') }}">connect your Spotify account</a>,
-        or use one of the <a href="{{ url_for('index.add_data_info') }}">many players</a> which can
-        automatically record your listening history.
-      </p>
-      <p>
-        Need help? Ask our <a href="https://community.metabrainz.org/c/listenbrainz">community</a>!
-      </p>
 
-    <div>
-      <h2>Discover new music</h2>
-      <p>
-        Based on your listening history we recommend music you might like, new music you missed out on
-        from your favorite artists, as well as what similar users have been listening to.
-        <br>
-        There are many ways to explore and discover new music with ListenBrainz!
-      </p>
+  {{ super() }}
+{%- endblock -%}
 
-    </div>
-    <div>
-      <h2>About us</h2>
-      <p>
-        ListenBrainz is operated by the <a href="https://metabrainz.org">MetaBrainz Foundation</a>
-        which has a long-standing history of curating, protecting and making music data available to the
-        public. MetaBrainz commits itself to safe-guarding the ListenBrainz data indefinitely.
-      </p>
-      <p>
-        We also make this incredibly useful data available to anyone who cares to play with it. You
-        can use our API or our regular public <a href="https://listenbrainz.readthedocs.io/en/latest/users/listenbrainz-dumps.html">data dumps</a>.
-        All non-commercial use of this data is free, but commercial users are asked to <a href="https://metabrainz.org/supporters/account-type">support</a>
-        us in order to help fund the project.
-      </p>
-      <p>
-        For more information about this project and its goals, please take a look at our
-        <a href="{{ url_for('index.about') }}">about page</a>.
-      </p>
-      <div class="row" style="padding: 12px 0;">
-        <div class="col-md-7"
-          id="stats">
-          <div class="card">
-            <div class="panel-heading center-p"><strong>Data Statistics</strong></div>
-            <div class="panel-body">
-              <table class="table table-collapsed">
-                <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Number</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% if listen_count %}
-                <tr>
-                  <td>Number of listens</td>
-                  <td>{{ listen_count }}</td>
-                </tr>
-                {% endif %}
-                {% if user_count %}
-                <tr>
-                  <td>Number of users</td>
-                  <td>{{ user_count }}</td>
-                </tr>
-                {% endif %}
-                </tbody>
-              </table>
-            </div>
-            <div class="panel-footer" style="text-align: center">
-              <small>Updated every 5 minutes</small><br />
-              <small><a href="{{ url_for('index.current_status') }}">more on the current status page</a></small>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-md-5"
-          id="blogs"></div>
-      </div>
-
-    </div>
-
-  </div>
+{%- block footer -%}
+<!-- No footer for the homepage -->
 {%- endblock -%}
 
 {% block scripts %}
