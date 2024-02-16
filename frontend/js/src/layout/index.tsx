@@ -4,7 +4,7 @@ import { Outlet, ScrollRestoration } from "react-router-dom";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 
-export default function Layout() {
+export default function Layout({ children }: { children?: React.ReactNode }) {
   return (
     <>
       <ScrollRestoration />
@@ -12,6 +12,7 @@ export default function Layout() {
       <div className="container-react">
         <div className="container-react-main">
           <Outlet />
+          {children}
         </div>
         <Footer />
       </div>

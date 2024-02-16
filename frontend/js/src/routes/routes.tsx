@@ -28,7 +28,11 @@ const getRoutes = (musicbrainzID?: string) => {
     {
       path: "/",
       element: <Layout />,
-      errorElement: <ErrorBoundary />,
+      errorElement: (
+        <Layout>
+          <ErrorBoundary />
+        </Layout>
+      ),
       children: [
         ...indexRoutes,
         ...aboutRoutes,
@@ -41,6 +45,11 @@ const getRoutes = (musicbrainzID?: string) => {
     },
     {
       element: <ProtectedRoutes />,
+      errorElement: (
+        <Layout>
+          <ErrorBoundary />
+        </Layout>
+      ),
       children: [...settingsRoutes, ...settingsRedirectRoutes],
     },
   ];
