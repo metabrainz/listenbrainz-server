@@ -1,13 +1,15 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 function Navbar() {
   const { currentUser } = React.useContext(GlobalAppContext);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [activePage, setActivePage] = React.useState("");
   const [myProfile, setMyProfile] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
   React.useEffect(() => {
     const path = location.pathname.split("/")[1];
     if (path === "user") {
@@ -15,6 +17,16 @@ function Navbar() {
     }
     setActivePage(path);
   }, [location.pathname, currentUser?.name]);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const searchInput = searchTerm;
+    if (!searchInput) {
+      return;
+    }
+    setSearchTerm("");
+    navigate(`/search/?search_term=${searchInput}`);
+  };
 
   return (
     <nav role="navigation">
@@ -115,17 +127,14 @@ function Navbar() {
           >
             Community
           </a>
-          <form
-            className="search-bar"
-            role="search"
-            method="GET"
-            action="/search"
-          >
+          <form className="search-bar" role="search" onSubmit={handleSubmit}>
             <input
               type="text"
               name="search_term"
               className="form-control input-sm"
               placeholder="Search users"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               required
             />
             <button type="submit">
