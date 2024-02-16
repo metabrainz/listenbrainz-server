@@ -94,7 +94,7 @@ function Navbar() {
           {currentUser?.name ? (
             <>
               <div className="username">{currentUser.name}</div>
-              <a href="/logout/">Logout</a>
+              <a href="/login/logout/">Logout</a>
               <Link
                 className={activePage === "settings" ? "active" : ""}
                 to="/settings/"
@@ -103,7 +103,7 @@ function Navbar() {
               </Link>
             </>
           ) : (
-            <a href="/login/">Sign in</a>
+            <Link to="/login/">Sign in</Link>
           )}
           <Link className={activePage === "about" ? "active" : ""} to="/about/">
             About

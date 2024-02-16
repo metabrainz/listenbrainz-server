@@ -21,6 +21,8 @@ import {
 } from "../recent/RecentListens";
 import UserFeedLayout from "../user-feed/UserFeedLayout";
 import HomePage from "../home/Homepage";
+import Login from "../login/Login";
+import GDPR from "../gdpr/GDPR";
 
 const getIndexRoutes = () => {
   const routes = [
@@ -32,6 +34,14 @@ const getIndexRoutes = () => {
           index: true,
           element: <HomePage />,
           loader: RouteLoader,
+        },
+        {
+          path: "login/",
+          element: <Login />,
+        },
+        {
+          path: "agree-to-terms/",
+          element: <GDPR />,
         },
         {
           path: "import-data/",

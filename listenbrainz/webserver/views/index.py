@@ -146,22 +146,16 @@ def recent_listens():
 @login_required
 def gdpr_notice():
     if request.method == 'GET':
-        return render_template('index/gdpr.html', next=request.args.get('next'))
+        return render_template('index.html')
     elif request.method == 'POST':
         if request.form.get('gdpr-options') == 'agree':
             try:
                 db_user.agree_to_gdpr(db_conn, current_user.musicbrainz_id)
             except DatabaseException as e:
                 flash.error('Could not store agreement to GDPR terms')
-            next = request.form.get('next')
-            if next:
-                return redirect(next)
-            return redirect(url_for('index.index'))
-        elif request.form.get('gdpr-options') == 'disagree':
-            return redirect(url_for('settings.index',  path='delete'))
+            return jsonify({'status': 'agreed'})
         else:
-            flash.error('You must agree to or decline our terms')
-            return render_template('index/gdpr.html', next=request.args.get('next'))
+            return jsonify({'status': 'not_agreed'}), 400
 
 
 @index_bp.route('/search/', methods=['POST', 'OPTIONS'])
@@ -244,4 +238,5 @@ def _get_user_count():
 @index_bp.route('/<path:path>/')
 @web_listenstore_needed
 def index_pages(path):
+    current_app.logger.warn("USER landed on page %s", path)
     return render_template("index.html")
