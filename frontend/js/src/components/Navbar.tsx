@@ -10,6 +10,9 @@ function Navbar() {
   const [activePage, setActivePage] = React.useState("");
   const [myProfile, setMyProfile] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
+
+  const toggleSidebarButton = React.useRef<HTMLButtonElement>(null);
+
   React.useEffect(() => {
     const path = location.pathname.split("/")[1];
     if (path === "user") {
@@ -18,6 +21,15 @@ function Navbar() {
     setActivePage(path);
   }, [location.pathname, currentUser?.name]);
 
+  const toggleSidebar = () => {
+    if (
+      toggleSidebarButton.current &&
+      getComputedStyle(toggleSidebarButton.current).display !== "none"
+    ) {
+      toggleSidebarButton.current.click();
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const searchInput = searchTerm;
@@ -25,6 +37,7 @@ function Navbar() {
       return;
     }
     setSearchTerm("");
+    toggleSidebar();
     navigate(`/search/?search_term=${searchInput}`);
   };
 
@@ -36,13 +49,18 @@ function Navbar() {
           className="navbar-toggle collapsed"
           data-toggle="collapse"
           data-target="#side-nav,#side-nav-overlay"
+          ref={toggleSidebarButton}
         >
           <span className="sr-only">Toggle navigation</span>
           <span className="icon-bar" />
           <span className="icon-bar" />
           <span className="icon-bar" />
         </button>
-        <Link className="navbar-logo" to="/?redirect=false">
+        <Link
+          className="navbar-logo"
+          to="/?redirect=false"
+          onClick={toggleSidebar}
+        >
           <img
             src="/static/img/navbar_logo.svg"
             alt="ListenBrainz"
@@ -52,7 +70,11 @@ function Navbar() {
       </div>
 
       <div id="side-nav" className="collapse">
-        <Link className="navbar-logo" to="/?redirect=false">
+        <Link
+          className="navbar-logo"
+          to="/?redirect=false"
+          onClick={toggleSidebar}
+        >
           <img
             src="/static/img/listenbrainz_logo_icon.svg"
             alt="ListenBrainz"
@@ -68,12 +90,14 @@ function Navbar() {
                     ? "active"
                     : ""
                 }
+                onClick={toggleSidebar}
               >
                 Feed
               </Link>
               <Link
                 to={`/user/${currentUser.name}/`}
                 className={activePage === "user" && myProfile ? "active" : ""}
+                onClick={toggleSidebar}
               >
                 Dashboard
               </Link>
@@ -83,12 +107,14 @@ function Navbar() {
               <Link
                 to="/recent/"
                 className={activePage === "recent" ? "active" : ""}
+                onClick={toggleSidebar}
               >
                 Feed
               </Link>
               <Link
                 to="/statistics/"
                 className={activePage === "statistics" ? "active" : ""}
+                onClick={toggleSidebar}
               >
                 Dashboard
               </Link>
@@ -97,6 +123,7 @@ function Navbar() {
           <Link
             to="/explore/"
             className={activePage === "explore" ? "active" : ""}
+            onClick={toggleSidebar}
           >
             Explore
           </Link>
@@ -110,14 +137,21 @@ function Navbar() {
               <Link
                 className={activePage === "settings" ? "active" : ""}
                 to="/settings/"
+                onClick={toggleSidebar}
               >
                 Settings
               </Link>
             </>
           ) : (
-            <Link to="/login/">Sign in</Link>
+            <Link to="/login/" onClick={toggleSidebar}>
+              Sign in
+            </Link>
           )}
-          <Link className={activePage === "about" ? "active" : ""} to="/about/">
+          <Link
+            className={activePage === "about" ? "active" : ""}
+            to="/about/"
+            onClick={toggleSidebar}
+          >
             About
           </Link>
           <a
