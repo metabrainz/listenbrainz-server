@@ -14,10 +14,17 @@ class PopularityDataset(DatabaseDataset):
     """ Dataset class for artists, recordings and releases with popularity info (listen count and unique listener count)
      from MLHD data """
 
-    def __init__(self, entity):
-        super().__init__(f"mlhd_popularity_{entity}", entity, "popularity")
+    def __init__(self, entity, mlhd):
+        if mlhd:
+            name = "mlhd_popularity_" + entity
+            table_name = "mlhd_" + entity
+        else:
+            name = "popularity_" + entity
+            table_name = entity
+        super().__init__(name, table_name, "popularity")
         self.entity = entity
         self.entity_mbid = f"{entity}_mbid"
+        self.mlhd = mlhd
 
     def get_table(self):
         return f"""
@@ -34,9 +41,13 @@ class PopularityDataset(DatabaseDataset):
         return query, None, values
 
     def get_indexes(self):
+        if self.mlhd:
+            prefix = "mlhd_popularity"
+        else:
+            prefix = "popularity"
         return [
-            f"CREATE INDEX popularity_{self.entity}_listen_count_idx_{{suffix}} ON {{table}} (total_listen_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE INDEX popularity_{self.entity}_user_count_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})"
+            f"CREATE INDEX {prefix}_{self.entity}_listen_count_idx_{{suffix}} ON {{table}} (total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX {prefix}_{self.entity}_user_count_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})"
         ]
 
 
@@ -44,10 +55,15 @@ class PopularityTopDataset(DatabaseDataset):
     """ Dataset class for all recordings and releases with popularity info (total listen count and unique listener
      count) for each artist in MLHD data. """
 
-    def __init__(self, entity):
-        super().__init__(f"mlhd_popularity_top_{entity}", f"top_{entity}", "popularity")
+    def __init__(self, entity, mlhd):
+        if mlhd:
+            name = "mlhd_popularity_top_" + entity
+        else:
+            name = "popularity_top_" + entity
+        super().__init__(name, f"top_{entity}", "popularity")
         self.entity = entity
         self.entity_mbid = f"{entity}_mbid"
+        self.mlhd = mlhd
 
     def get_table(self):
         return f"""
@@ -65,19 +81,25 @@ class PopularityTopDataset(DatabaseDataset):
         return query, None, values
 
     def get_indexes(self):
+        if self.mlhd:
+            prefix = "mlhd_popularity_top"
+        else:
+            prefix = "popularity_top"
         return [
-            f"CREATE INDEX popularity_top_{self.entity}_artist_mbid_listen_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_listen_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE INDEX popularity_top_{self.entity}_artist_mbid_user_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})"
+            f"CREATE INDEX {prefix}_{self.entity}_artist_mbid_listen_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX {prefix}_{self.entity}_artist_mbid_user_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})"
         ]
 
 
-RecordingPopularityDataset = PopularityDataset("recording")
-ArtistPopularityDataset = PopularityDataset("artist")
-ReleasePopularityDataset = PopularityDataset("release")
-ReleaseGroupPopularityDataset = PopularityDataset("release_group")
-TopRecordingPopularityDataset = PopularityTopDataset("recording")
-TopReleasePopularityDataset = PopularityTopDataset("release")
-TopReleaseGroupPopularityDataset = PopularityTopDataset("release_group")
+def get_all_popularity_datasets():
+    """ Return all possible popularity datasets """
+    datasets = []
+    for entity in ["artist", "recording", "release", "release_group"]:
+        for mlhd in [False, True]:
+            datasets.append(PopularityDataset(entity, mlhd))
+            if entity != "artist":
+                datasets.append(PopularityTopDataset(entity, mlhd))
+    return datasets
 
 
 def get_top_entity_for_artist(ts_conn, entity, artist_mbid, count=None):
@@ -100,11 +122,24 @@ def get_top_entity_for_artist(ts_conn, entity, artist_mbid, count=None):
         limit = "LIMIT :count"
 
     query = """
-        SELECT """ + entity_mbid + """::TEXT
+          WITH intermediate AS (
+        SELECT """ + entity_mbid + """
              , total_listen_count
              , total_user_count
           FROM popularity.top_""" + entity + """
          WHERE artist_mbid = :artist_mbid
+     UNION ALL
+        SELECT """ + entity_mbid + """
+             , total_listen_count
+             , total_user_count
+          FROM popularity.mlhd_top_""" + entity + """
+         WHERE artist_mbid = :artist_mbid
+             )
+        SELECT """ + entity_mbid + """::TEXT
+             , SUM(total_listen_count) AS total_listen_count
+             , SUM(total_user_count) AS total_user_count
+          FROM intermediate
+      GROUP BY """ + entity_mbid + """
       ORDER BY total_listen_count DESC
     """ + limit
     results = ts_conn.execute(text(query), {"artist_mbid": artist_mbid, "count": count})
@@ -123,14 +158,33 @@ def get_counts(ts_conn, entity, mbids):
         return []
 
     query = SQL("""
-          WITH mbids (mbid) AS (VALUES %s)
+          WITH mbids (mbid) AS (
+               VALUES %s
+             ), intermediate AS (
         SELECT mbid
              , total_listen_count
              , total_user_count
           FROM {table}
           JOIN mbids
             ON {entity_mbid} = mbid::UUID
-    """).format(entity_mbid=Identifier(entity_mbid), table=Identifier("popularity", entity))
+         UNION ALL
+        SELECT mbid
+             , total_listen_count
+             , total_user_count
+          FROM {mlhd_table}
+          JOIN mbids
+            ON {entity_mbid} = mbid::UUID
+             )
+        SELECT mbid
+             , SUM(total_listen_count) AS total_listen_count
+             , SUM(total_user_count) AS total_user_count
+          FROM intermediate
+      GROUP BY mbid    
+    """).format(
+        entity_mbid=Identifier(entity_mbid),
+        table=Identifier("popularity", entity),
+        mlhd_table=Identifier("popularity", "mlhd_" + entity)
+    )
     ts_curs = ts_conn.connection.cursor()
     results = execute_values(ts_curs, query, [(mbid, ) for mbid in mbids], fetch=True)
     index = {row[0]: (row[1], row[2]) for row in results}
