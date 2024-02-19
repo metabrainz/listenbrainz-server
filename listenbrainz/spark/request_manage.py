@@ -469,10 +469,11 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip,
     )
 
 
-@cli.command(name='request_mlhd_popularity')
-def request_mlhd_popularity():
-    """ Request mlhd popularity data. """
-    send_request_to_spark_cluster("mlhd.popularity.all")
+@cli.command(name='request_popularity')
+@click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
+def request_popularity(mlhd):
+    """ Request mlhd popularity data using the specified dataset. """
+    send_request_to_spark_cluster("popularity.all", mlhd=mlhd)
 
 
 @cli.command(name="request_yim_similar_users")
