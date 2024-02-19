@@ -1,16 +1,4 @@
 import * as React from "react";
-import SettingsLayout from "../layout";
-import DeleteAccount from "../delete/DeleteAccount";
-import DeleteListens from "../delete-listens/DeleteListens";
-import Export from "../export/ExportData";
-import Import from "../import/ImportListens";
-import { MissingMBDataPageWrapper as MissingMBDataPage } from "../missing-data/MissingMBData";
-import MusicServices from "../music-services/details/MusicServices";
-import ResetToken from "../resettoken/ResetToken";
-import { SelectTimezoneWrapper as SelectTimezone } from "../select_timezone/SelectTimezone";
-import { SelectTroiPreferencesWrapper as SelectTroiPreferences } from "../troi/SelectTroiPreferences";
-import Settings from "../Settings";
-import ResetImportTimestamp from "../resetlatestimportts/ResetLatestImports";
 import RouteLoader from "../../utils/Loader";
 import ErrorBoundary from "../../error/ErrorBoundary";
 
@@ -18,57 +6,105 @@ const getSettingsRoutes = () => {
   const routes = [
     {
       path: "/settings",
-      element: <SettingsLayout />,
+      lazy: async () => {
+        const SettingsLayout = await import("../layout");
+        return { Component: SettingsLayout.default };
+      },
       errorElement: <ErrorBoundary />,
       children: [
         {
           index: true,
-          element: <Settings />,
+          lazy: async () => {
+            const Settings = await import("../Settings");
+            return { Component: Settings.default };
+          },
         },
         {
           path: "resettoken/",
-          element: <ResetToken />,
+          lazy: async () => {
+            const ResetToken = await import("../resettoken/ResetToken");
+            return { Component: ResetToken.default };
+          },
         },
         {
           path: "music-services/details/",
           loader: RouteLoader,
-          element: <MusicServices />,
+          lazy: async () => {
+            const MusicServices = await import(
+              "../music-services/details/MusicServices"
+            );
+            return { Component: MusicServices.default };
+          },
         },
         {
           path: "import/",
           loader: RouteLoader,
-          element: <Import />,
+          lazy: async () => {
+            const Import = await import("../import/ImportListens");
+            return { Component: Import.default };
+          },
         },
         {
           path: "resetlatestimportts/",
-          element: <ResetImportTimestamp />,
+          lazy: async () => {
+            const ResetImportTimestamp = await import(
+              "../resetlatestimportts/ResetLatestImports"
+            );
+            return { Component: ResetImportTimestamp.default };
+          },
         },
         {
           path: "missing-data/",
           loader: RouteLoader,
-          element: <MissingMBDataPage />,
+          lazy: async () => {
+            const MissingMBData = await import("../missing-data/MissingMBData");
+            return { Component: MissingMBData.MissingMBDataPageWrapper };
+          },
         },
         {
           path: "select_timezone/",
           loader: RouteLoader,
-          element: <SelectTimezone />,
+          lazy: async () => {
+            const SelectTimezone = await import(
+              "../select_timezone/SelectTimezone"
+            );
+            return { Component: SelectTimezone.SelectTimezoneWrapper };
+          },
         },
         {
           path: "troi/",
           loader: RouteLoader,
-          element: <SelectTroiPreferences />,
+          lazy: async () => {
+            const SelectTroiPreferences = await import(
+              "../troi/SelectTroiPreferences"
+            );
+            return {
+              Component: SelectTroiPreferences.SelectTroiPreferencesWrapper,
+            };
+          },
         },
         {
           path: "export/",
-          element: <Export />,
+          lazy: async () => {
+            const Export = await import("../export/ExportData");
+            return { Component: Export.default };
+          },
         },
         {
           path: "delete-listens/",
-          element: <DeleteListens />,
+          lazy: async () => {
+            const DeleteListens = await import(
+              "../delete-listens/DeleteListens"
+            );
+            return { Component: DeleteListens.default };
+          },
         },
         {
           path: "delete/",
-          element: <DeleteAccount />,
+          lazy: async () => {
+            const DeleteAccount = await import("../delete/DeleteAccount");
+            return { Component: DeleteAccount.default };
+          },
         },
       ],
     },
