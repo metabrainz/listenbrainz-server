@@ -15,7 +15,8 @@ export default function SearchResults() {
   const [searchTermInput, setSearchTermInput] = React.useState(searchTerm);
   const username = currentUser ? currentUser.name : null;
 
-  const search = () => {
+  const search = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!searchTermInput) {
       return;
     }
@@ -24,7 +25,7 @@ export default function SearchResults() {
 
   return (
     <>
-      <div className="form-group row">
+      <form className="form-group row" onSubmit={search}>
         <h2 className="col-sm-4">Username Search Results</h2>
         <div className="col-xs-6">
           <input
@@ -44,13 +45,12 @@ export default function SearchResults() {
               className="btn btn-default"
               type="submit"
               style={{ marginTop: "27px" }}
-              onClick={search}
             >
               Search Again!
             </button>
           </span>
         </div>
-      </div>
+      </form>
 
       <table className="table table-striped">
         <thead>
@@ -93,7 +93,7 @@ export default function SearchResults() {
             ))
           ) : (
             <tr>
-              <td colSpan={username ? 3 : 2}>No search results found.</td>
+              <td>No search results found.</td>
             </tr>
           )}
         </tbody>
