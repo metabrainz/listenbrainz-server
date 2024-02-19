@@ -236,7 +236,7 @@ def get_mbid_mapping():
         if exact_results:
             return process_results(exact_results[0], metadata, incs)
 
-        q = MBIDMapper(timeout=10, remove_stop_words=True, debug=False)
+        q = MBIDMapper(timeout=10, remove_stop_words=True, debug=False, retry_on_timeout=False)
         fuzzy_result = q.search(artist_name, recording_name, release_name)
         if fuzzy_result:
             return process_results(fuzzy_result, metadata, incs)
