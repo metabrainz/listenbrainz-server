@@ -35,8 +35,8 @@ class PopularityDataset(DatabaseDataset):
 
     def get_indexes(self):
         return [
-            "CREATE INDEX popularity_{table}_listen_count_idx_{suffix} ON {table} (total_listen_count) INCLUDE (recording_mbid)",
-            "CREATE INDEX popularity_{table}_user_count_idx ON {table} (total_user_count) INCLUDE (recording_mbid)"
+            f"CREATE INDEX popularity_{self.entity}_listen_count_idx_{{suffix}} ON {{table}} (total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX popularity_{self.entity}_user_count_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})"
         ]
 
 
@@ -66,8 +66,8 @@ class PopularityTopDataset(DatabaseDataset):
 
     def get_indexes(self):
         return [
-            "CREATE INDEX popularity_top_{table}_artist_mbid_listen_count_idx_{suffix} ON {table} (artist_mbid, total_listen_count) INCLUDE (recording_mbid)",
-            "CREATE INDEX popularity_top_{table}_artist_mbid_user_count_idx_{suffix} ON {table} (artist_mbid, total_user_count) INCLUDE (recording_mbid)"
+            f"CREATE INDEX popularity_top_{self.entity}_artist_mbid_listen_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX popularity_top_{self.entity}_artist_mbid_user_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})"
         ]
 
 
