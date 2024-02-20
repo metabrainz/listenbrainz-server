@@ -17,7 +17,7 @@ from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_
 metadata_bp = Blueprint('metadata', __name__)
 
 #: The maximum length of the query permitted for a mapping search
-MAX_MAPPING_QUERY_LENGTH = 500
+MAX_MAPPING_QUERY_LENGTH = 250
 
 
 def parse_incs():
