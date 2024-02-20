@@ -1,55 +1,82 @@
 import * as React from "react";
-import UserEntityChart, {
-  StatisticsChartLoader,
-} from "../user/charts/UserEntityChart";
-import { StatisticsPage } from "../user/stats/UserReports";
-import UserDashboardLayout from "../user/layout";
-import UserFeedPage from "../user-feed/UserFeed";
-import {
-  RecentListensLoader,
-  RecentListensWrapper,
-} from "../recent/RecentListens";
-import UserFeedLayout from "../user-feed/UserFeedLayout";
 
 const getStatisticsRoutes = () => {
   const routes = [
     {
       path: "/statistics/",
-      element: <UserDashboardLayout />,
+      lazy: async () => {
+        const UserDashboardLayout = await import("../user/layout");
+        return { Component: UserDashboardLayout.default };
+      },
       children: [
         {
           index: true,
-          element: <StatisticsPage />,
+          lazy: async () => {
+            const UserReports = await import("../user/stats/UserReports");
+            return { Component: UserReports.UserReportsWrapper };
+          },
         },
         {
           path: "top-artists/",
-          element: <UserEntityChart />,
-          loader: StatisticsChartLoader,
+          lazy: async () => {
+            const UserEntityChart = await import(
+              "../user/charts/UserEntityChart"
+            );
+            return {
+              Component: UserEntityChart.default,
+              loader: UserEntityChart.StatisticsChartLoader,
+            };
+          },
         },
         {
           path: "top-albums/",
-          element: <UserEntityChart />,
-          loader: StatisticsChartLoader,
+          lazy: async () => {
+            const UserEntityChart = await import(
+              "../user/charts/UserEntityChart"
+            );
+            return {
+              Component: UserEntityChart.default,
+              loader: UserEntityChart.StatisticsChartLoader,
+            };
+          },
         },
         {
           path: "top-tracks/",
-          element: <UserEntityChart />,
-          loader: StatisticsChartLoader,
+          lazy: async () => {
+            const UserEntityChart = await import(
+              "../user/charts/UserEntityChart"
+            );
+            return {
+              Component: UserEntityChart.default,
+              loader: UserEntityChart.StatisticsChartLoader,
+            };
+          },
         },
       ],
     },
     {
       path: "/",
-      element: <UserFeedLayout />,
+      lazy: async () => {
+        const UserFeedLayout = await import("../user-feed/UserFeedLayout");
+        return { Component: UserFeedLayout.default };
+      },
       children: [
         {
           path: "/feed/",
-          element: <UserFeedPage events={[]} />,
+          lazy: async () => {
+            const UserFeed = await import("../user-feed/UserFeed");
+            return { Component: UserFeed.default };
+          },
         },
         {
           path: "/recent/",
-          element: <RecentListensWrapper />,
-          loader: RecentListensLoader,
+          lazy: async () => {
+            const RecentListens = await import("../recent/RecentListens");
+            return {
+              Component: RecentListens.RecentListensWrapper,
+              loader: RecentListens.RecentListensLoader,
+            };
+          },
         },
       ],
     },

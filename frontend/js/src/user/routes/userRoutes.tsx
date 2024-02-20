@@ -1,33 +1,23 @@
 import * as React from "react";
 
 import { Navigate, Outlet } from "react-router-dom";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
-import { UserReportsWrapper } from "../stats/UserReports";
-import UserFeedLayout from "../layout";
-import { ListensWrapper } from "../Dashboard";
-import { UserTastesWrapper } from "../taste/UserTaste";
-import { UserPlaylistsWrapper } from "../playlists/Playlists";
-import { RecommendationsPageWrapper } from "../recommendations/RecommendationsPage";
-import { YearInMusicWrapper as YearInMusic2021Wrapper } from "../year-in-music/2021/YearInMusic2021";
-import { YearInMusicWrapper as YearInMusic2022Wrapper } from "../year-in-music/2022/YearInMusic2022";
-import { YearInMusicWrapper as YearInMusic2023Wrapper } from "../year-in-music/2023/YearInMusic2023";
-import UserEntityChart, {
-  UserEntityChartLoader,
-} from "../charts/UserEntityChart";
-import ExploreLayout from "../../explore/layout";
 import RouteLoader from "../../utils/Loader";
 
 const getUserRoutes = () => {
-  const LayoutWithAlertNotifications = withAlertNotifications(UserFeedLayout);
-
   const routes = [
     {
       path: "/user/:username/",
-      element: <LayoutWithAlertNotifications />,
+      lazy: async () => {
+        const UserFeedLayout = await import("../layout");
+        return { Component: UserFeedLayout.default };
+      },
       children: [
         {
           index: true,
-          element: <ListensWrapper />,
+          lazy: async () => {
+            const Listens = await import("../Dashboard");
+            return { Component: Listens.ListensWrapper };
+          },
           loader: RouteLoader,
         },
         {
@@ -36,23 +26,47 @@ const getUserRoutes = () => {
           children: [
             {
               index: true,
-              element: <UserReportsWrapper />,
+              lazy: async () => {
+                const UserReports = await import("../stats/UserReports");
+                return { Component: UserReports.UserReportsWrapper };
+              },
               loader: RouteLoader,
             },
             {
               path: "top-artists/",
-              element: <UserEntityChart />,
-              loader: UserEntityChartLoader,
+              lazy: async () => {
+                const UserEntityChart = await import(
+                  "../charts/UserEntityChart"
+                );
+                return {
+                  Component: UserEntityChart.default,
+                  loader: UserEntityChart.UserEntityChartLoader,
+                };
+              },
             },
             {
               path: "top-albums/",
-              element: <UserEntityChart />,
-              loader: UserEntityChartLoader,
+              lazy: async () => {
+                const UserEntityChart = await import(
+                  "../charts/UserEntityChart"
+                );
+                return {
+                  Component: UserEntityChart.default,
+                  loader: UserEntityChart.UserEntityChartLoader,
+                };
+              },
             },
             {
               path: "top-tracks/",
-              element: <UserEntityChart />,
-              loader: UserEntityChartLoader,
+              lazy: async () => {
+                const UserEntityChart = await import(
+                  "../charts/UserEntityChart"
+                );
+                return {
+                  Component: UserEntityChart.default,
+                  loader: UserEntityChart.UserEntityChartLoader,
+                };
+              },
             },
           ],
         },
@@ -70,12 +84,18 @@ const getUserRoutes = () => {
         },
         {
           path: "taste/",
-          element: <UserTastesWrapper />,
+          lazy: async () => {
+            const UserTastes = await import("../taste/UserTaste");
+            return { Component: UserTastes.UserTastesWrapper };
+          },
           loader: RouteLoader,
         },
         {
           path: "playlists/",
-          element: <UserPlaylistsWrapper />,
+          lazy: async () => {
+            const UserPlaylists = await import("../playlists/Playlists");
+            return { Component: UserPlaylists.UserPlaylistsWrapper };
+          },
           loader: RouteLoader,
         },
         {
@@ -84,33 +104,63 @@ const getUserRoutes = () => {
         },
         {
           path: "recommendations/",
-          element: <RecommendationsPageWrapper />,
+          lazy: async () => {
+            const RecommendationsPage = await import(
+              "../recommendations/RecommendationsPage"
+            );
+            return {
+              Component: RecommendationsPage.RecommendationsPageWrapper,
+            };
+          },
           loader: RouteLoader,
         },
       ],
     },
     {
       path: "/user/:username/year-in-music/",
-      element: <ExploreLayout />,
+      lazy: async () => {
+        const ExploreLayout = await import("../../explore/layout");
+        return { Component: ExploreLayout.default };
+      },
       children: [
         {
           index: true,
-          element: <YearInMusic2023Wrapper />,
+          lazy: async () => {
+            const YearInMusic2023 = await import(
+              "../year-in-music/2023/YearInMusic2023"
+            );
+            return { Component: YearInMusic2023.YearInMusicWrapper };
+          },
           loader: RouteLoader,
         },
         {
           path: "2023/",
-          element: <YearInMusic2023Wrapper />,
+          lazy: async () => {
+            const YearInMusic2023 = await import(
+              "../year-in-music/2023/YearInMusic2023"
+            );
+            return { Component: YearInMusic2023.YearInMusicWrapper };
+          },
           loader: RouteLoader,
         },
         {
           path: "2022/",
-          element: <YearInMusic2022Wrapper />,
+          lazy: async () => {
+            const YearInMusic2022 = await import(
+              "../year-in-music/2022/YearInMusic2022"
+            );
+            return { Component: YearInMusic2022.YearInMusicWrapper };
+          },
           loader: RouteLoader,
         },
         {
           path: "2021/",
-          element: <YearInMusic2021Wrapper />,
+          lazy: async () => {
+            const YearInMusic2021 = await import(
+              "../year-in-music/2021/YearInMusic2021"
+            );
+            return { Component: YearInMusic2021.YearInMusicWrapper };
+          },
           loader: RouteLoader,
         },
       ],

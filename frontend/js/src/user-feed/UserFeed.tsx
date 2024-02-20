@@ -55,7 +55,7 @@ export enum EventType {
 }
 
 export type UserFeedPageProps = {
-  events: TimelineEvent[];
+  events?: TimelineEvent[];
 };
 
 export type UserFeedPageState = {
