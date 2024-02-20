@@ -58,9 +58,11 @@ class PopularityTopDataset(DatabaseDataset):
     def __init__(self, entity, mlhd):
         if mlhd:
             name = "mlhd_popularity_top_" + entity
+            table_name = "top_" + entity
         else:
             name = "popularity_top_" + entity
-        super().__init__(name, f"top_{entity}", "popularity")
+            table_name = "mlhd_top_" + entity
+        super().__init__(name, table_name, "popularity")
         self.entity = entity
         self.entity_mbid = f"{entity}_mbid"
         self.mlhd = mlhd
