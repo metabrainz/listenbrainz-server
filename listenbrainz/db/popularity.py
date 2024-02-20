@@ -147,7 +147,11 @@ def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
         release_mbids = [str(r["release_mbid"]) for r in recordings_data if r["release_mbid"] is not None]
         releases_color = color.fetch_color_for_releases(db_conn, release_mbids)
 
+        results = []
         for recording, data in zip(recordings, recordings_data):
+            if data["artist_credit_name"] is None:
+                continue
+
             data.pop("artist_credit_id", None)
             data.pop("canonical_recording_mbid", None)
             data.pop("original_recording_mbid", None)
@@ -158,8 +162,9 @@ def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
                 "total_user_count": recording["total_user_count"],
                 "release_color": releases_color.get(str(data["release_mbid"]), {})
             })
+            results.append(data)
 
-        return recordings_data
+        return results
 
 
 def get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid: str, count=None):
