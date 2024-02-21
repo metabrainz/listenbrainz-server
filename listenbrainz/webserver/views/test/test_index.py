@@ -16,51 +16,33 @@ from listenbrainz.webserver.testing import ServerAppPerTestTestCase
 class IndexViewsTestCase(IntegrationTestCase):
 
     def test_index(self):
-        resp = self.client.get(self.custom_url_for('index.index'))
+        resp = self.client.get(self.custom_url_for('index.index_pages', page=''))
         self.assert200(resp)
-    
-    def test_index_logged_in_redirect(self):
-        """ If the user is logged in, redirect from the index to their profile page """
-        user = db_user.get_or_create(self.db_conn, 1, 'mr_monkey')
-        db_user.agree_to_gdpr(self.db_conn, user['musicbrainz_id'])
-        user = db_user.get_or_create(self.db_conn, 1, 'mr_monkey')
-        self.temporary_login(user['login_id'])
-
-        resp = self.client.get(self.custom_url_for('index.index'))
-        self.assertRedirects(resp, self.custom_url_for('user.profile', user_name='mr_monkey'))
-
-    def test_downloads(self):
-        resp = self.client.get(self.custom_url_for('index.downloads'))
-        self.assertRedirects(resp, self.custom_url_for('index.data'))
 
     def test_data(self):
-        resp = self.client.get(self.custom_url_for('index.data'))
+        resp = self.client.get(self.custom_url_for('index.index_pages', path='data'))
         self.assert200(resp)
 
     def test_about(self):
-        resp = self.client.get(self.custom_url_for('index.about'))
+        resp = self.client.get(self.custom_url_for('index.index_pages', path='about'))
         self.assert200(resp)
 
     def test_terms_of_service(self):
-        resp = self.client.get(self.custom_url_for('index.terms_of_service'))
+        resp = self.client.get(self.custom_url_for('index.index_pages', path='terms-of-service'))
         self.assert200(resp)
 
     def test_add_data_info(self):
-        resp = self.client.get(self.custom_url_for('index.add_data_info'))
+        resp = self.client.get(self.custom_url_for('index.index_pages', path='add-data'))
         self.assert200(resp)
 
     def test_import_data_info(self):
-        resp = self.client.get(self.custom_url_for('index.import_data_info'))
+        resp = self.client.get(self.custom_url_for('index.index_pages', path='import-data'))
         self.assert200(resp)
 
     def test_404(self):
         resp = self.client.get('/canyoufindthis')
         self.assert404(resp)
         self.assertIn('Not Found', resp.data.decode('utf-8'))
-
-    def test_lastfm_proxy(self):
-        resp = self.client.get(self.custom_url_for('index.proxy'))
-        self.assert200(resp)
 
     def test_flask_debugtoolbar(self):
         """ Test if flask debugtoolbar is loaded correctly
@@ -206,10 +188,6 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.temporary_login(user['login_id'])
         r = self.client.get('/feed/')
         self.assert200(r)
-
-    def test_similar_users(self):
-        resp = self.client.get(self.custom_url_for('index.similar_users'))
-        self.assertStatus(resp, 302)
 
     @patch("listenbrainz.webserver.views.player.fetch_playlist_recording_metadata")
     def test_instant_playlist(self, mock_recording_metadata):

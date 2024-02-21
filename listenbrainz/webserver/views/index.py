@@ -238,5 +238,4 @@ def _get_user_count():
 @index_bp.route('/<path:path>/')
 @web_listenstore_needed
 def index_pages(path):
-    current_app.logger.warn("USER landed on page %s", path)
     return render_template("index.html")
