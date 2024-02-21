@@ -101,7 +101,7 @@ def create_user_recording_recommendation_event(user_name):
         raise APIInternalServerError("Something went wrong, please try again.")
 
     event_data = event.dict()
-    event_data['created'] = event_data['created'].timestamp()
+    event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
     return jsonify(event_data)
 
@@ -157,7 +157,7 @@ def create_user_notification_event(user_name):
         raise APIInternalServerError("Something went wrong, please try again.")
 
     event_data = event.dict()
-    event_data['created'] = event_data['created'].timestamp()
+    event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
     return jsonify(event_data)
 
@@ -224,7 +224,7 @@ def create_user_cb_review_event(user_name):
     event = db_user_timeline_event.create_user_cb_review_event(db_conn, user["id"], metadata)
 
     event_data = event.dict()
-    event_data["created"] = event_data["created"].timestamp()
+    event_data["created"] = int(event_data["created"].timestamp())
     event_data["event_type"] = event_data["event_type"].value
     return jsonify(event_data)
 
@@ -691,7 +691,7 @@ def create_personal_recommendation_event(user_name):
         raise APIInternalServerError("Something went wrong, please try again.")
 
     event_data = event.dict()
-    event_data['created'] = event_data['created'].timestamp()
+    event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
     return jsonify(event_data)
 

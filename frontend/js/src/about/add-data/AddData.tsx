@@ -272,6 +272,19 @@ export default function AddData() {
         </li>
       </ul>
 
+      <h4>Scripts</h4>
+      <ul>
+        <li>
+          <em>
+            <a href="https://gist.github.com/fuddl/e17aa687df6ac1c7cbee5650ccfbc889">
+              YTMusic2listenbrainz.py
+            </a>
+          </em>
+          , a Python script to submit your YouTube Music watch history to
+          Listenbrainz.
+        </li>
+      </ul>
+
       <h3>Submitting via Spotify</h3>
       <p>ListenBrainz can automatically record listens from Spotify.</p>
       <p>
