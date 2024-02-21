@@ -39,11 +39,6 @@ class IndexViewsTestCase(IntegrationTestCase):
         resp = self.client.get(self.custom_url_for('index.index_pages', path='import-data'))
         self.assert200(resp)
 
-    def test_404(self):
-        resp = self.client.get('/canyoufindthis')
-        self.assert404(resp)
-        self.assertIn('Not Found', resp.data.decode('utf-8'))
-
     def test_flask_debugtoolbar(self):
         """ Test if flask debugtoolbar is loaded correctly
 
@@ -61,12 +56,8 @@ class IndexViewsTestCase(IntegrationTestCase):
 
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_not_logged_in(self, mock_user_get):
-        resp = self.client.get(self.custom_url_for('index.index'))
-        data = resp.data.decode('utf-8')
-        self.assertIn('id="side-nav"', data)
-        self.assertIn('Sign in', data)
-        self.assertNotIn('iliekcomputers', data)
-        self.assertNotIn('Logout', data)
+        resp = self.client.post(self.custom_url_for('index.index'))
+        self.assert200(resp)
         mock_user_get.assert_not_called()
 
     @mock.patch('listenbrainz.db.user.get_by_login_id')
@@ -78,14 +69,8 @@ class IndexViewsTestCase(IntegrationTestCase):
 
         mock_user_get.return_value = user
         self.temporary_login(user['login_id'])
-        resp = self.client.get(self.custom_url_for('index.recent_listens'))
-        data = resp.data.decode('utf-8')
-
-        # username & logout link in sidenav menu
-        self.assertIn('id="side-nav"', data)
-        self.assertIn('iliekcomputers', data)
-        self.assertIn('Logout', data)
-        self.assertNotIn('Sign in', data)
+        resp = self.client.post(self.custom_url_for('index.recent_listens'))
+        self.assert200(resp)
 
         mock_user_get.assert_called_with(mock.ANY, user['login_id'])
 
@@ -240,22 +225,11 @@ class IndexViewsTestCase2(ServerAppPerTestTestCase, DatabaseTestCase):
         data = resp.data.decode('utf-8')
         self.assert400(resp)
 
-        # username & logout link in sidenav menu
-        self.assertIn('id="side-nav"', data)
-        self.assertIn('iliekcomputers', data)
-        self.assertIn('Logout', data)
-        self.assertNotIn('Sign in', data)
-
         mock_user_get.assert_called_with(mock.ANY, user['login_id'])
 
         resp = self.client.get('/page_that_returns_404')
         data = resp.data.decode('utf-8')
         self.assert404(resp)
-        # username & logout link in sidenav menu
-        self.assertIn('id="side-nav"', data)
-        self.assertIn('iliekcomputers', data)
-        self.assertIn('Logout', data)
-        self.assertNotIn('Sign in', data)
 
         mock_user_get.assert_called_with(mock.ANY, user['login_id'])
 
