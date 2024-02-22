@@ -692,10 +692,10 @@ export default class Listens extends React.Component<
     const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
     const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
-      <div role="main">
+      <div id="dashboard">
         <div className="row">
-          <div className="col-md-4 col-md-push-8 mt-15">
-            <div className="mb-15">
+          <div className="col-md-4 col-md-push-8">
+            <div className="listen-header">
               {isUserLoggedIn && !isCurrentUsersPage && (
                 <FollowButton
                   type="icon-only"
@@ -778,7 +778,7 @@ export default class Listens extends React.Component<
               {listens.length === 0 ? (
                 <div id="spacer" />
               ) : (
-                <h3>Recent listens</h3>
+                <h3 className="header-with-line">Recent listens</h3>
               )}
               {isCurrentUsersPage && (
                 <div className="dropdow add-listen-btn">
@@ -789,8 +789,7 @@ export default class Listens extends React.Component<
                     data-toggle="dropdown"
                     aria-haspopup="true"
                   >
-                    <FontAwesomeIcon icon={faPlusCircle} title="Add listens" />
-                    &nbsp;Add listens&nbsp;
+                    Add listens&nbsp;
                     <span className="caret" />
                   </button>
                   <ul
