@@ -158,8 +158,12 @@ export default class UserTopEntity extends React.Component<
                         </span>
                       }
                       // no thumbnail for artist entities
-                      // eslint-disable-next-line react/jsx-no-useless-fragment
-                      customThumbnail={<></>}
+                      customThumbnail={
+                        <div
+                          className="listen-thumbnail"
+                          style={{ minWidth: "0" }}
+                        />
+                      }
                       // eslint-disable-next-line react/jsx-no-useless-fragment
                       feedbackComponent={<></>}
                       compact
@@ -298,9 +302,11 @@ export default class UserTopEntity extends React.Component<
                 }
               )}
           </div>
-          <a href={statsUrl} className="mt-15 btn btn-block btn-info">
-            View more…
-          </a>
+          <div className="mb-15 text-center">
+            <a href={statsUrl} className="btn btn-outline">
+              View more…
+            </a>
+          </div>
         </Loader>
       </Card>
     );
