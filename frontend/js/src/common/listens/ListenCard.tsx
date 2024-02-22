@@ -475,10 +475,7 @@ export default class ListenCard extends React.Component<
                   </div>
                 )}
               </div>
-              <div
-                className="small text-muted ellipsis"
-                title={artistName}
-              >
+              <div className="small text-muted ellipsis" title={artistName}>
                 {getArtistLink(listen)}
               </div>
             </div>
@@ -506,15 +503,17 @@ export default class ListenCard extends React.Component<
                 ))}
               {hideActionsMenu ? null : (
                 <>
-                  <FontAwesomeIcon
-                    icon={faEllipsisVertical as IconProp}
+                  <button
                     title="More actions"
-                    className="dropdown-toggle"
+                    className="btn-transparent dropdown-toggle"
                     id="listenControlsDropdown"
                     data-toggle="dropdown"
                     aria-haspopup="true"
                     aria-expanded="true"
-                  />
+                    type="button"
+                  >
+                    <FontAwesomeIcon icon={faEllipsisVertical} fixedWidth />
+                  </button>
                   <ul
                     className="dropdown-menu dropdown-menu-right"
                     aria-labelledby="listenControlsDropdown"
@@ -666,15 +665,16 @@ export default class ListenCard extends React.Component<
               )}
               <button
                 title="Play"
-                className="btn-transparent play-button"
+                className={`btn-transparent play-button${
+                  isCurrentlyPlaying ? " playing" : ""
+                }`}
                 onClick={this.playListen}
                 type="button"
               >
-                {isCurrentlyPlaying ? (
-                  <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
-                ) : (
-                  <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
-                )}
+                <FontAwesomeIcon
+                  fixedWidth
+                  icon={isCurrentlyPlaying ? faPlay : faPlayCircle}
+                />
               </button>
               {additionalActions}
             </div>
