@@ -33,10 +33,17 @@ class PopularityDataset(DatabaseDataset):
         values = [(r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
+    def get_indexes(self):
+        return [
+            f"CREATE INDEX popularity_{self.entity}_listen_count_idx_{{suffix}} ON {{table}} (total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX popularity_{self.entity}_user_count_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})"
+        ]
+
 
 class PopularityTopDataset(DatabaseDataset):
     """ Dataset class for all recordings and releases with popularity info (total listen count and unique listener
      count) for each artist in MLHD data. """
+
     def __init__(self, entity):
         super().__init__(f"mlhd_popularity_top_{entity}", f"top_{entity}", "popularity")
         self.entity = entity
@@ -54,11 +61,14 @@ class PopularityTopDataset(DatabaseDataset):
 
     def get_inserts(self, message):
         query = f"INSERT INTO {{table}} (artist_mbid, {self.entity_mbid}, total_listen_count, total_user_count) VALUES %s"
-        values = [
-            (r["artist_mbid"], r[self.entity_mbid], r["total_listen_count"], r["total_user_count"])
-            for r in message["data"]
-        ]
+        values = [(r["artist_mbid"], r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
+
+    def get_indexes(self):
+        return [
+            f"CREATE INDEX popularity_top_{self.entity}_artist_mbid_listen_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX popularity_top_{self.entity}_artist_mbid_user_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})"
+        ]
 
 
 RecordingPopularityDataset = PopularityDataset("recording")
@@ -122,17 +132,13 @@ def get_counts(ts_conn, entity, mbids):
             ON {entity_mbid} = mbid::UUID
     """).format(entity_mbid=Identifier(entity_mbid), table=Identifier("popularity", entity))
     ts_curs = ts_conn.connection.cursor()
-    results = execute_values(ts_curs, query, [(mbid,) for mbid in mbids], fetch=True)
+    results = execute_values(ts_curs, query, [(mbid, ) for mbid in mbids], fetch=True)
     index = {row[0]: (row[1], row[2]) for row in results}
 
     entity_data = []
     for mbid in mbids:
         total_listen_count, total_user_count = index.get(mbid, (None, None))
-        entity_data.append({
-            entity_mbid: mbid,
-            "total_listen_count": total_listen_count,
-            "total_user_count": total_user_count
-        })
+        entity_data.append({entity_mbid: mbid, "total_listen_count": total_listen_count, "total_user_count": total_user_count})
     return entity_data, index
 
 
@@ -147,7 +153,11 @@ def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
         release_mbids = [str(r["release_mbid"]) for r in recordings_data if r["release_mbid"] is not None]
         releases_color = color.fetch_color_for_releases(db_conn, release_mbids)
 
+        results = []
         for recording, data in zip(recordings, recordings_data):
+            if data["artist_credit_name"] is None:
+                continue
+
             data.pop("artist_credit_id", None)
             data.pop("canonical_recording_mbid", None)
             data.pop("original_recording_mbid", None)
@@ -158,8 +168,9 @@ def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
                 "total_user_count": recording["total_user_count"],
                 "release_color": releases_color.get(str(data["release_mbid"]), {})
             })
+            results.append(data)
 
-        return recordings_data
+        return results
 
 
 def get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid: str, count=None):
@@ -180,17 +191,22 @@ def get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid: str, count=
 
     release_groups_data.sort(key=lambda x: release_group_mbids.index(x["release_group_mbid"]))
 
-    release_mbids = [str(r["release"]['caa_release_mbid']) for r in release_groups_data
-                     if r["release"] is not None and r["release"]['caa_release_mbid'] is not None]
+    release_mbids = [
+        str(r["release"]['caa_release_mbid']) for r in release_groups_data
+        if r["release"] is not None and r["release"]['caa_release_mbid'] is not None
+    ]
 
     releases_color = color.fetch_color_for_releases(db_conn, release_mbids)
 
     for release_group, pop in zip(release_groups_data, release_groups):
         release_group.update({
-            "total_listen_count": pop["total_listen_count"],
-            "total_user_count": pop["total_user_count"],
-            "release_color": releases_color.get(str(release_group["release"]["caa_release_mbid"]
-                                                    if release_group["release"] is not None else None), {})
+            "total_listen_count":
+            pop["total_listen_count"],
+            "total_user_count":
+            pop["total_user_count"],
+            "release_color":
+            releases_color.get(str(release_group["release"]["caa_release_mbid"] if release_group["release"] is not None else None),
+                               {})
         })
 
     return release_groups_data

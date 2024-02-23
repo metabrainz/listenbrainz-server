@@ -28,6 +28,7 @@ export default NiceModal.create(({ listen }: ListenPayloadModalProps) => {
 
   const closeModal = () => {
     modal.hide();
+    document?.body?.classList?.remove("modal-open");
     setTimeout(modal.remove, 200);
   };
   const stringifiedJSON = JSON.stringify(listen, null, 2);

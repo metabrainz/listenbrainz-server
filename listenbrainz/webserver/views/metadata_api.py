@@ -16,6 +16,9 @@ from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_
 
 metadata_bp = Blueprint('metadata', __name__)
 
+#: The maximum length of the query permitted for a mapping search
+MAX_MAPPING_QUERY_LENGTH = 250
+
 
 def parse_incs():
     allowed_incs = ("artist", "tag", "release", "recording", "release_group")
@@ -181,11 +184,15 @@ def process_results(match, metadata, incs):
 @ratelimit()
 def get_mbid_mapping():
     """
-    This endpoint looks up mbid metadata for the given artist and recording name.
+    This endpoint looks up mbid metadata for the given artist, recording and optionally a release name.
+    The total number of characters in the artist name, recording name and release name query arguments should be
+    less than or equal to :data:`~webserver.views.metadata_api.MAX_MAPPING_QUERY_LENGTH`.
 
     :param artist_name: artist name of the listen
     :type artist_name: ``str``
     :param recording_name: track name of the listen
+    :type artist_name: ``str``
+    :param recording_name: release name of the listen
     :type artist_name: ``str``
     :param metadata: should extra metadata be also returned if a match is found,
                      see /metadata/recording for details.
@@ -202,6 +209,9 @@ def get_mbid_mapping():
         raise APIBadRequest("artist_name is invalid or not present in arguments")
     if not recording_name:
         raise APIBadRequest("recording_name is invalid or not present in arguments")
+    if len(artist_name) + len(recording_name) + len(release_name or "") > MAX_MAPPING_QUERY_LENGTH:
+        raise APIBadRequest(f"total number of characters in artist_name, recording_name and release_name"
+                            f" arguments must be less than {MAX_MAPPING_QUERY_LENGTH}")
 
     metadata = parse_boolean_arg("metadata")
     incs = parse_incs() if metadata else []
@@ -226,7 +236,7 @@ def get_mbid_mapping():
         if exact_results:
             return process_results(exact_results[0], metadata, incs)
 
-        q = MBIDMapper(timeout=10, remove_stop_words=True, debug=False)
+        q = MBIDMapper(timeout=10, remove_stop_words=True, debug=False, retry_on_timeout=False)
         fuzzy_result = q.search(artist_name, recording_name, release_name)
         if fuzzy_result:
             return process_results(fuzzy_result, metadata, incs)

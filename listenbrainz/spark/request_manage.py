@@ -351,11 +351,13 @@ def request_recording_discovery():
 @cli.command(name='request_fresh_releases')
 @click.option("--days", type=int, required=False, help="Number of days of listens to consider for artist listening data")
 @click.option("--database", type=str, help="Name of the couchdb database to store data in")
-def request_fresh_releases(database, days):
+@click.option("--threshold", type=int, default=0, required=False,
+              help="Number of days of listens to consider for artist listening data")
+def request_fresh_releases(database, days, threshold):
     """ Send the cluster a request to generate release radar data. """
     if not database:
         database = "fresh_releases_" + date.today().strftime("%Y%m%d")
-    send_request_to_spark_cluster('releases.fresh', database=database, days=days)
+    send_request_to_spark_cluster('releases.fresh', database=database, days=days, threshold=threshold)
 
 
 @cli.command(name='request_import_artist_relation')

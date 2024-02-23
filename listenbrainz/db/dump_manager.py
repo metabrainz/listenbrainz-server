@@ -121,26 +121,20 @@ def create_mbcanonical(location, use_lb_conn):
               help="the number of threads to be used while compression")
 @click.option('--dump-id', type=int, default=None,
               help="the ID of the ListenBrainz data dump")
-@click.option('--listen/--no-listen', 'do_listen_dump', default=True)
-@click.option('--spark/--no-spark', 'do_spark_dump', type=bool, default=True)
-@click.option('--db/--no-db', 'do_db_dump', type=bool, default=True)
-@click.option('--timescale/--no-timescale', 'do_timescale_dump', type=bool, default=True)
-@click.option('--stats/--no-stats', 'do_stats_dump', type=bool, default=True)
-def create_full(location, location_private, threads, dump_id, do_listen_dump: bool,
+@click.option('--listen/--no-listen', 'do_listen_dump', default=True,
+              help="If True, make a listens dump")
+@click.option('--spark/--no-spark', 'do_spark_dump', type=bool, default=True,
+              help="If True, make a spark listens dump")
+@click.option('--db/--no-db', 'do_db_dump', type=bool, default=True,
+              help="If True, make a public/private postgres dump")
+@click.option('--timescale/--no-timescale', 'do_timescale_dump', type=bool, default=True,
+              help="If True, make a public/private timescale dump")
+@click.option('--stats/--no-stats', 'do_stats_dump', type=bool, default=True,
+              help="If True, make a couchdb stats dump")
+def create_full(location: str, location_private: str, threads: int, dump_id: int, do_listen_dump: bool,
                 do_spark_dump: bool, do_db_dump: bool, do_timescale_dump: bool, do_stats_dump: bool):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from the listenstore.
-
-        Args:
-            location (str): path to the directory where the dump should be made
-            location_private (str): path to the directory where the private dumps should be made
-            threads (int): the number of threads to be used while compression
-            dump_id (int): the ID of the ListenBrainz data dump
-            do_listen_dump: If True, make a listens dump
-            do_spark_dump: If True, make a spark listens dump
-            do_db_dump: If True, make a public/private postgres dump
-            do_timescale_dump: If True, make a public/private timescale dump
-            do_stats_dump: If True, make a couchdb stats dump
     """
     app = create_app()
     with app.app_context():
