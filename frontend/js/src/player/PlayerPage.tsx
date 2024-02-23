@@ -1,17 +1,13 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
 import { faCog, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 
@@ -21,15 +17,15 @@ import {
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../playlists/utils";
-import { getPageProps } from "../utils/utils";
 import ListenControl from "../common/listens/ListenControl";
 import ListenCard from "../common/listens/ListenCard";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import { ToastMsg } from "../notifications/Notifications";
 
 export type PlayerPageProps = {
   playlist: JSPFObject;
 };
+
+type PlayerPageLoaderData = PlayerPageProps;
 
 export interface PlayerPageState {
   playlist: JSPFPlaylist;
@@ -255,34 +251,7 @@ export default class PlayerPage extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { playlist } = reactProps;
-
-  const PlayerPageWithAlertNotifications = withAlertNotifications(PlayerPage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <PlayerPageWithAlertNotifications playlist={playlist} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function PlayerPageWrapper() {
+  const loaderData = useLoaderData() as PlayerPageLoaderData;
+  return <PlayerPage playlist={loaderData.playlist} />;
+}

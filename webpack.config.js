@@ -54,20 +54,10 @@ module.exports = function (env, argv) {
       // Importing main.less file here so that it gets compiled.
       // Otherwise with a standalone entrypoint Webpack would generate a superfluous js file.
       // All the Less/CSS will be exported separately to a main.css file and not appear in the index module
-      index: [
+      indexPage: [
         path.resolve(jsDir, "src/index.tsx"),
         path.resolve(cssDir, "main.less"),
       ],
-      AIBrainz: [path.resolve(jsDir, "src/explore/ai-brainz/AIBrainz.tsx")],
-      recommendationsPlayground: path.resolve(
-        jsDir,
-        "src/recommended/tracks/Recommendations.tsx"
-      ),
-      metadataViewer: path.resolve(
-        jsDir,
-        "src/metadata-viewer/MetadataViewerPage.tsx"
-      ),
-      indexPage: path.resolve(jsDir, "src/index.tsx"),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

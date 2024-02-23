@@ -45,6 +45,9 @@ def profile(user_name):
     playing_now_conn = webserver.redis_connection._redis
 
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
@@ -116,6 +119,8 @@ def profile(user_name):
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
 
     user_data = {
         "name": user.musicbrainz_id,
@@ -134,6 +139,8 @@ def charts(user_name):
 def stats(user_name: str):
     """ Show user stats """
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
 
     user_data = {
         "name": user.musicbrainz_id,
@@ -154,6 +161,9 @@ def playlists(user_name: str):
     """ Show user playlists """
 
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
@@ -198,6 +208,9 @@ def recommendation_playlists(user_name: str):
         return jsonify({"error": "Incorrect int argument count: %s" %
                         request.args.get("count")}), 400
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
@@ -242,7 +255,7 @@ def _get_user(user_name):
     else:
         user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
-            raise NotFound("Cannot find user: %s" % user_name)
+            return None
         return User.from_dbrow(user)
 
 
@@ -302,6 +315,9 @@ def taste(user_name: str):
                         request.args.get("score")}), 400
 
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
@@ -339,6 +355,9 @@ def year_in_music(user_name, year: int = 2023):
         return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
 
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     try:
         yearInMusicData = db_year_in_music.get(user.id, year) or {}
     except Exception as e:

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import psycopg2
-from flask import Blueprint, render_template, request, current_app
+from flask import Blueprint, render_template, request, current_app, jsonify
 from flask_login import current_user, login_required
 from werkzeug.exceptions import BadRequest, NotFound
 import orjson
@@ -17,59 +17,59 @@ from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_m
 player_bp = Blueprint("player", __name__)
 
 
+# @player_bp.route("/", methods=["POST"])
+# @login_required
+# def load():
+#     """This is the start of the BrainzPlayer concept where anyone (logged into LB) can post a playlist
+#         composed of an array of listens-formatted items and get returned a playable playlist page.
+#     """
+
+#     try:
+#         raw_listens = request.form['listens']
+#     except KeyError:
+#         return render_template(
+#             "index/player.html",
+#             error_msg="Missing form data key 'listens'"
+#         )
+
+#     try:
+#         listens = orjson.loads(raw_listens)
+#     except ValueError as e:
+#         return render_template(
+#             "index/player.html",
+#             error_msg="Could not parse JSON array. Error: %s" % e
+#         )
+
+#     if not isinstance(listens, list):
+#         return render_template(
+#             "index/player.html",
+#             error_msg="'listens' should be a stringified JSON array."
+#         )
+
+#     if len(listens) <= 0:
+#         return render_template(
+#             "index/player.html",
+#             error_msg="'Listens' array must have one or more items."
+#         )
+
+#     # `user` == `curent_user` since player isn't for a user but the recommendation component
+#     # it uses expects `user` and `current_user` as keys.
+#     props = {
+#         "user": {
+#             "id": current_user.id,
+#             "name": current_user.musicbrainz_id,
+#         },
+#         "recommendations": listens,
+#     }
+
+#     return render_template(
+#         "index/player.html",
+#         props=orjson.dumps(props).decode("utf-8"),
+#         user=current_user
+#     )
+
+
 @player_bp.route("/", methods=["POST"])
-@login_required
-def load():
-    """This is the start of the BrainzPlayer concept where anyone (logged into LB) can post a playlist
-        composed of an array of listens-formatted items and get returned a playable playlist page.
-    """
-
-    try:
-        raw_listens = request.form['listens']
-    except KeyError:
-        return render_template(
-            "index/player.html",
-            error_msg="Missing form data key 'listens'"
-        )
-
-    try:
-        listens = orjson.loads(raw_listens)
-    except ValueError as e:
-        return render_template(
-            "index/player.html",
-            error_msg="Could not parse JSON array. Error: %s" % e
-        )
-
-    if not isinstance(listens, list):
-        return render_template(
-            "index/player.html",
-            error_msg="'listens' should be a stringified JSON array."
-        )
-
-    if len(listens) <= 0:
-        return render_template(
-            "index/player.html",
-            error_msg="'Listens' array must have one or more items."
-        )
-
-    # `user` == `curent_user` since player isn't for a user but the recommendation component
-    # it uses expects `user` and `current_user` as keys.
-    props = {
-        "user": {
-            "id": current_user.id,
-            "name": current_user.musicbrainz_id,
-        },
-        "recommendations": listens,
-    }
-
-    return render_template(
-        "index/player.html",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=current_user
-    )
-
-
-@player_bp.route("/", methods=["GET"])
 def load_instant():
     """
     This endpoint takes in a list of recording_mbids and optional desc/name arguments  and then loads
@@ -118,13 +118,10 @@ def load_instant():
 
     fetch_playlist_recording_metadata(playlist)
 
-    return render_template(
-        "player/player-page.html",
-        props=orjson.dumps({"playlist": playlist.serialize_jspf()}).decode("utf-8")
-    )
+    return jsonify({"playlist": playlist.serialize_jspf()})
 
 
-@player_bp.route("/release/<release_mbid>/", methods=["GET"])
+@player_bp.route("/release/<release_mbid>/", methods=["POST"])
 def load_release(release_mbid):
     """
     This endpoint takes a release mbid, loads the tracks for this release and makes a playlist from it and
@@ -175,7 +172,10 @@ def load_release(release_mbid):
                     )
                     playlist.recordings.append(rec)
 
-    return render_template(
-        "player/player-page.html",
-        props=orjson.dumps({"playlist": playlist.serialize_jspf() if playlist is not None else {}}).decode("utf-8")
-    )
+    return jsonify({"playlist": playlist.serialize_jspf() if playlist is not None else {}})
+
+
+@player_bp.route('/', defaults={'path': ''})
+@player_bp.route('/<path:path>/')
+def index(path):
+    return render_template("index.html")
