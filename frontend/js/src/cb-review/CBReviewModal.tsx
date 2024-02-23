@@ -43,6 +43,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
 
   const closeModal = React.useCallback(() => {
     modal.hide();
+    document?.body?.classList?.remove("modal-open");
     setTimeout(modal.remove, 200);
   }, [modal]);
 
