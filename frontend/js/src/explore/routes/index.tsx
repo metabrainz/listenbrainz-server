@@ -11,6 +11,7 @@ import LBRadio from "../lb-radio/LBRadio";
 import SimilarUsers from "../similar-users/SimilarUsers";
 import MusicNeighborhood from "../music-neighborhood/MusicNeighborhood";
 import RouteLoader from "../../utils/Loader";
+import AIBrainzComponent from "../ai-brainz/AIBrainz";
 
 const getExploreRoutes = () => {
   const routes = [
@@ -66,6 +67,10 @@ const getExploreRoutes = () => {
           path: "music-neighborhood/",
           element: <MusicNeighborhood />,
           loader: RouteLoader,
+        },
+        {
+          path: "ai-brainz/",
+          element: <AIBrainzComponent />,
         },
       ],
     },

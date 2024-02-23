@@ -17,6 +17,7 @@ const links: NavbarLink[] = [
   { to: "year-in-music/2022/", label: "Year in Music 2022" },
   { to: "year-in-music/2021/", label: "Year in Music 2021" },
   { to: "year-in-music/", label: "Year in Music 2023" },
+  { to: "ai-brainz/", label: "AI Brainz" },
 ];
 
 function ExploreLayout() {
