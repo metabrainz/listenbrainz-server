@@ -89,7 +89,7 @@ def import_data():
 
     # Return error if LASTFM_API_KEY is not given in config.py
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
-        return NotFound("LASTFM_API_KEY not specified.")
+        return jsonify({"error": "LASTFM_API_KEY not specified."}), 404
 
     data = {
         "user_has_email": user_has_email,

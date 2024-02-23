@@ -66,7 +66,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         mock_user.assert_called_with("vansika")
 
     def test_raw_invalid_user(self):
-        response = self.client.get(url_for('recommendations_cf_recording.raw', user_name="invalid"))
+        response = self.client.post(url_for('recommendations_cf_recording.raw', user_name="invalid"))
         self.assert404(response)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
@@ -88,14 +88,14 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
     def test_get_template_missing_user_from_rec_db(self):
         user = User.from_dbrow(self.user)
         recommendations_cf_recording._get_template(active_section='raw', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/base.html')
+        self.assertTemplateUsed('index.html')
         self.assert_context('active_section', 'raw')
         self.assert_context('user', user)
 
     def test_get_template_missing_rec_raw(self):
         user = User.from_dbrow(self.user2)
         recommendations_cf_recording._get_template(active_section='raw', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/base.html')
+        self.assertTemplateUsed('index.html')
         self.assert_context('active_section', 'raw')
         self.assert_context('user', user)
 
@@ -117,7 +117,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         mock_get_recommendations.return_value = []
 
         recommendations_cf_recording._get_template(active_section='raw', user=user)
-        self.assertTemplateUsed('recommendations_cf_recording/base.html')
+        self.assertTemplateUsed('index.html')
         self.assert_context('active_section', 'raw')
         self.assert_context('user', user)
         error_msg = "An error occurred while processing your request. Check back later!"
@@ -158,7 +158,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         recommendations_cf_recording._get_template(active_section='raw', user=user)
         mock_get_rec.assert_called_with(mock.ANY, user.id)
         mock_get_recommendations.assert_called_once()
-        self.assertTemplateUsed('recommendations_cf_recording/base.html')
+        self.assertTemplateUsed('index.html')
         self.assert_context('active_section', 'raw')
         self.assert_context('user', user)
         self.assert_context('last_updated', created.strftime('%d %b %Y'))
