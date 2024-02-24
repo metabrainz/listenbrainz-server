@@ -60,4 +60,4 @@ MAILTO=""
 0 9 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similarity_datasets >> /logs/similarity_datasets.log 2>&1
 
 # run weekly cron job to update popularity datasets
-0 10 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_mlhd_popularity >> /logs/popularity_datasets.log 2>&1
+0 10 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_popularity >> /logs/popularity_datasets.log 2>&1
