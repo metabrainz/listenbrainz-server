@@ -109,6 +109,8 @@ In production, webservers run uwsgi server to serve the flask application. In de
    * - listenbrainz spark cluster
      - spark cluster to generate statistics and recommendations for LB.
 
+.. _listen-flow:
+
 Listen Flow
 ===========
 
