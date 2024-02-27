@@ -39,6 +39,23 @@ Messages are expected to be processed within seconds (or minutes during activity
 of the listen data a persistent volume is needed. Listen data messages are critical and should be backed up, other
 messages can be regenerated and can be ignored in case of a disaster.
 
+Procedures
+++++++++++
+
+* Start service: LB containers automatically connect to RabbitMQ on startup.
+* Reload service configuration: Update the RabbitMQ service details in consul configuration for LB and deploy a new image.
+* Restart service: Restart LB docker containers and each container will disconnect and reconnect to RabbitMQ.
+* Move service:
+   * Create vhost, user, permissions, queues in the new instance
+   * Stop LB producers (except the web and api containers)
+   * Use shovels to transfer existing messages from old RabbitMQ instance to new one
+   * Build an image using the a new consul config pointing to new RabbitMQ instance
+   * Deploy all consumers using the new image
+   * Deploy all producers using the new image
+   * Stop shovels
+  There will be no data loss but a short downtime while the containers restart.
+* Remove service: LB cannot function without RabbitMQ. So the only way is to stop LB containers, and LB will become unavailable.
+
 Implementation details
 ~~~~~~~~~~~~~~~~~~~~~~
 
