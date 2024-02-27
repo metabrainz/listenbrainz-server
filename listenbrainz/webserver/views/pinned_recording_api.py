@@ -330,6 +330,7 @@ def get_current_pin_for_user(user_name):
         "user_name": user_name,
     })
 
+
 @pinned_recording_api_bp.route("/pin/update/<row_id>", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
@@ -363,7 +364,7 @@ def update_blurb_content_pinned_recording(row_id):
         log_raise_400("JSON document must contain blurb_content", data)
 
     try:
-        blurb_content=data["blurb_content"]
+        blurb_content = data["blurb_content"]
     except ValidationError as e:
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
@@ -374,4 +375,3 @@ def update_blurb_content_pinned_recording(row_id):
         raise APIInternalServerError("Something went wrong. Please try again.")
 
     return jsonify({"status": status})
-
