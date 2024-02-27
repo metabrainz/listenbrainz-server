@@ -14,6 +14,7 @@ import { ToastMsg } from "../notifications/Notifications";
 export type PinRecordingModalProps = {
   recordingToPin: Listen;
   onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
+  isUpdate?: boolean;
 };
 
 export const maxBlurbContentLength = 280;
@@ -28,7 +29,7 @@ export const maxBlurbContentLength = 280;
  */
 
 export default NiceModal.create(
-  ({ recordingToPin, onSuccessfulPin }: PinRecordingModalProps) => {
+  ({ recordingToPin, onSuccessfulPin, isUpdate }: PinRecordingModalProps) => {
     const modal = useModal();
     const [blurbContent, setBlurbContent] = React.useState("");
 
@@ -191,7 +192,7 @@ export default NiceModal.create(
                 onClick={submitPinRecording}
                 data-dismiss="modal"
               >
-                Pin track
+                {isUpdate ? "Update Comment" : "Pin track"}
               </button>
             </div>
           </form>

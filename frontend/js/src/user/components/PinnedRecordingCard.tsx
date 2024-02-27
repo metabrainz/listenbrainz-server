@@ -1,8 +1,9 @@
 import * as React from "react";
-import { faThumbtack } from "@fortawesome/free-solid-svg-icons";
+import { faPencilAlt, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
+import NiceModal from "@ebay/nice-modal-react";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -12,6 +13,7 @@ import {
   getTrackName,
   pinnedRecordingToListen,
 } from "../../utils/utils";
+import PinRecordingModal from "../../pins/PinRecordingModal";
 
 export type PinnedRecordingCardProps = {
   pinnedRecording: PinnedRecording;
@@ -139,6 +141,7 @@ export default class PinnedRecordingCard extends React.Component<
     ) : undefined;
 
     const additionalMenuItems = [];
+    const listen = pinnedRecordingToListen(pinnedRecording);
     if (currentlyPinned) {
       additionalMenuItems.push(
         <ListenControl
@@ -146,6 +149,21 @@ export default class PinnedRecordingCard extends React.Component<
           title="Unpin"
           text="Unpin"
           action={() => this.unpinRecording()}
+        />
+      );
+      additionalMenuItems.push(
+        <ListenControl
+          text="Edit Comment"
+          key="Edit Comment"
+          icon={faPencilAlt}
+          action={() => {
+            NiceModal.show(PinRecordingModal, {
+              recordingToPin: listen,
+              isUpdate: true,
+            });
+          }}
+          dataToggle="modal"
+          dataTarget="#PinRecordingModal"
         />
       );
     }
@@ -168,7 +186,7 @@ export default class PinnedRecordingCard extends React.Component<
     return (
       <ListenCard
         className={cssClasses.join(" ")}
-        listen={pinnedRecordingToListen(pinnedRecording)}
+        listen={listen}
         showTimestamp
         showUsername={false}
         additionalMenuItems={additionalMenuItems}
