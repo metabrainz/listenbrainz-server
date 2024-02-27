@@ -7,9 +7,7 @@ import sentry_sdk
 from kombu import Connection, Message, Consumer, Exchange, Queue
 from kombu.mixins import ConsumerMixin
 
-from listenbrainz.db.popularity import RecordingPopularityDataset, ReleasePopularityDataset, \
-    TopRecordingPopularityDataset, ArtistPopularityDataset, TopReleasePopularityDataset, ReleaseGroupPopularityDataset, \
-    TopReleaseGroupPopularityDataset
+from listenbrainz.db.popularity import get_all_popularity_datasets
 from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset
 from listenbrainz.db.tags import TagsDataset
 from listenbrainz.spark.handlers import (
@@ -67,13 +65,7 @@ class SparkReader(ConsumerMixin):
             SimilarRecordingsDataset,
             SimilarArtistsDataset,
             TagsDataset,
-            RecordingPopularityDataset,
-            ReleasePopularityDataset,
-            ArtistPopularityDataset,
-            ReleaseGroupPopularityDataset,
-            TopRecordingPopularityDataset,
-            TopReleasePopularityDataset,
-            TopReleaseGroupPopularityDataset
+            *get_all_popularity_datasets()
         ]
         for dataset in datasets:
             self.response_handlers.update(dataset.get_handlers())
