@@ -15,6 +15,7 @@ export type PinRecordingModalProps = {
   recordingToPin: Listen;
   onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
   isUpdate?: boolean;
+  rowId?: number;
 };
 
 export const maxBlurbContentLength = 280;
@@ -29,7 +30,12 @@ export const maxBlurbContentLength = 280;
  */
 
 export default NiceModal.create(
-  ({ recordingToPin, onSuccessfulPin, isUpdate }: PinRecordingModalProps) => {
+  ({
+    recordingToPin,
+    onSuccessfulPin,
+    isUpdate,
+    rowId,
+  }: PinRecordingModalProps) => {
     const modal = useModal();
     const [blurbContent, setBlurbContent] = React.useState("");
 
@@ -112,7 +118,44 @@ export default NiceModal.create(
       },
       [recordingToPin, blurbContent]
     );
-
+    const updatePinnedRecordingComment = React.useCallback(
+      async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        try {
+          if (rowId && recordingToPin && currentUser?.auth_token) {
+            const response = await APIService.updatePinRecordingBlurbContent(
+              currentUser.auth_token,
+              rowId,
+              blurbContent
+            );
+            if (!response.status) {
+              toast.error(
+                <ToastMsg
+                  title="Comment update failed"
+                  message="Something went wrong"
+                />,
+                {
+                  toastId: "pin-update-failed",
+                }
+              );
+            } else {
+              toast.success(
+                <ToastMsg
+                  title="Comment updated"
+                  message={`Comment has been updated: ${blurbContent}`}
+                />,
+                {
+                  toastId: "pin-update-success",
+                }
+              );
+            }
+          }
+        } catch (error) {
+          handleError(error, "Error while updating pinned recording");
+        }
+      },
+      [recordingToPin, blurbContent]
+    );
     const { track_name, artist_name } = recordingToPin.track_metadata;
 
     const unpin_time_ms: number =
@@ -189,7 +232,9 @@ export default NiceModal.create(
               <button
                 type="submit"
                 className="btn btn-success"
-                onClick={submitPinRecording}
+                onClick={
+                  isUpdate ? updatePinnedRecordingComment : submitPinRecording
+                }
                 data-dismiss="modal"
               >
                 {isUpdate ? "Update Comment" : "Pin track"}

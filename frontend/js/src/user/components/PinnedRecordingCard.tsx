@@ -160,6 +160,7 @@ export default class PinnedRecordingCard extends React.Component<
             NiceModal.show(PinRecordingModal, {
               recordingToPin: listen,
               isUpdate: true,
+              rowId: pinnedRecording.row_id,
             });
           }}
           dataToggle="modal"
