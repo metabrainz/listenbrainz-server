@@ -14,7 +14,6 @@ import { ToastMsg } from "../notifications/Notifications";
 export type PinRecordingModalProps = {
   recordingToPin: Listen;
   onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
-  isUpdate?: boolean;
   rowId?: number;
 };
 
@@ -33,10 +32,10 @@ export default NiceModal.create(
   ({
     recordingToPin,
     onSuccessfulPin,
-    isUpdate,
     rowId,
   }: PinRecordingModalProps) => {
     const modal = useModal();
+    const isUpdate = Boolean(rowId == null);
     const [blurbContent, setBlurbContent] = React.useState("");
 
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
@@ -123,32 +122,18 @@ export default NiceModal.create(
         event.preventDefault();
         try {
           if (rowId && recordingToPin && currentUser?.auth_token) {
-            const response = await APIService.updatePinRecordingBlurbContent(
+            await APIService.updatePinRecordingBlurbContent(
               currentUser.auth_token,
               rowId,
               blurbContent
             );
-            if (!response.status) {
-              toast.error(
-                <ToastMsg
-                  title="Comment update failed"
-                  message="Something went wrong"
-                />,
-                {
-                  toastId: "pin-update-failed",
-                }
-              );
-            } else {
-              toast.success(
-                <ToastMsg
-                  title="Comment updated"
-                  message={`Comment has been updated: ${blurbContent}`}
-                />,
-                {
-                  toastId: "pin-update-success",
-                }
-              );
-            }
+            toast.success(
+              <ToastMsg
+                title="Comment updated" message=''/>,
+              {
+                toastId: "pin-update-success",
+              }
+            );
           }
         } catch (error) {
           handleError(error, "Error while updating pinned recording");
