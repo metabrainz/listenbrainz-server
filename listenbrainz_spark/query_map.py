@@ -32,7 +32,7 @@ import listenbrainz_spark.troi.periodic_jams
 import listenbrainz_spark.tags.tags
 import listenbrainz_spark.mlhd.download
 import listenbrainz_spark.mlhd.similarity
-import listenbrainz_spark.mlhd.popularity
+import listenbrainz_spark.popularity.main
 import listenbrainz_spark.echo.echo
 
 functions = {
@@ -45,21 +45,26 @@ functions = {
     'stats.sitewide.listening_activity': listenbrainz_spark.stats.sitewide.listening_activity.get_listening_activity,
     'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
-    'import.dump.incremental_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,
+    'import.dump.incremental_newest':
+        listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,
     'import.dump.mlhd': listenbrainz_spark.mlhd.download.import_mlhd_dump_to_hdfs,
-    'import.dump.incremental_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_incremental_dump_by_id_handler,
+    'import.dump.incremental_id':
+        listenbrainz_spark.request_consumer.jobs.import_dump.import_incremental_dump_by_id_handler,
     'cf.missing_mb_data': listenbrainz_spark.missing_mb_data.missing_mb_data.main,
-    'cf.recommendations.recording.create_dataframes': listenbrainz_spark.recommendations.recording.create_dataframes.main,
+    'cf.recommendations.recording.create_dataframes':
+        listenbrainz_spark.recommendations.recording.create_dataframes.main,
     'cf.recommendations.recording.train_model': listenbrainz_spark.recommendations.recording.train_models.main,
     'cf.recommendations.recording.recommendations': listenbrainz_spark.recommendations.recording.recommend.main,
-    'cf.recommendations.recording.discovery': listenbrainz_spark.recommendations.recording.discovery.get_recording_discovery,
+    'cf.recommendations.recording.discovery':
+        listenbrainz_spark.recommendations.recording.discovery.get_recording_discovery,
     'import.artist_relation': listenbrainz_spark.request_consumer.jobs.import_dump.import_artist_relation_to_hdfs,
-    'import.musicbrainz_release_dump': listenbrainz_spark.request_consumer.jobs.import_dump.import_release_json_dump_to_hdfs,
+    'import.musicbrainz_release_dump':
+        listenbrainz_spark.request_consumer.jobs.import_dump.import_release_json_dump_to_hdfs,
     'similarity.similar_users': listenbrainz_spark.similarity.user.main,
     'similarity.recording.mlhd': listenbrainz_spark.mlhd.similarity.main,
     'similarity.recording': listenbrainz_spark.similarity.recording.main,
     'similarity.artist': listenbrainz_spark.similarity.artist.main,
-    'mlhd.popularity.all': listenbrainz_spark.mlhd.popularity.main,
+    'popularity.all': listenbrainz_spark.popularity.main.main,
     'year_in_music.new_releases_of_top_artists':
         listenbrainz_spark.year_in_music.new_releases_of_top_artists.get_new_releases_of_top_artists,
     'year_in_music.most_listened_year': listenbrainz_spark.year_in_music.most_listened_year.get_most_listened_year,
@@ -68,11 +73,13 @@ functions = {
     'year_in_music.top_stats': listenbrainz_spark.year_in_music.top_stats.calculate_top_entity_stats,
     'year_in_music.listens_per_day': listenbrainz_spark.year_in_music.listens_per_day.calculate_listens_per_day,
     'year_in_music.listen_count': listenbrainz_spark.year_in_music.listen_count.get_listen_count,
-    'year_in_music.new_artists_discovered_count': listenbrainz_spark.year_in_music.new_artists_discovered.get_new_artists_discovered_count,
+    'year_in_music.new_artists_discovered_count':
+        listenbrainz_spark.year_in_music.new_artists_discovered.get_new_artists_discovered_count,
     'year_in_music.listening_time': listenbrainz_spark.year_in_music.listening_time.get_listening_time,
     'year_in_music.artist_map': listenbrainz_spark.year_in_music.artist_map.get_artist_map_stats,
     'year_in_music.top_genres': listenbrainz_spark.year_in_music.top_genres.get_top_genres,
-    'year_in_music.top_missed_recordings': listenbrainz_spark.year_in_music.top_missed_recordings.generate_top_missed_recordings,
+    'year_in_music.top_missed_recordings':
+        listenbrainz_spark.year_in_music.top_missed_recordings.generate_top_missed_recordings,
     'year_in_music.top_discoveries': listenbrainz_spark.year_in_music.top_discoveries.generate_top_discoveries,
     'import.pg_metadata_tables': listenbrainz_spark.postgres.import_all_pg_tables,
     'releases.fresh': listenbrainz_spark.fresh_releases.fresh_releases.main,

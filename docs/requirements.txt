@@ -1,6 +1,6 @@
-Sphinx==5.0.2
+Sphinx==7.2.6
 sphinxcontrib-httpdomain==1.8.1
-sphinx_rtd_theme==0.5.1
-docutils==0.17.1
-sphinx-click==4.3.0
+sphinx_rtd_theme==2.0.0
+docutils==0.20.1
+sphinx-click==5.1.0
 -r ../requirements.txt

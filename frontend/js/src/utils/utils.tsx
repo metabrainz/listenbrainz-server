@@ -623,6 +623,7 @@ const getPageProps = async (): Promise<{
           try {
             const newToken = await apiService.refreshMusicbrainzToken();
             _.set(globalAppContext, "musicbrainzAuth.access_token", newToken);
+            return newToken;
           } catch (err) {
             // eslint-disable-next-line no-console
             console.error(
@@ -630,6 +631,7 @@ const getPageProps = async (): Promise<{
               err.toString()
             );
           }
+          return undefined;
         },
       },
       userPreferences: user_preferences,
