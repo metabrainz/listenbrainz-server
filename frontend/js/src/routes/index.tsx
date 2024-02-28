@@ -13,7 +13,7 @@ const getStatisticsRoutes = () => {
           index: true,
           lazy: async () => {
             const UserReports = await import("../user/stats/UserReports");
-            return { Component: UserReports.UserReportsWrapper };
+            return { Component: UserReports.StatisticsPage };
           },
         },
         {
