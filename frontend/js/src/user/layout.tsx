@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 function NavItem({
@@ -43,7 +43,7 @@ function UserFeedLayout() {
         <ul className="nav nav-tabs" role="tablist">
           <li className="username">
             {userName ? (
-              <div>{userName}</div>
+              <Link to={userName ? `/user/${userName}/` : "#"}>{userName}</Link>
             ) : (
               <div>
                 <a href="/login">Sign in</a>

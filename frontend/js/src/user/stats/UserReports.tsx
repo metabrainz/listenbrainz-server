@@ -6,7 +6,8 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
+import type { NavigateFunction } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
 import ErrorBoundary from "../../utils/ErrorBoundary";
@@ -21,6 +22,7 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 export type UserReportsProps = {
   user?: ListenBrainzUser;
   apiUrl: string;
+  navigate: NavigateFunction;
 };
 
 export type UserReportsState = {
@@ -97,7 +99,7 @@ export default class UserReports extends React.Component<
 
   render() {
     const { range, user } = this.state;
-    const { apiUrl, user: initialUser } = this.props;
+    const { apiUrl, user: initialUser, navigate } = this.props;
     const { currentUser } = this.context;
 
     const ranges = getAllStatRanges();
@@ -133,7 +135,11 @@ export default class UserReports extends React.Component<
               <button
                 type="button"
                 onClick={() => {
-                  this.setUser(initialUser?.name ?? currentUser?.name);
+                  navigate(
+                    `/user/${
+                      initialUser?.name ?? currentUser?.name
+                    }/stats/?range=${range}`
+                  );
                 }}
                 className={`pill secondary ${user ? "active" : ""}`}
               >
@@ -144,7 +150,7 @@ export default class UserReports extends React.Component<
             <button
               type="button"
               onClick={() => {
-                this.setUser();
+                navigate(`/statistics/?range=${range}`);
               }}
               className={`pill secondary ${!user ? "active" : ""}`}
             >
@@ -225,10 +231,14 @@ export default class UserReports extends React.Component<
 export function UserReportsWrapper() {
   const data = useLoaderData() as UserReportsLoaderData;
   const { APIService } = React.useContext(GlobalAppContext);
-  return <UserReports {...data} apiUrl={APIService.APIBaseURI} />;
+  const navigate = useNavigate();
+  return (
+    <UserReports {...data} apiUrl={APIService.APIBaseURI} navigate={navigate} />
+  );
 }
 
 export function StatisticsPage() {
   const { APIService } = React.useContext(GlobalAppContext);
-  return <UserReports apiUrl={APIService.APIBaseURI} />;
+  const navigate = useNavigate();
+  return <UserReports apiUrl={APIService.APIBaseURI} navigate={navigate} />;
 }

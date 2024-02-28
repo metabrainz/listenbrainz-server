@@ -9,17 +9,6 @@ import MessyBrainz from "../messybrainz/MessyBrainz";
 import RouteLoader from "../utils/Loader";
 import { PlaylistPageWrapper } from "../playlists/Playlist";
 import { PlayingNowPageWrapper } from "../metadata-viewer/MetadataViewerPage";
-import UserEntityChart, {
-  StatisticsChartLoader,
-} from "../user/charts/UserEntityChart";
-import { StatisticsPage } from "../user/stats/UserReports";
-import UserDashboardLayout from "../user/layout";
-import UserFeedPage from "../user-feed/UserFeed";
-import {
-  RecentListensLoader,
-  RecentListensWrapper,
-} from "../recent/RecentListens";
-import UserFeedLayout from "../user-feed/UserFeedLayout";
 import HomePage from "../home/Homepage";
 import Login from "../login/Login";
 import GDPR from "../gdpr/GDPR";
@@ -80,41 +69,79 @@ const getIndexRoutes = () => {
         },
         {
           path: "/statistics/",
-          element: <UserDashboardLayout />,
+          lazy: async () => {
+            const UserDashboardLayout = await import("../user/layout");
+            return { Component: UserDashboardLayout.default };
+          },
           children: [
             {
               index: true,
-              element: <StatisticsPage />,
+              lazy: async () => {
+                const UserReports = await import("../user/stats/UserReports");
+                return { Component: UserReports.StatisticsPage };
+              },
             },
             {
               path: "top-artists/",
-              element: <UserEntityChart />,
-              loader: StatisticsChartLoader,
+              lazy: async () => {
+                const UserEntityChart = await import(
+                  "../user/charts/UserEntityChart"
+                );
+                return {
+                  Component: UserEntityChart.default,
+                  loader: UserEntityChart.StatisticsChartLoader,
+                };
+              },
             },
             {
               path: "top-albums/",
-              element: <UserEntityChart />,
-              loader: StatisticsChartLoader,
+              lazy: async () => {
+                const UserEntityChart = await import(
+                  "../user/charts/UserEntityChart"
+                );
+                return {
+                  Component: UserEntityChart.default,
+                  loader: UserEntityChart.StatisticsChartLoader,
+                };
+              },
             },
             {
               path: "top-tracks/",
-              element: <UserEntityChart />,
-              loader: StatisticsChartLoader,
+              lazy: async () => {
+                const UserEntityChart = await import(
+                  "../user/charts/UserEntityChart"
+                );
+                return {
+                  Component: UserEntityChart.default,
+                  loader: UserEntityChart.StatisticsChartLoader,
+                };
+              },
             },
           ],
         },
         {
           path: "/",
-          element: <UserFeedLayout />,
+          lazy: async () => {
+            const UserFeedLayout = await import("../user-feed/UserFeedLayout");
+            return { Component: UserFeedLayout.default };
+          },
           children: [
             {
               path: "/feed/",
-              element: <UserFeedPage events={[]} />,
+              lazy: async () => {
+                const UserFeed = await import("../user-feed/UserFeed");
+                return { Component: UserFeed.default };
+              },
             },
             {
               path: "/recent/",
-              element: <RecentListensWrapper />,
-              loader: RecentListensLoader,
+              lazy: async () => {
+                const RecentListens = await import("../recent/RecentListens");
+                return {
+                  Component: RecentListens.RecentListensWrapper,
+                  loader: RecentListens.RecentListensLoader,
+                };
+              },
             },
           ],
         },

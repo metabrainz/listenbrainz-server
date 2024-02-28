@@ -122,6 +122,13 @@ export default class YearInMusic extends React.Component<
     await this.getFollowing();
   }
 
+  async componentDidUpdate(prevProps: YearInMusicProps) {
+    const { user } = this.props;
+    if (user !== prevProps.user) {
+      await this.getFollowing();
+    }
+  }
+
   private getPlaylistByName(
     playlistName: string,
     description?: string

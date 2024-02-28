@@ -20,23 +20,25 @@ export default function SimilarUsers() {
       </p>
 
       <table className="table table-striped">
-        {similarUsers.length > 0 ? (
-          similarUsers.map((row, index) => (
+        <tbody>
+          {similarUsers.length > 0 ? (
+            similarUsers.map((row, index) => (
+              <tr>
+                <td>
+                  <Link to={`/user/${row[0]}`}>{row[0]}</Link>
+                </td>
+                <td>
+                  <Link to={`/user/${row[1]}`}>{row[1]}</Link>
+                </td>
+                <td>{row[2]}</td>
+              </tr>
+            ))
+          ) : (
             <tr>
-              <td>
-                <Link to={`/user/${row[0]}`}>{row[0]}</Link>
-              </td>
-              <td>
-                <Link to={`/user/${row[1]}`}>{row[1]}</Link>
-              </td>
-              <td>{row[2]}</td>
+              <td>No similar users to show.</td>
             </tr>
-          ))
-        ) : (
-          <tr>
-            <td>No similar users to show.</td>
-          </tr>
-        )}
+          )}
+        </tbody>
       </table>
     </div>
   );

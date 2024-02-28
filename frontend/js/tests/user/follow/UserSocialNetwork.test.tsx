@@ -93,7 +93,9 @@ describe("<UserSocialNetwork />", () => {
   it("contains a FollowerFollowingModal and a SimilarUsersModal components", () => {
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <UserSocialNetwork {...props} />
+        <BrowserRouter>
+          <UserSocialNetwork {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find(FollowerFollowingModal)).toHaveLength(1);
