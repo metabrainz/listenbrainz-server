@@ -13,7 +13,6 @@ const getRoutes = (musicbrainzID?: string) => {
   const redirectRoutes = getUserRedirectRoutes(musicbrainzID);
 
   const statisticsRoutes = getStatisticsRoutes();
-  const indexRoutes = [...statisticsRoutes];
 
   const routes = [
     {
@@ -21,7 +20,7 @@ const getRoutes = (musicbrainzID?: string) => {
       element: <Layout />,
       errorElement: <ErrorBoundary />,
       children: [
-        ...indexRoutes,
+        ...statisticsRoutes,
         ...exploreRoutes,
         ...userRoutes,
         ...redirectRoutes,

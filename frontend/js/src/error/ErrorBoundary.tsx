@@ -23,8 +23,7 @@ export function ErrorBoundary() {
   const errorStatus = error.status || 500;
   const errorStatusMessage = ErrorStatusMessage[errorStatus] || "Error";
 
-  const errorMessage =
-    error.data?.error || error.message || "An error occurred";
+  const errorMessage = error.data?.error || error.message || errorStatusMessage;
 
   return isRouteErrorResponse(error) ? (
     <>
