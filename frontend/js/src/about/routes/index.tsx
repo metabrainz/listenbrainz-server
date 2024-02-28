@@ -1,38 +1,53 @@
-import * as React from "react";
-import AboutLayout from "../layout";
-import About from "../About";
-import AddData from "../add-data/AddData";
-import CurrentStatus from "../current-status/CurrentStatus";
-import Data from "../data/Data";
-import TermsOfService from "../terms-of-service/TermsOfService";
 import RouteLoader from "../../utils/Loader";
 
 const getAboutRoutes = () => {
   const routes = [
     {
       path: "/",
-      element: <AboutLayout />,
+      lazy: async () => {
+        const AboutLayout = await import("../layout");
+        return { Component: AboutLayout.default };
+      },
       children: [
         {
           path: "about/",
-          element: <About />,
+          lazy: async () => {
+            const About = await import("../About");
+            return { Component: About.default };
+          },
         },
         {
           path: "add-data/",
-          element: <AddData />,
+          lazy: async () => {
+            const AddData = await import("../add-data/AddData");
+            return { Component: AddData.default };
+          },
         },
         {
           path: "current-status/",
           loader: RouteLoader,
-          element: <CurrentStatus />,
+          lazy: async () => {
+            const CurrentStatus = await import(
+              "../current-status/CurrentStatus"
+            );
+            return { Component: CurrentStatus.default };
+          },
         },
         {
           path: "data/",
-          element: <Data />,
+          lazy: async () => {
+            const Data = await import("../data/Data");
+            return { Component: Data.default };
+          },
         },
         {
           path: "terms-of-service/",
-          element: <TermsOfService />,
+          lazy: async () => {
+            const TermsOfService = await import(
+              "../terms-of-service/TermsOfService"
+            );
+            return { Component: TermsOfService.default };
+          },
         },
       ],
     },

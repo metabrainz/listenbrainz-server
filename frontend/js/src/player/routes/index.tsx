@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
-import { PlayerPageWrapper } from "../PlayerPage";
 import RouteLoader from "../../utils/Loader";
 
 const getPlayerRoutes = () => {
@@ -11,12 +10,18 @@ const getPlayerRoutes = () => {
       children: [
         {
           index: true,
-          element: <PlayerPageWrapper />,
+          lazy: async () => {
+            const PlayerPage = await import("../PlayerPage");
+            return { Component: PlayerPage.PlayerPageWrapper };
+          },
           loader: RouteLoader,
         },
         {
           path: "release/:releaseMBID",
-          element: <PlayerPageWrapper />,
+          lazy: async () => {
+            const PlayerPage = await import("../PlayerPage");
+            return { Component: PlayerPage.PlayerPageWrapper };
+          },
           loader: RouteLoader,
         },
       ],

@@ -1,17 +1,6 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
-import ImportData from "../import-data/ImportData";
-import LastfmProxy from "../lastfm-proxy/LastfmProxy";
-import ListensOffline from "../listens-offline/ListensOffline";
-import MusicBrainzOffline from "../musicbrainz-offline/MusicBrainzOffline";
-import SearchResults from "../search/UserSearch";
-import MessyBrainz from "../messybrainz/MessyBrainz";
 import RouteLoader from "../utils/Loader";
-import { PlaylistPageWrapper } from "../playlists/Playlist";
-import { PlayingNowPageWrapper } from "../metadata-viewer/MetadataViewerPage";
-import HomePage from "../home/Homepage";
-import Login from "../login/Login";
-import GDPR from "../gdpr/GDPR";
 
 const getIndexRoutes = () => {
   const routes = [
@@ -21,50 +10,89 @@ const getIndexRoutes = () => {
       children: [
         {
           index: true,
-          element: <HomePage />,
+          lazy: async () => {
+            const HomePage = await import("../home/Homepage");
+            return { Component: HomePage.default };
+          },
           loader: RouteLoader,
         },
         {
           path: "login/",
-          element: <Login />,
+          lazy: async () => {
+            const Login = await import("../login/Login");
+            return { Component: Login.default };
+          },
         },
         {
           path: "agree-to-terms/",
-          element: <GDPR />,
+          lazy: async () => {
+            const GDPR = await import("../gdpr/GDPR");
+            return { Component: GDPR.default };
+          },
         },
         {
           path: "import-data/",
-          element: <ImportData />,
+          lazy: async () => {
+            const ImportData = await import("../import-data/ImportData");
+            return { Component: ImportData.default };
+          },
         },
         {
           path: "messybrainz/",
-          element: <MessyBrainz />,
+          lazy: async () => {
+            const MessyBrainz = await import("../messybrainz/MessyBrainz");
+            return { Component: MessyBrainz.default };
+          },
         },
         {
           path: "lastfm-proxy/",
-          element: <LastfmProxy />,
+          lazy: async () => {
+            const LastfmProxy = await import("../lastfm-proxy/LastfmProxy");
+            return { Component: LastfmProxy.default };
+          },
         },
         {
           path: "listens-offline/",
-          element: <ListensOffline />,
+          lazy: async () => {
+            const ListensOffline = await import(
+              "../listens-offline/ListensOffline"
+            );
+            return { Component: ListensOffline.default };
+          },
         },
         {
           path: "musicbrainz-offline/",
-          element: <MusicBrainzOffline />,
+          lazy: async () => {
+            const MusicBrainzOffline = await import(
+              "../musicbrainz-offline/MusicBrainzOffline"
+            );
+            return { Component: MusicBrainzOffline.default };
+          },
         },
         {
           path: "search/",
-          element: <SearchResults />,
+          lazy: async () => {
+            const SearchResults = await import("../search/UserSearch");
+            return { Component: SearchResults.default };
+          },
           loader: RouteLoader,
         },
         {
           path: "playlist/:playlistID/",
-          element: <PlaylistPageWrapper />,
+          lazy: async () => {
+            const PlaylistPage = await import("../playlists/Playlist");
+            return { Component: PlaylistPage.PlaylistPageWrapper };
+          },
           loader: RouteLoader,
         },
         {
           path: "listening-now/",
-          element: <PlayingNowPageWrapper />,
+          lazy: async () => {
+            const PlayingNowPage = await import(
+              "../metadata-viewer/MetadataViewerPage"
+            );
+            return { Component: PlayingNowPage.PlayingNowPageWrapper };
+          },
           loader: RouteLoader,
         },
         {

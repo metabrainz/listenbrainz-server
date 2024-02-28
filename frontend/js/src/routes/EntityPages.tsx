@@ -1,34 +1,43 @@
-import * as React from "react";
-import EntityPageLayout from "../layout/EntityPages";
-import ArtistPage from "../artist/ArtistPage";
-import AlbumPage from "../album/AlbumPage";
 import RouteLoader from "../utils/Loader";
-import ReleaseGroup from "../release-group/ReleaseGroup";
-import Release from "../release/Release";
 
 const getEntityPages = () => {
   const routes = [
     {
       path: "/",
-      element: <EntityPageLayout />,
+      lazy: async () => {
+        const EntityPageLayout = await import("../layout/EntityPages");
+        return { Component: EntityPageLayout.default };
+      },
       children: [
         {
           path: "artist/:artistMBID/",
-          element: <ArtistPage />,
+          lazy: async () => {
+            const ArtistPage = await import("../artist/ArtistPage");
+            return { Component: ArtistPage.default };
+          },
           loader: RouteLoader,
         },
         {
           path: "album/:albumMBID/",
-          element: <AlbumPage />,
+          lazy: async () => {
+            const AlbumPage = await import("../album/AlbumPage");
+            return { Component: AlbumPage.default };
+          },
           loader: RouteLoader,
         },
         {
           path: "release-group/:releaseGroupMBID/",
-          element: <ReleaseGroup />,
+          lazy: async () => {
+            const ReleaseGroup = await import("../release-group/ReleaseGroup");
+            return { Component: ReleaseGroup.default };
+          },
         },
         {
           path: "release/:releaseMBID/",
-          element: <Release />,
+          lazy: async () => {
+            const Release = await import("../release/Release");
+            return { Component: Release.default };
+          },
           loader: RouteLoader,
         },
       ],

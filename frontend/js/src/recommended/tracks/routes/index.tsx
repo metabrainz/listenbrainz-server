@@ -1,24 +1,30 @@
-import * as React from "react";
-
-import RecommendationsPageLayout from "../Layout";
-import Info from "../Info";
-import { RecommendationsPageWrapper } from "../Recommendations";
 import RouteLoader from "../../../utils/Loader";
 
 const getRecommendationsRoutes = () => {
   const routes = [
     {
       path: "/recommended/tracks/:userName/",
-      element: <RecommendationsPageLayout />,
+      lazy: async () => {
+        const RecommendationsPageLayout = await import("../Layout");
+        return { Component: RecommendationsPageLayout.default };
+      },
       children: [
         {
           index: true,
-          element: <Info />,
+          lazy: async () => {
+            const Info = await import("../Info");
+            return { Component: Info.default };
+          },
           loader: RouteLoader,
         },
         {
           path: "raw/",
-          element: <RecommendationsPageWrapper />,
+          lazy: async () => {
+            const RecommendationsPage = await import("../Recommendations");
+            return {
+              Component: RecommendationsPage.RecommendationsPageWrapper,
+            };
+          },
           loader: RouteLoader,
         },
       ],

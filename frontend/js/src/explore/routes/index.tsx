@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
 import RouteLoader from "../../utils/Loader";
-import AIBrainzComponent from "../ai-brainz/AIBrainz";
 
 const getExploreRoutes = () => {
   const routes = [
@@ -106,7 +105,10 @@ const getExploreRoutes = () => {
         },
         {
           path: "ai-brainz/",
-          element: <AIBrainzComponent />,
+          lazy: async () => {
+            const AIBrainzComponent = await import("../ai-brainz/AIBrainz");
+            return { Component: AIBrainzComponent.default };
+          },
         },
       ],
     },
