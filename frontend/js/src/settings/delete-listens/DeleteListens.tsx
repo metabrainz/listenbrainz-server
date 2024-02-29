@@ -77,7 +77,10 @@ export default function DeleteListens() {
       <p>Once deleted, all your listens data will be removed PERMANENTLY.</p>
 
       <p>
-        Warning: if you are still connected to Spotify, the last 50 Spotify tracks might be auto-reimported. <Link to="/settings/music-services/details/">Disconnect</Link> before deleting. 
+        Warning: if you are still connected to Spotify, the last 50 Spotify
+        tracks might be auto-reimported.{" "}
+        <Link to="/settings/music-services/details/">Disconnect</Link> before
+        deleting.
       </p>
 
       <p>

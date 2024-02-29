@@ -25,6 +25,7 @@ import { getPageProps } from "../../utils/utils";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import { getPlaylistId, PlaylistType } from "../../playlists/utils";
+import ImportPlaylistModal from "./components/ImportPlaylistModal";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
@@ -147,6 +148,18 @@ export default class UserPlaylists extends React.Component<
           >
             <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
           </Pill>
+          {this.isCurrentUserPage() && (
+            <button
+              type="button"
+              onClick={() => {
+                NiceModal.show(ImportPlaylistModal);
+              }}
+              data-toggle="modal"
+              data-target="#ImportPlaylistModal"
+            >
+              Import from...
+            </button>
+          )}
         </div>
         <PlaylistsList
           onPaginatePlaylists={this.updatePlaylists}

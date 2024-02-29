@@ -11,6 +11,7 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.troi.export import export_to_spotify
+from listenbrainz.webserver.views.views_utils import get_user_playlists, get_tracks_from_playlist, mbid_mapping_spotify,listen_to_jspf
 from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -825,7 +826,85 @@ def export_playlist(playlist_mbid, service):
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
+@playlist_api_bp.route("/import/<service>", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_playlist_from_spotify(service):
+    user = validate_auth_header()
 
+    if service != "spotify":
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+
+    spotify_service = SpotifyService()
+    token = spotify_service.get_user(user["id"], refresh=True)
+    if not token:
+        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
+
+    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+        raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
+                            f" to use this feature.")
+    
+    try:
+        # got user playlists
+        user_playlists = get_user_playlists(token["access_token"]) 
+        
+        return jsonify(user_playlists["items"])
+    except requests.exceptions.HTTPError as exc:
+        error = exc.response.json()
+        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+    
+@playlist_api_bp.route("/<service>/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_tracks_from_spotify_to_playlist(service, playlist_id):
+    user = validate_auth_header()
+
+    if service != "spotify":
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+
+    spotify_service = SpotifyService()
+    token = spotify_service.get_user(user["id"], refresh=True)
+    if not token:
+        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
+
+    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+        raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
+                            f" to use this feature.")
+    
+    try:
+        tracks_from_playlist = get_tracks_from_playlist(token["access_token"], playlist_id) 
+        
+        tracks = []
+        for track in tracks_from_playlist["items"]:
+            artists = track['track'].get('artists', [])
+            artist_names = []
+            for a in artists:
+                name = a.get('name')
+                if name is not None:
+                    artist_names.append(name)
+            artist_name = ', '.join(artist_names)
+            tracks.append({
+                    "track_name": track['track']['name'], 
+                    "artist_name": artist_name,
+            })
+            
+        mbid_mapped_tracks = []
+        for track in tracks:
+            mbid_mapped_tracks.append(mbid_mapping_spotify(track["track_name"], track["artist_name"]))
+            
+        jspf_tracks = []
+        for track in mbid_mapped_tracks:
+            if "recording_mbid" in track:
+                jspf_tracks.append(listen_to_jspf(track))
+        return jsonify(jspf_tracks)
+    except requests.exceptions.HTTPError as exc:
+        error = exc.response.json()
+        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+ 
 @playlist_api_bp.route("/export-jspf/<service>", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
