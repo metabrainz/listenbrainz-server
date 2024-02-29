@@ -13,6 +13,7 @@ import WS from "jest-websocket-mock";
 import { SocketIO as mockSocketIO } from "mock-socket";
 import userEvent from "@testing-library/user-event";
 import type { UserEvent } from "@testing-library/user-event/dist/types/setup/setup";
+import { BrowserRouter } from "react-router-dom";
 import APIServiceClass from "../../src/utils/APIService";
 
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
@@ -73,7 +74,9 @@ describe("Listens page", () => {
   it("renders correctly on the profile page", async () => {
     /* eslint-disable testing-library/prefer-screen-queries */
     const { findByTestId, getAllByTestId } = renderWithProviders(
-      <Listens {...props} />,
+      <BrowserRouter>
+        <Listens {...props} />
+      </BrowserRouter>,
       { APIService, currentUser }
     );
     await findByTestId("listens");
@@ -89,7 +92,12 @@ describe("Listens page", () => {
     APIService.getUserListenCount = spy;
 
     await act(async () => {
-      renderWithProviders(<Listens {...props} />, { APIService, currentUser });
+      renderWithProviders(
+        <BrowserRouter>
+          <Listens {...props} />
+        </BrowserRouter>,
+        { APIService, currentUser }
+      );
     });
 
     const listenCountCard = await screen.findByTestId("listen-count-card");
@@ -156,7 +164,11 @@ describe("Listens page", () => {
         });
       });
       await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+        renderWithProviders(
+          <BrowserRouter>
+            <Listens {...props} />
+          </BrowserRouter>
+        );
       });
       await websocketServer.connected;
       await returnPromise; // See at the beginning of this test
@@ -168,7 +180,11 @@ describe("Listens page", () => {
 
     it('calls correct handler for "listen" event', async () => {
       await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+        renderWithProviders(
+          <BrowserRouter>
+            <Listens {...props} />
+          </BrowserRouter>
+        );
       });
       await websocketServer.connected;
 
@@ -192,7 +208,11 @@ describe("Listens page", () => {
 
     it('calls correct event for "playing_now" event', async () => {
       await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+        renderWithProviders(
+          <BrowserRouter>
+            <Listens {...props} />
+          </BrowserRouter>
+        );
       });
       await websocketServer.connected;
       expect(screen.queryAllByTestId("listen")).toHaveLength(26);
@@ -216,7 +236,11 @@ describe("Listens page", () => {
 
     it("crops the websocket listens array to a maximum of 7", async () => {
       await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+        renderWithProviders(
+          <BrowserRouter>
+            <Listens {...props} />
+          </BrowserRouter>
+        );
       });
       await websocketServer.connected;
 
@@ -272,10 +296,15 @@ describe("Listens page", () => {
         .mockImplementation(() => Promise.resolve(200));
 
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          APIService,
-          currentUser,
-        });
+        renderWithProviders(
+          <BrowserRouter>
+            <Listens {...props} />
+          </BrowserRouter>,
+          {
+            APIService,
+            currentUser,
+          }
+        );
       });
 
       expect(await screen.findAllByTestId("listen")).toHaveLength(26);
@@ -308,9 +337,14 @@ describe("Listens page", () => {
 
     it("does not render delete button if user is not logged in", async () => {
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          currentUser: undefined,
-        });
+        renderWithProviders(
+          <BrowserRouter>
+            <Listens {...props} />
+          </BrowserRouter>,
+          {
+            currentUser: undefined,
+          }
+        );
       });
 
       const deleteButton = screen.queryAllByRole("menuitem", {
@@ -325,10 +359,15 @@ describe("Listens page", () => {
         .mockImplementation(() => Promise.resolve(200));
 
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          APIService,
-          currentUser: { auth_token: undefined, name: "iliekcomputers" },
-        });
+        renderWithProviders(
+          <BrowserRouter>
+            <Listens {...props} />
+          </BrowserRouter>,
+          {
+            APIService,
+            currentUser: { auth_token: undefined, name: "iliekcomputers" },
+          }
+        );
       });
 
       const listensContainer = await screen.findByTestId("listens");
@@ -353,10 +392,15 @@ describe("Listens page", () => {
       spy.mockImplementation(() => Promise.resolve(500));
 
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          APIService,
-          currentUser,
-        });
+        renderWithProviders(
+          <BrowserRouter>
+            <Listens {...props} />
+          </BrowserRouter>,
+          {
+            APIService,
+            currentUser,
+          }
+        );
       });
 
       const listensContainer = await screen.findByTestId("listens");
@@ -396,10 +440,15 @@ describe("Listens page", () => {
         });
 
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          APIService,
-          currentUser,
-        });
+        renderWithProviders(
+          <BrowserRouter>
+            <Listens {...props} />
+          </BrowserRouter>,
+          {
+            APIService,
+            currentUser,
+          }
+        );
       });
       const listensContainer = await screen.findByTestId("listens");
       const listenCards = await within(listensContainer).findAllByTestId(
@@ -491,7 +540,12 @@ describe("Listens page", () => {
         );
 
         await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
+          renderWithProviders(
+            <BrowserRouter>
+              <Listens {...props} />
+            </BrowserRouter>,
+            { APIService }
+          );
         });
         const expectedNextListenTimestamp =
           listens[listens.length - 1].listened_at;
@@ -514,7 +568,12 @@ describe("Listens page", () => {
           Promise.resolve([mockListen])
         );
         await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
+          renderWithProviders(
+            <BrowserRouter>
+              <Listens {...props} />
+            </BrowserRouter>,
+            { APIService }
+          );
         });
 
         const olderButton = await screen.findByLabelText(
