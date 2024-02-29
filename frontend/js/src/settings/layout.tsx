@@ -19,6 +19,7 @@ const sections: Section[] = [
     title: "Account",
     links: [
       { to: "select_timezone/", label: "Timezone" },
+      { to: "select-area/", label: "Area" },
       { to: "troi/", label: "Playlist preferences" },
       { to: "export/", label: "Export data" },
       { to: "delete-listens/", label: "Delete listens" },

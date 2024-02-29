@@ -35,3 +35,12 @@ class MusicBrainzService(BaseBrainzService):
         )
         response.raise_for_status()
         return response.json()
+
+
+    def get_address_from_mbid(self, mbid: str):
+        response = requests.get(
+            f'{current_app.config["MUSICBRAINZ_BASE_URL"]}/ws/2/area/{mbid}?fmt=json'
+        )
+        print(response)
+        response.raise_for_status()
+        return response.json()

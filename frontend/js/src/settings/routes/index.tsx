@@ -22,6 +22,10 @@ import {
 } from "../troi/SelectTroiPreferences";
 import Settings from "../Settings";
 import ResetImportTimestamp from "../resetlatestimportts/ResetLatestImports";
+import SelectArea, {
+  SelectAreaLoader,
+  SelectAreaWrapper,
+} from "../select-location/SelectLocation";
 
 const getSettingsRoutes = () => {
   const routes = [
@@ -60,6 +64,11 @@ const getSettingsRoutes = () => {
           path: "select_timezone/",
           loader: SelectTimezoneLoader,
           element: <SelectTimezone />,
+        },
+        {
+          path: "select-area/",
+          loader: SelectAreaLoader,
+          element: <SelectAreaWrapper />,
         },
         {
           path: "troi/",

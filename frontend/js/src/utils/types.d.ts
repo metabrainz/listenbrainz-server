@@ -779,3 +779,30 @@ declare type FeedbackForUserForRecordingsRequestBody = {
   recording_mbids: string[];
   recording_msids?: string[];
 };
+
+
+type MusicBrainzArea = {
+  id: string;
+  type: string;
+  typeId: string;
+  score: number;
+  name: string;
+  sortName: string;
+  iso31661Codes: string[];
+  lifeSpan: {
+      ended: boolean | null;
+  };
+  aliases: {
+      sortName: string;
+      name: string;
+      locale: string;
+      type: string | null;
+      primary: boolean;
+      beginDate: string | null;
+      endDate: string | null;
+  }[];
+  tags: {
+      count: number;
+      name: string;
+  }[];
+}

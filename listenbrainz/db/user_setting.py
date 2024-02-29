@@ -70,7 +70,8 @@ def set_timezone(db_conn, user_id: int, timezone_name: str):
         })
         db_conn.commit()
     except sqlalchemy.exc.ProgrammingError as err:
-        raise DatabaseException("Couldn't update user's timezone: %s" % str(err))
+        raise DatabaseException(
+            "Couldn't update user's timezone: %s" % str(err))
 
 
 def standardize_timezone(timezones):
@@ -88,7 +89,8 @@ def standardize_timezone(timezones):
         if offset.days > -1:
             result.append((name, "+" + str(offset) + " GMT"))
         else:
-            result.append((name, str(offset.seconds//3600 - 24) + ":00:00 GMT"))
+            result.append(
+                (name, str(offset.seconds//3600 - 24) + ":00:00 GMT"))
     return result
 
 
@@ -113,3 +115,36 @@ def get_troi_prefs(db_conn, user_id: int):
     """), {"user_id": user_id})
     row = result.mappings().first()
     return dict(row) if row else None
+
+
+def get_user_area_id(db_conn, user_id: int) -> str:
+    """Returns the musicbrainz id of area selected by user"""
+    try:
+        result = db_conn.execute(sqlalchemy.text("""
+            SELECT area_mbid FROM user_setting WHERE user_id = :user_id
+        """), {'user_id': user_id})
+        row = result.mappings().first()
+        return row['area_mbid'] if row else None
+    except sqlalchemy.exc.ProgrammingError as err:
+        raise DatabaseException(f"Unable to get user's area: {err}")
+
+
+def set_user_area_id(db_conn, user_id: int, area_mbid: str):
+    """Set area of the user
+    Args:
+        db_conn: Database connection
+        user_id: user id of the user
+        area_mbid: Musicbrainz area id
+    """
+    try:
+        db_conn.execute(sqlalchemy.text("""
+            INSERT INTO user_setting (user_id, area_mbid) 
+            VALUES (:user_id, :area_mbid)
+            ON CONFLICT (user_id) DO UPDATE 
+            SET  area_mbid = EXCLUDED.area_mbid
+        """), {
+            'user_id': user_id, 'area_mbid': area_mbid
+        })
+        db_conn.commit()
+    except sqlalchemy.exc.ProgrammingError as err:
+        raise DatabaseException(f"Unable to update user's area: {err}")

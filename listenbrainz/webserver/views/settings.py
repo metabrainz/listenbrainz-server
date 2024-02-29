@@ -364,6 +364,32 @@ def missing_mb_data():
     }
     return jsonify(data)
 
+@settings_bp.route("/area/", methods=["POST"])
+@api_login_required
+def set_user_area():
+    try:
+        data = orjson.loads(request.get_data())
+    except (ValueError, KeyError) as e:
+        raise BadRequest(f"Invalid JSON: {str(e)}")
+    if 'area_mbid' not in data:
+        raise BadRequest(f'JSON Document must contain area_mbid key')
+    area_mbid = data['area_mbid']
+    if type(area_mbid) != str:
+        raise BadRequest("area_mbid key in the JSON document must be a string(uuid)")
+    db_usersetting.set_user_area_id(db_conn, current_user.id, data['area_mbid'])
+    return jsonify({"status": "ok"})
+
+
+@settings_bp.route("/select_area/", methods=["POST"])
+@api_login_required
+def get_user_area():
+    area_mbid = db_usersetting.get_user_area_id(db_conn, current_user.id)
+    if area_mbid is None:
+        return jsonify({'area': None})
+    else:
+        service = MusicBrainzService()
+        area = service.get_address_from_mbid(area_mbid)
+        return jsonify({'area': area})
 
 @profile_bp.route('/', defaults={'path': ''})
 @profile_bp.route('/<path:path>/')

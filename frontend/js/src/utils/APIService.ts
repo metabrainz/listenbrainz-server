@@ -1149,6 +1149,43 @@ export default class APIService {
     return response.json();
   };
 
+  lookupMBArea = async (
+    query: string,
+    limit?: number
+  ): Promise<{
+    created: string;
+    count: string;
+    offset: number;
+    areas: MusicBrainzArea[];
+  }> => {
+    let endpoint = `${this.MBBaseURI}/area`;
+    endpoint += `?query=${query}`;
+    if (!isUndefined(limit)) endpoint += `&limit=${limit}`;
+    endpoint += "&fmt=json";
+    const response = await fetch(endpoint);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  submitArea = async (
+    userToken: string,
+    area: MusicBrainzArea
+  ): Promise<any> => {
+    const endpoint = `/settings/area/`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        area_mbid: area.id,
+      }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
+
   deleteFeedEvent = async (
     eventType: string,
     username: string,
