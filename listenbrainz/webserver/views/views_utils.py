@@ -76,6 +76,7 @@ def get_current_soundcloud_user():
         "access_token": user["access_token"],
     }
 
+
 def get_user_playlists(spotify_token):
     """ Get the user's playlists.
     """
@@ -83,12 +84,14 @@ def get_user_playlists(spotify_token):
     playlists = sp.current_user_playlists()
     return playlists
 
+
 def get_tracks_from_playlist(spotify_token, playlist_id):
     """ Get the tracks from Spotify playlist.
     """
     sp = spotipy.Spotify(auth=spotify_token)
     playlists = sp.playlist_items(playlist_id, limit=100)
     return playlists
+
 
 def mbid_mapping_spotify(track_name, artist_name):
     url = "https://api.listenbrainz.org/1/metadata/lookup/"
@@ -102,13 +105,14 @@ def mbid_mapping_spotify(track_name, artist_name):
         return data
     else:
         print("Error occurred:", response.status_code)
-        
+
+
 def listen_to_jspf(track):
     jspf_format = {
         "identifier": PLAYLIST_TRACK_URI_PREFIX + track["recording_mbid"],
-        "title" : track["recording_name"],
+        "title": track["recording_name"],
         "creator": track["artist_credit_name"],
         "chosen": False,
-        "selected":False
+        "selected": False
     }
     return jspf_format

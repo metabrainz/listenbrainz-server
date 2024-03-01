@@ -11,7 +11,8 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.troi.export import export_to_spotify
-from listenbrainz.webserver.views.views_utils import get_user_playlists, get_tracks_from_playlist, mbid_mapping_spotify,listen_to_jspf
+from listenbrainz.webserver.views.views_utils import get_user_playlists, \
+    get_tracks_from_playlist, mbid_mapping_spotify, listen_to_jspf
 from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -826,11 +827,22 @@ def export_playlist(playlist_mbid, service):
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
+
 @playlist_api_bp.route("/import/<service>", methods=["GET", "OPTIONS"])
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
 def import_playlist_from_spotify(service):
+    """
+
+    Get playlists from Spotify.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlists are fetched.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: Playlists not found
+    :resheader Content-Type: *application/json*
+    """
     user = validate_auth_header()
 
     if service != "spotify":
@@ -847,19 +859,29 @@ def import_playlist_from_spotify(service):
                             f" to use this feature.")
     
     try:
-        # got user playlists
         user_playlists = get_user_playlists(token["access_token"]) 
-        
         return jsonify(user_playlists["items"])
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
-    
+
+
 @playlist_api_bp.route("/<service>/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
 def import_tracks_from_spotify_to_playlist(service, playlist_id):
+    """
+
+    Import a playlist tracks from a Spotify and convert them to JSPF.
+
+    :reqheader Authorization: Token <user token>
+    :param playlist_id: The Spotify playlist id to get the tracks from
+    :statuscode 200: tracks are fetched and converted.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: Playlist not found
+    :resheader Content-Type: *application/json*
+    """
     user = validate_auth_header()
 
     if service != "spotify":
@@ -874,10 +896,9 @@ def import_tracks_from_spotify_to_playlist(service, playlist_id):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
-    
-    try:
-        tracks_from_playlist = get_tracks_from_playlist(token["access_token"], playlist_id) 
         
+    try:
+        tracks_from_playlist = get_tracks_from_playlist(token["access_token"], playlist_id)
         tracks = []
         for track in tracks_from_playlist["items"]:
             artists = track['track'].get('artists', [])
@@ -888,14 +909,12 @@ def import_tracks_from_spotify_to_playlist(service, playlist_id):
                     artist_names.append(name)
             artist_name = ', '.join(artist_names)
             tracks.append({
-                    "track_name": track['track']['name'], 
+                    "track_name": track['track']['name'],
                     "artist_name": artist_name,
             })
-            
         mbid_mapped_tracks = []
         for track in tracks:
             mbid_mapped_tracks.append(mbid_mapping_spotify(track["track_name"], track["artist_name"]))
-            
         jspf_tracks = []
         for track in mbid_mapped_tracks:
             if "recording_mbid" in track:
@@ -904,7 +923,8 @@ def import_tracks_from_spotify_to_playlist(service, playlist_id):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
- 
+
+
 @playlist_api_bp.route("/export-jspf/<service>", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
