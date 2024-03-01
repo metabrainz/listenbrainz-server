@@ -1,35 +1,36 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
 import {
   faGlobe,
   faInfoCircle,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useLoaderData, useNavigate } from "react-router-dom";
+import type { NavigateFunction } from "react-router-dom";
+import { Helmet } from "react-helmet";
+
 import ErrorBoundary from "../../utils/ErrorBoundary";
 import Pill from "../../components/Pill";
 import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
 import UserDailyActivity from "./components/UserDailyActivity";
 import UserArtistMap from "./components/UserArtistMap";
-import { getPageProps } from "../../utils/utils";
 import { getAllStatRanges } from "./utils";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
   apiUrl: string;
+  navigate: NavigateFunction;
 };
 
 export type UserReportsState = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
 };
+
+type UserReportsLoaderData = UserReportsProps;
 
 export default class UserReports extends React.Component<
   UserReportsProps,
@@ -98,15 +99,23 @@ export default class UserReports extends React.Component<
 
   render() {
     const { range, user } = this.state;
-    const { apiUrl, user: initialUser } = this.props;
+    const { apiUrl, user: initialUser, navigate } = this.props;
     const { currentUser } = this.context;
 
     const ranges = getAllStatRanges();
     const userOrLoggedInUser: string | undefined =
       user?.name ?? currentUser?.name;
 
+    const userStatsTitle =
+      user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
+
     return (
       <div>
+        <Helmet>
+          <title>
+            {userOrLoggedInUser ? userStatsTitle : "Sitewide"} Stats
+          </title>
+        </Helmet>
         <div className="tertiary-nav dragscroll">
           <div>
             {Array.from(ranges, ([stat_type, stat_name]) => {
@@ -126,7 +135,11 @@ export default class UserReports extends React.Component<
               <button
                 type="button"
                 onClick={() => {
-                  this.setUser(initialUser?.name ?? currentUser?.name);
+                  navigate(
+                    `/user/${
+                      initialUser?.name ?? currentUser?.name
+                    }/stats/?range=${range}`
+                  );
                 }}
                 className={`pill secondary ${user ? "active" : ""}`}
               >
@@ -137,7 +150,7 @@ export default class UserReports extends React.Component<
             <button
               type="button"
               onClick={() => {
-                this.setUser();
+                navigate(`/statistics/?range=${range}`);
               }}
               className={`pill secondary ${!user ? "active" : ""}`}
             >
@@ -215,38 +228,17 @@ export default class UserReports extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { user } = reactProps;
-  const UserReportsPageWithAlertNotifications = withAlertNotifications(
-    UserReports
+export function UserReportsWrapper() {
+  const data = useLoaderData() as UserReportsLoaderData;
+  const { APIService } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
+  return (
+    <UserReports {...data} apiUrl={APIService.APIBaseURI} navigate={navigate} />
   );
+}
 
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserReportsPageWithAlertNotifications
-            apiUrl={globalAppContext.APIService.APIBaseURI}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function StatisticsPage() {
+  const { APIService } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
+  return <UserReports apiUrl={APIService.APIBaseURI} navigate={navigate} />;
+}

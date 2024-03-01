@@ -1,19 +1,14 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
 
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext from "../../utils/GlobalAppContext";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
-
+import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../../utils/ErrorBoundary";
-import { getListenablePin, getPageProps } from "../../utils/utils";
-import UserFeedback from "./components/UserFeedback";
 import UserPins from "./components/UserPins";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { getListenablePin } from "../../utils/utils";
+import UserFeedback from "./components/UserFeedback";
 
 export type UserTasteProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
@@ -22,6 +17,8 @@ export type UserTasteProps = {
   totalPinsCount: number;
   user: ListenBrainzUser;
 };
+
+type UserTasteLoaderData = UserTasteProps;
 
 export default class UserTaste extends React.Component<UserTasteProps> {
   static contextType = GlobalAppContext;
@@ -59,6 +56,11 @@ export default class UserTaste extends React.Component<UserTasteProps> {
     const listenables = [...listensFromFeedback, ...listensFromPins];
     return (
       <div role="main">
+        <Helmet>
+          <title>{`${
+            user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
+          } Tastes`}</title>
+        </Helmet>
         <div className="row">
           <div className="col-md-7">
             <UserFeedback
@@ -83,40 +85,7 @@ export default class UserTaste extends React.Component<UserTasteProps> {
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const { feedback, feedback_count, user, pins, pin_count } = reactProps;
-  const UserTasteWithAlertNotifications = withAlertNotifications(UserTaste);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserTasteWithAlertNotifications
-            user={user}
-            feedback={feedback}
-            totalFeedbackCount={feedback_count}
-            pins={pins}
-            totalPinsCount={pin_count}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function UserTastesWrapper() {
+  const data = useLoaderData() as UserTasteLoaderData;
+  return <UserTaste {...data} />;
+}
