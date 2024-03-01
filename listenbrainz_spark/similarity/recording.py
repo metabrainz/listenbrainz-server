@@ -127,14 +127,14 @@ def main(days, session, contribution, threshold, limit, skip, is_production_data
 
     if is_production_dataset:
         yield {
-            "type": "similar_recordings_start",
+            "type": "similarity_recordings_start",
             "algorithm": algorithm
         }
 
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]
         yield {
-            "type": "similar_recordings",
+            "type": "similarity_recordings",
             "algorithm": algorithm,
             "data": items,
             "is_production_dataset": is_production_dataset
@@ -142,6 +142,6 @@ def main(days, session, contribution, threshold, limit, skip, is_production_data
 
     if is_production_dataset:
         yield {
-            "type": "similar_recordings_end",
+            "type": "similarity_recordings_end",
             "algorithm": algorithm
         }
