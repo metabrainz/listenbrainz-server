@@ -139,7 +139,8 @@ def load_release(release_mbid):
     if mb_engine:
         release = get_release_by_mbid(release_mbid, includes=["media", "artists"])
         if not release:
-            return jsonify({"error": "This release was not found in our database. It may not have replicated to this server yet."}), 404
+            return jsonify({"error": "This release was not found in our database. \
+                            It may not have replicated to this server yet."}), 404
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, \
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:

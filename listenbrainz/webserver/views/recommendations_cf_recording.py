@@ -74,7 +74,7 @@ def _get_template(active_section, user):
                 "name": user.musicbrainz_id,
             },
             "recommendations": [],
-            "errorMsg": "Looks like the recommendations weren't generated because of anomalies in our data." \
+            "errorMsg": "Looks like the recommendations weren't generated because of anomalies in our data. "
                       "We are working on it. Check back later."
         }
 
@@ -88,7 +88,6 @@ def _get_template(active_section, user):
             "recommendations": [],
             "errorMsg": "An error occurred while processing your request. Check back later!"
         }
-
 
     return {
         "user": {
