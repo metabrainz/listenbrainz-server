@@ -15,7 +15,7 @@ class AdminTestCase(IntegrationTestCase):
         r = self.client.get('/admin', follow_redirects=True)
         self.assert200(r)
         self.assertNotIn('BDFL Zone', r.data.decode('utf-8'))
-        self.assertIn('You are not authorized', r.data.decode('utf-8'))
+        self.assertTemplateUsed('index.html')
 
     def test_admin_views_when_authorized_logged_in(self):
         self.app.config['ADMINS'] = [self.authorized_user['musicbrainz_id']]
@@ -32,4 +32,4 @@ class AdminTestCase(IntegrationTestCase):
         r = self.client.get('/admin', follow_redirects=True)
         self.assert200(r)
         self.assertNotIn('BDFL Zone', r.data.decode('utf-8'))
-        self.assertIn('You are not authorized', r.data.decode('utf-8'))
+        self.assertTemplateUsed('index.html')

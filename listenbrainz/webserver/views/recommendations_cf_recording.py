@@ -1,5 +1,5 @@
 import orjson
-from flask import Blueprint, render_template, jsonify, current_app
+from flask import Blueprint, render_template, jsonify
 from psycopg2.extras import DictCursor
 
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
@@ -36,14 +36,13 @@ def raw(user_name: str):
     if not user:
         return jsonify({"error": "Cannot find user: %s" % user_name}), 404
 
-    data = _get_template(active_section='raw', user=user)
-    current_app.logger.debug("Data: %s", data)
+    data = _get_props(active_section='raw', user=user)
 
     return data
 
 
-def _get_template(active_section, user):
-    """ Get template to render based on active section.
+def _get_props(active_section, user):
+    """ Get props required to render based on active section.
 
         Args:
             active_section (str): Type of recommendation playlist to render.

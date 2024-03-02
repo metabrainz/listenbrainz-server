@@ -60,7 +60,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
     def test_info_valid_user(self, mock_user):
         response = self.client.get(url_for('recommendations_cf_recording.info', user_name="vansika"))
         self.assert200(response)
-        self.assertTemplateUsed('recommendations_cf_recording/info.html')
+        self.assertTemplateUsed('index.html')
         self.assert_context('active_section', 'info')
         self.assert_context('user', mock_user.return_value)
         mock_user.assert_called_with("vansika")
@@ -75,7 +75,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         # Flask essentially needs render_template to generate a response
         # this is a fake repsonse to check _get_template wa called with desired params.
         mock_template.return_value = render_template(
-            "recommendations_cf_recording/base.html",
+            "index.html",
             active_section='raw',
             user=self.user,
             error_msg="test"
@@ -87,17 +87,13 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
 
     def test_get_template_missing_user_from_rec_db(self):
         user = User.from_dbrow(self.user)
-        recommendations_cf_recording._get_template(active_section='raw', user=user)
-        self.assertTemplateUsed('index.html')
-        self.assert_context('active_section', 'raw')
-        self.assert_context('user', user)
+        props = recommendations_cf_recording._get_props(active_section='raw', user=user)
+        self.assert_context(props['user'], user)
 
     def test_get_template_missing_rec_raw(self):
         user = User.from_dbrow(self.user2)
-        recommendations_cf_recording._get_template(active_section='raw', user=user)
-        self.assertTemplateUsed('index.html')
-        self.assert_context('active_section', 'raw')
-        self.assert_context('user', user)
+        props = recommendations_cf_recording._get_props(active_section='raw', user=user)
+        self.assert_context(props['user'], user)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
@@ -116,12 +112,10 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         })
         mock_get_recommendations.return_value = []
 
-        recommendations_cf_recording._get_template(active_section='raw', user=user)
-        self.assertTemplateUsed('index.html')
-        self.assert_context('active_section', 'raw')
-        self.assert_context('user', user)
+        props = recommendations_cf_recording._get_props(active_section='raw', user=user)
+        self.assert_context(props['user'], user)
         error_msg = "An error occurred while processing your request. Check back later!"
-        self.assert_context('error_msg', error_msg)
+        self.assert_context(props['errorMsg'], error_msg)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
@@ -155,13 +149,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         }]
         mock_get_recommendations.return_value = recommendations
 
-        recommendations_cf_recording._get_template(active_section='raw', user=user)
-        mock_get_rec.assert_called_with(mock.ANY, user.id)
-        mock_get_recommendations.assert_called_once()
-        self.assertTemplateUsed('index.html')
-        self.assert_context('active_section', 'raw')
-        self.assert_context('user', user)
-        self.assert_context('last_updated', created.strftime('%d %b %Y'))
+        props = recommendations_cf_recording._get_props(active_section='raw', user=user)
 
         expected_props = {
             "user": {
@@ -170,8 +158,8 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
             },
             "recommendations": recommendations,
         }
-        received_props = orjson.loads(self.get_context_variable('props'))
-        self.assertEqual(expected_props, received_props)
+        self.assertEqual(expected_props['user'], props['user'])
+        self.assertEqual(expected_props['recommendations'], props['recommendations'])
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.load_recordings_from_mbids')
     def test_get_playable_recommendations_list(self, mock_load):
