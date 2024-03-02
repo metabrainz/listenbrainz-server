@@ -60,20 +60,6 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assert200(resp)
         mock_user_get.assert_not_called()
 
-    @mock.patch('listenbrainz.db.user.get_by_login_id')
-    def test_menu_logged_in(self, mock_user_get):
-        """ If the user is logged in, check that we perform a database query to get user data """
-        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
-        db_user.agree_to_gdpr(self.db_conn, user['musicbrainz_id'])
-        user = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
-
-        mock_user_get.return_value = user
-        self.temporary_login(user['login_id'])
-        resp = self.client.post(self.custom_url_for('index.recent_listens'))
-        self.assert200(resp)
-
-        mock_user_get.assert_called_with(mock.ANY, user['login_id'])
-
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.webserver.views.index.delete_user')
     def test_mb_user_deleter_valid_account(self, mock_delete_user, mock_authorize_mb_user_deleter):

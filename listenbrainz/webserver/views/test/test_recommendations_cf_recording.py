@@ -85,19 +85,19 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         mock_user.assert_called_with("vansika")
         mock_template.assert_called_with(active_section='raw', user=mock_user.return_value)
 
-    def test_get_template_missing_user_from_rec_db(self):
+    def test_get_props_missing_user_from_rec_db(self):
         user = User.from_dbrow(self.user)
         props = recommendations_cf_recording._get_props(active_section='raw', user=user)
-        self.assert_context(props['user'], user)
+        self.assertEqual(props['user'], user)
 
-    def test_get_template_missing_rec_raw(self):
+    def test_get_props_missing_rec_raw(self):
         user = User.from_dbrow(self.user2)
         props = recommendations_cf_recording._get_props(active_section='raw', user=user)
-        self.assert_context(props['user'], user)
+        self.assertEqual(props['user'], user)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
-    def test_get_template_empty_repsonce_raw(self, mock_get_recommendations, mock_get_rec):
+    def test_get_props_empty_repsonce_raw(self, mock_get_recommendations, mock_get_rec):
         user = User.from_dbrow(self.user2)
 
         mock_get_rec.return_value = UserRecommendationsData(**{
@@ -113,13 +113,13 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         mock_get_recommendations.return_value = []
 
         props = recommendations_cf_recording._get_props(active_section='raw', user=user)
-        self.assert_context(props['user'], user)
+        self.assertEqual(props['user'], user)
         error_msg = "An error occurred while processing your request. Check back later!"
-        self.assert_context(props['errorMsg'], error_msg)
+        self.assertEqual(props['errorMsg'], error_msg)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
-    def test_get_template(self, mock_get_recommendations, mock_get_rec):
+    def test_get_props(self, mock_get_recommendations, mock_get_rec):
         # active_section = 'raw'
         user = User.from_dbrow(self.user2)
         created = datetime.utcnow()
