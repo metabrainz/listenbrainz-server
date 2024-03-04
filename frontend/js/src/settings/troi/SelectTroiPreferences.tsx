@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
@@ -9,7 +10,13 @@ type SelectTroiPreferencesProps = {
   exportToSpotify: boolean;
 };
 
-type SelectTroiPreferencesLoaderData = SelectTroiPreferencesProps;
+type SelectTroiPreferencesLoaderData = {
+  troi_prefs: {
+    troi: {
+      export_to_spotify: boolean;
+    };
+  };
+};
 
 export interface SelectTroiPreferencesState {
   exportToSpotify: boolean;
@@ -86,6 +93,9 @@ class SelectTroiPreferences extends React.Component<
 
     return (
       <>
+        <Helmet>
+          <title>Select Playlist Preferences</title>
+        </Helmet>
         <h3>Configure auto export of generated playlists</h3>
         <p>
           If this setting is turned on, ListenBrainz will automatically export
@@ -127,18 +137,7 @@ class SelectTroiPreferences extends React.Component<
 
 export function SelectTroiPreferencesWrapper() {
   const data = useLoaderData() as SelectTroiPreferencesLoaderData;
-  return <SelectTroiPreferences {...data} />;
-}
-
-export const SelectTroiPreferencesLoader = async () => {
-  const response = await fetch("/settings/troi/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
   const { troi_prefs } = data;
   const exportToSpotify = troi_prefs?.troi?.export_to_spotify ?? false;
-  return { exportToSpotify };
-};
+  return <SelectTroiPreferences exportToSpotify={exportToSpotify} />;
+}

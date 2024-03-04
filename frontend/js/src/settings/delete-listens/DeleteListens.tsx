@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { redirect, useLocation, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { downloadFile } from "../export/ExportData";
@@ -68,6 +69,9 @@ export default function DeleteListens() {
 
   return (
     <>
+      <Helmet>
+        <title>Delete Listens</title>
+      </Helmet>
       <h3 className="page-title">Delete your listens</h3>
       <p>
         Hi {name}, are you sure you want to delete listens imported into your
@@ -77,7 +81,10 @@ export default function DeleteListens() {
       <p>Once deleted, all your listens data will be removed PERMANENTLY.</p>
 
       <p>
-        Warning: if you are still connected to Spotify, the last 50 Spotify tracks might be auto-reimported. <Link to="/settings/music-services/details/">Disconnect</Link> before deleting. 
+        Warning: if you are still connected to Spotify, the last 50 Spotify
+        tracks might be auto-reimported.{" "}
+        <Link to="/settings/music-services/details/">Disconnect</Link> before
+        deleting.
       </p>
 
       <p>

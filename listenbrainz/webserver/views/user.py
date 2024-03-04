@@ -2,10 +2,9 @@ from datetime import datetime
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
-import orjson
 
-from flask import Blueprint, render_template, request, url_for, redirect, current_app, jsonify
-from flask_login import current_user
+from flask import Blueprint, render_template, request, url_for, redirect, jsonify, current_app
+from flask_login import current_user, login_required
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
@@ -30,39 +29,14 @@ user_bp = Blueprint("user", __name__)
 redirect_bp = Blueprint("redirect", __name__)
 
 
-def redirect_user_page(target):
-    """Redirect a well-known url to a user's profile.
-
-    The user-facing informational pages contain a username in the url. This means
-    that we don't have a standard url that we can send any user to (for example a link
-    on twitter). We configure some standardised URLS /my/[page] that will redirect
-    the user to this specific page in their namespace if they are logged in."""
-
-    def inner():
-        if current_user.is_authenticated:
-            return redirect(url_for(target, user_name=current_user.musicbrainz_id, **request.args))
-        else:
-            return current_app.login_manager.unauthorized()
-
-    return inner
+@redirect_bp.route('/', defaults={'path': ''})
+@redirect_bp.route('/<path:path>/')
+@login_required
+def index(path):
+    return render_template("index.html", user=current_user)
 
 
-redirect_bp.add_url_rule("/listens/", "redirect_listens",
-                         redirect_user_page("user.profile"))
-redirect_bp.add_url_rule("/stats/", "redirect_stats",
-                         redirect_user_page("user.stats"))
-redirect_bp.add_url_rule("/playlists/", "redirect_playlists",
-                         redirect_user_page("user.playlists"))
-redirect_bp.add_url_rule("/recommendations/",
-                         "redirect_recommendations",
-                         redirect_user_page("user.recommendation_playlists"))
-redirect_bp.add_url_rule("/taste/", "redirect_taste",
-                         redirect_user_page("user.taste"))
-redirect_bp.add_url_rule("/year-in-music/", "redirect_year_in_music",
-                         redirect_user_page("user.year_in_music"))
-
-
-@user_bp.route("/<user_name>/")
+@user_bp.route("/<user_name>/", methods=['POST'])
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
@@ -80,16 +54,16 @@ def profile(user_name):
         try:
             max_ts = int(max_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument max_ts: %s" %
-                             request.args.get("max_ts"))
+            return jsonify({"error": "Incorrect timestamp argument max_ts: %s" %
+                            request.args.get("max_ts")}), 400
 
     min_ts = request.args.get("min_ts")
     if min_ts is not None:
         try:
             min_ts = int(min_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument min_ts: %s" %
-                             request.args.get("min_ts"))
+            return jsonify({"error": "Incorrect timestamp argument min_ts: %s" %
+                            request.args.get("min_ts")}), 400
 
     args = {}
     if max_ts:
@@ -119,45 +93,26 @@ def profile(user_name):
     if pin:
         pin = fetch_track_metadata_for_items(webserver.ts_conn, [pin])[0].to_api()
 
-    props = {
+    data = {
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
         },
         "listens": listens,
-        "latest_listen_ts": max_ts_per_user,
-        "oldest_listen_ts": min_ts_per_user,
-        "profile_url": url_for('user.profile', user_name=user_name),
+        "latestListenTs": max_ts_per_user,
+        "oldestListenTs": min_ts_per_user,
+        "profile_url": url_for('user.index', path="", user_name=user_name),
         "userPinnedRecording": pin,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
     }
 
-    return render_template("user/profile.html",
-                           props=orjson.dumps(props).decode("utf-8"),
-                           user=user,
-                           active_section='listens')
+    return jsonify(data)
 
 
-@user_bp.route("/<user_name>/artists/")
-def artists(user_name):
-    """ Redirect to charts page """
-    page = request.args.get('page', default=1)
-    stats_range = request.args.get('range', default="all_time")
-    return redirect(url_for('user.charts', user_name=user_name, entity='artist', page=page, range=stats_range),
-                    code=301)
-
-
-@user_bp.route("/<user_name>/history/")
-def history(user_name):
-    """ Redirect to charts page """
-    entity = request.args.get('entity', default="artist")
-    page = request.args.get('page', default=1)
-    stats_range = request.args.get('range', default="all_time")
-    return redirect(url_for('user.charts', user_name=user_name, entity=entity, page=page, range=stats_range), code=301)
-
-
-@user_bp.route("/<user_name>/charts/")
+@user_bp.route("/<user_name>/stats/top-artists/", methods=['POST'])
+@user_bp.route("/<user_name>/stats/top-albums/", methods=['POST'])
+@user_bp.route("/<user_name>/stats/top-tracks/", methods=['POST'])
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
@@ -172,21 +127,10 @@ def charts(user_name):
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
-    return render_template(
-        "user/charts.html",
-        active_section="stats",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(props)
 
 
-@user_bp.route("/<user_name>/reports/")
-def reports(user_name):
-    """ Redirect to stats page """
-    return redirect(url_for('user.stats', user_name=user_name), code=301)
-
-
-@user_bp.route("/<user_name>/stats/")
+@user_bp.route("/<user_name>/stats/", methods=['POST'])
 def stats(user_name: str):
     """ Show user stats """
     user = _get_user(user_name)
@@ -196,25 +140,15 @@ def stats(user_name: str):
         "id": user.id,
     }
 
-    props = {
+    data = {
         "user": user_data,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
-    return render_template(
-        "user/stats.html",
-        active_section="stats",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(data)
 
 
-@user_bp.route("/<user_name>/collaborations/")
-def collaborations(user_name: str):
-    return redirect(url_for("user.playlists", user_name=user_name))
-
-
-@user_bp.route("/<user_name>/playlists/")
+@user_bp.route("/<user_name>/playlists/", methods=['POST'])
 @web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
@@ -235,23 +169,17 @@ def playlists(user_name: str):
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
-    props = {
+    data = {
         "playlists": playlists,
         "user": user_data,
-        "active_section": "playlists",
-        "playlist_count": playlist_count,
+        "playlistCount": playlist_count,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
-    return render_template(
-        "playlists/playlists.html",
-        active_section="playlists",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(data)
 
 
-@user_bp.route("/<user_name>/recommendations/")
+@user_bp.route("/<user_name>/recommendations/", methods=['POST'])
 @web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
@@ -260,15 +188,15 @@ def recommendation_playlists(user_name: str):
     try:
         offset = int(offset)
     except ValueError:
-        raise BadRequest("Incorrect int argument offset: %s" %
-                         request.args.get("offset"))
+        return jsonify({"error": "Incorrect int argument offset: %s" %
+                        request.args.get("offset")}), 400
 
     count = request.args.get("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     try:
         count = int(count)
     except ValueError:
-        raise BadRequest("Incorrect int argument count: %s" %
-                         request.args.get("count"))
+        return jsonify({"error": "Incorrect int argument count: %s" %
+                        request.args.get("count")}), 400
     user = _get_user(user_name)
     user_data = {
         "name": user.musicbrainz_id,
@@ -280,18 +208,13 @@ def recommendation_playlists(user_name: str):
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
-    props = {
+    data = {
         "playlists": playlists,
         "user": user_data,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
-    return render_template(
-        "playlists/recommendations.html",
-        active_section="recommendations",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(data)
 
 
 @user_bp.route("/<user_name>/report-user/", methods=['POST'])
@@ -359,7 +282,7 @@ def logged_in_user_follows_user(user):
     return None
 
 
-@user_bp.route("/<user_name>/taste/")
+@user_bp.route("/<user_name>/taste/", methods=['POST'])
 @web_listenstore_needed
 def taste(user_name: str):
     """ Show user feedback(love/hate) and pins.
@@ -375,8 +298,8 @@ def taste(user_name: str):
     try:
         score = int(score)
     except ValueError:
-        raise BadRequest("Incorrect int argument score: %s" %
-                         request.args.get("score"))
+        return jsonify({"error": "Incorrect int argument score: %s" %
+                        request.args.get("score")}), 400
 
     user = _get_user(user_name)
     user_data = {
@@ -394,7 +317,7 @@ def taste(user_name: str):
     pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, pins)]
     pin_count = get_pin_count_for_user(db_conn, user_id=user.id)
 
-    props = {
+    data = {
         "feedback": [f.to_api() for f in feedback],
         "feedback_count": feedback_count,
         "user": user_data,
@@ -402,35 +325,38 @@ def taste(user_name: str):
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "pins": pins,
         "pin_count": pin_count,
-        "profile_url": url_for('user.profile', user_name=user_name),
+        "profile_url": url_for('user.index', path="", user_name=user_name),
     }
 
-    return render_template(
-        "user/taste.html",
-        active_section="taste",
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user
-    )
+    return jsonify(data)
 
 
-@user_bp.route("/<user_name>/year-in-music/")
-@user_bp.route("/<user_name>/year-in-music/<int:year>/")
+@user_bp.route("/<user_name>/year-in-music/", methods=['POST'])
+@user_bp.route("/<user_name>/year-in-music/<int:year>/", methods=['POST'])
 def year_in_music(user_name, year: int = 2023):
     """ Year in Music """
     if year != 2021 and year != 2022 and year != 2023:
-        raise NotFound(f"Cannot find Year in Music report for year: {year}")
+        return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
 
     user = _get_user(user_name)
-    return render_template(
-        "user/year-in-music.html",
-        user_name=user_name,
-        year=year,
-        props=orjson.dumps({
-            "data": db_year_in_music.get(user.id, year) or {},
-            "user": {
-                "id": user.id,
-                "name": user.musicbrainz_id,
-            }
-        }).decode("utf-8"),
-        year_in_music_js_file=f"yearInMusic{year}.js"
-    )
+    try:
+        yearInMusicData = db_year_in_music.get(user.id, year) or {}
+    except Exception as e:
+        yearInMusicData = {}
+        current_app.logger.error(f"Error getting Year in Music data for user {user_name}: {e}")
+
+    return jsonify({
+        "data": yearInMusicData,
+        "user": {
+            "id": user.id,
+            "name": user.musicbrainz_id,
+        },
+    })
+
+
+@user_bp.route("/<user_name>/",  defaults={'path': ''})
+@user_bp.route('/<user_name>/<path:path>/')
+@web_listenstore_needed
+def index(user_name, path):
+    user = _get_user(user_name)
+    return render_template("index.html", user=user)

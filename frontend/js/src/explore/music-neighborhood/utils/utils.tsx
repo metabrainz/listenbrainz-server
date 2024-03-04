@@ -1,7 +1,7 @@
 import * as React from "react";
 import html2canvas from "html2canvas";
 import { toast } from "react-toastify";
-import { ToastMsg } from "../../notifications/Notifications";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 const saveAs = (blob: string, fileName: string) => {
   const elem = window.document.createElement("a");

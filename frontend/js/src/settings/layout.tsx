@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+} from "react-router-dom";
 
 type Section = {
   title: string;
@@ -49,6 +55,7 @@ function SettingsLayout() {
 
   return (
     <>
+      <ScrollRestoration />
       <div className="secondary-nav">
         <ol className="breadcrumb">
           <li>

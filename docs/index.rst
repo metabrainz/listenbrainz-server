@@ -53,6 +53,7 @@ Contents
    maintainers/dumps
    maintainers/mapping
    maintainers/spotify-reader
+   maintainers/rabbitmq
    maintainers/updating-prod-db-schema
    maintainers/pull-requests
 

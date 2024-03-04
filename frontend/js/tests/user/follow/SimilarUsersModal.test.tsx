@@ -1,5 +1,6 @@
 import * as React from "react";
 import { mount } from "enzyme";
+import { BrowserRouter } from "react-router-dom";
 import SimilarUsersModal from "../../../src/user/components/follow/SimilarUsersModal";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -30,7 +31,9 @@ describe("<SimilarUsersModal />", () => {
   it("renders", () => {
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <SimilarUsersModal {...props} />
+        <BrowserRouter>
+          <SimilarUsersModal {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find(".similar-users-list")).toHaveLength(1);

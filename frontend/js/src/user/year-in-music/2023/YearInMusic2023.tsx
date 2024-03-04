@@ -1,4 +1,3 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
@@ -26,19 +25,15 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import NiceModal from "@ebay/nice-modal-react";
 import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
-import ErrorBoundary from "../../../utils/ErrorBoundary";
+import { Link, useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
-
-import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
 import {
   generateAlbumArtThumbnailLink,
   getArtistLink,
-  getPageProps,
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
@@ -50,6 +45,7 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../components/follow/FollowButton";
+import SEO, { YIMYearMetaTags } from "../SEO";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -118,6 +114,12 @@ export type YearInMusicProps = {
     }>;
   };
 };
+
+type YearInMusicLoaderData = {
+  user: YearInMusicProps["user"];
+  data: YearInMusicProps["yearInMusicData"];
+};
+
 enum YIM2023Color {
   green = "#4C6C52",
   red = "#BE4A55",
@@ -162,6 +164,13 @@ export default class YearInMusic extends React.Component<
 
   async componentDidMount() {
     await this.getFollowing();
+  }
+
+  async componentDidUpdate(prevProps: YearInMusicProps) {
+    const { user } = this.props;
+    if (user !== prevProps.user) {
+      await this.getFollowing();
+    }
   }
 
   private getPlaylistByName(
@@ -524,9 +533,13 @@ export default class YearInMusic extends React.Component<
               loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
             />
           )}
-          <a href={linkToUserProfile} role="button" className="btn btn-info">
+          <Link
+            to={`/user/${user.name}/`}
+            role="button"
+            className="btn btn-info"
+          >
             ListenBrainz Profile
-          </a>
+          </Link>
           <div className="input-group">
             <input
               type="text"
@@ -558,6 +571,8 @@ export default class YearInMusic extends React.Component<
         role="main"
         style={{ ["--selectedColor" as any]: selectedColor }}
       >
+        <SEO year={2023} userName={user?.name} />
+        <YIMYearMetaTags year={2023} />
         <div id="main-header">
           <div className="color-picker">
             <img
@@ -1350,9 +1365,9 @@ export default class YearInMusic extends React.Component<
               >
                 {followingList.slice(0, 15).map((followedUser, index) => {
                   return (
-                    <a
+                    <Link
                       className="buddy content-card card"
-                      href={`/user/${followedUser}/year-in-music/2023`}
+                      to={`/user/${followedUser}/year-in-music/2023/`}
                     >
                       <div className="img-container">
                         <img
@@ -1363,7 +1378,7 @@ export default class YearInMusic extends React.Component<
                       <div className="small-stat">
                         <div className="value">{followedUser}</div>
                       </div>
-                    </a>
+                    </Link>
                   );
                 })}
               </div>
@@ -1389,7 +1404,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <a href="/explore/cover-art-collage/2023">
+            <Link to="/explore/cover-art-collage/2023/">
               <LazyLoadImage
                 src="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
                 placeholderSrc="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
@@ -1401,7 +1416,7 @@ export default class YearInMusic extends React.Component<
                 loading="lazy"
                 decoding="async"
               />
-            </a>
+            </Link>
           </div>
 
           <div className="section">
@@ -1466,7 +1481,7 @@ export default class YearInMusic extends React.Component<
               <br />
               <br />
               Feeling nostalgic? See your previous Year in Music:{" "}
-              <a href={`/user/${user.name}/year-in-music/2022`}>2022</a>
+              <Link to={`/user/${user.name}/year-in-music/2022/`}>2022</Link>
             </div>
           </div>
         </div>
@@ -1492,24 +1507,8 @@ export default class YearInMusic extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, reactProps, globalAppContext } = await getPageProps();
-
-  const { user, data: yearInMusicData } = reactProps;
-
-  const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <YearInMusicWithAlertNotifications
-            user={user}
-            yearInMusicData={yearInMusicData}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function YearInMusicWrapper() {
+  const props = useLoaderData() as YearInMusicLoaderData;
+  const { user, data: yearInMusicData } = props;
+  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
+}
