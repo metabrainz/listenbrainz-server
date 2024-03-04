@@ -364,6 +364,7 @@ def missing_mb_data():
     }
     return jsonify(data)
 
+
 @settings_bp.route("/area/", methods=["POST"])
 @api_login_required
 def set_user_area():

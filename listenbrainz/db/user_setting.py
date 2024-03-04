@@ -138,9 +138,9 @@ def set_user_area_id(db_conn, user_id: int, area_mbid: str):
     """
     try:
         db_conn.execute(sqlalchemy.text("""
-            INSERT INTO user_setting (user_id, area_mbid) 
+            INSERT INTO user_setting (user_id, area_mbid)
             VALUES (:user_id, :area_mbid)
-            ON CONFLICT (user_id) DO UPDATE 
+            ON CONFLICT (user_id) DO UPDATE
             SET  area_mbid = EXCLUDED.area_mbid
         """), {
             'user_id': user_id, 'area_mbid': area_mbid
