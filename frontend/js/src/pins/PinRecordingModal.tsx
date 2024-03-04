@@ -222,7 +222,7 @@ export default NiceModal.create(
                 }
                 data-dismiss="modal"
               >
-                {isUpdate ? "Update Comment" : "Pin track"}
+                {isUpdate ? "Update comment" : "Pin track"}
               </button>
             </div>
           </form>
