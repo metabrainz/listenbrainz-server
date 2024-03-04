@@ -260,7 +260,7 @@ def get_pin_count_for_user(db_conn, user_id: int) -> int:
 def update_comment(db_conn, row_id: int, blurb_content: str) -> bool:
     """ Updates the comment of the user of the current pinned recording
 
-        Args: 
+        Args:
             db_conn: Database connection
             user_id: The user for which the comment of pinned record has to be updated
             blurb_content: The new comment of the user
