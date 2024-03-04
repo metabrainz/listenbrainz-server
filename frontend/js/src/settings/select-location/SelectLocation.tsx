@@ -69,7 +69,7 @@ export function SelectArea({ area: initialArea }: SelectAreaProps) {
         <br />
         Choosing your area lets us tell you about upcoming events in your area.
         You can be as broad (Country) as you like or as specific (Town) as you
-        like. This information will be public.
+        like. <b>This information will be public.</b>
       </p>
 
       <div>
