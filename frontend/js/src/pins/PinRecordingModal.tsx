@@ -35,7 +35,7 @@ export default NiceModal.create(
     rowId,
   }: PinRecordingModalProps) => {
     const modal = useModal();
-    const isUpdate = Boolean(rowId == null);
+    const isUpdate = Boolean(rowId);
     const [blurbContent, setBlurbContent] = React.useState("");
 
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
