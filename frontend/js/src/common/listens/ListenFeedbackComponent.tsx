@@ -29,7 +29,7 @@ export default function ListenFeedbackComponent(
       <button
         title="Love"
         onClick={() => update(currentFeedback === 1 ? 0 : 1)}
-        className={`btn-transparent${currentFeedback === 1 ? " loved" : ""}`}
+        className={`btn btn-transparent${currentFeedback === 1 ? " loved" : ""}`}
         type="button"
       >
         <FontAwesomeIcon icon={faHeart} fixedWidth />
@@ -37,7 +37,7 @@ export default function ListenFeedbackComponent(
       <button
         title="Hate"
         onClick={() => update(currentFeedback === -1 ? 0 : -1)}
-        className={`btn-transparent${currentFeedback === -1 ? " hated" : ""}`}
+        className={`btn btn-transparent${currentFeedback === -1 ? " hated" : ""}`}
         type="button"
       >
         <FontAwesomeIcon icon={faHeartCrack} fixedWidth />

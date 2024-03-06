@@ -181,7 +181,7 @@ export default NiceModal.create(() => {
                         compact
                         additionalActions={
                           <ListenControl
-                            buttonClassName="btn-transparent"
+                            buttonClassName="btn btn-transparent"
                             text=""
                             title="Reset"
                             icon={faTimesCircle}

@@ -505,7 +505,7 @@ export default class ListenCard extends React.Component<
                 <>
                   <button
                     title="More actions"
-                    className="btn-transparent dropdown-toggle"
+                    className="btn btn-transparent dropdown-toggle"
                     id="listenControlsDropdown"
                     data-toggle="dropdown"
                     aria-haspopup="true"
@@ -665,7 +665,7 @@ export default class ListenCard extends React.Component<
               )}
               <button
                 title="Play"
-                className={`btn-transparent play-button${
+                className={`btn btn-transparent play-button${
                   isCurrentlyPlaying ? " playing" : ""
                 }`}
                 onClick={this.playListen}
