@@ -55,8 +55,10 @@ export default class RecentListens extends React.Component<
     const { APIService, currentUser } = this.context;
 
     return (
-      <div role="main">
-        <h3>Global listens</h3>
+      <div>
+        <div className="listen-header">
+          <h3 className="header-with-line">Global listens</h3>
+        </div>
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             <Card id="listen-count-card">
