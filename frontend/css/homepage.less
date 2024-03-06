@@ -45,7 +45,6 @@
     }
 
     h1 {
-      margin-top: 0;
       color: #fafafa;
     }
 
@@ -349,7 +348,7 @@
 
       .homepage-upper-headphone {
         height: min(66%, 460px);
-        top: 150px;
+        top: min(150px, 18%);
       }
     }
 
@@ -442,6 +441,43 @@
       .homepage-lower-speaker {
         height: min(30%, 275px);
       }
+    }
+  }
+  @media (max-height:600px){
+    .homepage-lower, .homepage-upper{
+      .number-count-digit{
+          background: #383836;
+          color: #fafafa;
+        &::after {
+          background-color: #383836;
+        }
+      }
+      h1 {
+        font-size: calc(100vh / 13);
+        color: @dark-grey;
+      }
+      padding-left: 3em;
+      .listen-container {
+        top: 0;
+      }
+      .homepage-info{
+       bottom:1.5em; 
+       color: @dark-grey;
+       max-width: 50%;
+      }
+      .create-account-button {
+        right: 0;
+        position: absolute;
+        top: 1.7em;
+      }
+    }
+    .homepage-upper .homepage-upper-grey-box{
+      clip-path: polygon(58% 0%,51% 100%,0% 100%,0% 0%);
+      height: 100%;
+    }
+    .homepage-lower .homepage-lower-grey-box {
+      clip-path: polygon(49% 0%, 58% 100%, 0% 100%, 0% 0%);
+      height: 100%;
     }
   }
 }
