@@ -40,7 +40,7 @@ class FreshReleasesTestCase(SparkNewTestCase):
 
         database = "fresh_releases_20220919"
 
-        itr = fresh_releases.main(None, database)
+        itr = fresh_releases.main(None, database, 0)
 
         self.assertEqual(next(itr), {
             "type": "couchdb_data_start",

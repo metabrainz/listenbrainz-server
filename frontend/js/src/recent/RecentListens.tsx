@@ -1,34 +1,23 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-import { get } from "lodash";
-import { toast } from "react-toastify";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
+import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import ListenCard from "../common/listens/ListenCard";
-
-import {
-  getPageProps,
-  getRecordingMBID,
-  getTrackName,
-  getRecordingMSID,
-} from "../utils/utils";
-
 import Card from "../components/Card";
-import { ToastMsg } from "../notifications/Notifications";
+
+import { getTrackName } from "../utils/utils";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
   globalListenCount: number;
   globalUserCount: string;
 };
+
+type RecentListensLoaderData = RecentListensProps;
 
 export interface RecentListensState {
   listens: Array<Listen>;
@@ -55,7 +44,10 @@ export default class RecentListens extends React.Component<
     const { APIService, currentUser } = this.context;
 
     return (
-      <div>
+      <div role="main">
+        <Helmet>
+          <title>Recent listens</title>
+        </Helmet>
         <div className="listen-header">
           <h3 className="header-with-line">Global listens</h3>
         </div>
@@ -110,40 +102,22 @@ export default class RecentListens extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
+export function RecentListensWrapper() {
+  const data = useLoaderData() as RecentListensLoaderData;
+  return <RecentListens {...data} />;
+}
 
-  const { listens, globalListenCount, globalUserCount } = reactProps;
-
-  const RecentListensWithAlertNotifications = withAlertNotifications(
-    RecentListens
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <RecentListensWithAlertNotifications
-            listens={listens}
-            globalListenCount={globalListenCount}
-            globalUserCount={globalUserCount}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export const RecentListensLoader = async ({
+  request,
+}: {
+  request: Request;
+}) => {
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  return { ...data };
+};

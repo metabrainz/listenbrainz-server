@@ -7,7 +7,6 @@ import { toast } from "react-toastify";
 import ReactMarkdown from "react-markdown";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
-import SpotifyAPIService from "./SpotifyAPIService";
 import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
@@ -622,6 +621,7 @@ const getPageProps = async (): Promise<{
           try {
             const newToken = await apiService.refreshMusicbrainzToken();
             _.set(globalAppContext, "musicbrainzAuth.access_token", newToken);
+            return newToken;
           } catch (err) {
             // eslint-disable-next-line no-console
             console.error(
@@ -629,6 +629,7 @@ const getPageProps = async (): Promise<{
               err.toString()
             );
           }
+          return undefined;
         },
       },
       userPreferences: user_preferences,
@@ -812,6 +813,31 @@ const getAlbumArtFromReleaseMBID = async (
   return undefined;
 };
 
+const getAlbumArtFromSpotifyTrackID = async (
+  spotifyTrackID: string,
+  spotifyUser?: SpotifyUser
+): Promise<string | undefined> => {
+  const APIBaseURI = "https://api.spotify.com/v1";
+  if (!spotifyUser || !spotifyTrackID) {
+    return undefined;
+  }
+  try {
+    const response = await fetch(`${APIBaseURI}/tracks/${spotifyTrackID}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${spotifyUser?.access_token}`,
+      },
+    });
+    if (response.ok) {
+      const track: SpotifyTrack = await response.json();
+      return track.album?.images?.[0]?.url;
+    }
+  } catch (error) {
+    return undefined;
+  }
+  return undefined;
+};
+
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
   spotifyUser?: SpotifyUser,
@@ -823,9 +849,7 @@ const getAlbumArtFromListenMetadata = async (
     SpotifyPlayer.hasPermissions(spotifyUser)
   ) {
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
-    return new SpotifyAPIService(spotifyUser).getAlbumArtFromSpotifyTrackID(
-      trackID
-    );
+    return getAlbumArtFromSpotifyTrackID(trackID, spotifyUser);
   }
   if (YoutubePlayer.isListenFromThisService(listen)) {
     const videoId = YoutubePlayer.getVideoIDFromListen(listen);

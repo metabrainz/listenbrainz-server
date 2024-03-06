@@ -2,6 +2,7 @@ import * as React from "react";
 import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { Link } from "react-router-dom";
 
 import APIService from "../../../utils/APIService";
 import Card from "../../../components/Card";
@@ -105,11 +106,11 @@ export default class UserTopEntity extends React.Component<
 
     let statsUrl;
     if (user) {
-      statsUrl = `${window.location.origin}/user/${user.name}`;
+      statsUrl = `${window.location.origin}/user/${user.name}/stats`;
     } else {
       statsUrl = `${window.location.origin}/statistics`;
     }
-    statsUrl += `/charts?range=${range}&entity=${entity}`;
+    statsUrl += `/top-${terminology}s/?range=${range}`;
 
     const entityTextOnCard = `${terminology}s`;
     if (hasError) {
@@ -303,9 +304,9 @@ export default class UserTopEntity extends React.Component<
               )}
           </div>
           <div className="mb-15 text-center">
-            <a href={statsUrl} className="btn btn-outline">
+            <Link to={statsUrl} className="btn btn-outline">
               View more…
-            </a>
+            </Link>
           </div>
         </Loader>
       </Card>

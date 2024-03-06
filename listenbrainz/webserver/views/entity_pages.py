@@ -101,6 +101,9 @@ def release_redirect(release_mbid):
 @web_listenstore_needed
 def artist_entity(artist_mbid):
     """ Show a artist page with all their relevant information """
+    # VA artist mbid
+    if artist_mbid in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
+        raise BadRequest(f"Provided artist mbid is disabled for viewing on ListenBrainz")
 
     if not is_valid_uuid(artist_mbid):
         raise BadRequest("Provided artist mbid is invalid: %s" % artist_mbid)

@@ -1,9 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import * as Sentry from "@sentry/react";
 import * as _ from "lodash";
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -14,12 +12,12 @@ import {
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Integrations } from "@sentry/tracing";
 import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "./components/AddListenModal";
@@ -32,14 +30,11 @@ import ListenCountCard from "../common/listens/ListenCountCard";
 import { ToastMsg } from "../notifications/Notifications";
 import PinnedRecordingCard from "./components/PinnedRecordingCard";
 import APIServiceClass from "../utils/APIService";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import {
   formatWSMessageToListen,
   getListenablePin,
   getListenCardKey,
-  getPageProps,
   getRecordingMSID,
-  getTrackName,
 } from "../utils/utils";
 import FollowButton from "./components/follow/FollowButton";
 
@@ -68,6 +63,8 @@ export interface ListensState {
   playingNowListen?: Listen;
   followingList: Array<string>;
 }
+
+type ListenLoaderData = ListensProps;
 
 export default class Listens extends React.Component<
   ListensProps,
@@ -692,7 +689,12 @@ export default class Listens extends React.Component<
     const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
     const isCurrentUsersPage = currentUser?.name === user?.name;
     return (
-      <div id="dashboard">
+      <div role="main" id="dashboard">
+        <Helmet>
+          <title>{`${
+            user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
+          } Listens`}</title>
+        </Helmet>
         <div className="row">
           <div className="col-md-4 col-md-push-8 side-column">
             <div className="listen-header">
@@ -972,46 +974,7 @@ export default class Listens extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const {
-    latest_listen_ts,
-    listens,
-    oldest_listen_ts,
-    userPinnedRecording,
-    user,
-  } = reactProps;
-
-  const ListensWithAlertNotifications = withAlertNotifications(Listens);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <ListensWithAlertNotifications
-            latestListenTs={latest_listen_ts}
-            listens={listens}
-            userPinnedRecording={userPinnedRecording}
-            oldestListenTs={oldest_listen_ts}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function ListensWrapper() {
+  const data = useLoaderData() as ListenLoaderData;
+  return <Listens {...data} />;
+}

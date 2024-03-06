@@ -1,7 +1,5 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
 import { toast } from "react-toastify";
 import {
   faBell,
@@ -22,26 +20,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { get as _get, reject as _reject } from "lodash";
+import { reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
-import { Integrations } from "@sentry/tracing";
-import * as _ from "lodash";
-import NiceModal from "@ebay/nice-modal-react";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { Helmet } from "react-helmet";
 
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
 import ListenCard from "../common/listens/ListenCard";
 import {
-  getPageProps,
   preciseTimestamp,
   getAdditionalContent,
   feedReviewEventToListen,
   getReviewEventContent,
-  getRecordingMBID,
-  getRecordingMSID,
   personalRecommendationEventToListen,
   getPersonalRecommendationEventContent,
 } from "../utils/utils";
@@ -63,7 +54,7 @@ export enum EventType {
 }
 
 export type UserFeedPageProps = {
-  events: TimelineEvent[];
+  events?: TimelineEvent[];
 };
 
 export type UserFeedPageState = {
@@ -660,7 +651,10 @@ export default class UserFeedPage extends React.Component<
       !previousEventTs ||
       (earliestEventTs && events?.[0]?.created >= earliestEventTs);
     return (
-      <div>
+      <>
+        <Helmet>
+          <title>Feed</title>
+        </Helmet>
         <div className="listen-header">
           <h3 className="header-with-line">Latest activity</h3>
         </div>
@@ -775,36 +769,3 @@ export default class UserFeedPage extends React.Component<
     );
   }
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { events } = reactProps;
-
-  const UserFeedPageWithAlertNotifications = withAlertNotifications(
-    UserFeedPage
-  );
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserFeedPageWithAlertNotifications events={events} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

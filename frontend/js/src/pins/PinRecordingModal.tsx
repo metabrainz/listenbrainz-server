@@ -63,6 +63,7 @@ export default NiceModal.create(
 
     const closeModal = () => {
       modal.hide();
+      document?.body?.classList?.remove("modal-open");
       setTimeout(modal.remove, 200);
     };
 

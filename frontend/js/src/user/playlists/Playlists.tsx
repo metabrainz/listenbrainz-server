@@ -7,21 +7,17 @@ import {
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
+import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import Card from "../../components/Card";
 import Pill from "../../components/Pill";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import { ToastMsg } from "../../notifications/Notifications";
-import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getPageProps } from "../../utils/utils";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import { getPlaylistId, PlaylistType } from "../../playlists/utils";
@@ -37,6 +33,8 @@ export type UserPlaylistsState = {
   playlistCount: number;
   playlistType: PlaylistType;
 };
+
+type UserPlaylistsLoaderData = UserPlaylistsProps;
 
 export default class UserPlaylists extends React.Component<
   UserPlaylistsProps,
@@ -129,9 +127,15 @@ export default class UserPlaylists extends React.Component<
   render() {
     const { user } = this.props;
     const { playlists, playlistCount, playlistType } = this.state;
+    const { currentUser } = this.context;
 
     return (
       <div role="main" id="playlists-page">
+        <Helmet>
+          <title>{`${
+            user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
+          } Playlists`}</title>
+        </Helmet>
         <div style={{ marginTop: "1em" }}>
           <Pill
             active={playlistType === PlaylistType.playlists}
@@ -183,40 +187,7 @@ export default class UserPlaylists extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { playlists, user, playlist_count: playlistCount } = reactProps;
-
-  const UserPlaylistsWithAlertNotifications = withAlertNotifications(
-    UserPlaylists
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserPlaylistsWithAlertNotifications
-            playlistCount={playlistCount}
-            playlists={playlists}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function UserPlaylistsWrapper() {
+  const data = useLoaderData() as UserPlaylistsLoaderData;
+  return <UserPlaylists {...data} />;
+}
