@@ -440,7 +440,19 @@ export default class ListenCard extends React.Component<
       );
     } else {
       // eslint-disable-next-line react/jsx-no-useless-fragment
-      thumbnail = <div className="listen-thumbnail" />;
+      thumbnail = (
+        <div className="listen-thumbnail">
+          <div className="cover-art-fallback">
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faImage} />
+              <FontAwesomeIcon
+                icon={faSquare}
+                transform="shrink-10 left-5 up-2.5"
+              />
+            </span>
+          </div>
+        </div>
+      );
     }
 
     return (
