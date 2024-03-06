@@ -694,7 +694,7 @@ export default class Listens extends React.Component<
     return (
       <div id="dashboard">
         <div className="row">
-          <div className="col-md-4 col-md-push-8">
+          <div className="col-md-4 col-md-push-8 side-column">
             <div className="listen-header">
               {isUserLoggedIn && !isCurrentUsersPage && (
                 <FollowButton

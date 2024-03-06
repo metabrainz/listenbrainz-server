@@ -9,7 +9,7 @@
 @cover-art-thumbnail-size: 66px;
 
 #dashboard {
-  .side-column{
+  .side-column > *:not(:last-child) {
     margin-bottom: 15px;
   }
 }
@@ -229,7 +229,7 @@
       position: relative; // This is need for dropdown menu positioning
       margin-left: auto; // align flexbox item at flex-end
       color: #8d8d8d;
-      
+
       > * {
         align-self: center;
         stroke-width: 40px;
