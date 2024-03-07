@@ -29,7 +29,7 @@ export default function ListenFeedbackComponent(
       <button
         title="Love"
         onClick={() => update(currentFeedback === 1 ? 0 : 1)}
-        className={`btn btn-transparent${
+        className={`btn btn-transparent love${
           currentFeedback === 1 ? " loved" : ""
         }`}
         type="button"
@@ -39,7 +39,7 @@ export default function ListenFeedbackComponent(
       <button
         title="Hate"
         onClick={() => update(currentFeedback === -1 ? 0 : -1)}
-        className={`btn btn-transparent${
+        className={`btn btn-transparent hate${
           currentFeedback === -1 ? " hated" : ""
         }`}
         type="button"

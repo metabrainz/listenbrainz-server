@@ -230,7 +230,7 @@
       margin-left: auto; // align flexbox item at flex-end
       color: #8d8d8d;
 
-      > * {
+      > button, > .btn {
         align-self: center;
         stroke-width: 40px;
         font-size: 18px;
@@ -246,28 +246,29 @@
         word-break: break-word;
       }
 
-      .fa-heart,
-      .fa-heart-crack {
+      .love,
+      .hate {
         color: transparent;
         stroke: #8d8d8d;
+        &:hover {
+          color: transparent;
+        }
       }
 
-      .fa-heart {
+      .love {
         &:hover {
           stroke: @love;
         }
-
         &.loved {
           stroke: transparent;
           color: @love;
         }
       }
 
-      .fa-heart-crack {
+      .hate{
         &:hover {
           stroke: @hate;
         }
-
         &.hated {
           stroke: transparent;
           color: @hate;
@@ -285,7 +286,7 @@
           display: block; // necessary for <a> tags
           width: 100%;
           background: none;
-          color: inherit;
+          color: @text-color;
           border: none;
           padding: 5px 20px;
           font: inherit;

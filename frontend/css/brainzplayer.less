@@ -211,37 +211,35 @@
       }
     }
 
-    .fa-heart,
-    .fa-heart-crack {
+    .love,
+    .hate {
       color: transparent;
       stroke: #8d8d8d;
     }
 
-    .fa-ellipsis-vertical {
-      //Thin down ellipsis icon
-      stroke: @white-background;
-    }
-
-    .fa-heart {
+    .love {
       &:hover {
         stroke: @love-color;
       }
-
       &.loved {
         stroke: transparent;
         color: @love-color;
       }
     }
 
-    .fa-heart-crack {
+    .hate{
       &:hover {
         stroke: @hate-color;
       }
-
       &.hated {
         stroke: transparent;
         color: @hate-color;
       }
+    }
+
+    .fa-ellipsis-vertical {
+      //Thin down ellipsis icon
+      stroke: @white-background;
     }
   }
 
