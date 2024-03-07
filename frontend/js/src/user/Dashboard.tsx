@@ -708,7 +708,7 @@ export default class Listens extends React.Component<
               )}
               <a
                 href={`https://musicbrainz.org/user/${user.name}`}
-                className="btn lb-follow-button" // for same style as follow button next to it
+                className="btn musicbrainz-profile-button"
                 target="_blank"
                 rel="noreferrer"
               >
