@@ -46,7 +46,7 @@
 
 pre code.hljs {
   max-height: 50vh;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .table {
@@ -320,7 +320,8 @@ pre code.hljs {
 .search-dropdown {
   display: block;
   position: absolute;
-  width: calc(100% - 40px);
+  right: 0;
+  max-width: 100%;
   z-index: 6;
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
   list-style: none;
@@ -329,7 +330,7 @@ pre code.hljs {
   background-color: @white-background;
   max-height: 102px;
   /*overflow: hidden;*/
-  overflow-y: scroll;
+  overflow-y: auto;
 
   // Links within the dropdown menu
   > a,
