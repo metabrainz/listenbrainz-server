@@ -765,7 +765,7 @@ export default class UserFeedPage extends React.Component<
           refreshYoutubeToken={APIService.refreshYoutubeToken}
           refreshSoundcloudToken={APIService.refreshSoundcloudToken}
         />
-      </div>
+      </>
     );
   }
 }
