@@ -83,7 +83,8 @@ describe("Recommendations", () => {
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find("#recommendations")).toHaveLength(1);
-    expect(wrapper.find(ListenCard)).toHaveLength(25);
+    // Due to BrainzPlayer Queue, there are 25 listens more
+    expect(wrapper.find(ListenCard)).toHaveLength(25 * 2);
   });
   describe("componentDidMount", () => {
     it('calls loadFeedback if user is the currentUser"', async () => {

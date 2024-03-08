@@ -2,6 +2,7 @@ import * as React from "react";
 import { mount } from "enzyme";
 
 import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
+import { QueueRepeatModes } from "../../../src/common/brainzplayer/BrainzPlayer";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -19,6 +20,14 @@ const props = {
   durationMs: 10000,
   seekToPositionMs: (msTimeCode: number) => {},
   listenBrainzAPIBaseURI: "api.example.com",
+  removeTrackFromQueue: (track: BrainzPlayerQueueItem) => {},
+  moveQueueItem: (evt: any) => {},
+  setQueue: (queue: BrainzPlayerQueue) => {},
+  clearQueue: () => {},
+  queue: [],
+  ambientQueue: [],
+  queueRepeatMode: QueueRepeatModes.off,
+  toggleRepeatMode: () => {},
 };
 describe("BrainzPlayerUI", () => {
   it("renders", () => {

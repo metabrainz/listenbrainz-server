@@ -5,6 +5,7 @@ import fetchMock from "jest-fetch-mock";
 import { mount } from "enzyme";
 import BrainzPlayer, {
   DataSourceType,
+  QueueRepeatModes,
 } from "../../../src/common/brainzplayer/BrainzPlayer";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -16,6 +17,7 @@ import SoundcloudPlayer from "../../../src/common/brainzplayer/SoundcloudPlayer"
 import SpotifyPlayer from "../../../src/common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../../../src/common/brainzplayer/YoutubePlayer";
 import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
+import { listenOrJSPFTrackToQueueItem } from "../../../src/playlists/utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -82,6 +84,9 @@ const listen2: Listen = {
     track_name: "Never Gonna Give You Up",
   },
 };
+
+const listenQueueItem = listenOrJSPFTrackToQueueItem(listen);
+const listen2QueueItem = listenOrJSPFTrackToQueueItem(listen2);
 
 describe("BrainzPlayer", () => {
   beforeAll(() => {
@@ -176,7 +181,7 @@ describe("BrainzPlayer", () => {
     };
     // if origin_url is a youtube link, it should play it with YoutubePlayer instead of Spotify
     await act(() => {
-      instance.playListen(youtubeListen);
+      instance.playListenEventHandler(youtubeListen);
     });
     expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
@@ -210,7 +215,7 @@ describe("BrainzPlayer", () => {
     // Try to play, should select spotify instead of first in list
     expect(instance.state.currentDataSourceIndex).toEqual(0);
     await act(() => {
-      instance.playListen(spotifyListen);
+      instance.playListenEventHandler(spotifyListen);
     });
     expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
@@ -244,7 +249,7 @@ describe("BrainzPlayer", () => {
     // Try to play, should select spotify instead of first in list
     expect(instance.state.currentDataSourceIndex).toEqual(0);
     await act(() => {
-      instance.playListen(spotifyListen);
+      instance.playListenEventHandler(spotifyListen);
     });
     expect(instance.state.currentDataSourceIndex).toEqual(2);
   });
@@ -276,7 +281,7 @@ describe("BrainzPlayer", () => {
     };
     // if origin_url is a soundcloud link, it should play it with SoundcloudPlayer instead of Spotify
     await act(() => {
-      instance.playListen(soundcloudListen);
+      instance.playListenEventHandler(soundcloudListen);
     });
     expect(instance.state.currentDataSourceIndex).toEqual(1);
   });
@@ -305,7 +310,7 @@ describe("BrainzPlayer", () => {
 
       // Initial play
       await act(() => {
-        instance.playListen(youtubeListen);
+        instance.playListenEventHandler(youtubeListen);
       });
       expect(spy).toHaveBeenCalled();
 
@@ -419,10 +424,10 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper.setState({ currentListen: listen });
+        wrapper.setState({ currentListen: listenQueueItem });
       });
 
-      expect(instance.isCurrentlyPlaying(listen)).toBe(true);
+      expect(instance.isCurrentlyPlaying(listenQueueItem)).toBe(true);
     });
 
     it("returns false if currentListen is not set", async () => {
@@ -435,7 +440,9 @@ describe("BrainzPlayer", () => {
         wrapper.setState({ currentListen: undefined });
       });
 
-      expect(instance.isCurrentlyPlaying({} as Listen)).toBeFalsy();
+      expect(
+        instance.isCurrentlyPlaying({} as BrainzPlayerQueueItem)
+      ).toBeFalsy();
     });
   });
 
@@ -447,7 +454,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper.setState({ currentListen: listen });
+        wrapper.setState({ currentListen: listenQueueItem });
       });
 
       expect(instance.getCurrentTrackName()).toEqual("Bird's Lament");
@@ -475,7 +482,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
       await act(() => {
-        wrapper.setState({ currentListen: listen });
+        wrapper.setState({ currentListen: listenQueueItem });
       });
 
       expect(instance.getCurrentTrackArtists()).toEqual("Moondog");
@@ -609,7 +616,7 @@ describe("BrainzPlayer", () => {
       );
       const instance = wrapper.instance();
       await act(async () => {
-        wrapper.setState({ isActivated: true, currentListen: listen });
+        wrapper.setState({ isActivated: true, currentListen: listenQueueItem });
       });
       expect(instance.dataSources.length).toBeGreaterThan(1);
       instance.playNextTrack = jest.fn();
@@ -618,7 +625,7 @@ describe("BrainzPlayer", () => {
         instance.failedToPlayTrack();
       });
       expect(instance.playNextTrack).not.toHaveBeenCalled();
-      expect(instance.playListen).toHaveBeenCalledWith(listen, 1);
+      expect(instance.playListen).toHaveBeenCalledWith(listenQueueItem, 1);
     });
 
     it("calls playNextTrack if we ran out of datasources", async () => {
@@ -635,7 +642,8 @@ describe("BrainzPlayer", () => {
         wrapper.setState({
           isActivated: true,
           currentDataSourceIndex: instance.dataSources.length - 1,
-          currentListen: listen,
+          currentListen: instance.state.queue[0],
+          queueRepeatMode: QueueRepeatModes.all,
         });
       });
       const playNextTrackSpy = jest.spyOn(instance, "playNextTrack");
@@ -647,12 +655,17 @@ describe("BrainzPlayer", () => {
       expect(instance.handleWarning).not.toHaveBeenCalled();
       expect(playNextTrackSpy).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledTimes(1);
-      expect(instance.playListen).toHaveBeenCalledWith(listen2);
+      expect(instance.playListen).toHaveBeenCalledWith(
+        expect.objectContaining({
+          track_metadata: instance.state.queue[0].track_metadata,
+        }),
+        0
+      );
     });
   });
   describe("submitListenToListenBrainz", () => {
     beforeAll(() => {
-      jest.useFakeTimers({advanceTimers: true});
+      jest.useFakeTimers({ advanceTimers: true });
     });
     afterAll(() => {
       jest.useRealTimers();
@@ -732,7 +745,7 @@ describe("BrainzPlayer", () => {
       const instance = wrapper.instance();
       await act(async () => {
         instance.setState({
-          currentListen: listen2,
+          currentListen: listen2QueueItem,
           currentTrackName: "Never Gonna Give You Up",
           currentTrackArtist: "Rick Astley",
           currentTrackURL:
@@ -803,7 +816,7 @@ describe("BrainzPlayer", () => {
       const instance = wrapper.instance();
       await act(async () => {
         instance.setState({
-          currentListen: listen2,
+          currentListen: listen2QueueItem,
           currentTrackName: "Never Gonna Give You Up",
           currentTrackArtist: "Rick Astley",
           currentTrackURL:
@@ -864,6 +877,76 @@ describe("BrainzPlayer", () => {
         JSON.parse(fetchMock.mock.calls[0][1].body as string);
       expect(parsedFetchbody.listen_type).toEqual("single");
       expect(parsedFetchbody.payload[0]).toEqual(expectedListen);
+    });
+  });
+
+  describe("brainzplayer_queue", () => {
+    beforeAll(() => {
+      localStorage.clear();
+    });
+    it("initializes with an empty queue", () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+      expect(wrapper.state("queue")).toEqual([]);
+    });
+    it("if the localstorage queue is empty then there is no element in the queue", () => {
+      const mockProps = {
+        ...props,
+        listens: [listen, listen2],
+      };
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...mockProps} />,
+        GlobalContextMock
+      );
+      expect(wrapper.state("queue")).toHaveLength(0);
+    });
+    it("on recieving a play message, adds it to the queue", async () => {
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...props} />,
+        GlobalContextMock
+      );
+
+      const instance = wrapper.instance();
+      const spy = jest.spyOn(instance, "addTrackToQueue");
+      instance.playNextListenFromQueue = jest.fn();
+      await act(async () => {
+        instance.playListenEventHandler(listen);
+      });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(instance.playNextListenFromQueue).toHaveBeenCalledTimes(1);
+      expect(instance.state.queue).toHaveLength(1);
+    });
+    it("add listen to next up queue if there is a current listen", async () => {
+      const mockProps = {
+        ...props,
+        listens: [listen, listen2],
+      };
+      const wrapper = mount<BrainzPlayer>(
+        <BrainzPlayer {...mockProps} />,
+        GlobalContextMock
+      );
+
+      const instance = wrapper.instance();
+      const spy = jest.spyOn(instance, "addTrackToQueue");
+      await act(async () => {
+        instance.addTrackToQueue(listen, false);
+      });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(instance.state.queue).toHaveLength(1);
+      expect(instance.state.queue[0].track_metadata).toEqual(
+        listen.track_metadata
+      );
+
+      await act(async () => {
+        instance.addTrackToQueue(listen2, true);
+      });
+
+      expect(instance.state.queue).toHaveLength(2);
+      expect(instance.state.queue[0].track_metadata).toEqual(
+        listen2.track_metadata
+      );
     });
   });
 });

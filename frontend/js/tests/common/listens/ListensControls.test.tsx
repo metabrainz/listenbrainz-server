@@ -65,7 +65,8 @@ describe("ListensControls", () => {
       });
 
       const listenCards = screen.getAllByTestId("listen");
-      expect(listenCards).toHaveLength(1);
+      // Due to BrainzPlayer Queue there is one extra listen card
+      expect(listenCards).toHaveLength(1 * 2);
 
       const removeListenButton = await within(listenCards[0]).findByLabelText(
         "Delete Listen"
