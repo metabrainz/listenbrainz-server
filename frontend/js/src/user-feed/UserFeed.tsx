@@ -476,6 +476,7 @@ export default class UserFeedPage extends React.Component<
     }
     if (
       (event.event_type === EventType.RECORDING_PIN ||
+        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
         event.event_type === EventType.RECORDING_RECOMMENDATION) &&
       event.user_name !== currentUser.name
     ) {

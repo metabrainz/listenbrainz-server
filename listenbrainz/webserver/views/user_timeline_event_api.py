@@ -569,7 +569,8 @@ def hide_user_timeline_event(user_name):
         raise APIBadRequest("JSON document must contain both event_type and event_id", data)
 
     row_id = data["event_id"]
-    if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
+    event_type = data["event_type"]
+    if event_type in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,  UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
         result = db_user_timeline_event.get_user_timeline_event_by_id(db_conn, row_id)
     elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
         result = get_pin_by_id(db_conn, row_id)
