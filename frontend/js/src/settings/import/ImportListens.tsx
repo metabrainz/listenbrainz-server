@@ -53,7 +53,7 @@ export default function Import() {
         listens, please visit the{" "} <a href="https://listenbrainz.org/add-data/">Connect services</a>
         and{" "} <a href="https://listenbrainz.org/settings/music-services/details/">Submitting data</a>
         pages.
-      </br>
+      <br/>
         Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
         Last.fm, and we cannot use it. Instead, we use the term{" "}
         <strong>listen</strong> for our data.
