@@ -94,7 +94,7 @@ export default function Import() {
         />
       )}
 
-      </br>
+      <br/>
       <h4> Reset Last.FM Import timestamp </h4>
       <p>
         If you think that a partial import has missed listens, you
