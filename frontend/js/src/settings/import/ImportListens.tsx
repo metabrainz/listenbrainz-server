@@ -49,7 +49,7 @@ export default function Import() {
         </div>
       )}
       <p>
-        Import your existing listen history from other databasess. To submit <em>new</em>
+        Import your existing listen history from other databases. To submit <em>new</em>
         listens, please visit the{" "} <a href="https://listenbrainz.org/add-data/">Connect services</a>
         and{" "} <a href="https://listenbrainz.org/settings/music-services/details/">Submitting data</a>
         pages.
