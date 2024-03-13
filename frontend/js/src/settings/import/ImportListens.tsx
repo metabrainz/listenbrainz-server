@@ -49,47 +49,35 @@ export default function Import() {
         </div>
       )}
       <p>
-        Most users will want to import from Last.fm directly.
-        <br />
+        Import your existing listen history from other databasess. To submit <em>new</em>
+        listens, please visit the{" "} <a href="https://listenbrainz.org/add-data/">Connect services</a>
+        and{" "} <a href="https://listenbrainz.org/settings/music-services/details/">Submitting data</a>
+        pages.
+      </br>
         Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
         Last.fm, and we cannot use it. Instead, we use the term{" "}
         <strong>listen</strong> for our data.
       </p>
 
-      <h3>Direct import from Last.fm and Libre.fm</h3>
+      <h3>Import from Last.fm and Libre.fm</h3>
       <p>
         The importer manually steps through your listen history and imports the
-        listens one page at a time. Should it fail for whatever reason, it is
-        safe to restart the import process. Running the import process multiple
-        times <strong>does not</strong> create duplicates in your ListenBrainz
-        listen history.
+        listens one page at a time.
       </p>
+
+      <ul>
+        <li>In order for this to work, you must disable the &#34;Hide recent listening information&#34; setting in your Last.fm{" "} <a href="https://www.last.fm/settings/privacy" target="_blank">Privacy Settings</a>.</li>
+        <li>Should it fail for whatever reason, it is safe to restart the import process.</li>
+        <li>Running the import process multiple times <strong>does not</strong> create duplicates in your ListenBrainz listen history.</li>
+        <li>Clicking the &quot;Import listens&quot; button will import your profile without the need to open LastFM.</li>
+        <li>Your listen counts may not be accurate for up to 24 hours after you import your data.{" "} <a href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html" target="_blank" rel="noopener noreferrer">See more details here.</a></li>
+      </ul>
+        
       <p>
-        In order for this to work, you must disable the &#34;Hide recent
-        listening information&#34; setting in your Last.fm{" "}
-        <a href="https://www.last.fm/settings/privacy">Privacy Settings</a>.
+        You need to keep this page open while it is importing, which may take a
+        while to complete.
       </p>
-      <p>
-        Clicking the &quot;Import listens&quot; button will import your profile
-        now without the need to open LastFM.
-        <br />
-        You need to keep this page open for the tool to work, it might take a
-        while to complete. Though, you can continue doing your work. :)
-      </p>
-      <p>
-        <em>NOTE</em>: Please note that your listen counts may not be accurate
-        for up to 24 hours after you import your data!
-        <a
-          href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          See more details here.
-        </a>
-        <br />
-        Also, running the Last.fm importer twice will not cause duplicates in
-        your listen history.
-      </p>
+
       {userHasEmail && (
         <LastFmImporter
           user={{
@@ -105,15 +93,16 @@ export default function Import() {
           librefmApiKey={librefmApiKey}
         />
       )}
+
+      </br>
       <h4> Reset Last.FM Import timestamp </h4>
       <p>
-        If you think that a partial import has somehow missed some listens, you
+        If you think that a partial import has missed listens, you
         may reset your previous import timestamp. This will cause your next
-        import to be a complete import which should add any missing listens
-        while still avoiding adding duplicates to your history.
+        import to be a complete import which should add any missing listens,
+        without adding duplicates to your history.
       </p>
 
-      <p>If you want to reset your previous import timestamp, click below</p>
       <p>
         <span className="btn btn-info btn-lg" style={{ width: "300px" }}>
           <Link to="/settings/resetlatestimportts/" style={{ color: "white" }}>
