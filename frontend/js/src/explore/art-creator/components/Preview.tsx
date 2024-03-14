@@ -44,7 +44,7 @@ const Preview = React.forwardRef(function PreviewComponent(
       <div className="alert alert-danger">
         There was an error trying to load statistics for this user and time
         range:
-        <pre>{error}</pre>
+        <pre style={{ whiteSpace: "pre-wrap" }}>{error}</pre>
         Please check the username or try another time range.
       </div>
     );
