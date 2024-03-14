@@ -46,7 +46,7 @@ def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_r
                                 WHERE (mbid0 = mbid::UUID OR mbid1 = mbid::UUID)
                            ), knockdown AS (
                                SELECT similar_artist_mbid
-                                    , CASE WHEN similar_artist_mbid = oa.artist_mbid::TEXT THEN score * oa.factor ELSE score END AS score   
+                                    , CASE WHEN similar_artist_mbid = oa.artist_mbid::TEXT THEN score * oa.factor ELSE score END AS score
                                     , rownum
                                  FROM similar_artists sa
                             LEFT JOIN similarity.overhyped_artists oa
@@ -106,7 +106,7 @@ def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_r
                                     , recording_mbid
                                     , total_listen_count
                                     , rank
-                                    , ROW_NUMBER() OVER (PARTITION BY similar_artist_mbid ORDER BY RANDOM()) AS rownum 
+                                    , ROW_NUMBER() OVER (PARTITION BY similar_artist_mbid ORDER BY RANDOM()) AS rownum
                                  FROM top_recordings
                                 WHERE rank >= %s and rank < %s   -- select the range of results here
                            )
