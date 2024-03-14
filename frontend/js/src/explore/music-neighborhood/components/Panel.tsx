@@ -7,6 +7,7 @@ import {
 import Spinner from "react-loader-spinner";
 import ReleaseCard from "../../fresh-releases/components/ReleaseCard";
 import SideBar from "../../../components/Sidebar";
+import { COLOR_LB_ORANGE } from "../../../utils/constants";
 
 interface PanelProps {
   artistInfo: ArtistInfoType;
@@ -24,7 +25,7 @@ function Panel({ artistInfo, loading }: PanelProps) {
           <div className="spinner-container">
             <Spinner
               type="ThreeDots"
-              color="#eb743b"
+              color={COLOR_LB_ORANGE}
               height={100}
               width={100}
               visible

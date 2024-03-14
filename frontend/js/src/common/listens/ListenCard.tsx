@@ -440,7 +440,19 @@ export default class ListenCard extends React.Component<
       );
     } else {
       // eslint-disable-next-line react/jsx-no-useless-fragment
-      thumbnail = <div className="listen-thumbnail" />;
+      thumbnail = (
+        <div className="listen-thumbnail">
+          <div className="cover-art-fallback">
+            <span className="fa-layers fa-fw">
+              <FontAwesomeIcon icon={faImage} />
+              <FontAwesomeIcon
+                icon={faSquare}
+                transform="shrink-10 left-5 up-2.5"
+              />
+            </span>
+          </div>
+        </div>
+      );
     }
 
     return (
@@ -503,15 +515,17 @@ export default class ListenCard extends React.Component<
                 ))}
               {hideActionsMenu ? null : (
                 <>
-                  <FontAwesomeIcon
-                    icon={faEllipsisVertical as IconProp}
+                  <button
                     title="More actions"
-                    className="dropdown-toggle"
+                    className="btn btn-transparent dropdown-toggle"
                     id="listenControlsDropdown"
                     data-toggle="dropdown"
                     aria-haspopup="true"
                     aria-expanded="true"
-                  />
+                    type="button"
+                  >
+                    <FontAwesomeIcon icon={faEllipsisVertical} fixedWidth />
+                  </button>
                   <ul
                     className="dropdown-menu dropdown-menu-right"
                     aria-labelledby="listenControlsDropdown"
@@ -663,15 +677,16 @@ export default class ListenCard extends React.Component<
               )}
               <button
                 title="Play"
-                className="btn-transparent play-button"
+                className={`btn btn-transparent play-button${
+                  isCurrentlyPlaying ? " playing" : ""
+                }`}
                 onClick={this.playListen}
                 type="button"
               >
-                {isCurrentlyPlaying ? (
-                  <FontAwesomeIcon size="1x" icon={faPlay as IconProp} />
-                ) : (
-                  <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
-                )}
+                <FontAwesomeIcon
+                  fixedWidth
+                  icon={isCurrentlyPlaying ? faPlay : faPlayCircle}
+                />
               </button>
               {additionalActions}
             </div>
