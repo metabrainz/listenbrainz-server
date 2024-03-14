@@ -122,7 +122,10 @@ export default NiceModal.create(() => {
 
   const onSubmit = async (event: React.SyntheticEvent) => {
     try {
-      const newPlaylist = createPlaylist();
+      const newPlaylist = await createPlaylist();
+      if (!newPlaylist) {
+        return;
+      }
       modal.resolve(newPlaylist);
       closeModal();
     } catch (error) {
