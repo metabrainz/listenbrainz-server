@@ -16,7 +16,6 @@ const Preview = React.forwardRef(function PreviewComponent(
   ref: React.ForwardedRef<SVGSVGElement>
 ) {
   const [error, setError] = React.useState<string>();
-  const externalSVGRef = React.useRef<SVGSVGElement>(null);
   const { url, styles, size = 750 } = props;
   const hasCustomStyles = Boolean(
     Object.values(styles)?.filter(Boolean).length
@@ -24,15 +23,14 @@ const Preview = React.forwardRef(function PreviewComponent(
   const { textColor, bgColor1, bgColor2 } = styles;
 
   React.useEffect(() => {
-    const { current } = externalSVGRef;
     const errorEventListener = ((e: CustomEvent) => {
-      setError(e.detail);
+      setError(e.detail ?? "Something went wrong");
     }) as EventListener;
-    current?.addEventListener("iconloaderror", errorEventListener);
+    window.addEventListener("iconloaderror", errorEventListener);
     return () => {
-      current?.removeEventListener("iconloaderror", errorEventListener);
+      window.removeEventListener("iconloaderror", errorEventListener);
     };
-  }, [externalSVGRef]);
+  }, []);
 
   if (!url) {
     return (
@@ -88,12 +86,7 @@ const Preview = React.forwardRef(function PreviewComponent(
             : ""}
         </style>
       )}
-      <svg
-        ref={externalSVGRef}
-        data-src={url}
-        data-js="enabled"
-        data-cache="21600"
-      />
+      <svg data-src={url} data-js="enabled" data-cache="21600" />
     </svg>
   );
 });
