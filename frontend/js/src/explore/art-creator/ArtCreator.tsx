@@ -371,6 +371,7 @@ export default function ArtCreator() {
             onClickCopyURL={onClickCopyURL}
           />
           <Preview
+            key={previewUrl}
             url={previewUrl}
             styles={{
               textColor,
