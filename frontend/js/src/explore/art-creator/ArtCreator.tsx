@@ -12,6 +12,7 @@ import Preview from "./components/Preview";
 import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
+import Sidebar from "../../components/Sidebar";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -380,7 +381,17 @@ export default function ArtCreator() {
             size={DEFAULT_IMAGE_SIZE}
           />
         </div>
-        <div className="sidebar settings-navbar">
+        <Sidebar className="settings-navbar">
+          <div className="sidebar-header">
+            <p>Art Creator</p>
+            <p>Visualize and share images of your listening stats.</p>
+            <p>
+              Select your username, a date range and a template to a dynamic
+              image that you can save, copy and share easily with your friends.
+              Check out the #ListenbrainzMonday tag on your social platform of
+              choice!
+            </p>
+          </div>
           <div className="basic-settings-container">
             <div className="sidenav-content-grid">
               <h4>Settings</h4>
@@ -606,65 +617,57 @@ export default function ArtCreator() {
                 </>
               )}
               {/* <div className="flex-center input-group">
-              <label htmlFor="bg-upload">Background image:</label>
-              <div className="input-group">
-                <input className="form-control" type="text" disabled />
-                <div className="input-group-btn">
-                  <button type="button" className="btn btn-default btn-sm">
-                    <FontAwesomeIcon icon={faCloudArrowUp} />
-                  </button>
-                  <input id="bg-upload" type="file" className="hidden" />
+                <label htmlFor="bg-upload">Background image:</label>
+                <div className="input-group">
+                  <input className="form-control" type="text" disabled />
+                  <div className="input-group-btn">
+                    <button type="button" className="btn btn-default btn-sm">
+                      <FontAwesomeIcon icon={faCloudArrowUp} />
+                    </button>
+                    <input id="bg-upload" type="file" className="hidden" />
+                  </div>
                 </div>
-              </div>
-            </div> */}
+              </div> */}
 
               {/* <div>
-              <label htmlFor="genres">
-                Genres: <FontAwesomeIcon icon={faCircleQuestion} />
-              </label>
-              <input
-                id="genres"
-                type="text"
-                className="form-control"
-                onChange={updateGenresCallback}
-              />
-            </div> */}
+                <label htmlFor="genres">
+                  Genres: <FontAwesomeIcon icon={faCircleQuestion} />
+                </label>
+                <input
+                  id="genres"
+                  type="text"
+                  className="form-control"
+                  onChange={updateGenresCallback}
+                />
+              </div> */}
               {/* <div>
-              <ToggleOption onClick={userToggler} buttonName="Users" />
-              <ToggleOption onClick={dateToggler} buttonName="Date" />
-              <ToggleOption onClick={rangeToggler} buttonName="Range" />
-              <ToggleOption onClick={totalToggler} buttonName="Total" />
-              <ToggleOption onClick={genresToggler} buttonName="Genres" />
-            </div> */}
+                <ToggleOption onClick={userToggler} buttonName="Users" />
+                <ToggleOption onClick={dateToggler} buttonName="Date" />
+                <ToggleOption onClick={rangeToggler} buttonName="Range" />
+                <ToggleOption onClick={totalToggler} buttonName="Total" />
+                <ToggleOption onClick={genresToggler} buttonName="Genres" />
+              </div> */}
               {/* <div>
-              <label htmlFor="font-select">Font:</label>
-              <select
-                id="font-select"
-                className="form-control"
-                value={font}
-                onChange={updateFontCallback}
-              >
-                {fontOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div> */}
+                <label htmlFor="font-select">Font:</label>
+                <select
+                  id="font-select"
+                  className="form-control"
+                  value={font}
+                  onChange={updateFontCallback}
+                >
+                  {fontOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div> */}
               {/* <div>
-              <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
-            </div> */}
+                <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
+              </div> */}
             </div>
           </div>
-          {/* <div className="generate-button-container">
-          <button
-            type="button"
-            className="btn btn-block btn-info text-uppercase"
-          >
-            Generate
-          </button>
-        </div> */}
-        </div>
+        </Sidebar>
       </div>
     </>
   );

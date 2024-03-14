@@ -7,9 +7,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 function Sidebar(
-  props: React.PropsWithChildren<{ toggleIcon?: IconDefinition }>
+  props: React.PropsWithChildren<{
+    toggleIcon?: IconDefinition;
+    className?: string;
+  }>
 ) {
-  const { children, toggleIcon } = props;
+  const { children, toggleIcon, className } = props;
 
   const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);
   const toggleSidebar = () => {
@@ -18,7 +21,9 @@ function Sidebar(
 
   return (
     <>
-      <div className={`sidebar ${isSidebarOpen ? "open" : ""}`}>{children}</div>
+      <div className={`sidebar ${isSidebarOpen ? "open" : ""} ${className}`}>
+        {children}
+      </div>
       <button
         className={`toggle-sidebar-button ${isSidebarOpen ? "open" : ""}`}
         onClick={toggleSidebar}
