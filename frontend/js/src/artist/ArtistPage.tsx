@@ -27,7 +27,11 @@ import {
   ListeningStats,
   popularRecordingToListen,
 } from "../album/utils";
-import type { PopularRecording, ReleaseGroup, SimilarArtist } from "../album/utils";
+import type {
+  PopularRecording,
+  ReleaseGroup,
+  SimilarArtist,
+} from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 
 export type ArtistPageProps = {

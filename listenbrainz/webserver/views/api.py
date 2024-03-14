@@ -786,23 +786,25 @@ def _get_listen_type(listen_type):
 def get_artist_radio_recordings(seed_artist_mbid):
     """ Get recordings for use in LB radio with the given seed artist. The endpoint
     returns a dict of all the similar artists, including the seed artist. For each artists,
-    there will be a list of dicts that contain recording_mbid, similar_artist_mbid and total_listen_count.
+    there will be a list of dicts that contain recording_mbid, similar_artist_mbid and total_listen_count:
 
     .. code-block:: json
 
-    :param max_similar_artists: The maximum number of similar artists to return recordings for.
-    :param max_recordings_per_artist: The maximum number of recordings to return for each artist.
-    :param begin_percent: percent is a measure of the recording's popularity, begin_percent denotes a preferred
-        lower bound on the popularity of recordings to be returned. Values are 0-100
-    :param end_percent: percent is a measure of the recording's popularity, end_percent denotes a preferred
-        upper bound on the popularity of recordings to be returned. Values are 0-100
-    :param mode: mode is the LB radio mode to be used for this query
+            {
+              "recording_mbid": "401c1a5d-56e7-434d-b07e-a14d4e7eb83c",
+              "similar_artist_mbid": "cb67438a-7f50-4f2b-a6f1-2bb2729fd538",
+              "total_listen_count": 232361
+            }
 
+    :param mode: mode is the LB radio mode to be used for this query. Must be one of "easy", "medium", "hard".
+    :param max_similar_artists: The maximum number of similar artists to return recordings for.
+    :param max_recordings_per_artist: The maximum number of recordings to return for each artist. If there are aren't enough recordings, all available recordings will be returned.
+    :param pop_begin: Popularity range percentage lower bound. A popularity range is given to narrow down the recordings into a smaller target group. The most popular recording(s) on LB have a pop percent of 100. The least popular recordings have a score of 0. This range is not coupled to the specified mode, but the mode would often determine the popularity range, so that less popular recordings can be returned on the medium and harder modes.
+    :param pop_end: Popularity range percentage upper bound. See above.
     :resheader Content-Type: *application/json*
     :statuscode 200: Yay, you have data!
     :statuscode 400: Invalid or missing param in request, see error message for details.
     """
-
     max_similar_artists = _parse_int_arg("max_similar_artists")
     max_recordings_per_artist = _parse_int_arg("max_recordings_per_artist")
 
@@ -813,24 +815,23 @@ def get_artist_radio_recordings(seed_artist_mbid):
         raise APIBadRequest("mode must be one of: easy, medium or hard.")
 
     try:
-        begin_percent = request.args.get("begin_percent")
-        if begin_percent is None:
-            raise APIBadRequest("begin_percent param is missing")
-        begin_percent = float(begin_percent) / 100
-        if begin_percent < 0 or begin_percent > 1:
-            raise APIBadRequest("begin_percent should be between the range: 0 to 100")
+        pop_begin = request.args.get("pop_begin")
+        if pop_begin is None:
+            raise APIBadRequest("pop_begin param is missing")
+        pop_begin = float(pop_begin) / 100
+        if pop_begin < 0 or pop_begin > 1:
+            raise APIBadRequest("pop_begin should be between the range: 0 to 100")
     except ValueError:
-        raise APIBadRequest(f"begin_percent: '{begin_percent}' is not a valid number")
+        raise APIBadRequest(f"pop_begin: '{pop_begin}' is not a valid number")
 
     try:
-        end_percent = request.args.get("end_percent")
-        if end_percent is None:
-            raise APIBadRequest("end_percent param is missing")
-        end_percent = float(end_percent) / 100
-        if end_percent < 0 or end_percent > 1:
-            raise APIBadRequest("end_percent should be between the range: 0 to 100")
+        pop_end = request.args.get("pop_end")
+        if pop_end is None:
+            raise APIBadRequest("pop_end param is missing")
+        pop_end = float(pop_end) / 100
+        if pop_end < 0 or pop_end > 1:
+            raise APIBadRequest("pop_end should be between the range: 0 to 100")
     except ValueError:
-        raise APIBadRequest(f"end_percent: '{end_percent}' is not a valid number")
+        raise APIBadRequest(f"pop_end: '{pop_end}' is not a valid number")
 
-    return lb_radio_artist(mode, seed_artist_mbid, max_similar_artists, max_recordings_per_artist,
-                           begin_percent, end_percent)
+    return lb_radio_artist(mode, seed_artist_mbid, max_similar_artists, max_recordings_per_artist, pop_begin, pop_end)

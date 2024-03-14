@@ -7,31 +7,32 @@ from flask import current_app
 import psycopg2
 from psycopg2.extras import DictCursor
 
-SIMILARITY_ALGORITHM = "session_based_days_7500_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30"
 
-# TODO:
-#  Add this table creation:
-# create table similarity.overhyped_artists (id serial, artist_mbid UUID NOT NULL, factor FLOAT);
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d', .3);  -- The Beatles
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('83d91898-7763-47d7-b03b-b92132375c47', .3);  -- Pink Floyd
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('a74b1b7f-71a5-4011-9441-d0b5e4122711', .3);  -- Radiohead
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('8bfac288-ccc5-448d-9573-c33ea2aa5c30', .3);  -- Red Hot Chili Peppers
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('9c9f1380-2516-4fc9-a3e6-f9f61941d090', .3);  -- Muse
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('cc197bad-dc9c-440d-a5b5-d52ba2e14234', .3);  -- Coldplay
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab', .3);  -- Metallica
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('5b11f4ce-a62d-471e-81fc-a69a8278c7da', .3);  -- Nirvana
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('f59c5520-5f46-4d2c-b2c4-822eabf53419', .3);  -- Linkin Park
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('cc0b7089-c08d-4c10-b6b0-873582c17fd6', .3);  -- System of a Down
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('ebfc1398-8d96-47e3-82c3-f782abcdb13d', .3);  -- Beach boys
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('ba0d6274-db14-4ef5-b28d-657ebde1a396', .3);  -- Smashing pumpkins
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('87c5dedd-371d-4a53-9f7f-80522fb7f3cb', .3);  -- Björk
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('5441c29d-3602-4898-b1a1-b77fa23b8e50', .3);  -- David Bowie
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('69ee3720-a7cb-4402-b48d-a02c366f2bcf', .3);  -- The Cure
-#INSERT INTO similarity.overhyped_artists (artist_mbid, factor) VALUES ('ea4dfa26-f633-4da6-a52a-f49ea4897b58', .3);  -- R.E.M
+def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_recordings_per_artist: int, pop_begin: float,
+                    pop_end: float) -> List[dict]:
+    """
+        Fetch recordings for LB Radio's similar artists element.
 
+        Given a seed artist mbid, find similar artists given other parameters and then return
+        a dict of artist_mbids that contain lists of dict as such:
+            {
+              "recording_mbid": "401c1a5d-56e7-434d-b07e-a14d4e7eb83c",
+              "similar_artist_mbid": "cb67438a-7f50-4f2b-a6f1-2bb2729fd538",
+              "total_listen_count": 232361
+            }
 
-def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_recordings_per_artist: int, begin_percentage: float,
-                    end_percentage: float) -> List[dict]:
+        Troi will take this data and complete processing it into a complete playlist.
+
+        parameters:
+
+        mode: LB radio mode, must be one of: easy, medium, hard.
+        seed_artist: artist mbid of the seed artist for similar artists
+        num_recordings_per_artist: Return up to this many recordings for each artist.
+        pop_begin: Popularity range percentage lower bound. A popularity range is given to narrow down
+                   the recordings into a smaller target group. The most popular track(s) on
+                   LB have a pop percent of 100. The least popular tracks have a score of 0.
+        pop_end: Popularity range percentage upper bound. See above.
+    """
 
     query = """WITH mbids(mbid, score) AS (
                                VALUES %s
@@ -118,19 +119,28 @@ def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_r
     # The query requires a count, which is safe to leave 0
     seed_artist = (seed_artist, 0)
     similar_artist_limit = 100
+
+    # This mapping determines how artists are picked from the similar artists.
+    # For each mode, we have a tuple of (steps, offset) which indicates at which offset
+    # down the similar artists we should start selecting and then how large the bins are
+    # from which we randomly select an artist. This ensures a decent spread of artists
+    # and ensures that when run repeatedly that different results are returned each time.
     step_index = {"easy": (2, 0), "medium": (4, 3), "hard": (10, 10)}
     steps, offset = step_index[mode]
 
+    # Now select the actual similar artist offsets to pick
     artist_indexes = []
     for i in range(max_similar_artists):
         try:
             artist_indexes.append(randint((i * steps + offset), ((i + 1) * steps + offset)))
         except IndexError:
             break
+
+    # Pass the calculated args above to postgres and run the query
     with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn, conn.cursor(cursor_factory=DictCursor) as curs:
         curs.execute(
             query,
-            (seed_artist, similar_artist_limit, tuple(artist_indexes), begin_percentage, end_percentage, num_recordings_per_artist))
+            (seed_artist, similar_artist_limit, tuple(artist_indexes), pop_begin, pop_end, num_recordings_per_artist))
 
         artists = defaultdict(list)
         for row in curs.fetchall():
