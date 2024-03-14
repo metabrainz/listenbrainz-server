@@ -10,6 +10,7 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_external_service_oauth
 import listenbrainz.webserver.redis_connection as redis_connection
+from listenbrainz.db.lb_radio_artist import lb_radio_artist
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
@@ -24,7 +25,7 @@ from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
-    get_non_negative_param
+    get_non_negative_param, _parse_int_arg
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -777,3 +778,59 @@ def _get_listen_type(listen_type):
         'import': LISTEN_TYPE_IMPORT,
         'playing_now': LISTEN_TYPE_PLAYING_NOW
     }.get(listen_type)
+
+
+@api_bp.route("/lb-radio/artist/<seed_artist_mbid>", methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+def get_artist_radio_recordings(seed_artist_mbid):
+    """ Get recordings for use in LB radio with the given seed artist. The endpoint
+    returns a dict of all the similar artists, including the seed artist. For each artists,
+    there will be a list of dicts that contain recording_mbid, similar_artist_mbid and total_listen_count.
+
+    .. code-block:: json
+
+    :param max_similar_artists: The maximum number of similar artists to return recordings for.
+    :param max_recordings_per_artist: The maximum number of recordings to return for each artist.
+    :param begin_percent: percent is a measure of the recording's popularity, begin_percent denotes a preferred
+        lower bound on the popularity of recordings to be returned. Values are 0-100
+    :param end_percent: percent is a measure of the recording's popularity, end_percent denotes a preferred
+        upper bound on the popularity of recordings to be returned. Values are 0-100
+    :param mode: mode is the LB radio mode to be used for this query
+
+    :resheader Content-Type: *application/json*
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: Invalid or missing param in request, see error message for details.
+    """
+
+    max_similar_artists = _parse_int_arg("max_similar_artists")
+    max_recordings_per_artist = _parse_int_arg("max_recordings_per_artist")
+
+    mode = request.args.get("mode")
+    if mode is None:
+        raise APIBadRequest("mode param is missing")
+    if mode not in ("easy", "medium", "hard"):
+        raise APIBadRequest("mode must be one of: easy, medium or hard.")
+
+    try:
+        begin_percent = request.args.get("begin_percent")
+        if begin_percent is None:
+            raise APIBadRequest("begin_percent param is missing")
+        begin_percent = float(begin_percent) / 100
+        if begin_percent < 0 or begin_percent > 1:
+            raise APIBadRequest("begin_percent should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"begin_percent: '{begin_percent}' is not a valid number")
+
+    try:
+        end_percent = request.args.get("end_percent")
+        if end_percent is None:
+            raise APIBadRequest("end_percent param is missing")
+        end_percent = float(end_percent) / 100
+        if end_percent < 0 or end_percent > 1:
+            raise APIBadRequest("end_percent should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"end_percent: '{end_percent}' is not a valid number")
+
+    return lb_radio_artist(mode, seed_artist_mbid, max_similar_artists, max_recordings_per_artist,
+                           begin_percent, end_percent)
