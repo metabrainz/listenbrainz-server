@@ -1,5 +1,4 @@
 import spotipy
-from troi.core import generate_playlist
 from troi.patches.playlist_from_listenbrainz import TransferPlaylistPatch
 
 
@@ -21,6 +20,7 @@ def export_to_spotify(lb_token, spotify_token, is_public, playlist_mbid=None, js
         "echo": False,
         "min_recordings": 1
     }
-    playlist = generate_playlist(TransferPlaylistPatch(), args)
+    patch = TransferPlaylistPatch(args)
+    playlist = patch.generate_playlist()
     metadata = playlist.playlists[0].additional_metadata
     return metadata["external_urls"]["spotify"]

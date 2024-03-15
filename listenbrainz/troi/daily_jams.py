@@ -3,7 +3,7 @@
 """
 from flask import current_app
 from sqlalchemy import text
-from troi.core import generate_playlist
+from troi.patch import Patch
 from troi.patches.recs_to_playlist import RecommendationsToPlaylistPatch
 from troi.patches.periodic_jams import PeriodicJamsPatch
 
@@ -88,7 +88,8 @@ def make_playlist_from_recommendations(user):
         # need to copy dict so that test mocks keep working
         _args = args.copy()
         _args["type"] = recs_type
-        generate_playlist(RecommendationsToPlaylistPatch(), _args)
+        patch = RecommendationsToPlaylistPatch(_args)
+        patch.generate_playlist()
 
 
 def _get_spotify_details(user_id, service):
