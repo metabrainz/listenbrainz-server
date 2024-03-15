@@ -25,7 +25,7 @@ import { Integrations } from "@sentry/tracing";
 import { ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
-import { throttle } from "lodash";
+import { isNumber, throttle } from "lodash";
 import { getPageProps } from "../utils/utils";
 import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -117,10 +117,12 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
         />
         <div className="homepage-upper-grey-box" />
 
-        <h1 className="listen-container">
-          <NumberCounter count={listenCount} />
-          global listens.
-        </h1>
+        {isNumber(listenCount) && listenCount > 0 && (
+          <h1 className="listen-container">
+            <NumberCounter count={listenCount} />
+            global listens.
+          </h1>
+        )}
         <div className="homepage-info">
           <h1>
             Listen together
@@ -202,12 +204,14 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
         />
         <div className="homepage-lower-grey-box" />
 
-        <h1 className="listen-container">
-          Dig deeper with
-          <div id="artist-count-container">
-            <NumberCounter count={artistCount} /> artists.
-          </div>
-        </h1>
+        {isNumber(artistCount) && artistCount > 0 && (
+          <h1 className="listen-container">
+            Dig deeper with
+            <div id="artist-count-container">
+              <NumberCounter count={artistCount} /> artists.
+            </div>
+          </h1>
+        )}
         <div className="homepage-info">
           <h1>
             Connect your music

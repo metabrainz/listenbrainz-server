@@ -239,7 +239,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                   ? () => submitFeedback(currentListenFeedback === 1 ? 0 : 1)
                   : undefined
               }
-              className={`${currentListenFeedback === 1 ? " loved" : ""}${
+              className={`love ${currentListenFeedback === 1 ? " loved" : ""}${
                 !isPlayingATrack ? " disabled" : ""
               }`}
             />
@@ -251,7 +251,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                   ? () => submitFeedback(currentListenFeedback === -1 ? 0 : -1)
                   : undefined
               }
-              className={`${currentListenFeedback === -1 ? " hated" : ""}${
+              className={`hate ${currentListenFeedback === -1 ? " hated" : ""}${
                 !isPlayingATrack ? " disabled" : ""
               }`}
             />

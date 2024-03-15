@@ -21,29 +21,16 @@ const Preview = React.forwardRef(function PreviewComponent(
     Object.values(styles)?.filter(Boolean).length
   );
   const { textColor, bgColor1, bgColor2 } = styles;
-  /* The library used to dynamically load the SVG does not currently allow handling errors
-  so we have to separately try to hit the URL to catch and display any API errors (no data for user for range, etc.)
-  See https://github.com/shubhamjain/svg-loader/pull/42 */
+
   React.useEffect(() => {
-    const fetchUrl = async () => {
-      if (!url) {
-        return;
-      }
-      try {
-        const response = await fetch(url);
-        // We only care if there was an error
-        if (!response.ok) {
-          const json = await response.json();
-          setError(json.error || "Something went wrong");
-        } else {
-          setError(undefined);
-        }
-      } catch (err) {
-        setError(err.toString());
-      }
+    const errorEventListener = ((e: CustomEvent) => {
+      setError(e.detail ?? "Something went wrong");
+    }) as EventListener;
+    window.addEventListener("iconloaderror", errorEventListener);
+    return () => {
+      window.removeEventListener("iconloaderror", errorEventListener);
     };
-    fetchUrl();
-  }, [url]);
+  }, []);
 
   if (!url) {
     return (
@@ -57,7 +44,7 @@ const Preview = React.forwardRef(function PreviewComponent(
       <div className="alert alert-danger">
         There was an error trying to load statistics for this user and time
         range:
-        <pre>{error}</pre>
+        <pre style={{ whiteSpace: "pre-wrap" }}>{error}</pre>
         Please check the username or try another time range.
       </div>
     );
