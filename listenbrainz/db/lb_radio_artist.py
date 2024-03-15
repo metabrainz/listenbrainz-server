@@ -7,6 +7,8 @@ from flask import current_app
 import psycopg2
 from psycopg2.extras import DictCursor
 
+from listenbrainz.webserver import ts_conn
+
 
 def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_recordings_per_artist: int, pop_begin: float,
                     pop_end: float) -> List[dict]:
@@ -137,7 +139,7 @@ def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_r
             break
 
     # Pass the calculated args above to postgres and run the query
-    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn, conn.cursor(cursor_factory=DictCursor) as curs:
+    with ts_conn.connection.cursor(cursor_factory=DictCursor) as curs:
         curs.execute(
             query,
             (seed_artist, similar_artist_limit, tuple(artist_indexes), pop_begin, pop_end, num_recordings_per_artist))
