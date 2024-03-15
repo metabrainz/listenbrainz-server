@@ -805,6 +805,9 @@ def get_artist_radio_recordings(seed_artist_mbid):
     :statuscode 200: Yay, you have data!
     :statuscode 400: Invalid or missing param in request, see error message for details.
     """
+    if not is_valid_uuid(seed_artist_mbid):
+        log_raise_400("Seed artist mbid is not a valid UUID.")
+
     max_similar_artists = _parse_int_arg("max_similar_artists")
     max_recordings_per_artist = _parse_int_arg("max_recordings_per_artist")
 
