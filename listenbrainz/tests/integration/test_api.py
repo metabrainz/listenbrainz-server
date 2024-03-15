@@ -24,7 +24,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
                                                    user_name=self.followed_user["musicbrainz_id"])
         self.follow_user_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
 
-
     def insert_lb_radio_data(self):
 
         with open(self.path_to_data_file('similar_artist_db_data_for_api_test.json'), 'r') as f:
@@ -1219,14 +1218,14 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def test_test_lb_radio_artist(self):
         self.insert_lb_radio_data()
-        r = self.client.get(self.custom_url_for("api_v1.get_artist_radio_recordings", 
-                seed_artist_mbid="8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-                mode="easy",
-                max_similar_artists=2,
-                max_recordings_per_artist=2,
-                pop_begin=0,
-                pop_end=100),
-            content_type="application/json")
+        r = self.client.get(self.custom_url_for("api_v1.get_artist_radio_recordings",
+                                                seed_artist_mbid="8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+                                                mode="easy",
+                                                max_similar_artists=2,
+                                                max_recordings_per_artist=2,
+                                                pop_begin=0,
+                                                pop_end=100),
+                            content_type="application/json")
         self.assert200(r)
         keys = list(r.json.keys())
         self.assertGreater(len(keys), 0)
