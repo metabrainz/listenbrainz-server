@@ -257,7 +257,7 @@ CREATE TABLE similarity.artist_credit_mbids (
 );
 
 CREATE TABLE similarity.overhyped_artists (
-    id                      SERIAL,
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
     artist_mbid             UUID NOT NULL,
     factor                  FLOAT
 );
