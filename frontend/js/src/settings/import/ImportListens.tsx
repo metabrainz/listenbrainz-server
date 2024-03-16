@@ -66,7 +66,7 @@ export default function Import() {
       </p>
 
       <ul>
-        <li>In order for this to work, you must disable the &#34;Hide recent listening information&#34; setting in your Last.fm{" "} <a href="https://www.last.fm/settings/privacy" target="_blank">Privacy Settings</a>.</li>
+        <li>In order for this to work, you must disable the &#34;Hide recent listening information&#34; setting in your Last.fm{" "} <a href="https://www.last.fm/settings/privacy" target="_blank" rel="noreferrer">Privacy Settings</a>.</li>
         <li>Should it fail for whatever reason, it is safe to restart the import process.</li>
         <li>Running the import process multiple times <strong>does not</strong> create duplicates in your ListenBrainz listen history.</li>
         <li>Clicking the &quot;Import listens&quot; button will import your profile without the need to open LastFM.</li>
