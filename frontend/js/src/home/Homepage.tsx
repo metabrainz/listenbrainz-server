@@ -22,7 +22,7 @@ import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
 import { throttle } from "lodash";
-import { useLoaderData, useNavigate } from "react-router-dom";
+import { Navigate, useLoaderData, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import NumberCounter from "./NumberCounter";
 import Blob from "./Blob";
@@ -37,23 +37,8 @@ function HomePage() {
   const { listenCount, artistCount } = useLoaderData() as HomePageProps;
   const homepageUpperRef = React.useRef<HTMLDivElement>(null);
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
-  const { currentUser } = React.useContext(GlobalAppContext);
-  const navigate = useNavigate();
 
   const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
-
-  React.useEffect(() => {
-    const redirectParam = new URLSearchParams(window.location.search).get(
-      "redirect"
-    );
-
-    if (
-      currentUser?.name &&
-      (redirectParam === "true" || redirectParam === null)
-    ) {
-      navigate(`/user/${currentUser.name}`);
-    }
-  }, [currentUser, navigate]);
 
   React.useEffect(() => {
     const handleResize = throttle(
@@ -261,6 +246,21 @@ function HomePage() {
       </div>
     </div>
   );
+}
+
+export function HomePageWrapper() {
+  const { currentUser } = React.useContext(GlobalAppContext);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const redirectParam = searchParams.get("redirect");
+
+  if (
+    currentUser?.name &&
+    (redirectParam === "true" || redirectParam === null)
+  ) {
+    return <Navigate to={`/user/${currentUser.name}`} />;
+  }
+  return <HomePage />;
 }
 
 export default HomePage;

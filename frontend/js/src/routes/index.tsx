@@ -12,7 +12,7 @@ const getIndexRoutes = () => {
           index: true,
           lazy: async () => {
             const HomePage = await import("../home/Homepage");
-            return { Component: HomePage.default };
+            return { Component: HomePage.HomePageWrapper };
           },
           loader: RouteLoader,
         },
