@@ -487,8 +487,6 @@ export default class ListenCard extends React.Component<
                 {showUsername && (
                   <Link
                     to={`/user/${listen.user_name}/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     title={listen.user_name ?? undefined}
                   >
                     {listen.user_name}

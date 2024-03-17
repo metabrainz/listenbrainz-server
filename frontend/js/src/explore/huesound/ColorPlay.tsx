@@ -187,7 +187,7 @@ export default class ColorPlay extends React.Component<{}, ColorPlayState> {
                           to={`/artist/${get(
                             selectedRelease,
                             "recordings[0].track_metadata.additional_info.artist_mbids[0]"
-                          )}`}
+                          )}/`}
                         >
                           {selectedRelease.artist_name}
                         </Link>

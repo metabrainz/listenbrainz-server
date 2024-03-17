@@ -366,7 +366,7 @@ export default class SpotifyPlayer
         account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
-        <Link to="/settings/music-services/details/" target="_blank">
+        <Link to="/settings/music-services/details/">
           link for &quot;playing music&quot; feature
         </Link>{" "}
         and refresh this page

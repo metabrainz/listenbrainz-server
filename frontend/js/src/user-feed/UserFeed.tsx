@@ -619,13 +619,7 @@ export default class UserFeedPage extends React.Component<
       user_name === currentUser.name ? (
         "You"
       ) : (
-        <Link
-          to={`/user/${user_name}/`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {user_name}
-        </Link>
+        <Link to={`/user/${user_name}/`}>{user_name}</Link>
       );
     return (
       <span className="event-description-text">

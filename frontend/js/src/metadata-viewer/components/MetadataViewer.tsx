@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as tinycolor from "tinycolor2";
 import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
+import { Link } from "react-router-dom";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import TagsComponent from "../../tags/TagsComponent";
@@ -322,13 +323,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                         return (
                           <tr key={artist_mbid}>
                             <td>
-                              <a
-                                href={`/artist/${artist_mbid}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
+                              <Link to={`/artist/${artist_mbid}/`}>
                                 {artist_name}
-                              </a>
+                              </Link>
                             </td>
                             <td>{instrument}</td>
                           </tr>

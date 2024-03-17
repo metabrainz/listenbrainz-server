@@ -246,8 +246,6 @@ export default function ArtistPage(): JSX.Element {
             <ul className="dropdown-menu">
               <li>
                 <Link
-                  target="_blank"
-                  rel="noopener noreferrer"
                   to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                     artist.name
                   )})::nosim&mode=easy`}
@@ -257,8 +255,6 @@ export default function ArtistPage(): JSX.Element {
               </li>
               <li>
                 <Link
-                  target="_blank"
-                  rel="noopener noreferrer"
                   to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                     artist.name
                   )})&mode=easy`}
@@ -269,8 +265,6 @@ export default function ArtistPage(): JSX.Element {
               {Boolean(filteredTags?.length) && (
                 <li>
                   <Link
-                    target="_blank"
-                    rel="noopener noreferrer"
                     to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
                       filteredTagsAsString
                     )})::or&mode=easy`}
@@ -377,11 +371,7 @@ export default function ArtistPage(): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <Link
-                          to={`/user/${listener.user_name}/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                        <Link to={`/user/${listener.user_name}/`}>
                           {listener.user_name}
                         </Link>
                         <span className="badge badge-info">
@@ -418,7 +408,7 @@ export default function ArtistPage(): JSX.Element {
               .map((similarArtist) => {
                 const listenDetails = (
                   <div>
-                    <Link to={`/artist/${similarArtist.artist_mbid}`}>
+                    <Link to={`/artist/${similarArtist.artist_mbid}/`}>
                       {similarArtist.name}
                     </Link>
                   </div>

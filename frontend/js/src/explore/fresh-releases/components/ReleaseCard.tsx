@@ -3,6 +3,7 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 import { faPlay, faHourglass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isArray, isString, isUndefined } from "lodash";
+import { Link } from "react-router-dom";
 import { formatListenCount, formatReleaseDate } from "../utils";
 import {
   generateAlbumArtThumbnailLink,
@@ -227,13 +228,9 @@ export default function ReleaseCard(props: ReleaseCardProps) {
         <div className="release-artist" title={artistCreditName}>
           {artistCredits.map((ac) => (
             <>
-              <a
-                href={`/artist/${ac.artist_mbid}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <Link to={`/artist/${ac.artist_mbid}/`}>
                 {ac.artist_credit_name}
-              </a>
+              </Link>
               {ac.join_phrase}
             </>
           ))}
@@ -241,13 +238,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       )}
       {showArtist && !isArray(artistCredits) && (
         <div className="release-artist" title={artistCreditName}>
-          <a
-            href={`/artist/${artistMBIDs[0]}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {artistCreditName}
-          </a>
+          <Link to={`/artist/${artistMBIDs[0]}`}>{artistCreditName}</Link>
         </div>
       )}
     </div>
