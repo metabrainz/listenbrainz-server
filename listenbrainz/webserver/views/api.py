@@ -722,6 +722,7 @@ def get_tags_dataset():
     tag = request.args.getlist("tag")
     if tag is None:
         raise APIBadRequest("tag param is missing")
+    tag = [t.lower() for t in tag]
 
     condition = request.args.get("condition")
 
