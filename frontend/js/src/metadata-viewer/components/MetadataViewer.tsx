@@ -503,7 +503,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           </div>
           <div className="love-hate">
             <button
-              className="btn-transparent"
+              className="btn btn-transparent love"
               onClick={() =>
                 submitFeedbackCallback(currentListenFeedback === 1 ? 0 : 1)
               }
@@ -517,7 +517,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               />
             </button>
             <button
-              className="btn-transparent"
+              className="btn btn-transparent hate"
               onClick={() =>
                 submitFeedbackCallback(currentListenFeedback === -1 ? 0 : -1)
               }

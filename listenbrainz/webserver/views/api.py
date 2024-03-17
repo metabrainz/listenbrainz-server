@@ -10,6 +10,7 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_external_service_oauth
 import listenbrainz.webserver.redis_connection as redis_connection
+from listenbrainz.db.lb_radio_artist import lb_radio_artist
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
@@ -24,7 +25,7 @@ from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
-    get_non_negative_param
+    get_non_negative_param, _parse_int_arg
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -777,3 +778,63 @@ def _get_listen_type(listen_type):
         'import': LISTEN_TYPE_IMPORT,
         'playing_now': LISTEN_TYPE_PLAYING_NOW
     }.get(listen_type)
+
+
+@api_bp.route("/lb-radio/artist/<seed_artist_mbid>", methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+def get_artist_radio_recordings(seed_artist_mbid):
+    """ Get recordings for use in LB radio with the given seed artist. The endpoint
+    returns a dict of all the similar artists, including the seed artist. For each artists,
+    there will be a list of dicts that contain recording_mbid, similar_artist_mbid and total_listen_count:
+
+    .. code-block:: json
+
+            {
+              "recording_mbid": "401c1a5d-56e7-434d-b07e-a14d4e7eb83c",
+              "similar_artist_mbid": "cb67438a-7f50-4f2b-a6f1-2bb2729fd538",
+              "total_listen_count": 232361
+            }
+
+    :param mode: mode is the LB radio mode to be used for this query. Must be one of "easy", "medium", "hard".
+    :param max_similar_artists: The maximum number of similar artists to return recordings for.
+    :param max_recordings_per_artist: The maximum number of recordings to return for each artist. If there are aren't enough recordings, all available recordings will be returned.
+    :param pop_begin: Popularity range percentage lower bound. A popularity range is given to narrow down the recordings into a smaller target group. The most popular recording(s) on LB have a pop percent of 100. The least popular recordings have a score of 0. This range is not coupled to the specified mode, but the mode would often determine the popularity range, so that less popular recordings can be returned on the medium and harder modes.
+    :param pop_end: Popularity range percentage upper bound. See above.
+    :resheader Content-Type: *application/json*
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: Invalid or missing param in request, see error message for details.
+    """
+    if not is_valid_uuid(seed_artist_mbid):
+        log_raise_400("Seed artist mbid is not a valid UUID.")
+
+    max_similar_artists = _parse_int_arg("max_similar_artists")
+    max_recordings_per_artist = _parse_int_arg("max_recordings_per_artist")
+
+    mode = request.args.get("mode")
+    if mode is None:
+        raise APIBadRequest("mode param is missing")
+    if mode not in ("easy", "medium", "hard"):
+        raise APIBadRequest("mode must be one of: easy, medium or hard.")
+
+    try:
+        pop_begin = request.args.get("pop_begin")
+        if pop_begin is None:
+            raise APIBadRequest("pop_begin param is missing")
+        pop_begin = float(pop_begin) / 100
+        if pop_begin < 0 or pop_begin > 1:
+            raise APIBadRequest("pop_begin should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"pop_begin: '{pop_begin}' is not a valid number")
+
+    try:
+        pop_end = request.args.get("pop_end")
+        if pop_end is None:
+            raise APIBadRequest("pop_end param is missing")
+        pop_end = float(pop_end) / 100
+        if pop_end < 0 or pop_end > 1:
+            raise APIBadRequest("pop_end should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"pop_end: '{pop_end}' is not a valid number")
+
+    return lb_radio_artist(mode, seed_artist_mbid, max_similar_artists, max_recordings_per_artist, pop_begin, pop_end)

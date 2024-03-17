@@ -118,6 +118,13 @@ export default function AddData() {
           , a player, scrobbler and visualiser for personal media servers and
           streaming services.
         </li>
+        <li>
+          <em>
+            <a href="https://github.com/Mastermindzh/tidal-hifi">TIDAL Hi-Fi</a>
+          </em>
+          , the web version of Tidal running in electron with Hi-Fi (High & Max)
+          support.
+        </li>
       </ul>
 
       <h4>Standalone programs/streaming servers</h4>

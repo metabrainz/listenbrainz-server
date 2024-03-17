@@ -3,7 +3,6 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import {
   faBell,
-  faBullhorn,
   faCircle,
   faHeadphones,
   faHeart,
@@ -651,142 +650,116 @@ export default class UserFeedPage extends React.Component<
         <Helmet>
           <title>Feed</title>
         </Helmet>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-          }}
-        >
-          <h2>Latest activity</h2>
-          <a
-            id="feedback-button"
-            href="mailto:support@listenbrainz.org?subject=Feed%20page%20feedback"
-            type="button"
-            className="btn btn-primary"
-          >
-            <span className="fa-layers icon">
-              <FontAwesomeIcon
-                icon={faCircle as IconProp}
-                transform="grow-10"
-              />
-              <FontAwesomeIcon
-                icon={faBullhorn as IconProp}
-                transform="rotate--20"
-              />
-            </span>{" "}
-            Feedback
-          </a>
+        <div className="listen-header">
+          <h3 className="header-with-line">Latest activity</h3>
         </div>
-        <div role="main">
-          <div className="row">
-            <div className="col-md-7 col-xs-12">
-              <div
-                style={{
-                  height: 0,
-                  position: "sticky",
-                  top: "50%",
-                  zIndex: 1,
-                }}
-              >
-                <Loader isLoading={loading} />
-              </div>
-              <div id="timeline" style={{ opacity: loading ? "0.4" : "1" }}>
-                <ul>
-                  {events.map((event) => {
-                    const { created, event_type, user_name } = event;
-                    return (
-                      <li
-                        className="timeline-event"
-                        key={`event-${user_name}-${created}`}
-                      >
-                        <div className="event-description">
-                          <span className={`event-icon ${event_type}`}>
-                            <span className="fa-layers">
-                              <FontAwesomeIcon
-                                icon={faCircle as IconProp}
-                                transform="grow-8"
-                              />
-                              <FontAwesomeIcon
-                                icon={
-                                  UserFeedPage.getEventTypeIcon(
-                                    event_type
-                                  ) as IconProp
-                                }
-                                inverse
-                                transform="shrink-4"
-                              />
-                            </span>
+        <div className="row">
+          <div className="col-md-7 col-xs-12">
+            <div
+              style={{
+                height: 0,
+                position: "sticky",
+                top: "50%",
+                zIndex: 1,
+              }}
+            >
+              <Loader isLoading={loading} />
+            </div>
+            <div id="timeline" style={{ opacity: loading ? "0.4" : "1" }}>
+              <ul>
+                {events.map((event) => {
+                  const { created, event_type, user_name } = event;
+                  return (
+                    <li
+                      className="timeline-event"
+                      key={`event-${user_name}-${created}`}
+                    >
+                      <div className="event-description">
+                        <span className={`event-icon ${event_type}`}>
+                          <span className="fa-layers">
+                            <FontAwesomeIcon
+                              icon={faCircle as IconProp}
+                              transform="grow-8"
+                            />
+                            <FontAwesomeIcon
+                              icon={
+                                UserFeedPage.getEventTypeIcon(
+                                  event_type
+                                ) as IconProp
+                              }
+                              inverse
+                              transform="shrink-4"
+                            />
                           </span>
-                          {this.renderEventText(event)}
+                        </span>
+                        {this.renderEventText(event)}
 
-                          <span className="event-time">
-                            {preciseTimestamp(created * 1000)}
-                            {this.renderEventActionButton(event)}
-                          </span>
-                        </div>
+                        <span className="event-time">
+                          {preciseTimestamp(created * 1000)}
+                          {this.renderEventActionButton(event)}
+                        </span>
+                      </div>
 
-                        {this.renderEventContent(event)}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-              <ul
-                className="pager"
-                style={{ marginRight: "-1em", marginLeft: "1.5em" }}
-              >
-                <li
-                  className={`previous ${
-                    isNewerButtonDisabled ? "disabled" : ""
-                  }`}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickNewer}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickNewer();
-                    }}
-                    tabIndex={0}
-                    href={
-                      isNewerButtonDisabled
-                        ? undefined
-                        : `?min_ts=${previousEventTs}`
-                    }
-                  >
-                    &larr; Newer
-                  </a>
-                </li>
-                <li
-                  className={`next ${!nextEventTs ? "disabled" : ""}`}
-                  style={{ marginLeft: "auto" }}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickOlder}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickOlder();
-                    }}
-                    tabIndex={0}
-                    href={!nextEventTs ? undefined : `?max_ts=${nextEventTs}`}
-                  >
-                    Older &rarr;
-                  </a>
-                </li>
+                      {this.renderEventContent(event)}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
-            <div className="col-md-offset-1 col-md-4">
-              <UserSocialNetwork user={currentUser} />
-            </div>
+            <ul
+              className="pager"
+              style={{ marginRight: "-1em", marginLeft: "1.5em" }}
+            >
+              <li
+                className={`previous ${
+                  isNewerButtonDisabled ? "disabled" : ""
+                }`}
+              >
+                <a
+                  role="button"
+                  onClick={this.handleClickNewer}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") this.handleClickNewer();
+                  }}
+                  tabIndex={0}
+                  href={
+                    isNewerButtonDisabled
+                      ? undefined
+                      : `?min_ts=${previousEventTs}`
+                  }
+                >
+                  &larr; Newer
+                </a>
+              </li>
+              <li
+                className={`next ${!nextEventTs ? "disabled" : ""}`}
+                style={{ marginLeft: "auto" }}
+              >
+                <a
+                  role="button"
+                  onClick={this.handleClickOlder}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") this.handleClickOlder();
+                  }}
+                  tabIndex={0}
+                  href={!nextEventTs ? undefined : `?max_ts=${nextEventTs}`}
+                >
+                  Older &rarr;
+                </a>
+              </li>
+            </ul>
           </div>
-          <BrainzPlayer
-            listens={listens}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-          />
+          <div className="col-md-offset-1 col-md-4">
+            <UserSocialNetwork user={currentUser} />
+          </div>
         </div>
+        <BrainzPlayer
+          listens={listens}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
+        />
       </>
     );
   }

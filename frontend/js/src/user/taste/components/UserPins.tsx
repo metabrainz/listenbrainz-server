@@ -134,13 +134,15 @@ export default class UserPins extends React.Component<
     });
 
     return (
-      <div role="main">
-        <h3>
-          {user.name === currentUser.name
-            ? "Your"
-            : `${_.startCase(user.name)}'s`}{" "}
-          Pins
-        </h3>
+      <div>
+        <div className="listen-header">
+          <h3 className="header-with-line">
+            {user.name === currentUser.name
+              ? "Your"
+              : `${_.startCase(user.name)}'s`}{" "}
+            Pins
+          </h3>
+        </div>
 
         {pins.length === 0 && (
           <>
@@ -185,7 +187,7 @@ export default class UserPins extends React.Component<
                 );
               })}
               <button
-                className={`btn btn-block ${
+                className={`mt-15 btn btn-block ${
                   noMorePins ? "btn-default" : "btn-info"
                 }`}
                 disabled={noMorePins}

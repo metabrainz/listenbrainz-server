@@ -184,6 +184,7 @@ def init_ts_db(force, create_db):
         if not res:
             raise Exception('Failed to create ts extension! Exit code: %i' % res)
 
+
     if "PYTHON_TESTS_RUNNING" in os.environ:
         ts.init_db_connection(ts_connect["DB_CONNECT"])
     else:
@@ -199,6 +200,9 @@ def init_ts_db(force, create_db):
 
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
+
+        print('TS: Insert default rows...')
+        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'insert_default_data.sql'))
 
         print('TS: Creating views...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
