@@ -1,25 +1,16 @@
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 function Navbar() {
   const { currentUser } = React.useContext(GlobalAppContext);
-  const location = useLocation();
   const navigate = useNavigate();
 
-  const [activePage, setActivePage] = React.useState("");
-  const [myProfile, setMyProfile] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
 
   const toggleSidebarButton = React.useRef<HTMLButtonElement>(null);
-
-  React.useEffect(() => {
-    const path = location.pathname.split("/")[1];
-    if (path === "user") {
-      setMyProfile(location.pathname.split("/")[2] === currentUser?.name);
-    }
-    setActivePage(path);
-  }, [location.pathname, currentUser?.name]);
 
   const toggleSidebar = () => {
     if (
@@ -83,50 +74,47 @@ function Navbar() {
         <div className="main-nav">
           {currentUser?.name ? (
             <>
-              <Link
+              <NavLink
                 to="/feed/"
-                className={
-                  activePage === "feed" || activePage === "recent"
-                    ? "active"
-                    : ""
-                }
+                className={({ isActive }) => (isActive ? "active" : "")}
                 onClick={toggleSidebar}
               >
                 Feed
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to={`/user/${currentUser.name}/`}
-                className={activePage === "user" && myProfile ? "active" : ""}
+                className={({ isActive }) => (isActive ? "active" : "")}
                 onClick={toggleSidebar}
+                end
               >
                 Dashboard
-              </Link>
+              </NavLink>
             </>
           ) : (
             <>
-              <Link
+              <NavLink
                 to="/recent/"
-                className={activePage === "recent" ? "active" : ""}
+                className={({ isActive }) => (isActive ? "active" : "")}
                 onClick={toggleSidebar}
               >
                 Feed
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/statistics/"
-                className={activePage === "statistics" ? "active" : ""}
+                className={({ isActive }) => (isActive ? "active" : "")}
                 onClick={toggleSidebar}
               >
                 Dashboard
-              </Link>
+              </NavLink>
             </>
           )}
-          <Link
+          <NavLink
             to="/explore/"
-            className={activePage === "explore" ? "active" : ""}
+            className={({ isActive }) => (isActive ? "active" : "")}
             onClick={toggleSidebar}
           >
             Explore
-          </Link>
+          </NavLink>
         </div>
 
         <div className="navbar-bottom">
@@ -134,26 +122,26 @@ function Navbar() {
             <>
               <div className="username">{currentUser.name}</div>
               <a href="/login/logout/">Logout</a>
-              <Link
-                className={activePage === "settings" ? "active" : ""}
+              <NavLink
+                className={({ isActive }) => (isActive ? "active" : "")}
                 to="/settings/"
                 onClick={toggleSidebar}
               >
                 Settings
-              </Link>
+              </NavLink>
             </>
           ) : (
             <Link to="/login/" onClick={toggleSidebar}>
               Sign in
             </Link>
           )}
-          <Link
-            className={activePage === "about" ? "active" : ""}
+          <NavLink
+            className={({ isActive }) => (isActive ? "active" : "")}
             to="/about/"
             onClick={toggleSidebar}
           >
             About
-          </Link>
+          </NavLink>
           <a
             href="https://community.metabrainz.org/c/listenbrainz"
             target="_blank"
@@ -172,7 +160,7 @@ function Navbar() {
               required
             />
             <button type="submit">
-              <span className="glyphicon glyphicon-search" />
+              <FontAwesomeIcon icon={faMagnifyingGlass} />
             </button>
           </form>
         </div>

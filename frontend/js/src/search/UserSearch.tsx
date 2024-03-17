@@ -1,18 +1,20 @@
 import * as React from "react";
-import { Link, useLoaderData, useNavigate } from "react-router-dom";
+import { Link, useLoaderData, useSearchParams } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 type SearchResultsLoaderData = {
-  searchTerm: string;
   users: [string, number, number?][];
 };
 
 export default function SearchResults() {
-  const navigate = useNavigate();
-  const { searchTerm, users } = useLoaderData() as SearchResultsLoaderData;
+  const { users } = useLoaderData() as SearchResultsLoaderData;
   const { currentUser } = React.useContext(GlobalAppContext);
 
-  const [searchTermInput, setSearchTermInput] = React.useState(searchTerm);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [searchTermInput, setSearchTermInput] = React.useState(
+    searchParams.get("search_term") || ""
+  );
   const username = currentUser ? currentUser.name : null;
 
   const search = (e: React.FormEvent<HTMLFormElement>) => {
@@ -20,7 +22,7 @@ export default function SearchResults() {
     if (!searchTermInput) {
       return;
     }
-    navigate(`/search/?search_term=${searchTermInput}`);
+    setSearchParams({ search_term: searchTermInput });
   };
 
   return (
