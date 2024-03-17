@@ -18,18 +18,9 @@ const sections: Section[] = [
 
 function AboutLayout() {
   const location = useLocation();
-  const [activeLabel, setActiveLabel] = React.useState<string>("");
-
-  const getActiveLabel = React.useCallback((path: string) => {
-    const newActiveLabel = sections.find((link) => path.includes(link.to))
-      ?.label;
-    return newActiveLabel;
-  }, []);
-
-  React.useEffect(() => {
-    const newActiveLabel = getActiveLabel(location.pathname);
-    setActiveLabel(newActiveLabel || "");
-  }, [location.pathname, getActiveLabel]);
+  const activeLabel = sections.find((link) =>
+    location.pathname.includes(link.to)
+  )?.label;
 
   return (
     <>
