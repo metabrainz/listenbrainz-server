@@ -104,7 +104,7 @@
 // When a container is present, change the behavior of the header and collapse.
 
 .container,
-.container-react-main {
+.container-fluid {
   > .navbar-header,
   > .navbar-collapse {
     margin-right: -@navbar-padding-horizontal;
@@ -178,7 +178,7 @@
 
   @media (min-width: @grid-float-breakpoint) {
     .navbar > .container &,
-    .navbar > .container-react & {
+    .navbar > .container-fluid & {
       margin-left: -@navbar-padding-horizontal;
     }
   }
