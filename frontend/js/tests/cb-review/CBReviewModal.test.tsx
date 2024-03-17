@@ -3,7 +3,6 @@ import NiceModal from "@ebay/nice-modal-react";
 import userEvent from "@testing-library/user-event";
 import { merge } from "lodash";
 import { act, waitFor, screen, cleanup } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
 import * as lookupMBRelease from "../__mocks__/lookupMBRelease.json";
 import * as lookupMBReleaseFromTrack from "../__mocks__/lookupMBReleaseFromTrack.json";
 
@@ -78,12 +77,7 @@ describe("CBReviewModal", () => {
   });
 
   it("requires the user to be logged in, showing a message otherwise", async () => {
-    renderWithProviders(
-      <BrowserRouter>
-        <NiceModal.Provider />
-      </BrowserRouter>,
-      { critiquebrainzAuth: {} }
-    );
+    renderWithProviders(<NiceModal.Provider />, { critiquebrainzAuth: {} });
     act(() => {
       NiceModal.show(CBReviewModal, { ...props });
     });

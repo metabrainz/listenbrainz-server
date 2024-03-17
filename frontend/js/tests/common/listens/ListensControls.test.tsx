@@ -7,7 +7,6 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { BrowserRouter } from "react-router-dom";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 import * as recentListensPropsOneListen from "../../__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsThreeListens from "../../__mocks__/recentListensPropsThreeListens.json";
@@ -57,18 +56,13 @@ describe("ListensControls", () => {
       fetchMock.doMock();
     });
     it("updates the listens state for particular recording", async () => {
-      renderWithProviders(
-        <BrowserRouter>
-          <Listens {...props} />
-        </BrowserRouter>,
-        {
-          currentUser: {
-            id: 1,
-            name: "iliekcomputers",
-            auth_token: "never_gonna",
-          },
-        }
-      );
+      renderWithProviders(<Listens {...props} />, {
+        currentUser: {
+          id: 1,
+          name: "iliekcomputers",
+          auth_token: "never_gonna",
+        },
+      });
 
       const listenCards = screen.getAllByTestId("listen");
       expect(listenCards).toHaveLength(1);
