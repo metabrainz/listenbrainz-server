@@ -11,8 +11,9 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.troi.export import export_to_spotify
-from listenbrainz.webserver.views.views_utils import get_user_playlists, \
-    get_tracks_from_playlist, mbid_mapping_spotify, listen_to_jspf
+from listenbrainz.troi.import_ms import import_from_spotify
+from listenbrainz.webserver.views.views_utils import get_user_playlists
+#     get_tracks_from_playlist, mbid_mapping_spotify, listen_to_jspf
 from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -898,28 +899,8 @@ def import_tracks_from_spotify_to_playlist(service, playlist_id):
                             f" to use this feature.")
         
     try:
-        tracks_from_playlist = get_tracks_from_playlist(token["access_token"], playlist_id)
-        tracks = []
-        for track in tracks_from_playlist["items"]:
-            artists = track['track'].get('artists', [])
-            artist_names = []
-            for a in artists:
-                name = a.get('name')
-                if name is not None:
-                    artist_names.append(name)
-            artist_name = ', '.join(artist_names)
-            tracks.append({
-                    "track_name": track['track']['name'],
-                    "artist_name": artist_name,
-            })
-        mbid_mapped_tracks = []
-        for track in tracks:
-            mbid_mapped_tracks.append(mbid_mapping_spotify(track["track_name"], track["artist_name"]))
-        jspf_tracks = []
-        for track in mbid_mapped_tracks:
-            if "recording_mbid" in track:
-                jspf_tracks.append(listen_to_jspf(track))
-        return jsonify(jspf_tracks)
+        playlist = import_from_spotify(token["access_token"], user["auth_token"], playlist_id)
+        return playlist
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)

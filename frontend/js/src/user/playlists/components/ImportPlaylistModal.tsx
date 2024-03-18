@@ -61,80 +61,6 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
     );
   };
 
-  const createPlaylist = React.useCallback(
-    async (
-      JSPFTracks: JSPFTrack[],
-      playlistName: string
-    ): Promise<JSPFPlaylist | undefined> => {
-      if (!currentUser?.auth_token) {
-        toast.error(
-          <ToastMsg
-            title="Error"
-            message="You must be logged in for this operation"
-          />,
-          { toastId: "auth-error" }
-        );
-        return undefined;
-      }
-
-      const newPlaylist: JSPFObject = {
-        playlist: {
-          creator: currentUser?.name,
-          identifier: "",
-          date: "",
-          track: JSPFTracks ?? [],
-          title: playlistName,
-          extension: {
-            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-              public: true,
-            },
-          },
-        },
-      };
-      try {
-        const newPlaylistId = await APIService.createPlaylist(
-          currentUser?.auth_token,
-          newPlaylist
-        );
-        toast.success(
-          <ToastMsg
-            title="Successfully imported playlist from Spotify"
-            message={
-              <>
-                Imported new playlist{" "}
-                <a href={`/playlist/${newPlaylistId}`}>{playlistName}</a>
-              </>
-            }
-          />,
-          { toastId: "create-playlist-success" }
-        );
-        try {
-          // Fetch the newly created playlist and return it
-          const response = await APIService.getPlaylist(
-            newPlaylistId,
-            currentUser?.auth_token
-          );
-          console.log(response.json());
-          const JSPFObject: JSPFObject = await response.json();
-          return JSPFObject.playlist;
-        } catch (error) {
-          console.error(error);
-          return newPlaylist.playlist;
-        }
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="Could not import playlist"
-            message={`Something went wrong: ${error.toString()}`}
-          />,
-          { toastId: "create-playlist-error" }
-        );
-        return undefined;
-      }
-    },
-    [currentUser, APIService]
-  );
-
   const importTracksToPlaylist = async (
     playlistID: string,
     playlistName: string
@@ -145,11 +71,22 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
     }
 
     try {
-      const tracks = await APIService.getSpotifyTracksInJSPF(
+      const newPlaylist: JSPFPlaylist = await APIService.getSpotifyTracksInJSPF(
         currentUser?.auth_token,
         playlistID
       );
-      const newPlaylist = await createPlaylist(tracks, playlistName);
+      toast.success(
+        <ToastMsg
+          title="Successfully imported playlist from Spotify"
+          message={
+            <>
+              Imported
+              <a href={newPlaylist.identifier}>new playlist</a>
+            </>
+          }
+        />,
+        { toastId: "create-playlist-success" }
+      );
       modal.resolve(newPlaylist);
     } catch (error) {
       toast.error(

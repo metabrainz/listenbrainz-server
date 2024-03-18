@@ -149,16 +149,40 @@ export default class UserPlaylists extends React.Component<
             <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
           </Pill>
           {this.isCurrentUserPage() && (
-            <button
-              type="button"
-              onClick={() => {
-                NiceModal.show(ImportPlaylistModal);
-              }}
-              data-toggle="modal"
-              data-target="#ImportPlaylistModal"
-            >
-              Import from...
-            </button>
+            <div className="dropdow import-playlist-btn">
+              <button
+                className="btn btn-info dropdown-toggle"
+                type="button"
+                id="ImportPlaylistDropdown"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+              >
+                <FontAwesomeIcon icon={faPlusCircle} title="Import from" />
+                &nbsp;Import from...&nbsp;
+                <span className="caret" />
+              </button>
+              <ul
+                className="dropdown-menu dropdown-menu-left"
+                aria-labelledby="importPlaylistDropdown"
+              >
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show(ImportPlaylistModal)
+                        // @ts-ignore
+                        .then((playlist: JSPFPlaylist) => {
+                          this.onPlaylistCreated(playlist);
+                        });
+                    }}
+                    data-toggle="modal"
+                    data-target="#ImportPlaylistModal"
+                  >
+                    Spotify
+                  </button>
+                </li>
+              </ul>
+            </div>
           )}
         </div>
         <PlaylistsList
