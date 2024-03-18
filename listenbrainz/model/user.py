@@ -1,12 +1,11 @@
 from datetime import datetime
 
 from flask import current_app
-from markupsafe import Markup
 from psycopg2 import OperationalError, DatabaseError
 from listenbrainz.model import db
 from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver.admin import AdminModelView
-from listenbrainz.webserver.views.user import delete_user
+from listenbrainz.background.background_tasks import add_task
 
 
 class User(db.Model):
@@ -61,7 +60,7 @@ class UserAdminView(AdminModelView):
 
     def delete_model(self, model):
         try:
-            delete_user(model.id)
+            add_task(model.id, "delete_user")
             return True
         except OperationalError or DatabaseError as err:
             current_app.logger.error(err, exc_info=True)

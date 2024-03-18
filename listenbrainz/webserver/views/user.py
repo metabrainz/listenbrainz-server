@@ -3,12 +3,10 @@ from datetime import datetime
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 
-from flask import Blueprint, render_template, request, url_for, redirect, jsonify, current_app
+from flask import Blueprint, render_template, request, url_for, jsonify, current_app
 from flask_login import current_user, login_required
 
-from data.model.external_service import ExternalServiceType
 from listenbrainz import webserver
-from listenbrainz.db import listens_importer
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
@@ -18,9 +16,8 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
-from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
-from werkzeug.exceptions import NotFound, BadRequest
+from werkzeug.exceptions import NotFound
 
 LISTENS_PER_PAGE = 25
 DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
@@ -244,27 +241,6 @@ def _get_user(user_name):
         if user is None:
             raise NotFound("Cannot find user: %s" % user_name)
         return User.from_dbrow(user)
-
-
-def delete_user(user_id: int):
-    """ Delete a user from ListenBrainz completely. First, drops
-     the user's listens and then deletes the user from the database.
-
-    Args:
-        user_id: the LB row ID of the user
-    """
-    timescale_connection._ts.delete(user_id)
-    db_user.delete(db_conn, user_id)
-
-
-def delete_listens_history(user_id: int):
-    """ Delete a user's listens from ListenBrainz completely.
-
-    Args:
-        user_id: the LB row ID of the user
-    """
-    timescale_connection._ts.delete(user_id)
-    listens_importer.update_latest_listened_at(db_conn, user_id, ExternalServiceType.LASTFM, 0)
 
 
 def logged_in_user_follows_user(user):

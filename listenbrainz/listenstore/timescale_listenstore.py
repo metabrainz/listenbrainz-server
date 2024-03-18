@@ -1,7 +1,7 @@
 import subprocess
 import tarfile
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Tuple, Optional
 
 import psycopg2
@@ -621,7 +621,7 @@ class TimescaleListenStore:
 
         return total_imported
 
-    def delete(self, user_id):
+    def delete(self, user_id, created=None):
         """ Delete all listens for user with specified user ID.
 
         Note: this method tries to delete the user 5 times before giving up.
@@ -629,19 +629,23 @@ class TimescaleListenStore:
         Args:
             musicbrainz_id: the MusicBrainz ID of the user
             user_id: the listenbrainz row id of the user
+            created: delete listens created before this timestamp
 
         Raises: Exception if unable to delete the user in 5 retries
         """
-        query = """
+        if created:
+            created = datetime.now(tz=timezone.utc)
+        query1 = """
             UPDATE listen_user_metadata 
                SET count = 0
                  , min_listened_at = NULL
                  , max_listened_at = NULL
-             WHERE user_id = :user_id;
-            DELETE FROM listen WHERE user_id = :user_id;
+             WHERE user_id = :user_id
         """
+        query2 = """DELETE FROM listen WHERE user_id = :user_id AND created <= :created"""
         try:
-            ts_conn.execute(sqlalchemy.text(query), {"user_id": user_id})
+            ts_conn.execute(sqlalchemy.text(query1), {"user_id": user_id})
+            ts_conn.execute(sqlalchemy.text(query2), {"user_id": user_id, "created": created})
             ts_conn.commit()
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))
