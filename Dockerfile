@@ -159,6 +159,12 @@ COPY ./docker/services/timescale_writer/timescale_writer.service /etc/service/ti
 COPY ./docker/services/timescale_writer/timescale_writer.finish /etc/service/timescale_writer/finish
 RUN touch /etc/service/timescale_writer/down
 
+# Background tasks
+COPY ./docker/services/background_tasks/consul-template-background-tasks.conf /etc/consul-template-background-tasks.conf
+COPY ./docker/services/background_tasks/background_tasks.service /etc/service/background_tasks/run
+COPY ./docker/services/background_tasks/background_tasks.finish /etc/service/background_tasks/finish
+RUN touch /etc/service/background_tasks/down
+
 # MBID-mapping writer
 COPY ./docker/services/mbid_mapping_writer/consul-template-mbid-mapping-writer.conf /etc/consul-template-mbid-mapping-writer.conf
 COPY ./docker/services/mbid_mapping_writer/mbid_mapping_writer.service /etc/service/mbid_mapping_writer/run
