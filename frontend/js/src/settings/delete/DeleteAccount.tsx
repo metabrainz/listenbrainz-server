@@ -70,11 +70,6 @@ export default function DeleteAccount() {
           message={`Successfully enqueued account deletion for ${name}.`}
         />
       );
-
-      // TODO: logout user properly
-      setTimeout(() => {
-        window.location.href = `/`;
-      }, 3000);
     } catch (error) {
       toast.error(
         <ToastMsg

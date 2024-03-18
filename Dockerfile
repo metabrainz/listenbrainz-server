@@ -161,8 +161,8 @@ RUN touch /etc/service/timescale_writer/down
 
 # Background tasks
 COPY ./docker/services/background_tasks/consul-template-background-tasks.conf /etc/consul-template-background-tasks.conf
-COPY ./docker/services/background_tasks/timescale_writer.service /etc/service/background_tasks/run
-COPY ./docker/services/background_tasks/timescale_writer.finish /etc/service/background_tasks/finish
+COPY ./docker/services/background_tasks/background_tasks.service /etc/service/background_tasks/run
+COPY ./docker/services/background_tasks/background_tasks.finish /etc/service/background_tasks/finish
 RUN touch /etc/service/background_tasks/down
 
 # MBID-mapping writer

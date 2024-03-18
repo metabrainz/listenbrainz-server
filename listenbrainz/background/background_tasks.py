@@ -44,9 +44,7 @@ class BackgroundTasks:
         while True:
             try:
                 task = get_task()
-                current_app.logger.info(f"Processing task: {task}")
                 if task is None:
-                    current_app.logger.info("No pending tasks found, sleeping 5 seconds")
                     time.sleep(5)
                     continue
                 status = self.process_task(task)

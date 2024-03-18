@@ -633,7 +633,7 @@ class TimescaleListenStore:
 
         Raises: Exception if unable to delete the user in 5 retries
         """
-        if created:
+        if created is None:
             created = datetime.now(tz=timezone.utc)
         query1 = """
             UPDATE listen_user_metadata 
