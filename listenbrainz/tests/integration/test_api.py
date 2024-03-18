@@ -49,6 +49,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
                                          total_listen_count integer, total_user_count integer)""")
 
             self.ts_conn.connection.commit()
+    
+    def insert_lb_tag_radio_data(self):
+        with open(self.path_to_data_file('lb_tag_radio_db_data_for_api_test.json'), 'r') as f:
+            lb_tag_radio = json.loads(f.read())
+
+        with self.ts_conn.connection.cursor() as curs:
+            curs.execute("DROP TABLE IF EXISTS tags.lb_tag_radio")
+            curs.execute("CREATE TABLE tags.lb_tag_radio (tag text, recording_mbid uuid, tag_count integer, percent double precision, source lb_tag_radio_source_type_enum)")
+            query = "INSERT INTO tags.lb_tag_radio (tag, recording_mbid, tag_count, percent, source) VALUES %s"
+            execute_values(curs, query, lb_tag_radio, template=None)
+
+            self.ts_conn.connection.commit()
+
 
     def test_get_listens_invalid_count(self):
         """If the count argument is negative, the API should raise HTTP 400"""
@@ -1230,3 +1243,18 @@ class APITestCase(ListenAPIIntegrationTestCase):
         keys = list(r.json.keys())
         self.assertGreater(len(keys), 0)
         self.assertEqual(len(r.json[keys[0]][0]), 3)
+
+    def test_test_lb_radio_tags(self):
+        self.insert_lb_tag_radio_data()
+        r = self.client.get(self.custom_url_for("api_v1.get_tags_dataset",
+                                                tag="Jazz",
+                                                begin_percent=0,
+                                                end_percent=100,
+                                                count=50),
+                            content_type="application/json")
+        self.assert200(r)
+        keys = list(r.json.keys())
+        self.assertGreater(len(keys), 0)
+        self.assertEqual(r.json['count']['artist'], 7)
+        self.assertEqual(r.json['count']['recording'], 0)
+        self.assertEqual(r.json['count']['release-group'], 0)
