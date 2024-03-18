@@ -53,47 +53,36 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         )
 
     def test_info_invalid_user(self):
-        response = self.client.get(url_for('recommendations_cf_recording.info', user_name="invalid"))
+        response = self.client.post(url_for('recommendations_cf_recording.info', user_name="invalid"))
         self.assert404(response)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
     def test_info_valid_user(self, mock_user):
-        response = self.client.get(url_for('recommendations_cf_recording.info', user_name="vansika"))
+        mock_user.return_value = User.from_dbrow(self.user)
+        response = self.client.post(url_for('recommendations_cf_recording.info', user_name="vansika"))
         self.assert200(response)
-        self.assertTemplateUsed('index.html')
-        self.assert_context('active_section', 'info')
-        self.assert_context('user', mock_user.return_value)
-        mock_user.assert_called_with("vansika")
+        self.assertEqual(response.json, {
+            "user": {
+                "id": mock_user.return_value.id,
+                "name": 'vansika',
+            }
+        })
 
     def test_raw_invalid_user(self):
         response = self.client.post(url_for('recommendations_cf_recording.raw', user_name="invalid"))
         self.assert404(response)
 
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_user')
-    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_template')
-    def test_raw_valid_user(self, mock_template, mock_user):
-        # Flask essentially needs render_template to generate a response
-        # this is a fake repsonse to check _get_template wa called with desired params.
-        mock_template.return_value = render_template(
-            "index.html",
-            active_section='raw',
-            user=self.user,
-            error_msg="test"
-        )
-        response = self.client.get(url_for('recommendations_cf_recording.raw', user_name="vansika"))
-        self.assert200(response)
-        mock_user.assert_called_with("vansika")
-        mock_template.assert_called_with(active_section='raw', user=mock_user.return_value)
-
     def test_get_props_missing_user_from_rec_db(self):
         user = User.from_dbrow(self.user)
         props = recommendations_cf_recording._get_props(active_section='raw', user=user)
-        self.assertEqual(props['user'], user)
+        self.assertEqual(props['user']['id'], user.id)
+        self.assertEqual(props['user']['name'], user.musicbrainz_id)
 
     def test_get_props_missing_rec_raw(self):
         user = User.from_dbrow(self.user2)
         props = recommendations_cf_recording._get_props(active_section='raw', user=user)
-        self.assertEqual(props['user'], user)
+        self.assertEqual(props['user']['id'], user.id)
+        self.assertEqual(props['user']['name'], user.musicbrainz_id)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_playable_recommendations_list')
@@ -113,7 +102,8 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
         mock_get_recommendations.return_value = []
 
         props = recommendations_cf_recording._get_props(active_section='raw', user=user)
-        self.assertEqual(props['user'], user)
+        self.assertEqual(props['user']['id'], user.id)
+        self.assertEqual(props['user']['name'], user.musicbrainz_id)
         error_msg = "An error occurred while processing your request. Check back later!"
         self.assertEqual(props['errorMsg'], error_msg)
 

@@ -15,7 +15,8 @@ class AdminTestCase(IntegrationTestCase):
         r = self.client.get('/admin', follow_redirects=True)
         self.assert200(r)
         self.assertNotIn('BDFL Zone', r.data.decode('utf-8'))
-        self.assertTemplateUsed('index.html')
+        # Check if the user is redirected to the login page
+        self.assertEqual(r.request.path, self.custom_url_for('login.index'))
 
     def test_admin_views_when_authorized_logged_in(self):
         self.app.config['ADMINS'] = [self.authorized_user['musicbrainz_id']]
@@ -32,4 +33,5 @@ class AdminTestCase(IntegrationTestCase):
         r = self.client.get('/admin', follow_redirects=True)
         self.assert200(r)
         self.assertNotIn('BDFL Zone', r.data.decode('utf-8'))
-        self.assertTemplateUsed('index.html')
+        # Check if the user is redirected to the their dashboard
+        self.assertEqual(r.request.path, self.custom_url_for('index.index_pages', path=""))
