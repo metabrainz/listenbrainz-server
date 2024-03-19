@@ -20,9 +20,8 @@ const getPlayerRoutes = () => {
           path: "release/:releaseMBID",
           lazy: async () => {
             const PlayerPage = await import("../PlayerPage");
-            return { Component: PlayerPage.PlayerPageWrapper };
+            return { Component: PlayerPage.PlayerPageRedirectToAlbum };
           },
-          loader: RouteLoader,
         },
       ],
     },

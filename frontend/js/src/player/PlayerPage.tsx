@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
-import { useLoaderData } from "react-router-dom";
+import { Navigate, useLoaderData, useParams } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 
@@ -254,4 +254,9 @@ export default class PlayerPage extends React.Component<
 export function PlayerPageWrapper() {
   const loaderData = useLoaderData() as PlayerPageLoaderData;
   return <PlayerPage playlist={loaderData.playlist} />;
+}
+
+export function PlayerPageRedirectToAlbum() {
+  const { releaseMBID } = useParams();
+  return <Navigate to={`/release/${releaseMBID}`} />;
 }
