@@ -1,6 +1,7 @@
+import type { RouteObject } from "react-router-dom";
 import RouteLoader from "../utils/Loader";
 
-const getEntityPages = () => {
+const getEntityPages = (): RouteObject[] => {
   const routes = [
     {
       path: "/",

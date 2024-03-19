@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import type { RouteObject } from "react-router-dom";
 import getExploreRoutes from "../explore/routes";
 import getUserRedirectRoutes from "../user/routes/redirectRoutes";
 import getUserRoutes from "../user/routes/userRoutes";
@@ -15,7 +16,7 @@ import getSettingsRedirectRoutes from "../settings/routes/redirectRoutes";
 import getPlayerRoutes from "../player/routes";
 import getRecommendationsRoutes from "../recommended/tracks/routes";
 
-const getRoutes = (musicbrainzID?: string) => {
+const getRoutes = (musicbrainzID?: string): RouteObject[] => {
   const exploreRoutes = getExploreRoutes();
   const userRoutes = getUserRoutes();
   const redirectRoutes = getUserRedirectRoutes(musicbrainzID);

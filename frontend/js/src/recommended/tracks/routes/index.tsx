@@ -1,6 +1,7 @@
+import type { RouteObject } from "react-router-dom";
 import RouteLoader from "../../../utils/Loader";
 
-const getRecommendationsRoutes = () => {
+const getRecommendationsRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/recommended/tracks/:userName/",

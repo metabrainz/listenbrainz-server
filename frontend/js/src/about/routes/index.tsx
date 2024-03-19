@@ -1,6 +1,7 @@
+import type { RouteObject } from "react-router-dom";
 import RouteLoader from "../../utils/Loader";
 
-const getAboutRoutes = () => {
+const getAboutRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/",

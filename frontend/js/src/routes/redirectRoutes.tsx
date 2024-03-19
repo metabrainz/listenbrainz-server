@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Navigate, Outlet, Params } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+import type { RouteObject } from "react-router-dom";
 
-const getRedirectRoutes = () => {
+const getRedirectRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/",

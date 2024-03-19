@@ -1,8 +1,9 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
+import type { RouteObject } from "react-router-dom";
 import RouteLoader from "../../utils/Loader";
 
-const getExploreRoutes = () => {
+const getExploreRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/explore",
