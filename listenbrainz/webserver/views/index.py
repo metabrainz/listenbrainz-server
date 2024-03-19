@@ -14,12 +14,12 @@ from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
 from data.model.user_entity import EntityRecord
+from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash, db_conn
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.views.user import delete_user
 import listenbrainz.db.stats as db_stats
 
 index_bp = Blueprint('index', __name__)
@@ -192,7 +192,7 @@ def mb_user_deleter(musicbrainz_row_id):
     user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id)
     if user is None:
         raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
-    delete_user(user['id'])
+    add_task(user['id'], 'delete_user')
     return jsonify({'status': 'ok'}), 200
 
 

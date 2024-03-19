@@ -4,6 +4,7 @@ import time
 from brainzutils import cache
 
 import listenbrainz.db.user as db_user
+from listenbrainz.background.background_tasks import get_task
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -103,6 +104,15 @@ class SettingsViewsTestCase(IntegrationTestCase):
 
         # listen counts are cached for 5 min, so delete key otherwise cached will be returned
         cache.delete(REDIS_USER_LISTEN_COUNT + str(self.user['id']))
+
+        with self.app.app_context():
+            task = get_task()
+            self.assertIsNotNone(task)
+            self.assertEquals(task.user_id, self.user["id"])
+            self.assertEquals(task.task, "delete_listens")
+
+        # wait for background tasks to be processed
+        time.sleep(5)
 
         # check that listens have been successfully deleted
         resp = self.client.get(self.custom_url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
