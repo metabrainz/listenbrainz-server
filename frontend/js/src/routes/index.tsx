@@ -1,8 +1,9 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
+import type { RouteObject } from "react-router-dom";
 import RouteLoader from "../utils/Loader";
 
-const getIndexRoutes = () => {
+const getIndexRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/",
@@ -172,6 +173,13 @@ const getIndexRoutes = () => {
               },
             },
           ],
+        },
+        {
+          path: "api/auth/",
+          lazy: async () => {
+            const APIAuth = await import("../api/auth/AuthPage");
+            return { Component: APIAuth.default };
+          },
         },
       ],
     },
