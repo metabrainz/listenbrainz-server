@@ -302,7 +302,7 @@ export default class ListenCard extends React.Component<
     } else if (listen.playing_now) {
       timeStampForDisplay = (
         <span className="listen-time">
-          <Link to="/listening-now/" target="_blank" rel="noopener noreferrer">
+          <Link to="/listening-now/">
             <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
           </Link>
         </span>

@@ -238,7 +238,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       )}
       {showArtist && !isArray(artistCredits) && (
         <div className="release-artist" title={artistCreditName}>
-          <Link to={`/artist/${artistMBIDs[0]}`}>{artistCreditName}</Link>
+          <Link to={`/artist/${artistMBIDs[0]}/`}>{artistCreditName}</Link>
         </div>
       )}
     </div>

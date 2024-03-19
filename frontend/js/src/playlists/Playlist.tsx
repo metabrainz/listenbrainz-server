@@ -14,7 +14,7 @@ import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
@@ -368,9 +368,11 @@ export default class PlaylistPage extends React.Component<
                 <small>
                   {customFields?.public ? "Public " : "Private "}
                   playlist by{" "}
-                  <a href={sanitizeUrl(`/user/${playlist.creator}/playlists`)}>
+                  <Link
+                    to={sanitizeUrl(`/user/${playlist.creator}/playlists/`)}
+                  >
                     {playlist.creator}
-                  </a>
+                  </Link>
                 </small>
               </h1>
               <div className="info">
@@ -382,9 +384,9 @@ export default class PlaylistPage extends React.Component<
                       With the help of:&ensp;
                       {customFields.collaborators.map((collaborator, index) => (
                         <React.Fragment key={collaborator}>
-                          <a href={sanitizeUrl(`/user/${collaborator}`)}>
+                          <Link to={sanitizeUrl(`/user/${collaborator}/`)}>
                             {collaborator}
-                          </a>
+                          </Link>
                           {index <
                           (customFields?.collaborators?.length ?? 0) - 1
                             ? ", "

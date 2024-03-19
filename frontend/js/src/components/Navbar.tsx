@@ -74,45 +74,27 @@ function Navbar() {
         <div className="main-nav">
           {currentUser?.name ? (
             <>
-              <NavLink
-                to="/feed/"
-                className={({ isActive }) => (isActive ? "active" : "")}
-                onClick={toggleSidebar}
-              >
+              <NavLink to="/feed/" onClick={toggleSidebar}>
                 Feed
               </NavLink>
               <NavLink
                 to={`/user/${currentUser.name}/`}
-                className={({ isActive }) => (isActive ? "active" : "")}
                 onClick={toggleSidebar}
-                end
               >
                 Dashboard
               </NavLink>
             </>
           ) : (
             <>
-              <NavLink
-                to="/recent/"
-                className={({ isActive }) => (isActive ? "active" : "")}
-                onClick={toggleSidebar}
-              >
+              <NavLink to="/recent/" onClick={toggleSidebar}>
                 Feed
               </NavLink>
-              <NavLink
-                to="/statistics/"
-                className={({ isActive }) => (isActive ? "active" : "")}
-                onClick={toggleSidebar}
-              >
+              <NavLink to="/statistics/" onClick={toggleSidebar}>
                 Dashboard
               </NavLink>
             </>
           )}
-          <NavLink
-            to="/explore/"
-            className={({ isActive }) => (isActive ? "active" : "")}
-            onClick={toggleSidebar}
-          >
+          <NavLink to="/explore/" onClick={toggleSidebar}>
             Explore
           </NavLink>
         </div>
@@ -122,11 +104,7 @@ function Navbar() {
             <>
               <div className="username">{currentUser.name}</div>
               <a href="/login/logout/">Logout</a>
-              <NavLink
-                className={({ isActive }) => (isActive ? "active" : "")}
-                to="/settings/"
-                onClick={toggleSidebar}
-              >
+              <NavLink to="/settings/" onClick={toggleSidebar}>
                 Settings
               </NavLink>
             </>
@@ -135,11 +113,7 @@ function Navbar() {
               Sign in
             </Link>
           )}
-          <NavLink
-            className={({ isActive }) => (isActive ? "active" : "")}
-            to="/about/"
-            onClick={toggleSidebar}
-          >
+          <NavLink to="/about/" onClick={toggleSidebar}>
             About
           </NavLink>
           <a

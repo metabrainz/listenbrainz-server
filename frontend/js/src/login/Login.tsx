@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
@@ -56,17 +56,18 @@ export default function Login() {
         <p>
           If after creating an account you change your mind about processing
           your listening history, you will need to{" "}
-          <a href="/login/musicbrainz/">delete your ListenBrainz account</a>.
+          <Link to="/login/musicbrainz/">delete your ListenBrainz account</Link>
+          .
         </p>
       </div>
       <br />
       <div className="well" style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <a
-          href={`/login/musicbrainz/${next ? `?next=${next}` : ""}`}
+        <Link
+          to={`/login/musicbrainz/${next ? `?next=${next}` : ""}`}
           className="btn btn-primary btn-lg btn-block"
         >
           Sign in with MusicBrainz
-        </a>
+        </Link>
       </div>
     </div>
   );

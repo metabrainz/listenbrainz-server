@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
-import { Navigate, useLoaderData, useParams } from "react-router-dom";
+import { Link, Navigate, useLoaderData, useParams } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 
@@ -93,7 +93,7 @@ export default class PlayerPage extends React.Component<
             <div>
               {" "}
               Created a new public
-              <a href={`/playlist/${newPlaylistId}`}>instant playlist</a>
+              <Link to={`/playlist/${newPlaylistId}/`}>instant playlist</Link>
             </div>
           }
         />,

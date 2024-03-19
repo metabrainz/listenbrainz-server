@@ -255,8 +255,6 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
         <>
           <Link
             to={`/artist/${artist.artist_mbid}/`}
-            target="_blank"
-            rel="noopener noreferrer"
             title={artist.artist_credit_name}
           >
             {artist.artist_credit_name}

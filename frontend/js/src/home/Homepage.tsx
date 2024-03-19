@@ -22,7 +22,12 @@ import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
 import { isNumber, throttle } from "lodash";
-import { Navigate, useLoaderData, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  Navigate,
+  useLoaderData,
+  useSearchParams,
+} from "react-router-dom";
 import { Helmet } from "react-helmet";
 import NumberCounter from "./NumberCounter";
 import Blob from "./Blob";
@@ -147,9 +152,9 @@ function HomePage() {
             <p>Follow your favourites and discover great new music.</p>
           </div>
           <div className="homepage-info-links">
-            <a href="/login">Login</a>
+            <Link to="/login/">Login</Link>
             <span>|</span>
-            <a href="/about">About ListenBrainz</a>
+            <Link to="/about/">About ListenBrainz</Link>
           </div>
         </div>
         <FontAwesomeIcon
@@ -242,9 +247,9 @@ function HomePage() {
             </p>
           </div>
           <div className="homepage-info-links">
-            <a href="/login">Login</a>
+            <Link to="/login/">Login</Link>
             <span>|</span>
-            <a href="/about">About ListenBrainz</a>
+            <Link to="/about/">About ListenBrainz</Link>
           </div>
         </div>
       </div>

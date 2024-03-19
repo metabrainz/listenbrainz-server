@@ -244,7 +244,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <br />
             <small>
               In order to receive these events, you will need to{" "}
-              <a href="/add-data/">send listens</a> to ListenBrainz.
+              <Link to="/add-data/">send listens</Link> to ListenBrainz.
               <br />
               We work hard to make this data available to you as soon as we
               receive it, but until your music service sends us a{" "}
@@ -492,13 +492,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               </a>
             </div>
             <span className="artist-name small ellipsis" title={artistName}>
-              <a
-                href={artistMBID ? `/artist/${artistMBID}` : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {artistName}
-              </a>
+              {artistMBID ? (
+                <Link to={`/artist/${artistMBID}/`}>{artistName}</Link>
+              ) : (
+                artistName
+              )}
             </span>
           </div>
           <div className="love-hate">

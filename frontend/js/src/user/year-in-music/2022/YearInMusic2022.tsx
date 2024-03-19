@@ -600,17 +600,13 @@ export default class YearInMusic extends React.Component<
                             />
                             <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                             <div title={release.release_name}>
-                              <a
-                                href={
-                                  release.release_mbid
-                                    ? `/release/${release.release_mbid}/`
-                                    : undefined
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {release.release_name}
-                              </a>
+                              {release.release_mbid ? (
+                                <Link to={`/release/${release.release_mbid}/`}>
+                                  {release.release_name}
+                                </Link>
+                              ) : (
+                                release.release_name
+                              )}
                               <div className="small text-muted">
                                 {release.artist_name}
                               </div>
