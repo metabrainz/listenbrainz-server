@@ -266,6 +266,16 @@ def create_api_compat_app(debug=None):
 
     app = create_app(debug=debug)
 
+    import listenbrainz.webserver.static_manager as static_manager
+    static_manager.read_manifest()
+    app.static_folder = '/static'
+
+    from listenbrainz.webserver.utils import get_global_props
+    app.context_processor(lambda: dict(
+        get_static_path=static_manager.get_static_path,
+        global_props=get_global_props()
+    ))
+
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp
     app.register_blueprint(api_compat_bp)
