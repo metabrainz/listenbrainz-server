@@ -9,7 +9,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
@@ -42,8 +42,8 @@ export type ArtistPageProps = {
 export default function ArtistPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
   const {
-    artist: initialArtist,
-    popularRecordings: initialPopularRecordings,
+    artist,
+    popularRecordings,
     releaseGroups,
     similarArtists,
     listeningStats,
@@ -55,47 +55,22 @@ export default function ArtistPage(): JSX.Element {
     total_user_count: userCount,
   } = listeningStats;
 
-  const [artist, setArtist] = React.useState(initialArtist);
+  const { artistMBID } = useParams();
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
   >();
-  // Data we get from the back end
-  const [popularRecordings, setPopularRecordings] = React.useState(
-    initialPopularRecordings
-  );
-  const [loading, setLoading] = React.useState(false);
 
   const [albumsByThisArtist, alsoAppearsOn] = partition(
     releaseGroups,
     (rg) => rg.artists[0].artist_mbid === artist.artist_mbid
   );
-  /** Navigation from one artist to a similar artist */
-  //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
-  //     event
-  //   ) => {
-  //     setLoading(true);
-  //   	try{
-  //     // Hit the API to get all the required info for the artist we clicked on
-  //    const response = await fetch(…)
-  //   if(!response.ok){
-  // 	throw new Error(response.status);
-  //   }
-  //	setArtist(response.artist)
-  //  setArtistTags(…)
-  //  setPopularRecordings(…)
-  // }
-  // catch(err){
-  // toast.error(<ToastMsg title={"Could no load similar artist"} message={err.toString()})
-  // }
-  //     setLoading(false);
-  //   };
 
   React.useEffect(() => {
     async function fetchReviews() {
       try {
         const response = await fetch(
-          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artist.artist_mbid}&entity_type=artist`
+          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artistMBID}&entity_type=artist`
         );
         const body = await response.json();
         if (!response.ok) {
@@ -109,7 +84,7 @@ export default function ArtistPage(): JSX.Element {
     async function fetchWikipediaExtract() {
       try {
         const response = await fetch(
-          `https://musicbrainz.org/artist/${artist.artist_mbid}/wikipedia-extract`
+          `https://musicbrainz.org/artist/${artistMBID}/wikipedia-extract`
         );
         const body = await response.json();
         if (!response.ok) {
@@ -122,7 +97,7 @@ export default function ArtistPage(): JSX.Element {
     }
     fetchReviews();
     fetchWikipediaExtract();
-  }, [artist, releaseGroups, APIService.APIBaseURI]);
+  }, [artistMBID]);
 
   const listensFromPopularRecordings =
     popularRecordings.map(popularRecordingToListen) ?? [];
@@ -169,7 +144,6 @@ export default function ArtistPage(): JSX.Element {
       <Helmet>
         <title>{artist?.name}</title>
       </Helmet>
-      <Loader isLoading={loading} />
       <div className="entity-page-header flex">
         <div
           className="cover-art"
