@@ -41,7 +41,7 @@ def api_auth():
 def api_auth_approve():
     """ Authenticate the user token provided.
     """
-    data = request.get_json()
+    data = request.json
     user = User.load_by_name(db_conn, current_user.musicbrainz_id)
     if "token" not in data:
         return jsonify({"message": "Missing required parameters. Please provide correct parameters and try again."})
