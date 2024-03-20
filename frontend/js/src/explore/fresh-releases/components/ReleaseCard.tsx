@@ -189,12 +189,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
             </div>
           )}
         </div>
-        <a
-          href={linkToEntity}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="release-coverart-container"
-        >
+        <Link to={linkToEntity} className="release-coverart-container">
           {coverartSrc ? (
             <>
               {coverArtPlaceholder}
@@ -213,14 +208,12 @@ export default function ReleaseCard(props: ReleaseCardProps) {
               {releaseCoverArtIcon}
             </div>
           )}
-        </a>
+        </Link>
       </div>
       {showReleaseTitle && (
         <div className="name-type-container">
           <div className="release-name" title={releaseName}>
-            <a href={linkToEntity} target="_blank" rel="noopener noreferrer">
-              {releaseName}
-            </a>
+            <Link to={linkToEntity}>{releaseName}</Link>
           </div>
         </div>
       )}
