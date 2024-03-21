@@ -693,7 +693,6 @@ export default class APIService {
     });
     await this.checkStatus(response);
     const result = await response.json();
-
     return result.playlist_mbid;
   };
 
@@ -1102,6 +1101,35 @@ export default class APIService {
       url += `&inc=${inc}`;
     }
     const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importPlaylistToSpotify = async (userToken?: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/import/spotify`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getSpotifyTracksInJSPF = async (
+    userToken: string,
+    playlistID: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/spotify/${playlistID}/tracks`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
     await this.checkStatus(response);
     return response.json();
   };

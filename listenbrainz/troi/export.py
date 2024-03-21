@@ -2,7 +2,6 @@ import spotipy
 from troi.core import generate_playlist
 from troi.patches.playlist_from_listenbrainz import TransferPlaylistPatch
 
-
 def export_to_spotify(lb_token, spotify_token, is_public, playlist_mbid=None, jspf=None):
     sp = spotipy.Spotify(auth=spotify_token)
     # TODO: store spotify user ids in external_service_oauth table
