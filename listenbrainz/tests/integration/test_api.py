@@ -50,6 +50,21 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
             self.ts_conn.connection.commit()
 
+    def insert_lb_tag_radio_data(self):
+        with open(self.path_to_data_file('lb_tag_radio_db_data_for_api_test.json'), 'r') as f:
+            lb_tag_radio = json.loads(f.read())
+
+        with self.ts_conn.connection.cursor() as curs:
+            curs.execute("DROP TABLE IF EXISTS tags.lb_tag_radio")
+            curs.execute(
+                """CREATE TABLE tags.lb_tag_radio (tag text, recording_mbid uuid, tag_count integer, percent double precision,
+                                source lb_tag_radio_source_type_enum)"""
+            )
+            query = "INSERT INTO tags.lb_tag_radio (tag, recording_mbid, tag_count, percent, source) VALUES %s"
+            execute_values(curs, query, lb_tag_radio, template=None)
+
+            self.ts_conn.connection.commit()
+
     def test_get_listens_invalid_count(self):
         """If the count argument is negative, the API should raise HTTP 400"""
         url = self.custom_url_for('api_v1.get_listens',
@@ -280,7 +295,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
-    
+
     def test_playlist_api_xml_error(self):
 
         # Making a request that would trigger the error
@@ -331,13 +346,13 @@ class APITestCase(ListenAPIIntegrationTestCase):
 <error code="401">Invalid authorization token.</error>
 </playlist_error>
 """.strip().replace('\n', '').replace('    ', '')
-        
+
         first_xml_str_auth = ''.join(r.data.decode('utf-8').split())
         second_xml_str_auth = ''.join(expected_error_xml.split())
         self.assertEqual(first_xml_str_auth, second_xml_str_auth)
 
     def test_playlist_api_xml_internal_server_error(self):
-        
+
         playlist = {
             "playlist": {
                 "title": "you're a person",
@@ -370,10 +385,9 @@ class APITestCase(ListenAPIIntegrationTestCase):
 <playlist_error>
   <error code="500">Internal server error occurred.</error>
 </playlist_error>"""
-            
+
             actual_xml = response.data.decode('utf-8')
             self.assertEqual(actual_xml, expected_error_xml)
-
 
     def test_valid_playing_now(self):
         """ Test for valid submission of listen_type 'playing_now'
@@ -1230,3 +1244,18 @@ class APITestCase(ListenAPIIntegrationTestCase):
         keys = list(r.json.keys())
         self.assertGreater(len(keys), 0)
         self.assertEqual(len(r.json[keys[0]][0]), 3)
+
+    def test_test_lb_radio_tags(self):
+        self.insert_lb_tag_radio_data()
+        r = self.client.get(self.custom_url_for("api_v1.get_tags_dataset",
+                                                tag="Jazz",
+                                                begin_percent=0,
+                                                end_percent=100,
+                                                count=50),
+                            content_type="application/json")
+        self.assert200(r)
+        keys = list(r.json.keys())
+        self.assertGreater(len(keys), 0)
+        self.assertEqual(r.json['count']['artist'], 7)
+        self.assertEqual(r.json['count']['recording'], 0)
+        self.assertEqual(r.json['count']['release-group'], 0)
