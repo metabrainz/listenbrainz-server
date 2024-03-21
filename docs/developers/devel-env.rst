@@ -19,7 +19,13 @@ Clone listenbrainz-server
 -------------------------
 
 ListenBrainz is hosted on GitHub at https://github.com/metabrainz/listenbrainz-server/.
-You can use ``git`` to clone it (or your own fork) to your computer
+You can use ``git`` to clone it (or your own fork) to your computer.
+
+.. note::
+    
+    We recommend Windows users to :ref:`run docker inside WSL <Windows Docker Installation>` 
+    (preferably WSL2) to avoid any compatibility issues.
+
 
 .. code-block:: bash
 
