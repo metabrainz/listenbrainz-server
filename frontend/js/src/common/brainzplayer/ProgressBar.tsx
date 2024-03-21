@@ -25,7 +25,9 @@ const TOOLTIP_TOP_OFFSET: number = 102;
 function ProgressBar(props: ProgressBarProps) {
   const { durationMs, progressMs, seekToPositionMs } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
-  const progressPercentage = Number((progressMs * 100 / durationMs).toFixed(2));
+  const progressPercentage = Number(
+    ((progressMs * 100) / durationMs).toFixed(2)
+  );
   const hideProgressBar = isNaN(progressPercentage) || progressPercentage <= 0;
 
   // Originally by ford04 - https://stackoverflow.com/a/62017005
