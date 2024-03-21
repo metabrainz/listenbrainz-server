@@ -10,14 +10,14 @@ import {
 import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import tinycolor from "tinycolor2";
 import { Helmet } from "react-helmet";
-import { Link, useLoaderData } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useLocation, useParams } from "react-router-dom";
 import {
   getRelIconLink,
   ListeningStats,
   popularRecordingToListen,
 } from "./utils";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import Loader from "../components/Loader";
 import {
   generateAlbumArtThumbnailLink,
   getAlbumArtFromReleaseGroupMBID,
@@ -28,6 +28,7 @@ import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
+import { RouteQuery } from "../utils/Loader";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -58,17 +59,23 @@ export type AlbumPageProps = {
 };
 
 export default function AlbumPage(): JSX.Element {
-  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const { APIService } = React.useContext(GlobalAppContext);
+  const location = useLocation();
+  const params = useParams() as { albumMBID: string };
   const {
-    release_group_metadata: initialReleaseGroupMetadata,
-    recordings_release_mbid,
-    release_group_mbid,
-    mediums,
-    caa_id,
-    caa_release_mbid,
-    type,
-    listening_stats,
-  } = useLoaderData() as AlbumPageProps;
+    data: {
+      release_group_metadata: initialReleaseGroupMetadata,
+      recordings_release_mbid,
+      release_group_mbid,
+      mediums,
+      caa_id,
+      caa_release_mbid,
+      type,
+      listening_stats,
+    },
+  } = useQuery(RouteQuery(["album", params.albumMBID], location.pathname)) as {
+    data: AlbumPageProps;
+  };
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
@@ -85,8 +92,6 @@ export default function AlbumPage(): JSX.Element {
     release,
   } = metadata as ReleaseGroupMetadataLookup;
   const releaseGroupTags = tag?.release_group;
-
-  const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
   const [coverArtSrc, setCoverArtSrc] = React.useState(
@@ -202,7 +207,6 @@ export default function AlbumPage(): JSX.Element {
       <Helmet>
         <title>{album?.name}</title>
       </Helmet>
-      <Loader isLoading={loading} />
       <div className="entity-page-header flex">
         <div className="cover-art">
           <img

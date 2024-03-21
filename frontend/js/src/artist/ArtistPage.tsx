@@ -9,10 +9,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
-import { Link, useLoaderData, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import Loader from "../components/Loader";
 import { getReviewEventContent } from "../utils/utils";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
@@ -29,6 +29,7 @@ import type {
   SimilarArtist,
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
+import { RouteQuery } from "../utils/Loader";
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
@@ -41,21 +42,26 @@ export type ArtistPageProps = {
 
 export default function ArtistPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
+  const location = useLocation();
+  const { artistMBID } = useParams() as { artistMBID: string };
   const {
-    artist,
-    popularRecordings,
-    releaseGroups,
-    similarArtists,
-    listeningStats,
-    coverArt: coverArtSVG,
-  } = useLoaderData() as ArtistPageProps;
+    data: {
+      artist,
+      popularRecordings,
+      releaseGroups,
+      similarArtists,
+      listeningStats,
+      coverArt: coverArtSVG,
+    },
+  } = useQuery(RouteQuery(["artist", artistMBID], location.pathname)) as {
+    data: ArtistPageProps;
+  };
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
     total_user_count: userCount,
   } = listeningStats;
 
-  const { artistMBID } = useParams();
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
