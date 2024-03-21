@@ -168,9 +168,9 @@ const getIndexRoutes = (): RouteObject[] => {
                 const RecentListens = await import("../recent/RecentListens");
                 return {
                   Component: RecentListens.RecentListensWrapper,
-                  loader: RecentListens.RecentListensLoader,
                 };
               },
+              loader: RouteLoader,
             },
           ],
         },
