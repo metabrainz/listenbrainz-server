@@ -162,6 +162,9 @@ class Playlist(BaseModel):
             if rec.title:
                 tr["title"] = rec.title
 
+            if rec.duration_ms:
+                tr["duration"] = rec.duration_ms
+
             extension = {"added_by": rec.added_by,
                          "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
             if rec.artist_mbids:
