@@ -91,22 +91,12 @@ function unit_setup {
 
 function is_unit_db_running {
     # Check if the database container is running
-    containername="${COMPOSE_PROJECT_NAME}_lb_db_1"
+    containername="${COMPOSE_PROJECT_NAME}-lb_db-1"
     res=$(docker ps --filter "name=$containername" --filter "status=running" -q)
     if [ -n "$res" ]; then
-        return 0
+        echo "return 0"
     else
-        return 1
-    fi
-}
-
-function is_unit_db_exists {
-    containername="${COMPOSE_PROJECT_NAME}_lb_db_1"
-    res=$(docker ps --filter "name=$containername" --filter "status=exited" -q)
-    if [ -n "$res" ]; then
-        return 0
-    else
-        return 1
+        echo "return 1"
     fi
 }
 
@@ -228,11 +218,9 @@ fi
 
 # if -u flag, bring up db, run setup, quit
 if [ "$1" == "-u" ]; then
-    is_unit_db_exists
-    DB_EXISTS=$?
     is_unit_db_running
     DB_RUNNING=$?
-    if [ $DB_EXISTS -eq 0 ] || [ $DB_RUNNING -eq 0 ]; then
+    if [ $DB_RUNNING -eq 0 ]; then
         echo "Database is already up, doing nothing"
     else
         echo "Building containers"
@@ -244,11 +232,9 @@ if [ "$1" == "-u" ]; then
     exit 0
 fi
 
-is_unit_db_exists
-DB_EXISTS=$?
 is_unit_db_running
 DB_RUNNING=$?
-if [ $DB_EXISTS -eq 1 ] && [ $DB_RUNNING -eq 1 ] ; then
+if [ $DB_RUNNING -eq 1 ] ; then
     # If no containers, build them, run setup then run tests, then bring down
     build_unit_containers
     bring_up_unit_db
