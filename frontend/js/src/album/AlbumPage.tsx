@@ -73,7 +73,7 @@ export default function AlbumPage(): JSX.Element {
       type,
       listening_stats,
     },
-  } = useQuery(RouteQuery(["album", params.albumMBID], location.pathname)) as {
+  } = useQuery(RouteQuery(["album", params], location.pathname)) as {
     data: AlbumPageProps;
   };
   const {

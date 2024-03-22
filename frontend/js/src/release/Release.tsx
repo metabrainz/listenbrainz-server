@@ -9,10 +9,10 @@ type ReleaseLoaderData = {
 
 export default function Release() {
   const location = useLocation();
-  const { releaseMBID } = useParams() as { releaseMBID: string };
+  const params = useParams() as { releaseMBID: string };
   const {
     data: { releaseGroupMBID },
-  } = useQuery(RouteQuery(["release", releaseMBID], location.pathname)) as {
+  } = useQuery(RouteQuery(["release", params], location.pathname)) as {
     data: ReleaseLoaderData;
   };
   return <Navigate to={`/album/${releaseGroupMBID}/`} />;

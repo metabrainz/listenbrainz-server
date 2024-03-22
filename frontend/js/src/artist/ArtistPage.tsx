@@ -9,7 +9,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLoaderData, useLocation, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -41,9 +41,11 @@ export type ArtistPageProps = {
 };
 
 export default function ArtistPage(): JSX.Element {
+  const _ = useLoaderData();
   const { APIService } = React.useContext(GlobalAppContext);
   const location = useLocation();
-  const { artistMBID } = useParams() as { artistMBID: string };
+  const params = useParams() as { artistMBID: string };
+  const { artistMBID } = params;
   const {
     data: {
       artist,
@@ -53,7 +55,7 @@ export default function ArtistPage(): JSX.Element {
       listeningStats,
       coverArt: coverArtSVG,
     },
-  } = useQuery(RouteQuery(["artist", artistMBID], location.pathname)) as {
+  } = useQuery(RouteQuery(["artist", params], location.pathname)) as {
     data: ArtistPageProps;
   };
   const {

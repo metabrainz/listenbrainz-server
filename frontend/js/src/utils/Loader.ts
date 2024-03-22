@@ -1,5 +1,6 @@
-import type { Params } from "react-router-dom";
+import type { LoaderFunctionArgs, Params } from "react-router-dom";
 import { json } from "react-router-dom";
+import _ from "lodash";
 import queryClient from "./QueryClient";
 
 const RouteLoader = async ({ request }: { request: Request }) => {
@@ -32,7 +33,7 @@ const RouteLoaderURL = async (url: string) => {
   return data;
 };
 
-export const RouteQuery = (key: string[], url: string) => ({
+export const RouteQuery = (key: any[], url: string) => ({
   queryKey: key,
   queryFn: async () => {
     const data = await RouteLoaderURL(url);
@@ -40,24 +41,26 @@ export const RouteQuery = (key: string[], url: string) => ({
   },
 });
 
-export const RouteQueryLoader = (key: string[]) => async ({
+export const RouteQueryLoader = (routeKey: string) => async ({
   request,
   params,
-}: {
-  request: Request;
-  params: Params<string>;
-}) => {
-  if (params && Object.keys(params).length) {
-    const paramsValues = Object.values(params);
-    paramsValues.forEach((value) => {
-      if (typeof value === "string") {
-        if (!key.includes(value)) {
-          key.push(value);
-        }
-      }
-    });
+}: LoaderFunctionArgs) => {
+  const keys = [routeKey] as any[];
+
+  // Add params to the keys
+  const paramsObject = { ...params };
+  if (!_.isEmpty(paramsObject)) keys.push(paramsObject);
+
+  // Add search params to the keys
+  const searchParams = new URLSearchParams(request.url.split("?")[1]);
+  const searchParamsObject = {} as { [key: string]: string };
+  searchParams.forEach((value, key) => {
+    searchParamsObject[key] = value;
+  });
+  if (!_.isEmpty(searchParamsObject)) {
+    keys.push(searchParamsObject);
   }
 
-  await queryClient.ensureQueryData(RouteQuery(key, request.url || ""));
+  await queryClient.ensureQueryData(RouteQuery(keys, request.url || ""));
   return null;
 };

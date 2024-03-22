@@ -16,7 +16,7 @@ const getEntityPages = (): RouteObject[] => {
             const ArtistPage = await import("../artist/ArtistPage");
             return { Component: ArtistPage.default };
           },
-          loader: RouteQueryLoader(["artist"]),
+          loader: RouteQueryLoader("artist"),
         },
         {
           path: "album/:albumMBID/",
@@ -24,7 +24,7 @@ const getEntityPages = (): RouteObject[] => {
             const AlbumPage = await import("../album/AlbumPage");
             return { Component: AlbumPage.default };
           },
-          loader: RouteQueryLoader(["album"]),
+          loader: RouteQueryLoader("album"),
         },
         {
           path: "release-group/:releaseGroupMBID/",
@@ -39,7 +39,7 @@ const getEntityPages = (): RouteObject[] => {
             const Release = await import("../release/Release");
             return { Component: Release.default };
           },
-          loader: RouteQueryLoader(["release"]),
+          loader: RouteQueryLoader("release"),
         },
       ],
     },
