@@ -94,9 +94,9 @@ function is_unit_db_running {
     containername="${COMPOSE_PROJECT_NAME}-lb_db-1"
     res=$(docker ps --filter "name=$containername" --filter "status=running" -q)
     if [ -n "$res" ]; then
-        echo "return 0"
+        return 0
     else
-        echo "return 1"
+        return 1
     fi
 }
 
