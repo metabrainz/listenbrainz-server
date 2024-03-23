@@ -41,23 +41,23 @@ export const RouteQuery = (key: any[], url: string) => ({
   },
 });
 
-export const RouteQueryLoader = (routeKey: string) => async ({
-  request,
-  params,
-}: LoaderFunctionArgs) => {
+export const RouteQueryLoader = (
+  routeKey: string,
+  includeSearchParams = false
+) => async ({ request, params }: LoaderFunctionArgs) => {
   const keys = [routeKey] as any[];
 
   // Add params to the keys
   const paramsObject = { ...params };
   if (!_.isEmpty(paramsObject)) keys.push(paramsObject);
 
-  // Add search params to the keys
-  const searchParams = new URLSearchParams(request.url.split("?")[1]);
-  const searchParamsObject = {} as { [key: string]: string };
-  searchParams.forEach((value, key) => {
-    searchParamsObject[key] = value;
-  });
-  if (!_.isEmpty(searchParamsObject)) {
+  if (includeSearchParams) {
+    // Add search params to the keys
+    const searchParams = new URLSearchParams(request.url.split("?")[1]);
+    const searchParamsObject = {} as { [key: string]: string };
+    searchParams.forEach((value, key) => {
+      searchParamsObject[key] = value;
+    });
     keys.push(searchParamsObject);
   }
 
