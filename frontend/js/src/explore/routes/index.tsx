@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
 import type { RouteObject } from "react-router-dom";
-import RouteLoader from "../../utils/Loader";
+import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 
 const getExploreRoutes = (): RouteObject[] => {
   const routes = [
@@ -92,7 +92,7 @@ const getExploreRoutes = (): RouteObject[] => {
             const SimilarUsers = await import("../similar-users/SimilarUsers");
             return { Component: SimilarUsers.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("similar-users"),
         },
         {
           path: "music-neighborhood/",
