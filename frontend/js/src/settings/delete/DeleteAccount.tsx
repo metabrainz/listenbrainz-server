@@ -39,7 +39,7 @@ export default function DeleteAccount() {
       toast.success(
         <ToastMsg
           title="Success"
-          message="Your feedback have been downloaded.."
+          message="Your feedback have been downloaded."
         />
       );
     } catch (error) {
@@ -67,13 +67,9 @@ export default function DeleteAccount() {
       toast.success(
         <ToastMsg
           title="Success"
-          message={`Successfully deleted acount for ${name}.`}
+          message={`Successfully enqueued account deletion for ${name}.`}
         />
       );
-
-      setTimeout(() => {
-        window.location.href = `/`;
-      }, 3000);
     } catch (error) {
       toast.error(
         <ToastMsg

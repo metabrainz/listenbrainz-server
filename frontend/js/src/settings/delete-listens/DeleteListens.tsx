@@ -47,7 +47,7 @@ export default function DeleteListens() {
       toast.success(
         <ToastMsg
           title="Success"
-          message="Your listens have been deleted. You will be logged out in 5 seconds."
+          message="Your listens have been enqueued for deletion."
         />
       );
 

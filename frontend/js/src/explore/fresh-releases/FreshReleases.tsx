@@ -9,6 +9,7 @@ import ReleaseFilters from "./components/ReleaseFilters";
 import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
+import { COLOR_LB_ORANGE } from "../../utils/constants";
 
 export enum DisplaySettingsPropertiesEnum {
   releaseTitle = "Release Title",
@@ -262,7 +263,7 @@ export default function FreshReleases() {
             <div className="spinner-container">
               <Spinner
                 type="Grid"
-                color="#eb743b"
+                color={COLOR_LB_ORANGE}
                 height={100}
                 width={100}
                 visible

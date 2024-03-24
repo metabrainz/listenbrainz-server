@@ -87,6 +87,15 @@ services:
       - redis
       - rabbitmq
 
+  background_tasks:
+    image: web
+    command: python3 -m "listenbrainz.background.background_tasks"
+    volumes:
+      - ..:/code/listenbrainz:z
+    depends_on:
+      - redis
+      - rabbitmq
+
   spotify_reader:
     image: web
     volumes:
