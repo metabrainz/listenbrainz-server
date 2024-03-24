@@ -1,7 +1,10 @@
 from time import time
 import requests
 
-ROOT = '127.0.0.1'
+# Set DEBUG to True to test local dev server.
+# API keys for local dev server and the real server are different.
+DEBUG = True
+ROOT = 'http://localhost:8100' if DEBUG else 'https://api.listenbrainz.org'
 
 def submit_listen(listen_type, payload, token):
     """Submits listens for the track(s) in payload.
@@ -20,7 +23,7 @@ def submit_listen(listen_type, payload, token):
     """
 
     response = requests.post(
-        url="http://{0}/1/submit-listens".format(ROOT),
+        url="{0}/1/submit-listens".format(ROOT),
         json={
             "listen_type": listen_type,
             "payload": payload,
