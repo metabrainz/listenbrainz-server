@@ -6,10 +6,11 @@ import { formatReleaseDate, useMediaQuery } from "../utils";
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
   order: string;
+  direction: string;
 };
 
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
-  const { releases, order } = props;
+  const { releases, order, direction } = props;
 
   const [currentValue, setCurrentValue] = React.useState<number | number[]>();
   const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
@@ -27,7 +28,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     return scrollTo;
   }, []);
 
-  function createMarks(data: Array<FreshReleaseItem>) {
+  function createMarks(data: Array<FreshReleaseItem>, sortDirection: string) {
     let dataArr: Array<string> = [];
     let percentArr: Array<number> = [];
     // We want to filter out the keys that have less than 1.5% of the total releases
@@ -40,6 +41,10 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       const filteredDates = Object.keys(releasesPerDate).filter(
         (date) => releasesPerDate[date] >= minReleasesThreshold
       );
+
+      if (sortDirection === "descend") {
+        filteredDates.reverse();
+      }
 
       dataArr = filteredDates.map((item) => formatReleaseDate(item));
       percentArr = filteredDates
@@ -56,6 +61,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       );
 
       dataArr = filteredInitials.sort();
+      if (sortDirection === "descend") {
+        dataArr.reverse();
+      }
 
       percentArr = filteredInitials
         .map((item) => (artistInitialsCount[item] / data.length) * 100)
@@ -71,6 +79,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       );
 
       dataArr = filteredInitials.sort();
+      if (sortDirection === "descend") {
+        dataArr.reverse();
+      }
 
       percentArr = filteredInitials
         .map((item) => (releaseInitialsCount[item] / data.length) * 100)
@@ -116,8 +127,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   );
 
   React.useEffect(() => {
-    setMarks(createMarks(releases));
-  }, [releases]);
+    setMarks(createMarks(releases, direction));
+  }, [releases, direction]);
 
   React.useEffect(() => {
     window.addEventListener("scroll", handleScroll);
