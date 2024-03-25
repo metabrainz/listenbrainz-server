@@ -303,7 +303,7 @@ export default function FreshReleases() {
             </div>
           )}
         </div>
-        {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 && (
+        {filteredList.length > 0 && (
           <ReleaseTimeline releases={filteredList} order={sort} />
         )}
         <ReleaseFilters
