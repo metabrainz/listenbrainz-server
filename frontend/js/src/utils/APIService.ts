@@ -1,6 +1,8 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
+import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
+import { PopularRecording } from "../album/utils";
 
 export default class APIService {
   APIBaseURI: string;
@@ -159,7 +161,7 @@ export default class APIService {
 
   refreshAccessToken = async (service: string): Promise<string> => {
     const response = await fetch(
-      `/profile/music-services/${service}/refresh/`,
+      `/settings/music-services/${service}/refresh/`,
       {
         method: "POST",
       }
@@ -725,7 +727,12 @@ export default class APIService {
     count: number = 25,
     createdFor: boolean = false,
     collaborator: boolean = false
-  ) => {
+  ): Promise<{
+    playlists: JSPFObject[];
+    playlist_count: number;
+    count: string;
+    offset: string;
+  }> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
@@ -1086,6 +1093,19 @@ export default class APIService {
     return response.json();
   };
 
+  lookupMBArtist = async (
+    artistMBID: string,
+    inc?: string
+  ): Promise<Array<MusicBrainzArtist>> => {
+    let url = `${this.APIBaseURI}/metadata/artist/?artist_mbids=${artistMBID}`;
+    if (inc) {
+      url += `&inc=${inc}`;
+    }
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"
@@ -1316,6 +1336,26 @@ export default class APIService {
     return response.json();
   };
 
+  exportJSPFPlaylistToSpotify = async (
+    userToken: string,
+    playlist: JSPFPlaylist
+  ): Promise<any> => {
+    if (!playlist) {
+      throw new Error("Expected a playlist");
+    }
+    const url = `${this.APIBaseURI}/playlist/export-jspf/spotify`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlist),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   exportPlaylistToXSPF = async (
     userToken: string,
     playlist_mbid: string
@@ -1334,6 +1374,9 @@ export default class APIService {
 
   fetchSitewideFreshReleases = async (
     days?: number,
+    past?: boolean,
+    future?: boolean,
+    sort?: SortOption,
     release_date?: string
   ): Promise<any> => {
     let url = `${this.APIBaseURI}/explore/fresh-releases/`;
@@ -1341,6 +1384,15 @@ export default class APIService {
     const queryParams: Array<string> = [];
     if (days) {
       queryParams.push(`days=${days}`);
+    }
+    if (past === false) {
+      queryParams.push(`past=${past}`);
+    }
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (sort) {
+      queryParams.push(`sort=${sort}`);
     }
     if (release_date) {
       queryParams.push(`release_date=${release_date}`);
@@ -1354,11 +1406,32 @@ export default class APIService {
     return response.json();
   };
 
-  fetchUserFreshReleases = async (username: string): Promise<any> => {
+  fetchUserFreshReleases = async (
+    username: string,
+    past?: boolean,
+    future?: boolean,
+    sort?: SortOption
+  ): Promise<any> => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
-    const url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+    let url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+
+    const queryParams: Array<string> = [];
+    if (sort) {
+      queryParams.push(`sort=${sort}`);
+    }
+
+    if (past === false) {
+      queryParams.push(`past=${past}`);
+    }
+
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (queryParams.length) {
+      url += `?${queryParams.join("&")}`;
+    }
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1448,5 +1521,49 @@ export default class APIService {
       console.error(err);
       return false;
     }
+  };
+
+  artistLookup = async (searchQuery: string): Promise<any> => {
+    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getArtistWikipediaExtract = async (artistMBID: string): Promise<string> => {
+    const url = `https://musicbrainz.org/artist/${artistMBID}/wikipedia-extract`;
+    const response = await fetch(url);
+    const { wikipediaExtract } = await response.json();
+
+    if (!wikipediaExtract || !wikipediaExtract.content) {
+      return "No wiki data found.";
+    }
+
+    const htmlParser = new DOMParser();
+    const htmlData = htmlParser.parseFromString(
+      wikipediaExtract.content,
+      "text/html"
+    );
+    const htmlParagraphs = htmlData.querySelector("p:not(.mw-empty-elt)");
+
+    return htmlParagraphs?.textContent || "No wiki data found.";
+  };
+
+  getTopRecordingsForArtist = async (
+    artistMBID: string
+  ): Promise<RecordingType[]> => {
+    const url = `${this.APIBaseURI}/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getTopReleaseGroupsForArtist = async (
+    artistMBID: string
+  ): Promise<ReleaseGroupType[]> => {
+    const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist?artist_mbid=${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
   };
 }

@@ -10,14 +10,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    steps:    
-      # Github stores the current tag in an enviroment variable (GITHUB_REF) in the format /refs/tags/TAG_NAME.
-      # Using shell parameter expansion, we extract the TAG_NAME. Also, it seems we cannot use shell tricks
-      # directly in the with block, so doing it in a separate step and then fetching its output when needed.
-    - name: Get the tag name
-      id: get_tag
-      run: echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
-    
+    steps:
+
     - name: Docker Setup Buildx
       uses: docker/setup-buildx-action@v2
       
@@ -30,10 +24,10 @@ jobs:
     - name: Build and push Docker images
       uses: docker/build-push-action@v4
       with:
-        build-args: GIT_COMMIT_SHA=${{ steps.get_tag.outputs.TAG }}
+        build-args: GIT_COMMIT_SHA=${{ github.ref_name }}
         cache-from: metabrainz/listenbrainz:cache
         # use mode=max to cache intermediate layers as well
         cache-to: type=registry,mode=max,oci-mediatypes=true,compression=zstd,compression-level=7,ref=metabrainz/listenbrainz:cache
         push: true
-        tags: metabrainz/listenbrainz:${{ steps.get_tag.outputs.TAG }}
+        tags: metabrainz/listenbrainz:${{ github.ref_name }}
         target: listenbrainz-prod

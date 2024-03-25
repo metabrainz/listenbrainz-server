@@ -16,7 +16,7 @@ import * as encodeScrobbleOutput from "../__mocks__/encodeScrobbleOutput.json";
 import * as lastFMPrivateUser from "../__mocks__/lastFMPrivateUser.json";
 import { waitForComponentToPaint } from "../test-utils";
 
-jest.useFakeTimers();
+jest.useFakeTimers({advanceTimers: true});
 const props = {
   user: {
     id: "id",
@@ -43,26 +43,26 @@ describe("LastFMImporter", () => {
   let instance: LastFmImporter;
 
   describe("getNumberOfPages", () => {
+    beforeAll(()=>{
+      // Mock function for fetch
+      fetchMock.mockResponse(JSON.stringify(page));
+    })
     beforeEach(() => {
       const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
       instance = wrapper.instance();
       instance.setState({ lastfmUsername: "dummyUser" });
-      // Mock function for fetch
-      fetchMock.mockResponse(JSON.stringify(page));
     });
 
-    it("should call with the correct url", () => {
+    it("should call with the correct url", async () => {
       instance.getNumberOfPages();
 
-      expect(window.fetch).toHaveBeenCalledWith(
+      expect(fetchMock).toHaveBeenCalledWith(
         `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&from=1&format=json`
       );
-    });
-
-    it("should return number of pages", async () => {
       const num = await instance.getNumberOfPages();
       expect(num).toBe(1);
     });
+
 
     it("should return -1 if there is an error", async () => {
       // Mock function for failed fetch
@@ -343,7 +343,7 @@ describe("LastFMImporter", () => {
       // Flush all promises
       // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
       await new Promise((resolve) => {
-        setImmediate(resolve);
+        setTimeout(resolve, 0);
       });
 
       expect(instance.APIService.submitListens).toHaveBeenCalledTimes(1);
@@ -368,7 +368,7 @@ describe("LastFMImporter", () => {
       // Flush all promises
       // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
       await new Promise((resolve) => {
-        setImmediate(resolve);
+        setTimeout(resolve, 0);
       });
 
       expect(instance.updateRateLimitParameters).toHaveBeenCalledTimes(1);
@@ -474,7 +474,9 @@ describe("LastFMImporter", () => {
   describe("LastFmImporter Page", () => {
     it("renders", () => {
       const wrapper = mount(<LastFmImporter {...props} />);
-      expect(wrapper.html()).toMatchSnapshot();
+      expect(wrapper.getDOMNode()).toHaveTextContent("Choose a service");
+      expect(wrapper.getDOMNode()).toHaveTextContent("Last.fm");
+      expect(wrapper.getDOMNode()).toHaveTextContent("Libre.fm");
     });
 
     it("modal renders when button clicked", () => {

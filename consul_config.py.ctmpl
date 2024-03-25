@@ -80,16 +80,22 @@ MB_DATABASE_URI = ""
 SQLALCHEMY_TIMESCALE_URI = """postgresql://listenbrainz_ts:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
 TIMESCALE_ADMIN_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
 TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_URI
+}
     {{end}}
     {{else}}
 SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
+SQLALCHEMY_BINDS = {}
     {{end}}
 {{else}}
 SQLALCHEMY_TIMESCALE_URI = ""
 TIMESCALE_ADMIN_URI=""
 TIMESCALE_ADMIN_LB_URI=""
+SQLALCHEMY_BINDS = {}
 {{end}}
 
 
@@ -101,13 +107,8 @@ MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host=
 MBID_MAPPING_DATABASE_URI = ""
 {{end}}
 
-# for use in playlists admin view
-SQLALCHEMY_BINDS = {
-   'timescale': SQLALCHEMY_TIMESCALE_URI
-}
-
-{{if service "typesense-listenbrainz"}}
-{{with index (service "typesense-listenbrainz") 0}}
+{{if service "typesense-listenbrainz-new"}}
+{{with index (service "typesense-listenbrainz-new") 0}}
 TYPESENSE_HOST = "{{.Address}}"
 TYPESENSE_PORT = {{.Port}}
 {{end}}
@@ -175,9 +176,12 @@ SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
 
 EXTERNAL_SERVICES_EXCHANGE = '''{{template "KEY" "external_services_exchange"}}'''
 EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = '''{{template "KEY" "external_services_spotify_cache"}}'''
+EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_apple_cache"}}'''
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
 MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
+MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
+MUSICBRAINZ_OAUTH_URL = f"{MUSICBRAINZ_BASE_URL}/oauth2/userinfo"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
@@ -200,8 +204,8 @@ UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 API_URL = '''{{template "KEY" "api_url"}}'''
 LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
 SERVER_ROOT_URL = '''{{template "KEY" "server_root_url"}}'''
-MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
+WEBSOCKETS_SERVER_URL = SERVER_ROOT_URL
 
 # Sentry config
 LOG_SENTRY = {

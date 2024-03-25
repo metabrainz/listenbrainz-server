@@ -51,6 +51,8 @@ def get_recordings(table: str, cache_tables: List[str], user_listen_count_limit,
                  , artist_credit_mbids
                  , nullif(first(release_name), '') as release_name
                  , release_mbid
+                 , caa_id
+                 , caa_release_mbid
                  , SUM(listen_count) as total_listen_count
               FROM user_counts uc
           GROUP BY lower(uc.recording_name)
@@ -59,6 +61,8 @@ def get_recordings(table: str, cache_tables: List[str], user_listen_count_limit,
                  , artist_credit_mbids
                  , lower(release_name)
                  , release_mbid
+                 , caa_id
+                 , caa_release_mbid
         ), entity_count AS (
             SELECT count(*) AS total_count
               FROM intermediate_table
@@ -78,6 +82,8 @@ def get_recordings(table: str, cache_tables: List[str], user_listen_count_limit,
                               , coalesce(artist_credit_mbids, array()) AS artist_mbids
                               , release_name
                               , release_mbid
+                              , caa_id
+                              , caa_release_mbid
                             )
                         )
                        , false

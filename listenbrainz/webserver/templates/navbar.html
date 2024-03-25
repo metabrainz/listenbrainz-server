@@ -34,7 +34,7 @@
       {% if current_user.is_authenticated and not current_user.is_anonymous %}
       <div class="username">{{ current_user.musicbrainz_id }}</div>
       <a href="{{ url_for('login.logout') }}">Logout</a>
-      <a {{ 'class=active' if active_settings_section is defined }} href="{{ url_for('profile.info') }}">
+      <a {{ 'class=active' if active_settings_section is defined }} href="{{ url_for('settings.index', path='') }}">
         Settings
       </a>
         {% else %}

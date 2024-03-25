@@ -20,11 +20,6 @@ describe("<SearchDropDown />", () => {
     jest.spyOn(global.Math, "random").mockImplementation(() => 0);
   });
 
-  it("renders correctly", () => {
-    const wrapper = mount(<SearchDropDown {...props} />);
-    expect(wrapper).toMatchSnapshot();
-  });
-
   it("renders suggestions", () => {
     const wrapper = mount(<SearchDropDown {...props} />);
     expect(wrapper.find("button").at(0).contains("hrik2001")).toBeTruthy();

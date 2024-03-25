@@ -5,6 +5,7 @@ from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 from listenbrainz.db import external_service_oauth
 
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.webserver import db_conn
 
 
 class BaseBrainzService(ExternalService):
@@ -22,6 +23,7 @@ class BaseBrainzService(ExternalService):
     def add_new_user(self, user_id: int, token: dict) -> bool:
         expires_at = int(time.time()) + token["expires_in"]
         external_service_oauth.save_token(
+            db_conn,
             user_id=user_id,
             service=self.service,
             access_token=token["access_token"],
@@ -29,6 +31,18 @@ class BaseBrainzService(ExternalService):
             token_expires_ts=expires_at,
             record_listens=False,
             scopes=self.scopes
+        )
+        return True
+
+    def update_user(self, user_id: int, token: dict) -> bool:
+        expires_at = int(time.time()) + token["expires_in"]
+        external_service_oauth.update_token(
+            db_conn,
+            user_id=user_id,
+            service=self.service,
+            access_token=token["access_token"],
+            refresh_token=token.get("refresh_token"),
+            expires_at=expires_at
         )
         return True
 
@@ -68,6 +82,7 @@ class BaseBrainzService(ExternalService):
 
         expires_at = int(time.time()) + token["expires_in"]
         external_service_oauth.update_token(
+            db_conn,
             user_id=user_id,
             service=self.service,
             access_token=token["access_token"],

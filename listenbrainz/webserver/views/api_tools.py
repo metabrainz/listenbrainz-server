@@ -13,10 +13,12 @@ import orjson
 import uuid
 import sentry_sdk
 
+from typing import NoReturn
+
 from flask import current_app, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
-from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
+from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
 
@@ -38,7 +40,7 @@ MAX_LISTEN_PAYLOAD_SIZE = MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST
 MAX_TAG_SIZE = 64
 
 #: The maximum number of listens returned in a single GET request.
-MAX_ITEMS_PER_GET = 100
+MAX_ITEMS_PER_GET = 1000
 
 #: The default number of listens returned in a single GET request.
 DEFAULT_ITEMS_PER_GET = 25
@@ -248,7 +250,7 @@ def _get_augmented_listens(payload, user: SubmitListenUserMetadata):
     return payload
 
 
-def log_raise_400(msg, data=""):
+def log_raise_400(msg, data="") -> NoReturn:
     """ Helper function for logging issues with request data and showing error page.
         Logs the message and data, raises BadRequest exception which shows 400 Bad
         Request to the user.
@@ -421,6 +423,19 @@ def _parse_int_arg(name, default=None):
         return default
 
 
+def _parse_bool_arg(name, default=None):
+    value = request.args.get(name)
+    if value:
+        if value.lower() == "true":
+            return True
+        elif value.lower() == "false":
+            return False
+        else:
+            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
+    else:
+        return default
+
+
 def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
 
@@ -464,7 +479,7 @@ def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
     except IndexError:
         raise APIUnauthorized("Provided Authorization header is invalid.")
 
-    user = db_user.get_by_token(auth_token, fetch_email=fetch_email)
+    user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
     if user is None:
         raise APIUnauthorized("Invalid authorization token.")
 

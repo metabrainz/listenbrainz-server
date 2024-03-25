@@ -1,30 +1,20 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
-import NiceModal from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
-import ColorWheel from "./ColorWheel";
+import { Helmet } from "react-helmet";
+import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
-import ErrorBoundary from "../../utils/ErrorBoundary";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../utils/GlobalAppContext";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
-import { getPageProps } from "../../utils/utils";
-import ListenCard from "../../listens/ListenCard";
+import ListenCard from "../../common/listens/ListenCard";
 import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
 import { ToastMsg } from "../../notifications/Notifications";
-
-export type ColorPlayProps = {
-  user: ListenBrainzUser;
-};
 
 export type ColorPlayState = {
   colorReleases: Array<ColorReleaseItem>;
@@ -34,15 +24,12 @@ export type ColorPlayState = {
   gridBackground: string;
 };
 
-export default class ColorPlay extends React.Component<
-  ColorPlayProps,
-  ColorPlayState
-> {
+export default class ColorPlay extends React.Component<{}, ColorPlayState> {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  constructor(props: ColorPlayProps) {
-    super(props);
+  constructor() {
+    super({});
     this.state = {
       colorReleases: [],
       loading: false,
@@ -95,7 +82,6 @@ export default class ColorPlay extends React.Component<
   };
 
   render() {
-    const { user } = this.props;
     const {
       loading,
       colorReleases,
@@ -107,6 +93,9 @@ export default class ColorPlay extends React.Component<
     const selectedReleaseTracks = selectedRelease?.recordings ?? [];
     return (
       <div role="main">
+        <Helmet>
+          <title>Huesound</title>
+        </Helmet>
         <div>
           <h1 className="text-center">
             Huesound<span className="beta">beta</span>
@@ -184,9 +173,7 @@ export default class ColorPlay extends React.Component<
                   />
                   <div style={{ flex: 3, padding: "0.5em 2em" }}>
                     <div className="h3">
-                      <a
-                        href={`https://musicbrainz.org/release/${selectedRelease.release_mbid}`}
-                      >
+                      <a href={`/release/${selectedRelease.release_mbid}`}>
                         {selectedRelease.release_name}
                       </a>
                     </div>
@@ -196,7 +183,7 @@ export default class ColorPlay extends React.Component<
                         "recordings[0].track_metadata.additional_info.artist_mbids[0]"
                       ) ? (
                         <a
-                          href={`https://musicbrainz.org/artist/${get(
+                          href={`/artist/${get(
                             selectedRelease,
                             "recordings[0].track_metadata.additional_info.artist_mbids[0]"
                           )}`}
@@ -237,22 +224,3 @@ export default class ColorPlay extends React.Component<
     );
   }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalAppContext } = getPageProps();
-
-  const { user } = reactProps;
-
-  const ColorPlayWithAlertNotifications = withAlertNotifications(ColorPlay);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <ColorPlayWithAlertNotifications user={user} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

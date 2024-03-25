@@ -6,9 +6,9 @@ from psycopg2.extras import execute_values
 from requests.adapters import HTTPAdapter, Retry
 from sqlalchemy import text
 
-from listenbrainz import db
 from brainzutils import musicbrainz_db
 
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.errors import APINotFound
 
 
@@ -26,16 +26,17 @@ def bulk_insert_loved_tracks(user_id: int, feedback: list[tuple[int, str]]):
         INSERT INTO recording_feedback (user_id, created, recording_mbid, score)
              VALUES %s
     """
-    connection = db.engine.raw_connection()
-    with connection.cursor() as cursor:
+    with db_conn.connection.cursor() as cursor:
         execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
         execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
-    connection.commit()
+        db_conn.commit()
 
 
 def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:
     """ Fetch recording mbids corresponding to track mbids. Last.FM uses tracks mbids in loved tracks endpoint
      but we use recording mbids in feedback table so need convert between the two. """
+    if not track_mbids:
+        return {}
     query = """
         SELECT track.gid::text AS track_mbid
              , recording.gid::text AS recording_mbid
@@ -52,7 +53,7 @@ def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:
 def fetch_lfm_feedback(lfm_user: str):
     """ Retrieve the loved tracks of a user from Last.FM api """
     session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, method_whitelist=["GET"])))
+    session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, allowed_methods=["GET"])))
 
     params = {
         "method": "user.getlovedtracks",

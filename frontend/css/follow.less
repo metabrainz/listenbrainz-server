@@ -6,8 +6,8 @@
   }
   font-family: "Sintony", sans-serif;
   color: @white;
-  background: @blue;
   border: 2px solid @blue;
+  background: @blue;
   font-weight: bold;
   padding: 5px 8px;
   border-radius: 4px;
@@ -18,7 +18,7 @@
     > .text {
       width: 0px;
       margin-left: 0px;
-      display: inherit;
+      display: inline-block;
       vertical-align: inherit;
       transition: width 0.42s, margin-left 0.42s;
       overflow-x: hidden;
@@ -57,7 +57,7 @@
 
   hr {
     margin: 0px 2em;
-    border-top: 1px solid #eee;
+    border-top: 1px solid @gray-light;
   }
 }
 
@@ -73,7 +73,7 @@
 .similar-users-list {
   max-height: 250px;
   padding: 10px;
-  overflow-y: scroll;
+  overflow-y: auto;
   border-radius: 2px;
   box-shadow: inset 0px 11px 8px -10px #ccc;
 
@@ -88,7 +88,7 @@
     }
 
     &:not(:first-child) {
-      border-top: 2px solid #ddd;
+      border-top: 1px solid @gray-light;
       padding-top: 12px;
     }
   }
@@ -97,4 +97,12 @@
 .follower-following-empty,
 .similar-users-empty {
   padding: 10px 20px;
+}
+
+.musicbrainz-profile-button {
+  color: #fff;
+  background: @blue;
+  padding: 5px 8px;
+  border-radius: 4px;
+  transition: background 0.42s;
 }

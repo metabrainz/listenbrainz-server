@@ -1,43 +1,16 @@
-import os
 import ftplib
-import hashlib
 import logging
-from enum import Enum
-from typing import NamedTuple
+import os
+from abc import ABC
 
 from listenbrainz_spark import config
+from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader
 from listenbrainz_spark.exceptions import DumpInvalidException
-
 
 logger = logging.getLogger(__name__)
 
 
-class DumpType(Enum):
-    INCREMENTAL = 'incremental'
-    FULL = 'full'
-
-
-class ListensDump(NamedTuple):
-    dump_id: int
-    dump_date: str
-    dump_tod: str
-    dump_type: DumpType
-
-    @staticmethod
-    def from_ftp_dir(dir_name: str) -> 'ListensDump':
-        # Remove / if any from the end of dir name before splitting so the dump_type is correct
-        parts = dir_name.replace('/', '').split('-')
-        return ListensDump(dump_id=int(parts[2]),
-                           dump_date=parts[3],
-                           dump_tod=parts[4],
-                           dump_type=DumpType.INCREMENTAL if parts[5] == 'incremental' else DumpType.FULL)
-
-    def get_dump_file(self):
-        return f'listenbrainz-spark-dump-{self.dump_id}-{self.dump_date}' \
-               f'-{self.dump_tod}-{self.dump_type.value}.tar'
-
-
-class ListenBrainzFTPDownloader:
+class ListenBrainzFTPDownloader(ListenbrainzDumpLoader, ABC):
 
     def __init__(self):
         self.connect()
@@ -70,6 +43,15 @@ class ListenBrainzFTPDownloader:
             cmd += ' ' + path
         self.connection.retrlines(cmd, callback=callback)
         return files
+
+    def list_dump_directories(self, dump_type: DumpType):
+        if dump_type == DumpType.INCREMENTAL:
+            dump_dir = os.path.join(config.FTP_LISTENS_DIR, 'incremental/')
+        else:
+            dump_dir = os.path.join(config.FTP_LISTENS_DIR, 'fullexport/')
+
+        self.connection.cwd(dump_dir)
+        return self.list_dir()
 
     def download_file_binary(self, src, dest):
         """ Download file `src` from the FTP server to `dest`
@@ -119,22 +101,3 @@ class ListenBrainzFTPDownloader:
 
         self.connection.cwd('/')
         return dest_path
-
-    def _calc_sha256(self, filepath: str) -> str:
-        """ Takes in path of a file and calculates the SHA256 checksum for it
-        """
-        calculated_sha = hashlib.sha256()
-        with open(filepath, "rb") as f:
-            # Read and update hash string value in blocks of 4K
-            for byte_block in iter(lambda: f.read(4096), b""):
-                calculated_sha.update(byte_block)
-
-        return calculated_sha.hexdigest()
-
-    def _read_sha_file(self, filepath: str) -> str:
-        """ Reads the SHA file and returns the string stripped of any whitespace and extra characters
-        """
-        with open(filepath, "r") as f:
-            sha = f.read().lstrip().split(" ", 1)[0].strip()
-
-        return sha

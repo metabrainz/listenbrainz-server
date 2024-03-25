@@ -1,5 +1,5 @@
 coverage==6.3.2
-flask-shell-ipython==0.4.1
+flask-shell-ipython==0.5.1
 freezegun==1.2.0
 pytest==7.1.0
 pytest-cov==3.0.0

@@ -43,7 +43,8 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
 
   const closeModal = React.useCallback(() => {
     modal.hide();
-    setTimeout(modal.remove, 500);
+    document?.body?.classList?.remove("modal-open");
+    setTimeout(modal.remove, 200);
   }, [modal]);
 
   const { APIService, currentUser, critiquebrainzAuth } = React.useContext(
@@ -388,7 +389,9 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           <br />
           <br />
           You can connect to your CritiqueBrainz account by visiting the
-          <a href={`${window.location.origin}/profile/music-services/details/`}>
+          <a
+            href={`${window.location.origin}/settings/music-services/details/`}
+          >
             {" "}
             music services page.
           </a>
@@ -514,7 +517,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
         </div>
 
         <div className="checkbox">
-          <label>
+          <label htmlFor="#acceptLicense">
             <input
               id="acceptLicense"
               type="checkbox"
@@ -539,7 +542,11 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           </label>
         </div>
         {!reviewValid && (
-          <div id="text-too-short-alert" className="alert alert-danger">
+          <div
+            id="text-too-short-alert"
+            className="alert alert-danger"
+            role="alert"
+          >
             Your review needs to be longer than {minTextLength} characters.
           </div>
         )}
@@ -570,7 +577,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
     if (!hasPermissions)
       return (
         <a
-          href={`${window.location.origin}/profile/music-services/details/`}
+          href={`${window.location.origin}/settings/music-services/details/`}
           className="btn btn-success"
           role="button"
         >

@@ -22,57 +22,55 @@ from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from flask import url_for, current_app
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 import time
 import json
-import uuid
 from listenbrainz.webserver.views.user_timeline_event_api import DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
 
 class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def insert_metadata(self):
-        with timescale.engine.begin() as connection:
-            query = """
-                INSERT INTO mapping.mb_metadata_cache
-                           (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
-                    VALUES ('34c208ee-2de7-4d38-b47e-907074866dd3'
-                          , '{4a779683-5404-4b90-a0d7-242495158265}'::UUID[]
-                          , '1390f1b7-7851-48ae-983d-eb8a48f78048'
-                          , '{"name": "52 Bars", "rels": [], "length": 214024}'
-                          , '{"name": "Karan Aujla", "artists": [{"area": "Punjab", "name": "Karan Aujla", "rels": {"wikidata": "https://www.wikidata.org/wiki/Q58008320", "social network": "https://www.instagram.com/karanaujla_official/"}, "type": "Person", "gender": "Male", "begin_year": 1997, "join_phrase": ""}], "artist_credit_id": 2892477}'
-                          , '{"artist": [], "recording": [], "release_group": []}'
-                          , '{"mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "name": "Four You", "year": 2023, "caa_id": 34792503592, "caa_release_mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "album_artist_name": "Karan Aujla", "release_group_mbid": "eb8734c9-127d-495e-b908-9194cdbac45d"}'
-                          , 'f'
-                           )
-            """
-            connection.execute(text(query))
-            msid = messybrainz.submit_recording(connection, "Strangers", "Portishead", "Dummy", None, 291160)
-            return msid
+        query = """
+            INSERT INTO mapping.mb_metadata_cache
+                       (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                VALUES ('34c208ee-2de7-4d38-b47e-907074866dd3'
+                      , '{4a779683-5404-4b90-a0d7-242495158265}'::UUID[]
+                      , '1390f1b7-7851-48ae-983d-eb8a48f78048'
+                      , '{"name": "52 Bars", "rels": [], "length": 214024}'
+                      , '{"name": "Karan Aujla", "artists": [{"area": "Punjab", "name": "Karan Aujla", "rels": {"wikidata": "https://www.wikidata.org/wiki/Q58008320", "social network": "https://www.instagram.com/karanaujla_official/"}, "type": "Person", "gender": "Male", "begin_year": 1997, "join_phrase": ""}], "artist_credit_id": 2892477}'
+                      , '{"artist": [], "recording": [], "release_group": []}'
+                      , '{"mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "name": "Four You", "year": 2023, "caa_id": 34792503592, "caa_release_mbid": "1390f1b7-7851-48ae-983d-eb8a48f78048", "album_artist_name": "Karan Aujla", "release_group_mbid": "eb8734c9-127d-495e-b908-9194cdbac45d"}'
+                      , 'f'
+                       )
+        """
+        self.ts_conn.execute(text(query))
+        msid = messybrainz.submit_recording(self.ts_conn, "Strangers", "Portishead", "Dummy", None, 291160)
+        self.ts_conn.commit()
+        return msid
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:
-        following_user = db_user.get_or_create(mb_row_id, name)
-        db_user_relationship.insert(user, following_user['id'], 'follow')
+        following_user = db_user.get_or_create(self.db_conn, mb_row_id, name)
+        db_user_relationship.insert(self.db_conn, user, following_user['id'], 'follow')
         return following_user
 
-    def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, global_similarity: float, name: str) -> dict:
-        similar_user = db_user.get_or_create(mb_row_id, name)
-        self.similar_user_data[similar_user['id']] = (similarity, global_similarity)
-        with db.engine.begin() as connection:
-            connection.execute(text("""
-                INSERT INTO recommendation.similar_user (user_id, similar_users)
-                     VALUES (:similar_to_user, :similar_users)
-                ON CONFLICT (user_id)
-                  DO UPDATE
-                        SET similar_users = EXCLUDED.similar_users
-                """), {
-                "similar_to_user": similar_to_user,
-                "similar_users": json.dumps(self.similar_user_data)
-            })
+    def create_similar_user(self, similar_to_user: int, mb_row_id: int, similarity: float, name: str) -> dict:
+        similar_user = db_user.get_or_create(self.db_conn, mb_row_id, name)
+        self.similar_user_data[similar_user['id']] = similarity
+        self.db_conn.execute(text("""
+            INSERT INTO recommendation.similar_user (user_id, similar_users)
+                 VALUES (:similar_to_user, :similar_users)
+            ON CONFLICT (user_id)
+              DO UPDATE
+                    SET similar_users = EXCLUDED.similar_users
+            """), {
+            "similar_to_user": similar_to_user,
+            "similar_users": json.dumps(self.similar_user_data)
+        })
+        self.db_conn.commit()
         return similar_user
 
     def remove_own_follow_events(self, payload: dict) -> dict:
@@ -87,7 +85,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(FeedAPITestCase, self).setUp()
-        self.main_user = db_user.get_or_create(100, 'param')
+        self.main_user = db_user.get_or_create(self.db_conn, 100, 'param')
         self.following_user_1 = self.create_and_follow_user(self.main_user['id'], 102, 'following_1')
         self.following_user_2 = self.create_and_follow_user(self.main_user['id'], 103, 'following_2')
 
@@ -116,7 +114,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         time.sleep(2)
 
         response = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(response)
@@ -150,8 +148,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         self.similar_user_data = dict()
-        similar_user_1 = self.create_similar_user(self.main_user['id'], 104, 0.1, 0.1, 'similar_1')
-        similar_user_2 = self.create_similar_user(self.main_user['id'], 105, 0.2, 0.2, 'similar_2')
+        similar_user_1 = self.create_similar_user(self.main_user['id'], 104, 0.1, 'similar_1')
+        similar_user_2 = self.create_similar_user(self.main_user['id'], 105, 0.2, 'similar_2')
 
         ts = int(time.time())
         # Send 3 listens for the following_user_1
@@ -169,7 +167,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assertEqual(response.json['status'], 'ok')
 
         from datetime import timedelta
-        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(seconds=1))
+        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW / timedelta(seconds=1))
 
         # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
         payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
@@ -188,7 +186,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         time.sleep(2)
 
         response = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed_listens_similar', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed_listens_similar',
+                                user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(response)
@@ -249,7 +248,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             self.assertEqual(response.json['status'], 'ok')
 
         from datetime import timedelta
-        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW/timedelta(seconds=1))
+        listenWindowMillisec = int(DEFAULT_LISTEN_EVENT_WINDOW_NEW / timedelta(seconds=1))
 
         # Sending a listen with time difference slightly lesser than DEFAULT_LISTEN_EVENT_WINDOW_NEW
         payload['payload'][0]['listened_at'] = ts - listenWindowMillisec + 1000
@@ -268,7 +267,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         time.sleep(2)
 
         response = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed_listens_following', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed_listens_following',
+                                user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(response)
@@ -327,7 +327,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # max_ts = 2, should have sent back 2 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'max_ts': ts + 2}
         )
@@ -339,7 +339,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # max_ts = 4, should have sent back 4 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'max_ts': ts + 4}
         )
@@ -349,7 +349,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # min_ts = 1, should have sent back 4 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'min_ts': ts + 1}
         )
@@ -359,7 +359,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # min_ts = 2, should have sent back 2 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'min_ts': ts + 2}
         )
@@ -369,7 +369,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # min_ts = 1, max_ts = 3, should have sent back 2 listens
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'min_ts': ts + 1, 'max_ts': ts + 3}
         )
@@ -379,7 +379,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         # should honor count
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'count': 1}
         )
@@ -388,12 +388,12 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_it_returns_follow_events(self):
         # make a user you're following follow a new user
-        new_user_1 = db_user.get_or_create(104, 'new_user_1')
-        db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
+        new_user_1 = db_user.get_or_create(self.db_conn, 104, 'new_user_1')
+        db_user_relationship.insert(self.db_conn, self.following_user_1['id'], new_user_1['id'], 'follow')
 
         # this should show up in the events
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'max_ts': int(time.time()) + 1}
         )
@@ -428,23 +428,26 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         msid = self.insert_metadata()
         # create a recording recommendation ourselves
         db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=self.main_user['id'],
             metadata=RecordingRecommendationMetadata(recording_msid=msid)
         )
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=self.following_user_1['id'],
             metadata=RecordingRecommendationMetadata(recording_mbid="34c208ee-2de7-4d38-b47e-907074866dd3")
         )
 
         # this should show up in the events
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
             query_string={'max_ts': int(time.time()) + 1}
         )
         self.assert200(r)
+        print(json.dumps(r.json['payload'], indent=4))
 
         # first, let's remove the own follow events, we don't care about those in this test.
         payload = self.remove_own_follow_events(r.json['payload'])
@@ -482,9 +485,9 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(msid, payload['events'][1]['metadata']['track_metadata']['additional_info']['recording_msid'])
 
     def test_it_returns_empty_list_if_user_does_not_follow_anyone(self):
-        new_user = db_user.get_or_create(111, 'totally_new_user_with_no_friends')
+        new_user = db_user.get_or_create(self.db_conn, 111, 'totally_new_user_with_no_friends')
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
             headers={'Authorization': f"Token {new_user['auth_token']}"},
         )
         self.assert200(r)
@@ -502,14 +505,15 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['status'], 'ok')
 
         # make a user you're following follow a new user
-        new_user_1 = db_user.get_or_create(104, 'new_user_1')
-        db_user_relationship.insert(self.following_user_1['id'], new_user_1['id'], 'follow')
+        new_user_1 = db_user.get_or_create(self.db_conn, 104, 'new_user_1')
+        db_user_relationship.insert(self.db_conn, self.following_user_1['id'], new_user_1['id'], 'follow')
 
         time.sleep(1)  # sleep a bit to avoid ordering conflicts, cannot mock this time as it comes from postgres
         self.insert_metadata()
 
         # create a recording recommendation for a user we follow
         db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=self.following_user_1['id'],
             metadata=RecordingRecommendationMetadata(recording_mbid="34c208ee-2de7-4d38-b47e-907074866dd3")
         )
@@ -517,7 +521,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         time.sleep(1)
 
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(r)

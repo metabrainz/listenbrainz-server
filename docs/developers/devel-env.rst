@@ -82,6 +82,13 @@ Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
 
+.. note:: 
+    Make sure the ``MUSICBRAINZ_CLIENT_ID`` and ``MUSICBRAINZ_CLIENT_SECRET`` parameters are set properly, 
+    failing to do so will result in a basic browser auth popup like the one below:
+.. image:: ../images/auth-popup.png
+    :width: 200
+    :alt: Screenshot showing the auth popup.
+
 To use the Last.fm importer you need an API account at Last.fm. You can
 register for one at the `Last.fm API page`_. Look for the following section in ``config.py``.
 
@@ -96,7 +103,7 @@ Update the ``LASTFM_API_KEY`` field with your Last.fm API key.
 You also need to update the ``API_URL`` field value to ``http://localhost:8100``.
 
 To use the Spotify importer you need to register an application on the
-`Spotify Developer Dashboard`_. Use ``http://localhost:8100/profile/music-services/spotify/callback/``
+`Spotify Developer Dashboard`_. Use ``http://localhost:8100/settings/music-services/spotify/callback/``
 as the callback URL.
 
 After that, fill out the Spotify client ID and client secret in the following
@@ -119,7 +126,7 @@ section of the file.
 
 
 To use the CritiqueBrainz reviewer, you'll need to visit the `CritiqueBrainz applications page`_
-and create/register an application. Use ``http://localhost:8100/`` as the homepage URL and ``http://localhost:8100/profile/music-services/critiquebrainz/callback/``
+and create/register an application. Use ``http://localhost:8100/`` as the homepage URL and ``http://localhost:8100/settings/music-services/critiquebrainz/callback/``
 as the callback URL.
 
 After registering, update the CritiqueBrainz section of the file with the client ID and client secret
@@ -130,7 +137,7 @@ you obtained.
     # CRITIQUEBRAINZ
     CRITIQUEBRAINZ_CLIENT_ID = ''
     CRITIQUEBRAINZ_CLIENT_SECRET = ''
-    CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
+    CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/settings/music-services/critiquebrainz/callback/'
 
 .. note::
 

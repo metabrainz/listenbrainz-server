@@ -3,11 +3,11 @@ import json
 import time
 
 import orjson
+import sentry_sdk
 from kombu import Connection, Message, Consumer, Exchange, Queue
 from kombu.mixins import ConsumerMixin
 
-from listenbrainz.db.popularity import RecordingPopularityDataset, ReleasePopularityDataset, \
-    TopRecordingPopularityDataset, ArtistPopularityDataset, TopReleasePopularityDataset
+from listenbrainz.db.popularity import get_all_popularity_datasets
 from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset
 from listenbrainz.db.tags import TagsDataset
 from listenbrainz.spark.handlers import (
@@ -36,13 +36,14 @@ from listenbrainz.spark.handlers import (
     handle_fresh_releases,
     handle_entity_listener,
     handle_yim_listening_time,
-    handle_new_artists_discovered_count,
-    handle_yim_tracks_of_the_year_start,
-    handle_yim_tracks_of_the_year_data,
-    handle_yim_tracks_of_the_year_end,
+    handle_yim_new_artists_discovered_count,
     handle_yim_artist_map,
     handle_troi_playlists,
-    handle_troi_playlists_end)
+    handle_troi_playlists_end,
+    handle_yim_top_genres,
+    handle_yim_playlists,
+    handle_yim_playlists_end, handle_echo
+)
 from listenbrainz.spark.spark_dataset import CouchDbDataset
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
@@ -64,16 +65,13 @@ class SparkReader(ConsumerMixin):
             SimilarRecordingsDataset,
             SimilarArtistsDataset,
             TagsDataset,
-            RecordingPopularityDataset,
-            ReleasePopularityDataset,
-            ArtistPopularityDataset,
-            TopRecordingPopularityDataset,
-            TopReleasePopularityDataset,
+            *get_all_popularity_datasets()
         ]
         for dataset in datasets:
             self.response_handlers.update(dataset.get_handlers())
 
         self.response_handlers.update({
+            'echo': handle_echo,
             'user_entity': handle_user_entity,
             'entity_listener': handle_entity_listener,
             'user_listening_activity': handle_user_listening_activity,
@@ -101,10 +99,10 @@ class SparkReader(ConsumerMixin):
             'year_in_music_most_listened_year': handle_yim_most_listened_year,
             'year_in_music_listening_time': handle_yim_listening_time,
             'year_in_music_artist_map': handle_yim_artist_map,
-            'year_in_music_new_artists_discovered_count': handle_new_artists_discovered_count,
-            'year_in_music_tracks_of_the_year_start': handle_yim_tracks_of_the_year_start,
-            'year_in_music_tracks_of_the_year_data': handle_yim_tracks_of_the_year_data,
-            'year_in_music_tracks_of_the_year_end': handle_yim_tracks_of_the_year_end,
+            'year_in_music_new_artists_discovered_count': handle_yim_new_artists_discovered_count,
+            'year_in_music_top_genres': handle_yim_top_genres,
+            'year_in_music_playlists': handle_yim_playlists,
+            'year_in_music_playlists_end': handle_yim_playlists_end,
             'troi_playlists': handle_troi_playlists,
             'troi_playlists_end': handle_troi_playlists_end,
         })
@@ -125,9 +123,10 @@ class SparkReader(ConsumerMixin):
 
         try:
             response_handler(response)
-        except Exception:
+        except Exception as e:
             self.app.logger.error("Error in the spark reader response handler: data: %s",
                                   json.dumps(response, indent=4), exc_info=True)
+            sentry_sdk.capture_exception(e)
             return
 
     def callback(self, message: Message):

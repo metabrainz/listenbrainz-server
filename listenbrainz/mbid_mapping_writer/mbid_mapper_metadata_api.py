@@ -280,7 +280,6 @@ class MBIDMapperMetadataAPI:
             'release_mbid': hit['document']['release_mbid'],
             'recording_name': hit['document']['recording_name'],
             'recording_mbid': hit['document']['recording_mbid'],
-            'year': hit['document']['year'],
             'match_type': match_type
         }
 

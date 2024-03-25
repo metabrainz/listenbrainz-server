@@ -17,13 +17,6 @@ CREATE UNIQUE INDEX token_api_key_ndx_token ON api_compat.token (token, api_key)
 CREATE UNIQUE INDEX sid_ndx_session ON api_compat.session (sid);
 CREATE UNIQUE INDEX sid_api_key_ndx_session ON api_compat.session (sid, api_key);
 
-CREATE UNIQUE INDEX msid_ndx_artist_stats ON statistics.artist (msid);
-CREATE UNIQUE INDEX msid_ndx_release_stats ON statistics.release (msid);
-CREATE UNIQUE INDEX msid_ndx_recording_stats ON statistics.recording (msid);
-
-CREATE UNIQUE INDEX user_type_range_ndx_stats ON statistics.user (user_id, stats_type, stats_range);
-CREATE INDEX user_id_ndx__user_stats ON statistics.user (user_id);
-
 CREATE INDEX latest_listened_at_spotify_auth ON spotify_auth (latest_listened_at DESC NULLS LAST);
 
 CREATE INDEX user_id_ndx_external_service_oauth ON external_service_oauth (user_id);
@@ -35,7 +28,7 @@ CREATE INDEX service_ndx_listens_importer ON listens_importer (service);
 CREATE UNIQUE INDEX user_id_service_ndx_listens_importer ON listens_importer (user_id, service);
 CREATE INDEX latest_listened_at_ndx_listens_importer ON listens_importer (latest_listened_at DESC NULLS LAST);
 
-CREATE UNIQUE INDEX user_id_rec_msid_ndx_feedback ON recording_feedback (user_id, recording_msid);
+CREATE INDEX user_id_rec_msid_ndx_feedback ON recording_feedback (user_id, recording_msid);
 CREATE INDEX user_id_mbid_ndx_rec_feedback ON recording_feedback (user_id, recording_mbid);
 
 -- NOTE: If the indexes for the similar_user table changes, update the code in listenbrainz/db/similar_users.py !
@@ -62,6 +55,6 @@ CREATE UNIQUE INDEX caa_id_ndx_release_color ON release_color (caa_id);
 
 CREATE UNIQUE INDEX user_id_ndx_user_setting ON user_setting (user_id);
 
-CREATE UNIQUE INDEX user_id_year_in_music_uniq_idx ON statistics.year_in_music (user_id, year);
+CREATE INDEX background_tasks_user_id_task_type_idx ON background_tasks (user_id, task);
 
 COMMIT;

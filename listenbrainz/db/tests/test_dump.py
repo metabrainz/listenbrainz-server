@@ -36,7 +36,7 @@ import listenbrainz.db.feedback as db_feedback
 from datetime import datetime
 
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
-from listenbrainz.db import couchdb
+from listenbrainz.db import timescale
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.tests.utils import insert_test_stats, delete_all_couch_databases
 from listenbrainz.webserver import create_app
@@ -48,11 +48,14 @@ class DumpTestCase(DatabaseTestCase):
     def setUp(self):
         super().setUp()
         self.tempdir = tempfile.mkdtemp()
+        self.tempdir_private = tempfile.mkdtemp()
         self.app = create_app()
+        self.ts_conn = timescale.engine.connect()
 
     def tearDown(self):
-        super().tearDown()
+        self.ts_conn.close()
         shutil.rmtree(self.tempdir)
+        super().tearDown()
 
     def test_create_private_dump(self):
         time_now = datetime.today()
@@ -120,38 +123,38 @@ class DumpTestCase(DatabaseTestCase):
 
         # create a user
         with self.app.app_context():
-            one_id = db_user.create(1, 'test_user')
-            user_count = db_user.get_user_count()
+            one_id = db_user.create(self.db_conn, 1, 'test_user')
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             # do a db dump and reset the db
-            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
+            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir, self.tempdir_private)
             self.reset_db()
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
 
             # import the dump
             db_dump.import_postgres_dump(private_dump, None, public_dump, None)
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             # reset again, and use more threads to import
             self.reset_db()
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
 
             db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
-            two_id = db_user.create(2, 'vnskprk')
+            two_id = db_user.create(self.db_conn, 2, 'vnskprk')
             self.assertGreater(two_id, one_id)
 
     def test_dump_recording_feedback(self):
 
         # create a user
         with self.app.app_context():
-            one_id = db_user.create(1, 'test_user')
-            user_count = db_user.get_user_count()
+            one_id = db_user.create(self.db_conn, 1, 'test_user')
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             # insert a feedback record
@@ -160,21 +163,23 @@ class DumpTestCase(DatabaseTestCase):
                     recording_msid="d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
                     score=1
                 )
-            db_feedback.insert(feedback)
+            db_feedback.insert(self.db_conn, feedback)
 
             # do a db dump and reset the db
-            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
+            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir, self.tempdir_private)
             self.reset_db()
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
-            self.assertEqual(db_feedback.get_feedback_count_for_user(user_id=one_id), 0)
+            self.assertEqual(db_feedback.get_feedback_count_for_user(self.db_conn, user_id=one_id), 0)
 
             # import the dump and check the records are inserted
             db_dump.import_postgres_dump(private_dump, None, public_dump, None)
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(
+                self.db_conn, self.ts_conn, user_id=one_id, limit=1, offset=0
+            )
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
@@ -182,15 +187,17 @@ class DumpTestCase(DatabaseTestCase):
 
             # reset again, and use more threads to import
             self.reset_db()
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
             dumped_feedback = []
 
             db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
-            user_count = db_user.get_user_count()
+            user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
-            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1, offset=0)
+            dumped_feedback = db_feedback.get_feedback_for_user(
+                self.db_conn, self.ts_conn, user_id=one_id, limit=1, offset=0
+            )
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)

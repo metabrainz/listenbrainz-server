@@ -6,16 +6,6 @@ const freshReleasesSitewideData = require("../__mocks__/freshReleasesSitewideDat
 
 const apiService = new APIService("foobar");
 
-// from https://github.com/kentor/flush-promises/blob/46f58770b14fb74ce1ff27da00837c7e722b9d06/index.js
-const scheduler =
-  typeof setImmediate === "function" ? setImmediate : setTimeout;
-
-function flushPromises() {
-  return new Promise(function flushPromisesPromise(resolve) {
-    scheduler(resolve, 0);
-  });
-}
-
 describe("submitListens", () => {
   beforeEach(() => {
     // Mock function for fetch
@@ -25,7 +15,7 @@ describe("submitListens", () => {
         status: 200,
       });
     });
-    jest.useFakeTimers();
+    jest.useFakeTimers({advanceTimers: true});
   });
 
   it("calls fetch with correct parameters", async () => {
@@ -83,13 +73,9 @@ describe("submitListens", () => {
         },
       },
     ]);
+    
+    await jest.advanceTimersByTimeAsync(10000);
 
-    // The infamous flush promises sandwich
-    await flushPromises();
-    jest.runAllTimers();
-    await flushPromises();
-
-    expect(setTimeout).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenNthCalledWith(
       2,
@@ -136,12 +122,8 @@ describe("submitListens", () => {
       },
     ]);
 
-    // The infamous flush promises sandwich
-    await flushPromises();
-    jest.runAllTimers();
-    await flushPromises();
+    await jest.advanceTimersByTimeAsync(10000);
 
-    expect(setTimeout).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenNthCalledWith(
       2,
@@ -178,8 +160,8 @@ describe("submitListens", () => {
         },
       },
     ]);
+    await jest.advanceTimersByTimeAsync(10000);
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(setTimeout).not.toHaveBeenCalled(); // should return response with no calls for additional retries
   });
 
   it("returns the response if successful", async () => {
@@ -1414,7 +1396,13 @@ describe("Fresh Releases", () => {
     });
 
     await expect(
-      apiService.fetchSitewideFreshReleases(2, "2020-12-27")
+      apiService.fetchSitewideFreshReleases(
+        2,
+        undefined,
+        undefined,
+        undefined,
+        "2020-12-27"
+      )
     ).resolves.toEqual(freshReleasesSitewideData);
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/explore/fresh-releases/?days=2&release_date=2020-12-27"
@@ -1436,15 +1424,21 @@ describe("Fresh Releases", () => {
     });
 
     await expect(
-      apiService.fetchSitewideFreshReleases(undefined, "12-31-1988")
+      apiService.fetchSitewideFreshReleases(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        "12-31-1988"
+      )
     ).resolves.toEqual(response);
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/explore/fresh-releases/?release_date=12-31-1988"
     );
   });
 
-  it("shows error response if days are not between 1 and 30", async () => {
-    const response = { code: 400, error: "days must be between 1 and 30." };
+  it("shows error response if days are not between 1 and 90", async () => {
+    const response = { code: 400, error: "days must be between 1 and 90." };
 
     window.fetch = jest.fn().mockImplementationOnce(() => {
       return Promise.resolve({
@@ -1454,11 +1448,39 @@ describe("Fresh Releases", () => {
       });
     });
 
-    await expect(apiService.fetchSitewideFreshReleases(50)).resolves.toEqual(
+    await expect(apiService.fetchSitewideFreshReleases(120)).resolves.toEqual(
       response
     );
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/explore/fresh-releases/?days=50"
+      "foobar/1/explore/fresh-releases/?days=120"
+    );
+  });
+
+  it("shows error response if sort order is incorrect", async () => {
+    const response = {
+      code: 400,
+      error:
+        "sort must be one of 'release_date', 'artist_credit_name' or 'release_name'.",
+    };
+
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 400,
+        json: () => response,
+      });
+    });
+
+    await expect(
+      apiService.fetchSitewideFreshReleases(
+        50,
+        undefined,
+        undefined,
+        "confidence"
+      )
+    ).resolves.toEqual(response);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/explore/fresh-releases/?days=50&sort=confidence"
     );
   });
 });

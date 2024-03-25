@@ -75,7 +75,7 @@ function build_unit_containers {
 }
 
 function bring_up_unit_db {
-    invoke_docker_compose up -d lb_db redis rabbitmq couchdb timescale_writer
+    invoke_docker_compose up -d lb_db redis rabbitmq couchdb timescale_writer background_tasks
 }
 
 function unit_setup {

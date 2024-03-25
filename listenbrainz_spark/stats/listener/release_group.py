@@ -1,10 +1,10 @@
 from typing import Iterator, List
 
-from data.model.entity_listener_stat import ArtistListenerRecord
+from data.model.entity_listener_stat import ReleaseGroupListenerRecord
 from listenbrainz_spark.stats import run_query
 
 
-def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -> Iterator[ArtistListenerRecord]:
+def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -> Iterator[ReleaseGroupListenerRecord]:
     """ Get information about top listeners of a release group.
 
         Args:
@@ -62,8 +62,9 @@ def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -
         ), entity_count as (
             SELECT release_group_mbid
                  , SUM(listen_count) as total_listen_count
+                 , COUNT(DISTINCT user_id) as total_user_count
               FROM intermediate_table
-          GROUP BY release_group_mbid      
+          GROUP BY release_group_mbid
         ), ranked_stats as (
             SELECT release_group_mbid
                  , release_group_name
@@ -73,7 +74,7 @@ def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -
                  , caa_release_mbid
                  , user_id 
                  , listen_count
-                 , row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rank
+                 , row_number() OVER (PARTITION BY release_group_mbid ORDER BY listen_count DESC) AS rank
               FROM intermediate_table
         ), grouped_stats AS (
             SELECT release_group_mbid
@@ -108,6 +109,7 @@ def get_listeners(table: str, cache_tables: List[str], number_of_results: int) -
                  , caa_release_mbid
                  , listeners
                  , total_listen_count
+                 , total_user_count
               FROM grouped_stats
               JOIN entity_count
              USING (release_group_mbid)

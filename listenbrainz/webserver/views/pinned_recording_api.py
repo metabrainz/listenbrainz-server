@@ -4,8 +4,9 @@ import listenbrainz.db.pinned_recording as db_pinned_rec
 from flask import Blueprint, current_app, jsonify, request
 
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APINoContent
+from listenbrainz.webserver.errors import APIInternalServerError, APINotFound
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (
     log_raise_400,
@@ -14,7 +15,7 @@ from listenbrainz.webserver.views.api_tools import (
     get_non_negative_param,
     validate_auth_header,
 )
-from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
+from listenbrainz.db.model.pinned_recording import WritablePinnedRecording
 from pydantic import ValidationError
 
 pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
@@ -25,7 +26,7 @@ pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 @ratelimit()
 def pin_recording_for_user():
     """
-    Pin a recording for user. A user token (found on  https://listenbrainz.org/profile/)
+    Pin a recording for user. A user token (found on  https://listenbrainz.org/settings/)
     must be provided in the Authorization header! Each request should contain only one pinned recording item in the payload.
 
     The format of the JSON to be POSTed to this endpoint should look like the following:
@@ -64,7 +65,7 @@ def pin_recording_for_user():
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
     try:
-        recording_to_pin_with_id = db_pinned_rec.pin(recording_to_pin)
+        recording_to_pin_with_id = db_pinned_rec.pin(db_conn, recording_to_pin)
     except Exception as e:
         current_app.logger.error("Error while inserting pinned track record: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -77,7 +78,7 @@ def pin_recording_for_user():
 @ratelimit()
 def unpin_recording_for_user():
     """
-    Unpins the currently active pinned recording for the user. A user token (found on  https://listenbrainz.org/profile/)
+    Unpins the currently active pinned recording for the user. A user token (found on  https://listenbrainz.org/settings/)
     must be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>
@@ -89,7 +90,7 @@ def unpin_recording_for_user():
     user = validate_auth_header()
 
     try:
-        recording_unpinned = db_pinned_rec.unpin(user["id"])
+        recording_unpinned = db_pinned_rec.unpin(db_conn, user["id"])
     except Exception as e:
         current_app.logger.error("Error while unpinning recording for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -106,7 +107,7 @@ def unpin_recording_for_user():
 def delete_pin_for_user(row_id):
     """
     Deletes the pinned recording with given ``row_id`` from the server.
-    A user token (found on  https://listenbrainz.org/profile/) must be provided in the Authorization header!
+    A user token (found on  https://listenbrainz.org/settings/) must be provided in the Authorization header!
 
     :reqheader Authorization: Token <user token>
     :param row_id: the row_id of the pinned recording that should be deleted.
@@ -119,7 +120,7 @@ def delete_pin_for_user(row_id):
     user = validate_auth_header()
 
     try:
-        recording_deleted = db_pinned_rec.delete(row_id, user["id"])
+        recording_deleted = db_pinned_rec.delete(db_conn, row_id, user["id"])
     except Exception as e:
         current_app.logger.error("Error while unpinning recording for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -181,19 +182,21 @@ def get_pins_for_user(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
     try:
-        pinned_recordings = db_pinned_rec.get_pin_history_for_user(user_id=user["id"], count=count, offset=offset)
+        pinned_recordings = db_pinned_rec.get_pin_history_for_user(
+            db_conn, user_id=user["id"], count=count, offset=offset
+        )
     except Exception as e:
         current_app.logger.error("Error while retrieving pins for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
-    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
-    total_count = db_pinned_rec.get_pin_count_for_user(user_id=user["id"])
+    total_count = db_pinned_rec.get_pin_count_for_user(db_conn, user_id=user["id"])
 
     return jsonify(
         {
@@ -259,12 +262,14 @@ def get_pins_for_user_following(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    pinned_recordings = db_pinned_rec.get_pins_for_user_following(user_id=user["id"], count=count, offset=offset)
-    pinned_recordings = fetch_track_metadata_for_items(pinned_recordings)
+    pinned_recordings = db_pinned_rec.get_pins_for_user_following(
+        db_conn, user_id=user["id"], count=count, offset=offset
+    )
+    pinned_recordings = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
 
     return jsonify(
@@ -312,13 +317,13 @@ def get_current_pin_for_user(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    pin = db_pinned_rec.get_current_pin_for_user(user_id=user.id)
+    pin = db_pinned_rec.get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items([pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(ts_conn, [pin])[0].to_api()
 
     return jsonify({
         "pinned_recording": pin,

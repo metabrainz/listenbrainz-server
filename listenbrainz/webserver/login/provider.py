@@ -3,6 +3,7 @@ from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.musicbrainz_db import editor as mb_editor
 
 from listenbrainz.domain.musicbrainz import MusicBrainzService, MUSICBRAINZ_SCOPES
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.utils import generate_string
 from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
@@ -33,7 +34,7 @@ def get_user():
         # get_auth_session raises a KeyError if it was unable to get the required data from `code`
         raise MusicBrainzAuthSessionError()
 
-    user = db_user.get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id)
+    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id)
     user_email = None
     if mb_engine:
         user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)["email"]
@@ -42,8 +43,8 @@ def get_user():
         if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and user_email is None:
             # if flag is set to True and the user does not have an email do not allow to sign up
             raise MusicBrainzAuthNoEmailError()
-        db_user.create(musicbrainz_row_id, musicbrainz_id, email=user_email)
-        user = db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)
+        db_user.create(db_conn, musicbrainz_row_id, musicbrainz_id, email=user_email)
+        user = db_user.get_by_mb_id(db_conn, musicbrainz_id, fetch_email=True)
         ts.set_empty_values_for_user(user["id"])
     else:  # an existing user is trying to log in
         # Other option is to change the return type of get_by_mb_row_id to a dict
@@ -51,10 +52,14 @@ def get_user():
         user = dict(user)
         user["email"] = user_email
         # every time a user logs in, update the email in LB.
-        db_user.update_user_details(user["id"], musicbrainz_id, user_email)
+        db_user.update_user_details(db_conn, user["id"], musicbrainz_id, user_email)
 
-    # update oauth token for the user
-    service.add_new_user(user["id"], token)
+    # save user's MB OAuth token, this check cannot be merged with the previous signup/login check because
+    # we have a different service user row for each LB deployment but a common user row for all three
+    if service.get_user(user["id"]) is None:
+        service.add_new_user(user["id"], token)
+    else:
+        service.update_user(user["id"], token)
 
     return user
 

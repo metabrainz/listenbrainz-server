@@ -33,8 +33,8 @@ class HandlersTestCase(DatabaseTestCase):
     def setUp(self):
         super(HandlersTestCase, self).setUp()
         self.app = create_app()
-        self.user1 = db_user.get_or_create(1, 'iliekcomputers')
-        self.user2 = db_user.get_or_create(2, 'lucifer')
+        self.user1 = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        self.user2 = db_user.get_or_create(self.db_conn, 2, 'lucifer')
 
     def tearDown(self):
         super(HandlersTestCase, self).tearDown()
@@ -351,6 +351,7 @@ class HandlersTestCase(DatabaseTestCase):
             handle_recommendations(data)
 
         mock_db_insert.assert_called_with(
+            mock.ANY,
             1,
             UserRecommendationsJson(
                 top_artist=[
@@ -580,6 +581,7 @@ class HandlersTestCase(DatabaseTestCase):
             handle_missing_musicbrainz_data(data)
 
         mock_db_insert.assert_called_with(
+            mock.ANY,
             1,
             UserMissingMusicBrainzDataJson(
                 missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(

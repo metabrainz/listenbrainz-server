@@ -1,5 +1,5 @@
-ARG PYTHON_BASE_IMAGE_VERSION=3.11-20221221
-ARG NODE_VERSION=16-alpine
+ARG PYTHON_BASE_IMAGE_VERSION=3.11-20231006
+ARG NODE_VERSION=20-alpine
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
@@ -159,6 +159,12 @@ COPY ./docker/services/timescale_writer/timescale_writer.service /etc/service/ti
 COPY ./docker/services/timescale_writer/timescale_writer.finish /etc/service/timescale_writer/finish
 RUN touch /etc/service/timescale_writer/down
 
+# Background tasks
+COPY ./docker/services/background_tasks/consul-template-background-tasks.conf /etc/consul-template-background-tasks.conf
+COPY ./docker/services/background_tasks/background_tasks.service /etc/service/background_tasks/run
+COPY ./docker/services/background_tasks/background_tasks.finish /etc/service/background_tasks/finish
+RUN touch /etc/service/background_tasks/down
+
 # MBID-mapping writer
 COPY ./docker/services/mbid_mapping_writer/consul-template-mbid-mapping-writer.conf /etc/consul-template-mbid-mapping-writer.conf
 COPY ./docker/services/mbid_mapping_writer/mbid_mapping_writer.service /etc/service/mbid_mapping_writer/run
@@ -171,8 +177,14 @@ COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.service /et
 COPY ./docker/services/spotify_metadata_cache/spotify_metadata_cache.finish /etc/service/spotify_metadata_cache/finish
 RUN touch /etc/service/spotify_metadata_cache/down
 
+# Apple Metadata Cache
+COPY ./docker/services/apple_metadata_cache/consul-template-apple-metadata-cache.conf /etc/consul-template-apple-metadata-cache.conf
+COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.service /etc/service/apple_metadata_cache/run
+COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.finish /etc/service/apple_metadata_cache/finish
+RUN touch /etc/service/apple_metadata_cache/down
+
 # uwsgi (website)
-COPY ./docker/services/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
+COPY ./docker/services/uwsgi/uwsgi.ini.ctmpl /etc/uwsgi/uwsgi.ini.ctmpl
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf
 COPY ./docker/services/uwsgi/uwsgi.service /etc/service/uwsgi/run
 COPY ./docker/services/uwsgi/uwsgi.finish /etc/service/uwsgi/finish
@@ -190,8 +202,6 @@ COPY --from=listenbrainz-frontend-prod /code/frontend/sound /static/sound
 COPY --from=listenbrainz-frontend-prod /code/frontend/fonts /static/fonts
 COPY --from=listenbrainz-frontend-prod /code/frontend/img /static/img
 COPY --from=listenbrainz-frontend-prod /code/frontend/js/lib /static/js/lib
-COPY --from=listenbrainz-frontend-prod /code/frontend/js/info.js /static/js/
-COPY --from=listenbrainz-frontend-prod /code/frontend/js/music-services.js /static/js/
 COPY --from=listenbrainz-frontend-prod /code/frontend/dist /static/dist
 
 # Now install our code, which may change frequently

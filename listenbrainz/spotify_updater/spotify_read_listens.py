@@ -8,6 +8,7 @@ from brainzutils.mail import send_mail
 from dateutil import parser
 from flask import current_app, render_template
 from spotipy import SpotifyException
+from sqlalchemy.exc import DatabaseError, SQLAlchemyError
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
 import listenbrainz.webserver
@@ -16,7 +17,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, \
     ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService
-from listenbrainz.webserver.errors import APIBadRequest, ListenValidationError
+from listenbrainz.webserver.errors import ListenValidationError
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT, \
     LISTEN_TYPE_PLAYING_NOW
@@ -25,6 +26,7 @@ METRIC_UPDATE_INTERVAL = 60  # seconds
 _listens_imported_since_last_update = 0  # number of listens imported since last metric update was submitted
 _metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
 
+
 def notify_error(musicbrainz_id: str, error: str):
     """ Notifies specified user via email about error during Spotify import.
 
@@ -32,11 +34,11 @@ def notify_error(musicbrainz_id: str, error: str):
         musicbrainz_id: the MusicBrainz ID of the user
         error: a description of the error encountered.
     """
-    user_email = db_user.get_by_mb_id(musicbrainz_id, fetch_email=True)["email"]
+    user_email = db_user.get_by_mb_id(listenbrainz.webserver.db_conn, musicbrainz_id, fetch_email=True)["email"]
     if not user_email:
         return
 
-    spotify_url = current_app.config['SERVER_ROOT_URL'] + '/profile/music-services/details/'
+    spotify_url = current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/details/'
     text = render_template('emails/spotify_import_error.txt', error=error, link=spotify_url)
     send_mail(
         subject='ListenBrainz Spotify Importer Error',
@@ -371,6 +373,7 @@ def process_all_spotify_users():
     try:
         users = service.get_active_users_to_process()
     except DatabaseException as e:
+        listenbrainz.webserver.db_conn.rollback()
         current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)
         return 0, 0
 
@@ -384,9 +387,13 @@ def process_all_spotify_users():
         try:
             _listens_imported_since_last_update += process_one_user(u, service)
             success += 1
+        except (DatabaseException, DatabaseError, SQLAlchemyError):
+            listenbrainz.webserver.db_conn.rollback()
+            current_app.logger.error('spotify_reader could not import listens for user %s:',
+                                     u['musicbrainz_id'], exc_info=True)
         except Exception:
-            current_app.logger.critical('spotify_reader could not import listens for user %s:',
-                                        u['musicbrainz_id'], exc_info=True)
+            current_app.logger.error('spotify_reader could not import listens for user %s:',
+                                     u['musicbrainz_id'], exc_info=True)
             failure += 1
 
         if time.monotonic() > _metric_submission_time:

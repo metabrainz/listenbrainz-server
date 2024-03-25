@@ -1,40 +1,36 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
-import { createRoot } from "react-dom/client";
-import * as React from "react";
-import NiceModal from "@ebay/nice-modal-react";
-import { useState } from "react";
-import { toast } from "react-toastify";
-import { saveAs } from "file-saver";
 import { merge } from "lodash";
-import Prompt, { Modes } from "./Prompt";
-import { LBRadioFeedback, Playlist } from "./Playlist";
-import ErrorBoundary from "../../utils/ErrorBoundary";
-import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getPageProps } from "../../utils/utils";
+import * as React from "react";
+import { useState } from "react";
+import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
   getRecordingMBIDFromJSPFTrack,
 } from "../../playlists/utils";
-import BrainzPlayer from "../../brainzplayer/BrainzPlayer";
-import { ToastMsg } from "../../notifications/Notifications";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { LBRadioFeedback, Playlist } from "./components/Playlist";
+import Prompt, { Modes } from "./components/Prompt";
 
-type LBRadioProps = {
-  modeArg: Modes;
-  promptArg: string;
+type LBRadioLoaderData = {
+  mode: Modes;
+  prompt: string;
 };
 
-function LBRadio(props: LBRadioProps) {
-  const { modeArg, promptArg } = props;
+export default function LBRadio() {
+  const data = useLoaderData() as LBRadioLoaderData;
+  const { mode: modeArg, prompt: promptArg } = data;
+
   const [jspfPlaylist, setJspfPlaylist] = React.useState<JSPFObject>();
   const [feedback, setFeedback] = React.useState<string[]>([]);
   const [isLoading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { APIService } = React.useContext(GlobalAppContext);
   const generatePlaylistCallback = React.useCallback(
     async (prompt: string, mode: Modes) => {
       setErrorMessage("");
@@ -105,125 +101,11 @@ function LBRadio(props: LBRadioProps) {
     [setJspfPlaylist, setFeedback, APIService]
   );
 
-  const onSavePlaylist = React.useCallback(async () => {
-    // TODO: Move the guts of this to APIService
-    const args = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${currentUser.auth_token}`,
-      },
-      body: JSON.stringify(jspfPlaylist),
-    };
-    try {
-      const request = await fetch(
-        `${APIService.APIBaseURI}/playlist/create`,
-        args
-      );
-      if (request.ok) {
-        const { playlist_mbid } = await request.json();
-        toast.success(
-          <ToastMsg
-            title="Saved playlist"
-            message={
-              <>
-                Playlist saved to &ensp;
-                <a href={`/playlist/${playlist_mbid}`}>
-                  {jspfPlaylist?.playlist.title}
-                </a>
-              </>
-            }
-          />,
-          { toastId: "saved-playlist" }
-        );
-      } else {
-        const { error } = await request.json();
-        toast.error(
-          <ToastMsg
-            title="Error"
-            message={`Failed to save playlist: ${error}.`}
-          />,
-          { toastId: "saved-playlist-error" }
-        );
-      }
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={`Failed to save playlist: ${error}.`}
-        />,
-        { toastId: "saved-playlist-error" }
-      );
-    }
-  }, [currentUser.auth_token, jspfPlaylist, APIService.APIBaseURI]);
-
-  const onSaveToSpotify = React.useCallback(async () => {
-    // TODO: Move the guts of this to APIService
-    const args = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${currentUser.auth_token}`,
-      },
-      body: JSON.stringify(jspfPlaylist),
-    };
-    const playlistTitle = jspfPlaylist?.playlist.title;
-    try {
-      const request = await fetch(
-        `${APIService.APIBaseURI}/playlist/export-jspf/spotify`,
-        args
-      );
-      if (request.ok) {
-        const { external_url } = await request.json();
-        toast.success(
-          <ToastMsg
-            title="Saved playlist"
-            message={
-              <>
-                Successfully exported playlist:{" "}
-                <a
-                  href={external_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {playlistTitle}
-                </a>
-                Heads up: the new playlist is public on Spotify.
-              </>
-            }
-          />,
-          { toastId: "saved-playlist" }
-        );
-      } else {
-        const { error } = await request.json();
-        toast.error(
-          <ToastMsg
-            title="Error"
-            message={`Failed to save playlist to Spotify: ${error}.`}
-          />,
-          { toastId: "saved-playlist-error" }
-        );
-      }
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={`Failed to save playlist to Spotify: ${error}.`}
-        />,
-        { toastId: "saved-playlist-error" }
-      );
-    }
-  }, [currentUser.auth_token, jspfPlaylist, APIService.APIBaseURI]);
-
-  const onExportJSPF = React.useCallback(async () => {
-    const jspf = new Blob([JSON.stringify(jspfPlaylist)], {
-      type: "application/json;charset=utf-8",
-    });
-    saveAs(jspf, `${jspfPlaylist?.playlist.title}.jspf`);
-  }, [jspfPlaylist]);
-
   return (
     <>
+      <Helmet>
+        <title>LB Radio</title>
+      </Helmet>
       <div className="row">
         <div className="col-sm-12">
           <Prompt
@@ -238,12 +120,7 @@ function LBRadio(props: LBRadioProps) {
             className="playlist-loader"
           >
             <LBRadioFeedback feedback={feedback} />
-            <Playlist
-              playlist={jspfPlaylist?.playlist}
-              onSavePlaylist={onSavePlaylist}
-              onSaveToSpotify={onSaveToSpotify}
-              onExportJSPF={onExportJSPF}
-            />
+            <Playlist playlist={jspfPlaylist?.playlist} />
           </Loader>
         </div>
       </div>
@@ -257,21 +134,3 @@ function LBRadio(props: LBRadioProps) {
     </>
   );
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const { domContainer, reactProps, globalAppContext } = getPageProps();
-
-  const { user, mode, prompt, token } = reactProps;
-  const renderRoot = createRoot(domContainer!);
-  const LBRadioWithAlertNotifications = withAlertNotifications(LBRadio);
-
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <LBRadioWithAlertNotifications modeArg={mode} promptArg={prompt} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

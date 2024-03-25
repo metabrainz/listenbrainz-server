@@ -19,6 +19,7 @@ from psycopg2.extras import execute_values
 from listenbrainz import DUMP_LICENSE_FILE_PATH, db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db import timescale
+from listenbrainz.db.user import get_all_usernames
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS
@@ -30,6 +31,20 @@ PARQUET_APPROX_COMPRESSION_RATIO = .57
 
 # This is the approximate amount of data to write to a parquet file in order to meet the max size
 PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
+
+
+SPARK_LISTENS_SCHEMA = pa.schema([
+    pa.field("listened_at", pa.timestamp("ms"), False),
+    pa.field("user_id", pa.int64(), False),
+    pa.field("recording_msid", pa.string(), False),
+    pa.field("artist_name", pa.string(), False),
+    pa.field("artist_credit_id", pa.int64(), True),
+    pa.field("release_name", pa.string(), True),
+    pa.field("release_mbid", pa.string(), True),
+    pa.field("recording_name", pa.string(), False),
+    pa.field("recording_mbid", pa.string(), True),
+    pa.field('artist_credit_mbids', pa.list_(pa.string()), True),
+])
 
 
 class DumpListenStore:
@@ -134,12 +149,7 @@ class DumpListenStore:
             temp_dir (str): the dir to use to write files before adding to archive
             full_dump (bool): the type of dump
         """
-        user_id_map = {}
-        query = 'SELECT id, musicbrainz_id FROM "user"'
-        with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query))
-            for row in result:
-                user_id_map[row.id] = row.musicbrainz_id
+        user_id_map = get_all_usernames()
 
         t0 = time.monotonic()
         listen_count = 0
@@ -445,8 +455,8 @@ class DumpListenStore:
 
                 # Create a pandas dataframe, then write that to a parquet files
                 df = pd.DataFrame(data, dtype=object)
-                table = pa.Table.from_pandas(df, preserve_index=False)
-                pq.write_table(table, filename)
+                table = pa.Table.from_pandas(df, schema=SPARK_LISTENS_SCHEMA, preserve_index=False)
+                pq.write_table(table, filename, flavor="spark")
                 file_size = os.path.getsize(filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
                 os.unlink(filename)

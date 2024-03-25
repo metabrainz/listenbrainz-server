@@ -258,16 +258,5 @@
             "user_id": "mr_monkey",
             "recording_mbid": "25f7c11a-d6df-4f02-b653-a6e7d7eab540"
         }
-    ],
-    "spotify": {
-        "access_token": "access token",
-        "permission": [
-            "streaming",
-            "user-read-email",
-            "user-read-private"
-        ]
-    },
-    "youtube": {
-        "api_key": "fake-api-key"
-    }
+    ]
 }

@@ -16,6 +16,13 @@ export enum PlaylistType {
   "recommendations",
 }
 
+export function isPlaylistOwner(
+  playlist: JSPFPlaylist,
+  user: ListenBrainzUser
+): boolean {
+  return Boolean(user) && user?.name === playlist.creator;
+}
+
 export function getPlaylistExtension(
   playlist?: JSPFPlaylist
 ): JSPFPlaylistExtension | null {
@@ -88,8 +95,8 @@ export function JSPFTrackToListen(track: JSPFTrack): Listen {
 
   listen.track_metadata.mbid_mapping = {
     artist_mbids:
-      customFields?.artist_identifiers.map(getArtistMBIDFromURI) ?? [],
-    artists: [],
+      customFields?.artist_identifiers?.map(getArtistMBIDFromURI) ?? [],
+    artists: customFields?.additional_metadata?.artists ?? [],
     recording_mbid: recordingMBID,
     release_mbid: caa_release_mbid,
     caa_id,

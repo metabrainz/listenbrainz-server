@@ -4,9 +4,9 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
-import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
-import YoutubePlayer from "../brainzplayer/YoutubePlayer";
-import SpotifyAPIService from "./SpotifyAPIService";
+import ReactMarkdown from "react-markdown";
+import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
+import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
@@ -214,6 +214,10 @@ const getReleaseGroupMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.release_group_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.release_group_mbid");
 
+const getReleaseName = (listen: Listen): string =>
+  _.get(listen, "track_metadata.mbid_mapping.release_name", "") ||
+  _.get(listen, "track_metadata.release_name", "");
+
 const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
   _.get(listen, "track_metadata.mbid_mapping.recording_name", "") ||
   _.get(listen, "track_metadata.track_name", "") ||
@@ -243,42 +247,54 @@ const getArtistName = (
   );
 };
 
-const getArtistLink = (listen: Listen) => {
-  const artists = listen.track_metadata?.mbid_mapping?.artists;
+const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
+  return (
+    <>
+      {artists.map((artist) => (
+        <>
+          <a
+            href={`/artist/${artist.artist_mbid}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={artist.artist_credit_name}
+          >
+            {artist.artist_credit_name}
+          </a>
+          {artist.join_phrase}
+        </>
+      ))}
+    </>
+  );
+};
+
+const getStatsArtistLink = (
+  artists?: MBIDMappingArtist[],
+  artist_name?: string,
+  artist_mbids?: string[]
+) => {
   if (artists?.length) {
-    return (
-      <>
-        {artists.map((artist) => (
-          <>
-            <a
-              href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={artist.artist_credit_name}
-            >
-              {artist.artist_credit_name}
-            </a>
-            {artist.join_phrase}
-          </>
-        ))}
-      </>
-    );
+    return getMBIDMappingArtistLink(artists);
   }
-  const artistName = getArtistName(listen);
-  const artistMbids = getArtistMBIDs(listen);
-  const firstArtist = _.first(artistMbids);
+  const firstArtist = _.first(artist_mbids);
   if (firstArtist) {
     return (
       <a
-        href={`https://musicbrainz.org/artist/${firstArtist}`}
+        href={`/artist/${firstArtist}`}
         target="_blank"
         rel="noopener noreferrer"
       >
-        {artistName}
+        {artist_name}
       </a>
     );
   }
-  return artistName;
+  return artist_name;
+};
+
+const getArtistLink = (listen: Listen) => {
+  const artists = listen.track_metadata?.mbid_mapping?.artists;
+  const artist_name = getArtistName(listen);
+  const artist_mbids = getArtistMBIDs(listen);
+  return getStatsArtistLink(artists, artist_name, artist_mbids);
 };
 
 const getTrackLink = (listen: Listen): JSX.Element | string => {
@@ -298,6 +314,19 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
   }
   return trackName;
 };
+
+const getListenCardKey = (listen: Listen): string =>
+  `${listen.listened_at}-${listen.user_name}-${getRecordingMSID(
+    listen
+  )}-${getTrackName(listen)}-${getArtistName(listen)}-${getReleaseName(
+    listen
+  )}-${
+    listen.track_metadata?.mbid_mapping?.release_group_name
+  }-${getRecordingMBID(listen)}-${getArtistMBIDs(listen)?.join(
+    ","
+  )}-${getReleaseMBID(listen)}-${getReleaseGroupMBID(listen)}-${
+    listen.track_metadata?.mbid_mapping?.caa_id
+  }-${listen.track_metadata?.mbid_mapping?.caa_release_mbid}`;
 
 const formatWSMessageToListen = (wsMsg: any): Listen | null => {
   const json = wsMsg;
@@ -454,6 +483,52 @@ export function loadScriptAsync(document: any, scriptSrc: string): void {
   el.src = scriptSrc;
   container.appendChild(el);
 }
+export async function fetchMusicBrainzGenres() {
+  // Fetch and save the list of MusicBrainz genres
+  try {
+    const response = await fetch(
+      "https://musicbrainz.org/ws/2/genre/all?fmt=txt"
+    );
+    const genresList = await response.text();
+    const fetchedGenres = Array.from(genresList.split("\n"));
+    if (fetchedGenres.length) {
+      localStorage?.setItem(
+        "musicbrainz-genres",
+        JSON.stringify({
+          creation_date: Date.now(),
+          genre_list: fetchedGenres,
+        })
+      );
+      return fetchedGenres;
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+  return [];
+}
+
+async function getOrFetchMBGenres(forceExpiry = false) {
+  // Try to load genres from local storage, fetch them otherwise
+  const localStorageString = localStorage?.getItem("musicbrainz-genres");
+  if (!localStorageString) {
+    // nothing saved, fetch the genres and save them
+    const fetchedGenres = await fetchMusicBrainzGenres();
+    return fetchedGenres;
+  }
+  const localStorageObject = JSON.parse(localStorageString);
+  // expire the list after 2 weeks
+  if (
+    forceExpiry ||
+    !localStorageObject ||
+    Date.now() > localStorageObject.creation_date + 1209000000
+  ) {
+    // If the item is expired, fetch them afresh and save them
+    const fetchedGenres = await fetchMusicBrainzGenres();
+    return fetchedGenres;
+  }
+  return localStorageObject.genre_list;
+}
 
 type SentryProps = {
   sentry_dsn: string;
@@ -461,6 +536,7 @@ type SentryProps = {
 };
 type GlobalAppProps = {
   api_url: string;
+  websockets_url: string;
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
@@ -472,12 +548,12 @@ type GlobalAppProps = {
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 
-const getPageProps = (): {
+const getPageProps = async (): Promise<{
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
   sentryProps: SentryProps;
   globalAppContext: GlobalAppContextT;
-} => {
+}> => {
   let domContainer = document.getElementById("react-container");
   const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
@@ -508,6 +584,7 @@ const getPageProps = (): {
     const {
       current_user,
       api_url,
+      websockets_url,
       spotify,
       youtube,
       soundcloud,
@@ -534,14 +611,32 @@ const getPageProps = (): {
     );
     globalAppContext = {
       APIService: apiService,
+      websocketsUrl: websockets_url,
       currentUser: current_user,
       spotifyAuth: spotify,
       youtubeAuth: youtube,
       soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
-      musicbrainzAuth: musicbrainz,
       appleAuth: apple,
+      musicbrainzAuth: {
+        ...musicbrainz,
+        refreshMBToken: async function refreshMBToken() {
+          try {
+            const newToken = await apiService.refreshMusicbrainzToken();
+            _.set(globalAppContext, "musicbrainzAuth.access_token", newToken);
+            return newToken;
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error(
+              "Could not refresh MusicBrainz auth token:",
+              err.toString()
+            );
+          }
+          return undefined;
+        },
+      },
       userPreferences: user_preferences,
+      musicbrainzGenres: await getOrFetchMBGenres(),
       recordingFeedbackManager: new RecordingFeedbackManager(
         apiService,
         current_user
@@ -552,6 +647,8 @@ const getPageProps = (): {
       sentry_traces_sample_rate,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err);
     // Show error to the user and ask to reload page
     const errorMessage = `Please refresh the page.
 	If the problem persists, please contact us.
@@ -606,13 +703,17 @@ const pinnedRecordingToListen = (pinnedRecording: PinnedRecording): Listen => {
 
 const generateAlbumArtThumbnailLink = (
   caaId: number | string,
-  releaseMBID: string
+  releaseMBID: string,
+  size: CAAThumbnailSizes = 250
 ): string => {
-  return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb250.jpg`;
+  return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb${size}.jpg`;
 };
 
+export type CAAThumbnailSizes = 250 | 500 | 1200 | "small" | "large";
+
 const getThumbnailFromCAAResponse = (
-  body: CoverArtArchiveResponse
+  body: CoverArtArchiveResponse,
+  size: CAAThumbnailSizes = 250
 ): string | undefined => {
   if (!body.images?.length) {
     return undefined;
@@ -634,53 +735,76 @@ const getThumbnailFromCAAResponse = (
 
   // No front image? Fallback to whatever the first image is
   const { thumbnails, image } = body.images[0];
-  return thumbnails[250] ?? thumbnails.small ?? image;
+  return thumbnails[size] ?? thumbnails.small ?? image;
+};
+
+const retryParams = {
+  retries: 4,
+  retryOn: [429],
+  retryDelay(attempt: number) {
+    // Exponential backoff at random interval between maxRetryTime and minRetryTime,
+    // adding minRetryTime for every attempt. `attempt` starts at 0
+    const maxRetryTime = 2500;
+    const minRetryTime = 1800;
+    const clampedRandomTime =
+      Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
+    // Make it exponential
+    return Math.floor(clampedRandomTime) * 2 ** attempt;
+  },
+};
+
+const getAlbumArtFromReleaseGroupMBID = async (
+  releaseGroupMBID: string,
+  optionalSize?: CAAThumbnailSizes
+): Promise<string | undefined> => {
+  try {
+    const CAAResponse = await fetchWithRetry(
+      `https://coverartarchive.org/release-group/${releaseGroupMBID}`,
+      retryParams
+    );
+    if (CAAResponse.ok) {
+      const body: CoverArtArchiveResponse = await CAAResponse.json();
+      return getThumbnailFromCAAResponse(body, optionalSize);
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Couldn't fetch Cover Art Archive entry for ${releaseGroupMBID}`,
+      error
+    );
+  }
+  return undefined;
 };
 
 const getAlbumArtFromReleaseMBID = async (
   userSubmittedReleaseMBID: string,
-  useReleaseGroupFallback: boolean = false,
-  APIService?: APIServiceClass
+  useReleaseGroupFallback: boolean | string = false,
+  APIService?: APIServiceClass,
+  optionalSize?: CAAThumbnailSizes
 ): Promise<string | undefined> => {
   try {
-    const retryParams = {
-      retries: 4,
-      retryOn: [429],
-      retryDelay(attempt: number) {
-        // Exponential backoff at random interval between maxRetryTime and minRetryTime,
-        // adding minRetryTime for every attempt. `attempt` starts at 0
-        const maxRetryTime = 2500;
-        const minRetryTime = 1800;
-        const clampedRandomTime =
-          Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
-        // Make it exponential
-        return Math.floor(clampedRandomTime) * 2 ** attempt;
-      },
-    };
-
     const CAAResponse = await fetchWithRetry(
       `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
       retryParams
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      return getThumbnailFromCAAResponse(body);
+      return getThumbnailFromCAAResponse(body, optionalSize);
     }
 
-    if (CAAResponse.status === 404 && useReleaseGroupFallback && APIService) {
-      const releaseGroupResponse = await APIService.lookupMBRelease(
-        userSubmittedReleaseMBID
-      );
-      const releaseGroupMBID = releaseGroupResponse["release-group"].id;
-
-      const CAAReleaseGroupResponse = await fetchWithRetry(
-        `https://coverartarchive.org/release-group/${releaseGroupMBID}`,
-        retryParams
-      );
-      if (CAAReleaseGroupResponse.ok) {
-        const body: CoverArtArchiveResponse = await CAAReleaseGroupResponse.json();
-        return getThumbnailFromCAAResponse(body);
+    if (CAAResponse.status === 404 && useReleaseGroupFallback) {
+      let releaseGroupMBID = useReleaseGroupFallback;
+      if (!_.isString(useReleaseGroupFallback) && APIService) {
+        const releaseGroupResponse = await APIService.lookupMBRelease(
+          userSubmittedReleaseMBID
+        );
+        releaseGroupMBID = releaseGroupResponse["release-group"].id;
       }
+      if (!_.isString(releaseGroupMBID)) {
+        return undefined;
+      }
+
+      return await getAlbumArtFromReleaseGroupMBID(releaseGroupMBID);
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -688,6 +812,31 @@ const getAlbumArtFromReleaseMBID = async (
       `Couldn't fetch Cover Art Archive entry for ${userSubmittedReleaseMBID}`,
       error
     );
+  }
+  return undefined;
+};
+
+const getAlbumArtFromSpotifyTrackID = async (
+  spotifyTrackID: string,
+  spotifyUser?: SpotifyUser
+): Promise<string | undefined> => {
+  const APIBaseURI = "https://api.spotify.com/v1";
+  if (!spotifyUser || !spotifyTrackID) {
+    return undefined;
+  }
+  try {
+    const response = await fetch(`${APIBaseURI}/tracks/${spotifyTrackID}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${spotifyUser?.access_token}`,
+      },
+    });
+    if (response.ok) {
+      const track: SpotifyTrack = await response.json();
+      return track.album?.images?.[0]?.url;
+    }
+  } catch (error) {
+    return undefined;
   }
   return undefined;
 };
@@ -703,9 +852,7 @@ const getAlbumArtFromListenMetadata = async (
     SpotifyPlayer.hasPermissions(spotifyUser)
   ) {
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
-    return new SpotifyAPIService(spotifyUser).getAlbumArtFromSpotifyTrackID(
-      trackID
-    );
+    return getAlbumArtFromSpotifyTrackID(trackID, spotifyUser);
   }
   if (YoutubePlayer.isListenFromThisService(listen)) {
     const videoId = YoutubePlayer.getVideoIDFromListen(listen);
@@ -846,19 +993,18 @@ export function personalRecommendationEventToListen(
 }
 
 export function getReviewEventContent(
-  eventMetadata: CritiqueBrainzReview
+  eventMetadata: CritiqueBrainzReview | CritiqueBrainzReviewAPI
 ): JSX.Element {
-  const additionalContent = getAdditionalContent(eventMetadata);
+  const additionalContent = getAdditionalContent(
+    eventMetadata as CritiqueBrainzReview
+  );
+  const reviewID =
+    _.get(eventMetadata, "review_mbid") ?? _.get(eventMetadata, "id");
+  const userName =
+    _.get(eventMetadata, "user_name") ??
+    _.get(eventMetadata, "user.display_name");
   return (
-    <>
-      <a
-        href={`https://critiquebrainz.org/review/${eventMetadata.review_mbid}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="pull-right"
-      >
-        See this review on CritiqueBrainz
-      </a>
+    <div className="review">
       {!isUndefined(eventMetadata.rating) && isFinite(eventMetadata.rating) && (
         <div className="rating-container">
           <b>Rating: </b>
@@ -866,15 +1012,33 @@ export function getReviewEventContent(
             readonly
             onClick={() => {}}
             className="rating-stars"
-            ratingValue={eventMetadata.rating * 20} // CB stores ratings in 0 - 5 scale but the component requires 0 - 100
+            ratingValue={eventMetadata.rating}
             transition
             size={20}
             iconsCount={5}
           />
         </div>
       )}
-      {additionalContent}
-    </>
+      <div className="text">
+        <ReactMarkdown
+          disallowedElements={["h1", "h2", "h3", "h4", "h5", "h6"]}
+          unwrapDisallowed
+        >
+          {additionalContent}
+        </ReactMarkdown>
+      </div>
+      <div className="author read-more">
+        by {userName}
+        <a
+          href={`https://critiquebrainz.org/review/${reviewID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pull-right"
+        >
+          Read on CritiqueBrainz
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -901,6 +1065,8 @@ export function getPersonalRecommendationEventContent(
 export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,
+  getMBIDMappingArtistLink,
+  getStatsArtistLink,
   getArtistLink,
   getTrackLink,
   formatWSMessageToListen,
@@ -919,9 +1085,12 @@ export {
   getArtistMBIDs,
   getArtistName,
   getTrackName,
+  getReleaseName,
   getTrackDurationInMs,
+  getListenCardKey,
   pinnedRecordingToListen,
   getAlbumArtFromReleaseMBID,
+  getAlbumArtFromReleaseGroupMBID,
   getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,
   getAdditionalContent,

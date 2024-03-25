@@ -56,6 +56,12 @@ class FreshRelease(BaseModel):
     # The release group's secondary type
     release_group_secondary_type: Optional[ReleaseGroupSecondaryType]
 
+    # The array of tags for this release
+    release_tags: List[str]
+
+    # The listen count for this release
+    listen_count: int
+
     # The cover art archive id of the release's front cover art if it has any
     caa_id: Optional[int]
 

@@ -7,7 +7,7 @@ export type ToastMsgProps = {
 
 export function ToastMsg({ title, message }: ToastMsgProps) {
   return (
-    <div>
+    <div aria-roledescription="alert" role="alert">
       <b>{title}</b>
       <p>{message}</p>
     </div>

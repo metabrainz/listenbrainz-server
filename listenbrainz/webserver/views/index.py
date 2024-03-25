@@ -1,8 +1,6 @@
-import json
 import locale
 import os
 import requests
-import subprocess
 
 from brainzutils import cache
 from datetime import datetime
@@ -15,50 +13,62 @@ import orjson
 from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
+from data.model.user_entity import EntityRecord
+from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import flash
+from listenbrainz.webserver import flash, db_conn
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.views.user import delete_user
+import listenbrainz.db.stats as db_stats
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
 
-STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
-CACHE_TIME = 10 * 60 # time in seconds we cache the stats
+STATS_PREFIX = 'listenbrainz.stats'  # prefix used in key to cache stats
+CACHE_TIME = 10 * 60  # time in seconds we cache the stats
 NUMBER_OF_RECENT_LISTENS = 50
 
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
+
 @index_bp.route("/")
 def index():
     if current_user.is_authenticated and request.args.get("redirect", "true") == "true":
-        return redirect( url_for("user.profile", user_name=current_user.musicbrainz_id))
+        return redirect(url_for("user.index", path="", user_name=current_user.musicbrainz_id))
 
     if _ts:
         try:
             listen_count = _ts.get_total_listen_count()
-            user_count = format(int(_get_user_count()), ',d')
         except Exception as e:
             current_app.logger.error('Error while trying to get total listen count: %s', str(e))
-            listen_count = None
-            user_count = 'Unknown'
-
+            listen_count = 0
     else:
-        listen_count = None
-        user_count = 'Unknown'
+        listen_count = 0
+
+    artist_count = 0
+    try:
+        artist_stats = db_stats.get(db_stats.SITEWIDE_STATS_USER_ID, "artists", "all_time", EntityRecord)
+        if artist_stats is not None:
+            artist_count = artist_stats.count
+    except Exception as e:
+        current_app.logger.error('Error while trying to get total artist count: %s', str(e))
+
+    props = {
+        "listen_count": listen_count,
+        "artist_count": artist_count,
+    }
 
     return render_template(
         "index/index.html",
-        listen_count=format(int(listen_count), ",d") if listen_count else "0",
-        user_count=user_count,
+        props=orjson.dumps(props).decode("utf-8")
     )
+
 
 @index_bp.route("/import/")
 def import_data():
     if current_user.is_authenticated:
-        return redirect(url_for("profile.import_data"))
+        return redirect(url_for("settings.index", path='import/'))
     else:
         return current_app.login_manager.unauthorized()
 
@@ -75,7 +85,7 @@ def data():
 
 @index_bp.route("/add-data/")
 def add_data_info():
-    return render_template("index/add-data.html", active_settings_section = "add-listens" )
+    return render_template("index/add-data.html", active_about_section="add-listens")
 
 
 @index_bp.route("/import-data/")
@@ -155,8 +165,10 @@ def current_status():
     )
 
 
-@index_bp.route("/recent/")
+@index_bp.route("/recent/", methods=['GET', 'POST'])
 def recent_listens():
+    if request.method == 'GET':
+        return render_template('index.html')
 
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
@@ -175,17 +187,18 @@ def recent_listens():
 
     props = {
         "listens": recent,
-        "globalListenCount":listen_count,
+        "globalListenCount": listen_count,
         "globalUserCount": user_count
     }
 
-    return render_template("index/recent.html", props=orjson.dumps(props).decode("utf-8"))
+    return jsonify(props)
+
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required
 @web_listenstore_needed
 def feed():
-    return render_template('index/feed.html')
+    return render_template('index.html')
 
 
 @index_bp.route('/agree-to-terms/', methods=['GET', 'POST'])
@@ -196,7 +209,7 @@ def gdpr_notice():
     elif request.method == 'POST':
         if request.form.get('gdpr-options') == 'agree':
             try:
-                db_user.agree_to_gdpr(current_user.musicbrainz_id)
+                db_user.agree_to_gdpr(db_conn, current_user.musicbrainz_id)
             except DatabaseException as e:
                 flash.error('Could not store agreement to GDPR terms')
             next = request.form.get('next')
@@ -204,7 +217,7 @@ def gdpr_notice():
                 return redirect(next)
             return redirect(url_for('index.index'))
         elif request.form.get('gdpr-options') == 'disagree':
-            return redirect(url_for('profile.delete'))
+            return redirect(url_for('settings.index',  path='delete'))
         else:
             flash.error('You must agree to or decline our terms')
             return render_template('index/gdpr.html', next=request.args.get('next'))
@@ -215,7 +228,7 @@ def search():
     search_term = request.args.get("search_term")
     user_id = current_user.id if current_user.is_authenticated else None
     if search_term:
-        users = db_user.search(search_term, SEARCH_USER_LIMIT, user_id)
+        users = db_user.search(db_conn, search_term, SEARCH_USER_LIMIT, user_id)
     else:
         users = []
     return render_template("index/search-users.html", search_term=search_term, users=users)
@@ -242,10 +255,10 @@ def mb_user_deleter(musicbrainz_row_id):
         Unauthorized if the MusicBrainz access token provided with the query is invalid
     """
     _authorize_mb_user_deleter(request.args.get('access_token', ''))
-    user = db_user.get_by_mb_row_id(musicbrainz_row_id)
+    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id)
     if user is None:
         raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
-    delete_user(user['id'])
+    add_task(user['id'], 'delete_user')
     return jsonify({'status': 'ok'}), 200
 
 
@@ -282,17 +295,14 @@ def _get_user_count():
     if user_count:
         return user_count
     else:
-        try:
-            user_count = db_user.get_user_count()
-        except DatabaseException as e:
-            raise
+        user_count = db_user.get_user_count(db_conn)
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
 
 
 @index_bp.route("/similar-users/")
 def similar_users():
-    return redirect(url_for("explore.similar_users"))
+    return redirect(url_for('explore.index', path="similar-users"))
 
 
 @index_bp.route("/listens-offline/")
@@ -314,15 +324,11 @@ def musicbrainz_offline():
 def huesound():
     """ Redirect to /explore/huesound """
 
-    return redirect(url_for("explore.huesound"))
-
-@index_bp.route("/statistics/charts/")
-def charts():
-    """ Show the top sitewide entities. """
-    return render_template("index/charts.html")
+    return redirect(url_for('explore.index', path="huesound"))
 
 
-@index_bp.route("/statistics/")
-def stats():
+@index_bp.route("/statistics/",  defaults={'path': ''})
+@index_bp.route('/statistics/<path:path>/')
+def stats(path):
     """ Show sitewide stats """
-    return render_template("index/stats.html")
+    return render_template("index.html")
