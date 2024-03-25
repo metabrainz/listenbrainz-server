@@ -308,23 +308,6 @@ def music_services_callback(service_name: str):
     return redirect(url_for('settings.index', path='music-services/details'))
 
 
-@settings_bp.route('/music-services/apple/get-token/')
-@api_login_required
-def get_apple_music_developer_token():
-    service = AppleService()
-    token = service.generate_developer_token()
-    return jsonify({"token": token})
-
-
-@settings_bp.route('/music-services/apple/submit-token/', methods=["POST"])
-@api_login_required
-def submit_apple_music_user_token():
-    """ Submit a new music user token for a user's apple music account """
-    service = AppleService()
-    service.add_new_user(current_user.id, request.json)
-    return jsonify({"status": "ok"})
-
-
 @settings_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
 @api_login_required
 def refresh_service_token(service_name: str):

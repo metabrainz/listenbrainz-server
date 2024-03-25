@@ -31,7 +31,6 @@ import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import AppleMusicPlayer from "./AppleMusicPlayer";
 
-
 export type DataSourceType = {
   name: string;
   icon: IconProp;

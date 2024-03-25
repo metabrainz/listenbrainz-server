@@ -2,13 +2,11 @@
 import * as React from "react";
 import { get as _get, isString } from "lodash";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
-import { getArtistName, getTrackName, loadScriptAsync } from "../utils/utils";
+import { getArtistName, getTrackName, loadScriptAsync } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 export type AppleMusicPlayerProps = DataSourceProps & {
   appleMusicUser?: AppleMusicUser;
-  // eslint-disable-next-line react/no-unused-prop-types
-  listenBrainzToken: string;
 };
 
 export type AppleMusicPlayerState = {
@@ -50,11 +48,7 @@ export default class AppleMusicPlayer
   public name = "Apple Music";
   public domainName = "music.apple.com";
   public icon = faApple;
-  // Saving the developer token outside of React state , we do not need it for any rendering purposes
-  // and it simplifies some of the closure issues we've had with old tokens.
-  private readonly developerToken: string = "";
-  private readonly musicUserToken: string = "";
-
+\
   private readonly _boundOnPlaybackStateChange: (
     event: MusicKit.PlayerPlaybackState
   ) => void;
@@ -79,9 +73,6 @@ export default class AppleMusicPlayer
       durationMs: 0,
       progressMs: 0,
     };
-
-    this.developerToken = props.appleMusicUser?.developer_token || "";
-    this.musicUserToken = props.appleMusicUser?.music_user_token || "";
 
     // Do an initial check of whether the user wants to link Apple Music before loading the SDK library
     if (AppleMusicPlayer.hasPermissions(props.appleMusicUser)) {
@@ -127,6 +118,7 @@ export default class AppleMusicPlayer
       return;
     }
     try {
+      await this.appleMusicPlayer.authorize();
       await this.appleMusicPlayer.setQueue({
         song: appleMusicId,
         startPlaying: true,
@@ -245,6 +237,7 @@ export default class AppleMusicPlayer
 
   connectAppleMusicPlayer = async (): Promise<void> => {
     this.disconnectAppleMusicPlayer();
+    const { appleMusicUser } = this.props;
 
     const musickit = window.MusicKit;
     if (!musickit) {
@@ -252,7 +245,7 @@ export default class AppleMusicPlayer
       return;
     }
     await musickit.configure({
-      developerToken: this.developerToken,
+      developerToken: appleMusicUser?.developer_token,
       debug: true,
       app: {
         name: "ListenBrainz",
@@ -261,8 +254,12 @@ export default class AppleMusicPlayer
     });
     this.appleMusicPlayer = musickit.getInstance();
 
-    if (this.appleMusicPlayer && this.musicUserToken) {
-      this.appleMusicPlayer.musicUserToken = this.musicUserToken;
+    if (this.appleMusicPlayer && appleMusicUser?.music_user_token) {
+      this.appleMusicPlayer.musicUserToken = appleMusicUser.music_user_token;
+    } else {
+      const userToken = await this.appleMusicPlayer.authorize();
+      this.appleMusicPlayer.musicUserToken = userToken;
+
     }
 
     this.appleMusicPlayer?.addEventListener(
