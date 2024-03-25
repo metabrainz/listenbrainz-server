@@ -6,6 +6,7 @@ import * as React from "react";
 import * as _ from "lodash";
 
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import Loader from "../../../components/Loader";
 import PinnedRecordingCard from "../../components/PinnedRecordingCard";
@@ -150,7 +151,10 @@ export default class UserPins extends React.Component<
             {user.name === currentUser.name && (
               <>
                 Pin one of your
-                <a href={`${profileUrl ?? "/my/listens/"}`}> recent Listens!</a>
+                <Link to={`${profileUrl ?? "/my/listens/"}`}>
+                  {" "}
+                  recent Listens!
+                </Link>
               </>
             )}
           </>

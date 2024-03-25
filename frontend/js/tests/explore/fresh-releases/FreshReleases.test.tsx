@@ -17,6 +17,7 @@ import * as userData from "../../__mocks__/freshReleasesUserData.json";
 import * as sitewideFilters from "../../__mocks__/freshReleasesSitewideFilters.json";
 import * as userDisplayFilters from "../../__mocks__/freshReleasesDisplaySettings.json";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import { BrowserRouter } from "react-router-dom";
 
 const freshReleasesProps = {
   user: {
@@ -95,7 +96,9 @@ describe("FreshReleases", () => {
     mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases;
     const wrapper = mount(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
-        <FreshReleases />
+        <BrowserRouter>
+          <FreshReleases />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     await waitForComponentToPaint(wrapper);

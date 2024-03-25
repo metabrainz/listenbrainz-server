@@ -631,8 +631,8 @@ export default class YearInMusic extends React.Component<
                   We don&apos;t have enough 2023 statistics for {user.name}.
                 </p>
                 <p className="center-p">
-                  <a href="/settings/music-services/details/">Submit</a> enough
-                  listens before the end of December to generate your
+                  <Link to="/settings/music-services/details/">Submit</Link>{" "}
+                  enough listens before the end of December to generate your
                   #yearinmusic next year.
                 </p>
               </div>

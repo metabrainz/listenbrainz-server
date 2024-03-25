@@ -1,8 +1,9 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
+import type { RouteObject } from "react-router-dom";
 import RouteLoader from "../../utils/Loader";
 
-const getExploreRoutes = () => {
+const getExploreRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/explore",
@@ -102,6 +103,13 @@ const getExploreRoutes = () => {
             return { Component: MusicNeighborhood.default };
           },
           loader: RouteLoader,
+        },
+        {
+          path: "ai-brainz/",
+          lazy: async () => {
+            const AIBrainzComponent = await import("../ai-brainz/AIBrainz");
+            return { Component: AIBrainzComponent.default };
+          },
         },
       ],
     },

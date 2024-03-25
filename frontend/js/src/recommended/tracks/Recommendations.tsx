@@ -1,24 +1,19 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
 
-import { get, isEqual, isInteger } from "lodash";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
+import { get, isInteger } from "lodash";
 import { toast } from "react-toastify";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import { useLoaderData } from "react-router-dom";
 
+import { Helmet } from "react-helmet";
 import APIServiceClass from "../../utils/APIService";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../../utils/ErrorBoundary";
 import Loader from "../../components/Loader";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getArtistName,
-  getPageProps,
   getRecordingMBID,
   getTrackName,
   preciseTimestamp,
@@ -30,7 +25,11 @@ import { ToastMsg } from "../../notifications/Notifications";
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
   user: ListenBrainzUser;
+  errorMsg?: string;
+  lastUpdated?: string;
 };
+
+type RecommendationsLoaderData = RecommendationsProps;
 
 export interface RecommendationsState {
   currentRecommendation?: Recommendation;
@@ -89,7 +88,7 @@ export default class Recommendations extends React.Component<
     const { recommendations } = this.state;
     const recordings: string[] = [];
 
-    if (recommendations) {
+    if (recommendations && recommendations.length > 0) {
       recommendations.forEach((recommendation) => {
         const recordingMbid = getRecordingMBID(recommendation);
         if (recordingMbid) {
@@ -214,166 +213,163 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { user } = this.props;
+    const { user, errorMsg, lastUpdated } = this.props;
     const { APIService, currentUser } = this.context;
     const isCurrentUser =
       Boolean(currentUser?.name) && currentUser?.name === user?.name;
+
     return (
       <div role="main">
-        <div className="row">
-          <div className="col-md-8">
-            <div>
-              <div
-                style={{
-                  height: 0,
-                  position: "sticky",
-                  top: "50%",
-                  zIndex: 1,
-                }}
-              >
-                <Loader isLoading={loading} />
-              </div>
-              <div
-                id="recommendations"
-                ref={this.recommendationsTable}
-                style={{ opacity: loading ? "0.4" : "1" }}
-              >
-                {recommendations.map((recommendation) => {
-                  const recordingMBID = getRecordingMBID(recommendation);
-                  const recommendationFeedbackComponent = (
-                    <RecommendationFeedbackComponent
-                      updateFeedbackCallback={this.updateFeedback}
-                      listen={recommendation}
-                      currentFeedback={this.getFeedbackForRecordingMbid(
-                        recordingMBID
-                      )}
-                    />
-                  );
-                  // Backwards compatible support for various timestamp property names
-                  let discoveryTimestamp: string | number | undefined | null =
-                    recommendation.latest_listened_at;
-                  if (!discoveryTimestamp) {
-                    discoveryTimestamp = recommendation.listened_at_iso;
-                  }
-                  if (
-                    !discoveryTimestamp &&
-                    isInteger(recommendation.listened_at)
-                  ) {
-                    // Transfrom unix timestamp in JS milliseconds timestamp
-                    discoveryTimestamp = recommendation.listened_at * 1000;
-                  }
-                  const customTimestamp = discoveryTimestamp ? (
-                    <span
-                      className="listen-time"
-                      title={fullLocalizedDateFromTimestampOrISODate(
-                        discoveryTimestamp
-                      )}
-                    >
-                      Last listened at
-                      <br />
-                      {preciseTimestamp(discoveryTimestamp)}
-                    </span>
-                  ) : (
-                    <span className="listen-time">Not listened to yet</span>
-                  );
-                  return (
-                    <ListenCard
-                      key={`${getTrackName(recommendation)}-${getArtistName(
-                        recommendation
-                      )}`}
-                      customTimestamp={customTimestamp}
-                      showTimestamp
-                      showUsername={false}
-                      feedbackComponent={recommendationFeedbackComponent}
-                      listen={recommendation}
-                    />
-                  );
-                })}
-              </div>
-              <ul className="pager" style={{ display: "flex" }}>
-                <li
-                  className={`previous ${
-                    currRecPage && currRecPage <= 1 ? "hidden" : ""
-                  }`}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickPrevious}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickPrevious();
-                    }}
-                    tabIndex={0}
-                  >
-                    &larr; Previous
-                  </a>
-                </li>
-                <li
-                  className={`next ${
-                    currRecPage && currRecPage >= totalRecPages ? "hidden" : ""
-                  }`}
-                  style={{ marginLeft: "auto" }}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickNext}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickNext();
-                    }}
-                    tabIndex={0}
-                  >
-                    Next &rarr;
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <br />
+        <Helmet>
+          <title>{`User - ${user.name}`}</title>
+        </Helmet>
+        {errorMsg ? (
+          <div>
+            <h2>Error</h2>
+            <p>{errorMsg}</p>
           </div>
-          <BrainzPlayer
-            listens={recommendations}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-          />
-        </div>
+        ) : (
+          <>
+            <div
+              style={{
+                marginTop: "20px",
+              }}
+            >
+              <p>
+                Your raw tracks playlist was last updated on{" "}
+                <b>{lastUpdated}</b>.
+              </p>
+            </div>
+            <div className="row">
+              <div className="col-md-8">
+                <div>
+                  <div
+                    style={{
+                      height: 0,
+                      position: "sticky",
+                      top: "50%",
+                      zIndex: 1,
+                    }}
+                  >
+                    <Loader isLoading={loading} />
+                  </div>
+                  <div
+                    id="recommendations"
+                    ref={this.recommendationsTable}
+                    style={{ opacity: loading ? "0.4" : "1" }}
+                  >
+                    {recommendations.map((recommendation) => {
+                      const recordingMBID = getRecordingMBID(recommendation);
+                      const recommendationFeedbackComponent = (
+                        <RecommendationFeedbackComponent
+                          updateFeedbackCallback={this.updateFeedback}
+                          listen={recommendation}
+                          currentFeedback={this.getFeedbackForRecordingMbid(
+                            recordingMBID
+                          )}
+                        />
+                      );
+                      // Backwards compatible support for various timestamp property names
+                      let discoveryTimestamp:
+                        | string
+                        | number
+                        | undefined
+                        | null = recommendation.latest_listened_at;
+                      if (!discoveryTimestamp) {
+                        discoveryTimestamp = recommendation.listened_at_iso;
+                      }
+                      if (
+                        !discoveryTimestamp &&
+                        isInteger(recommendation.listened_at)
+                      ) {
+                        // Transfrom unix timestamp in JS milliseconds timestamp
+                        discoveryTimestamp = recommendation.listened_at * 1000;
+                      }
+                      const customTimestamp = discoveryTimestamp ? (
+                        <span
+                          className="listen-time"
+                          title={fullLocalizedDateFromTimestampOrISODate(
+                            discoveryTimestamp
+                          )}
+                        >
+                          Last listened at
+                          <br />
+                          {preciseTimestamp(discoveryTimestamp)}
+                        </span>
+                      ) : (
+                        <span className="listen-time">Not listened to yet</span>
+                      );
+                      return (
+                        <ListenCard
+                          key={`${getTrackName(recommendation)}-${getArtistName(
+                            recommendation
+                          )}`}
+                          customTimestamp={customTimestamp}
+                          showTimestamp
+                          showUsername={false}
+                          feedbackComponent={recommendationFeedbackComponent}
+                          listen={recommendation}
+                        />
+                      );
+                    })}
+                  </div>
+                  <ul className="pager" style={{ display: "flex" }}>
+                    <li
+                      className={`previous ${
+                        currRecPage && currRecPage <= 1 ? "hidden" : ""
+                      }`}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickPrevious}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickPrevious();
+                        }}
+                        tabIndex={0}
+                      >
+                        &larr; Previous
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
+                        currRecPage && currRecPage >= totalRecPages
+                          ? "hidden"
+                          : ""
+                      }`}
+                      style={{ marginLeft: "auto" }}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickNext}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickNext();
+                        }}
+                        tabIndex={0}
+                      >
+                        Next &rarr;
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <br />
+              </div>
+              <BrainzPlayer
+                listens={recommendations}
+                listenBrainzAPIBaseURI={APIService.APIBaseURI}
+                refreshSpotifyToken={APIService.refreshSpotifyToken}
+                refreshYoutubeToken={APIService.refreshYoutubeToken}
+                refreshSoundcloudToken={APIService.refreshSoundcloudToken}
+              />
+            </div>
+          </>
+        )}
       </div>
     );
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { recommendations, user } = reactProps;
-
-  const RecommendationsWithAlertNotifications = withAlertNotifications(
-    Recommendations
-  );
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <RecommendationsWithAlertNotifications
-            recommendations={recommendations}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function RecommendationsPageWrapper() {
+  const loaderData = useLoaderData() as RecommendationsLoaderData;
+  return <Recommendations {...loaderData} />;
+}

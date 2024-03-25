@@ -30,7 +30,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         """Tests the user info view and makes sure auth token is present there"""
         self.temporary_login(self.user['login_id'])
         response = self.client.get(self.custom_url_for('settings.index', path=''))
-        self.assertTemplateUsed('settings/index.html')
+        self.assertTemplateUsed('index.html')
         self.assert200(response)
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
@@ -39,7 +39,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         listens_importer.update_latest_listened_at(self.db_conn, self.user['id'], ExternalServiceType.LASTFM, val)
         self.temporary_login(self.user['login_id'])
         response = self.client.get(self.custom_url_for('settings.index', path='resetlatestimportts'))
-        self.assertTemplateUsed('settings/index.html')
+        self.assertTemplateUsed('index.html')
         self.assert200(response)
 
         response = self.client.post(self.custom_url_for('settings.reset_latest_import_timestamp'))

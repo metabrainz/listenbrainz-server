@@ -14,6 +14,7 @@ import * as React from "react";
 import { useContext } from "react";
 import { toast } from "react-toastify";
 import NiceModal from "@ebay/nice-modal-react";
+import { Link } from "react-router-dom";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPlaylistId, isPlaylistOwner } from "../utils";
@@ -91,9 +92,9 @@ function PlaylistMenu({
           message={
             <>
               {successTerm} to playlist&ensp;
-              <a href={`/playlist/${newPlaylistId}`}>
+              <Link to={`/playlist/${newPlaylistId}/`}>
                 {JSPFObject.playlist.title}
-              </a>
+              </Link>
             </>
           }
         />,

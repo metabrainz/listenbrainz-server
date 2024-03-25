@@ -46,7 +46,7 @@ def artist_similarity():
 def ai_brainz():
     """ Explore your love of Rick """
 
-    return render_template("explore/ai-brainz.html")
+    return render_template("index.html")
 
 
 @explore_bp.route("/lb-radio/", methods=["POST"])

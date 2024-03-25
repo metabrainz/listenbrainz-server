@@ -25,10 +25,10 @@ export default function SimilarUsers() {
             similarUsers.map((row, index) => (
               <tr>
                 <td>
-                  <Link to={`/user/${row[0]}`}>{row[0]}</Link>
+                  <Link to={`/user/${row[0]}/`}>{row[0]}</Link>
                 </td>
                 <td>
-                  <Link to={`/user/${row[1]}`}>{row[1]}</Link>
+                  <Link to={`/user/${row[1]}/`}>{row[1]}</Link>
                 </td>
                 <td>{row[2]}</td>
               </tr>

@@ -16,7 +16,7 @@ import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
 import { Socket, io } from "socket.io-client";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
@@ -745,13 +745,14 @@ export default class Listens extends React.Component<
                 {isCurrentUsersPage && (
                   <div className="empty-action">
                     Import{" "}
-                    <a href="/settings/import/">your listening history</a> from
-                    last.fm/libre.fm and track your listens by{" "}
-                    <a href="/settings/music-services/details/">
+                    <Link to="/settings/import/">your listening history</Link>{" "}
+                    from last.fm/libre.fm and track your listens by{" "}
+                    <Link to="/settings/music-services/details/">
                       connecting to a music streaming service
-                    </a>
-                    , or use <a href="/add-data/">one of these music players</a>{" "}
-                    to start submitting your listens.
+                    </Link>
+                    , or use{" "}
+                    <Link to="/add-data/">one of these music players</Link> to
+                    start submitting your listens.
                   </div>
                 )}
               </div>
@@ -811,15 +812,15 @@ export default class Listens extends React.Component<
                       </button>
                     </li>
                     <li>
-                      <a href="/settings/music-services/details/">
+                      <Link to="/settings/music-services/details/">
                         Connect music services
-                      </a>
+                      </Link>
                     </li>
                     <li>
-                      <a href="/settings/import/">Import your listens</a>
+                      <Link to="/settings/import/">Import your listens</Link>
                     </li>
                     <li>
-                      <a href="/add-data/">Submit from music players</a>
+                      <Link to="/add-data/">Submit from music players</Link>
                     </li>
                   </ul>
                 </div>

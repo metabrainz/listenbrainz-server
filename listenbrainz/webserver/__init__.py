@@ -246,7 +246,8 @@ def create_web_app(debug=None):
                 or request.path == url_for('settings.index', path='export') \
                 or request.path == url_for('login.logout') \
                 or request.path.startswith('/static') \
-                or request.path.startswith('/1'):
+                or request.path.startswith('/1') \
+                or request.method in ['OPTIONS', 'POST']:
             return
         # otherwise if user is logged in and hasn't agreed to gdpr,
         # redirect them to agree to terms page.
@@ -264,6 +265,16 @@ def create_api_compat_app(debug=None):
     """
 
     app = create_app(debug=debug)
+
+    import listenbrainz.webserver.static_manager as static_manager
+    static_manager.read_manifest()
+    app.static_folder = '/static'
+
+    from listenbrainz.webserver.utils import get_global_props
+    app.context_processor(lambda: dict(
+        get_static_path=static_manager.get_static_path,
+        global_props=get_global_props()
+    ))
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp

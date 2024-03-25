@@ -3,6 +3,7 @@ import * as React from "react";
 import { RenderOptions, render } from "@testing-library/react";
 import { ToastContainer } from "react-toastify";
 import { isString } from "lodash";
+import { BrowserRouter } from "react-router-dom";
 import APIService from "../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -52,7 +53,7 @@ export const renderWithProviders = (
     return (
       <GlobalAppContext.Provider value={globalProps}>
         <ToastContainer />
-        {children}
+        <BrowserRouter>{children}</BrowserRouter>
       </GlobalAppContext.Provider>
     );
   }

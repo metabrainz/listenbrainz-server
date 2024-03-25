@@ -1,9 +1,10 @@
 import * as React from "react";
 
 import { Navigate, Outlet } from "react-router-dom";
+import type { RouteObject } from "react-router-dom";
 import RouteLoader from "../../utils/Loader";
 
-const getUserRoutes = () => {
+const getUserRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/user/:username/",

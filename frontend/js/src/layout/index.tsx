@@ -1,11 +1,21 @@
 import * as React from "react";
 import { Outlet, ScrollRestoration } from "react-router-dom";
 
-export default function Layout() {
+import Footer from "../components/Footer";
+import Navbar from "../components/Navbar";
+
+export default function Layout({ children }: { children?: React.ReactNode }) {
   return (
     <>
       <ScrollRestoration />
-      <Outlet />
+      <Navbar />
+      <div className="container-react">
+        <div className="container-react-main">
+          <Outlet />
+          {children}
+        </div>
+        <Footer />
+      </div>
     </>
   );
 }

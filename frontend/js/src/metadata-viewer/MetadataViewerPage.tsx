@@ -1,15 +1,10 @@
 /* eslint-disable no-console */
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 import { toast } from "react-toastify";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
 import { io } from "socket.io-client";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
-import { getPageProps } from "../utils/utils";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import MetadataViewer from "./components/MetadataViewer";
 import { ToastMsg } from "../notifications/Notifications";
 
@@ -112,35 +107,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   );
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const { playing_now } = reactProps;
-
-  const PlayingNowPageWithAlertNotifications = withAlertNotifications(
-    PlayingNowPage
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <PlayingNowPageWithAlertNotifications playingNow={playing_now} />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function PlayingNowPageWrapper() {
+  const { playingNow } = useLoaderData() as PlayingNowPageProps;
+  return <PlayingNowPage playingNow={playingNow} />;
+}

@@ -249,11 +249,12 @@ export default class YearInMusic extends React.Component<
           </h3>
           <p>
             Check out how you can submit listens by{" "}
-            <a href="/settings/music-services/details/">
+            <Link to="/settings/music-services/details/">
               connecting a music service
-            </a>{" "}
-            or <a href="/settings/import/">importing your listening history</a>,
-            and come back next year!
+            </Link>{" "}
+            or{" "}
+            <Link to="/settings/import/">importing your listening history</Link>
+            , and come back next year!
           </p>
         </div>
       );
@@ -468,9 +469,9 @@ export default class YearInMusic extends React.Component<
               Double click on any song to start playing it — we will do our best
               to find a matching song to play. If you have a Spotify pro
               account, we recommend{" "}
-              <a href="/settings/music-services/details/">
+              <Link to="/settings/music-services/details/">
                 connecting your account
-              </a>{" "}
+              </Link>{" "}
               for a better playback experience.
             </p>
             <p>
@@ -572,17 +573,13 @@ export default class YearInMusic extends React.Component<
                           alt={release.release_name}
                         />
                         <div title={release.release_name}>
-                          <a
-                            href={
-                              release.release_mbid
-                                ? `/release/${release.release_mbid}/`
-                                : undefined
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {release.release_name}
-                          </a>
+                          {release.release_mbid ? (
+                            <Link to={`/release/${release.release_mbid}/`}>
+                              {release.release_name}
+                            </Link>
+                          ) : (
+                            release.release_name
+                          )}
                           <div className="small text-muted">
                             {release.artist_name}
                           </div>
@@ -914,13 +911,9 @@ export default class YearInMusic extends React.Component<
                         id="top-discoveries"
                       >
                         <h3 className="text-center">
-                          <a
-                            href={`/playlist/${topLevelPlaylist.mbid}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
+                          <Link to={`/playlist/${topLevelPlaylist.mbid}/`}>
                             {topLevelPlaylist.jspf?.playlist?.title}
-                          </a>
+                          </Link>
                           {topLevelPlaylist.description && (
                             <div className="small mt-15">
                               {topLevelPlaylist.description}
@@ -956,14 +949,12 @@ export default class YearInMusic extends React.Component<
                             }
                           )}
                           <hr />
-                          <a
-                            href={`/playlist/${topLevelPlaylist.mbid}`}
+                          <Link
+                            to={`/playlist/${topLevelPlaylist.mbid}/`}
                             className="btn btn-info btn-block"
-                            target="_blank"
-                            rel="noopener noreferrer"
                           >
                             See the full playlist…
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     );

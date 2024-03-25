@@ -10,7 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isUndefined, set, throttle } from "lodash";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
@@ -201,7 +201,7 @@ export default class RecommendationsPage extends React.Component<
       toast.success(
         <>
           Duplicated to playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+          <Link to={`/playlist/${newPlaylistId}/`}>{newPlaylistId}</Link>
         </>
       );
     } catch (error) {

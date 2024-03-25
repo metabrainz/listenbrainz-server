@@ -3,6 +3,7 @@ import { shallow, mount, ReactWrapper } from "enzyme";
 import * as timeago from "time-ago";
 import AsyncSelect from "react-select/async";
 import { act } from "react-dom/test-utils";
+import { BrowserRouter } from "react-router-dom";
 import PlaylistPage, {
   PlaylistPageProps,
   PlaylistPageState,
@@ -50,12 +51,17 @@ describe("PlaylistPage", () => {
   it("renders correctly", () => {
     // Mock timeago (returns an elapsed time string) otherwise snapshot won't match
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
-      wrappingComponent: GlobalAppContext.Provider,
-      wrappingComponentProps: {
-        value: GlobalContextMock,
-      },
-    });
+    const wrapper = mount(
+      <BrowserRouter>
+        <PlaylistPage {...props} />
+      </BrowserRouter>,
+      {
+        wrappingComponent: GlobalAppContext.Provider,
+        wrappingComponentProps: {
+          value: GlobalContextMock,
+        },
+      }
+    );
     expect(wrapper.find("#playlist")).toHaveLength(1);
     const h1 = wrapper.find("h1");
     expect(h1).toHaveLength(1);
@@ -64,12 +70,17 @@ describe("PlaylistPage", () => {
   });
 
   it("hides exportPlaylistToSpotify button if playlist permissions are absent", () => {
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
-      wrappingComponent: GlobalAppContext.Provider,
-      wrappingComponentProps: {
-        value: GlobalContextMock,
-      },
-    });
+    const wrapper = mount(
+      <BrowserRouter>
+        <PlaylistPage {...props} />
+      </BrowserRouter>,
+      {
+        wrappingComponent: GlobalAppContext.Provider,
+        wrappingComponentProps: {
+          value: GlobalContextMock,
+        },
+      }
+    );
     expect(wrapper.find("#exportPlaylistToSpotify")).toHaveLength(0);
   });
 
@@ -86,12 +97,17 @@ describe("PlaylistPage", () => {
         ] as Array<SpotifyPermission>,
       },
     };
-    const wrapper = mount<PlaylistPage>(<PlaylistPage {...props} />, {
-      wrappingComponent: GlobalAppContext.Provider,
-      wrappingComponentProps: {
-        value: alternativeContextMock,
-      },
-    });
+    const wrapper = mount(
+      <BrowserRouter>
+        <PlaylistPage {...props} />
+      </BrowserRouter>,
+      {
+        wrappingComponent: GlobalAppContext.Provider,
+        wrappingComponentProps: {
+          value: alternativeContextMock,
+        },
+      }
+    );
     expect(wrapper.find("#exportPlaylistToSpotify")).toHaveLength(1);
   });
 });

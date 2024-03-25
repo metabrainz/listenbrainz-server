@@ -18,7 +18,7 @@ login_bp = Blueprint('login', __name__)
 @web_listenstore_needed
 @login_forbidden
 def index():
-    return render_template('login/login.html')
+    return render_template('index.html')
 
 
 @login_bp.route('/musicbrainz/')
@@ -65,7 +65,7 @@ def musicbrainz_post():
             flash.error(no_email_warning + 'before creating a ListenBrainz account. ' + blog_link)
     else:
         flash.error("Login failed.")
-    return redirect(url_for('index.index'))
+    return redirect(url_for('index.index_pages', path=''))
 
 
 @login_bp.route('/logout/')
@@ -73,4 +73,4 @@ def musicbrainz_post():
 def logout():
     session.clear()
     logout_user()
-    return redirect(url_for('index.index'))
+    return redirect(url_for('index.index_pages', path=''))

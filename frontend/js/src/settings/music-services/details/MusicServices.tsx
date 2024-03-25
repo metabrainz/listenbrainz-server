@@ -48,10 +48,9 @@ export default function MusicServices() {
           />
         );
 
-        setPermissions((prevState) => ({
-          ...prevState,
-          [serviceName]: newValue,
-        }));
+        // Refresh the page to update the global state
+        // TODO: Update the global state without refreshing the page (use context)
+        window.location.reload();
         return;
       }
 

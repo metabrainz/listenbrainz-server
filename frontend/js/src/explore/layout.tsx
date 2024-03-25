@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 
 type NavbarLink = { to: string; label: string };
 
@@ -17,21 +17,13 @@ const links: NavbarLink[] = [
   { to: "year-in-music/2022/", label: "Year in Music 2022" },
   { to: "year-in-music/2021/", label: "Year in Music 2021" },
   { to: "year-in-music/", label: "Year in Music 2023" },
+  { to: "ai-brainz/", label: "AI Brainz" },
 ];
 
 function ExploreLayout() {
   const location = useLocation();
-  const [activeLabel, setActiveLabel] = React.useState<string>("");
-
-  const getActiveLabel = React.useCallback((path: string) => {
-    const newActiveLabel = links.find((link) => path.includes(link.to))?.label;
-    return newActiveLabel;
-  }, []);
-
-  React.useEffect(() => {
-    const newActiveLabel = getActiveLabel(location.pathname);
-    setActiveLabel(newActiveLabel || "");
-  }, [location.pathname, getActiveLabel]);
+  const activeLabel = links.find((link) => location.pathname.includes(link.to))
+    ?.label;
 
   return (
     <>

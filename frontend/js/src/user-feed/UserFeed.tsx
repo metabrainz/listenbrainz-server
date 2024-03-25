@@ -24,6 +24,7 @@ import { reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
 import { Helmet } from "react-helmet";
 
+import { Link } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
@@ -580,22 +581,22 @@ export default class UserFeedPage extends React.Component<
         return (
           <span className="event-description-text">
             You are now following{" "}
-            <a href={`/user/${user_name_1}`}>{user_name_1}</a>
+            <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
           </span>
         );
       }
       if (currentUserFollowed) {
         return (
           <span className="event-description-text">
-            <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following
-            you
+            <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
+            following you
           </span>
         );
       }
       return (
         <span className="event-description-text">
-          <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following{" "}
-          <a href={`/user/${user_name_1}`}>{user_name_1}</a>
+          <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
+          following <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
         </span>
       );
     }
@@ -617,13 +618,7 @@ export default class UserFeedPage extends React.Component<
       user_name === currentUser.name ? (
         "You"
       ) : (
-        <a
-          href={`/user/${user_name}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {user_name}
-        </a>
+        <Link to={`/user/${user_name}/`}>{user_name}</Link>
       );
     return (
       <span className="event-description-text">

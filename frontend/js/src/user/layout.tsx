@@ -46,7 +46,7 @@ function UserFeedLayout() {
               <Link to={userName ? `/user/${userName}/` : "#"}>{userName}</Link>
             ) : (
               <div>
-                <a href="/login">Sign in</a>
+                <Link to="/login/">Sign in</Link>
               </div>
             )}
           </li>

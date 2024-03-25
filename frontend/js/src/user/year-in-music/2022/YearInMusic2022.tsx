@@ -351,12 +351,14 @@ export default class YearInMusic extends React.Component<
             </h3>
             <p className="center-p">
               Check out how you can submit listens by{" "}
-              <a href="/settings/music-services/details/">
+              <Link to="/settings/music-services/details/">
                 connecting a music service
-              </a>{" "}
+              </Link>{" "}
               or{" "}
-              <a href="/settings/import/">importing your listening history</a>,
-              and come back next year!
+              <Link to="/settings/import/">
+                importing your listening history
+              </Link>
+              , and come back next year!
             </p>
           </div>
         </div>
@@ -598,17 +600,13 @@ export default class YearInMusic extends React.Component<
                             />
                             <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                             <div title={release.release_name}>
-                              <a
-                                href={
-                                  release.release_mbid
-                                    ? `/release/${release.release_mbid}/`
-                                    : undefined
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {release.release_name}
-                              </a>
+                              {release.release_mbid ? (
+                                <Link to={`/release/${release.release_mbid}/`}>
+                                  {release.release_name}
+                                </Link>
+                              ) : (
+                                release.release_name
+                              )}
                               <div className="small text-muted">
                                 {release.artist_name}
                               </div>

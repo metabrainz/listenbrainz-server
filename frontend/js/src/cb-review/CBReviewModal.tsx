@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { kebabCase, lowerCase } from "lodash";
+import { Link } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
@@ -389,12 +390,12 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           <br />
           <br />
           You can connect to your CritiqueBrainz account by visiting the
-          <a
-            href={`${window.location.origin}/settings/music-services/details/`}
+          <Link
+            to={`${window.location.origin}/settings/music-services/details/`}
           >
             {" "}
             music services page.
-          </a>
+          </Link>
         </div>
       );
     }
@@ -576,14 +577,14 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
     /* User hasn't logged into CB yet: prompt them to authenticate */
     if (!hasPermissions)
       return (
-        <a
-          href={`${window.location.origin}/settings/music-services/details/`}
+        <Link
+          to={`${window.location.origin}/settings/music-services/details/`}
           className="btn btn-success"
           role="button"
         >
           {" "}
           Connect To CritiqueBrainz{" "}
-        </a>
+        </Link>
       );
 
     /* Submit review button */

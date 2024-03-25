@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Navigate, Outlet, Params } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+import type { RouteObject } from "react-router-dom";
 
-const getRedirectRoutes = (musicbrainzID?: string) => {
+const getRedirectRoutes = (musicbrainzID?: string): RouteObject[] => {
   // Handle redirects if the user is not logged in
   if (!musicbrainzID) {
     return [];

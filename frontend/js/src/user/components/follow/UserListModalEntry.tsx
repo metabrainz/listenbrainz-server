@@ -23,13 +23,7 @@ function UserListModalEntry(props: UserListModalEntryProps) {
   return (
     <div key={user.name}>
       <div>
-        <Link
-          to={`/user/${user.name}/`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {user.name}
-        </Link>
+        <Link to={`/user/${user.name}/`}>{user.name}</Link>
         {isUserLoggedIn && mode === "similar-users" && (
           <SimilarityScore
             similarityScore={(user as SimilarUser).similarityScore}
