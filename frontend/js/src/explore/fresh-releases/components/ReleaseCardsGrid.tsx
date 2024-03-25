@@ -7,6 +7,7 @@ type ReleaseCardReleaseProps = {
   filteredList: Array<FreshReleaseItem>;
   displaySettings: DisplaySettings;
   order: string;
+  direction: string;
 };
 
 const getKeyForOrder = (
@@ -42,7 +43,7 @@ const getMapping = (
 };
 
 export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
-  const { filteredList, displaySettings, order } = props;
+  const { filteredList, displaySettings, order, direction } = props;
 
   const releaseMapping = React.useMemo(() => getMapping(order, filteredList), [
     order,
@@ -62,9 +63,14 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     return releaseKey;
   };
 
+  const mappedEntries =
+    direction === "descend"
+      ? Array.from(releaseMapping?.entries()).reverse()
+      : Array.from(releaseMapping?.entries());
+
   return (
     <>
-      {Array.from(releaseMapping?.entries()).map(([releaseKey, releases]) => (
+      {mappedEntries.map(([releaseKey, releases]) => (
         <React.Fragment key={`${releaseKey}-container`}>
           <div className="release-card-grid-title" key={`${releaseKey}-title`}>
             {getReleaseCardGridTitle(releaseKey, order)}

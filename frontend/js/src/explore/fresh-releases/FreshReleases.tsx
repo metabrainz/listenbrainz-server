@@ -52,6 +52,19 @@ const SortOptions = {
 
 export type SortOption = typeof SortOptions[keyof typeof SortOptions]["value"];
 
+const SortDirections = {
+  ascend: {
+    value: "ascend",
+    label: "Ascending",
+  },
+  descend: {
+    value: "descend",
+    label: "Descending",
+  },
+};
+
+export type SortDirection = typeof SortDirections[keyof typeof SortDirections]["value"];
+
 export const filterRangeOptions = {
   week: {
     value: 7,
@@ -105,6 +118,9 @@ export default function FreshReleases() {
     true
   );
   const [sort, setSort] = React.useState<SortOption>("release_date");
+  const [sortDirection, setSortDirection] = React.useState<SortDirection>(
+    "ascend"
+  );
 
   const releaseCardGridRef = React.useRef(null);
 
@@ -257,6 +273,23 @@ export default function FreshReleases() {
                   ))}
                 </select>
               </div>
+              <span>Direction:</span>{" "}
+              <div className="input-group">
+                <select
+                  id="fresh-releases-sort-direction-select"
+                  className="form-control"
+                  value={sortDirection}
+                  onChange={(event) =>
+                    setSortDirection(event.target.value as SortDirection)
+                  }
+                >
+                  {Object.entries(SortDirections).map(([_, direction]) => (
+                    <option value={direction.value} key={direction.value}>
+                      {direction.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
           {isLoading ? (
@@ -298,13 +331,18 @@ export default function FreshReleases() {
                   filteredList={filteredList}
                   displaySettings={displaySettings}
                   order={sort}
+                  direction={sortDirection}
                 />
               )}
             </div>
           )}
         </div>
         {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 && (
-          <ReleaseTimeline releases={filteredList} order={sort} />
+          <ReleaseTimeline
+            releases={filteredList}
+            order={sort}
+            direction={sortDirection}
+          />
         )}
         <ReleaseFilters
           allFilters={allFilters}
