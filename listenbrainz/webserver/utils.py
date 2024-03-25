@@ -70,7 +70,7 @@ def get_global_props():
         "critiquebrainz": get_current_critiquebrainz_user(),
         "musicbrainz": get_current_musicbrainz_user(),
         "soundcloud": get_current_soundcloud_user(),
-        "apple": get_current_apple_music_user(),
+        "appleMusic": get_current_apple_music_user(),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
         "user_preferences": {},
     }

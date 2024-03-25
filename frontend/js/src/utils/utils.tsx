@@ -543,7 +543,7 @@ type GlobalAppProps = {
   soundcloud?: SoundCloudUser;
   critiquebrainz?: MetaBrainzProjectUser;
   musicbrainz?: MetaBrainzProjectUser;
-  apple?: AppleMusicUser;
+  appleMusic?: AppleMusicUser;
   user_preferences?: UserPreferences;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
@@ -590,7 +590,7 @@ const getPageProps = async (): Promise<{
       soundcloud,
       critiquebrainz,
       musicbrainz,
-      apple,
+      appleMusic,
       sentry_traces_sample_rate,
       sentry_dsn,
     } = globalReactProps;
@@ -617,7 +617,7 @@ const getPageProps = async (): Promise<{
       youtubeAuth: youtube,
       soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
-      appleAuth: apple,
+      appleAuth: appleMusic,
       musicbrainzAuth: {
         ...musicbrainz,
         refreshMBToken: async function refreshMBToken() {

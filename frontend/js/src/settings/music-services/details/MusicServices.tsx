@@ -11,6 +11,7 @@ type MusicServicesLoaderData = {
   current_spotify_permissions: string;
   current_critiquebrainz_permissions: string;
   current_soundcloud_permissions: string;
+  current_apple_permissions: string;
 };
 
 export default function MusicServices() {
@@ -20,6 +21,7 @@ export default function MusicServices() {
     spotify: loaderData.current_spotify_permissions,
     critiquebrainz: loaderData.current_critiquebrainz_permissions,
     soundcloud: loaderData.current_soundcloud_permissions,
+    appleMusic: loaderData.current_apple_permissions,
   });
 
   const handlePermissionChange = async (
@@ -227,6 +229,38 @@ export default function MusicServices() {
                   value="disable"
                   title="Disable"
                   details="You will not be able to listen to music on ListenBrainz using SoundCloud."
+                  handlePermissionChange={handlePermissionChange}
+                />
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel panel-default">
+          <div className="panel-heading">
+            <h3 className="panel-title">Apple Music</h3>
+          </div>
+          <div className="panel-body">
+            <p>
+              Connect to your Apple Music account to play music on ListenBrainz.
+            </p>
+            <br />
+            <div className="music-service-selection">
+              <form>
+                <ServicePermissionButton
+                  service="apple"
+                  current={permissions.appleMusic}
+                  value="listen"
+                  title="Play music on ListenBrainz"
+                  details="Connect to your Apple Music account to play music using Apple Music on ListenBrainz."
+                  handlePermissionChange={handlePermissionChange}
+                />
+                <ServicePermissionButton
+                  service="apple"
+                  current={permissions.appleMusic}
+                  value="disable"
+                  title="Disable"
+                  details="You will not be able to listen to music on ListenBrainz using Apple Music."
                   handlePermissionChange={handlePermissionChange}
                 />
               </form>
