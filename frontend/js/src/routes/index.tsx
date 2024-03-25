@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
 import type { RouteObject } from "react-router-dom";
-import RouteLoader from "../utils/Loader";
+import RouteLoader, { RouteQueryLoader } from "../utils/Loader";
 
 const getIndexRoutes = (): RouteObject[] => {
   const routes = [
@@ -15,7 +15,7 @@ const getIndexRoutes = (): RouteObject[] => {
             const HomePage = await import("../home/Homepage");
             return { Component: HomePage.HomePageWrapper };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("home"),
         },
         {
           path: "login/",
@@ -76,7 +76,7 @@ const getIndexRoutes = (): RouteObject[] => {
             const SearchResults = await import("../search/UserSearch");
             return { Component: SearchResults.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("search-users", true),
         },
         {
           path: "playlist/:playlistID/",
@@ -168,9 +168,9 @@ const getIndexRoutes = (): RouteObject[] => {
                 const RecentListens = await import("../recent/RecentListens");
                 return {
                   Component: RecentListens.RecentListensWrapper,
-                  loader: RecentListens.RecentListensLoader,
                 };
               },
+              loader: RouteLoader,
             },
           ],
         },

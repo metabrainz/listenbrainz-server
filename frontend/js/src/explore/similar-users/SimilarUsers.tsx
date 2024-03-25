@@ -1,9 +1,17 @@
+import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { Helmet } from "react-helmet";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { RouteQuery } from "../../utils/Loader";
 
 export default function SimilarUsers() {
-  const { similarUsers } = useLoaderData() as { similarUsers: string[][] };
+  const location = useLocation();
+  const {
+    data: { similarUsers },
+  } = useQuery(RouteQuery(["similar-users"], location.pathname)) as {
+    data: { similarUsers: string[][] };
+  };
+
   return (
     <div id="similar-users">
       <Helmet>

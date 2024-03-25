@@ -27,7 +27,8 @@ import {
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
@@ -46,6 +47,7 @@ import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../components/follow/FollowButton";
 import SEO, { YIMYearMetaTags } from "../SEO";
+import { RouteQuery } from "../../../utils/Loader";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -1508,7 +1510,14 @@ export default class YearInMusic extends React.Component<
 }
 
 export function YearInMusicWrapper() {
-  const props = useLoaderData() as YearInMusicLoaderData;
-  const { user, data: yearInMusicData } = props;
+  const location = useLocation();
+  const params = useParams();
+  const {
+    data: { user, data: yearInMusicData },
+  } = useQuery(
+    RouteQuery(["year-in-music-2023", params], location.pathname)
+  ) as {
+    data: YearInMusicLoaderData;
+  };
   return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
 }

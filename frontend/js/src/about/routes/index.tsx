@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router-dom";
-import RouteLoader from "../../utils/Loader";
+import { RouteQueryLoader } from "../../utils/Loader";
 
 const getAboutRoutes = (): RouteObject[] => {
   const routes = [
@@ -26,7 +26,7 @@ const getAboutRoutes = (): RouteObject[] => {
         },
         {
           path: "current-status/",
-          loader: RouteLoader,
+          loader: RouteQueryLoader("current-status"),
           lazy: async () => {
             const CurrentStatus = await import(
               "../current-status/CurrentStatus"

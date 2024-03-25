@@ -1,5 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import React from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { RouteQuery } from "../../utils/Loader";
 
 type CurrentStatusLoaderData = {
   listenCount: number;
@@ -13,12 +15,12 @@ type CurrentStatusLoaderData = {
 };
 
 export default function CurrentStatus() {
+  const location = useLocation();
   const {
-    userCount,
-    listenCount,
-    listenCountsPerDay,
-    load,
-  } = useLoaderData() as CurrentStatusLoaderData;
+    data: { userCount, listenCount, listenCountsPerDay, load },
+  } = useQuery(RouteQuery(["current-status"], location.pathname)) as {
+    data: CurrentStatusLoaderData;
+  };
 
   return (
     <>
