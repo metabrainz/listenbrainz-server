@@ -2,7 +2,11 @@
 import * as React from "react";
 import { get as _get, isString } from "lodash";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
-import { getArtistName, getTrackName, loadScriptAsync } from "../../utils/utils";
+import {
+  getArtistName,
+  getTrackName,
+  loadScriptAsync,
+} from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 
 export type AppleMusicPlayerProps = DataSourceProps & {
@@ -48,7 +52,7 @@ export default class AppleMusicPlayer
   public name = "Apple Music";
   public domainName = "music.apple.com";
   public icon = faApple;
-\
+
   private readonly _boundOnPlaybackStateChange: (
     event: MusicKit.PlayerPlaybackState
   ) => void;
@@ -259,7 +263,6 @@ export default class AppleMusicPlayer
     } else {
       const userToken = await this.appleMusicPlayer.authorize();
       this.appleMusicPlayer.musicUserToken = userToken;
-
     }
 
     this.appleMusicPlayer?.addEventListener(

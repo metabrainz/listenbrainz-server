@@ -925,7 +925,6 @@ export default class BrainzPlayer extends React.Component<
                 AppleMusicPlayer
             }
             appleMusicUser={appleAuth}
-            listenBrainzToken={currentUser?.auth_token || ""}
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.appleMusicPlayer}
             playerPaused={playerPaused}
