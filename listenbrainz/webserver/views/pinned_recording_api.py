@@ -329,3 +329,49 @@ def get_current_pin_for_user(user_name):
         "pinned_recording": pin,
         "user_name": user_name,
     })
+
+
+@pinned_recording_api_bp.route("/pin/update/<row_id>", methods=["POST", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def update_blurb_content_pinned_recording(row_id):
+    """
+    Updates the blurb content of a pinned recording for the user. A user token (found on  https://listenbrainz.org/settings/)
+    must be provided in the Authorization header! Each request should contain only one pinned recording item in the payload.
+
+    The format of the JSON to be POSTed to this endpoint should look like the following:
+
+    .. code-block:: json
+
+        {
+            "blurb_content": "Wow..",
+        }
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: feedback accepted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    validate_auth_header()
+
+    data = request.json
+    try:
+        row_id = int(row_id)
+    except ValueError:
+        log_raise_400("Invalid row_id provided")
+    if "blurb_content" not in data:
+        log_raise_400("JSON document must contain blurb_content", data)
+
+    try:
+        blurb_content = data["blurb_content"]
+    except ValidationError as e:
+        log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
+
+    try:
+        status = db_pinned_rec.update_comment(db_conn, row_id, blurb_content)
+    except Exception as e:
+        current_app.logger.error("Error while inserting pinned track record: {}".format(e))
+        raise APIInternalServerError("Something went wrong. Please try again.")
+
+    return jsonify({"status": status})

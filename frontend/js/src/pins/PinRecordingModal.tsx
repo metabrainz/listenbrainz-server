@@ -14,6 +14,7 @@ import { ToastMsg } from "../notifications/Notifications";
 export type PinRecordingModalProps = {
   recordingToPin: Listen;
   onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
+  rowId?: number;
 };
 
 export const maxBlurbContentLength = 280;
@@ -28,8 +29,13 @@ export const maxBlurbContentLength = 280;
  */
 
 export default NiceModal.create(
-  ({ recordingToPin, onSuccessfulPin }: PinRecordingModalProps) => {
+  ({
+    recordingToPin,
+    onSuccessfulPin,
+    rowId,
+  }: PinRecordingModalProps) => {
     const modal = useModal();
+    const isUpdate = Boolean(rowId);
     const [blurbContent, setBlurbContent] = React.useState("");
 
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
@@ -111,7 +117,30 @@ export default NiceModal.create(
       },
       [recordingToPin, blurbContent]
     );
-
+    const updatePinnedRecordingComment = React.useCallback(
+      async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        try {
+          if (rowId && recordingToPin && currentUser?.auth_token) {
+            await APIService.updatePinRecordingBlurbContent(
+              currentUser.auth_token,
+              rowId,
+              blurbContent
+            );
+            toast.success(
+              <ToastMsg
+                title="Comment updated" message=''/>,
+              {
+                toastId: "pin-update-success",
+              }
+            );
+          }
+        } catch (error) {
+          handleError(error, "Error while updating pinned recording");
+        }
+      },
+      [recordingToPin, blurbContent]
+    );
     const { track_name, artist_name } = recordingToPin.track_metadata;
 
     const unpin_time_ms: number =
@@ -188,10 +217,12 @@ export default NiceModal.create(
               <button
                 type="submit"
                 className="btn btn-success"
-                onClick={submitPinRecording}
+                onClick={
+                  isUpdate ? updatePinnedRecordingComment : submitPinRecording
+                }
                 data-dismiss="modal"
               >
-                Pin track
+                {isUpdate ? "Update comment" : "Pin track"}
               </button>
             </div>
           </form>
