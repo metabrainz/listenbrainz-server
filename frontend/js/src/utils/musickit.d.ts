@@ -139,6 +139,10 @@ declare namespace MusicKit {
      * authenticated and authorized the app.
      */
     authorize(): Promise<string>;
+    /**
+     * Unauthorizes the app for the current user.
+     */
+    unauthorize(): Promise<void>;
 
     pause(): void;
 

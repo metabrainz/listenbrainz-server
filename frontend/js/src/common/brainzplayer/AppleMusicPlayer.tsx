@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import * as React from "react";
 import { get as _get, isString } from "lodash";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
@@ -18,12 +17,68 @@ export type AppleMusicPlayerState = {
   progressMs: number;
   durationMs: number;
 };
-
+export async function loadAppleMusicKit(): Promise<void> {
+  if (!window.MusicKit) {
+    loadScriptAsync(
+      document,
+      "https://js-cdn.music.apple.com/musickit/v3/musickit.js"
+    );
+    return new Promise((resolve) => {
+      window.addEventListener("musickitloaded", () => {
+        resolve();
+      });
+    });
+  }
+  return Promise.resolve();
+}
+export async function setupAppleMusicKit(developerToken?: string) {
+  const { MusicKit } = window;
+  if (!MusicKit) {
+    throw new Error("Could not load Apple's MusicKit library");
+  }
+  if (!developerToken) {
+    throw new Error(
+      "Cannot configure Apple MusikKit without a valid developer token"
+    );
+  }
+  await MusicKit.configure({
+    developerToken,
+    debug: true,
+    app: {
+      name: "ListenBrainz",
+      build: "latest",
+    },
+  });
+  return MusicKit.getInstance();
+}
+export async function authorizeWithAppleMusic(
+  musicKit: MusicKit.MusicKitInstance,
+  setToken = true
+): Promise<string | null> {
+  const musicUserToken = await musicKit.authorize();
+  if (musicUserToken && setToken) {
+    try {
+      // push token to LB server
+      const request = await fetch("/settings/music-services/apple/set-token", {
+        method: "POST",
+        body: musicUserToken,
+      });
+      if (!request.ok) {
+        const err = request.json();
+        throw err;
+      }
+    } catch (error) {
+      console.debug("Could not set user's Apple Music token:", error);
+    }
+  }
+  return musicUserToken ?? null;
+}
 export default class AppleMusicPlayer
   extends React.Component<AppleMusicPlayerProps, AppleMusicPlayerState>
   implements DataSourceType {
   static hasPermissions = (appleMusicUser?: AppleMusicUser) => {
-    return Boolean(appleMusicUser?.developer_token);
+    return true;
+    // return Boolean(appleMusicUser?.music_user_token);
   };
 
   static isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
@@ -53,22 +108,6 @@ export default class AppleMusicPlayer
   public domainName = "music.apple.com";
   public icon = faApple;
 
-  private readonly _boundOnPlaybackStateChange: (
-    event: MusicKit.PlayerPlaybackState
-  ) => void;
-
-  private readonly _boundOnPlaybackTimeChange: (
-    event: MusicKit.PlayerPlaybackTime
-  ) => void;
-
-  private readonly _boundOnPlaybackDurationChange: (
-    event: MusicKit.PlayerDurationTime
-  ) => void;
-
-  private readonly _boundOnNowPlayingItemChange: (
-    event: MusicKit.NowPlayingItem
-  ) => void;
-
   appleMusicPlayer?: AppleMusicPlayerType;
 
   constructor(props: AppleMusicPlayerProps) {
@@ -80,21 +119,12 @@ export default class AppleMusicPlayer
 
     // Do an initial check of whether the user wants to link Apple Music before loading the SDK library
     if (AppleMusicPlayer.hasPermissions(props.appleMusicUser)) {
-      window.addEventListener("musickitloaded", this.connectAppleMusicPlayer);
-      loadScriptAsync(
-        document,
-        "https://js-cdn.music.apple.com/musickit/v3/musickit.js"
-      );
+      loadAppleMusicKit().then(() => {
+        this.connectAppleMusicPlayer();
+      });
     } else {
       this.handleAccountError();
     }
-
-    this._boundOnPlaybackStateChange = this.onPlaybackStateChange.bind(this);
-    this._boundOnPlaybackTimeChange = this.onPlaybackTimeChange.bind(this);
-    this._boundOnPlaybackDurationChange = this.onPlaybackDurationChange.bind(
-      this
-    );
-    this._boundOnNowPlayingItemChange = this.onNowPlayingItemChange.bind(this);
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
@@ -117,12 +147,12 @@ export default class AppleMusicPlayer
       handleError("Could not play AppleMusic track", "Playback error");
       return;
     }
-    if (!this.appleMusicPlayer || !this.appleMusicPlayer.isAuthorized) {
+    if (!this.appleMusicPlayer || !this.appleMusicPlayer?.isAuthorized) {
       await this.connectAppleMusicPlayer();
+      this.playAppleMusicId(appleMusicId, retryCount);
       return;
     }
     try {
-      await this.appleMusicPlayer.authorize();
       await this.appleMusicPlayer.setQueue({
         song: appleMusicId,
         startPlaying: true,
@@ -138,6 +168,8 @@ export default class AppleMusicPlayer
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
     if (!this.appleMusicPlayer) {
+      await this.connectAppleMusicPlayer();
+      await this.searchAndPlayTrack(listen);
       return;
     }
     const trackName = getTrackName(listen);
@@ -187,7 +219,6 @@ export default class AppleMusicPlayer
   };
 
   stopAndClear = (): void => {
-    // eslint-disable-next-line react/no-unused-state
     this.setState({ currentAppleMusicTrack: undefined });
     if (this.appleMusicPlayer) {
       this.appleMusicPlayer.pause();
@@ -222,64 +253,69 @@ export default class AppleMusicPlayer
     }
     this.appleMusicPlayer?.removeEventListener(
       "playbackStateDidChange",
-      this._boundOnPlaybackStateChange
+      this.onPlaybackStateChange.bind(this)
     );
     this.appleMusicPlayer.removeEventListener(
       "playbackTimeDidChange",
-      this._boundOnPlaybackTimeChange
+      this.onPlaybackTimeChange.bind(this)
     );
     this.appleMusicPlayer.removeEventListener(
       "playbackDurationDidChange",
-      this._boundOnPlaybackDurationChange
+      this.onPlaybackDurationChange.bind(this)
     );
     this.appleMusicPlayer.removeEventListener(
       "nowPlayingItemDidChange",
-      this._boundOnNowPlayingItemChange
+      this.onNowPlayingItemChange.bind(this)
     );
     this.appleMusicPlayer = undefined;
   };
 
-  connectAppleMusicPlayer = async (): Promise<void> => {
+  connectAppleMusicPlayer = async (retryCount = 0): Promise<void> => {
     this.disconnectAppleMusicPlayer();
     const { appleMusicUser } = this.props;
-
-    const musickit = window.MusicKit;
-    if (!musickit) {
-      setTimeout(this.connectAppleMusicPlayer.bind(this), 1000);
+    try {
+      this.appleMusicPlayer = await setupAppleMusicKit(
+        appleMusicUser?.developer_token
+      );
+    } catch (error) {
+      console.debug(error);
+      if (retryCount >= 5) {
+        const { onInvalidateDataSource } = this.props;
+        onInvalidateDataSource(
+          this,
+          "Could not load Apple's MusicKit library after 5 retries"
+        );
+        return;
+      }
+      setTimeout(this.connectAppleMusicPlayer.bind(this, retryCount + 1), 1000);
       return;
     }
-    await musickit.configure({
-      developerToken: appleMusicUser?.developer_token,
-      debug: true,
-      app: {
-        name: "ListenBrainz",
-        build: "latest",
-      },
-    });
-    this.appleMusicPlayer = musickit.getInstance();
-
-    if (this.appleMusicPlayer && appleMusicUser?.music_user_token) {
-      this.appleMusicPlayer.musicUserToken = appleMusicUser.music_user_token;
-    } else {
-      const userToken = await this.appleMusicPlayer.authorize();
-      this.appleMusicPlayer.musicUserToken = userToken;
+    try {
+      const userToken = await authorizeWithAppleMusic(this.appleMusicPlayer);
+      if (userToken === null) {
+        throw new Error("Could not retrieve Apple Music authorization token");
+      }
+      // this.appleMusicPlayer.musicUserToken = userToken;
+    } catch (error) {
+      console.debug(error);
+      this.handleAccountError();
     }
 
-    this.appleMusicPlayer?.addEventListener(
+    this.appleMusicPlayer.addEventListener(
       "playbackStateDidChange",
-      this._boundOnPlaybackStateChange
+      this.onPlaybackStateChange.bind(this)
     );
-    this.appleMusicPlayer?.addEventListener(
+    this.appleMusicPlayer.addEventListener(
       "playbackTimeDidChange",
-      this._boundOnPlaybackTimeChange
+      this.onPlaybackTimeChange.bind(this)
     );
-    this.appleMusicPlayer?.addEventListener(
+    this.appleMusicPlayer.addEventListener(
       "playbackDurationDidChange",
-      this._boundOnPlaybackDurationChange
+      this.onPlaybackDurationChange.bind(this)
     );
-    this.appleMusicPlayer?.addEventListener(
+    this.appleMusicPlayer.addEventListener(
       "nowPlayingItemDidChange",
-      this._boundOnNowPlayingItemChange
+      this.onNowPlayingItemChange.bind(this)
     );
   };
 
