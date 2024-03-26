@@ -1,6 +1,8 @@
 import json
 import time
 
+import pytest
+
 from brainzutils import cache
 
 import listenbrainz.db.user as db_user
@@ -63,6 +65,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         json_response = r.json
         self.assertEqual(json_response['latestListenTs'], 1618500200)
 
+    @pytest.mark.timeout(30)
     def test_delete_listens(self):
         """
         Test delete listens for a user
@@ -108,11 +111,13 @@ class SettingsViewsTestCase(IntegrationTestCase):
         with self.app.app_context():
             task = get_task()
             self.assertIsNotNone(task)
-            self.assertEquals(task.user_id, self.user["id"])
-            self.assertEquals(task.task, "delete_listens")
+            self.assertEqual(task.user_id, self.user["id"])
+            self.assertEqual(task.task, "delete_listens")
+        
+            # wait for background tasks to be processed, with timeout function decorator
+            while get_task():
+                time.sleep(1)
 
-        # wait for background tasks to be processed
-        time.sleep(5)
 
         # check that listens have been successfully deleted
         resp = self.client.get(self.custom_url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
