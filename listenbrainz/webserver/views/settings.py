@@ -27,8 +27,6 @@ from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.views.api_tools import validate_auth_header
-from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -363,9 +361,26 @@ def music_services_disconnect(service_name: str):
             if action:
                 return jsonify({"url": service.get_authorize_url(CRITIQUEBRAINZ_SCOPES)})
         elif service_name == 'apple':
-            return jsonify({"url": service.get_authorize_url([])})
+            service.add_new_user(user_id=current_user.id)
+            return jsonify({"success": True})
 
     raise BadRequest('Invalid action')
+
+@settings_bp.route('/music-services/<service_name>/set-token/', methods=['POST'])
+@api_login_required
+def music_services_set_token(service_name: str):
+    if service_name != ExternalServiceType.APPLE:
+        raise APIInternalServerError("The set-token method not implemented for this service")
+    
+    music_user_token = request.data
+
+    if music_user_token is None:
+        raise BadRequest('Missing user token in request body')
+
+    apple_service = AppleService()
+    apple_service.set_token(user_id=current_user.id,music_user_token=music_user_token)
+
+    return jsonify({"success": True})
 
 
 @settings_bp.route('/missing-data/', methods=['POST'])

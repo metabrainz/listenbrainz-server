@@ -6,6 +6,7 @@ from flask import current_app
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth
 from listenbrainz.domain.external_service import ExternalService
+from listenbrainz.webserver import db_conn
 
 DEVELOPER_TOKEN_VALIDITY = timedelta(days=180)
 
@@ -41,19 +42,21 @@ class AppleService(ExternalService):
         )
         return {"access_token": token, "expires_at": exp}
 
-    def add_new_user(self, user_id: int, token: dict) -> bool:
+    def add_new_user(self, user_id: int) -> bool:
         """ Create a new apple music row to store a user specific developer token
 
         Args:
             user_id: A flask auth `current_user.id`
             token: A dict containing jwt encoded token and its expiry time
         """
-        access_token = token["developer_token"]
-        refresh_token = token["music_user_token"]
+        token = self.fetch_access_token()
+        access_token = token["access_token"]
+        # refresh_token = token["music_user_token"]
         expires_at = token["expires_at"]
         external_service_oauth.save_token(
+            db_conn=db_conn,
             user_id=user_id, service=self.service, access_token=access_token,
-            refresh_token=refresh_token, token_expires_ts=expires_at, record_listens=False,
+            refresh_token=None, token_expires_ts=expires_at, record_listens=False,
             scopes=[], external_user_id=None
         )
         return True
@@ -66,3 +69,21 @@ class AppleService(ExternalService):
             user_id (int): the ListenBrainz row ID of the user
         """
         external_service_oauth.delete_token(user_id, self.service, remove_import_log=False)
+
+    def set_token(self, user_id:int, music_user_token: str):
+        """ Create a new apple music row to store a user specific developer token
+
+        Args:
+            user_id: A flask auth `current_user.id`
+            music_user_token: A string containing the user token returned by MusiKit after authorization
+        """
+        token = self.fetch_access_token()
+
+        access_token = token["developer_token"]
+        expires_at = token["expires_at"]
+        external_service_oauth.update_token(
+            db_conn,
+            user_id=user_id, service=self.service, access_token=access_token,
+            refresh_token=music_user_token, token_expires_ts=expires_at
+        )
+        return True
