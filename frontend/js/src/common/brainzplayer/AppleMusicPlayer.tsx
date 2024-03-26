@@ -77,8 +77,7 @@ export default class AppleMusicPlayer
   extends React.Component<AppleMusicPlayerProps, AppleMusicPlayerState>
   implements DataSourceType {
   static hasPermissions = (appleMusicUser?: AppleMusicUser) => {
-    return true;
-    // return Boolean(appleMusicUser?.music_user_token);
+    return Boolean(appleMusicUser?.music_user_token);
   };
 
   static isListenFromThisService = (listen: Listen | JSPFTrack): boolean => {
@@ -142,7 +141,7 @@ export default class AppleMusicPlayer
     appleMusicId: string,
     retryCount = 0
   ): Promise<void> => {
-    const { handleError } = this.props;
+    const { handleError, onTrackNotFound } = this.props;
     if (retryCount > 5) {
       handleError("Could not play AppleMusic track", "Playback error");
       return;
@@ -159,11 +158,13 @@ export default class AppleMusicPlayer
       });
     } catch (error) {
       handleError(error.message, "Error playing on Apple Music");
+      onTrackNotFound();
     }
   };
 
   canSearchAndPlayTracks = (): boolean => {
-    return true;
+    const { appleMusicUser } = this.props;
+    return AppleMusicPlayer.hasPermissions(appleMusicUser);
   };
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
@@ -172,11 +173,13 @@ export default class AppleMusicPlayer
       await this.searchAndPlayTrack(listen);
       return;
     }
+    const { onTrackNotFound } = this.props;
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
     const releaseName = _get(listen, "track_metadata.release_name");
     const searchTerm = `${trackName} ${artistName} ${releaseName}`;
     if (!searchTerm) {
+      onTrackNotFound();
       return;
     }
     const response = await this.appleMusicPlayer.api.music(
@@ -186,6 +189,8 @@ export default class AppleMusicPlayer
     const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
     if (apple_music_id) {
       await this.playAppleMusicId(apple_music_id);
+    } else {
+      onTrackNotFound();
     }
   };
 
