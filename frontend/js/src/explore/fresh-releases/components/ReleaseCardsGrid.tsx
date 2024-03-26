@@ -1,13 +1,13 @@
 import * as React from "react";
 import ReleaseCard from "./ReleaseCard";
 import { formatReleaseDate } from "../utils";
-import type { DisplaySettings } from "../FreshReleases";
+import type { DisplaySettings, SortDirection } from "../FreshReleases";
 
 type ReleaseCardReleaseProps = {
   filteredList: Array<FreshReleaseItem>;
   displaySettings: DisplaySettings;
   order: string;
-  direction: string;
+  direction: SortDirection;
 };
 
 const getKeyForOrder = (
@@ -63,10 +63,10 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     return releaseKey;
   };
 
-  const mappedEntries =
-    direction === "descend"
-      ? Array.from(releaseMapping?.entries()).reverse()
-      : Array.from(releaseMapping?.entries());
+  const mappedEntries = Array.from(releaseMapping?.entries());
+  if (direction === "descend") {
+    mappedEntries.reverse();
+  }
 
   return (
     <>

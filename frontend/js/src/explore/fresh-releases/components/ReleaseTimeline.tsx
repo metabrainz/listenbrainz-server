@@ -2,11 +2,12 @@ import * as React from "react";
 import Slider from "rc-slider";
 import { countBy, debounce, zipObject } from "lodash";
 import { formatReleaseDate, useMediaQuery } from "../utils";
+import { SortDirection } from "../FreshReleases";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
   order: string;
-  direction: string;
+  direction: SortDirection;
 };
 
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
