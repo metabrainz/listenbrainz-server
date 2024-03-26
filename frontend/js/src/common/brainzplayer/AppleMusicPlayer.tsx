@@ -149,7 +149,7 @@ export default class AppleMusicPlayer
     }
     if (!this.appleMusicPlayer || !this.appleMusicPlayer?.isAuthorized) {
       await this.connectAppleMusicPlayer();
-      this.playAppleMusicId(appleMusicId, retryCount);
+      await this.playAppleMusicId(appleMusicId, retryCount);
       return;
     }
     try {

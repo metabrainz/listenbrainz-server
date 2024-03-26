@@ -6,6 +6,12 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
+import {
+  authorizeWithAppleMusic,
+  loadAppleMusicKit,
+  setupAppleMusicKit,
+} from "../../../common/brainzplayer/AppleMusicPlayer";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 type MusicServicesLoaderData = {
   current_spotify_permissions: string;
@@ -16,6 +22,8 @@ type MusicServicesLoaderData = {
 
 export default function MusicServices() {
   const loaderData = useLoaderData() as MusicServicesLoaderData;
+
+  const { appleAuth } = React.useContext(GlobalAppContext);
 
   const [permissions, setPermissions] = React.useState({
     spotify: loaderData.current_spotify_permissions,
@@ -68,6 +76,54 @@ export default function MusicServices() {
           message={`Failed to change permissions for ${capitalize(
             serviceName
           )}`}
+        />
+      );
+    }
+  };
+
+  const handleAppleMusicPermissionChange = async (
+    serviceName: string,
+    action: string
+  ) => {
+    try {
+      await loadAppleMusicKit();
+      const musicKitInstance = await setupAppleMusicKit(
+        appleAuth?.developer_token
+      );
+      // Delete or recreate the user in the database for this external service
+      const response = await fetch(
+        `/settings/music-services/apple/disconnect/`,
+        {
+          method: "POST",
+          body: JSON.stringify({ action }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (action === "disable") {
+        await musicKitInstance.unauthorize();
+        toast.success(
+          <ToastMsg
+            title="Success"
+            message="Apple Music integration has been disabled."
+          />
+        );
+      } else {
+        // authorizeWithAppleMusic also sends the token to the server
+        const newToken = await authorizeWithAppleMusic(musicKitInstance);
+      }
+
+      setPermissions((prevState) => ({
+        ...prevState,
+        appleMusic: action,
+      }));
+    } catch (error) {
+      console.debug(error);
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={`Failed to change permissions for Apple Music:${error.toString()}`}
         />
       );
     }
@@ -243,25 +299,29 @@ export default function MusicServices() {
           <div className="panel-body">
             <p>
               Connect to your Apple Music account to play music on ListenBrainz.
+              <small>
+                Note: Full length track playback requires a paid Apple Music
+                subscription.
+              </small>
             </p>
             <br />
             <div className="music-service-selection">
               <form>
                 <ServicePermissionButton
-                  service="apple"
+                  service="appleMusic"
                   current={permissions.appleMusic}
                   value="listen"
                   title="Play music on ListenBrainz"
                   details="Connect to your Apple Music account to play music using Apple Music on ListenBrainz."
-                  handlePermissionChange={handlePermissionChange}
+                  handlePermissionChange={handleAppleMusicPermissionChange}
                 />
                 <ServicePermissionButton
-                  service="apple"
+                  service="appleMusic"
                   current={permissions.appleMusic}
                   value="disable"
                   title="Disable"
                   details="You will not be able to listen to music on ListenBrainz using Apple Music."
-                  handlePermissionChange={handlePermissionChange}
+                  handlePermissionChange={handleAppleMusicPermissionChange}
                 />
               </form>
             </div>
