@@ -1,7 +1,7 @@
 import * as React from "react";
 
 type ExternalServiceButtonProps = {
-  service: "spotify" | "soundcloud" | "critiquebrainz";
+  service: "spotify" | "soundcloud" | "critiquebrainz" | "appleMusic";
   current: string;
   value: string;
   title: string;

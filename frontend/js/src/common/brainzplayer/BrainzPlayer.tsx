@@ -29,6 +29,7 @@ import BrainzPlayerUI from "./BrainzPlayerUI";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
+import AppleMusicPlayer from "./AppleMusicPlayer";
 
 export type DataSourceType = {
   name: string;
@@ -40,7 +41,11 @@ export type DataSourceType = {
   datasourceRecordsListens: () => boolean;
 };
 
-export type DataSourceTypes = SpotifyPlayer | YoutubePlayer | SoundcloudPlayer;
+export type DataSourceTypes =
+  | SpotifyPlayer
+  | YoutubePlayer
+  | SoundcloudPlayer
+  | AppleMusicPlayer;
 
 export type DataSourceProps = {
   show: boolean;
@@ -112,6 +117,9 @@ function isListenFromDatasource(
   if (datasource instanceof SoundcloudPlayer) {
     return SoundcloudPlayer.isListenFromThisService(listen);
   }
+  if (datasource instanceof AppleMusicPlayer) {
+    return AppleMusicPlayer.isListenFromThisService(listen);
+  }
   return undefined;
 }
 
@@ -125,6 +133,7 @@ export default class BrainzPlayer extends React.Component<
   spotifyPlayer?: React.RefObject<SpotifyPlayer>;
   youtubePlayer?: React.RefObject<YoutubePlayer>;
   soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
+  appleMusicPlayer?: React.RefObject<AppleMusicPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
   playerStateTimerID?: NodeJS.Timeout;
@@ -150,6 +159,9 @@ export default class BrainzPlayer extends React.Component<
 
     this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
     this.dataSources.push(this.soundcloudPlayer);
+
+    this.appleMusicPlayer = React.createRef<AppleMusicPlayer>();
+    this.dataSources.push(this.appleMusicPlayer);
 
     this.youtubePlayer = React.createRef<YoutubePlayer>();
     this.dataSources.push(this.youtubePlayer);
@@ -180,7 +192,7 @@ export default class BrainzPlayer extends React.Component<
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
     window.addEventListener("beforeunload", this.alertBeforeClosingPage);
     // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
-    const { spotifyAuth, soundcloudAuth } = this.context;
+    const { spotifyAuth, soundcloudAuth, appleAuth } = this.context;
     if (
       !SpotifyPlayer.hasPermissions(spotifyAuth) &&
       this.spotifyPlayer?.current
@@ -192,6 +204,12 @@ export default class BrainzPlayer extends React.Component<
       this.soundcloudPlayer?.current
     ) {
       this.invalidateDataSource(this.soundcloudPlayer.current);
+    }
+    if (
+      !AppleMusicPlayer.hasPermissions(appleAuth) &&
+      this.appleMusicPlayer?.current
+    ) {
+      this.invalidateDataSource(this.appleMusicPlayer.current);
     }
   }
 
@@ -805,7 +823,13 @@ export default class BrainzPlayer extends React.Component<
       refreshSoundcloudToken,
       listenBrainzAPIBaseURI,
     } = this.props;
-    const { youtubeAuth, spotifyAuth, soundcloudAuth } = this.context;
+    const {
+      youtubeAuth,
+      spotifyAuth,
+      soundcloudAuth,
+      appleAuth,
+      currentUser,
+    } = this.context;
 
     return (
       <div>
@@ -883,6 +907,26 @@ export default class BrainzPlayer extends React.Component<
             ref={this.soundcloudPlayer}
             soundcloudUser={soundcloudAuth}
             refreshSoundcloudToken={refreshSoundcloudToken}
+            playerPaused={playerPaused}
+            onPlayerPausedChange={this.playerPauseChange}
+            onProgressChange={this.progressChange}
+            onDurationChange={this.durationChange}
+            onTrackInfoChange={this.throttledTrackInfoChange}
+            onTrackEnd={this.playNextTrack}
+            onTrackNotFound={this.failedToPlayTrack}
+            handleError={this.handleError}
+            handleWarning={this.handleWarning}
+            handleSuccess={this.handleSuccess}
+          />
+          <AppleMusicPlayer
+            show={
+              isActivated &&
+              this.dataSources[currentDataSourceIndex]?.current instanceof
+                AppleMusicPlayer
+            }
+            appleMusicUser={appleAuth}
+            onInvalidateDataSource={this.invalidateDataSource}
+            ref={this.appleMusicPlayer}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
