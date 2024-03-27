@@ -64,8 +64,8 @@ export async function authorizeWithAppleMusic(
         body: musicUserToken,
       });
       if (!request.ok) {
-        const err = request.json();
-        throw err;
+        const { error } = await request.json();
+        throw error;
       }
     } catch (error) {
       console.debug("Could not set user's Apple Music token:", error);

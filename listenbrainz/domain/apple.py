@@ -79,11 +79,11 @@ class AppleService(ExternalService):
         """
         token = self.fetch_access_token()
 
-        access_token = token["developer_token"]
+        access_token = token["access_token"]
         expires_at = token["expires_at"]
         external_service_oauth.update_token(
             db_conn,
             user_id=user_id, service=self.service, access_token=access_token,
-            refresh_token=music_user_token, token_expires_ts=expires_at
+            refresh_token=music_user_token, expires_at=expires_at
         )
         return True
