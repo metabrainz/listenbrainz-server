@@ -43,11 +43,13 @@ export async function setupAppleMusicKit(developerToken?: string) {
   }
   await MusicKit.configure({
     developerToken,
-    debug: true,
     app: {
       name: "ListenBrainz",
+      // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as submission_client_version
       build: "latest",
+      icon: "https://listenbrainz.org/static/img/ListenBrainz_logo_no_text.png",
     },
+    bitrate: "HIGH",
   });
   return MusicKit.getInstance();
 }
@@ -182,16 +184,19 @@ export default class AppleMusicPlayer
       onTrackNotFound();
       return;
     }
-    const response = await this.appleMusicPlayer.api.music(
-      `/v1/catalog/{{storefrontId}}/search`,
-      { term: searchTerm, types: "songs" }
-    );
-    const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
-    if (apple_music_id) {
-      await this.playAppleMusicId(apple_music_id);
-    } else {
-      onTrackNotFound();
+    try {
+      const response = await this.appleMusicPlayer.api.music(
+        `/v1/catalog/{{storefrontId}}/search`,
+        { term: searchTerm, types: "songs" }
+      );
+      const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
+      if (apple_music_id) {
+        await this.playAppleMusicId(apple_music_id);
+      }
+    } catch (error) {
+      console.debug("Apple Music API request failed:", error);
     }
+    onTrackNotFound();
   };
 
   datasourceRecordsListens = (): boolean => {

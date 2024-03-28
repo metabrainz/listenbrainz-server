@@ -112,6 +112,17 @@ export default function MusicServices() {
       } else {
         // authorizeWithAppleMusic also sends the token to the server
         const newToken = await authorizeWithAppleMusic(musicKitInstance);
+        if (newToken) {
+          // We know appleAuth is not undefined because we needed the developer_token
+          // it contains in order to authorize the user successfully
+          (appleAuth as AppleMusicUser).music_user_token = newToken;
+        }
+        toast.success(
+          <ToastMsg
+            title="Success"
+            message="You are now logged in to Apple Music."
+          />
+        );
       }
 
       setPermissions((prevState) => ({
@@ -302,6 +313,8 @@ export default function MusicServices() {
               <small>
                 Note: Full length track playback requires a paid Apple Music
                 subscription.
+                <br />
+                You will need to repeat the sign-in process every 6 months.
               </small>
             </p>
             <br />

@@ -6,7 +6,9 @@ declare namespace MusicKit {
   /**
    * Configure a MusicKit instance.
    */
-  function configure(configuration: Configuration): MusicKitInstance;
+  async function configure(
+    configuration: Configuration
+  ): Promise<MusicKitInstance>;
   /**
    * Returns the configured MusicKit instance.
    */
