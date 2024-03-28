@@ -17,9 +17,9 @@ const getUserRoutes = (): RouteObject[] => {
           index: true,
           lazy: async () => {
             const Listens = await import("../Dashboard");
-            return { Component: Listens.ListensWrapper };
+            return { Component: Listens.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("dashboard", true),
         },
         {
           path: "stats/",
