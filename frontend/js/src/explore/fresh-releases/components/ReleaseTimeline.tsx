@@ -96,6 +96,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       );
 
       dataArr = Object.keys(confidenceInitialsCount).sort();
+      if (sortDirection === "descend") {
+        dataArr.reverse();
+      }
 
       percentArr = Object.values(confidenceInitialsCount)
         .map((item) => (item / data.length) * 100)
