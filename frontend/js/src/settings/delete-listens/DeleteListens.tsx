@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { redirect, useLocation, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { downloadFile } from "../export/ExportData";
@@ -46,7 +47,7 @@ export default function DeleteListens() {
       toast.success(
         <ToastMsg
           title="Success"
-          message="Your listens have been deleted. You will be logged out in 5 seconds."
+          message="Your listens have been enqueued for deletion."
         />
       );
 
@@ -68,6 +69,9 @@ export default function DeleteListens() {
 
   return (
     <>
+      <Helmet>
+        <title>Delete Listens</title>
+      </Helmet>
       <h3 className="page-title">Delete your listens</h3>
       <p>
         Hi {name}, are you sure you want to delete listens imported into your

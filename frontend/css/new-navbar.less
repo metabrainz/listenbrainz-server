@@ -79,6 +79,7 @@ body {
           margin-bottom: 0.3em;
           // prevent long usernames from breaking the layout
           word-break: break-all;
+          border-radius: 0;
         }
         line-height: 1.5em;
 
@@ -154,8 +155,7 @@ body {
     }
   }
   /* main content */
-  > :not(nav) {
-    margin-left: 1em;
+  > [class*="container"] {
     // Leave some space for BrainzPlayer
     padding-bottom: @brainzplayer-height;
 
@@ -218,7 +218,7 @@ body {
         align-items: center;
       }
     }
-    > :not(nav) {
+    > [class*="container"] {
       &,
       div[role="main"] {
         width: 100%;
@@ -230,8 +230,8 @@ body {
 .secondary-nav {
   /* Secondary nav container should be full width and scrollable if there is excess */
   width: calc(100% + @grid-gutter-width);
-  margin-left: ceil((@grid-gutter-width / -2));
-  margin-right: floor((@grid-gutter-width / -2));
+  margin-left: (@grid-gutter-width / -2) - 1;
+  margin-right: (@grid-gutter-width / -2);
   margin-bottom: @nav-bottom-padding;
   &,
   > * {
@@ -277,6 +277,7 @@ body {
         a:visited,
         a:visited:hover {
           color: @white;
+          background: initial;
         }
       }
       &.disabled {

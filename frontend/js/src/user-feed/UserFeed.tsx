@@ -1,11 +1,8 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
 import { toast } from "react-toastify";
 import {
   faBell,
-  faBullhorn,
   faCircle,
   faHeadphones,
   faHeart,
@@ -23,26 +20,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { get as _get, reject as _reject } from "lodash";
+import { reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
-import { Integrations } from "@sentry/tracing";
-import * as _ from "lodash";
-import NiceModal from "@ebay/nice-modal-react";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { Helmet } from "react-helmet";
 
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import Loader from "../components/Loader";
 import ListenCard from "../common/listens/ListenCard";
 import {
-  getPageProps,
   preciseTimestamp,
   getAdditionalContent,
   feedReviewEventToListen,
   getReviewEventContent,
-  getRecordingMBID,
-  getRecordingMSID,
   personalRecommendationEventToListen,
   getPersonalRecommendationEventContent,
 } from "../utils/utils";
@@ -64,7 +54,7 @@ export enum EventType {
 }
 
 export type UserFeedPageProps = {
-  events: TimelineEvent[];
+  events?: TimelineEvent[];
 };
 
 export type UserFeedPageState = {
@@ -662,176 +652,120 @@ export default class UserFeedPage extends React.Component<
       (earliestEventTs && events?.[0]?.created >= earliestEventTs);
     return (
       <>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-          }}
-        >
-          <h2>Latest activity</h2>
-          <a
-            id="feedback-button"
-            href="mailto:support@listenbrainz.org?subject=Feed%20page%20feedback"
-            type="button"
-            className="btn btn-primary"
-          >
-            <span className="fa-layers icon">
-              <FontAwesomeIcon
-                icon={faCircle as IconProp}
-                transform="grow-10"
-              />
-              <FontAwesomeIcon
-                icon={faBullhorn as IconProp}
-                transform="rotate--20"
-              />
-            </span>{" "}
-            Feedback
-          </a>
+        <Helmet>
+          <title>Feed</title>
+        </Helmet>
+        <div className="listen-header">
+          <h3 className="header-with-line">Latest activity</h3>
         </div>
-        <div role="main">
-          <div className="row">
-            <div className="col-md-7 col-xs-12">
-              <div
-                style={{
-                  height: 0,
-                  position: "sticky",
-                  top: "50%",
-                  zIndex: 1,
-                }}
-              >
-                <Loader isLoading={loading} />
-              </div>
-              <div id="timeline" style={{ opacity: loading ? "0.4" : "1" }}>
-                <ul>
-                  {events.map((event) => {
-                    const { created, event_type, user_name } = event;
-                    return (
-                      <li
-                        className="timeline-event"
-                        key={`event-${user_name}-${created}`}
-                      >
-                        <div className="event-description">
-                          <span className={`event-icon ${event_type}`}>
-                            <span className="fa-layers">
-                              <FontAwesomeIcon
-                                icon={faCircle as IconProp}
-                                transform="grow-8"
-                              />
-                              <FontAwesomeIcon
-                                icon={
-                                  UserFeedPage.getEventTypeIcon(
-                                    event_type
-                                  ) as IconProp
-                                }
-                                inverse
-                                transform="shrink-4"
-                              />
-                            </span>
+        <div className="row">
+          <div className="col-md-7 col-xs-12">
+            <div
+              style={{
+                height: 0,
+                position: "sticky",
+                top: "50%",
+                zIndex: 1,
+              }}
+            >
+              <Loader isLoading={loading} />
+            </div>
+            <div id="timeline" style={{ opacity: loading ? "0.4" : "1" }}>
+              <ul>
+                {events.map((event) => {
+                  const { created, event_type, user_name } = event;
+                  return (
+                    <li
+                      className="timeline-event"
+                      key={`event-${user_name}-${created}`}
+                    >
+                      <div className="event-description">
+                        <span className={`event-icon ${event_type}`}>
+                          <span className="fa-layers">
+                            <FontAwesomeIcon
+                              icon={faCircle as IconProp}
+                              transform="grow-8"
+                            />
+                            <FontAwesomeIcon
+                              icon={
+                                UserFeedPage.getEventTypeIcon(
+                                  event_type
+                                ) as IconProp
+                              }
+                              inverse
+                              transform="shrink-4"
+                            />
                           </span>
-                          {this.renderEventText(event)}
+                        </span>
+                        {this.renderEventText(event)}
 
-                          <span className="event-time">
-                            {preciseTimestamp(created * 1000)}
-                            {this.renderEventActionButton(event)}
-                          </span>
-                        </div>
+                        <span className="event-time">
+                          {preciseTimestamp(created * 1000)}
+                          {this.renderEventActionButton(event)}
+                        </span>
+                      </div>
 
-                        {this.renderEventContent(event)}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-              <ul
-                className="pager"
-                style={{ marginRight: "-1em", marginLeft: "1.5em" }}
-              >
-                <li
-                  className={`previous ${
-                    isNewerButtonDisabled ? "disabled" : ""
-                  }`}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickNewer}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickNewer();
-                    }}
-                    tabIndex={0}
-                    href={
-                      isNewerButtonDisabled
-                        ? undefined
-                        : `?min_ts=${previousEventTs}`
-                    }
-                  >
-                    &larr; Newer
-                  </a>
-                </li>
-                <li
-                  className={`next ${!nextEventTs ? "disabled" : ""}`}
-                  style={{ marginLeft: "auto" }}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickOlder}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickOlder();
-                    }}
-                    tabIndex={0}
-                    href={!nextEventTs ? undefined : `?max_ts=${nextEventTs}`}
-                  >
-                    Older &rarr;
-                  </a>
-                </li>
+                      {this.renderEventContent(event)}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
-            <div className="col-md-offset-1 col-md-4">
-              <UserSocialNetwork user={currentUser} />
-            </div>
+            <ul
+              className="pager"
+              style={{ marginRight: "-1em", marginLeft: "1.5em" }}
+            >
+              <li
+                className={`previous ${
+                  isNewerButtonDisabled ? "disabled" : ""
+                }`}
+              >
+                <a
+                  role="button"
+                  onClick={this.handleClickNewer}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") this.handleClickNewer();
+                  }}
+                  tabIndex={0}
+                  href={
+                    isNewerButtonDisabled
+                      ? undefined
+                      : `?min_ts=${previousEventTs}`
+                  }
+                >
+                  &larr; Newer
+                </a>
+              </li>
+              <li
+                className={`next ${!nextEventTs ? "disabled" : ""}`}
+                style={{ marginLeft: "auto" }}
+              >
+                <a
+                  role="button"
+                  onClick={this.handleClickOlder}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") this.handleClickOlder();
+                  }}
+                  tabIndex={0}
+                  href={!nextEventTs ? undefined : `?max_ts=${nextEventTs}`}
+                >
+                  Older &rarr;
+                </a>
+              </li>
+            </ul>
           </div>
-          <BrainzPlayer
-            listens={listens}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-          />
+          <div className="col-md-offset-1 col-md-4">
+            <UserSocialNetwork user={currentUser} />
+          </div>
         </div>
+        <BrainzPlayer
+          listens={listens}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
+        />
       </>
     );
   }
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { events } = reactProps;
-
-  const UserFeedPageWithAlertNotifications = withAlertNotifications(
-    UserFeedPage
-  );
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserFeedPageWithAlertNotifications events={events} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

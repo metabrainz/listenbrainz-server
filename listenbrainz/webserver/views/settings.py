@@ -11,6 +11,7 @@ import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
+from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db import listens_importer
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.db.exceptions import DatabaseException
@@ -24,7 +25,6 @@ from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -93,7 +93,7 @@ def import_data():
 
     data = {
         "user_has_email": user_has_email,
-        "profile_url": url_for('user.profile', user_name=current_user.musicbrainz_id),
+        "profile_url": url_for('user.index', path="", user_name=current_user.musicbrainz_id),
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
         "librefm_api_url": current_app.config["LIBREFM_API_URL"],
@@ -200,7 +200,7 @@ def delete():
     that they wish to delete their ListenBrainz account.
     """
     try:
-        delete_user(current_user.id)
+        add_task(current_user.id, 'delete_user')
         return jsonify({"success": True})
     except Exception:
         current_app.logger.error('Error while deleting user: %s', current_user.musicbrainz_id, exc_info=True)
@@ -221,7 +221,7 @@ def delete_listens():
     wish to delete their listens.
     """
     try:
-        delete_listens_history(current_user.id)
+        add_task(current_user.id, 'delete_listens')
         return jsonify({"success": True})
     except Exception:
         current_app.logger.error('Error while deleting listens for user: %s', current_user.musicbrainz_id, exc_info=True)

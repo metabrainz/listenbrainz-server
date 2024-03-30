@@ -1,6 +1,7 @@
 import { isEmpty, isNil } from "lodash";
 import * as React from "react";
 import { useContext } from "react";
+import { Link } from "react-router-dom";
 import FollowButton from "./FollowButton";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import SimilarityScore from "./SimilarityScore";
@@ -22,13 +23,13 @@ function UserListModalEntry(props: UserListModalEntryProps) {
   return (
     <div key={user.name}>
       <div>
-        <a
-          href={`/user/${user.name}/`}
+        <Link
+          to={`/user/${user.name}/`}
           target="_blank"
           rel="noopener noreferrer"
         >
           {user.name}
-        </a>
+        </Link>
         {isUserLoggedIn && mode === "similar-users" && (
           <SimilarityScore
             similarityScore={(user as SimilarUser).similarityScore}

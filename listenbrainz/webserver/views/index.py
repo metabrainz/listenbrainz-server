@@ -14,12 +14,12 @@ from werkzeug.exceptions import Unauthorized, NotFound
 
 import listenbrainz.db.user as db_user
 from data.model.user_entity import EntityRecord
+from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash, db_conn
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.views.user import delete_user
 import listenbrainz.db.stats as db_stats
 
 index_bp = Blueprint('index', __name__)
@@ -35,7 +35,7 @@ SEARCH_USER_LIMIT = 100  # max number of users to return in search username resu
 @index_bp.route("/")
 def index():
     if current_user.is_authenticated and request.args.get("redirect", "true") == "true":
-        return redirect(url_for("user.profile", user_name=current_user.musicbrainz_id))
+        return redirect(url_for("user.index", path="", user_name=current_user.musicbrainz_id))
 
     if _ts:
         try:
@@ -165,8 +165,10 @@ def current_status():
     )
 
 
-@index_bp.route("/recent/")
+@index_bp.route("/recent/", methods=['GET', 'POST'])
 def recent_listens():
+    if request.method == 'GET':
+        return render_template('index.html')
 
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
@@ -189,14 +191,14 @@ def recent_listens():
         "globalUserCount": user_count
     }
 
-    return render_template("index/recent.html", props=orjson.dumps(props).decode("utf-8"))
+    return jsonify(props)
 
 
 @index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required
 @web_listenstore_needed
 def feed():
-    return render_template('index/feed.html')
+    return render_template('index.html')
 
 
 @index_bp.route('/agree-to-terms/', methods=['GET', 'POST'])
@@ -256,7 +258,7 @@ def mb_user_deleter(musicbrainz_row_id):
     user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id)
     if user is None:
         raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
-    delete_user(user['id'])
+    add_task(user['id'], 'delete_user')
     return jsonify({'status': 'ok'}), 200
 
 
@@ -300,7 +302,7 @@ def _get_user_count():
 
 @index_bp.route("/similar-users/")
 def similar_users():
-    return redirect(url_for("explore.similar_users"))
+    return redirect(url_for('explore.index', path="similar-users"))
 
 
 @index_bp.route("/listens-offline/")
@@ -322,16 +324,11 @@ def musicbrainz_offline():
 def huesound():
     """ Redirect to /explore/huesound """
 
-    return redirect(url_for("explore.huesound"))
+    return redirect(url_for('explore.index', path="huesound"))
 
 
-@index_bp.route("/statistics/charts/")
-def charts():
-    """ Show the top sitewide entities. """
-    return render_template("index/charts.html")
-
-
-@index_bp.route("/statistics/")
-def stats():
+@index_bp.route("/statistics/",  defaults={'path': ''})
+@index_bp.route('/statistics/<path:path>/')
+def stats(path):
     """ Show sitewide stats """
-    return render_template("index/stats.html")
+    return render_template("index.html")

@@ -1,7 +1,10 @@
 from time import time
 import requests
 
-ROOT = '127.0.0.1'
+# Set DEBUG to True to test local dev server.
+# API keys for local dev server and the real server are different.
+DEBUG = True
+ROOT = 'http://localhost:8100' if DEBUG else 'https://api.listenbrainz.org'
 
 def set_latest_import(timestamp, token, service="lastfm"):
     """Sets the time of the latest import.
@@ -19,7 +22,7 @@ def set_latest_import(timestamp, token, service="lastfm"):
         A ValueError if the JSON response is invalid.
     """
     response = requests.post(
-        url="http://{0}/1/latest-import".format(ROOT),
+        url="{0}/1/latest-import".format(ROOT),
         json={
             "ts": timestamp,
             "service": service

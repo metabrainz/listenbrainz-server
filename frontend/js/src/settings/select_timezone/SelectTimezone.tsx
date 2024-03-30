@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
@@ -93,6 +94,9 @@ export default class SelectTimezone extends React.Component<
 
     return (
       <>
+        <Helmet>
+          <title>Select Timezone</title>
+        </Helmet>
         <h3>Select Timezone</h3>
         <p>
           Your current timezone setting is{" "}
@@ -141,14 +145,3 @@ export function SelectTimezoneWrapper() {
   const data = useLoaderData() as SelectTimezoneLoaderData;
   return <SelectTimezone {...data} />;
 }
-
-export const SelectTimezoneLoader = async () => {
-  const response = await fetch("/settings/select_timezone/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-};
