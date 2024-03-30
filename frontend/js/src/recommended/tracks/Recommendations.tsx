@@ -4,9 +4,10 @@ import * as React from "react";
 
 import { get, isInteger } from "lodash";
 import { toast } from "react-toastify";
-import { useLoaderData } from "react-router-dom";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
 
 import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import APIServiceClass from "../../utils/APIService";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
@@ -14,6 +15,7 @@ import Loader from "../../components/Loader";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getArtistName,
+  getObjectForURLSearchParams,
   getRecordingMBID,
   getTrackName,
   preciseTimestamp,
@@ -21,6 +23,7 @@ import {
 import ListenCard from "../../common/listens/ListenCard";
 import RecommendationFeedbackComponent from "../../common/listens/RecommendationFeedbackComponent";
 import { ToastMsg } from "../../notifications/Notifications";
+import { RouteQuery } from "../../utils/Loader";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -370,6 +373,17 @@ export default class Recommendations extends React.Component<
 }
 
 export function RecommendationsPageWrapper() {
-  const loaderData = useLoaderData() as RecommendationsLoaderData;
-  return <Recommendations {...loaderData} />;
+  const location = useLocation();
+  const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObject = getObjectForURLSearchParams(searchParams);
+  const { data } = useQuery(
+    RouteQuery(
+      ["recommendation", params, searchParamsObject],
+      location.pathname
+    )
+  ) as {
+    data: RecommendationsLoaderData;
+  };
+  return <Recommendations {...data} />;
 }

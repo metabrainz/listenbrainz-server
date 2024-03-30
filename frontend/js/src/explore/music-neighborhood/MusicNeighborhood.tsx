@@ -4,8 +4,9 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { isEmpty, isEqual, kebabCase } from "lodash";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchBox from "./components/SearchBox";
@@ -14,6 +15,7 @@ import Panel from "./components/Panel";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import generateTransformedArtists from "./utils/generateTransformedArtists";
 import { downloadComponentAsImage, copyImageToClipboard } from "./utils/utils";
+import { RouteQuery } from "../../utils/Loader";
 
 type MusicNeighborhoodLoaderData = {
   algorithm: string;
@@ -37,10 +39,12 @@ const isColorTooDark = (color: tinycolor.Instance): boolean => {
 };
 
 export default function MusicNeighborhood() {
+  const location = useLocation();
   const {
-    algorithm: DEFAULT_ALGORITHM,
-    artist_mbid: DEFAULT_ARTIST_MBID,
-  } = useLoaderData() as MusicNeighborhoodLoaderData;
+    data: { algorithm: DEFAULT_ALGORITHM, artist_mbid: DEFAULT_ARTIST_MBID },
+  } = useQuery(RouteQuery(["music-neighborhood"], location.pathname)) as {
+    data: MusicNeighborhoodLoaderData;
+  };
 
   const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbid=`;
   const DEFAULT_COLORS = colorGenerator();
@@ -290,7 +294,6 @@ export default function MusicNeighborhood() {
 
   React.useEffect(() => {
     onArtistChange(DEFAULT_ARTIST_MBID);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const browserHasClipboardAPI = "clipboard" in navigator;

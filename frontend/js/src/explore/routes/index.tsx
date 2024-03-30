@@ -102,7 +102,7 @@ const getExploreRoutes = (): RouteObject[] => {
             );
             return { Component: MusicNeighborhood.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("music-neighborhood"),
         },
         {
           path: "ai-brainz/",

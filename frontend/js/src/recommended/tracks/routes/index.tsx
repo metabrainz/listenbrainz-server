@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router-dom";
-import RouteLoader from "../../../utils/Loader";
+import RouteLoader, { RouteQueryLoader } from "../../../utils/Loader";
 
 const getRecommendationsRoutes = (): RouteObject[] => {
   const routes = [
@@ -26,7 +26,7 @@ const getRecommendationsRoutes = (): RouteObject[] => {
               Component: RecommendationsPage.RecommendationsPageWrapper,
             };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("recommendation", true),
         },
       ],
     },
