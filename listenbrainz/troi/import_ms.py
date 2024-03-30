@@ -23,7 +23,13 @@ def import_from_spotify(token, user, playlist_id):
     # select track_name and artist_name for each track
     mbid_mapped_tracks = [mbid_mapping_spotify(track["track_name"], track["artist_name"]) for track in tracks]
     # pass the tracks as Recording
-    recordings = [Recording(mbid=track["recording_mbid"]) for track in mbid_mapped_tracks if "recording_mbid" in track]
+    recordings=[]
+    if mbid_mapped_tracks:
+        for track in mbid_mapped_tracks:
+            if track is not None and "recording_mbid" in track:
+                recordings.append(Recording(mbid=track["recording_mbid"]))
+    else:
+        return None
     
     recording_list = RecordingListElement(recordings)
     try:
@@ -40,7 +46,7 @@ def import_from_spotify(token, user, playlist_id):
         return None  
     
     if result is not None and user:
-        for url, _ in playlist.submit(user, None):
+        for url, _ in playlist.submit("68fd28b9-37c2-41e1-97b2-31eda342c8c2", None):
             print("Submitted playlist: %s" % url)
 
     result = playlist.get_jspf()
@@ -51,7 +57,7 @@ def import_from_spotify(token, user, playlist_id):
 def get_tracks_from_playlist(spotify_token, playlist_id):
     """ Get the tracks from Spotify playlist.
     """
-    sp = spotipy.Spotify(auth=spotify_token)
+    sp = spotipy.Spotify(auth=spotify_token, requests_timeout=10, retries=10)
     playlist_info = sp.playlist(playlist_id)
     playlists = sp.playlist_items(playlist_id, limit=100)
     name = playlist_info["name"]

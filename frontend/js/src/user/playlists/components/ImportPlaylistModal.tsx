@@ -3,9 +3,7 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { ToastMsg } from "../../../notifications/Notifications";
-
-export const MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION =
-  "https://musicbrainz.org/doc/jspf#playlist";
+import Loader from "../../../components/Loader";
 
 type ImportPLaylistModalProps = {
   listenlist: JSPFTrack[];
@@ -22,9 +20,10 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [playlists, setPlaylists] = React.useState<SpotifyPlaylistObject[]>([]);
+  const [loading, setLoading] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    async function importPlaylistFromSpotify() {
+    async function getUserPlaylistsFromSpotify() {
       try {
         const response = await APIService.importPlaylistToSpotify(
           currentUser?.auth_token
@@ -47,7 +46,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
     }
 
     if (currentUser?.auth_token) {
-      importPlaylistFromSpotify();
+      getUserPlaylistsFromSpotify();
     }
   }, [APIService, currentUser]);
 
@@ -70,8 +69,14 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
       return;
     }
 
+    if (loading.includes(playlistID)) {
+      setLoading(loading.filter((i: string) => i !== playlistID));
+    } else {
+      setLoading([...loading, playlistID]);
+    }
+
     try {
-      const newPlaylist: JSPFPlaylist = await APIService.getSpotifyTracksInJSPF(
+      const newPlaylist: JSPFPlaylist = await APIService.importSpotifyPlaylistTracks(
         currentUser?.auth_token,
         playlistID
       );
@@ -81,12 +86,13 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
           message={
             <>
               Imported
-              <a href={newPlaylist.identifier}>new playlist</a>
+              <a href={newPlaylist.identifier}> {playlistName}</a>
             </>
           }
         />,
         { toastId: "create-playlist-success" }
       );
+      setLoading(loading.filter((i: string) => i !== playlistID));
       modal.resolve(newPlaylist);
     } catch (error) {
       toast.error(
@@ -96,6 +102,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
         />,
         { toastId: "save-playlist-error" }
       );
+      setLoading(loading.filter((i: string) => i !== playlistID));
     }
   };
 
@@ -141,12 +148,26 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
                   type="button"
                   key={playlist.id}
                   className="list-group-item"
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
                   name={playlist.name}
                   onClick={() =>
                     importTracksToPlaylist(playlist.id, playlist.name)
                   }
                 >
-                  {playlist.name}
+                  <span>{playlist.name}</span>
+                  {loading.includes(playlist.id) && (
+                    <Loader
+                      isLoading={!!loading}
+                      style={{
+                        maxHeight: "2vh",
+                        paddingTop: "10px",
+                        marginRight: "5px",
+                      }}
+                    />
+                  )}
                 </button>
               ))}
             </div>

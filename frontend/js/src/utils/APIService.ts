@@ -1118,7 +1118,7 @@ export default class APIService {
     return response.json();
   };
 
-  getSpotifyTracksInJSPF = async (
+  importSpotifyPlaylistTracks = async (
     userToken: string,
     playlistID: string
   ): Promise<any> => {

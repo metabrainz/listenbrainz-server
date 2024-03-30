@@ -133,7 +133,7 @@ export default class UserPlaylists extends React.Component<
 
     return (
       <div role="main" id="playlists-page">
-        <div style={{ marginTop: "1em" }}>
+        <div className="tertiary-nav">
           <Pill
             active={playlistType === PlaylistType.playlists}
             type="secondary"
