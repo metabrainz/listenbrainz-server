@@ -19,7 +19,7 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(WebSocketTests, self).setUp()
         self.sio = socketio.Client(logger=True, engineio_logger=True)
-        self.sio.connect('http://localhost:8102')
+        self.sio.connect('http://localhost:8102',wait_timeout = 20)
         self.http_session = requests.Session()
         print(self.sio)
 
