@@ -33,7 +33,10 @@ type FollowButtonProps = {
   type: "icon-only" | "block" | string;
   user: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
-  updateFollowingList?: (action: "follow" | "unfollow") => void;
+  updateFollowingList?: (
+    user: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => void;
 };
 
 type FollowButtonState = {

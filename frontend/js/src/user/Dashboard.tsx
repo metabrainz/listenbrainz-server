@@ -48,24 +48,6 @@ export type ListensProps = {
   userPinnedRecording?: PinnedRecording;
 };
 
-export interface ListensState {
-  lastFetchedDirection?: "older" | "newer";
-  listens: Array<Listen>;
-  webSocketListens: Array<Listen>;
-  listenCount?: number;
-  loading: boolean;
-  nextListenTs?: number;
-  previousListenTs?: number;
-  dateTimePickerValue: Date;
-  /* This is used to mark a listen as deleted
-  which give the UI some time to animate it out of the page
-  before being removed from the state */
-  deletedListen: Listen | null;
-  userPinnedRecording?: PinnedRecording;
-  playingNowListen?: Listen;
-  followingList: Array<string>;
-}
-
 type ListenLoaderData = ListensProps;
 
 export default function Listen() {
@@ -82,9 +64,9 @@ export default function Listen() {
   };
 
   const {
-    listens: initialListens,
+    listens: initialListens = [],
     user,
-    userPinnedRecording,
+    userPinnedRecording = undefined,
     latestListenTs,
     oldestListenTs,
   } = data;
@@ -298,13 +280,16 @@ export default function Listen() {
     websocketsUrl,
   ]);
 
-  const updateFollowingList = (action: "follow" | "unfollow") => {
+  const updateFollowingList = (
+    follower: ListenBrainzUser,
+    action: "follow" | "unfollow"
+  ) => {
     const newFollowingList = [...followingList];
     const index = newFollowingList.findIndex(
-      (following) => following === user.name
+      (following) => following === follower.name
     );
     if (action === "follow" && index === -1) {
-      newFollowingList.push(user.name);
+      newFollowingList.push(follower.name);
     }
     if (action === "unfollow" && index !== -1) {
       newFollowingList.splice(index, 1);
