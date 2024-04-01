@@ -172,7 +172,12 @@ CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/settings/music-services/cri
 # APPLE MUSIC
 APPLE_MUSIC_TEAM_ID = 'needs a non empty default value for tests, change this'
 APPLE_MUSIC_KID = 'needs a non empty default value for tests, change this'
-APPLE_MUSIC_KEY = 'needs a non empty default value for tests, change this'
+# Please note this is a randomly generated private key for use in tests as a valid key is required
+APPLE_MUSIC_KEY = """-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEILRqPRAVLQp24+C02idpqlpW2AA2cmoYNxJKY8+ITAAAoAoGCCqGSM49
+AwEHoUQDQgAEXnwpW2Tt3ZKPXwwIvLXb04uW3zYlENse7s10aEWsYtd0njkSgUUf
+8Bcx2BRwOPdumSr+fKBsJcAYh/9MHhACMg==
+-----END EC PRIVATE KEY-----"""
 APPLE_MUSIC_REDIRECT_URI = 'http://localhost:8100/settings/music-services/critiquebrainz/callback/'
 
 # YOUTUBE
