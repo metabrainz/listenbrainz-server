@@ -29,6 +29,10 @@ import BrainzPlayerUI from "./BrainzPlayerUI";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
+import {
+  useBrainzPlayerContext,
+  useBrainzPlayerDispatch,
+} from "./BrainzPlayerContext";
 
 export type DataSourceType = {
   name: string;
@@ -125,7 +129,7 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
     listenBrainzAPIBaseURI,
   } = props;
 
-  // Context
+  // Global App Context
   const globalAppContext = React.useContext(GlobalAppContext);
   const {
     currentUser,
@@ -143,32 +147,24 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
   const SUBMIT_LISTEN_UPDATE_INTERVAL = 5000;
   const initialWindowTitle: string = window.document.title;
 
-  // States
-  const [currentListen, setCurrentListen] = React.useState<
-    Listen | JSPFTrack | undefined
-  >(undefined);
-  const [currentDataSourceIndex, setCurrentDataSourceIndex] = React.useState<
-    number
-  >(0);
-  const [currentTrackName, setCurrentTrackName] = React.useState<string>("");
-  const [currentTrackArtist, setCurrentTrackArtist] = React.useState<string>(
-    ""
-  );
-  const [currentTrackAlbum, setCurrentTrackAlbum] = React.useState<
-    string | undefined
-  >(undefined);
-  const [currentTrackURL, setCurrentTrackURL] = React.useState<
-    string | undefined
-  >(undefined);
-  const [playerPaused, setPlayerPaused] = React.useState<boolean>(true);
-  const [isActivated, setIsActivated] = React.useState<boolean>(false);
-  const [durationMs, setDurationMs] = React.useState<number>(0);
-  const [progressMs, setProgressMs] = React.useState<number>(0);
-  const [updateTime, setUpdateTime] = React.useState<number>(performance.now());
-  const [listenSubmitted, setListenSubmitted] = React.useState<boolean>(false);
-  const [continuousPlaybackTime, setContinuousPlaybackTime] = React.useState<
-    number
-  >(0);
+  // BrainzPlayerContext
+  const {
+    currentListen,
+    currentDataSourceIndex,
+    currentTrackName,
+    currentTrackArtist,
+    currentTrackAlbum,
+    currentTrackURL,
+    playerPaused,
+    isActivated,
+    durationMs,
+    progressMs,
+    updateTime,
+    listenSubmitted,
+    continuousPlaybackTime,
+  } = useBrainzPlayerContext();
+
+  const dispatch = useBrainzPlayerDispatch();
 
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);
@@ -180,9 +176,7 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
     () => [spotifyPlayerRef, youtubePlayerRef, soundcloudPlayerRef],
     [spotifyPlayerRef, youtubePlayerRef, soundcloudPlayerRef]
   );
-  const playerStateTimerID = React.useRef<NodeJS.Timeout | undefined>(
-    undefined
-  );
+  const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
 
   // Functions
   const alertBeforeClosingPage = React.useCallback(
@@ -353,8 +347,6 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
     listen: BaseListenFormat,
     retries: number = 3
   ): Promise<void> => {
-    // const { currentDataSourceIndex } = this.state;
-    // const { listenBrainzAPIBaseURI } = this.props;
     const dataSource = dataSourceRefs[currentDataSourceIndex];
     if (!currentUser || !currentUser.auth_token) {
       return;
@@ -419,7 +411,6 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
     }
     if (continuousPlaybackTime >= playbackTimeRequired) {
       const listen = getListenMetadataToSubmit();
-      setListenSubmitted(true);
       await submitListenToListenBrainz("single", listen);
     }
   };
@@ -437,10 +428,12 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
 
   const playListen = React.useCallback(
     (listen: Listen | JSPFTrack, datasourceIndex: number = 0): void => {
-      setIsActivated(true);
-      setCurrentListen(listen);
-      setListenSubmitted(false);
-      setContinuousPlaybackTime(0);
+      dispatch({
+        currentListen: listen,
+        isActivated: true,
+        listenSubmitted: false,
+        continuousPlaybackTime: 0,
+      });
 
       window.postMessage(
         { brainzplayer_event: "current-listen-change", payload: listen },
@@ -478,11 +471,11 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
         return;
       }
       stopOtherBrainzPlayers();
-      console.log("Playing listen", listen, "with datasource", datasource.name);
-      setCurrentDataSourceIndex(selectedDatasourceIndex);
-      datasource.playListen(listen);
+      dispatch({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
+        datasource.playListen(listen);
+      });
     },
-    [dataSourceRefs]
+    [dataSourceRefs, dispatch]
   );
 
   const playNextTrack = (invert: boolean = false): void => {
@@ -531,8 +524,7 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
   };
 
   const progressChange = (newProgressMs: number): void => {
-    setProgressMs(newProgressMs);
-    setUpdateTime(performance.now());
+    dispatch({ progressMs: newProgressMs, updateTime: performance.now() });
   };
 
   const seekToPositionMs = (msTimecode: number): void => {
@@ -566,9 +558,9 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
 
   const activatePlayerAndPlay = (): void => {
     overwriteMediaSession(mediaSessionHandlers);
-    // this.setState({ isActivated: true }, this.playNextTrack);
-    setIsActivated(true);
-    playNextTrack();
+    dispatch({ isActivated: true }, () => {
+      playNextTrack();
+    });
   };
 
   const togglePlay = React.useCallback(async (): Promise<void> => {
@@ -585,27 +577,22 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
     } catch (error) {
       handleError(error, "Could not play");
     }
-  }, [
-    currentDataSourceIndex,
-    dataSourceRefs,
-    invalidateDataSource,
-    playerPaused,
-  ]);
+  }, [currentDataSourceIndex, dataSourceRefs, invalidateDataSource]);
 
-  // const getCurrentTrackName = (): string => {
-  //   return getTrackName(currentListen);
-  // };
+  const getCurrentTrackName = (): string => {
+    return getTrackName(currentListen);
+  };
 
-  // const getCurrentTrackArtists = (): string | undefined => {
-  //   return getArtistName(currentListen);
-  // };
+  const getCurrentTrackArtists = (): string | undefined => {
+    return getArtistName(currentListen);
+  };
 
   const stopPlayerStateTimer = React.useCallback((): void => {
     debouncedCheckProgressAndSubmitListen.flush();
     if (playerStateTimerID.current) {
       clearInterval(playerStateTimerID.current);
     }
-    playerStateTimerID.current = undefined;
+    playerStateTimerID.current = null;
   }, [debouncedCheckProgressAndSubmitListen]);
 
   /* Updating the progress bar without calling any API to check current player state */
@@ -620,9 +607,12 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
       const position = progressMs + elapsedTimeSinceLastUpdate;
       newProgressMs = position > durationMs ? durationMs : position;
     }
-    setProgressMs(newProgressMs);
-    setUpdateTime(performance.now());
-    setContinuousPlaybackTime((prev) => prev + elapsedTimeSinceLastUpdate);
+    dispatch({
+      progressMs: newProgressMs,
+      updateTime: performance.now(),
+      continuousPlaybackTime:
+        continuousPlaybackTime + elapsedTimeSinceLastUpdate,
+    });
   };
 
   const startPlayerStateTimer = (): void => {
@@ -650,15 +640,15 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
   };
 
   const playerPauseChange = (paused: boolean): void => {
-    console.log("playerPauseChange", paused);
-    setPlayerPaused(paused);
-    if (paused) {
-      stopPlayerStateTimer();
-      reinitializeWindowTitle();
-    } else {
-      startPlayerStateTimer();
-      updateWindowTitleWithTrackName();
-    }
+    dispatch({ playerPaused: paused }, () => {
+      if (paused) {
+        stopPlayerStateTimer();
+        reinitializeWindowTitle();
+      } else {
+        startPlayerStateTimer();
+        updateWindowTitleWithTrackName();
+      }
+    });
     if (hasMediaSessionSupport()) {
       window.navigator.mediaSession.playbackState = paused
         ? "paused"
@@ -667,9 +657,9 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
   };
 
   const durationChange = (newDurationMs: number): void => {
-    // this.setState({ durationMs }, this.startPlayerStateTimer);
-    setDurationMs(newDurationMs);
-    startPlayerStateTimer();
+    dispatch({ durationMs: newDurationMs }, () => {
+      startPlayerStateTimer();
+    });
   };
 
   const submitNowPlayingToListenBrainz = async (): Promise<void> => {
@@ -684,20 +674,17 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
     album?: string,
     artwork?: Array<MediaImage>
   ): void => {
-    // this.setState(
-    //   {
-    //     currentTrackName: title,
-    //     currentTrackArtist: artist,
-    //     currentTrackURL: trackURL,
-    //     currentTrackAlbum: album,
-    //   },
-    //   this.updateWindowTitle
-    // );
-    setCurrentTrackName(title);
-    setCurrentTrackArtist(artist!);
-    setCurrentTrackAlbum(album);
-    setCurrentTrackURL(trackURL);
-    updateWindowTitleWithTrackName();
+    dispatch(
+      {
+        currentTrackName: title,
+        currentTrackArtist: artist!,
+        currentTrackAlbum: album,
+        currentTrackURL: trackURL,
+      },
+      () => {
+        updateWindowTitleWithTrackName();
+      }
+    );
     if (playerPaused) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)
@@ -789,15 +776,7 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
       window.removeEventListener("beforeunload", alertBeforeClosingPage);
       stopPlayerStateTimer();
     };
-  }, [
-    alertBeforeClosingPage,
-    invalidateDataSource,
-    onLocalStorageEvent,
-    receiveBrainzPlayerMessage,
-    soundcloudAuth,
-    spotifyAuth,
-    stopPlayerStateTimer,
-  ]);
+  }, []);
 
   return (
     <div>
