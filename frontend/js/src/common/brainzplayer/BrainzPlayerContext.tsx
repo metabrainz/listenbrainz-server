@@ -21,12 +21,12 @@ const initialValue: BrainzPlayerContextT = {
   currentTrackName: "",
   currentTrackArtist: "",
   playerPaused: true,
-  progressMs: 0,
-  durationMs: 0,
-  updateTime: performance.now(),
-  continuousPlaybackTime: 0,
   isActivated: false,
+  durationMs: 0,
+  progressMs: 0,
+  updateTime: performance.now(),
   listenSubmitted: false,
+  continuousPlaybackTime: 0,
 };
 
 function valueReducer(
@@ -36,11 +36,41 @@ function valueReducer(
   return { ...state, ...action };
 }
 
+const useReduceerWithCallback = (
+  reducer: React.Reducer<BrainzPlayerContextT, Partial<BrainzPlayerContextT>>,
+  initialState: BrainzPlayerContextT
+): [
+  BrainzPlayerContextT,
+  (action: Partial<BrainzPlayerContextT>, callback?: () => void) => void
+] => {
+  const [state, dispatch] = React.useReducer(reducer, initialState);
+
+  const callbackRef = React.useRef<() => void>();
+  const dispatchWithCallback = (
+    action: Partial<BrainzPlayerContextT>,
+    callback?: () => void
+  ) => {
+    dispatch(action);
+    if (callback) {
+      callbackRef.current = callback;
+    }
+  };
+
+  React.useEffect(() => {
+    if (callbackRef.current) {
+      callbackRef.current();
+      callbackRef.current = undefined;
+    }
+  }, [state]);
+
+  return [state, dispatchWithCallback];
+};
+
 export const BrainzPlayerContext = React.createContext<BrainzPlayerContextT>(
   initialValue
 );
 export const BrainzPlayerDispatchContext = React.createContext<
-  React.Dispatch<Partial<BrainzPlayerContextT>>
+  (action: Partial<BrainzPlayerContextT>, callback?: () => void) => void
 >(() => {});
 
 export function BrainzPlayerProvider({
@@ -48,7 +78,7 @@ export function BrainzPlayerProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [value, dispatch] = React.useReducer(valueReducer, initialValue);
+  const [value, dispatch] = useReduceerWithCallback(valueReducer, initialValue);
 
   return (
     <BrainzPlayerContext.Provider value={value}>
