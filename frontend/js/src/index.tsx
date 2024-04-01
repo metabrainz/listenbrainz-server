@@ -11,6 +11,7 @@ import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
 import { getPageProps } from "./utils/utils";
 import getRoutes from "./routes/routes";
+import { BrainzPlayerProvider } from "./common/brainzplayer/BrainzPlayerContext";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const { domContainer, globalAppContext, sentryProps } = await getPageProps();
@@ -48,7 +49,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             defaultTitle="ListenBrainz"
             titleTemplate="%s - ListenBrainz"
           />
-          <RouterProvider router={router} />
+          <BrainzPlayerProvider>
+            <RouterProvider router={router} />
+          </BrainzPlayerProvider>
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
