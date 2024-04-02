@@ -7,13 +7,12 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { Helmet } from "react-helmet";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
 import { getPageProps } from "./utils/utils";
 import getRoutes from "./routes/routes";
 import queryClient from "./utils/QueryClient";
+import ReactQueryDevtool from "./utils/ReactQueryDevTools";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const { domContainer, globalAppContext, sentryProps } = await getPageProps();
@@ -51,10 +50,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             defaultTitle="ListenBrainz"
             titleTemplate="%s - ListenBrainz"
           />
-          <QueryClientProvider client={queryClient}>
+          <ReactQueryDevtool client={queryClient}>
             <RouterProvider router={router} />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </QueryClientProvider>
+          </ReactQueryDevtool>
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
