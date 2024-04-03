@@ -141,22 +141,24 @@ export default class UserPlaylists extends React.Component<
           } Playlists`}</title>
         </Helmet>
         <div className="tertiary-nav">
-          <Pill
-            active={playlistType === PlaylistType.playlists}
-            type="secondary"
-            onClick={() => this.setPlaylistType(PlaylistType.playlists)}
-          >
-            <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
-          </Pill>
-          <Pill
-            active={playlistType === PlaylistType.collaborations}
-            type="secondary"
-            onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
-          >
-            <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
-          </Pill>
+          <div>
+            <Pill
+              active={playlistType === PlaylistType.playlists}
+              type="secondary"
+              onClick={() => this.setPlaylistType(PlaylistType.playlists)}
+            >
+              <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
+            </Pill>
+            <Pill
+              active={playlistType === PlaylistType.collaborations}
+              type="secondary"
+              onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
+            >
+              <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
+            </Pill>
+          </div>
           {this.isCurrentUserPage() && (
-            <div className="dropdow">
+            <div className="dropdown">
               <button
                 className="btn btn-info dropdown-toggle"
                 type="button"
@@ -169,8 +171,8 @@ export default class UserPlaylists extends React.Component<
                 <span className="caret" />
               </button>
               <ul
-                className="dropdown-menu dropdown-menu-left"
-                aria-labelledby="importPlaylistDropdown"
+                className="dropdown-menu dropdown-menu-right"
+                aria-labelledby="ImportPlaylistDropdown"
               >
                 <li>
                   <button
