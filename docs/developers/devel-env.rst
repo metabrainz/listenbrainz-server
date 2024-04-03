@@ -22,10 +22,9 @@ ListenBrainz is hosted on GitHub at https://github.com/metabrainz/listenbrainz-s
 You can use ``git`` to clone it (or your own fork) to your computer.
 
 .. note::
-    
-    We recommend Windows users to :ref:`run docker inside WSL <Windows Docker Installation>` 
-    (preferably WSL2) to avoid any compatibility issues.
-
+    Windows users are adviced to clone in their WSL2 filesystem to avoid code watcher issues.
+    Please refers to :ref:`run docker inside WSL <Windows Docker Installation>` for more
+    information.
 
 .. code-block:: bash
 
