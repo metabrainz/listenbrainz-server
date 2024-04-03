@@ -7,6 +7,7 @@ import {
   faUsers,
   faFileImport,
 } from "@fortawesome/free-solid-svg-icons";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
 
 import NiceModal from "@ebay/nice-modal-react";
@@ -20,10 +21,10 @@ import Pill from "../../components/Pill";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
-import ImportPlaylistModal from "../../playlists/components/ImportPlaylistModal";
+import ImportPlaylistModal from "./components/ImportJSPFPlaylistModal";
+import ImportSpotifyPlaylistModal from "./components/ImportSpotifyPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import { getPlaylistId, PlaylistType } from "../../playlists/utils";
-import ImportPlaylistModal from "./components/ImportPlaylistModal";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
@@ -155,7 +156,7 @@ export default class UserPlaylists extends React.Component<
             <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
           </Pill>
           {this.isCurrentUserPage() && (
-            <div className="dropdow import-playlist-btn">
+            <div className="dropdow">
               <button
                 className="btn btn-info dropdown-toggle"
                 type="button"
@@ -175,16 +176,34 @@ export default class UserPlaylists extends React.Component<
                   <button
                     type="button"
                     onClick={() => {
-                      NiceModal.show(ImportPlaylistModal)
-                        // @ts-ignore
-                        .then((playlist: JSPFPlaylist) => {
-                          this.onPlaylistCreated(playlist);
-                        });
+                      NiceModal.show<JSPFPlaylist, any>(
+                        ImportSpotifyPlaylistModal
+                      ).then((playlist) => {
+                        this.onPlaylistCreated(playlist);
+                      });
+                    }}
+                    data-toggle="modal"
+                    data-target="#ImportSpotifyPlaylistModal"
+                  >
+                    <FontAwesomeIcon icon={faSpotify} />
+                    &nbsp;Spotify
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist, any>(
+                        ImportPlaylistModal
+                      ).then((playlist) => {
+                        this.onPlaylistCreated(playlist);
+                      });
                     }}
                     data-toggle="modal"
                     data-target="#ImportPlaylistModal"
                   >
-                    Spotify
+                    <FontAwesomeIcon icon={faFileImport} />
+                    &nbsp;Upload JSPF file
                   </button>
                 </li>
               </ul>
@@ -208,34 +227,16 @@ export default class UserPlaylists extends React.Component<
               data-toggle="modal"
               data-target="#CreateOrEditPlaylistModal"
               onClick={() => {
-                NiceModal.show(CreateOrEditPlaylistModal)
-                  // @ts-ignore
-                  .then((playlist: JSPFPlaylist) => {
-                    this.onPlaylistCreated(playlist);
-                  });
+                NiceModal.show<JSPFPlaylist, any>(
+                  CreateOrEditPlaylistModal
+                ).then((playlist) => {
+                  this.onPlaylistCreated(playlist);
+                });
               }}
             >
               <div>
                 <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
                 <span>Create new playlist</span>
-              </div>
-            </Card>,
-            <Card
-              key="import-playlist"
-              className="import-playlist"
-              data-toggle="modal"
-              data-target="#ImportPlaylistModal"
-              onClick={() => {
-                NiceModal.show(ImportPlaylistModal)
-                  // @ts-ignore
-                  .then((playlist: JSPFPlaylist) => {
-                    this.onPlaylistCreated(playlist);
-                  });
-              }}
-            >
-              <div>
-                <FontAwesomeIcon icon={faFileImport as IconProp} size="2x" />
-                <span>Import Playlist</span>
               </div>
             </Card>,
           ]}

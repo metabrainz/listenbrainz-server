@@ -5,7 +5,7 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { ToastMsg } from "../../../notifications/Notifications";
 import Loader from "../../../components/Loader";
 
-export type ImportPLaylistModalProps = {
+type ImportPLaylistModalProps = {
   listenlist: JSPFTrack[];
 };
 
