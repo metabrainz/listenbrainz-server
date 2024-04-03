@@ -5,7 +5,7 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { ToastMsg } from "../../../notifications/Notifications";
 import Loader from "../../../components/Loader";
 
-type ImportPLaylistModalProps = {
+export type ImportPLaylistModalProps = {
   listenlist: JSPFTrack[];
 };
 
@@ -109,10 +109,10 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
   return (
     <div
       className={`modal fade ${modal.visible ? "in" : ""}`}
-      id="ImportPlaylistModal"
+      id="ImportSpotifyPlaylistModal"
       tabIndex={-1}
       role="dialog"
-      aria-labelledby="ImportPlaylistLabel"
+      aria-labelledby="ImportSpotifyPlaylistLabel"
       data-backdrop="static"
     >
       <div className="modal-dialog" role="document">
@@ -129,7 +129,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
             </button>
             <h4
               className="modal-title"
-              id="AddToPlaylistLabel"
+              id="ImportSpotifyPlaylistLabel"
               style={{ textAlign: "center" }}
             >
               Import playlist from Spotify
