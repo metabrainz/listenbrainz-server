@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs, Params } from "react-router-dom";
 import { json } from "react-router-dom";
 import _ from "lodash";
 import queryClient from "./QueryClient";
+import { getObjectForURLSearchParams } from "./utils";
 
 const RouteLoader = async ({ request }: { request: Request }) => {
   const response = await fetch(request.url, {
@@ -54,10 +55,7 @@ export const RouteQueryLoader = (
   if (includeSearchParams) {
     // Add search params to the keys
     const searchParams = new URLSearchParams(request.url.split("?")[1]);
-    const searchParamsObject = {} as { [key: string]: string };
-    searchParams.forEach((value, key) => {
-      searchParamsObject[key] = value;
-    });
+    const searchParamsObject = getObjectForURLSearchParams(searchParams);
     keys.push(searchParamsObject);
   }
 
