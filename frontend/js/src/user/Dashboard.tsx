@@ -86,7 +86,6 @@ export default function Listen() {
   const maxWebsocketListens = 7;
 
   const listensTable = React.createRef<HTMLTableElement>();
-  const socketRef = React.useRef<Socket | null>(null);
   const [webSocketListens, setWebSocketListens] = React.useState<Array<Listen>>(
     []
   );
@@ -107,18 +106,6 @@ export default function Listen() {
   React.useEffect(() => {
     setListens(initialListens || []);
   }, [initialListens]);
-
-  const createWebsocketsConnection = React.useCallback((): void => {
-    // if modifying the uri or path, lookup socket.io namespace vs paths.
-    // tl;dr io("https://listenbrainz.org/socket.io/") and
-    // io("https://listenbrainz.org", { path: "/socket.io" }); are not equivalent
-    if (socketRef.current) {
-      return;
-    }
-    socketRef.current = io(websocketsUrl || window.location.origin, {
-      path: "/socket.io/",
-    });
-  }, [websocketsUrl]);
 
   const receiveNewListen = (newListen: string): void => {
     let json;
@@ -197,28 +184,6 @@ export default function Listen() {
     [APIService]
   );
 
-  const addWebsocketsHandlers = React.useCallback((): void => {
-    const socket = socketRef.current;
-    if (!socket) {
-      return;
-    }
-    socket.on("connect", () => {
-      socket.emit("json", { user: user.name });
-    });
-    socket.on("listen", (socketData: string) => {
-      receiveNewListen(socketData);
-    });
-    socket.on("playing_now", (socketData: string) => {
-      const playingNow = JSON.parse(socketData) as Listen;
-      receiveNewPlayingNow(playingNow);
-    });
-  }, [receiveNewPlayingNow, user.name]);
-
-  const connectWebsockets = React.useCallback((): void => {
-    createWebsocketsConnection();
-    addWebsocketsHandlers();
-  }, [addWebsocketsHandlers, createWebsocketsConnection]);
-
   const getFollowing = React.useCallback(async () => {
     const { getFollowingForUser } = APIService;
     if (!currentUser?.name) {
@@ -241,9 +206,6 @@ export default function Listen() {
   }, [APIService, currentUser?.name]);
 
   React.useEffect(() => {
-    if (websocketsUrl) {
-      connectWebsockets();
-    }
     if (user?.name) {
       APIService.getUserListenCount(user.name)
         .then((listenCountValue) => {
@@ -263,22 +225,44 @@ export default function Listen() {
       receiveNewPlayingNow(playingNowListen);
     }
     getFollowing();
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.close();
-        socketRef.current = null;
-      }
-    };
   }, [
     APIService,
-    connectWebsockets,
     getFollowing,
     playingNowListen,
     receiveNewPlayingNow,
     user.name,
-    websocketsUrl,
   ]);
+
+  React.useEffect(() => {
+    // if modifying the uri or path, lookup socket.io namespace vs paths.
+    // tl;dr io("https://listenbrainz.org/socket.io/") and
+    // io("https://listenbrainz.org", { path: "/socket.io" }); are not equivalent
+    const socket = io(websocketsUrl || window.location.origin, {
+      path: "/socket.io/",
+    });
+
+    const connectHandler = () => {
+      socket.emit("json", { user: user.name });
+    };
+    const newListenHandler = (socketData: string) => {
+      receiveNewListen(socketData);
+    };
+    const newPlayingNowHandler = (socketData: string) => {
+      const playingNow = JSON.parse(socketData) as Listen;
+      receiveNewPlayingNow(playingNow);
+    };
+
+    socket.on("connect", connectHandler);
+    socket.on("listen", newListenHandler);
+    socket.on("playing_now", newPlayingNowHandler);
+
+    return () => {
+      socket.off("connect", connectHandler);
+      socket.off("listen", newListenHandler);
+      socket.off("playing_now", newPlayingNowHandler);
+      socket.close();
+    };
+  }, [receiveNewPlayingNow, user.name, websocketsUrl]);
 
   const updateFollowingList = (
     follower: ListenBrainzUser,
@@ -359,12 +343,7 @@ export default function Listen() {
         }
       }
     },
-    [
-      APIService,
-      currentUser.auth_token,
-      currentUser?.name,
-      removeListenFromListenList,
-    ]
+    [APIService, currentUser, removeListenFromListenList]
   );
 
   const getListenCard = React.useCallback(
@@ -464,18 +443,16 @@ export default function Listen() {
                 updateFollowingList={updateFollowingList}
               />
             )}
-            <a
-              href={`https://musicbrainz.org/user/${user.name}`}
+            <Link
+              to={`https://musicbrainz.org/user/${user.name}`}
               className="btn musicbrainz-profile-button"
-              target="_blank"
-              rel="noreferrer"
             >
               <img
                 src="/static/img/musicbrainz-16.svg"
                 alt="MusicBrainz Logo"
               />{" "}
               MusicBrainz
-            </a>
+            </Link>
           </div>
           {playingNowListen && getListenCard(playingNowListen)}
           {userPinnedRecording && (
