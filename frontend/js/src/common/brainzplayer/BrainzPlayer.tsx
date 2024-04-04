@@ -70,30 +70,6 @@ export type DataSourceProps = {
   ) => void;
 };
 
-export type BrainzPlayerProps = {
-  listens: Array<Listen | JSPFTrack>;
-  refreshSpotifyToken: () => Promise<string>;
-  refreshYoutubeToken: () => Promise<string>;
-  refreshSoundcloudToken: () => Promise<string>;
-  listenBrainzAPIBaseURI: string;
-};
-
-export type BrainzPlayerState = {
-  currentListen?: Listen | JSPFTrack;
-  currentDataSourceIndex: number;
-  currentTrackName: string;
-  currentTrackArtist?: string;
-  currentTrackAlbum?: string;
-  currentTrackURL?: string;
-  playerPaused: boolean;
-  isActivated: boolean;
-  durationMs: number;
-  progressMs: number;
-  updateTime: number;
-  listenSubmitted: boolean;
-  continuousPlaybackTime: number;
-};
-
 /**
  * Due to some issue with TypeScript when accessing static methods of an instance when you don't know
  * which class it is, we have to manually determine the class of the instance and call MyClass.staticMethod().
@@ -119,16 +95,7 @@ function isListenFromDatasource(
   return undefined;
 }
 
-export default function BrainzPlayer(props: BrainzPlayerProps) {
-  // Props
-  const {
-    listens,
-    refreshSpotifyToken,
-    refreshYoutubeToken,
-    refreshSoundcloudToken,
-    listenBrainzAPIBaseURI,
-  } = props;
-
+export default function BrainzPlayer() {
   // Global App Context
   const globalAppContext = React.useContext(GlobalAppContext);
   const {
@@ -136,7 +103,15 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
     youtubeAuth,
     spotifyAuth,
     soundcloudAuth,
+    APIService,
   } = globalAppContext;
+
+  const {
+    refreshSpotifyToken,
+    refreshYoutubeToken,
+    refreshSoundcloudToken,
+    APIBaseURI: listenBrainzAPIBaseURI,
+  } = APIService;
 
   // Constants
   // By how much should we seek in the track?
@@ -162,9 +137,17 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
     updateTime,
     listenSubmitted,
     continuousPlaybackTime,
+    currentPageListens,
   } = useBrainzPlayerContext();
 
   const dispatch = useBrainzPlayerDispatch();
+
+  //   React.useEffect(() => {
+  //     dispatch({
+  //       type: "SET_CURRENT_LISTEN",
+  //       data: listens,
+  //     });
+  //   }, [listens]);
 
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);
@@ -179,20 +162,17 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
 
   // Functions
-  const alertBeforeClosingPage = React.useCallback(
-    (event: BeforeUnloadEvent) => {
-      if (!playerPaused) {
-        // Some old browsers may allow to set a custom message, but this is deprecated.
-        event.preventDefault();
-        // eslint-disable-next-line no-param-reassign
-        event.returnValue = `You are currently playing music from this page.
+  const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
+    if (!playerPaused) {
+      // Some old browsers may allow to set a custom message, but this is deprecated.
+      event.preventDefault();
+      // eslint-disable-next-line no-param-reassign
+      event.returnValue = `You are currently playing music from this page.
       Are you sure you want to close it? Playback will be stopped.`;
-        return event.returnValue;
-      }
-      return null;
-    },
-    [playerPaused]
-  );
+      return event.returnValue;
+    }
+    return null;
+  };
 
   /** We use LocalStorage events as a form of communication between BrainzPlayers
    * that works across browser windows/tabs, to ensure only one BP is playing at a given time.
@@ -485,7 +465,7 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
     }
     debouncedCheckProgressAndSubmitListen.flush();
 
-    if (listens.length === 0) {
+    if (currentPageListens.length === 0) {
       handleWarning(
         "You can try loading listens or refreshing the page",
         "No listens to play"
@@ -493,7 +473,7 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
       return;
     }
 
-    const currentListenIndex = listens.findIndex(isCurrentlyPlaying);
+    const currentListenIndex = currentPageListens.findIndex(isCurrentlyPlaying);
 
     let nextListenIndex;
     if (currentListenIndex === -1) {
@@ -507,7 +487,7 @@ export default function BrainzPlayer(props: BrainzPlayerProps) {
       nextListenIndex = currentListenIndex + 1;
     }
 
-    const nextListen = listens[nextListenIndex];
+    const nextListen = currentPageListens[nextListenIndex];
     if (!nextListen) {
       handleWarning(
         "You can try loading more listens or refreshing the page",

@@ -14,6 +14,7 @@ export type BrainzPlayerContextT = {
   updateTime: number;
   listenSubmitted: boolean;
   continuousPlaybackTime: number;
+  currentPageListens: Array<Listen | JSPFTrack>;
 };
 
 const initialValue: BrainzPlayerContextT = {
@@ -27,29 +28,45 @@ const initialValue: BrainzPlayerContextT = {
   updateTime: performance.now(),
   listenSubmitted: false,
   continuousPlaybackTime: 0,
+  currentPageListens: [],
 };
+
+type ActionType = Partial<BrainzPlayerContextT> & { type?: string; data?: any };
 
 function valueReducer(
   state: BrainzPlayerContextT,
-  action: Partial<BrainzPlayerContextT>
+  action: ActionType
 ): BrainzPlayerContextT {
-  return { ...state, ...action };
+  if (!action.type || !action.data) {
+    return { ...state, ...action };
+  }
+  switch (action.type) {
+    case "SET_CURRENT_LISTEN": {
+      const data = action.data as Array<Listen | JSPFTrack>;
+      const { type, data: _, ...restActions } = action;
+      if (data.length !== 0) {
+        return { ...state, ...restActions, currentPageListens: data };
+      }
+      break;
+    }
+    default: {
+      throw Error(`Unknown action: ${action.type}`);
+    }
+  }
+  return state;
 }
 
 const useReduceerWithCallback = (
-  reducer: React.Reducer<BrainzPlayerContextT, Partial<BrainzPlayerContextT>>,
+  reducer: React.Reducer<BrainzPlayerContextT, ActionType>,
   initialState: BrainzPlayerContextT
 ): [
   BrainzPlayerContextT,
-  (action: Partial<BrainzPlayerContextT>, callback?: () => void) => void
+  (action: ActionType, callback?: () => void) => void
 ] => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
 
   const callbackRef = React.useRef<() => void>();
-  const dispatchWithCallback = (
-    action: Partial<BrainzPlayerContextT>,
-    callback?: () => void
-  ) => {
+  const dispatchWithCallback = (action: ActionType, callback?: () => void) => {
     dispatch(action);
     if (callback) {
       callbackRef.current = callback;
@@ -70,7 +87,7 @@ export const BrainzPlayerContext = React.createContext<BrainzPlayerContextT>(
   initialValue
 );
 export const BrainzPlayerDispatchContext = React.createContext<
-  (action: Partial<BrainzPlayerContextT>, callback?: () => void) => void
+  (action: ActionType, callback?: () => void) => void
 >(() => {});
 
 export function BrainzPlayerProvider({
