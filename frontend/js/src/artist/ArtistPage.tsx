@@ -14,7 +14,6 @@ import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import { getReviewEventContent } from "../utils/utils";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
@@ -29,6 +28,7 @@ import type {
   SimilarArtist,
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
@@ -101,6 +101,15 @@ export default function ArtistPage(): JSX.Element {
 
   const listensFromPopularRecordings =
     popularRecordings.map(popularRecordingToListen) ?? [];
+
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_CURRENT_LISTEN",
+      data: listensFromPopularRecordings,
+    });
+  }, [listensFromPopularRecordings]);
 
   const filteredTags = chain(artist.tag?.artist)
     .sortBy("count")
@@ -437,13 +446,6 @@ export default function ArtistPage(): JSX.Element {
           )}
         </div>
       </div>
-      <BrainzPlayer
-        listens={listensFromPopularRecordings}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }

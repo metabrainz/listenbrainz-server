@@ -6,7 +6,6 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getInitData, getData, processData } from "./utils";
 
 import Bar from "./components/Bar";
@@ -19,6 +18,7 @@ import {
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -117,6 +117,15 @@ export default function UserEntityChart() {
 
   const listenableItems: BaseListenFormat[] =
     data?.map(userChartEntityToListen).reverse() ?? [];
+
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_CURRENT_LISTEN",
+      data: listenableItems,
+    });
+  }, [listenableItems]);
 
   const userOrLoggedInUser: string | undefined =
     user?.name ?? currentUser?.name;
@@ -315,14 +324,6 @@ export default function UserEntityChart() {
           )}
         </Loader>
       </div>
-
-      <BrainzPlayer
-        listens={listenableItems}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }
