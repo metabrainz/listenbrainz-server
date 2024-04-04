@@ -113,3 +113,25 @@ def get_troi_prefs(db_conn, user_id: int):
     """), {"user_id": user_id})
     row = result.mappings().first()
     return dict(row) if row else None
+
+def update_brainzplayer_prefs(db_conn, user_id: int, brainzplayer_settings: str):
+    """ Update brainzplayer preferences for the given user """
+    db_conn.execute(sqlalchemy.text("""
+        INSERT INTO user_setting (user_id, brainzplayer)
+             VALUES (:user_id, :brainzplayer_settings)
+        ON CONFLICT (user_id)
+          DO UPDATE 
+                SET brainzplayer = EXCLUDED.brainzplayer
+    """), {"user_id": user_id, "brainzplayer_settings": brainzplayer_settings})
+    db_conn.commit()
+
+
+def get_brainzplayer_prefs(db_conn, user_id: int):
+    """ Retrieve brainzplayer preferences for the given user """
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT brainzplayer
+          FROM user_setting
+         WHERE user_id = :user_id
+    """), {"user_id": user_id})
+    row = result.mappings().first()
+    return dict(row) if row else None
