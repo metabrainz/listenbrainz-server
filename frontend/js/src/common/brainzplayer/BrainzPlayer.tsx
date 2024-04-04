@@ -233,13 +233,13 @@ export default class BrainzPlayer extends React.Component<
               <>
                 You have disabled all music services for playback on
                 ListenBrainz. To enable them again, please go to the{" "}
-                <Link
-                  to="/settings/brainzplayer/"
+                <a
+                  href="/settings/brainzplayer/"
                   target="_blank"
                   rel="noreferrer"
                 >
                   music player preferences
-                </Link>{" "}
+                </a>{" "}
                 page
               </>
             }
