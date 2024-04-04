@@ -134,6 +134,10 @@
       &:hover {
         color: darken(@primary-color, 10%);
       }
+      &.disabled {
+        color:#8d8d8d;
+        pointer-events: none;
+      }
     }
   }
 
@@ -198,7 +202,7 @@
       stroke-width: 40px;
       font-size: 1.3em;
       margin: 0 0.7em;
-      width: 1em;
+      max-width: 1em;
       cursor: pointer;
       color: #8d8d8d;
       &:hover {

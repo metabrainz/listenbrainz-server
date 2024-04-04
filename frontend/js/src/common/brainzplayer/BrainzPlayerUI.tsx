@@ -1,10 +1,13 @@
 import {
+  faCog,
   faFastBackward,
   faFastForward,
   faHeart,
   faHeartCrack,
+  faMusic,
   faPauseCircle,
   faPlayCircle,
+  faSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
 
@@ -12,6 +15,8 @@ import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslin
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
+import { noop } from "lodash";
+import { Link } from "react-router-dom";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -34,6 +39,7 @@ type BrainzPlayerUIProps = {
   seekToPositionMs: (msTimeCode: number) => void;
   currentListen?: Listen | JSPFTrack;
   listenBrainzAPIBaseURI: string;
+  disabled?: boolean;
 };
 
 type PlaybackControlButtonProps = {
@@ -42,21 +48,21 @@ type PlaybackControlButtonProps = {
   icon: IconDefinition;
   title: string;
   size?: "2x";
+  disabled?: boolean;
 };
 
 function PlaybackControlButton(props: PlaybackControlButtonProps) {
-  const { className, action, icon, title, size } = props;
+  const { className, action, icon, title, size, disabled } = props;
   return (
-    <div
-      className={className}
+    <button
+      className={`btn-link ${className} ${disabled ? "disabled" : ""}`}
       title={title}
-      onClick={action}
-      onKeyPress={action}
-      role="button"
+      onClick={disabled ? noop : action}
+      type="button"
       tabIndex={0}
     >
-      <FontAwesomeIcon icon={icon as IconProp} size={size} />
-    </div>
+      <FontAwesomeIcon icon={icon as IconProp} size={size} fixedWidth />
+    </button>
   );
 }
 
@@ -158,13 +164,15 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     togglePlay,
     playNextTrack,
     seekToPositionMs,
+    disabled,
   } = props;
 
   const isPlayingATrack = Boolean(currentListen);
   const recordingMSID = getRecordingMSID(currentListen as Listen);
   const recordingMBID = getRecordingMBID(currentListen as Listen);
-  const showFeedback = Boolean(recordingMSID) || Boolean(recordingMBID);
-
+  const showFeedback =
+    (Boolean(recordingMSID) || Boolean(recordingMBID)) && isPlayingATrack;
+  const playbackDisabledText = "Playback disabled in preferences";
   return (
     <div id="brainz-player" aria-label="Playback control">
       <ProgressBar
@@ -196,12 +204,16 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           </div>
         )}
       </div>
-      <div className="controls">
+      <div
+        className="controls"
+        title={disabled ? playbackDisabledText : undefined}
+      >
         <PlaybackControlButton
           className="previous"
           title="Previous"
           action={playPreviousTrack}
           icon={faFastBackward}
+          disabled={disabled}
         />
         <PlaybackControlButton
           className="play"
@@ -209,12 +221,14 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           title={`${playerPaused ? "Play" : "Pause"}`}
           icon={playerPaused ? faPlayCircle : faPauseCircle}
           size="2x"
+          disabled={disabled}
         />
         <PlaybackControlButton
           className="next"
           action={playNextTrack}
           title="Next"
           icon={faFastForward}
+          disabled={disabled}
         />
       </div>
       <div className="actions">
@@ -257,8 +271,18 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             />
           </>
         )}
-        <MenuOptions currentListen={currentListen} />
-        {/* <FontAwesomeIcon icon={faCog} /> */}
+        {disabled ? (
+          <span className="fa-layers fa-fw" title={playbackDisabledText}>
+            <FontAwesomeIcon icon={faMusic} />
+            <FontAwesomeIcon icon={faSlash} />
+          </span>
+        ) : (
+          <MenuOptions currentListen={currentListen} />
+        )}
+
+        <Link to="/settings/brainzplayer/" target="_blank" rel="noreferrer">
+          <FontAwesomeIcon icon={faCog} title="Player preferences" />
+        </Link>
       </div>
     </div>
   );
