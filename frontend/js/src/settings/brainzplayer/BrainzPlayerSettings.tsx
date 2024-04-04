@@ -203,7 +203,7 @@ function BrainzPlayerSettings() {
       </p>
       <br />
       <button
-        className="btn btn-large btn-primary"
+        className="btn btn-lg btn-info"
         type="button"
         onClick={saveSettings}
       >
