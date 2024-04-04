@@ -595,7 +595,12 @@ const getPageProps = async (): Promise<{
 
     let { user_preferences } = globalReactProps;
 
-    user_preferences = { ...user_preferences, saveData: false };
+    user_preferences = {
+      ...user_preferences,
+      // @ts-ignore
+      brainzplayer: user_preferences?.brainzplayer.brainzplayer,
+      saveData: false,
+    };
 
     if ("connection" in navigator) {
       // @ts-ignore

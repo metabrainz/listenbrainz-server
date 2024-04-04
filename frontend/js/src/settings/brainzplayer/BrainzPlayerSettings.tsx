@@ -8,26 +8,67 @@ import {
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { toast } from "react-toastify";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
-import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
+import { ToastMsg } from "../../notifications/Notifications";
 
 function BrainzPlayerSettings() {
-  const { appleAuth, spotifyAuth, soundcloudAuth } = React.useContext(
-    GlobalAppContext
-  );
-  const [youtubeEnabled, setYoutubeEnabled] = React.useState(true);
-  const [appleMusicEnabled, setAppleMusicEnabled] = React.useState(
-    Boolean(appleAuth?.music_user_token)
+  const {
+    spotifyAuth,
+    soundcloudAuth,
+    userPreferences,
+    APIService,
+    currentUser,
+  } = React.useContext(GlobalAppContext);
+  const [youtubeEnabled, setYoutubeEnabled] = React.useState(
+    userPreferences?.brainzplayer?.youtubeEnabled ?? true
   );
   const [spotifyEnabled, setSpotifyEnabled] = React.useState(
-    SpotifyPlayer.hasPermissions(spotifyAuth)
+    userPreferences?.brainzplayer?.spotifyEnabled ??
+      SpotifyPlayer.hasPermissions(spotifyAuth)
   );
   const [soundcloudEnabled, setSoundcloudEnabled] = React.useState(
-    Boolean(soundcloudAuth?.access_token)
+    userPreferences?.brainzplayer?.soundcloudEnabled ??
+      SoundcloudPlayer.hasPermissions(soundcloudAuth)
   );
+
+  const saveSettings = React.useCallback(async () => {
+    if (!currentUser?.auth_token) {
+      toast.error("You must be logged in to update your preferences");
+      return;
+    }
+    const { submitBrainzplayerPreferences } = APIService;
+    try {
+      await submitBrainzplayerPreferences(currentUser.auth_token, {
+        youtubeEnabled,
+        spotifyEnabled,
+        soundcloudEnabled,
+      });
+      toast.success("Saved your preferences successfully");
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Error saving preferences"
+          message={
+            <>
+              {error.toString()}
+              <br />
+              Please try again or contact us if the issue persists.
+            </>
+          }
+        />
+      );
+    }
+  }, [
+    youtubeEnabled,
+    spotifyEnabled,
+    soundcloudEnabled,
+    APIService,
+    currentUser?.auth_token,
+  ]);
 
   return (
     <>
@@ -54,19 +95,22 @@ function BrainzPlayerSettings() {
           checked={spotifyEnabled}
           onChange={(e) => setSpotifyEnabled(!spotifyEnabled)}
           switchLabel={
-            <>
+            <span
+              className={`text-brand ${spotifyEnabled ? "text-success" : ""}`}
+            >
               <FontAwesomeIcon icon={faSpotify} />
-              Spotify Player
-            </>
+              &nbsp;Spotify
+            </span>
           }
         />
+        <br />
         <small>
           Spotify requires a premium account to play full songs on third-party
           websites. To sign in, please go to the{" "}
           <Link to="/settings/music-services/">music services page</Link>.
         </small>
       </p>
-      <p>
+      {/* <p>
         <Switch
           id="enable-apple-music"
           value="apple-music"
@@ -74,19 +118,20 @@ function BrainzPlayerSettings() {
           checked={appleMusicEnabled}
           onChange={(e) => setAppleMusicEnabled(!appleMusicEnabled)}
           switchLabel={
-            <>
+            <span className={`text-brand ${enabled ? "text-success":""}`}>
               <FontAwesomeIcon icon={faApple} />
-              Apple Music Player
-            </>
+              &nbsp;Apple Music Player
+            </span>
           }
         />
+        <br/>
         <small>
           Apple Music requires a premium account to play full songs on
           third-party websites. To sign in, please go to the{" "}
           <Link to="/settings/music-services/">music services page</Link>. You
           will need to sign in every 6 months.
         </small>
-      </p>
+      </p> */}
       <p>
         <Switch
           id="enable-soundcloud"
@@ -95,12 +140,17 @@ function BrainzPlayerSettings() {
           checked={soundcloudEnabled}
           onChange={(e) => setSoundcloudEnabled(!soundcloudEnabled)}
           switchLabel={
-            <>
+            <span
+              className={`text-brand ${
+                soundcloudEnabled ? "text-success" : ""
+              }`}
+            >
               <FontAwesomeIcon icon={faSoundcloud} />
-              Soundcloud Player
-            </>
+              &nbsp;Soundcloud
+            </span>
           }
         />
+        <br />
         <small>
           Soundcloud requires a free account to play full songs on third-party
           websites. To sign in, please go to the{" "}
@@ -114,16 +164,18 @@ function BrainzPlayerSettings() {
           checked={youtubeEnabled}
           onChange={(e) => setYoutubeEnabled(!youtubeEnabled)}
           switchLabel={
-            <>
+            <span
+              className={`text-brand ${youtubeEnabled ? "text-success" : ""}`}
+            >
               <FontAwesomeIcon icon={faYoutube} />
-              Youtube Player
-            </>
+              &nbsp;Youtube
+            </span>
           }
         />
+        <br />
         <small>
-          Youtube player does not require signing in and provides a good
-          fallback. Be aware the search results from Youtube are often
-          inaccurate.
+          Youtube does not require signing in and provides a good fallback. Be
+          aware the search results from Youtube are often inaccurate.
           <br />
           By using Youtube to play music, you agree to be bound by the YouTube
           Terms of Service. See their terms of service and privacy policy below:
@@ -149,6 +201,14 @@ function BrainzPlayerSettings() {
           </ul>
         </small>
       </p>
+      <br />
+      <button
+        className="btn btn-large btn-primary"
+        type="button"
+        onClick={saveSettings}
+      >
+        Save preferences
+      </button>
     </>
   );
 }
