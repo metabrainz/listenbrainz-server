@@ -220,6 +220,10 @@ export default class BrainzPlayer extends React.Component<
       return;
     }
     const { userPreferences } = this.context;
+    const { brainzplayer_event, payload } = event.data;
+    if (!brainzplayer_event) {
+      return;
+    }
     if (userPreferences?.brainzplayer) {
       const brainzPlayerDisabled =
         userPreferences?.brainzplayer?.spotifyEnabled === false &&
@@ -247,7 +251,6 @@ export default class BrainzPlayer extends React.Component<
         );
       }
     }
-    const { brainzplayer_event, payload } = event.data;
     switch (brainzplayer_event) {
       case "play-listen":
         this.playListen(payload);
