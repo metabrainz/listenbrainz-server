@@ -100,7 +100,10 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
             headers={"Authorization": f"Token {self.user['auth_token']}"}
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"], "Invalid preferences in the JSON: Additional properties are not allowed ('fnord' was unexpected)")
+        self.assertEqual(
+            response.json["error"],
+            "Invalid preferences in the JSON: Additional properties are not allowed ('fnord' was unexpected)"
+        )
 
         response = self.client.post(
             self.custom_url_for("user_settings_api_v1.update_brainzplayer_prefs"),

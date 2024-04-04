@@ -65,6 +65,7 @@ def set_troi_prefs():
     }
     return jsonify(data)
 
+
 @settings_bp.route("/brainzplayer/", methods=["POST"])
 @login_required
 def get_brainzplayer_prefs():

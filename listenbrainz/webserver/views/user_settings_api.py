@@ -88,6 +88,7 @@ brainzplayer_preferences_schema = {
     "additionalProperties": False,
 }
 
+
 @user_settings_api_bp.route('/brainzplayer', methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
@@ -111,6 +112,6 @@ def update_brainzplayer_prefs():
         validate(instance=new_preferences, schema=brainzplayer_preferences_schema)
     except exceptions.ValidationError as err:
         raise APIBadRequest(f"Invalid preferences in the JSON: {err.message}")
-    
+
     db_usersetting.update_brainzplayer_prefs(db_conn, user["id"], orjson.dumps(new_preferences).decode())
     return jsonify({"status": "ok"})

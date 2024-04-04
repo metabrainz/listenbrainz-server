@@ -14,7 +14,6 @@ import {
 } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
 import {
   ToastMsg,
   createNotification,
@@ -123,9 +122,9 @@ export default class BrainzPlayer extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  spotifyPlayer?: React.RefObject<SpotifyPlayer>;
-  youtubePlayer?: React.RefObject<YoutubePlayer>;
-  soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
+  spotifyPlayer: React.RefObject<SpotifyPlayer>;
+  youtubePlayer: React.RefObject<YoutubePlayer>;
+  soundcloudPlayer: React.RefObject<SoundcloudPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
   playerStateTimerID?: NodeJS.Timeout;
@@ -145,6 +144,10 @@ export default class BrainzPlayer extends React.Component<
 
   constructor(props: BrainzPlayerProps) {
     super(props);
+
+    this.spotifyPlayer = React.createRef<SpotifyPlayer>();
+    this.youtubePlayer = React.createRef<YoutubePlayer>();
+    this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
 
     this.state = {
       currentDataSourceIndex: 0,
@@ -171,25 +174,21 @@ export default class BrainzPlayer extends React.Component<
     window.addEventListener("storage", this.onLocalStorageEvent);
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
     window.addEventListener("beforeunload", this.alertBeforeClosingPage);
-    // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
     const { spotifyAuth, soundcloudAuth, userPreferences } = this.context;
 
     if (
       userPreferences?.brainzplayer?.spotifyEnabled !== false &&
       SpotifyPlayer.hasPermissions(spotifyAuth)
     ) {
-      this.spotifyPlayer = React.createRef<SpotifyPlayer>();
       this.dataSources.push(this.spotifyPlayer);
     }
     if (
       userPreferences?.brainzplayer?.soundcloudEnabled !== false &&
       SoundcloudPlayer.hasPermissions(soundcloudAuth)
     ) {
-      this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
       this.dataSources.push(this.soundcloudPlayer);
     }
     if (userPreferences?.brainzplayer?.youtubeEnabled !== false) {
-      this.youtubePlayer = React.createRef<YoutubePlayer>();
       this.dataSources.push(this.youtubePlayer);
     }
   }
