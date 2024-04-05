@@ -9,6 +9,7 @@ import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
+import ReactTooltip from "react-tooltip";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
@@ -80,14 +81,21 @@ function BrainzPlayerSettings() {
       <p>
         You can choose which music services to play music from on listenBrainz.
         To sign in and authorize your account please go to the{" "}
-        <Link to="/settings/music-services/">music services page</Link>. <br />
+        <Link to="/settings/music-services/details/">
+          &quot;connect services&quot; page
+        </Link>
+        . <br />
         If you don&apos;t have a subscription to a music service listed below,
         Youtube will be used by default as it does not require an account.
         However the search results from Youtube are often inaccurate, and for a
         better listening experience we recommend one of the other services (if
         you have one available).
       </p>
-      <p>
+      <div
+        className="mb-15"
+        data-tip={!SpotifyPlayer.hasPermissions(spotifyAuth)}
+        data-for="login-first"
+      >
         <Switch
           id="enable-spotify"
           disabled={!SpotifyPlayer.hasPermissions(spotifyAuth)}
@@ -96,10 +104,12 @@ function BrainzPlayerSettings() {
           onChange={(e) => setSpotifyEnabled(!spotifyEnabled)}
           switchLabel={
             <span
-              className={`text-brand ${spotifyEnabled ? "text-success" : ""}`}
+              className={`text-brand ${!spotifyEnabled ? "text-muted" : ""}`}
             >
-              <FontAwesomeIcon icon={faSpotify} />
-              &nbsp;Spotify
+              <span className={spotifyEnabled ? "text-success" : ""}>
+                <FontAwesomeIcon icon={faSpotify} />
+              </span>
+              <span>&nbsp;Spotify</span>
             </span>
           }
         />
@@ -107,20 +117,30 @@ function BrainzPlayerSettings() {
         <small>
           Spotify requires a premium account to play full songs on third-party
           websites. To sign in, please go to the{" "}
-          <Link to="/settings/music-services/">music services page</Link>.
+          <Link to="/settings/music-services/details/">
+            &quot;connect services&quot; page
+          </Link>
+          .
         </small>
-      </p>
-      {/* <p>
+      </div>
+      {/* <div className="mb-15"
+          data-tip={!AppleMusicPlayer.hasPermissions(appleAuth)}
+          data-for="login-first">
         <Switch
           id="enable-apple-music"
           value="apple-music"
           disabled={!AppleMusicPlayer.hasPermissions(appleAuth)}
           checked={appleMusicEnabled}
+          
           onChange={(e) => setAppleMusicEnabled(!appleMusicEnabled)}
           switchLabel={
-            <span className={`text-brand ${enabled ? "text-success":""}`}>
-              <FontAwesomeIcon icon={faApple} />
-              &nbsp;Apple Music Player
+            <span
+              className={`text-brand ${!appleMusicEnabled ? "text-muted" : ""}`}
+            >
+              <span className={appleMusicEnabled ? "text-success" : ""}>
+                <FontAwesomeIcon icon={faApple} />
+              </span>
+              <span>&nbsp;Apple Music</span>
             </span>
           }
         />
@@ -128,11 +148,15 @@ function BrainzPlayerSettings() {
         <small>
           Apple Music requires a premium account to play full songs on
           third-party websites. To sign in, please go to the{" "}
-          <Link to="/settings/music-services/">music services page</Link>. You
+          <Link to="/settings/music-services/details/">&quot;connect services&quot; page</Link>. You
           will need to sign in every 6 months.
         </small>
-      </p> */}
-      <p>
+      </div> */}
+      <div
+        className="mb-15"
+        data-tip={!SoundcloudPlayer.hasPermissions(soundcloudAuth)}
+        data-for="login-first"
+      >
         <Switch
           id="enable-soundcloud"
           value="soundcloud"
@@ -141,12 +165,12 @@ function BrainzPlayerSettings() {
           onChange={(e) => setSoundcloudEnabled(!soundcloudEnabled)}
           switchLabel={
             <span
-              className={`text-brand ${
-                soundcloudEnabled ? "text-success" : ""
-              }`}
+              className={`text-brand ${!soundcloudEnabled ? "text-muted" : ""}`}
             >
-              <FontAwesomeIcon icon={faSoundcloud} />
-              &nbsp;Soundcloud
+              <span className={soundcloudEnabled ? "text-success" : ""}>
+                <FontAwesomeIcon icon={faSoundcloud} />
+              </span>
+              <span>&nbsp;Soundcloud</span>
             </span>
           }
         />
@@ -154,10 +178,12 @@ function BrainzPlayerSettings() {
         <small>
           Soundcloud requires a free account to play full songs on third-party
           websites. To sign in, please go to the{" "}
-          <Link to="/settings/music-services/">music services page</Link>
+          <Link to="/settings/music-services/details/">
+            &quot;connect services&quot; page
+          </Link>
         </small>
-      </p>
-      <p>
+      </div>
+      <div className="mb-15">
         <Switch
           id="enable-youtube"
           value="youtube"
@@ -165,10 +191,12 @@ function BrainzPlayerSettings() {
           onChange={(e) => setYoutubeEnabled(!youtubeEnabled)}
           switchLabel={
             <span
-              className={`text-brand ${youtubeEnabled ? "text-success" : ""}`}
+              className={`text-brand ${!youtubeEnabled ? "text-muted" : ""}`}
             >
-              <FontAwesomeIcon icon={faYoutube} />
-              &nbsp;Youtube
+              <span className={youtubeEnabled ? "text-success" : ""}>
+                <FontAwesomeIcon icon={faYoutube} />
+              </span>
+              <span>&nbsp;Youtube</span>
             </span>
           }
         />
@@ -200,7 +228,7 @@ function BrainzPlayerSettings() {
             </li>
           </ul>
         </small>
-      </p>
+      </div>
       <br />
       <button
         className="btn btn-lg btn-info"
@@ -209,6 +237,10 @@ function BrainzPlayerSettings() {
       >
         Save preferences
       </button>
+      <ReactTooltip id="login-first" aria-haspopup="true" delayHide={500}>
+        You must login to this service in the &quot;Connect services&quot;
+        section before using it.
+      </ReactTooltip>
     </>
   );
 }

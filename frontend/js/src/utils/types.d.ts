@@ -772,10 +772,10 @@ declare type SearchUser = {
 };
 
 declare type BrainzPlayerSettings = {
-    youtubeEnabled?: boolean;
-    spotifyEnabled?: boolean;
-    soundcloudEnabled?: boolean;
-    appleMusicEnabled?: boolean;
+  youtubeEnabled?: boolean;
+  spotifyEnabled?: boolean;
+  soundcloudEnabled?: boolean;
+  appleMusicEnabled?: boolean;
 };
 
 declare type UserPreferences = {

@@ -248,6 +248,7 @@ export default class BrainzPlayer extends React.Component<
             }
           />
         );
+        return;
       }
     }
     switch (brainzplayer_event) {

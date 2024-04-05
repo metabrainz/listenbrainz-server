@@ -66,16 +66,6 @@ def set_troi_prefs():
     return jsonify(data)
 
 
-@settings_bp.route("/brainzplayer/", methods=["POST"])
-@login_required
-def get_brainzplayer_prefs():
-    current_brainzplayer_prefs = db_usersetting.get_brainzplayer_prefs(db_conn, current_user.id)
-    data = {
-        "brainzplayer": current_brainzplayer_prefs,
-    }
-    return jsonify(data)
-
-
 @settings_bp.route("/resetlatestimportts/", methods=["POST"])
 @api_login_required
 def reset_latest_import_timestamp():

@@ -74,12 +74,14 @@ def get_global_props():
         "musicbrainz": get_current_musicbrainz_user(),
         "soundcloud": get_current_soundcloud_user(),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
-        "user_preferences": {
-            "brainzplayer": db_usersetting.get_brainzplayer_prefs(
+    }
+
+    brainzplayer_props = db_usersetting.get_brainzplayer_prefs(
                 db_conn, current_user.id
             ) if current_user.is_authenticated else None
-        },
-    }
+    if brainzplayer_props is not None:
+        props["user_preferences"] = brainzplayer_props
+
     return orjson.dumps(props).decode("utf-8")
 
 
