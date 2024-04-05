@@ -17,7 +17,6 @@ import {
 } from "lodash";
 import { Link, useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
 import { getEntityLink } from "../../stats/utils";
 import ComponentToImage from "./components/ComponentToImage";
@@ -32,6 +31,7 @@ import FollowButton from "../../components/follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import { ToastMsg } from "../../../notifications/Notifications";
 import SEO, { YIMYearMetaTags } from "../SEO";
+import { useBrainzPlayerDispatch } from "../../../common/brainzplayer/BrainzPlayerContext";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -79,6 +79,14 @@ export type YearInMusicProps = {
       artist_credit_names: string[];
     }>;
   };
+  allPlaylists: (
+    | {
+        jspf: JSPFObject;
+        mbid: string;
+        description?: string | undefined;
+      }
+    | undefined
+  )[];
 };
 
 type YearInMusicLoaderData = {
@@ -231,7 +239,7 @@ export default class YearInMusic extends React.Component<
   };
 
   render() {
-    const { user, yearInMusicData } = this.props;
+    const { user, yearInMusicData, allPlaylists } = this.props;
     const { APIService, currentUser } = this.context;
     const { activeCoverflowImage } = this.state;
     const listens: BaseListenFormat[] = [];
@@ -326,39 +334,6 @@ export default class YearInMusic extends React.Component<
         // Filter out null entries in the array
         .filter(Boolean);
     }
-
-    /* Playlists */
-    const topDiscoveriesPlaylist = this.getPlaylistByName(
-      "playlist-top-discoveries-for-year",
-      `Highlights songs that ${user.name} first listened to (more than once) in 2021`
-    );
-    const topMissedRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-missed-recordings-for-year",
-      `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
-    );
-    const topNewRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-new-recordings-for-year",
-      `Songs released in 2021 that ${user.name} listened to`
-    );
-    const topRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-recordings-for-year",
-      `This playlist is made from ${user.name}'s top recordings for 2021 statistics`
-    );
-    if (
-      !topDiscoveriesPlaylist ||
-      !topMissedRecordingsPlaylist ||
-      !topNewRecordingsPlaylist ||
-      !topRecordingsPlaylist
-    ) {
-      missingSomeData = true;
-    }
-
-    const allPlaylists = [
-      topDiscoveriesPlaylist,
-      topMissedRecordingsPlaylist,
-      topNewRecordingsPlaylist,
-      topRecordingsPlaylist,
-    ];
 
     const noDataText = (
       <div className="center-p">
@@ -964,13 +939,6 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <hr className="wide" />
-        <BrainzPlayer
-          listens={listens}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     );
   }
@@ -979,5 +947,162 @@ export default class YearInMusic extends React.Component<
 export function YearInMusicWrapper() {
   const props = useLoaderData() as YearInMusicLoaderData;
   const { user, data: yearInMusicData } = props;
-  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
+  const listens: BaseListenFormat[] = [];
+  if (yearInMusicData?.top_recordings) {
+    yearInMusicData.top_recordings.forEach((recording) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: recording.artist_name,
+          track_name: recording.track_name,
+          release_name: recording.release_name,
+          additional_info: {
+            recording_mbid: recording.recording_mbid,
+            release_mbid: recording.release_mbid,
+            artist_mbids: recording.artist_mbids,
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+
+  if (yearInMusicData?.top_artists) {
+    yearInMusicData.top_artists.forEach((artist) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: artist.artist_name,
+          track_name: "",
+          additional_info: {
+            artist_mbids: artist.artist_mbids,
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+
+  if (yearInMusicData?.new_releases_of_top_artists) {
+    yearInMusicData.new_releases_of_top_artists.forEach((release) => {
+      const listen = {
+        listened_at: 0,
+        listened_at_iso: release.first_release_date,
+        track_metadata: {
+          artist_name: release.artist_credit_names.join(", "),
+          track_name: release.title,
+          release_name: release.title,
+          additional_info: {
+            release_mbid: release.release_mbid,
+            artist_mbids: release.artist_credit_mbids,
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+
+  function getPlaylistByName(
+    playlistName: string,
+    description?: string
+  ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
+    const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
+    /* We generated some playlists with this incorrect value as the track extension key, rewrite it if it exists */
+    const badPlaylistTrackExtensionValue = "https://musicbrainz.org/recording/";
+    let playlist;
+    try {
+      const rawPlaylist = get(yearInMusicData, playlistName);
+      const coverArt = get(yearInMusicData, `${playlistName}-coverart`);
+      playlist = isString(rawPlaylist) ? JSON.parse(rawPlaylist) : rawPlaylist;
+      // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
+      if (description) {
+        playlist.description = description;
+      }
+      /* Add a track image if it exists in the `{playlistName}-coverart` key */
+      playlist.jspf.playlist.track = playlist.jspf.playlist.track.map(
+        (track: JSPFTrack) => {
+          const newTrack = { ...track };
+          const track_id = track.identifier;
+          const found = track_id.match(uuidMatch);
+          if (found) {
+            const recording_mbid = found[0];
+            newTrack.id = recording_mbid;
+            const recording_coverart = coverArt?.[recording_mbid];
+            if (recording_coverart) {
+              newTrack.image = recording_coverart;
+            }
+          }
+          if (
+            newTrack.extension &&
+            track.extension?.[badPlaylistTrackExtensionValue]
+          ) {
+            newTrack.extension[MUSICBRAINZ_JSPF_TRACK_EXTENSION] =
+              track.extension[badPlaylistTrackExtensionValue];
+          }
+          const trackExtension =
+            newTrack?.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION];
+          // See https://github.com/metabrainz/listenbrainz-server/pull/1839 for context
+          if (trackExtension && has(trackExtension, "artist_mbids")) {
+            //  Using some forbiddden (but oh so sweet) ts-ignore as we're fixing objects that don't fit the expected type
+            // @ts-ignore
+            trackExtension.artist_identifiers = trackExtension.artist_mbids;
+            // @ts-ignore
+            delete trackExtension.artist_mbids;
+          }
+          return newTrack;
+        }
+      );
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`"Error parsing ${playlistName}:`, error);
+    }
+    return playlist;
+  }
+
+  /* Playlists */
+  const topDiscoveriesPlaylist = getPlaylistByName(
+    "playlist-top-discoveries-for-year",
+    `Highlights songs that ${user.name} first listened to (more than once) in 2021`
+  );
+  const topMissedRecordingsPlaylist = getPlaylistByName(
+    "playlist-top-missed-recordings-for-year",
+    `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
+  );
+  const topNewRecordingsPlaylist = getPlaylistByName(
+    "playlist-top-new-recordings-for-year",
+    `Songs released in 2021 that ${user.name} listened to`
+  );
+  const topRecordingsPlaylist = getPlaylistByName(
+    "playlist-top-recordings-for-year",
+    `This playlist is made from ${user.name}'s top recordings for 2021 statistics`
+  );
+  let missingSomeData = false;
+  if (
+    !topDiscoveriesPlaylist ||
+    !topMissedRecordingsPlaylist ||
+    !topNewRecordingsPlaylist ||
+    !topRecordingsPlaylist
+  ) {
+    missingSomeData = true;
+  }
+
+  const allPlaylists = [
+    topDiscoveriesPlaylist,
+    topMissedRecordingsPlaylist,
+    topNewRecordingsPlaylist,
+    topRecordingsPlaylist,
+  ];
+
+  const dispatch = useBrainzPlayerDispatch();
+  React.useEffect(() => {
+    dispatch({ type: "SET_CURRENT_LISTEN", data: listens });
+  }, [listens]);
+
+  return (
+    <YearInMusic
+      user={user}
+      yearInMusicData={yearInMusicData}
+      allPlaylists={allPlaylists}
+    />
+  );
 }

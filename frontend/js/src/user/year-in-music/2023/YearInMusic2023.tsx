@@ -29,7 +29,6 @@ import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
 import { Link, useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
 import {
   generateAlbumArtThumbnailLink,
@@ -46,6 +45,7 @@ import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../components/follow/FollowButton";
 import SEO, { YIMYearMetaTags } from "../SEO";
+import { useBrainzPlayerDispatch } from "../../../common/brainzplayer/BrainzPlayerContext";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -113,6 +113,9 @@ export type YearInMusicProps = {
       artists: Array<UserArtistMapArtist>;
     }>;
   };
+  topDiscoveriesPlaylist: JSPFPlaylist | undefined;
+  topMissedRecordingsPlaylist: JSPFPlaylist | undefined;
+  missingPlaylistData: boolean;
 };
 
 type YearInMusicLoaderData = {
@@ -170,28 +173,6 @@ export default class YearInMusic extends React.Component<
     const { user } = this.props;
     if (user !== prevProps.user) {
       await this.getFollowing();
-    }
-  }
-
-  private getPlaylistByName(
-    playlistName: string,
-    description?: string
-  ): JSPFPlaylist | undefined {
-    const { yearInMusicData } = this.props;
-    try {
-      const playlist = get(yearInMusicData, playlistName);
-      if (!playlist) {
-        return undefined;
-      }
-      // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
-      if (description) {
-        playlist.annotation = description;
-      }
-      return playlist;
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(`"Error parsing ${playlistName}:`, error);
-      return undefined;
     }
   }
 
@@ -391,14 +372,20 @@ export default class YearInMusic extends React.Component<
   };
 
   render() {
-    const { user, yearInMusicData } = this.props;
+    const {
+      user,
+      yearInMusicData,
+      topDiscoveriesPlaylist,
+      topMissedRecordingsPlaylist,
+      missingPlaylistData,
+    } = this.props;
     const { selectedMetric, selectedColor, followingList } = this.state;
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
 
     // Some data might not have been calculated for some users
     // This boolean lets us warn them of that
-    let missingSomeData = false;
+    let missingSomeData = missingPlaylistData;
     const hasSomeData = !!yearInMusicData && !isEmpty(yearInMusicData);
     if (
       !yearInMusicData.top_release_groups ||
@@ -493,19 +480,6 @@ export default class YearInMusic extends React.Component<
         )
         // Filter out null entries in the array
         .filter(Boolean);
-    }
-
-    /* Playlists */
-    const topDiscoveriesPlaylist = this.getPlaylistByName(
-      "playlist-top-discoveries-for-year",
-      `Highlights songs that ${user.name} first listened to (more than once) in 2023`
-    );
-    const topMissedRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-missed-recordings-for-year",
-      `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
-    );
-    if (!topDiscoveriesPlaylist || !topMissedRecordingsPlaylist) {
-      missingSomeData = true;
     }
 
     const linkToUserProfile = `https://listenbrainz.org/user/${user.name}`;
@@ -1495,13 +1469,6 @@ export default class YearInMusic extends React.Component<
         >
           x
         </span>
-        <BrainzPlayer
-          listens={listens}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     );
   }
@@ -1510,5 +1477,126 @@ export default class YearInMusic extends React.Component<
 export function YearInMusicWrapper() {
   const props = useLoaderData() as YearInMusicLoaderData;
   const { user, data: yearInMusicData } = props;
-  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
+  const listens: BaseListenFormat[] = [];
+  if (yearInMusicData.top_artists) {
+    yearInMusicData.top_artists.forEach((artist) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: artist.artist_name,
+          track_name: "",
+          additional_info: {
+            artist_mbids: [artist.artist_mbid],
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+  if (yearInMusicData.top_recordings) {
+    yearInMusicData.top_recordings.forEach((recording) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: recording.artist_name,
+          track_name: recording.track_name,
+          release_name: recording.release_name,
+          additional_info: {
+            recording_mbid: recording.recording_mbid,
+            release_mbid: recording.release_mbid,
+            artist_mbids: recording.artist_mbids,
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+
+  if (yearInMusicData.new_releases_of_top_artists) {
+    yearInMusicData.new_releases_of_top_artists.forEach((release) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: release.artist_credit_name,
+          track_name: release.title,
+          release_name: release.title,
+          additional_info: {
+            release_group_mbid: release.release_group_mbid,
+            artist_mbids: release.artist_credit_mbids,
+          },
+          mbid_mapping: {
+            recording_mbid: "",
+            release_mbid: "",
+            artist_mbids: [],
+            caa_id: release.caa_id,
+            caa_release_mbid: release.caa_release_mbid,
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+
+  function getPlaylistByName(
+    playlistName: string,
+    description?: string
+  ): JSPFPlaylist | undefined {
+    try {
+      const playlist = get(yearInMusicData, playlistName);
+      if (!playlist) {
+        return undefined;
+      }
+      // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
+      if (description) {
+        playlist.annotation = description;
+      }
+      return playlist;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`"Error parsing ${playlistName}:`, error);
+      return undefined;
+    }
+  }
+
+  /* Playlists */
+  let missingPlaylistData = false;
+  const topDiscoveriesPlaylist = getPlaylistByName(
+    "playlist-top-discoveries-for-year",
+    `Highlights songs that ${user.name} first listened to (more than once) in 2023`
+  );
+  const topMissedRecordingsPlaylist = getPlaylistByName(
+    "playlist-top-missed-recordings-for-year",
+    `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
+  );
+  if (!topDiscoveriesPlaylist || !topMissedRecordingsPlaylist) {
+    missingPlaylistData = true;
+  }
+
+  if (topDiscoveriesPlaylist) {
+    topDiscoveriesPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
+      const listen = JSPFTrackToListen(playlistTrack);
+      listens.push(listen);
+    });
+  }
+  if (topMissedRecordingsPlaylist) {
+    topMissedRecordingsPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
+      const listen = JSPFTrackToListen(playlistTrack);
+      listens.push(listen);
+    });
+  }
+
+  const dispatch = useBrainzPlayerDispatch();
+  React.useEffect(() => {
+    dispatch({ type: "SET_CURRENT_LISTEN", data: listens });
+  }, [listens]);
+
+  return (
+    <YearInMusic
+      user={user}
+      yearInMusicData={yearInMusicData}
+      topDiscoveriesPlaylist={topDiscoveriesPlaylist}
+      topMissedRecordingsPlaylist={topMissedRecordingsPlaylist}
+      missingPlaylistData={missingPlaylistData}
+    />
+  );
 }

@@ -125,7 +125,7 @@ export default function UserEntityChart() {
       type: "SET_CURRENT_LISTEN",
       data: listenableItems,
     });
-  }, [listenableItems]);
+  }, []);
 
   const userOrLoggedInUser: string | undefined =
     user?.name ?? currentUser?.name;

@@ -25,7 +25,6 @@ import {
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link, useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
 import { generateAlbumArtThumbnailLink } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
@@ -38,6 +37,7 @@ import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import SEO, { YIMYearMetaTags } from "../SEO";
+import { useBrainzPlayerDispatch } from "../../../common/brainzplayer/BrainzPlayerContext";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -91,6 +91,10 @@ export type YearInMusicProps = {
       artists: Array<UserArtistMapArtist>;
     }>;
   };
+  topDiscoveriesPlaylist: JSPFPlaylist | undefined;
+  topMissedRecordingsPlaylist: JSPFPlaylist | undefined;
+  missingSomePlaylistData: boolean;
+  hasNoPlaylists: boolean;
 };
 
 type YearInMusicLoaderData = {
@@ -252,8 +256,7 @@ export default class YearInMusic extends React.Component<
   showTopLevelPlaylist = (
     index: number,
     topLevelPlaylist: JSPFPlaylist | undefined,
-    coverArtKey: string,
-    listens: Array<Listen>
+    coverArtKey: string
   ): JSX.Element | undefined => {
     if (!topLevelPlaylist) {
       return undefined;
@@ -289,7 +292,6 @@ export default class YearInMusic extends React.Component<
         <div>
           {topLevelPlaylist.track.slice(0, 5).map((playlistTrack) => {
             const listen = JSPFTrackToListen(playlistTrack);
-            listens.push(listen);
             let thumbnail;
             if (playlistTrack.image) {
               thumbnail = (
@@ -327,10 +329,16 @@ export default class YearInMusic extends React.Component<
   };
 
   render() {
-    const { user, yearInMusicData } = this.props;
+    const {
+      user,
+      yearInMusicData,
+      topDiscoveriesPlaylist,
+      topMissedRecordingsPlaylist,
+      missingSomePlaylistData,
+      hasNoPlaylists,
+    } = this.props;
     const { selectedMetric } = this.state;
     const { APIService, currentUser } = this.context;
-    const listens: BaseListenFormat[] = [];
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
@@ -367,7 +375,7 @@ export default class YearInMusic extends React.Component<
 
     // Some data might not have been calculated for some users
     // This boolean lets us warn them of that
-    let missingSomeData = false;
+    let missingSomeData = missingSomePlaylistData;
 
     if (
       !yearInMusicData.top_releases ||
@@ -461,23 +469,6 @@ export default class YearInMusic extends React.Component<
         )
         // Filter out null entries in the array
         .filter(Boolean);
-    }
-
-    /* Playlists */
-    let hasNoPlaylists = false;
-    const topDiscoveriesPlaylist = this.getPlaylistByName(
-      "playlist-top-discoveries-for-year",
-      `Highlights songs that ${user.name} first listened to (more than once) in 2022`
-    );
-    const topMissedRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-missed-recordings-for-year",
-      `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
-    );
-    if (!topDiscoveriesPlaylist || !topMissedRecordingsPlaylist) {
-      missingSomeData = true;
-    }
-    if (!topDiscoveriesPlaylist && !topMissedRecordingsPlaylist) {
-      hasNoPlaylists = true;
     }
 
     const noDataText = (
@@ -668,7 +659,6 @@ export default class YearInMusic extends React.Component<
                               },
                             },
                           };
-                          listens.push(listenHere);
                           return (
                             <ListenCard
                               compact
@@ -733,7 +723,6 @@ export default class YearInMusic extends React.Component<
                               },
                             },
                           };
-                          listens.push(listenHere);
                           return (
                             <ListenCard
                               compact
@@ -992,15 +981,13 @@ export default class YearInMusic extends React.Component<
                 this.showTopLevelPlaylist(
                   0,
                   topDiscoveriesPlaylist,
-                  "discovery-playlist",
-                  listens
+                  "discovery-playlist"
                 )}
               {Boolean(topMissedRecordingsPlaylist) &&
                 this.showTopLevelPlaylist(
                   1,
                   topMissedRecordingsPlaylist,
-                  "missed-playlist",
-                  listens
+                  "missed-playlist"
                 )}
               {hasNoPlaylists && noDataText}
             </div>
@@ -1089,7 +1076,6 @@ export default class YearInMusic extends React.Component<
                               },
                             },
                           };
-                          listens.push(listenHere);
                           return (
                             <ListenCard
                               listenDetails={details}
@@ -1233,13 +1219,6 @@ export default class YearInMusic extends React.Component<
             cartoon.
           </div>
         </div>
-        <BrainzPlayer
-          listens={listens}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     );
   }
@@ -1248,5 +1227,150 @@ export default class YearInMusic extends React.Component<
 export function YearInMusicWrapper() {
   const props = useLoaderData() as YearInMusicLoaderData;
   const { user, data: yearInMusicData } = props;
-  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
+  const listens: BaseListenFormat[] = [];
+  if (yearInMusicData.top_artists) {
+    yearInMusicData.top_artists.forEach((artist) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: artist.artist_name,
+          track_name: "",
+          additional_info: {
+            artist_mbids: [artist.artist_mbid],
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+  if (yearInMusicData.top_recordings) {
+    yearInMusicData.top_recordings.forEach((recording) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: recording.artist_name,
+          track_name: recording.track_name,
+          release_name: recording.release_name,
+          additional_info: {
+            recording_mbid: recording.recording_mbid,
+            release_mbid: recording.release_mbid,
+            artist_mbids: recording.artist_mbids,
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+
+  if (yearInMusicData.new_releases_of_top_artists) {
+    yearInMusicData.new_releases_of_top_artists.forEach((release) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: release.artist_credit_name,
+          track_name: release.title,
+          release_name: release.title,
+          additional_info: {
+            release_group_mbid: release.release_group_mbid,
+            artist_mbids: release.artist_credit_mbids,
+          },
+          mbid_mapping: {
+            recording_mbid: "",
+            release_mbid: "",
+            artist_mbids: [],
+            caa_id: release.caa_id,
+            caa_release_mbid: release.caa_release_mbid,
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+
+  function getPlaylistByName(
+    playlistName: string,
+    description?: string
+  ): JSPFPlaylist | undefined {
+    const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
+    let playlist;
+    try {
+      playlist = get(yearInMusicData, playlistName);
+      if (!playlist) {
+        return undefined;
+      }
+      const coverArt = get(yearInMusicData, `${playlistName}-coverart`);
+      // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
+      if (description) {
+        playlist.annotation = description;
+      }
+      /* Add a track image if it exists in the `{playlistName}-coverart` key */
+      playlist.track = playlist.track.map((track: JSPFTrack) => {
+        const newTrack = { ...track };
+        const track_id = track.identifier;
+        const found = track_id.match(uuidMatch);
+        if (found) {
+          const recording_mbid = found[0];
+          newTrack.id = recording_mbid;
+          const recording_coverart = coverArt?.[recording_mbid];
+          if (recording_coverart) {
+            newTrack.image = recording_coverart;
+          }
+        }
+        return newTrack;
+      });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`"Error parsing ${playlistName}:`, error);
+      return undefined;
+    }
+    return playlist;
+  }
+
+  /* Playlists */
+  let missingSomePlaylistData = false;
+  let hasNoPlaylists = false;
+  const topDiscoveriesPlaylist = getPlaylistByName(
+    "playlist-top-discoveries-for-year",
+    `Highlights songs that ${user.name} first listened to (more than once) in 2022`
+  );
+  const topMissedRecordingsPlaylist = getPlaylistByName(
+    "playlist-top-missed-recordings-for-year",
+    `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
+  );
+  if (!topDiscoveriesPlaylist || !topMissedRecordingsPlaylist) {
+    missingSomePlaylistData = true;
+  }
+  if (!topDiscoveriesPlaylist && !topMissedRecordingsPlaylist) {
+    hasNoPlaylists = true;
+  }
+
+  if (topDiscoveriesPlaylist) {
+    topDiscoveriesPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
+      const listen = JSPFTrackToListen(playlistTrack);
+      listens.push(listen);
+    });
+  }
+
+  if (topMissedRecordingsPlaylist) {
+    topMissedRecordingsPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
+      const listen = JSPFTrackToListen(playlistTrack);
+      listens.push(listen);
+    });
+  }
+
+  const dispatch = useBrainzPlayerDispatch();
+  React.useEffect(() => {
+    dispatch({ type: "SET_CURRENT_LISTEN", data: listens });
+  }, [listens]);
+
+  return (
+    <YearInMusic
+      user={user}
+      yearInMusicData={yearInMusicData}
+      topDiscoveriesPlaylist={topDiscoveriesPlaylist}
+      topMissedRecordingsPlaylist={topMissedRecordingsPlaylist}
+      missingSomePlaylistData={missingSomePlaylistData}
+      hasNoPlaylists={hasNoPlaylists}
+    />
+  );
 }
