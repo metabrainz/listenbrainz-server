@@ -963,13 +963,13 @@ export default class Listens extends React.Component<
             )}
           </div>
         </div>
-        <BrainzPlayer
+        {/* <BrainzPlayer
           listens={allListenables}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
           refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
+        /> */}
       </div>
     );
   }

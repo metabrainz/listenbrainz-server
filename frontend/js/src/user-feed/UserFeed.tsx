@@ -753,13 +753,13 @@ export default class UserFeedPage extends React.Component<
             <UserSocialNetwork user={currentUser} />
           </div>
         </div>
-        <BrainzPlayer
+        {/* <BrainzPlayer
           listens={listens}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
           refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
+        /> */}
       </>
     );
   }

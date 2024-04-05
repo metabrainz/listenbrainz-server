@@ -475,13 +475,13 @@ export default class PlaylistPage extends React.Component<
               )}
             </div>
           </div>
-          <BrainzPlayer
+          {/* <BrainzPlayer
             listens={tracks.map(JSPFTrackToListen)}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
             refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-          />
+          /> */}
         </div>
       </div>
     );

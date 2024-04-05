@@ -478,13 +478,13 @@ export default class RecommendationsPage extends React.Component<
             <RecommendationPlaylistSettings playlist={selectedPlaylist} />
           </section>
         )}
-        <BrainzPlayer
+        {/* <BrainzPlayer
           listens={listensFromJSPFTracks}
           listenBrainzAPIBaseURI={APIService.APIBaseURI}
           refreshSpotifyToken={APIService.refreshSpotifyToken}
           refreshYoutubeToken={APIService.refreshYoutubeToken}
           refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
+        /> */}
       </div>
     );
   }

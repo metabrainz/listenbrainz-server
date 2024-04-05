@@ -377,13 +377,13 @@ export default class MissingMBDataPage extends React.Component<
               </ul>
             </div>
           </div>
-          <BrainzPlayer
+          {/* <BrainzPlayer
             listens={missingMBDataAsListen}
             listenBrainzAPIBaseURI={APIService.APIBaseURI}
             refreshSpotifyToken={APIService.refreshSpotifyToken}
             refreshYoutubeToken={APIService.refreshYoutubeToken}
             refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-          />
+          /> */}
         </div>
       </>
     );
