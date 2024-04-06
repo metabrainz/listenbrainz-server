@@ -71,7 +71,7 @@ services:
       - ../frontend:/code/frontend:z
 
   websockets:
-    image: web
+    image: listenbrainz
     volumes:
       - ..:/code/listenbrainz:z
     command: python manage.py run_websockets -h 0.0.0.0 -p 8102

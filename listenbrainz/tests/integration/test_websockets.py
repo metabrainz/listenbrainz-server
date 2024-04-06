@@ -2,11 +2,9 @@ import socketio
 import json
 import time
 import requests
-from unittest.mock import patch
-
 import pytest
 from flask import url_for
-
+from unittest.mock import patch
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from data.model.external_service import ExternalServiceType
@@ -15,11 +13,12 @@ from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 import listenbrainz.db.external_service_oauth as db_oauth
 
+
 class WebSocketTests(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(WebSocketTests, self).setUp()
         self.sio = socketio.Client(logger=True, engineio_logger=True)
-        self.sio.connect('http://localhost:8102',wait_timeout = 20)
+        self.sio.connect('http://websockets:8102',wait_timeout = 20)
         self.http_session = requests.Session()
         print(self.sio)
 
@@ -36,16 +35,16 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-    def send_data(self, payload, user):
-        if not user:
-            user = self.user
-        response = self.http_session.post(
-            self.custom_url_for('api_v1.submit_listen'),
-            data=json.dumps(payload),
-            # headers={'Authorization': 'Token {}'.format(user['auth_token'])},
-            headers={'content-type': 'application/json'}
-        )
-        return response
+    # def send_data(self, payload, user):
+    #     if not user:
+    #         user = self.user
+    #     response = self.http_session.post(
+    #         self.custom_url_for('api_v1.submit_listen'),
+    #         data=json.dumps(payload),
+    #         # headers={'Authorization': 'Token {}'.format(user['auth_token'])},
+    #         headers={'content-type': 'application/json'}
+    #     )
+    #     return response
     
     def tearDown(self):
         # Close the HTTP session after the test
