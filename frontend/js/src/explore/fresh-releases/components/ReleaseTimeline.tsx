@@ -43,10 +43,6 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         (date) => releasesPerDate[date] >= minReleasesThreshold
       );
 
-      if (sortDirection === "descend") {
-        filteredDates.reverse();
-      }
-
       dataArr = filteredDates.map((item) => formatReleaseDate(item));
       percentArr = filteredDates
         .map((item) => (releasesPerDate[item] / data.length) * 100)
@@ -62,10 +58,6 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       );
 
       dataArr = filteredInitials.sort();
-      if (sortDirection === "descend") {
-        dataArr.reverse();
-      }
-
       percentArr = filteredInitials
         .map((item) => (artistInitialsCount[item] / data.length) * 100)
         .map((_, index, arr) =>
@@ -80,31 +72,28 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       );
 
       dataArr = filteredInitials.sort();
-      if (sortDirection === "descend") {
-        dataArr.reverse();
-      }
-
       percentArr = filteredInitials
         .map((item) => (releaseInitialsCount[item] / data.length) * 100)
         .map((_, index, arr) =>
           arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
         );
     } else {
+      // conutBy gives us an asc-sorted Dict by confidence
       const confidenceInitialsCount = countBy(
         data,
         (item: FreshReleaseItem) => item?.confidence
       );
-
-      dataArr = Object.keys(confidenceInitialsCount).sort();
-      if (sortDirection === "descend") {
-        dataArr.reverse();
-      }
-
+      dataArr = Object.keys(confidenceInitialsCount);
       percentArr = Object.values(confidenceInitialsCount)
         .map((item) => (item / data.length) * 100)
         .map((_, index, arr) =>
           arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
         );
+    }
+
+    if (sortDirection === "descend") {
+      dataArr.reverse();
+      percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
     }
 
     /**

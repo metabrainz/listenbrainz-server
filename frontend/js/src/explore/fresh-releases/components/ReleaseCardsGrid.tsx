@@ -64,7 +64,10 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
   };
 
   const mappedEntries = Array.from(releaseMapping?.entries());
-  if (direction === "descend") {
+  if (
+    (order !== "confidence" && direction === "descend") ||
+    (order === "confidence" && direction === "ascend")
+  ) {
     mappedEntries.reverse();
   }
 

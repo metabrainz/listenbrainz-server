@@ -65,6 +65,13 @@ const SortDirections = {
 
 export type SortDirection = typeof SortDirections[keyof typeof SortDirections]["value"];
 
+const DefaultSortDirections: Record<SortOption, SortDirection> = {
+  release_date: "descend",
+  artist_credit_name: "ascend",
+  release_name: "ascend",
+  confidence: "descend",
+};
+
 export const filterRangeOptions = {
   week: {
     value: 7,
@@ -119,8 +126,12 @@ export default function FreshReleases() {
   );
   const [sort, setSort] = React.useState<SortOption>("release_date");
   const [sortDirection, setSortDirection] = React.useState<SortDirection>(
-    "ascend"
-  );
+    "descend"
+  ); // Default sort direction for release_date
+  const [
+    hasSelectedSortDirection,
+    setHasSelectedSortDirection,
+  ] = React.useState(false);
 
   const releaseCardGridRef = React.useRef(null);
 
@@ -262,9 +273,14 @@ export default function FreshReleases() {
                   id="fresh-releases-sort-select"
                   className="form-control"
                   value={sort}
-                  onChange={(event) =>
-                    setSort(event.target.value as SortOption)
-                  }
+                  onChange={(event) => {
+                    setSort(event.target.value as SortOption);
+                    if (!hasSelectedSortDirection) {
+                      setSortDirection(
+                        DefaultSortDirections[event.target.value as SortOption]
+                      );
+                    }
+                  }}
                 >
                   {availableSortOptions.map((option) => (
                     <option value={option.value} key={option.value}>
@@ -279,9 +295,10 @@ export default function FreshReleases() {
                   id="fresh-releases-sort-direction-select"
                   className="form-control"
                   value={sortDirection}
-                  onChange={(event) =>
-                    setSortDirection(event.target.value as SortDirection)
-                  }
+                  onChange={(event) => {
+                    setSortDirection(event.target.value as SortDirection);
+                    setHasSelectedSortDirection(true);
+                  }}
                 >
                   {Object.entries(SortDirections).map(([_, direction]) => (
                     <option value={direction.value} key={direction.value}>
