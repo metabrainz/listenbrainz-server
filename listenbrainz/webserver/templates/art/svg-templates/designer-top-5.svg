@@ -6,10 +6,13 @@
      version="1.1"
      xmlns:cc="http://creativecommons.org/ns#"
      xmlns:xlink="http://www.w3.org/1999/xlink"
+     role="img"
      viewBox="0 0 924 924"
      xmlns:dc="http://purl.org/dc/elements/1.1/"
      height="{{ height }}"
      width="{{ width }}">
+  <title>{{ title }}</title>
+  <desc>{{ desc }}</desc>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
   </style>

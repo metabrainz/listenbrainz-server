@@ -2,6 +2,7 @@ import {
   faLink,
   faCode,
   faCopy,
+  faClone,
   faDownload,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
@@ -14,6 +15,7 @@ type IconTrayProps = {
   onClickCopy: React.MouseEventHandler;
   onClickCopyCode: React.MouseEventHandler;
   onClickCopyURL: React.MouseEventHandler;
+  onClickCopyAlt: React.MouseEventHandler;
 };
 
 function IconTray(props: IconTrayProps) {
@@ -23,6 +25,7 @@ function IconTray(props: IconTrayProps) {
     onClickCopy,
     onClickCopyCode,
     onClickCopyURL,
+    onClickCopyAlt,
   } = props;
   const browserHasClipboardAPI = "clipboard" in navigator;
   return (
@@ -83,6 +86,29 @@ function IconTray(props: IconTrayProps) {
             </span>
           )}
         </div>
+        {browserHasClipboardAPI && (
+          <button
+            type="button"
+            className="btn btn-icon btn-info"
+            onClick={onClickCopyAlt}
+            style={{
+              marginLeft: "auto",
+              background: "transparent",
+              color: "darkgray",
+            }}
+          >
+            <text
+              style={{
+                textDecoration: "underline",
+                fontSize: "14px",
+                marginRight: "0.2em",
+              }}
+            >
+              alt text
+            </text>
+            <FontAwesomeIcon icon={faClone} fixedWidth />
+          </button>
+        )}
       </div>
     </div>
   );

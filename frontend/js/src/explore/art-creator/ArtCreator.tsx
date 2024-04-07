@@ -311,6 +311,29 @@ export default function ArtCreator() {
       );
     }
   }, [previewUrl]);
+
+  const onClickCopyAlt = useCallback(async () => {
+    if (!previewSVGRef?.current) {
+      return;
+    }
+    try {
+      const { current: svgElement } = previewSVGRef;
+      let altText = "";
+      altText += svgElement.getElementsByTagName("title")[0].innerHTML;
+      altText += svgElement.getElementsByTagName("desc")[0].innerHTML;
+      await navigator.clipboard.writeText(altText);
+      toast.success("Copied alt text to clipboard");
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not copy alt-text to clipboard"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "copy-alt-error" }
+      );
+    }
+  }, [previewSVGRef]);
+
   /* We want the username input to update as fast as the user types,
   but we don't want to update the preview URL on each keystroke so we debounce */
   const debouncedSetPreviewUrl = React.useMemo(() => {
@@ -369,6 +392,7 @@ export default function ArtCreator() {
             onClickCopy={onClickCopyImage}
             onClickCopyCode={onClickCopyCode}
             onClickCopyURL={onClickCopyURL}
+            onClickCopyAlt={onClickCopyAlt}
           />
           <Preview
             key={previewUrl}

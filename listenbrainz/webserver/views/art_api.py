@@ -168,15 +168,22 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
         return f"layout {layout} is not available for dimension {dimension}."
 
     try:
-        images = cac.create_grid_stats_cover(user_name, time_range, layout)
+        images, eng_time_range = cac.create_grid_stats_cover(user_name, time_range, layout)
         if images is None:
             raise APIInternalServerError("Failed to grid cover art SVG")
     except ValueError as error:
         raise APIBadRequest(str(error))
 
+    title = f"Top {len(images)} Releases {eng_time_range} for {user_name} \n"
+    desc = ""
+    for i in range(len(images)):
+        desc += f"{i+1}. {images[i]['title']} by {images[i]['artist']} \n"
+
     return render_template("art/svg-templates/simple-grid.svg",
                            background=cac.background,
                            images=images,
+                           title=title,
+                           desc=desc,
                            entity="release",
                            width=image_size,
                            height=image_size), 200, {
@@ -221,8 +228,15 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         except ValueError as error:
             raise APIBadRequest(str(error))
 
+        title = f'Top 5 artists {metadata["time_range"]} for {metadata["user_name"]} \n'
+        desc = ""
+        for i in range(5):
+            desc += f'{i+1}. {artists[i]["artist_name"]} \n'
+
         return render_template(f"art/svg-templates/{custom_name}.svg",
                                artists=artists,
+                               title=title,
+                               desc=desc,
                                width=image_size,
                                height=image_size,
                                metadata=metadata), 200, {
@@ -239,11 +253,18 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         except ValueError as error:
             raise APIBadRequest(str(error))
 
+        title = f"Top {5 if custom_name == 'lps-on-the-floor' else 10} releases {metadata['time_range']} for {metadata['user_name']} \n"
+        desc = ""
+        for i in range(5 if custom_name == "lps-on-the-floor" else 10):
+            desc += f"{i+1}. {releases[i]['release_name']} by {releases[i]['artist_name']} \n"
+        
         cover_art_on_floor_url = f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/cover-art-on-floor.png'
         return render_template(f"art/svg-templates/{custom_name}.svg",
                                cover_art_on_floor_url=cover_art_on_floor_url,
                                images=images,
                                releases=releases,
+                               title=title,
+                               desc=desc,
                                width=image_size,
                                height=image_size,
                                metadata=metadata), 200, {
