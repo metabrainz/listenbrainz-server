@@ -112,7 +112,7 @@ target/
 
 # pyenv
 .python-version
-
+test_websockets_connection.py
 # celery beat schedule file
 celerybeat-schedule
 

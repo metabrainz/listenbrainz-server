@@ -13,39 +13,50 @@ from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 import listenbrainz.db.external_service_oauth as db_oauth
 
-
 class WebSocketTests(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(WebSocketTests, self).setUp()
         self.sio = socketio.Client(logger=True, engineio_logger=True)
-        self.sio.connect('http://websockets:8102',wait_timeout = 20)
-        self.http_session = requests.Session()
-        print(self.sio)
+        self.sio.connect('http://localhost:8102', wait_timeout=20)
+        self.sio.wait()
+        self.listen_received = None
+        self.sio.on('listen', self.on_listen)
 
-    def test_get_listens(self):
-        """ Test to verify that the WebSocket server receives listens submitted via the API """
+    def test_valid_single(self):
+        """ Test for valid submission of listen_type listen """
         with open(self.path_to_data_file('valid_single.json'), 'r') as f:
             payload = json.load(f)
-        # Send a listen
-        print(payload)
-        ts = int(time.time())
-        payload['payload'][0]['listened_at'] = ts
+
         response = self.send_data(payload)
-        print(response)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-    # def send_data(self, payload, user):
-    #     if not user:
-    #         user = self.user
-    #     response = self.http_session.post(
-    #         self.custom_url_for('api_v1.submit_listen'),
-    #         data=json.dumps(payload),
-    #         # headers={'Authorization': 'Token {}'.format(user['auth_token'])},
-    #         headers={'content-type': 'application/json'}
-    #     )
-    #     return response
-    
+        received_listen = False
+        timeout = 20  # 20 seconds timeout
+
+        @self.sio.event
+        def connect():
+            print('Connected to the WebSockets server')
+
+        @self.sio.event
+        def listen(data):
+            nonlocal received_listen
+            print('Received listen event:', data)
+            received_listen = True
+
+        try:
+            self.sio.connect('ws://websockets:8102')
+            start_time = time.time()
+            while not received_listen and time.time() - start_time < timeout:
+                self.sio.sleep(0.1)
+            self.assertTrue(received_listen, 'Did not receive the listen event within the timeout period.')
+        finally:
+            self.sio.disconnect()
+
+    def on_listen(self, data):
+        """Callback function for the 'listen' event"""
+        self.listen_received = data
+        print(f"Received listen: {data}")
+
     def tearDown(self):
-        # Close the HTTP session after the test
-        self.http_session.close()
+        self.sio.disconnect()
