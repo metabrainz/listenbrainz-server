@@ -231,7 +231,7 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         title = f'Top 5 artists {metadata["time_range"]} for {metadata["user_name"]} \n'
         desc = ""
         for i in range(5):
-            desc += f'{i+1}. {artists[i]["artist_name"]} \n'
+            desc += f'{i+1}. {artists[i].artist_name} \n'
 
         return render_template(f"art/svg-templates/{custom_name}.svg",
                                artists=artists,
