@@ -252,12 +252,14 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
                 images = _repeat_images(images, 5)
         except ValueError as error:
             raise APIBadRequest(str(error))
-
-        title = f"Top {5 if custom_name == 'lps-on-the-floor' else 10} releases {metadata['time_range']} for {metadata['user_name']} \n"
+        
+        #implicit string concatenation to conform to PEP regulations
+        title = f"Top {5 if custom_name == 'lps-on-the-floor' else 10} releases" \
+                f"{metadata['time_range']} for {metadata['user_name']} \n"
         desc = ""
         for i in range(5 if custom_name == "lps-on-the-floor" else 10):
             desc += f"{i+1}. {releases[i].release_name} by {releases[i].artist_name} \n"
-        
+
         cover_art_on_floor_url = f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/cover-art-on-floor.png'
         return render_template(f"art/svg-templates/{custom_name}.svg",
                                cover_art_on_floor_url=cover_art_on_floor_url,
