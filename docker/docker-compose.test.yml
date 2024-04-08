@@ -75,6 +75,8 @@ services:
     volumes:
       - ..:/code/listenbrainz:z
     command: python manage.py run_websockets -h 0.0.0.0 -p 8102
+    expose:
+      - "8102"
     ports:
       - "8102:8102"
     depends_on:

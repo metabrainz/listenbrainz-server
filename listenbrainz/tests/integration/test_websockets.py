@@ -17,7 +17,7 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(WebSocketTests, self).setUp()
         self.sio = socketio.Client(logger=True, engineio_logger=True)
-        self.sio.connect('http://localhost:8102', wait_timeout=20)
+        self.sio.connect('http://websockets:8102', wait_timeout=20)
         self.sio.wait()
         self.listen_received = None
         self.sio.on('listen', self.on_listen)
@@ -45,7 +45,7 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
             received_listen = True
 
         try:
-            self.sio.connect('ws://websockets:8102')
+            self.sio.connect('http://websockets:8102')
             start_time = time.time()
             while not received_listen and time.time() - start_time < timeout:
                 self.sio.sleep(0.1)
