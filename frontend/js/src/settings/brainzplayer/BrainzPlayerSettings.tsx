@@ -105,7 +105,8 @@ function BrainzPlayerSettings() {
       </p>
       <div
         className="mb-15"
-        data-tip={!SpotifyPlayer.hasPermissions(spotifyAuth)}
+        data-tip
+        data-tip-disable={SpotifyPlayer.hasPermissions(spotifyAuth)}
         data-for="login-first"
       >
         <Switch
@@ -136,7 +137,8 @@ function BrainzPlayerSettings() {
         </small>
       </div>
       {/* <div className="mb-15"
-          data-tip={!AppleMusicPlayer.hasPermissions(appleAuth)}
+          data-tip
+          data-tip-diable={AppleMusicPlayer.hasPermissions(appleAuth)}
           data-for="login-first">
         <Switch
           id="enable-apple-music"
@@ -166,7 +168,8 @@ function BrainzPlayerSettings() {
       </div> */}
       <div
         className="mb-15"
-        data-tip={!SoundcloudPlayer.hasPermissions(soundcloudAuth)}
+        data-tip
+        data-tip-disable={SoundcloudPlayer.hasPermissions(soundcloudAuth)}
         data-for="login-first"
       >
         <Switch
