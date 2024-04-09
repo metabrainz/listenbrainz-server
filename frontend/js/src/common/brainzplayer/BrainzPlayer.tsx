@@ -577,22 +577,7 @@ export default function BrainzPlayer() {
 
   /* Updating the progress bar without calling any API to check current player state */
   const getStatePosition = (): void => {
-    let newProgressMs: number;
-    let elapsedTimeSinceLastUpdate: number;
-    if (playerPaused) {
-      newProgressMs = progressMs || 0;
-      elapsedTimeSinceLastUpdate = 0;
-    } else {
-      elapsedTimeSinceLastUpdate = performance.now() - updateTime;
-      const position = progressMs + elapsedTimeSinceLastUpdate;
-      newProgressMs = position > durationMs ? durationMs : position;
-    }
-    dispatch({
-      progressMs: newProgressMs,
-      updateTime: performance.now(),
-      continuousPlaybackTime:
-        continuousPlaybackTime + elapsedTimeSinceLastUpdate,
-    });
+    dispatch({ type: "SET_PLAYBACK_TIMER" });
   };
 
   const startPlayerStateTimer = (): void => {

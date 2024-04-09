@@ -37,17 +37,40 @@ function valueReducer(
   state: BrainzPlayerContextT,
   action: ActionType
 ): BrainzPlayerContextT {
-  if (!action.type || !action.data) {
+  if (!action.type) {
     return { ...state, ...action };
   }
   switch (action.type) {
     case "SET_CURRENT_LISTEN": {
+      if (!action.data) {
+        return { ...state, ...action };
+      }
       const data = action.data as Array<Listen | JSPFTrack>;
       const { type, data: _, ...restActions } = action;
       if (data.length !== 0) {
         return { ...state, ...restActions, currentPageListens: data };
       }
       break;
+    }
+    case "SET_PLAYBACK_TIMER": {
+      const { playerPaused, progressMs, updateTime, durationMs } = state;
+      let newProgressMs: number;
+      let elapsedTimeSinceLastUpdate: number;
+      if (playerPaused) {
+        newProgressMs = progressMs || 0;
+        elapsedTimeSinceLastUpdate = 0;
+      } else {
+        elapsedTimeSinceLastUpdate = performance.now() - updateTime;
+        const position = progressMs + elapsedTimeSinceLastUpdate;
+        newProgressMs = position > durationMs ? durationMs : position;
+      }
+      return {
+        ...state,
+        progressMs: newProgressMs,
+        updateTime: performance.now(),
+        continuousPlaybackTime:
+          state.continuousPlaybackTime + elapsedTimeSinceLastUpdate,
+      };
     }
     default: {
       throw Error(`Unknown action: ${action.type}`);
