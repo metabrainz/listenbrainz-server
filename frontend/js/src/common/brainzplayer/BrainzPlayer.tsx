@@ -142,13 +142,6 @@ export default function BrainzPlayer() {
 
   const dispatch = useBrainzPlayerDispatch();
 
-  //   React.useEffect(() => {
-  //     dispatch({
-  //       type: "SET_CURRENT_LISTEN",
-  //       data: listens,
-  //     });
-  //   }, [listens]);
-
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);
   const youtubePlayerRef = React.useRef<YoutubePlayer>(null);
