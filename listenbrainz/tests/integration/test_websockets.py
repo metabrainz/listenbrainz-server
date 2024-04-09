@@ -11,7 +11,6 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         super(WebSocketTests, self).setUp()
         self.sio = socketio.Client(logger=True, engineio_logger=True)
         self.sio.connect("http://websockets:8102", wait_timeout=5)
-        self.sio.emit("json", {"user": self.user["musicbrainz_id"]})
 
     def test_valid_single(self):
         """ Test for valid submission of listen_type listen """
@@ -23,7 +22,7 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         received_listen = False
-        timeout = 5  # 20 seconds timeout
+        timeout = 20  # 20 seconds timeout
 
         @self.sio.event
         def listen(data):
