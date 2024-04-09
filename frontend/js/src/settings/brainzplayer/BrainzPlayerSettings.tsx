@@ -23,7 +23,7 @@ function BrainzPlayerSettings() {
     APIService,
     currentUser,
   } = React.useContext(GlobalAppContext);
-  let { userPreferences } = React.useContext(GlobalAppContext);
+  const { userPreferences } = React.useContext(GlobalAppContext);
   const [youtubeEnabled, setYoutubeEnabled] = React.useState(
     userPreferences?.brainzplayer?.youtubeEnabled ?? true
   );
@@ -52,15 +52,14 @@ function BrainzPlayerSettings() {
       // Update the global context values
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      userPreferences = {
-        ...userPreferences,
-        brainzplayer: {
+      if (userPreferences) {
+        userPreferences.brainzplayer = {
           ...userPreferences?.brainzplayer,
           youtubeEnabled,
           spotifyEnabled,
           soundcloudEnabled,
-        },
-      };
+        };
+      }
     } catch (error) {
       toast.error(
         <ToastMsg
