@@ -43,6 +43,7 @@ Contents
    developers/spark-architecture
    developers/mapping
    developers/commands
+   developers/troubleshooting
 
 .. toctree::
    :maxdepth: 2
