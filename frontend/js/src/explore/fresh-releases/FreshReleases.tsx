@@ -10,6 +10,7 @@ import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
+import { useMediaQuery } from "./utils";
 
 export enum DisplaySettingsPropertiesEnum {
   releaseTitle = "Release Title",
@@ -149,6 +150,14 @@ export default function FreshReleases() {
     });
   };
 
+  const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
+  let pillRowStyle = {};
+  if (screenMd) {
+    pillRowStyle = { justifyContent: "center" };
+  } else if (!isLoggedIn) {
+    pillRowStyle = { justifyContent: "flex-end" };
+  }
+
   React.useEffect(() => {
     const fetchReleases = async () => {
       setIsLoading(true);
@@ -239,10 +248,7 @@ export default function FreshReleases() {
       </Helmet>
       <div className="releases-page-container">
         <div className="releases-page">
-          <div
-            className="fresh-releases-pill-row"
-            style={!isLoggedIn ? { justifyContent: "flex-end" } : {}}
-          >
+          <div className="fresh-releases-pill-row" style={pillRowStyle}>
             {isLoggedIn ? (
               <div className="fresh-releases-row">
                 <Pill
