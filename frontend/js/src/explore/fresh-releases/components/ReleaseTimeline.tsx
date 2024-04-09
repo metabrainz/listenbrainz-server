@@ -102,9 +102,14 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
      * With the same logic, we don't want the last date to be at 100% because
      * that will mean we're at the bottom of the grid.
      * The last date should start before 100%. That explains the pop().
+     * For descending sort, the reverse computation above possibly already ensures that
+     * the percentArr starts with 0 and ends with a non-100% value, which is desired.
+     * Hence, we add a check to skip the unshift(0) and pop() operations in that case.
      */
-    percentArr.unshift(0);
-    percentArr.pop();
+    if (percentArr[0] !== 0) {
+      percentArr.unshift(0);
+      percentArr.pop();
+    }
 
     return zipObject(percentArr, dataArr);
   }
