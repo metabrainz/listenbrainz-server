@@ -224,14 +224,11 @@ export default function Listen() {
     if (playingNowListen) {
       receiveNewPlayingNow(playingNowListen);
     }
+  }, [APIService, user.name]);
+
+  React.useEffect(() => {
     getFollowing();
-  }, [
-    APIService,
-    getFollowing,
-    playingNowListen,
-    receiveNewPlayingNow,
-    user.name,
-  ]);
+  }, [currentUser, getFollowing]);
 
   React.useEffect(() => {
     // if modifying the uri or path, lookup socket.io namespace vs paths.
@@ -327,7 +324,10 @@ export default function Listen() {
             );
             // wait for the delete animation to finish
             setTimeout(() => {
-              removeListenFromListenList(listen);
+              setListens((prevListens) => {
+                const index = prevListens.indexOf(listen);
+                return [...prevListens].splice(index, 1);
+              });
             }, 1000);
           }
         } catch (error) {
@@ -343,7 +343,7 @@ export default function Listen() {
         }
       }
     },
-    [APIService, currentUser, removeListenFromListenList]
+    [APIService, currentUser]
   );
 
   const getListenCard = React.useCallback(
