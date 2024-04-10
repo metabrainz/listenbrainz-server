@@ -1320,6 +1320,23 @@ export default class APIService {
     return response.status;
   };
 
+  submitBrainzplayerPreferences = async (
+    userToken: string,
+    brainzPlayerSettings: BrainzPlayerSettings
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/brainzplayer`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(brainzPlayerSettings),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   exportPlaylistToSpotify = async (
     userToken: string,
     playlist_mbid: string
