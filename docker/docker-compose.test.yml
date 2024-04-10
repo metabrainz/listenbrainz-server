@@ -73,7 +73,7 @@ services:
   websockets:
     image: listenbrainz
     volumes:
-      - ../listenbrainz:/code/listenbrainz:z
+      - ..:/code/listenbrainz:z
     command: python manage.py run_websockets -h 0.0.0.0 -p 8102
     expose:
       - "8102"
