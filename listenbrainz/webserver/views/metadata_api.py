@@ -146,9 +146,6 @@ def metadata_recording_post():
     except KeyError:
         incs = []
 
-    if incs == []:
-        raise APIBadRequest("inc parameter cannot be empty.")
-
     try:
         recording_mbids = data["recording_mbids"]
     except KeyError:
