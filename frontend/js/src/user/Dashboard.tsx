@@ -326,7 +326,8 @@ export default function Listen() {
             setTimeout(() => {
               setListens((prevListens) => {
                 const index = prevListens.indexOf(listen);
-                return [...prevListens].splice(index, 1);
+                [...prevListens].splice(index, 1);
+                return prevListens;
               });
             }, 1000);
           }
