@@ -127,17 +127,14 @@ def metadata_recording_post():
     This endpoint is the POST verson for fetching recording metadata, since it allows up to the
     max number of items allowed. (:data:`~webserver.views.api.MAX_ITEMS_PER_GET` items)
 
-    A JSON document with a list of recording_mbids, inc string must be POSTed
+    A JSON document with a list of recording_mbids and inc string must be POSTed
     to this endpoint to returns an array of dicts that contain
     recording metadata suitable for showing in a context that requires as much detail about
     a recording and the artist. Using the inc parameter, you can control which portions of metadata
     to fetch.
        { "recording_mbids": [ "25d47b0c-5177-49db-b740-c166e4acebd1", ... ], inc="artist tag" }
 
-    The data returned by this endpoint can be seen here:
-
-    .. literalinclude:: ../../../listenbrainz/testdata/mb_metadata_cache_example.json
-       :language: json
+    To see what data this endpoint returns, please look at the data above for the GET version.
 
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid arguments
