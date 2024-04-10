@@ -314,7 +314,7 @@ class CoverArtGenerator:
         """ Given a user name and a stats time range, make an artist stats cover. Return
             the artist stats and metadata about this user/stats. The metadata dict contains
             user_name, date, time_range and num_artists. """
-
+        
         artists, total_count = self.download_user_stats("artists", user_name, time_range)
         metadata = {
             "user_name": user_name,

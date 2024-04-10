@@ -89,24 +89,11 @@ function IconTray(props: IconTrayProps) {
         {browserHasClipboardAPI && (
           <button
             type="button"
-            className="btn btn-icon btn-info"
+            className="btn btn-icon btn-link"
             onClick={onClickCopyAlt}
-            style={{
-              marginLeft: "auto",
-              background: "transparent",
-              color: "darkgray",
-            }}
           >
-            <text
-              style={{
-                textDecoration: "underline",
-                fontSize: "14px",
-                marginRight: "0.2em",
-              }}
-            >
-              alt text
-            </text>
-            <FontAwesomeIcon icon={faClone} fixedWidth />
+            <span className="text-muted">alt text</span>
+            <FontAwesomeIcon className="text-muted" icon={faClone} fixedWidth />
           </button>
         )}
       </div>

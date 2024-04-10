@@ -39,7 +39,7 @@
    {% for artist in artists[:5] %}
    <text id="artist_{{ loop.index }}">
     <tspan id="tspan2{{ loop.index }}" y="{{ y_start + loop.index0 * gap }}" x="-20">
-     {{ render_entity_link("artist", artist.artist_mbid, artist.artist_name|upper|e) }}
+     {{ render_entity_link("artist", artist.artist_mbid, artist.artist_name|e) }}
     </tspan>
    </text>
    {% endfor %}
