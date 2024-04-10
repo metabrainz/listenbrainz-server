@@ -12,7 +12,7 @@ from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.utils import parse_boolean_arg
-from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header, MAX_ITEMS_PER_GET
 
 metadata_bp = Blueprint('metadata', __name__)
 
@@ -125,7 +125,9 @@ def metadata_recording():
 def metadata_recording_post():
     """
     This endpoint is the POST verson for fetching recording metadata, since it allows up to the
-    max number of items allowed. A JSON document with a list of recording_mbids, inc string must be POSTed
+    max number of items allowed. (:data:`~webserver.views.api.MAX_ITEMS_PER_GET` items)
+
+    A JSON document with a list of recording_mbids, inc string must be POSTed
     to this endpoint to returns an array of dicts that contain
     recording metadata suitable for showing in a context that requires as much detail about
     a recording and the artist. Using the inc parameter, you can control which portions of metadata
@@ -162,6 +164,9 @@ def metadata_recording_post():
 
     if len(recording_mbids) == 0:
         raise APIBadRequest("At least one valid recording_mbid must be present.")
+
+    if len(recording_mbids) > MAX_ITEMS_PER_GET:
+        raise APIBadRequest("Maximum number of recordings_mbids that can be fetchs at once is %s" % MAX_ITEMS_PER_GET)
 
     result = fetch_metadata(recording_mbids, incs)
     return jsonify(result)
