@@ -49,16 +49,11 @@ export default function Import() {
         </div>
       )}
       <p>
-        Import your existing listen history from other databases. To submit{" "}
-        <em>new</em>
-        listens, please visit the{" "}
-        <a href="https://listenbrainz.org/add-data/">Connect services</a>
-        and{" "}
-        <a href="https://listenbrainz.org/settings/music-services/details/">
-          Submitting data
-        </a>
+        Import your existing listen history from other databases. To submit <em>new</em>
+        listens, please visit the{" "} <a href="https://listenbrainz.org/add-data/">Connect services</a>
+        and{" "} <a href="https://listenbrainz.org/settings/music-services/details/">Submitting data</a>
         pages.
-        <br />
+      <br/>
         Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
         Last.fm, and we cannot use it. Instead, we use the term{" "}
         <strong>listen</strong> for our data.
@@ -71,43 +66,13 @@ export default function Import() {
       </p>
 
       <ul>
-        <li>
-          In order for this to work, you must disable the &#34;Hide recent
-          listening information&#34; setting in your Last.fm{" "}
-          <a
-            href="https://www.last.fm/settings/privacy"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Privacy Settings
-          </a>
-          .
-        </li>
-        <li>
-          Should it fail for whatever reason, it is safe to restart the import
-          process.
-        </li>
-        <li>
-          Running the import process multiple times <strong>does not</strong>{" "}
-          create duplicates in your ListenBrainz listen history.
-        </li>
-        <li>
-          Clicking the &quot;Import listens&quot; button will import your
-          profile without the need to open LastFM.
-        </li>
-        <li>
-          Your listen counts may not be accurate for up to 24 hours after you
-          import your data.{" "}
-          <a
-            href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            See more details here.
-          </a>
-        </li>
+        <li>In order for this to work, you must disable the &#34;Hide recent listening information&#34; setting in your Last.fm{" "} <a href="https://www.last.fm/settings/privacy" target="_blank" rel="noreferrer">Privacy Settings</a>.</li>
+        <li>Should it fail for whatever reason, it is safe to restart the import process.</li>
+        <li>Running the import process multiple times <strong>does not</strong> create duplicates in your ListenBrainz listen history.</li>
+        <li>Clicking the &quot;Import listens&quot; button will import your profile without the need to open LastFM.</li>
+        <li>Your listen counts may not be accurate for up to 24 hours after you import your data.{" "} <a href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html" target="_blank" rel="noopener noreferrer">See more details here.</a></li>
       </ul>
-
+        
       <p>
         You need to keep this page open while it is importing, which may take a
         while to complete.
@@ -129,13 +94,13 @@ export default function Import() {
         />
       )}
 
-      <br />
+      <br/>
       <h4> Reset Last.FM Import timestamp </h4>
       <p>
-        If you think that a partial import has missed listens, you may reset
-        your previous import timestamp. This will cause your next import to be a
-        complete import which should add any missing listens, without adding
-        duplicates to your history.
+        If you think that a partial import has missed listens, you
+        may reset your previous import timestamp. This will cause your next
+        import to be a complete import which should add any missing listens,
+        without adding duplicates to your history.
       </p>
 
       <p>
