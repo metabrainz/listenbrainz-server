@@ -20,10 +20,9 @@ metadata_bp = Blueprint('metadata', __name__)
 MAX_MAPPING_QUERY_LENGTH = 250
 
 
-def parse_incs():
+def parse_incs(incs):
     allowed_incs = ("artist", "tag", "release", "recording", "release_group")
 
-    incs = request.args.get("inc")
     if not incs:
         return []
     incs = incs.split()
@@ -101,7 +100,7 @@ def metadata_recording():
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid arguments
     """
-    incs = parse_incs()
+    incs = parse_incs(request.args.get("inc"))
 
     recordings = request.args.get("recording_mbids", default=None)
     if recordings is None:
@@ -115,6 +114,54 @@ def metadata_recording():
             raise APIBadRequest(f"Recording mbid {mbid} is not valid.")
 
         recording_mbids.append(mbid_clean)
+
+    result = fetch_metadata(recording_mbids, incs)
+    return jsonify(result)
+
+
+@metadata_bp.route("/recording/", methods=["POST"])
+@crossdomain
+@ratelimit()
+def metadata_recording_post():
+    """
+    This endpoint is the POST verson for fetching recording metadata, since it allows up to the
+    max number of items allowed. A JSON document with a list of recording_mbids, inc string must be POSTed
+    to this endpoint to returns an array of dicts that contain
+    recording metadata suitable for showing in a context that requires as much detail about
+    a recording and the artist. Using the inc parameter, you can control which portions of metadata
+    to fetch.
+       { "recording_mbids": [ "25d47b0c-5177-49db-b740-c166e4acebd1", ... ], inc="artist tag" }
+
+    The data returned by this endpoint can be seen here:
+
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_metadata_cache_example.json
+       :language: json
+
+    :statuscode 200: you have data!
+    :statuscode 400: invalid recording_mbid arguments
+    """
+    data = request.json
+
+    try:
+        incs = parse_incs(data["inc"])
+    except KeyError:
+        incs = []
+
+    if incs == []:
+        raise APIBadRequest("inc parameter cannot be empty.")
+
+    try:
+        recording_mbids = data["recording_mbids"]
+    except KeyError:
+        raise APIBadRequest(
+            "recording_mbids JSON element must be present and contain a list of recording_mbids")
+
+    for mbid in recording_mbids:
+        if not is_valid_uuid(mbid):
+            raise APIBadRequest(f"Recording mbid {mbid} is not valid.")
+
+    if len(recording_mbids) == 0:
+        raise APIBadRequest("At least one valid recording_mbid must be present.")
 
     result = fetch_metadata(recording_mbids, incs)
     return jsonify(result)
@@ -144,7 +191,7 @@ def metadata_release_group():
     :statuscode 200: you have data!
     :statuscode 400: invalid release_group_mbid arguments
     """
-    incs = parse_incs()
+    incs = parse_incs(request.args.get("inc"))
 
     release_groups = request.args.get("release_group_mbids", default=None)
     if release_groups is None:
@@ -214,7 +261,7 @@ def get_mbid_mapping():
                             f" arguments must be less than {MAX_MAPPING_QUERY_LENGTH}")
 
     metadata = parse_boolean_arg("metadata")
-    incs = parse_incs() if metadata else []
+    incs = parse_incs(request.args.get("inc")) if metadata else []
 
     params = [
         {
@@ -345,7 +392,7 @@ def metadata_artist():
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid arguments
     """
-    incs = parse_incs()
+    incs = parse_incs(request.args.get("inc"))
 
     artists = request.args.get("artist_mbids", default=None)
     if artists is None:
