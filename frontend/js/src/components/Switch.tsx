@@ -5,11 +5,19 @@ type SwitchProps = {
   value: string | undefined;
   checked: boolean;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  switchLabel: string | undefined;
+  switchLabel: string | JSX.Element | undefined;
+  disabled?: boolean;
 };
 
 export default function Switch(props: SwitchProps) {
-  const { id, value = "", onChange, checked, switchLabel = "" } = props;
+  const {
+    id,
+    value = "",
+    onChange,
+    checked,
+    switchLabel = "",
+    disabled,
+  } = props;
 
   return (
     <label className="toggle" htmlFor={id}>
@@ -20,6 +28,7 @@ export default function Switch(props: SwitchProps) {
         value={value}
         checked={checked}
         onChange={onChange}
+        disabled={disabled}
       />
       <div className="toggle-switch" />
       <span className="toggle-label">{switchLabel}</span>
