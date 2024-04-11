@@ -23,8 +23,11 @@
 {% endmacro %}
 <svg version="1.1"
      xmlns="http://www.w3.org/2000/svg"
+     role="img"
      width="{{ width }}" height="{{ height }}"
      viewBox="0 0 {{ width }} {{ height }}">
+    <title>{{ title }}</title>
+    <desc>{{ desc }}</desc> 
     <style>
         .background-image {
             pointer-events: none;
