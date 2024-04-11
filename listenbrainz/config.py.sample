@@ -159,6 +159,10 @@ SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 SPOTIFY_CALLBACK_URL = 'http://localhost:8100/settings/music-services/spotify/callback/'
 
+# SPOTIFY-CACHE
+SPOTIFY_CACHE_CLIENT_ID = 'needs a non empty default value for tests, change this'
+SPOTIFY_CACHE_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
+
 # SOUNDCLOUD
 SOUNDCLOUD_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SOUNDCLOUD_CLIENT_SECRET = 'needs a non empty default value for tests, change this'

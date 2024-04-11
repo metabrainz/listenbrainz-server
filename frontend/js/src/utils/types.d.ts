@@ -780,8 +780,16 @@ declare type SearchUser = {
   user_name: string;
 };
 
+declare type BrainzPlayerSettings = {
+  youtubeEnabled?: boolean;
+  spotifyEnabled?: boolean;
+  soundcloudEnabled?: boolean;
+  appleMusicEnabled?: boolean;
+};
+
 declare type UserPreferences = {
   saveData?: boolean;
+  brainzplayer?: BrainzPlayerSettings;
 };
 
 declare type FeedbackForUserForRecordingsRequestBody = {

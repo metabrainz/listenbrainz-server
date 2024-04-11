@@ -130,10 +130,10 @@ export default class BrainzPlayer extends React.Component<
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  spotifyPlayer?: React.RefObject<SpotifyPlayer>;
-  youtubePlayer?: React.RefObject<YoutubePlayer>;
-  soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
-  appleMusicPlayer?: React.RefObject<AppleMusicPlayer>;
+  spotifyPlayer: React.RefObject<SpotifyPlayer>;
+  youtubePlayer: React.RefObject<YoutubePlayer>;
+  soundcloudPlayer: React.RefObject<SoundcloudPlayer>;
+  appleMusicPlayer: React.RefObject<AppleMusicPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
   playerStateTimerID?: NodeJS.Timeout;
@@ -155,16 +155,9 @@ export default class BrainzPlayer extends React.Component<
     super(props);
 
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
-    this.dataSources.push(this.spotifyPlayer);
-
-    this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
-    this.dataSources.push(this.soundcloudPlayer);
-
-    this.appleMusicPlayer = React.createRef<AppleMusicPlayer>();
-    this.dataSources.push(this.appleMusicPlayer);
-
     this.youtubePlayer = React.createRef<YoutubePlayer>();
-    this.dataSources.push(this.youtubePlayer);
+    this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
+    this.appleMusicPlayer = React.createRef<AppleMusicPlayer>();
 
     this.state = {
       currentDataSourceIndex: 0,
@@ -191,25 +184,33 @@ export default class BrainzPlayer extends React.Component<
     window.addEventListener("storage", this.onLocalStorageEvent);
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
     window.addEventListener("beforeunload", this.alertBeforeClosingPage);
-    // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
-    const { spotifyAuth, soundcloudAuth, appleAuth } = this.context;
+    const {
+      spotifyAuth,
+      soundcloudAuth,
+      appleAuth,
+      userPreferences,
+    } = this.context;
+
     if (
-      !SpotifyPlayer.hasPermissions(spotifyAuth) &&
-      this.spotifyPlayer?.current
+      userPreferences?.brainzplayer?.spotifyEnabled !== false &&
+      SpotifyPlayer.hasPermissions(spotifyAuth)
     ) {
-      this.invalidateDataSource(this.spotifyPlayer.current);
+      this.dataSources.push(this.spotifyPlayer);
     }
     if (
-      !SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
-      this.soundcloudPlayer?.current
+      userPreferences?.brainzplayer?.appleMusicEnabled !== false &&
+      AppleMusicPlayer.hasPermissions(appleAuth)
     ) {
-      this.invalidateDataSource(this.soundcloudPlayer.current);
+      this.dataSources.push(this.appleMusicPlayer);
     }
     if (
-      !AppleMusicPlayer.hasPermissions(appleAuth) &&
-      this.appleMusicPlayer?.current
+      userPreferences?.brainzplayer?.soundcloudEnabled !== false &&
+      SoundcloudPlayer.hasPermissions(soundcloudAuth)
     ) {
-      this.invalidateDataSource(this.appleMusicPlayer.current);
+      this.dataSources.push(this.soundcloudPlayer);
+    }
+    if (userPreferences?.brainzplayer?.youtubeEnabled !== false) {
+      this.dataSources.push(this.youtubePlayer);
     }
   }
 
@@ -238,7 +239,39 @@ export default class BrainzPlayer extends React.Component<
       // Received postMessage from different origin, ignoring it
       return;
     }
+    const { userPreferences } = this.context;
     const { brainzplayer_event, payload } = event.data;
+    if (!brainzplayer_event) {
+      return;
+    }
+    if (userPreferences?.brainzplayer) {
+      const brainzPlayerDisabled =
+        userPreferences?.brainzplayer?.spotifyEnabled === false &&
+        userPreferences?.brainzplayer?.youtubeEnabled === false &&
+        userPreferences?.brainzplayer?.soundcloudEnabled === false;
+      if (brainzPlayerDisabled) {
+        toast.info(
+          <ToastMsg
+            title="BrainzPlayer disabled"
+            message={
+              <>
+                You have disabled all music services for playback on
+                ListenBrainz. To enable them again, please go to the{" "}
+                <a
+                  href="/settings/brainzplayer/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  music player preferences
+                </a>{" "}
+                page
+              </>
+            }
+          />
+        );
+        return;
+      }
+    }
     switch (brainzplayer_event) {
       case "play-listen":
         this.playListen(payload);
@@ -828,12 +861,17 @@ export default class BrainzPlayer extends React.Component<
       spotifyAuth,
       soundcloudAuth,
       appleAuth,
-      currentUser,
+      userPreferences,
     } = this.context;
-
+    const brainzPlayerDisabled =
+      userPreferences?.brainzplayer?.spotifyEnabled === false &&
+      userPreferences?.brainzplayer?.youtubeEnabled === false &&
+      userPreferences?.brainzplayer?.soundcloudEnabled === false &&
+      userPreferences?.brainzplayer?.appleMusicEnabled === false;
     return (
       <div>
         <BrainzPlayerUI
+          disabled={brainzPlayerDisabled}
           playPreviousTrack={this.playPreviousTrack}
           playNextTrack={this.playNextTrack}
           togglePlay={
@@ -855,89 +893,97 @@ export default class BrainzPlayer extends React.Component<
             this.dataSources[currentDataSourceIndex]?.current?.name
           }
         >
-          <SpotifyPlayer
-            show={
-              isActivated &&
-              this.dataSources[currentDataSourceIndex]?.current instanceof
-                SpotifyPlayer
-            }
-            refreshSpotifyToken={refreshSpotifyToken}
-            onInvalidateDataSource={this.invalidateDataSource}
-            ref={this.spotifyPlayer}
-            spotifyUser={spotifyAuth}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={this.playerPauseChange}
-            onProgressChange={this.progressChange}
-            onDurationChange={this.durationChange}
-            onTrackInfoChange={this.throttledTrackInfoChange}
-            onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToPlayTrack}
-            handleError={this.handleError}
-            handleWarning={this.handleWarning}
-            handleSuccess={this.handleSuccess}
-          />
-          <YoutubePlayer
-            show={
-              isActivated &&
-              this.dataSources[currentDataSourceIndex]?.current instanceof
-                YoutubePlayer
-            }
-            onInvalidateDataSource={this.invalidateDataSource}
-            ref={this.youtubePlayer}
-            youtubeUser={youtubeAuth}
-            refreshYoutubeToken={refreshYoutubeToken}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={this.playerPauseChange}
-            onProgressChange={this.progressChange}
-            onDurationChange={this.durationChange}
-            onTrackInfoChange={this.throttledTrackInfoChange}
-            onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToPlayTrack}
-            handleError={this.handleError}
-            handleWarning={this.handleWarning}
-            handleSuccess={this.handleSuccess}
-          />
-          <SoundcloudPlayer
-            show={
-              isActivated &&
-              this.dataSources[currentDataSourceIndex]?.current instanceof
-                SoundcloudPlayer
-            }
-            onInvalidateDataSource={this.invalidateDataSource}
-            ref={this.soundcloudPlayer}
-            soundcloudUser={soundcloudAuth}
-            refreshSoundcloudToken={refreshSoundcloudToken}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={this.playerPauseChange}
-            onProgressChange={this.progressChange}
-            onDurationChange={this.durationChange}
-            onTrackInfoChange={this.throttledTrackInfoChange}
-            onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToPlayTrack}
-            handleError={this.handleError}
-            handleWarning={this.handleWarning}
-            handleSuccess={this.handleSuccess}
-          />
-          <AppleMusicPlayer
-            show={
-              isActivated &&
-              this.dataSources[currentDataSourceIndex]?.current instanceof
-                AppleMusicPlayer
-            }
-            appleMusicUser={appleAuth}
-            onInvalidateDataSource={this.invalidateDataSource}
-            ref={this.appleMusicPlayer}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={this.playerPauseChange}
-            onProgressChange={this.progressChange}
-            onDurationChange={this.durationChange}
-            onTrackInfoChange={this.throttledTrackInfoChange}
-            onTrackEnd={this.playNextTrack}
-            onTrackNotFound={this.failedToPlayTrack}
-            handleError={this.handleError}
-            handleWarning={this.handleWarning}
-            handleSuccess={this.handleSuccess}
-          />
+          {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
+            <SpotifyPlayer
+              show={
+                isActivated &&
+                this.dataSources[currentDataSourceIndex]?.current instanceof
+                  SpotifyPlayer
+              }
+              refreshSpotifyToken={refreshSpotifyToken}
+              onInvalidateDataSource={this.invalidateDataSource}
+              ref={this.spotifyPlayer}
+              spotifyUser={spotifyAuth}
+              playerPaused={playerPaused}
+              onPlayerPausedChange={this.playerPauseChange}
+              onProgressChange={this.progressChange}
+              onDurationChange={this.durationChange}
+              onTrackInfoChange={this.throttledTrackInfoChange}
+              onTrackEnd={this.playNextTrack}
+              onTrackNotFound={this.failedToPlayTrack}
+              handleError={this.handleError}
+              handleWarning={this.handleWarning}
+              handleSuccess={this.handleSuccess}
+            />
+          )}
+          {userPreferences?.brainzplayer?.youtubeEnabled !== false && (
+            <YoutubePlayer
+              show={
+                isActivated &&
+                this.dataSources[currentDataSourceIndex]?.current instanceof
+                  YoutubePlayer
+              }
+              onInvalidateDataSource={this.invalidateDataSource}
+              ref={this.youtubePlayer}
+              youtubeUser={youtubeAuth}
+              refreshYoutubeToken={refreshYoutubeToken}
+              playerPaused={playerPaused}
+              onPlayerPausedChange={this.playerPauseChange}
+              onProgressChange={this.progressChange}
+              onDurationChange={this.durationChange}
+              onTrackInfoChange={this.throttledTrackInfoChange}
+              onTrackEnd={this.playNextTrack}
+              onTrackNotFound={this.failedToPlayTrack}
+              handleError={this.handleError}
+              handleWarning={this.handleWarning}
+              handleSuccess={this.handleSuccess}
+            />
+          )}
+          {userPreferences?.brainzplayer?.soundcloudEnabled !== false && (
+            <SoundcloudPlayer
+              show={
+                isActivated &&
+                this.dataSources[currentDataSourceIndex]?.current instanceof
+                  SoundcloudPlayer
+              }
+              onInvalidateDataSource={this.invalidateDataSource}
+              ref={this.soundcloudPlayer}
+              soundcloudUser={soundcloudAuth}
+              refreshSoundcloudToken={refreshSoundcloudToken}
+              playerPaused={playerPaused}
+              onPlayerPausedChange={this.playerPauseChange}
+              onProgressChange={this.progressChange}
+              onDurationChange={this.durationChange}
+              onTrackInfoChange={this.throttledTrackInfoChange}
+              onTrackEnd={this.playNextTrack}
+              onTrackNotFound={this.failedToPlayTrack}
+              handleError={this.handleError}
+              handleWarning={this.handleWarning}
+              handleSuccess={this.handleSuccess}
+            />
+          )}
+          {userPreferences?.brainzplayer?.appleMusicEnabled !== false && (
+            <AppleMusicPlayer
+              show={
+                isActivated &&
+                this.dataSources[currentDataSourceIndex]?.current instanceof
+                  AppleMusicPlayer
+              }
+              appleMusicUser={appleAuth}
+              onInvalidateDataSource={this.invalidateDataSource}
+              ref={this.appleMusicPlayer}
+              playerPaused={playerPaused}
+              onPlayerPausedChange={this.playerPauseChange}
+              onProgressChange={this.progressChange}
+              onDurationChange={this.durationChange}
+              onTrackInfoChange={this.throttledTrackInfoChange}
+              onTrackEnd={this.playNextTrack}
+              onTrackNotFound={this.failedToPlayTrack}
+              handleError={this.handleError}
+              handleWarning={this.handleWarning}
+              handleSuccess={this.handleSuccess}
+            />
+          )}
         </BrainzPlayerUI>
       </div>
     );
