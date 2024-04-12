@@ -21,6 +21,10 @@ type MusicServicesLoaderData = {
 };
 
 export default function MusicServices() {
+  const { spotifyAuth, soundcloudAuth, critiquebrainzAuth } = React.useContext(
+    GlobalAppContext
+  );
+
   const loaderData = useLoaderData() as MusicServicesLoaderData;
 
   const { appleAuth } = React.useContext(GlobalAppContext);
@@ -62,6 +66,22 @@ export default function MusicServices() {
           ...prevState,
           [serviceName]: newValue,
         }));
+        switch (serviceName) {
+          case "spotify":
+            if (spotifyAuth) {
+              spotifyAuth.access_token = undefined;
+              spotifyAuth.permission = [];
+            }
+            break;
+          case "soundcloud":
+            if (soundcloudAuth) soundcloudAuth.access_token = undefined;
+            break;
+          case "critiquebrainz":
+            if (critiquebrainzAuth) critiquebrainzAuth.access_token = undefined;
+            break;
+          default:
+            break;
+        }
         return;
       }
 
