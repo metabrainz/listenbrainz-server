@@ -311,6 +311,7 @@ export default function MusicServices() {
           <div className="panel-body">
             <p>
               Connect to your Apple Music account to play music on ListenBrainz.
+              <br />
               <small>
                 Note: Full length track playback requires a paid Apple Music
                 subscription.
