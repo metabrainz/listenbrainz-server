@@ -1,7 +1,6 @@
 import socketio
 import json
 import time
-
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 
 
@@ -10,7 +9,8 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
     def setUp(self):
         super(WebSocketTests, self).setUp()
         self.sio = socketio.Client(logger=True, engineio_logger=True)
-        self.sio.connect("http://websockets:8102", wait_timeout=5)
+        self.sio.connect("http://websockets:8102", wait_timeout=20)
+        self.sio.emit("json", {"user": self.user["musicbrainz_id"]})
 
     def test_valid_single(self):
         """ Test for valid submission of listen_type listen """

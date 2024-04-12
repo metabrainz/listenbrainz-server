@@ -4,7 +4,6 @@ version: "3.4"
 # directory that this file is in (`docker/`) and so probably need to start with
 # `../` to refer to a directory in the main code checkout
 
-
 services:
 
   lb_db:
@@ -21,14 +20,11 @@ services:
     volumes:
       - ./couchdb_test.ini:/opt/couchdb/etc/local.ini
 
-
   redis:
     image: redis:6.2.2
 
-
   rabbitmq:
     image: rabbitmq:3.8.16
-
 
   listenbrainz:
     build:
@@ -47,7 +43,6 @@ services:
       - lb_db
       - rabbitmq
 
-
   timescale_writer:
     image: listenbrainz
     command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
@@ -58,7 +53,6 @@ services:
     environment:
       PYTHON_TESTS_RUNNING: 1
 
-
   background_tasks:
     image: listenbrainz
     command: python3 -m "listenbrainz.background.background_tasks"
@@ -68,7 +62,6 @@ services:
     environment:
       PYTHON_TESTS_RUNNING: 1
 
-
   frontend_tester:
     build:
       context: ..
@@ -76,7 +69,6 @@ services:
       target: listenbrainz-frontend-dev
     volumes:
       - ../frontend:/code/frontend:z
-
 
   websockets:
     image: listenbrainz
