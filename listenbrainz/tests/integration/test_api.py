@@ -29,6 +29,9 @@ class APITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('similar_artist_db_data_for_api_test.json'), 'r') as f:
             similar_artists = json.loads(f.read())
 
+        with open(self.path_to_data_file('mb_artist_metadata_cache.json'), 'r') as f:
+            artist_cache = json.loads(f.read())
+
         with open(self.path_to_data_file('top_recording_db_data_for_api_test.json'), 'r') as f:
             top_recordings = json.loads(f.read())
 
@@ -37,6 +40,17 @@ class APITestCase(ListenAPIIntegrationTestCase):
             curs.execute("CREATE TABLE similarity.artist (mbid0 uuid, mbid1 uuid, score integer)")
             query = "INSERT INTO similarity.artist (mbid0, mbid1, score) VALUES %s"
             execute_values(curs, query, similar_artists, template=None)
+
+            curs.execute("DROP TABLE IF EXISTS mapping.mb_artist_metadata_cache")
+            curs.execute("""CREATE TABLE mapping.mb_artist_metadata_cache (
+                                            dirty boolean,
+                                            last_updated timestamp with time zone default now(),
+                                            artist_mbid uuid,
+                                            artist_data jsonb,
+                                            tag_data jsonb,
+                                            release_group_data jsonb)""")
+            query = "INSERT INTO mapping.mb_artist_metadata_cache (dirty, artist_mbid, artist_data, tag_data, release_group_data) VALUES %s"
+            execute_values(curs, query, artist_cache, template=None)
 
             curs.execute("DROP TABLE IF EXISTS popularity.top_recording")
             curs.execute("""CREATE TABLE popularity.top_recording (artist_mbid uuid, recording_mbid uuid,
@@ -1216,7 +1230,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         r = self.client.get(self.custom_url_for("api_v1.user_recommendations", playlist_user_name="does not exist"))
         self.assert404(r)
 
-    def test_test_lb_radio_artist(self):
+    def test_lb_radio_artist(self):
         self.insert_lb_radio_data()
         r = self.client.get(self.custom_url_for("api_v1.get_artist_radio_recordings",
                                                 seed_artist_mbid="8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
@@ -1229,4 +1243,4 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
         keys = list(r.json.keys())
         self.assertGreater(len(keys), 0)
-        self.assertEqual(len(r.json[keys[0]][0]), 3)
+        self.assertEqual(len(r.json[keys[0]][0]), 4)
