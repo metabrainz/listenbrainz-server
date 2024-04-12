@@ -103,6 +103,7 @@ export default function MusicServices() {
       );
       if (action === "disable") {
         await musicKitInstance.unauthorize();
+        (appleAuth as AppleMusicUser).music_user_token = undefined;
         toast.success(
           <ToastMsg
             title="Success"

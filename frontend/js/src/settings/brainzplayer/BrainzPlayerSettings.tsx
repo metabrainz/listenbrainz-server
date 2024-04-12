@@ -15,11 +15,13 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
 import { ToastMsg } from "../../notifications/Notifications";
+import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 
 function BrainzPlayerSettings() {
   const {
     spotifyAuth,
     soundcloudAuth,
+    appleAuth,
     APIService,
     currentUser,
   } = React.useContext(GlobalAppContext);
@@ -34,6 +36,10 @@ function BrainzPlayerSettings() {
   const [soundcloudEnabled, setSoundcloudEnabled] = React.useState(
     userPreferences?.brainzplayer?.soundcloudEnabled ??
       SoundcloudPlayer.hasPermissions(soundcloudAuth)
+  );
+  const [appleMusicEnabled, setAppleMusicEnabled] = React.useState(
+    userPreferences?.brainzplayer?.appleMusicEnabled ??
+      AppleMusicPlayer.hasPermissions(appleAuth)
   );
 
   const saveSettings = React.useCallback(async () => {
@@ -58,6 +64,7 @@ function BrainzPlayerSettings() {
           youtubeEnabled,
           spotifyEnabled,
           soundcloudEnabled,
+          appleMusicEnabled,
         };
       }
     } catch (error) {
@@ -78,6 +85,7 @@ function BrainzPlayerSettings() {
     youtubeEnabled,
     spotifyEnabled,
     soundcloudEnabled,
+    appleMusicEnabled,
     APIService,
     currentUser?.auth_token,
     userPreferences,
@@ -136,16 +144,17 @@ function BrainzPlayerSettings() {
           .
         </small>
       </div>
-      {/* <div className="mb-15"
-          data-tip
-          data-tip-diable={AppleMusicPlayer.hasPermissions(appleAuth)}
-          data-for="login-first">
+      <div
+        className="mb-15"
+        data-tip
+        data-tip-diable={AppleMusicPlayer.hasPermissions(appleAuth)}
+        data-for="login-first"
+      >
         <Switch
           id="enable-apple-music"
           value="apple-music"
           disabled={!AppleMusicPlayer.hasPermissions(appleAuth)}
           checked={appleMusicEnabled}
-          
           onChange={(e) => setAppleMusicEnabled(!appleMusicEnabled)}
           switchLabel={
             <span
@@ -158,14 +167,17 @@ function BrainzPlayerSettings() {
             </span>
           }
         />
-        <br/>
+        <br />
         <small>
           Apple Music requires a premium account to play full songs on
           third-party websites. To sign in, please go to the{" "}
-          <Link to="/settings/music-services/details/">&quot;connect services&quot; page</Link>. You
-          will need to sign in every 6 months.
+          <Link to="/settings/music-services/details/">
+            &quot;connect services&quot; page
+          </Link>
+          . You will need to sign in every 6 months as the authorization
+          expires.
         </small>
-      </div> */}
+      </div>
       <div
         className="mb-15"
         data-tip
