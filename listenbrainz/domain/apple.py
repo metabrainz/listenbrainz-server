@@ -70,7 +70,7 @@ class AppleService(ExternalService):
         """
         external_service_oauth.delete_token(user_id, self.service, remove_import_log=False)
 
-    def set_token(self, user_id:int, music_user_token: str):
+    def set_token(self, user_id: int, music_user_token: str):
         """ Create a new apple music row to store a user specific developer token
 
         Args:

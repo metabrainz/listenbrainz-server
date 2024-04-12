@@ -366,19 +366,20 @@ def music_services_disconnect(service_name: str):
 
     raise BadRequest('Invalid action')
 
+
 @settings_bp.route('/music-services/<service_name>/set-token/', methods=['POST'])
 @api_login_required
 def music_services_set_token(service_name: str):
     if service_name != 'apple':
         raise APIInternalServerError("The set-token method not implemented for this service")
-    
+
     music_user_token = request.data
 
     if music_user_token is None:
         raise BadRequest('Missing user token in request body')
 
     apple_service = AppleService()
-    apple_service.set_token(user_id=current_user.id,music_user_token=music_user_token)
+    apple_service.set_token(user_id=current_user.id, music_user_token=music_user_token)
 
     return jsonify({"success": True})
 

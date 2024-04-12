@@ -82,10 +82,10 @@ def get_current_apple_music_user():
     tokens = AppleService().fetch_access_token()
     developer_token = tokens["access_token"]
     if not current_user.is_authenticated:
-        return {"developer_token":developer_token}
+        return {"developer_token": developer_token}
     user = AppleService().get_user(current_user.id)
     if user is None:
-        return {"developer_token":developer_token}
+        return {"developer_token": developer_token}
     return {
         "developer_token": developer_token,
         "music_user_token": user["refresh_token"]
