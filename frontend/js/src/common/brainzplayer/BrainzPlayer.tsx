@@ -248,7 +248,8 @@ export default class BrainzPlayer extends React.Component<
       const brainzPlayerDisabled =
         userPreferences?.brainzplayer?.spotifyEnabled === false &&
         userPreferences?.brainzplayer?.youtubeEnabled === false &&
-        userPreferences?.brainzplayer?.soundcloudEnabled === false;
+        userPreferences?.brainzplayer?.soundcloudEnabled === false &&
+        userPreferences?.brainzplayer?.appleMusicEnabled === false;
       if (brainzPlayerDisabled) {
         toast.info(
           <ToastMsg
