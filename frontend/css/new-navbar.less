@@ -17,8 +17,12 @@
 @gradient-orange: #ffa500;
 
 body {
-  display: flex;
-  > nav[role="navigation"] {
+  #react-container {
+    display: flex;
+    width: 100%;
+  }
+
+  nav[role="navigation"] {
     max-width: @sidenav-width;
 
     #side-nav {
@@ -155,14 +159,14 @@ body {
     }
   }
   /* main content */
-  > [class*="container"] {
+  .container-react {
     // Leave some space for BrainzPlayer
     padding-bottom: @brainzplayer-height;
 
     width: 100%; // fallback
     width: calc(100% - @sidenav-width);
 
-    div[role="main"] {
+    .container-react-main {
       max-width: @max-content-width;
       margin-left: auto;
       margin-right: auto;
@@ -171,8 +175,7 @@ body {
 
   /* Styles for mobile devices */
   @media (max-width: @offscreen-sidenav-breakpoint) {
-    display: initial;
-    > nav[role="navigation"] {
+    nav[role="navigation"] {
       max-width: unset;
       #side-nav {
         transition: transform 0.3s ease-in-out;
@@ -218,11 +221,14 @@ body {
         align-items: center;
       }
     }
-    > [class*="container"] {
+    .container-react {
       &,
-      div[role="main"] {
+      .container-react-main {
         width: 100%;
       }
+    }
+    #react-container {
+      display: initial;
     }
   }
 }

@@ -1,10 +1,7 @@
-import { ErrorBoundary } from "@sentry/react";
 import React, { useCallback, useContext, useState } from "react";
-import { createRoot } from "react-dom/client";
+import { Helmet } from "react-helmet";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getPageProps } from "../../utils/utils";
 
 const totallyInnocentListen: Listen = {
   listened_at: 1654079332,
@@ -28,9 +25,138 @@ const totallyInnocentListen: Listen = {
   },
 };
 
+function AIBrainzHeader() {
+  return (
+    <Helmet>
+      <title>AIBrainz</title>
+      <style type="text/css">
+        {`#AIBrainz {
+          text-align: center;
+        }
+        
+        .toggle {
+          cursor: pointer;
+          display: inline-block;
+        }
+
+        .toggle-switch {
+          display: inline-block;
+          background: #ccc;
+          border-radius: 16px;
+          width: 42px;
+          height: 18px;
+          position: relative;
+          vertical-align: middle;
+          transition: background 0.25s;
+        }
+        .toggle-switch:before, .toggle-switch:after {
+          content: "";
+        }
+        .toggle-switch:before {
+          display: block;
+          background: linear-gradient(to bottom, #fff 0%, #eee 100%);
+          border-radius: 50%;
+          box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+          width: 19px;
+          height: 19px;
+          position: absolute;
+          top: 0px;
+          left: 0px;
+          transition: left 0.25s;
+        }
+        .toggle:hover .toggle-switch:before {
+          background: linear-gradient(to bottom, #fff 0%, #fff 100%);
+          box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+        }
+        .toggle-checkbox:checked + .toggle-switch {
+          background: #353070;
+        }
+        .toggle-checkbox:checked + .toggle-switch:before {
+          left: 23px;
+        }
+
+        .toggle-checkbox {
+          position: absolute;
+          visibility: hidden;
+        }
+
+        .toggle-label {
+          margin-left: 5px;
+          position: relative;
+          top: 2px;
+        }
+        .big-ai-button {
+          margin-top:1.5em;
+          margin-bottom:1.5em;
+          width: 200px;
+          min-height: 170px;
+          background-color: #353070;
+          color: white;
+          padding: 1em;
+          border-radius: 15px;
+          font-size: 2em;
+          text-align: center;
+        }
+        .big-ai-button.disabled{
+          cursor: not-allowed;
+        }
+        .settings{
+          margin: 1.4em auto
+        }
+        .settings td {
+          text-align: initial;
+          padding: 0.2em 0.5em;
+        }
+        .confirmation {
+          max-width: 610px;
+          margin: auto;
+        }
+        .confirmation > input{
+          flex:0;
+          margin-right: 1em;
+        }`}
+      </style>
+      <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" />
+      <script type="text/javascript">
+        {`var duration = 15 * 1000;
+      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+      
+      
+      window.addEventListener("message", (event)=>{
+        if (event.origin !== window.location.origin) {
+          // Received postMessage from different origin, ignoring it
+          return;
+        }
+        const { aibrainz } = event.data;
+        if(aibrainz !== 'confetti-cannon') {
+          return;
+        }
+        var animationEnd = Date.now() + duration;
+        var interval = setInterval(function() {
+          var timeLeft = animationEnd - Date.now();
+        
+          if (timeLeft <= 0) {
+            return clearInterval(interval);
+          }
+        
+          var particleCount = 50 * (timeLeft / duration);
+          // since particles fall down, start a bit higher than random
+          confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+          confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+      });`}
+      </script>
+    </Helmet>
+  );
+}
+
 type AIBrainzComponentProps = {};
 
-function AIBrainzComponent(props: AIBrainzComponentProps) {
+export default function AIBrainzComponent(props: AIBrainzComponentProps) {
   const { APIService } = useContext(GlobalAppContext);
   const [submitted, setSubmitted] = useState(false);
   const [inputs, setInputs] = useState({
@@ -92,6 +218,7 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
 
   return (
     <div id="AIBrainz">
+      <AIBrainzHeader />
       <h3>AIBrainz playlist generator (beta)</h3>
       <br />
       <p style={{ fontWeight: "bold" }}>
@@ -345,20 +472,3 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, globalAppContext } = await getPageProps();
-
-  const AIBrainzComponentWithAlertNotifications = withAlertNotifications(
-    AIBrainzComponent
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <AIBrainzComponentWithAlertNotifications />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

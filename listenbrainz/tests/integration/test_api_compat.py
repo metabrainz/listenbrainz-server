@@ -62,10 +62,14 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         self.assert200(r)
         token = r.json['token']
 
+        data = {
+            "token": token,
+        }
+
         r = self.client.post(
             self.custom_url_for('api_compat.api_auth_approve'),
-            data=f"token={token}",
-            headers={'Content-Type': 'application/x-www-form-urlencoded'}
+            data=data,
+            headers={'Content-Type': 'application/json'}
         )
         self.assert200(r)
 
@@ -90,7 +94,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'duration[0]': 300,
             'timestamp[0]': int(time.time()),
         }
-        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data, headers={'Content-Type': 'application/json'})
         self.assert200(r)
 
         expected = {

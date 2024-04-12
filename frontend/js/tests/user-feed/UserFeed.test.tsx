@@ -19,10 +19,11 @@
  */
 
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
+import { mount } from "enzyme";
 import * as timeago from "time-ago";
 import { sortBy } from "lodash";
 import { act } from "react-dom/test-utils";
+import { BrowserRouter } from "react-router-dom";
 import UserFeedPage, {
   UserFeedPageProps,
   UserFeedPageState,
@@ -64,9 +65,11 @@ describe("UserFeed", () => {
     jest.spyOn(global.Math, "random").mockImplementation(() => 0);
   });
   it("renders correctly", () => {
-    const wrapper = mount<UserFeedPage>(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
+        <BrowserRouter>
+          <UserFeedPage {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find("#timeline")).toHaveLength(1);
@@ -77,9 +80,11 @@ describe("UserFeed", () => {
   });
 
   it("renders the correct number of timeline events", () => {
-    const wrapper = mount<UserFeedPage>(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
+        <BrowserRouter>
+          <UserFeedPage {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     const ulElement = wrapper.find("#timeline > ul");
@@ -93,9 +98,11 @@ describe("UserFeed", () => {
     const dateNowMock = jest
       .spyOn(Date, "now")
       .mockImplementation(() => date.getTime());
-    const wrapper = mount<UserFeedPage>(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
+        <BrowserRouter>
+          <UserFeedPage {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     const recEvent = wrapper.find("#timeline > ul >li").at(0);
@@ -114,9 +121,11 @@ describe("UserFeed", () => {
     const dateNowMock = jest
       .spyOn(Date, "now")
       .mockImplementation(() => date.getTime());
-    const wrapper = mount<UserFeedPage>(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
+        <BrowserRouter>
+          <UserFeedPage {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     const followedEvent = wrapper.find("#timeline > ul >li").at(3);
@@ -142,9 +151,11 @@ describe("UserFeed", () => {
     const dateNowMock = jest
       .spyOn(Date, "now")
       .mockImplementation(() => date.getTime());
-    const wrapper = mount<UserFeedPage>(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
+        <BrowserRouter>
+          <UserFeedPage {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     const notificationEvent = wrapper.find("#timeline > ul >li").at(5);
@@ -170,9 +181,11 @@ describe("UserFeed", () => {
     const dateNowMock = jest
       .spyOn(Date, "now")
       .mockImplementation(() => date.getTime());
-    const wrapper = mount<UserFeedPage>(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={GlobalContextMock}>
-        <UserFeedPage {...props} />
+        <BrowserRouter>
+          <UserFeedPage {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     const recEvent = wrapper.find("#timeline > ul >li").at(11);
@@ -200,37 +213,44 @@ describe("UserFeed", () => {
     describe("handleClickOlder", () => {
       it("does nothing if there is no older events timestamp", async () => {
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-        const wrapper = mount<UserFeedPage>(<UserFeedPage {...props} />, {
-          context: {
-            APIService: { getFeedForUser: spy },
-          },
-        });
+        const wrapper = mount(
+          <BrowserRouter>
+            <UserFeedPage {...props} />
+          </BrowserRouter>,
+          {
+            context: {
+              APIService: { getFeedForUser: spy },
+            },
+          }
+        );
         await waitForComponentToPaint(wrapper);
-        const instance = wrapper.instance();
+        const instance = wrapper.find(UserFeedPage).instance() as UserFeedPage;
         await act(async () => {
-          wrapper?.setState({ nextEventTs: undefined });
+          instance?.setState({ nextEventTs: undefined });
           await instance.handleClickOlder();
         });
 
         await waitForComponentToPaint(wrapper);
-        expect(wrapper.state("nextEventTs")).toBeUndefined();
+        expect(instance.state.nextEventTs).toBeUndefined();
 
-        expect(wrapper.state("loading")).toBeFalsy();
+        expect(instance.state.loading).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
       });
 
       it("calls the API to get older events", async () => {
-        const wrapper = mount<UserFeedPage>(
+        const wrapper = mount(
           <GlobalAppContext.Provider value={GlobalContextMock}>
-            <UserFeedPage {...props} />
+            <BrowserRouter>
+              <UserFeedPage {...props} />
+            </BrowserRouter>
           </GlobalAppContext.Provider>
         );
         await waitForComponentToPaint(wrapper);
-        const instance = wrapper.instance();
+        const instance = wrapper.find(UserFeedPage).instance() as UserFeedPage;
         await act(async () => {
-          wrapper?.setState({ nextEventTs: 1586450000 });
+          instance?.setState({ nextEventTs: 1586450000 });
         });
-        expect(wrapper.state("nextEventTs")).toEqual(1586450000);
+        expect(instance.state.nextEventTs).toEqual(1586450000);
         const expectedEventsArray = [
           {
             event_type: "follow",
@@ -259,8 +279,8 @@ describe("UserFeed", () => {
           undefined,
           1586450000
         );
-        expect(wrapper.state("loading")).toBeFalsy();
-        expect(wrapper.state("events")).toEqual(expectedEventsArray);
+        expect(instance.state.loading).toBeFalsy();
+        expect(instance.state.events).toEqual(expectedEventsArray);
       });
 
       it("sets nextEventTs to undefined if it receives no events from API", async () => {
@@ -268,14 +288,16 @@ describe("UserFeed", () => {
         const propsCopy = { ...props };
         propsCopy.events[propsCopy.events.length - 1].created = timestamp;
 
-        const wrapper = mount<UserFeedPage>(
+        const wrapper = mount(
           <GlobalAppContext.Provider value={GlobalContextMock}>
-            <UserFeedPage {...propsCopy} />
+            <BrowserRouter>
+              <UserFeedPage {...propsCopy} />
+            </BrowserRouter>
           </GlobalAppContext.Provider>
         );
-        const instance = wrapper.instance();
+        const instance = wrapper.find(UserFeedPage).instance() as UserFeedPage;
 
-        expect(wrapper.state("nextEventTs")).toEqual(timestamp);
+        expect(instance.state.nextEventTs).toEqual(timestamp);
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
         instance.context.APIService.getFeedForUser = spy;
@@ -291,27 +313,30 @@ describe("UserFeed", () => {
           undefined,
           timestamp
         );
-        expect(wrapper.state("loading")).toBeFalsy();
-        expect(wrapper.state("nextEventTs")).toBeUndefined();
+        expect(instance.state.loading).toBeFalsy();
+        expect(instance.state.nextEventTs).toBeUndefined();
         expect(pushStateSpy).not.toHaveBeenCalled();
       });
 
       it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
-        const wrapper = mount<UserFeedPage>(
+        const wrapper = mount(
           <GlobalAppContext.Provider value={GlobalContextMock}>
-            <UserFeedPage {...props} />
+            <BrowserRouter>
+              <UserFeedPage {...props} />
+            </BrowserRouter>
           </GlobalAppContext.Provider>
         );
-        const instance = wrapper.instance();
+
+        const instance = wrapper.find(UserFeedPage).instance() as UserFeedPage;
 
         await waitForComponentToPaint(wrapper);
         await act(() => {
           // Random nextEventTs to ensure that is the value set in browser history
-          wrapper?.setState({ events: [], nextEventTs: 1586440600 });
+          instance?.setState({ events: [], nextEventTs: 1586440600 });
         });
 
-        expect(wrapper.state("events")).toEqual([]);
-        expect(wrapper.state("nextEventTs")).toEqual(1586440600);
+        expect(instance.state.events).toEqual([]);
+        expect(instance.state.nextEventTs).toEqual(1586440600);
 
         const sortedEvents = sortBy(props.events, "created").reverse();
         const nextEventTs = sortedEvents[sortedEvents.length - 1].created;
@@ -327,10 +352,10 @@ describe("UserFeed", () => {
         });
         await waitForComponentToPaint(wrapper);
 
-        expect(wrapper.state("events")).toEqual(sortedEvents);
-        expect(wrapper.state("loading")).toBeFalsy();
-        expect(wrapper.state("nextEventTs")).toEqual(nextEventTs);
-        expect(wrapper.state("previousEventTs")).toEqual(previousEventTs);
+        expect(instance.state.events).toEqual(sortedEvents);
+        expect(instance.state.loading).toBeFalsy();
+        expect(instance.state.nextEventTs).toEqual(nextEventTs);
+        expect(instance.state.previousEventTs).toEqual(previousEventTs);
         expect(pushStateSpy).toHaveBeenCalledWith(
           null,
           "",
@@ -342,40 +367,44 @@ describe("UserFeed", () => {
     describe("handleClickNewer", () => {
       it("does nothing if there is no newer events timestamp", async () => {
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
-        const wrapper = mount<UserFeedPage>(
+        const wrapper = mount(
           <GlobalAppContext.Provider value={GlobalContextMock}>
-            <UserFeedPage {...props} />
+            <BrowserRouter>
+              <UserFeedPage {...props} />
+            </BrowserRouter>
           </GlobalAppContext.Provider>
         );
         await waitForComponentToPaint(wrapper);
-        const instance = wrapper.instance();
+        const instance = wrapper.find(UserFeedPage).instance() as UserFeedPage;
         instance.context.APIService.getFeedForUser = spy;
         await act(() => {
-          wrapper?.setState({ previousEventTs: undefined });
+          instance?.setState({ previousEventTs: undefined });
         });
-        expect(wrapper.state("previousEventTs")).toBeUndefined();
+        expect(instance.state.previousEventTs).toBeUndefined();
 
         await act(async () => {
           await instance.handleClickNewer();
         });
         await waitForComponentToPaint(wrapper);
 
-        expect(wrapper.state("loading")).toBeFalsy();
+        expect(instance.state.loading).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
       });
 
       it("calls the API to get newer events", async () => {
-        const wrapper = mount<UserFeedPage>(
+        const wrapper = mount(
           <GlobalAppContext.Provider value={GlobalContextMock}>
-            <UserFeedPage {...props} />
+            <BrowserRouter>
+              <UserFeedPage {...props} />
+            </BrowserRouter>
           </GlobalAppContext.Provider>
         );
         await waitForComponentToPaint(wrapper);
-        const instance = wrapper.instance();
+        const instance = wrapper.find(UserFeedPage).instance() as UserFeedPage;
         await act(() => {
-          wrapper?.setState({ previousEventTs: 123456 });
+          instance?.setState({ previousEventTs: 123456 });
         });
-        expect(wrapper.state("previousEventTs")).toEqual(123456);
+        expect(instance.state.previousEventTs).toEqual(123456);
 
         const expectedEventsArray = [
           {
@@ -399,8 +428,8 @@ describe("UserFeed", () => {
         });
         await waitForComponentToPaint(wrapper);
 
-        expect(wrapper.state("events")).toEqual(expectedEventsArray);
-        expect(wrapper.state("loading")).toBeFalsy();
+        expect(instance.state.events).toEqual(expectedEventsArray);
+        expect(instance.state.loading).toBeFalsy();
         expect(spy).toHaveBeenCalledWith(
           props.currentUser.name,
           props.currentUser.auth_token,
@@ -410,18 +439,20 @@ describe("UserFeed", () => {
       });
 
       it("sets previousEventTs to undefined if it receives no events from API", async () => {
-        const wrapper = mount<UserFeedPage>(
+        const wrapper = mount(
           <GlobalAppContext.Provider value={GlobalContextMock}>
-            <UserFeedPage {...props} />
+            <BrowserRouter>
+              <UserFeedPage {...props} />
+            </BrowserRouter>
           </GlobalAppContext.Provider>
         );
         await waitForComponentToPaint(wrapper);
-        const instance = wrapper.instance();
+        const instance = wrapper.find(UserFeedPage).instance() as UserFeedPage;
 
         await act(() => {
-          wrapper.setState({ previousEventTs: 123456 });
+          instance.setState({ previousEventTs: 123456 });
         });
-        expect(wrapper.state("previousEventTs")).toEqual(123456);
+        expect(instance.state.previousEventTs).toEqual(123456);
 
         const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
 
@@ -430,24 +461,26 @@ describe("UserFeed", () => {
           await instance.handleClickNewer();
         });
 
-        expect(wrapper.state("loading")).toBeFalsy();
-        expect(wrapper.state("previousEventTs")).toBeUndefined();
+        expect(instance.state.loading).toBeFalsy();
+        expect(instance.state.previousEventTs).toBeUndefined();
         expect(pushStateSpy).not.toHaveBeenCalled();
       });
 
       it("sets the events, nextEventTs and  previousEventTs on the state and updates browser history", async () => {
-        const wrapper = mount<UserFeedPage>(
+        const wrapper = mount(
           <GlobalAppContext.Provider value={GlobalContextMock}>
-            <UserFeedPage {...props} />
+            <BrowserRouter>
+              <UserFeedPage {...props} />
+            </BrowserRouter>
           </GlobalAppContext.Provider>
         );
         await waitForComponentToPaint(wrapper);
 
-        const instance = wrapper.instance();
+        const instance = wrapper.find(UserFeedPage).instance() as UserFeedPage;
         await act(() => {
-          wrapper.setState({ previousEventTs: 123456 });
+          instance.setState({ previousEventTs: 123456 });
         });
-        expect(wrapper.state("previousEventTs")).toEqual(123456);
+        expect(instance.state.previousEventTs).toEqual(123456);
 
         const sortedEvents = sortBy(props.events, "created");
         instance.context.APIService.getFeedForUser = jest.fn(
@@ -462,10 +495,10 @@ describe("UserFeed", () => {
           await instance.handleClickNewer();
         });
 
-        expect(wrapper.state("events")).toEqual(sortedEvents);
-        expect(wrapper.state("loading")).toBeFalsy();
-        expect(wrapper.state("nextEventTs")).toEqual(nextEventTs);
-        expect(wrapper.state("previousEventTs")).toEqual(previousEventTs);
+        expect(instance.state.events).toEqual(sortedEvents);
+        expect(instance.state.loading).toBeFalsy();
+        expect(instance.state.nextEventTs).toEqual(nextEventTs);
+        expect(instance.state.previousEventTs).toEqual(previousEventTs);
         expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?min_ts=123456`);
       });
     });

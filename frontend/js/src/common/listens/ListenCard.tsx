@@ -27,6 +27,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal from "@ebay/nice-modal-react";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
@@ -301,9 +302,9 @@ export default class ListenCard extends React.Component<
     } else if (listen.playing_now) {
       timeStampForDisplay = (
         <span className="listen-time">
-          <a href="/listening-now/" target="_blank" rel="noopener noreferrer">
+          <Link to="/listening-now/">
             <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
-          </a>
+          </Link>
         </span>
       );
     } else {
@@ -496,14 +497,12 @@ export default class ListenCard extends React.Component<
             {(showUsername || showTimestamp) && (
               <div className="username-and-timestamp">
                 {showUsername && (
-                  <a
-                    href={`/user/${listen.user_name}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    to={`/user/${listen.user_name}/`}
                     title={listen.user_name ?? undefined}
                   >
                     {listen.user_name}
-                  </a>
+                  </Link>
                 )}
                 {showTimestamp && timeStampForDisplay}
               </div>

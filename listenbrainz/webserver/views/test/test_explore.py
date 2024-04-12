@@ -11,17 +11,9 @@ class ExploreViewsTestCase(IntegrationTestCase):
         resp = self.client.get(self.custom_url_for('explore.index', path="huesound"))
         self.assert200(resp)
 
-    def test_hue_sound_redirect(self):
-        resp = self.client.get(self.custom_url_for('index.huesound'))
-        self.assertStatus(resp, 302)
-
     def test_similar_users(self):
         resp = self.client.get(self.custom_url_for('explore.index', path="similar-users"))
         self.assert200(resp)
-
-    def test_similar_users_redirect(self):
-        resp = self.client.get(self.custom_url_for('index.similar_users'))
-        self.assertStatus(resp, 302)
 
     def test_fresh_releases(self):
         resp = self.client.get(self.custom_url_for('explore.index', path="fresh-releases"))

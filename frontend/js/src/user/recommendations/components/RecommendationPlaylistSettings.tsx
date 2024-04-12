@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { sanitize } from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
+import { Link } from "react-router-dom";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 import { preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -44,7 +45,7 @@ export default function RecommendationPlaylistSettings({
       toast.success(
         <>
           Saved as playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+          <Link to={`/playlist/${newPlaylistId}/`}>{newPlaylistId}</Link>
         </>
       );
     } catch (error) {
@@ -107,7 +108,7 @@ export default function RecommendationPlaylistSettings({
           {playlist.creator} |{" "}
           {extension?.created_for && `For ${extension?.created_for}`}
           <br />
-          <a href={playlist.identifier}>Link to this playlist</a>
+          <Link to={playlist.identifier}>Link to this playlist</Link>
         </div>
         <hr />
         {playlist.annotation && (

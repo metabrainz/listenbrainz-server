@@ -1,8 +1,9 @@
 import * as React from "react";
+import type { RouteObject } from "react-router-dom";
 import RouteLoader from "../../utils/Loader";
 import ErrorBoundary from "../../error/ErrorBoundary";
 
-const getSettingsRoutes = () => {
+const getSettingsRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/settings",

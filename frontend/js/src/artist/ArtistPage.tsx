@@ -1,10 +1,6 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
@@ -13,11 +9,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { Link, useLoaderData, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import { getPageProps, getReviewEventContent } from "../utils/utils";
+import { getReviewEventContent } from "../utils/utils";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -43,63 +39,38 @@ export type ArtistPageProps = {
   coverArt?: string;
 };
 
-export default function ArtistPage(props: ArtistPageProps): JSX.Element {
+export default function ArtistPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
   const {
-    artist: initialArtist,
-    popularRecordings: initialPopularRecordings,
+    artist,
+    popularRecordings,
     releaseGroups,
     similarArtists,
     listeningStats,
     coverArt: coverArtSVG,
-  } = props;
+  } = useLoaderData() as ArtistPageProps;
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
     total_user_count: userCount,
   } = listeningStats;
 
-  const [artist, setArtist] = React.useState(initialArtist);
+  const { artistMBID } = useParams();
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
   >();
-  // Data we get from the back end
-  const [popularRecordings, setPopularRecordings] = React.useState(
-    initialPopularRecordings
-  );
-  const [loading, setLoading] = React.useState(false);
 
   const [albumsByThisArtist, alsoAppearsOn] = partition(
     releaseGroups,
     (rg) => rg.artists[0].artist_mbid === artist.artist_mbid
   );
-  /** Navigation from one artist to a similar artist */
-  //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
-  //     event
-  //   ) => {
-  //     setLoading(true);
-  //   	try{
-  //     // Hit the API to get all the required info for the artist we clicked on
-  //    const response = await fetch(…)
-  //   if(!response.ok){
-  // 	throw new Error(response.status);
-  //   }
-  //	setArtist(response.artist)
-  //  setArtistTags(…)
-  //  setPopularRecordings(…)
-  // }
-  // catch(err){
-  // toast.error(<ToastMsg title={"Could no load similar artist"} message={err.toString()})
-  // }
-  //     setLoading(false);
-  //   };
 
   React.useEffect(() => {
     async function fetchReviews() {
       try {
         const response = await fetch(
-          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artist.artist_mbid}&entity_type=artist`
+          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artistMBID}&entity_type=artist`
         );
         const body = await response.json();
         if (!response.ok) {
@@ -113,7 +84,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     async function fetchWikipediaExtract() {
       try {
         const response = await fetch(
-          `https://musicbrainz.org/artist/${artist.artist_mbid}/wikipedia-extract`
+          `https://musicbrainz.org/artist/${artistMBID}/wikipedia-extract`
         );
         const body = await response.json();
         if (!response.ok) {
@@ -126,7 +97,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     }
     fetchReviews();
     fetchWikipediaExtract();
-  }, [artist, releaseGroups, APIService.APIBaseURI]);
+  }, [artistMBID]);
 
   const listensFromPopularRecordings =
     popularRecordings.map(popularRecordingToListen) ?? [];
@@ -170,7 +141,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
 
   return (
     <div id="entity-page" className="artist-page">
-      <Loader isLoading={loading} />
+      <Helmet>
+        <title>{artist?.name}</title>
+      </Helmet>
       <div className="entity-page-header flex">
         <div
           className="cover-art"
@@ -225,15 +198,15 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             />
           </div>
           <div className="btn-group lb-radio-button">
-            <a
+            <Link
               type="button"
               className="btn btn-info"
-              href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+              to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                 artist.name
               )})&mode=easy`}
             >
               <FontAwesomeIcon icon={faPlayCircle} /> Radio
-            </a>
+            </Link>
             <button
               type="button"
               className="btn btn-info dropdown-toggle"
@@ -246,39 +219,33 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             </button>
             <ul className="dropdown-menu">
               <li>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                     artist.name
                   )})::nosim&mode=easy`}
                 >
                   This artist
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
                     artist.name
                   )})&mode=easy`}
                 >
                   Similar artists
-                </a>
+                </Link>
               </li>
               {Boolean(filteredTags?.length) && (
                 <li>
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                  <Link
+                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
                       filteredTagsAsString
                     )})::or&mode=easy`}
                   >
                     Tags (
                     <span className="tags-list">{filteredTagsAsString}</span>)
-                  </a>
+                  </Link>
                 </li>
               )}
             </ul>
@@ -378,13 +345,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <a
-                          href={`/user/${listener.user_name}/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                        <Link to={`/user/${listener.user_name}/`}>
                           {listener.user_name}
-                        </a>
+                        </Link>
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
@@ -419,9 +382,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               .map((similarArtist) => {
                 const listenDetails = (
                   <div>
-                    <a href={`/artist/${similarArtist.artist_mbid}`}>
+                    <Link to={`/artist/${similarArtist.artist_mbid}/`}>
                       {similarArtist.name}
-                    </a>
+                    </Link>
                   </div>
                 );
                 const artistAsListen: BaseListenFormat = {
@@ -484,54 +447,3 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const {
-    artist_data,
-    popular_recordings,
-    release_groups,
-    similar_artists,
-    listening_stats,
-    cover_art,
-  } = reactProps;
-
-  const ArtistPageWithAlertNotifications = withAlertNotifications(ArtistPage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <ArtistPageWithAlertNotifications
-            artist={artist_data}
-            popularRecordings={popular_recordings}
-            releaseGroups={release_groups}
-            similarArtists={similar_artists}
-            listeningStats={listening_stats}
-            coverArt={cover_art}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

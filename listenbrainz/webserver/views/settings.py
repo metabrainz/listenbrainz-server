@@ -89,7 +89,7 @@ def import_data():
 
     # Return error if LASTFM_API_KEY is not given in config.py
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
-        return NotFound("LASTFM_API_KEY not specified.")
+        return jsonify({"error": "LASTFM_API_KEY not specified."}), 404
 
     data = {
         "user_has_email": user_has_email,
@@ -283,8 +283,8 @@ def music_services_details():
     return jsonify(data)
 
 
-@settings_bp.route('/music-services/<service_name>/callback/')
 @profile_bp.route('/music-services/<service_name>/callback/')
+@settings_bp.route('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
     service = _get_service_or_raise_404(service_name)
@@ -371,4 +371,4 @@ def missing_mb_data():
 @settings_bp.route('/<path:path>/')
 @login_required
 def index(path):
-    return render_template("settings/index.html")
+    return render_template("index.html")
