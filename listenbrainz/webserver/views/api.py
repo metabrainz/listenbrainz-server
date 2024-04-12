@@ -809,7 +809,12 @@ def get_artist_radio_recordings(seed_artist_mbid):
         log_raise_400("Seed artist mbid is not a valid UUID.")
 
     max_similar_artists = _parse_int_arg("max_similar_artists")
+    if max_similar_artists is None:
+        raise APIBadRequest("Argument max_similar_artists must be specified.")
+
     max_recordings_per_artist = _parse_int_arg("max_recordings_per_artist")
+    if max_recordings_per_artist is None:
+        raise APIBadRequest("Argument max_recordings_per_artist must be specified.")
 
     mode = request.args.get("mode")
     if mode is None:
