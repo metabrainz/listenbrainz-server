@@ -147,7 +147,7 @@ function BrainzPlayerSettings() {
       <div
         className="mb-15"
         data-tip
-        data-tip-diable={AppleMusicPlayer.hasPermissions(appleAuth)}
+        data-tip-disable={AppleMusicPlayer.hasPermissions(appleAuth)}
         data-for="login-first"
       >
         <Switch
