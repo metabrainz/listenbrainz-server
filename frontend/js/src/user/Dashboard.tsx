@@ -503,7 +503,7 @@ export default function Listen() {
                   className="btn btn-outline"
                   onClick={() => {
                     refetch();
-                    setWebSocketListens;
+                    setWebSocketListens([]);
                   }}
                 >
                   See more fresh listens
