@@ -793,6 +793,7 @@ def get_artist_radio_recordings(seed_artist_mbid):
             {
               "recording_mbid": "401c1a5d-56e7-434d-b07e-a14d4e7eb83c",
               "similar_artist_mbid": "cb67438a-7f50-4f2b-a6f1-2bb2729fd538",
+              "similar_artist_name": "Boo Hoo Boys",
               "total_listen_count": 232361
             }
 
@@ -842,4 +843,4 @@ def get_artist_radio_recordings(seed_artist_mbid):
     except ValueError:
         raise APIBadRequest(f"pop_end: '{pop_end}' is not a valid number")
 
-    return lb_radio_artist(mode, seed_artist_mbid, max_similar_artists, max_recordings_per_artist, pop_begin, pop_end)
+    return jsonify(lb_radio_artist(mode, seed_artist_mbid, max_similar_artists, max_recordings_per_artist, pop_begin, pop_end))
