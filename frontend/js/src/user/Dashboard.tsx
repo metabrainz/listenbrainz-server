@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
-import { Socket, io } from "socket.io-client";
+import { io } from "socket.io-client";
 import {
   Link,
   useLocation,
@@ -56,12 +56,10 @@ export default function Listen() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObject = getObjectForURLSearchParams(searchParams);
 
-  const { data } = useQuery({
+  const { data, refetch } = useQuery({
     ...RouteQuery(["dashboard", params, searchParamsObject], location.pathname),
-    gcTime: !("max_ts" in searchParamsObject) ? 0 : 1,
-  }) as {
-    data: ListenLoaderData;
-  };
+    staleTime: !("max_ts" in searchParamsObject) ? 0 : 1000 * 60 * 5,
+  });
 
   const {
     listens: initialListens = [],
@@ -69,7 +67,7 @@ export default function Listen() {
     userPinnedRecording = undefined,
     latestListenTs,
     oldestListenTs,
-  } = data;
+  } = data as ListensProps;
 
   const previousListenTs = initialListens?.[0]?.listened_at;
   const nextListenTs = initialListens?.[initialListens.length - 1]?.listened_at;
@@ -500,13 +498,16 @@ export default function Listen() {
                 {webSocketListens.map((listen) => getListenCard(listen))}
               </div>
               <div className="read-more">
-                <Link
+                <button
                   type="button"
                   className="btn btn-outline"
-                  to={location.pathname}
+                  onClick={() => {
+                    refetch();
+                    setWebSocketListens;
+                  }}
                 >
                   See more fresh listens
-                </Link>
+                </button>
               </div>
             </div>
           )}
