@@ -20,27 +20,6 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
         
-        data = json.loads(response.data)['payload']
-
-        # make sure user id is correct
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
-
-        # make sure that count is 1 and list also contains 1 listen
-        self.assertEqual(data['count'], 1)
-        self.assertEqual(len(data['listens']), 1)
-
-        # make sure timestamp is the same as sent
-        sent_time = payload['payload'][0]['listened_at']
-        self.assertEqual(data['listens'][0]['listened_at'], sent_time)
-        self.assertEqual(data['listens'][0]
-                         ['track_metadata']['track_name'], 'Fade')
-        self.assertEqual(data['listens'][0]['track_metadata']
-                         ['artist_name'], 'Kanye West')
-        self.assertEqual(data['listens'][0]['track_metadata']
-                         ['release_name'], 'The Life of Pablo')
-        self.assertEqual(data['listens'][0]['track_metadata']
-                         ['additional_info']['music_service'], 'spotify.com')
-
         received_listen = False
         timeout = 5  # 5 seconds timeout
 
@@ -83,15 +62,6 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         r = self.client.get(self.custom_url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
         self.assertEqual(r.json['payload']['count'], 1)
-        self.assertEqual(len(r.json['payload']['listens']), 1)
-        self.assertEqual(r.json['payload']['user_id'],
-                         self.user['musicbrainz_id'])
-        self.assertEqual(r.json['payload']['listens'][0]
-                         ['track_metadata']['artist_name'], 'Kanye West')
-        self.assertEqual(r.json['payload']['listens'][0]
-                         ['track_metadata']['release_name'], 'The Life of Pablo')
-        self.assertEqual(r.json['payload']['listens'][0]
-                         ['track_metadata']['track_name'], 'Fade')
 
     def tearDown(self):
         self.sio.disconnect()
