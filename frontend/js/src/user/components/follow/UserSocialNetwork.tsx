@@ -5,6 +5,7 @@ import Card from "../../../components/Card";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
+import CompatibilityModal from "./CompatibilityModal";
 import { ToastMsg } from "../../../notifications/Notifications";
 
 export type UserSocialNetworkProps = {
@@ -16,6 +17,12 @@ export type UserSocialNetworkState = {
   followingList: Array<string>;
   currentUserFollowingList: Array<string>;
   similarUsersList: Array<SimilarUser>;
+  similarArtists: Array<{
+    artist_name: string;
+    artist_mbid: string | null;
+    listen_count: number;
+  }>;
+  similarityScore: number;
 };
 
 export default class UserSocialNetwork extends React.Component<
@@ -32,6 +39,8 @@ export default class UserSocialNetwork extends React.Component<
       followingList: [],
       similarUsersList: [],
       currentUserFollowingList: [],
+      similarArtists: [],
+      similarityScore: 0,
     };
   }
 
@@ -40,6 +49,8 @@ export default class UserSocialNetwork extends React.Component<
     await this.getFollowers();
     await this.getSimilarUsers();
     await this.getCurrentUserFollowing();
+    await this.getSimilarity();
+    await this.getSimilarArtists();
   }
 
   getSimilarUsers = async () => {
@@ -65,6 +76,72 @@ export default class UserSocialNetwork extends React.Component<
           message={err.toString()}
         />,
         { toastId: "fetch-similar-error" }
+      );
+    }
+  };
+
+  getSimilarity = async () => {
+    const { user } = this.props;
+    const { APIService, currentUser } = this.context;
+    if (currentUser?.name === user?.name) {
+      return;
+    }
+    const { getSimilarityBetweenUsers } = APIService;
+    try {
+      const response = await getSimilarityBetweenUsers(
+        user.name,
+        currentUser.name
+      );
+      const { payload } = response;
+      const similarityScore = payload.similarity;
+      this.setState({ similarityScore });
+    } catch (err) {
+      if (err.toString() === "Error: Similar-to user not found") {
+        // cannot get similarity if not in the list, so just return 0
+        this.setState({ similarityScore: 0 });
+      } else {
+        toast.error(
+          <ToastMsg
+            title="Error while fetching similarity"
+            message={err.toString()}
+          />,
+          { toastId: "fetch-similarity-error" }
+        );
+      }
+    }
+  };
+
+  getSimilarArtists = async () => {
+    const { user } = this.props;
+    const { APIService, currentUser } = this.context;
+    if (currentUser?.name === user?.name) {
+      return;
+    }
+    const { getUserArtists } = APIService;
+    try {
+      let response = await getUserArtists(user.name, "all_time", 100);
+      let { payload } = response;
+      const userArtists = payload.artists;
+      response = await getUserArtists(currentUser.name, "all_time", 100);
+      ({ payload } = response);
+      const currentUserArtists = payload.artists;
+      let similarArtists = currentUserArtists.filter((currArtist: any) =>
+        userArtists.some(
+          (artist: { artist_name: any }) =>
+            artist.artist_name === currArtist.artist_name
+        )
+      );
+      if (similarArtists.length > 5) {
+        similarArtists = similarArtists.slice(0, 4);
+      }
+      this.setState({ similarArtists });
+    } catch (err) {
+      toast.error(
+        <ToastMsg
+          title="Error while fetching user artists"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-artists-error" }
       );
     }
   };
@@ -162,9 +239,23 @@ export default class UserSocialNetwork extends React.Component<
 
   render() {
     const { user } = this.props;
-    const { followerList, followingList, similarUsersList } = this.state;
+    const { currentUser } = this.context;
+    const {
+      followerList,
+      followingList,
+      similarUsersList,
+      similarArtists,
+      similarityScore,
+    } = this.state;
     return (
       <>
+        {currentUser?.name !== user?.name && (
+          <CompatibilityModal
+            user={user}
+            similarityScore={similarityScore}
+            similarArtists={similarArtists}
+          />
+        )}
         <Card className="card-user-sn hidden-xs hidden-sm">
           <FollowerFollowingModal
             user={user}
