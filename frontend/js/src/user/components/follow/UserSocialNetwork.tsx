@@ -132,7 +132,7 @@ export default class UserSocialNetwork extends React.Component<
         )
       );
       if (similarArtists.length > 5) {
-        similarArtists = similarArtists.slice(0, 4);
+        similarArtists = similarArtists.slice(0, 5);
       }
       this.setState({ similarArtists });
     } catch (err) {
