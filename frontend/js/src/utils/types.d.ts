@@ -779,3 +779,9 @@ declare type FeedbackForUserForRecordingsRequestBody = {
   recording_mbids: string[];
   recording_msids?: string[];
 };
+
+declare type BrainzPlayerQueueItem = Listen & {
+  id: string;
+};
+
+declare type BrainzPlayerQueue = BrainzPlayerQueueItem[];
