@@ -1,4 +1,5 @@
 import { cloneDeep, has } from "lodash";
+import { v4 as uuidv4 } from "uuid";
 import { JSPFTrackToListen } from "../../playlists/utils";
 import { getListenCardKey } from "../../utils/utils";
 
@@ -14,7 +15,9 @@ export function listenOrJSPFTrackToQueueItem(
   }
   const queueItem = {
     ...listenTrack,
-    id: `queue-item-${getListenCardKey(listenTrack)}-${Date.now().toString()}`,
+    id: `queue-item-${getListenCardKey(
+      listenTrack
+    )}-${Date.now().toString()}-${uuidv4()}`,
   };
   return queueItem;
 }
