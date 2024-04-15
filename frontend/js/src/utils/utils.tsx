@@ -31,13 +31,13 @@ const searchForSpotifyTrack = async (
   }
   let queryString = `type=track&q=`;
   if (trackName) {
-    queryString += `track:${encodeURIComponent(trackName)}`;
+    queryString += encodeURIComponent(`track:${trackName}`);
   }
   if (artistName) {
-    queryString += ` artist:${encodeURIComponent(artistName)}`;
+    queryString += encodeURIComponent(` artist:${artistName}`);
   }
   if (releaseName) {
-    queryString += ` album:${encodeURIComponent(releaseName)}`;
+    queryString += encodeURIComponent(` album:${releaseName}`);
   }
 
   const response = await fetch(
