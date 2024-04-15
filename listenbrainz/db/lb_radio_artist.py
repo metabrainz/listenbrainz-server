@@ -108,7 +108,7 @@ def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_r
              FROM randomize
              JOIN mapping.mb_artist_metadata_cache
                ON artist_mbid = similar_artist_mbid
-            WHERE rownum < {num_recordings_per_artist}
+            WHERE rownum <= {num_recordings_per_artist}
     """).format(
         seed_artist_mbid=Literal(uuid.UUID(seed_artist)),
         similar_artist_limit=Literal(100),
