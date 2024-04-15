@@ -19,14 +19,18 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
-        
+
         received_listen = False
-        timeout = 5  # 5 seconds timeout
+        timeout =5  # 5 seconds timeout
 
         @self.sio.event
         def listen(data):
             nonlocal received_listen
             received_listen = True
+            self.assertEqual(data['listens'][0]['track_metadata']['track_name'], 'Fade')
+            self.assertEqual(data['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
+            self.assertEqual(data['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
+            self.assertEqual(data['listens'][0]['track_metadata']['additional_info']['music_service'], 'spotify.com')
 
         start_time = time.time()
         while not received_listen and time.time() - start_time < timeout:
@@ -44,12 +48,15 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['status'], 'ok')
 
         received_playing_now = False
-        timeout = 5  # 20 seconds timeout
+        timeout = 5  # 5 seconds timeout
 
         @self.sio.event
         def playing_now(data):
             nonlocal received_playing_now
             received_playing_now = True
+            self.assertEqual(data['listens'][0]['track_metadata']['track_name'], 'Fade')
+            self.assertEqual(data['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
+            self.assertEqual(data['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
 
         # Wait for the 'playing_now' event
         start_time = time.time()
