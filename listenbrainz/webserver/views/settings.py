@@ -280,7 +280,7 @@ def music_services_details():
 
     apple_service = AppleService()
     apple_user = apple_service.get_user(current_user.id)
-    current_apple_permissions = "listen" if apple_user["refresh_token"] else "disable"
+    current_apple_permissions = "listen" if apple_user and apple_user["refresh_token"] else "disable"
 
     data = {
         "current_spotify_permissions": current_spotify_permissions,

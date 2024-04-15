@@ -61,7 +61,7 @@ export async function authorizeWithAppleMusic(
   if (musicUserToken && setToken) {
     try {
       // push token to LB server
-      const request = await fetch("/settings/music-services/apple/set-token", {
+      const request = await fetch("/settings/music-services/apple/set-token/", {
         method: "POST",
         body: musicUserToken,
       });

@@ -75,7 +75,7 @@ class AppleService(ExternalService):
 
         Args:
             user_id: A flask auth `current_user.id`
-            music_user_token: A string containing the user token returned by MusiKit after authorization
+            music_user_token: A string containing the user token returned by MusicKit after authorization
         """
         token = self.fetch_access_token()
 
