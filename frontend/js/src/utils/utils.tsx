@@ -31,7 +31,7 @@ const searchForSpotifyTrack = async (
   }
   let queryString = `type=track&q=`;
   if (trackName) {
-    queryString += encodeURIComponent(`track:${trackName}`);
+    queryString += encodeURIComponent(trackName);
   }
   if (artistName) {
     queryString += encodeURIComponent(` artist:${artistName}`);
