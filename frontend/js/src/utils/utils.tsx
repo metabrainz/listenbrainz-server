@@ -229,7 +229,8 @@ const getTrackDurationInMs = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "duration", "");
 
 const getArtistName = (
-  listen?: Listen | JSPFTrack | PinnedRecording
+  listen?: Listen | JSPFTrack | PinnedRecording,
+  firstArtistOnly: boolean = false
 ): string => {
   const artists: MBIDMappingArtist[] = _.get(
     listen,
@@ -237,6 +238,9 @@ const getArtistName = (
     []
   );
   if (artists?.length) {
+    if (firstArtistOnly) {
+      return artists[0].artist_credit_name;
+    }
     return artists
       .map((artist) => `${artist.artist_credit_name}${artist.join_phrase}`)
       .join("");
