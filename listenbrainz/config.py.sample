@@ -182,7 +182,6 @@ MHcCAQEEILRqPRAVLQp24+C02idpqlpW2AA2cmoYNxJKY8+ITAAAoAoGCCqGSM49
 AwEHoUQDQgAEXnwpW2Tt3ZKPXwwIvLXb04uW3zYlENse7s10aEWsYtd0njkSgUUf
 8Bcx2BRwOPdumSr+fKBsJcAYh/9MHhACMg==
 -----END EC PRIVATE KEY-----"""
-APPLE_MUSIC_REDIRECT_URI = 'http://localhost:8100/settings/music-services/critiquebrainz/callback/'
 
 # YOUTUBE
 YOUTUBE_API_KEY = 'change me'
