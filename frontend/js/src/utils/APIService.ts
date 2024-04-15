@@ -497,43 +497,6 @@ export default class APIService {
     return response.json();
   };
 
-  getUserArtists = async (
-    userName: string,
-    range: UserStatsAPIRange = "all_time",
-    count?: number,
-    offset?: number
-  ): Promise<{
-    payload: {
-      artists: Array<{
-        artist_name: string;
-        artist_mbid: string | null;
-        listen_count: number;
-      }>;
-    };
-  }> => {
-    if (!userName) {
-      throw new SyntaxError("Username missing");
-    }
-
-    let url = `${this.APIBaseURI}/stats/user/${userName}/artists?range=${range}`;
-    if (count) {
-      url += `&count=${count}`;
-    }
-    if (offset) {
-      url += `&offset=${offset}`;
-    }
-
-    const response = await fetch(url);
-    await this.checkStatus(response);
-    if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
-      error.status = response.statusText;
-      error.response = response;
-      throw error;
-    }
-    return response.json();
-  };
-
   checkStatus = async (response: Response): Promise<void> => {
     if (response.status >= 200 && response.status < 300) {
       return;

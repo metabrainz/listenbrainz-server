@@ -1,11 +1,11 @@
-import { isEmpty, isNil } from "lodash";
+import { isEmpty, isNil, intersectionBy } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Card from "../../../components/Card";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
-import CompatibilityModal from "./CompatibilityModal";
+import CompatibilityCard from "./CompatibilityCard";
 import { ToastMsg } from "../../../notifications/Notifications";
 
 export type UserSocialNetworkProps = {
@@ -117,19 +117,29 @@ export default class UserSocialNetwork extends React.Component<
     if (currentUser?.name === user?.name) {
       return;
     }
-    const { getUserArtists } = APIService;
+    const { getUserEntity } = APIService;
     try {
-      let response = await getUserArtists(user.name, "all_time", 100);
-      let { payload } = response;
-      const userArtists = payload.artists;
-      response = await getUserArtists(currentUser.name, "all_time", 100);
-      ({ payload } = response);
-      const currentUserArtists = payload.artists;
-      let similarArtists = currentUserArtists.filter((currArtist: any) =>
-        userArtists.some(
-          (artist: { artist_name: any }) =>
-            artist.artist_name === currArtist.artist_name
-        )
+      let response = await getUserEntity(
+        user.name,
+        "artist",
+        "all_time",
+        0,
+        100
+      );
+      const userArtists = (response as UserArtistsResponse).payload.artists;
+      response = await getUserEntity(
+        currentUser.name,
+        "artist",
+        "all_time",
+        0,
+        100
+      );
+      const currentUserArtists = (response as UserArtistsResponse).payload
+        .artists;
+      let similarArtists = intersectionBy(
+        userArtists,
+        currentUserArtists,
+        "artist_name"
       );
       if (similarArtists.length > 5) {
         similarArtists = similarArtists.slice(0, 5);
@@ -250,7 +260,7 @@ export default class UserSocialNetwork extends React.Component<
     return (
       <>
         {currentUser?.name !== user?.name && (
-          <CompatibilityModal
+          <CompatibilityCard
             user={user}
             similarityScore={similarityScore}
             similarArtists={similarArtists}

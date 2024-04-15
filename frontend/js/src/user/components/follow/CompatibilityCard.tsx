@@ -1,10 +1,11 @@
 import * as React from "react";
 import { includes as _includes } from "lodash";
 
+import { Link } from "react-router-dom";
 import Card from "../../../components/Card";
 import SimilarityScore from "./SimilarityScore";
 
-export type CompatibilityModalProps = {
+export type CompatibilityCardProps = {
   user: ListenBrainzUser;
   similarityScore: number;
   similarArtists: Array<{
@@ -14,14 +15,14 @@ export type CompatibilityModalProps = {
   }>;
 };
 
-function CompatibilityModal(props: CompatibilityModalProps) {
+function CompatibilityCard(props: CompatibilityCardProps) {
   const { user, similarityScore, similarArtists } = props;
 
   let content;
 
   if (similarArtists.length > 0) {
     content = (
-      <div className="similarity-empty text-center">
+      <div className="text-center">
         {"You both listen to "}
         {similarArtists.map((artist, index) => {
           return (
@@ -29,14 +30,14 @@ function CompatibilityModal(props: CompatibilityModalProps) {
               {index > 0 && ", "}
               {index > 0 && index === similarArtists.length - 1 ? "and " : ""}
               {artist.artist_mbid !== null ? (
-                <a
-                  href={`/artist/${artist.artist_mbid}`}
+                <Link
+                  to={`/artist/${artist.artist_mbid}`}
+                  title={artist.artist_name}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title={artist.artist_name}
                 >
                   {artist.artist_name}
-                </a>
+                </Link>
               ) : (
                 `${artist.artist_name}`
               )}
@@ -46,11 +47,7 @@ function CompatibilityModal(props: CompatibilityModalProps) {
       </div>
     );
   } else {
-    content = (
-      <div className="similarity-empty text-center">
-        You have no common artists.
-      </div>
-    );
+    content = <div className="text-center">You have no common artists.</div>;
   }
 
   return (
@@ -67,4 +64,4 @@ function CompatibilityModal(props: CompatibilityModalProps) {
   );
 }
 
-export default CompatibilityModal;
+export default CompatibilityCard;
