@@ -644,7 +644,18 @@ describe("BrainzPlayer", () => {
       await act(async () => {
         instance.failedToPlayTrack();
       });
-      expect(instance.handleWarning).not.toHaveBeenCalled();
+      expect(instance.handleWarning).toHaveBeenCalledWith(
+        <>
+          We tried searching for this track on the music services you are
+          connected to, but did not find a match to play.
+          <br />
+          To enable more music services please go to the{" "}
+          <a href="/settings/brainzplayer/" rel="noreferrer" target="_blank">
+            music player preferences.
+          </a>
+        </>,
+        "Could not find a match"
+      );
       expect(playNextTrackSpy).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledTimes(1);
       expect(instance.playListen).toHaveBeenCalledWith(listen2);
@@ -652,7 +663,7 @@ describe("BrainzPlayer", () => {
   });
   describe("submitListenToListenBrainz", () => {
     beforeAll(() => {
-      jest.useFakeTimers({advanceTimers: true});
+      jest.useFakeTimers({ advanceTimers: true });
     });
     afterAll(() => {
       jest.useRealTimers();
