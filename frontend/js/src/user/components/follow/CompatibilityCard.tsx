@@ -59,7 +59,7 @@ function CompatibilityCard(props: CompatibilityCardProps) {
     <Card id="compatibility-card" data-testid="compatibility-card">
       <div className="info-icon" data-tip data-for="info-tooltip">
         <Link
-          to={`/user/${currentUser.name}/stats/?range=all_time`}
+          to={`/user/${currentUser?.name}/stats/?range=all_time`}
           target="_blank"
           rel="noopener noreferrer"
         >
