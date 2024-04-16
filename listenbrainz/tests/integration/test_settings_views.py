@@ -112,7 +112,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
             self.assertEquals(task.task, "delete_listens")
 
         # wait for background tasks to be processed
-        time.sleep(5)
+        time.sleep(7)
 
         # check that listens have been successfully deleted
         resp = self.client.get(self.custom_url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
