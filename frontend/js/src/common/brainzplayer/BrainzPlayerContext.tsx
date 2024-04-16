@@ -1,7 +1,37 @@
 import * as React from "react";
+import { faRepeat } from "@fortawesome/free-solid-svg-icons";
+import { isEqual, isNil } from "lodash";
+import { faRepeatOnce } from "../../utils/icons";
+import { listenOrJSPFTrackToQueueItem } from "./utils";
+
+export const QueueRepeatModes = {
+  off: {
+    icon: faRepeatOnce,
+    title: "Repeat off",
+    color: undefined,
+  },
+  one: {
+    icon: faRepeatOnce,
+    title: "Repeat one",
+    color: "green",
+  },
+  all: {
+    icon: faRepeat,
+    title: "Repeat all",
+    color: "green",
+  },
+} as const;
+
+export type QueueRepeatMode = typeof QueueRepeatModes[keyof typeof QueueRepeatModes];
+
+const repeatModes = [
+  QueueRepeatModes.off,
+  QueueRepeatModes.all,
+  QueueRepeatModes.one,
+];
 
 export type BrainzPlayerContextT = {
-  currentListen?: Listen | JSPFTrack;
+  currentListen?: BrainzPlayerQueueItem;
   currentDataSourceIndex: number;
   currentTrackName: string;
   currentTrackArtist?: string;
@@ -14,7 +44,9 @@ export type BrainzPlayerContextT = {
   updateTime: number;
   listenSubmitted: boolean;
   continuousPlaybackTime: number;
-  currentPageListens: Array<Listen | JSPFTrack>;
+  queue: BrainzPlayerQueue;
+  ambientQueue: BrainzPlayerQueue;
+  queueRepeatMode: QueueRepeatMode;
 };
 
 const initialValue: BrainzPlayerContextT = {
@@ -28,27 +60,47 @@ const initialValue: BrainzPlayerContextT = {
   updateTime: performance.now(),
   listenSubmitted: false,
   continuousPlaybackTime: 0,
-  currentPageListens: [],
+  queue: [],
+  ambientQueue: [],
+  queueRepeatMode: QueueRepeatModes.off,
 };
 
-type ActionType = Partial<BrainzPlayerContextT> & { type?: string; data?: any };
+export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
+  type?: string;
+  data?: any;
+};
 
 function valueReducer(
   state: BrainzPlayerContextT,
-  action: ActionType
+  action: BrainzPlayerActionType
 ): BrainzPlayerContextT {
   if (!action.type) {
     return { ...state, ...action };
   }
+
+  const isCurrentlyPlaying = (element: BrainzPlayerQueueItem) => {
+    const { currentListen } = state;
+    if (isNil(currentListen)) {
+      return false;
+    }
+
+    return isEqual(element.id, currentListen.id);
+  };
+
   switch (action.type) {
     case "SET_CURRENT_LISTEN": {
       if (!action.data) {
         return { ...state, ...action };
       }
-      const data = action.data as Array<Listen | JSPFTrack>;
+      const data = action.data as BrainzPlayerQueue;
       const { type, data: _, ...restActions } = action;
+      const newQueue = [...data].map(listenOrJSPFTrackToQueueItem);
       if (data.length !== 0) {
-        return { ...state, ...restActions, currentPageListens: data };
+        return {
+          ...state,
+          ...restActions,
+          ambientQueue: newQueue,
+        };
       }
       break;
     }
@@ -72,6 +124,68 @@ function valueReducer(
           state.continuousPlaybackTime + elapsedTimeSinceLastUpdate,
       };
     }
+    case "TOGGLE_REPEAT_MODE": {
+      const { queueRepeatMode } = state;
+      const repeatMode = repeatModes.find((mode) =>
+        isEqual(mode, queueRepeatMode)
+      );
+      const currentIndex = repeatModes.indexOf(repeatMode!);
+      const nextIndex = (currentIndex + 1) % repeatModes.length;
+      return {
+        ...state,
+        queueRepeatMode: repeatModes[nextIndex],
+      };
+    }
+    case "MOVE_QUEUE_ITEM": {
+      const { queue } = state;
+      const evt = action.data as any;
+      const currentListenIndex = queue.findIndex(isCurrentlyPlaying);
+
+      const newQueue = [...queue];
+      const newIndex = evt.newIndex + currentListenIndex;
+      const oldIndex = evt.oldIndex + currentListenIndex;
+
+      const toMove = newQueue[newIndex];
+      newQueue[newIndex] = newQueue[oldIndex];
+      newQueue[oldIndex] = toMove;
+
+      return {
+        ...state,
+        queue: newQueue,
+      };
+    }
+    case "REMOVE_TRACK_FROM_QUEUE": {
+      const trackToDelete = action.data as BrainzPlayerQueueItem;
+      const { queue } = state;
+      const updatedQueue = queue.filter((track) => track !== trackToDelete);
+      return {
+        ...state,
+        queue: updatedQueue,
+      };
+    }
+    case "ADD_LISTEN_TO_TOP_OF_QUEUE": {
+      const trackToAdd = listenOrJSPFTrackToQueueItem(action.data);
+      const { queue } = state;
+      const currentListenIndex = queue.findIndex(isCurrentlyPlaying);
+      const insertionIndex =
+        currentListenIndex === -1 ? 0 : currentListenIndex + 1;
+
+      const updatedQueue = [...queue];
+      updatedQueue.splice(insertionIndex, 0, trackToAdd);
+
+      return {
+        ...state,
+        queue: updatedQueue,
+      };
+    }
+    case "ADD_LISTEN_TO_BOTTOM_OF_QUEUE": {
+      const trackToAdd = listenOrJSPFTrackToQueueItem(action.data);
+      const { queue } = state;
+      return {
+        ...state,
+        queue: [...queue, trackToAdd],
+      };
+    }
     default: {
       throw Error(`Unknown action: ${action.type}`);
     }
@@ -79,28 +193,36 @@ function valueReducer(
   return state;
 }
 
-const useReduceerWithCallback = (
-  reducer: React.Reducer<BrainzPlayerContextT, ActionType>,
+const useReducerWithCallback = (
+  reducer: React.Reducer<BrainzPlayerContextT, BrainzPlayerActionType>,
   initialState: BrainzPlayerContextT
 ): [
   BrainzPlayerContextT,
-  (action: ActionType, callback?: () => void) => void
+  (action: BrainzPlayerActionType, callback?: () => void) => void
 ] => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
 
-  const callbackRef = React.useRef<() => void>();
-  const dispatchWithCallback = (action: ActionType, callback?: () => void) => {
+  const callbacksStackRef = React.useRef<(() => void)[]>([]);
+  const dispatchWithCallback = (
+    action: BrainzPlayerActionType,
+    callback?: () => void
+  ) => {
     dispatch(action);
     if (callback) {
-      callbackRef.current = callback;
+      callbacksStackRef.current.push(callback);
     }
   };
 
   React.useEffect(() => {
-    if (callbackRef.current) {
-      callbackRef.current();
-      callbackRef.current = undefined;
-    }
+    const executeCallback = () => {
+      const callback = callbacksStackRef.current.pop();
+      if (callback) {
+        callback();
+        executeCallback();
+      }
+    };
+
+    executeCallback();
   }, [state]);
 
   return [state, dispatchWithCallback];
@@ -110,7 +232,7 @@ export const BrainzPlayerContext = React.createContext<BrainzPlayerContextT>(
   initialValue
 );
 export const BrainzPlayerDispatchContext = React.createContext<
-  (action: ActionType, callback?: () => void) => void
+  (action: BrainzPlayerActionType, callback?: () => void) => void
 >(() => {});
 
 export function BrainzPlayerProvider({
@@ -118,7 +240,7 @@ export function BrainzPlayerProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [value, dispatch] = useReduceerWithCallback(valueReducer, initialValue);
+  const [value, dispatch] = useReducerWithCallback(valueReducer, initialValue);
 
   return (
     <BrainzPlayerContext.Provider value={value}>

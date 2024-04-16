@@ -30,6 +30,7 @@ import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import {
+  QueueRepeatModes,
   useBrainzPlayerContext,
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
@@ -134,10 +135,11 @@ export default function BrainzPlayer() {
     isActivated,
     durationMs,
     progressMs,
-    updateTime,
     listenSubmitted,
     continuousPlaybackTime,
-    currentPageListens,
+    queue,
+    ambientQueue,
+    queueRepeatMode,
   } = useBrainzPlayerContext();
 
   const dispatch = useBrainzPlayerDispatch();
@@ -153,6 +155,10 @@ export default function BrainzPlayer() {
     [spotifyPlayerRef, youtubePlayerRef, soundcloudPlayerRef]
   );
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
+  const queueRef = React.useRef<BrainzPlayerQueue>(queue);
+  queueRef.current = queue;
+  const ambientQueueRef = React.useRef<BrainzPlayerQueue>(ambientQueue);
+  ambientQueueRef.current = ambientQueue;
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
@@ -241,15 +247,11 @@ export default function BrainzPlayer() {
     updateWindowTitle(initialWindowTitle);
   };
 
-  const isCurrentlyPlaying = (element: Listen | JSPFTrack): boolean => {
+  const isCurrentlyPlaying = (element: BrainzPlayerQueueItem): boolean => {
     if (_isNil(currentListen)) {
       return false;
     }
-    if (_has(element, "identifier")) {
-      // JSPF Track format
-      return (element as JSPFTrack).id === (currentListen as JSPFTrack).id;
-    }
-    return _isEqual(element, currentListen);
+    return _isEqual(element.id, currentListen.id);
   };
 
   const invalidateDataSource = React.useCallback(
@@ -399,57 +401,56 @@ export default function BrainzPlayer() {
     }
   );
 
-  const playListen = React.useCallback(
-    (listen: Listen | JSPFTrack, datasourceIndex: number = 0): void => {
-      dispatch({
-        currentListen: listen,
-        isActivated: true,
-        listenSubmitted: false,
-        continuousPlaybackTime: 0,
+  const playListen = (
+    listen: BrainzPlayerQueueItem,
+    datasourceIndex: number = 0
+  ): void => {
+    dispatch({
+      currentListen: listen,
+      isActivated: true,
+      listenSubmitted: false,
+      continuousPlaybackTime: 0,
+    });
+    window.postMessage(
+      { brainzplayer_event: "current-listen-change", payload: listen },
+      window.location.origin
+    );
+
+    let selectedDatasourceIndex: number;
+    if (datasourceIndex === 0) {
+      /** If available, retrieve the service the listen was listened with */
+      const listenedFromIndex = dataSourceRefs.findIndex((datasourceRef) => {
+        const { current } = datasourceRef;
+        return isListenFromDatasource(listen, current);
       });
+      selectedDatasourceIndex =
+        listenedFromIndex === -1 ? 0 : listenedFromIndex;
+    } else {
+      /** If no matching datasource was found, revert to the default bahaviour
+       * (try playing from source 0 or try next source)
+       */
+      selectedDatasourceIndex = datasourceIndex;
+    }
 
-      window.postMessage(
-        { brainzplayer_event: "current-listen-change", payload: listen },
-        window.location.origin
-      );
-
-      let selectedDatasourceIndex: number;
-      if (datasourceIndex === 0) {
-        /** If available, retrieve the service the listen was listened with */
-        const listenedFromIndex = dataSourceRefs.findIndex((datasourceRef) => {
-          const { current } = datasourceRef;
-          return isListenFromDatasource(listen, current);
-        });
-        selectedDatasourceIndex =
-          listenedFromIndex === -1 ? 0 : listenedFromIndex;
-      } else {
-        /** If no matching datasource was found, revert to the default bahaviour
-         * (try playing from source 0 or try next source)
-         */
-        selectedDatasourceIndex = datasourceIndex;
-      }
-
-      const datasource = dataSourceRefs[selectedDatasourceIndex]?.current;
-      if (!datasource) {
-        return;
-      }
-      // Check if we can play the listen with the selected datasource
-      // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
-      // This prevents rendering datasource iframes when we can't use the datasource
-      if (
-        !isListenFromDatasource(listen, datasource) &&
-        !datasource.canSearchAndPlayTracks()
-      ) {
-        playListen(listen, datasourceIndex + 1);
-        return;
-      }
-      stopOtherBrainzPlayers();
-      dispatch({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
-        datasource.playListen(listen);
-      });
-    },
-    [dataSourceRefs, dispatch]
-  );
+    const datasource = dataSourceRefs[selectedDatasourceIndex]?.current;
+    if (!datasource) {
+      return;
+    }
+    // Check if we can play the listen with the selected datasource
+    // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
+    // This prevents rendering datasource iframes when we can't use the datasource
+    if (
+      !isListenFromDatasource(listen, datasource) &&
+      !datasource.canSearchAndPlayTracks()
+    ) {
+      playListen(listen, datasourceIndex + 1);
+      return;
+    }
+    stopOtherBrainzPlayers();
+    dispatch({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
+      datasource.playListen(listen);
+    });
+  };
 
   const playNextTrack = (invert: boolean = false): void => {
     if (!isActivated) {
@@ -458,7 +459,10 @@ export default function BrainzPlayer() {
     }
     debouncedCheckProgressAndSubmitListen.flush();
 
-    if (currentPageListens.length === 0) {
+    const currentQueue = queueRef.current;
+    const currentAmbientQueue = ambientQueueRef.current;
+
+    if (currentQueue.length === 0 && currentAmbientQueue.length === 0) {
       handleWarning(
         "You can try loading listens or refreshing the page",
         "No listens to play"
@@ -466,30 +470,59 @@ export default function BrainzPlayer() {
       return;
     }
 
-    const currentListenIndex = currentPageListens.findIndex(isCurrentlyPlaying);
+    const currentListenIndex = currentQueue.findIndex(isCurrentlyPlaying);
 
-    let nextListenIndex;
+    let nextListenIndex: number;
     if (currentListenIndex === -1) {
       // No current listen index found, default to first item
       nextListenIndex = 0;
-    } else if (invert === true) {
-      // Invert means "play previous track" instead of next track
-      // `|| 0` constrains to positive numbers
-      nextListenIndex = currentListenIndex - 1 || 0;
+    } else if (currentQueue.length === 1 && invert === true) {
+      // If there is only one item in the queue, and invert is true, play it again
+      nextListenIndex = 0;
     } else {
-      nextListenIndex = currentListenIndex + 1;
+      if (_isEqual(queueRepeatMode, QueueRepeatModes.one)) {
+        nextListenIndex = currentListenIndex;
+      } else if (invert === true) {
+        // Invert means "play previous track" instead of next track
+        nextListenIndex = currentListenIndex - 1;
+      } else {
+        nextListenIndex = currentListenIndex + 1;
+      }
+
+      if (nextListenIndex < 0) {
+        // If nextListenIndex becomes negative, wrap around to the last track
+        nextListenIndex = currentQueue.length - 1;
+      } else if (nextListenIndex >= currentQueue.length) {
+        // If nextListenIndex exceeds the queue length, wrap around to the first track
+        nextListenIndex = 0;
+      }
     }
 
-    const nextListen = currentPageListens[nextListenIndex];
-    if (!nextListen) {
-      handleWarning(
-        "You can try loading more listens or refreshing the page",
-        "No more listens to play"
-      );
-      reinitializeWindowTitle();
-      return;
+    let nextListen = currentQueue[nextListenIndex];
+    if (
+      !nextListen ||
+      (_isEqual(queueRepeatMode, QueueRepeatModes.off) && nextListenIndex === 0)
+    ) {
+      // Add the top of the ambient queue to the end of the queue
+      if (currentAmbientQueue.length === 0) {
+        handleWarning(
+          "You can try loading listens or refreshing the page",
+          "No listens to play"
+        );
+        return;
+      }
+      const ambientQueueTop = currentAmbientQueue.shift();
+      if (ambientQueueTop) {
+        dispatch(
+          { type: "ADD_LISTEN_TO_TOP_OF_QUEUE", data: ambientQueueTop },
+          () => {
+            nextListen = ambientQueueTop;
+          }
+        );
+      }
+      dispatch({ ambientQueue: currentAmbientQueue });
     }
-    playListen(nextListen);
+    playListen(nextListen, 0);
   };
 
   const playPreviousTrack = (): void => {
@@ -684,32 +717,65 @@ export default function BrainzPlayer() {
     submitNowPlayingToListenBrainz();
   };
 
+  const clearQueue = async (): Promise<void> => {
+    // Stop the currently playing song
+    if (!playerPaused) {
+      await togglePlay();
+    }
+
+    const currentQueue = queueRef.current;
+
+    // Clear the queue by keeping only the currently playing song
+    const currentlyPlayingIndex = currentQueue.findIndex(isCurrentlyPlaying);
+    dispatch({
+      queue: currentQueue[currentlyPlayingIndex]
+        ? [currentQueue[currentlyPlayingIndex]]
+        : [],
+    });
+  };
+
+  const playNextListenFromQueue = (datasourceIndex: number = 0): void => {
+    const currentQueue = queueRef.current;
+    const currentListenIndex = currentQueue.findIndex(isCurrentlyPlaying);
+    const nextTrack = queueRef.current[currentListenIndex + 1];
+    playListen(nextTrack, datasourceIndex);
+  };
+
+  const playListenEventHandler = (listen: Listen | JSPFTrack) => {
+    dispatch(
+      {
+        type: "ADD_LISTEN_TO_TOP_OF_QUEUE",
+        data: listen,
+      },
+      () => {
+        playNextListenFromQueue();
+      }
+    );
+  };
+
   // eslint-disable-next-line react/sort-comp
   const throttledTrackInfoChange = _throttle(trackInfoChange, 2000, {
     leading: false,
     trailing: true,
   });
 
-  const receiveBrainzPlayerMessage = React.useCallback(
-    (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) {
-        // Received postMessage from different origin, ignoring it
-        return;
-      }
-      const { brainzplayer_event, payload } = event.data;
-      switch (brainzplayer_event) {
-        case "play-listen":
-          playListen(payload);
-          break;
-        case "force-play":
-          togglePlay();
-          break;
-        default:
-        // do nothing
-      }
-    },
-    [playListen, togglePlay]
-  );
+  const receiveBrainzPlayerMessage = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) {
+      // Received postMessage from different origin, ignoring it
+      return;
+    }
+    const { brainzplayer_event, payload } = event.data;
+    switch (brainzplayer_event) {
+      case "play-listen":
+        playListenEventHandler(payload);
+        break;
+      case "force-play":
+        togglePlay();
+        break;
+      default:
+      // do nothing
+    }
+  };
 
   React.useEffect(() => {
     window.addEventListener("storage", onLocalStorageEvent);
@@ -757,6 +823,7 @@ export default function BrainzPlayer() {
         currentDataSourceName={
           dataSourceRefs[currentDataSourceIndex]?.current?.name
         }
+        clearQueue={clearQueue}
       >
         <SpotifyPlayer
           show={
