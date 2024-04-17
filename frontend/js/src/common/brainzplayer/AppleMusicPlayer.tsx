@@ -191,6 +191,7 @@ export default class AppleMusicPlayer
       const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
       if (apple_music_id) {
         await this.playAppleMusicId(apple_music_id);
+        return;
       }
     } catch (error) {
       console.debug("Apple Music API request failed:", error);
