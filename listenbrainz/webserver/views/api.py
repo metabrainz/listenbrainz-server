@@ -707,12 +707,12 @@ def get_tags_dataset():
 
 
     :param tag: the MusicBrainz tag to fetch recordings for, this parameter can be specified multiple times. if more
-        than one tag is specified, the condition param should also be specified.
-    :param condition: specify AND to retrieve recordings that have all the tags, otherwise specify OR to retrieve
+        than one tag is specified, the operator param should also be specified.
+    :param operator: specify AND to retrieve recordings that have all the tags, otherwise specify OR to retrieve
         recordings that have any one of the tags.
-    :param begin_percent: percent is a measure of the recording's popularity, begin_percent denotes a preferred
+    :param pop_begin: percent is a measure of the recording's popularity, pop_begin denotes a preferred
         lower bound on the popularity of recordings to be returned.
-    :param end_percent: percent is a measure of the recording's popularity, end_percent denotes a preferred
+    :param pop_end: percent is a measure of the recording's popularity, pop_end denotes a preferred
         upper bound on the popularity of recordings to be returned.
     :param count: number of recordings to return for the
     :resheader Content-Type: *application/json*
@@ -723,37 +723,37 @@ def get_tags_dataset():
     if tag is None:
         raise APIBadRequest("tag param is missing")
 
-    condition = request.args.get("condition")
+    operator = request.args.get("operator")
 
-    # if there is only one tag, then we can use any of the condition's query to retrieve data
-    if len(tag) == 1 and condition is None:
-        condition = "OR"
+    # if there is only one tag, then we can use any of the operator's query to retrieve data
+    if len(tag) == 1 and operator is None:
+        operator = "OR"
 
-    if condition is None:
-        raise APIBadRequest("multiple tags are specified but the condition param is missing")
-    condition = condition.upper()
-    if condition != "AND" and condition != "OR":
-        raise APIBadRequest("condition param should be either 'AND' or 'OR'")
-
-    try:
-        begin_percent = request.args.get("begin_percent")
-        if begin_percent is None:
-            raise APIBadRequest("begin_percent param is missing")
-        begin_percent = float(begin_percent) / 100
-        if begin_percent < 0 or begin_percent > 1:
-            raise APIBadRequest("begin_percent should be between the range: 0 to 100")
-    except ValueError:
-        raise APIBadRequest(f"begin_percent: '{begin_percent}' is not a valid number")
+    if operator is None:
+        raise APIBadRequest("multiple tags are specified but the operator param is missing")
+    operator = operator.upper()
+    if operator != "AND" and operator != "OR":
+        raise APIBadRequest("operator param should be either 'AND' or 'OR'")
 
     try:
-        end_percent = request.args.get("end_percent")
-        if end_percent is None:
-            raise APIBadRequest("end_percent param is missing")
-        end_percent = float(end_percent) / 100
-        if end_percent < 0 or end_percent > 1:
-            raise APIBadRequest("end_percent should be between the range: 0 to 100")
+        pop_begin = request.args.get("pop_begin")
+        if pop_begin is None:
+            raise APIBadRequest("pop_begin param is missing")
+        pop_begin = float(pop_begin) / 100
+        if pop_begin < 0 or pop_begin > 1:
+            raise APIBadRequest("pop_begin should be between the range: 0 to 100")
     except ValueError:
-        raise APIBadRequest(f"end_percent: '{end_percent}' is not a valid number")
+        raise APIBadRequest(f"pop_begin: '{pop_begin}' is not a valid number")
+
+    try:
+        pop_end = request.args.get("pop_end")
+        if pop_end is None:
+            raise APIBadRequest("pop_end param is missing")
+        pop_end = float(pop_end) / 100
+        if pop_end < 0 or pop_end > 1:
+            raise APIBadRequest("pop_end should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"pop_end: '{pop_end}' is not a valid number")
 
     try:
         count = request.args.get("count")
@@ -765,11 +765,11 @@ def get_tags_dataset():
     except ValueError:
         raise APIBadRequest(f"count: '{count}' is not a valid positive number")
 
-    if condition == "AND":
-        results = tags.get_and(tag, begin_percent, end_percent, count)
+    if operator == "AND":
+        recordings = tags.get_and(tag, pop_begin, pop_end, count)
     else:
-        results = tags.get_or(tag, begin_percent, end_percent, count)
-    return jsonify(results)
+        recordings = tags.get_or(tag, pop_begin, pop_end, count)
+    return jsonify(recordings[:count])
 
 
 def _get_listen_type(listen_type):
