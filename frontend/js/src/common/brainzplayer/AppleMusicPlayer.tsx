@@ -49,7 +49,6 @@ export async function setupAppleMusicKit(developerToken?: string) {
       build: "latest",
       icon: "https://listenbrainz.org/static/img/ListenBrainz_logo_no_text.png",
     },
-    bitrate: "HIGH",
   });
   return MusicKit.getInstance();
 }
