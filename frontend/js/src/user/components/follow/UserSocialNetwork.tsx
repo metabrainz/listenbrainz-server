@@ -83,14 +83,14 @@ export default class UserSocialNetwork extends React.Component<
   getSimilarity = async () => {
     const { user } = this.props;
     const { APIService, currentUser } = this.context;
-    if (currentUser?.name === user?.name) {
+    if (!currentUser || currentUser?.name === user?.name) {
       return;
     }
     const { getSimilarityBetweenUsers } = APIService;
     try {
       const response = await getSimilarityBetweenUsers(
-        user.name,
-        currentUser.name
+        currentUser.name,
+        user.name
       );
       const { payload } = response;
       const similarityScore = payload.similarity;
@@ -114,7 +114,7 @@ export default class UserSocialNetwork extends React.Component<
   getSimilarArtists = async () => {
     const { user } = this.props;
     const { APIService, currentUser } = this.context;
-    if (currentUser?.name === user?.name) {
+    if (!currentUser || currentUser?.name === user?.name) {
       return;
     }
     const { getUserEntity } = APIService;
@@ -259,7 +259,7 @@ export default class UserSocialNetwork extends React.Component<
     } = this.state;
     return (
       <>
-        {currentUser?.name !== user?.name && (
+        {currentUser && currentUser.name !== user?.name && (
           <CompatibilityCard
             user={user}
             similarityScore={similarityScore}
