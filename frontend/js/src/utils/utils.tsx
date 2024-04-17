@@ -31,13 +31,13 @@ const searchForSpotifyTrack = async (
   }
   let queryString = `type=track&q=`;
   if (trackName) {
-    queryString += `track:${encodeURIComponent(trackName)}`;
+    queryString += encodeURIComponent(trackName);
   }
   if (artistName) {
-    queryString += ` artist:${encodeURIComponent(artistName)}`;
+    queryString += encodeURIComponent(` artist:${artistName}`);
   }
   if (releaseName) {
-    queryString += ` album:${encodeURIComponent(releaseName)}`;
+    queryString += encodeURIComponent(` album:${releaseName}`);
   }
 
   const response = await fetch(
@@ -229,7 +229,8 @@ const getTrackDurationInMs = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "duration", "");
 
 const getArtistName = (
-  listen?: Listen | JSPFTrack | PinnedRecording
+  listen?: Listen | JSPFTrack | PinnedRecording,
+  firstArtistOnly: boolean = false
 ): string => {
   const artists: MBIDMappingArtist[] = _.get(
     listen,
@@ -237,6 +238,9 @@ const getArtistName = (
     []
   );
   if (artists?.length) {
+    if (firstArtistOnly) {
+      return artists[0].artist_credit_name;
+    }
     return artists
       .map((artist) => `${artist.artist_credit_name}${artist.join_phrase}`)
       .join("");
@@ -591,16 +595,18 @@ const getPageProps = async (): Promise<{
       musicbrainz,
       sentry_traces_sample_rate,
       sentry_dsn,
+      user_preferences,
     } = globalReactProps;
 
-    let { user_preferences } = globalReactProps;
-
-    user_preferences = { ...user_preferences, saveData: false };
+    const userPreferences = {
+      ...user_preferences,
+      saveData: false,
+    };
 
     if ("connection" in navigator) {
       // @ts-ignore
       if (navigator.connection?.saveData === true) {
-        user_preferences.saveData = true;
+        userPreferences.saveData = true;
       }
     }
 
@@ -632,7 +638,7 @@ const getPageProps = async (): Promise<{
           return undefined;
         },
       },
-      userPreferences: user_preferences,
+      userPreferences,
       musicbrainzGenres: await getOrFetchMBGenres(),
       recordingFeedbackManager: new RecordingFeedbackManager(
         apiService,
