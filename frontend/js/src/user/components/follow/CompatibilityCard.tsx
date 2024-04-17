@@ -75,8 +75,9 @@ function CompatibilityCard(props: CompatibilityCardProps) {
       <hr />
       {content}
       <ReactTooltip id="info-tooltip" place="top">
-        These artists are calculated on the basis of the top 100 <br />
-        artists of all time for both of the users. Click for more stats!
+        Artists displayed are the top matches, comparing the top 100 most
+        listened artists
+        <br /> of all time for both users. Click here for more statistics.
       </ReactTooltip>
     </Card>
   );
