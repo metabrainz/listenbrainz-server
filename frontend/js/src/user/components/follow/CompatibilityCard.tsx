@@ -19,34 +19,65 @@ export type CompatibilityCardProps = {
 };
 
 function CompatibilityCard(props: CompatibilityCardProps) {
-  const { user, similarityScore, similarArtists } = props;
+  const { user, similarityScore } = props;
+  let { similarArtists } = props;
 
   let content;
+  let isSliced = false;
+
+  if (similarArtists.length > 25) {
+    similarArtists = similarArtists.slice(0, 26);
+    isSliced = true;
+  }
 
   if (similarArtists.length > 0) {
     content = (
       <div className="text-center">
         {"You both listen to "}
-        {similarArtists.map((artist, index) => {
-          return (
-            <span>
-              {index > 0 && ", "}
-              {index > 0 && index === similarArtists.length - 1 ? "and " : ""}
-              {artist.artist_mbid !== null ? (
-                <Link
-                  to={`/artist/${artist.artist_mbid}`}
-                  title={artist.artist_name}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {artist.artist_name}
-                </Link>
-              ) : (
-                `${artist.artist_name}`
-              )}
+        {similarArtists
+          .slice(...(similarArtists.length > 5 ? [0, 5] : [0]))
+          .map((artist, index) => {
+            return (
+              <span>
+                {index > 0 && ", "}
+                {index > 0 && index === similarArtists.length - 1 ? "and " : ""}
+                {artist.artist_mbid !== null ? (
+                  <Link
+                    to={`/artist/${artist.artist_mbid}`}
+                    title={artist.artist_name}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {artist.artist_name}
+                  </Link>
+                ) : (
+                  `${artist.artist_name}`
+                )}
+              </span>
+            );
+          })}
+        {similarArtists.length > 5 && (
+          <>
+            <span data-tip data-for="more-artists-tooltip">
+              , and more.
             </span>
-          );
-        })}
+            <ReactTooltip id="more-artists-tooltip" place="top">
+              {similarArtists.slice(5, -1).map((artist, index) => {
+                return (
+                  <span>
+                    {index > 0 && ", "}
+                    {index > 0 && index === similarArtists.length - 1
+                      ? "and "
+                      : ""}
+                    {index > 0 && index % 5 === 0 && <br />}
+                    {`${artist.artist_name}`}
+                  </span>
+                );
+              })}
+              {isSliced && <span> and even more.</span>}
+            </ReactTooltip>
+          </>
+        )}
       </div>
     );
   } else {

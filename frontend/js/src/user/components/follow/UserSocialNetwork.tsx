@@ -136,14 +136,11 @@ export default class UserSocialNetwork extends React.Component<
       );
       const currentUserArtists = (response as UserArtistsResponse).payload
         .artists;
-      let similarArtists = intersectionBy(
+      const similarArtists = intersectionBy(
         userArtists,
         currentUserArtists,
         "artist_name"
       );
-      if (similarArtists.length > 5) {
-        similarArtists = similarArtists.slice(0, 5);
-      }
       this.setState({ similarArtists });
     } catch (err) {
       toast.error(
