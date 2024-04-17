@@ -123,7 +123,7 @@ describe("searchForSpotifyTrack", () => {
   it("calls fetch with correct parameters", async () => {
     await searchForSpotifyTrack("foobar", "import", "vs", "star");
     expect(window.fetch).toHaveBeenCalledWith(
-      "https://api.spotify.com/v1/search?type=track&q=track:import artist:vs album:star",
+      "https://api.spotify.com/v1/search?type=track&q=import%20artist%3Avs%20album%3Astar",
       {
         method: "GET",
         headers: {

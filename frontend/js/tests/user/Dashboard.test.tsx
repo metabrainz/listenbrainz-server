@@ -13,6 +13,7 @@ import WS from "jest-websocket-mock";
 import { SocketIO as mockSocketIO } from "mock-socket";
 import userEvent from "@testing-library/user-event";
 import type { UserEvent } from "@testing-library/user-event/dist/types/setup/setup";
+import { BrowserRouter } from "react-router-dom";
 import APIServiceClass from "../../src/utils/APIService";
 
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
@@ -61,6 +62,11 @@ fetchMock.mockIf(
     return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
   }
 );
+const getComponent = (componentProps: ListensProps) => (
+  <BrowserRouter>
+    <Listens {...componentProps} />
+  </BrowserRouter>
+);
 
 describe("Listens page", () => {
   jest.setTimeout(10000);
@@ -73,7 +79,7 @@ describe("Listens page", () => {
   it("renders correctly on the profile page", async () => {
     /* eslint-disable testing-library/prefer-screen-queries */
     const { findByTestId, getAllByTestId } = renderWithProviders(
-      <Listens {...props} />,
+      getComponent(props),
       { APIService, currentUser }
     );
     await findByTestId("listens");
@@ -89,7 +95,7 @@ describe("Listens page", () => {
     APIService.getUserListenCount = spy;
 
     await act(async () => {
-      renderWithProviders(<Listens {...props} />, { APIService, currentUser });
+      renderWithProviders(getComponent(props), { APIService, currentUser });
     });
 
     const listenCountCard = await screen.findByTestId("listen-count-card");
@@ -156,7 +162,7 @@ describe("Listens page", () => {
         });
       });
       await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+        renderWithProviders(getComponent(props));
       });
       await websocketServer.connected;
       await returnPromise; // See at the beginning of this test
@@ -168,7 +174,7 @@ describe("Listens page", () => {
 
     it('calls correct handler for "listen" event', async () => {
       await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+        renderWithProviders(getComponent(props));
       });
       await websocketServer.connected;
 
@@ -192,7 +198,7 @@ describe("Listens page", () => {
 
     it('calls correct event for "playing_now" event', async () => {
       await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+        renderWithProviders(getComponent(props));
       });
       await websocketServer.connected;
       expect(screen.queryAllByTestId("listen")).toHaveLength(26);
@@ -216,7 +222,7 @@ describe("Listens page", () => {
 
     it("crops the websocket listens array to a maximum of 7", async () => {
       await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+        renderWithProviders(getComponent(props));
       });
       await websocketServer.connected;
 
@@ -272,7 +278,7 @@ describe("Listens page", () => {
         .mockImplementation(() => Promise.resolve(200));
 
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
+        renderWithProviders(getComponent(props), {
           APIService,
           currentUser,
         });
@@ -308,7 +314,7 @@ describe("Listens page", () => {
 
     it("does not render delete button if user is not logged in", async () => {
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
+        renderWithProviders(getComponent(props), {
           currentUser: undefined,
         });
       });
@@ -325,7 +331,7 @@ describe("Listens page", () => {
         .mockImplementation(() => Promise.resolve(200));
 
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
+        renderWithProviders(getComponent(props), {
           APIService,
           currentUser: { auth_token: undefined, name: "iliekcomputers" },
         });
@@ -353,7 +359,7 @@ describe("Listens page", () => {
       spy.mockImplementation(() => Promise.resolve(500));
 
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
+        renderWithProviders(getComponent(props), {
           APIService,
           currentUser,
         });
@@ -396,7 +402,7 @@ describe("Listens page", () => {
         });
 
       await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
+        renderWithProviders(getComponent(props), {
           APIService,
           currentUser,
         });
@@ -456,10 +462,10 @@ describe("Listens page", () => {
       it("does nothing if there is no older listens timestamp", async () => {
         await act(async () => {
           renderWithProviders(
-            <Listens
-              {...props}
-              oldestListenTs={listens[listens.length - 1].listened_at}
-            />,
+            getComponent({
+              ...props,
+              oldestListenTs: listens[listens.length - 1].listened_at,
+            }),
             { APIService }
           );
         });
@@ -491,7 +497,7 @@ describe("Listens page", () => {
         );
 
         await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
+          renderWithProviders(getComponent(props), { APIService });
         });
         const expectedNextListenTimestamp =
           listens[listens.length - 1].listened_at;
@@ -514,7 +520,7 @@ describe("Listens page", () => {
           Promise.resolve([mockListen])
         );
         await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
+          renderWithProviders(getComponent(props), { APIService });
         });
 
         const olderButton = await screen.findByLabelText(
@@ -541,7 +547,7 @@ describe("Listens page", () => {
         );
 
         await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
+          renderWithProviders(getComponent(props), { APIService });
         });
 
         const olderButton = await screen.findByLabelText(
@@ -571,7 +577,10 @@ describe("Listens page", () => {
       it("does nothing if there is no newer listens timestamp", async () => {
         await act(async () => {
           renderWithProviders(
-            <Listens {...props} latestListenTs={listens[0].listened_at} />,
+            getComponent({
+              ...props,
+              latestListenTs: listens[0].listened_at,
+            }),
             { APIService }
           );
         });
@@ -604,7 +613,10 @@ describe("Listens page", () => {
 
         await act(async () => {
           renderWithProviders(
-            <Listens {...props} latestListenTs={Date.now()} />,
+            getComponent({
+              ...props,
+              latestListenTs: Date.now(),
+            }),
             { APIService }
           );
         });
@@ -629,7 +641,10 @@ describe("Listens page", () => {
         );
         await act(async () => {
           renderWithProviders(
-            <Listens {...props} latestListenTs={Date.now()} />,
+            getComponent({
+              ...props,
+              latestListenTs: Date.now(),
+            }),
             { APIService }
           );
         });
@@ -664,7 +679,10 @@ describe("Listens page", () => {
 
         await act(async () => {
           renderWithProviders(
-            <Listens {...props} latestListenTs={timestamp + 100} />,
+            getComponent({
+              ...props,
+              latestListenTs: timestamp + 100,
+            }),
             { APIService }
           );
         });
@@ -700,10 +718,10 @@ describe("Listens page", () => {
       it("does nothing if there is no older listens timestamp", async () => {
         await act(async () => {
           renderWithProviders(
-            <Listens
-              {...props}
-              oldestListenTs={listens[listens.length - 1].listened_at}
-            />,
+            getComponent({
+              ...props,
+              oldestListenTs: listens[listens.length - 1].listened_at,
+            }),
             { APIService }
           );
         });
@@ -733,7 +751,7 @@ describe("Listens page", () => {
         );
 
         await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
+          renderWithProviders(getComponent(props), { APIService });
         });
 
         const oldestButton = await screen.findByLabelText(
@@ -761,7 +779,10 @@ describe("Listens page", () => {
       it("does nothing if there is no more recent listens timestamp", async () => {
         await act(async () => {
           renderWithProviders(
-            <Listens {...props} latestListenTs={listens[0].listened_at} />,
+            getComponent({
+              ...props,
+              latestListenTs: listens[0].listened_at,
+            }),
             { APIService }
           );
         });
@@ -781,7 +802,10 @@ describe("Listens page", () => {
         const timestamp = Math.round(Date.now() / 1000);
         await act(async () => {
           renderWithProviders(
-            <Listens {...props} latestListenTs={timestamp} />,
+            getComponent({
+              ...props,
+              latestListenTs: timestamp,
+            }),
             { APIService }
           );
         });
