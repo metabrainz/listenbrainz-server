@@ -17,6 +17,8 @@ type BrainzPlayerQueueProps = {
   clearQueue: () => void;
 };
 
+const MAX_AMBIENT_QUEUE_ITEMS = 15;
+
 function Queue(props: BrainzPlayerQueueProps) {
   const dispatch = useBrainzPlayerDispatch();
   const { queue, ambientQueue, currentListen } = useBrainzPlayerContext();
@@ -136,16 +138,18 @@ function Queue(props: BrainzPlayerQueueProps) {
       </div>
       <div className="queue-list">
         {ambientQueue.length > 0
-          ? ambientQueue.map((queueItem: BrainzPlayerQueueItem) => {
-              return (
-                <ListenCard
-                  key={queueItem.id}
-                  listen={queueItem as Listen}
-                  showTimestamp={false}
-                  showUsername={false}
-                />
-              );
-            })
+          ? ambientQueue
+              .slice(0, MAX_AMBIENT_QUEUE_ITEMS)
+              .map((queueItem: BrainzPlayerQueueItem) => {
+                return (
+                  <ListenCard
+                    key={queueItem.id}
+                    listen={queueItem as Listen}
+                    showTimestamp={false}
+                    showUsername={false}
+                  />
+                );
+              })
           : null}
       </div>
     </>
