@@ -22,7 +22,7 @@ pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@upgrade-deps
 spotipy>=2.22.1
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@a1e12968af93d2f296a42a8094ebff83f3ed33f3
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2023-10-30.0
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@integration-fixes
 PyYAML==6.0
 eventlet == 0.33.1
 # eventlet fails to patch dnspython >= 2.3 https://github.com/eventlet/eventlet/issues/781
@@ -42,7 +42,7 @@ SQLAlchemy==2.0.23
 mbdata@git+https://github.com/amCap1712/mbdata.git@fix-sqlalchemy-warnings
 sqlalchemy-dst==1.0.1
 typesense==0.14.0
-unidecode==1.3.4
+unidecode>=1.3.4
 Levenshtein==0.20.8
 google_auth_oauthlib==0.4.4
 google-auth==1.30.0
