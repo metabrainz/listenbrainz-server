@@ -1,7 +1,7 @@
 import * as React from "react";
 import { includes as _includes } from "lodash";
 
-import { faCircleInfo } from "@fortawesome/free-solid-svg-icons";
+import { faCircleInfo, faSquarePlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
 import ReactTooltip from "react-tooltip";
@@ -55,7 +55,8 @@ function CompatibilityCard(props: CompatibilityCardProps) {
         {hasMoreThanFive && (
           <>
             <span data-tip data-for="more-artists-tooltip">
-              , and more.
+              , and more.{" "}
+              <FontAwesomeIcon icon={faSquarePlus} size="sm" color="gray" />
             </span>
             <ReactTooltip id="more-artists-tooltip" place="top">
               {otherArtists.map((artist, index) => {
