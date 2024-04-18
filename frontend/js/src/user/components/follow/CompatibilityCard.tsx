@@ -19,50 +19,46 @@ export type CompatibilityCardProps = {
 };
 
 function CompatibilityCard(props: CompatibilityCardProps) {
-  const { user, similarityScore } = props;
-  let { similarArtists } = props;
+  const { user, similarityScore, similarArtists } = props;
+
+  const firstFiveArtists = similarArtists.slice(0, 5);
+  const otherArtists = similarArtists.slice(5, 25);
+  const hasMoreThanFive = Boolean(otherArtists.length);
+  const hasEvenMoreArtists = similarArtists.length > 25;
 
   let content;
-  let isSliced = false;
-
-  if (similarArtists.length > 25) {
-    similarArtists = similarArtists.slice(0, 26);
-    isSliced = true;
-  }
 
   if (similarArtists.length > 0) {
     content = (
       <div className="text-center">
         {"You both listen to "}
-        {similarArtists
-          .slice(...(similarArtists.length > 5 ? [0, 5] : [0]))
-          .map((artist, index) => {
-            return (
-              <span>
-                {index > 0 && ", "}
-                {index > 0 && index === similarArtists.length - 1 ? "and " : ""}
-                {artist.artist_mbid !== null ? (
-                  <Link
-                    to={`/artist/${artist.artist_mbid}`}
-                    title={artist.artist_name}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {artist.artist_name}
-                  </Link>
-                ) : (
-                  `${artist.artist_name}`
-                )}
-              </span>
-            );
-          })}
-        {similarArtists.length > 5 && (
+        {firstFiveArtists.map((artist, index) => {
+          return (
+            <span>
+              {index > 0 && ", "}
+              {index > 0 && index === similarArtists.length - 1 ? "and " : ""}
+              {artist.artist_mbid !== null ? (
+                <Link
+                  to={`/artist/${artist.artist_mbid}`}
+                  title={artist.artist_name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {artist.artist_name}
+                </Link>
+              ) : (
+                `${artist.artist_name}`
+              )}
+            </span>
+          );
+        })}
+        {hasMoreThanFive && (
           <>
             <span data-tip data-for="more-artists-tooltip">
               , and more.
             </span>
             <ReactTooltip id="more-artists-tooltip" place="top">
-              {similarArtists.slice(5, -1).map((artist, index) => {
+              {otherArtists.map((artist, index) => {
                 return (
                   <span>
                     {index > 0 && ", "}
@@ -74,7 +70,7 @@ function CompatibilityCard(props: CompatibilityCardProps) {
                   </span>
                 );
               })}
-              {isSliced && <span> and even more.</span>}
+              {hasEvenMoreArtists && <span> and even more.</span>}
             </ReactTooltip>
           </>
         )}
@@ -106,7 +102,7 @@ function CompatibilityCard(props: CompatibilityCardProps) {
       <ReactTooltip id="info-tooltip" place="top">
         Artists displayed are the top matches, comparing the top 100 most
         listened artists of all
-        <br /> time for both users. Click here for more of their statistics.
+        <br /> time for both users. Click here for their statistics.
       </ReactTooltip>
     </Card>
   );
