@@ -969,6 +969,22 @@ export default class APIService {
     return response.json();
   };
 
+  getSimilarityBetweenUsers = async (
+    userName: string,
+    otherUserName: string
+  ): Promise<{
+    payload: { user_name: string; similarity: number };
+  }> => {
+    if (!userName || !otherUserName) {
+      throw new SyntaxError("One username missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${userName}/similar-to/${otherUserName}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   reportUser = async (userName: string, optionalContext?: string) => {
     const response = await fetch(`/user/${userName}/report-user/`, {
       method: "POST",

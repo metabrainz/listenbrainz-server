@@ -448,6 +448,40 @@
   }
 }
 
+#compatibility-card {
+  padding: 15px 50px;
+  text-align: center;
+  font-size: 16px;
+  position: relative;
+
+  > .info-icon {
+    color: gray;
+    position: absolute;
+    right: 0.75em;
+    top: 0.5em;
+    > a {
+      color: grey;
+    }
+  }
+
+  hr {
+    margin: 8px 0 16px 0;
+    border-top: 1px solid @gray-light;
+  }
+
+  > .similarity-score {
+    display: flex;
+    > .progress {
+      height: 15px;
+      width: 300px;
+      margin: 10px 5px 10px 0;
+    }
+    > p {
+      margin: 10px 0 0 0;
+    }
+  }
+}
+
 #navigation.pager {
   display: flex;
   flex-wrap: wrap;
