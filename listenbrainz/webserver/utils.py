@@ -7,7 +7,7 @@ from flask_login import current_user
 
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
-    get_current_critiquebrainz_user, get_current_musicbrainz_user, get_current_soundcloud_user
+    get_current_critiquebrainz_user, get_current_musicbrainz_user, get_current_soundcloud_user, get_current_apple_music_user
 import listenbrainz.db.user_setting as db_usersetting
 
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
@@ -73,6 +73,7 @@ def get_global_props():
         "critiquebrainz": get_current_critiquebrainz_user(),
         "musicbrainz": get_current_musicbrainz_user(),
         "soundcloud": get_current_soundcloud_user(),
+        "appleMusic": get_current_apple_music_user(),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
     }
 

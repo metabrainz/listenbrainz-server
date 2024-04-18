@@ -6,12 +6,18 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
+import {
+  authorizeWithAppleMusic,
+  loadAppleMusicKit,
+  setupAppleMusicKit,
+} from "../../../common/brainzplayer/AppleMusicPlayer";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 type MusicServicesLoaderData = {
   current_spotify_permissions: string;
   current_critiquebrainz_permissions: string;
   current_soundcloud_permissions: string;
+  current_apple_permissions: string;
 };
 
 export default function MusicServices() {
@@ -21,10 +27,13 @@ export default function MusicServices() {
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
 
+  const { appleAuth } = React.useContext(GlobalAppContext);
+
   const [permissions, setPermissions] = React.useState({
     spotify: loaderData.current_spotify_permissions,
     critiquebrainz: loaderData.current_critiquebrainz_permissions,
     soundcloud: loaderData.current_soundcloud_permissions,
+    appleMusic: loaderData.current_apple_permissions,
   });
 
   const handlePermissionChange = async (
@@ -87,6 +96,66 @@ export default function MusicServices() {
           message={`Failed to change permissions for ${capitalize(
             serviceName
           )}`}
+        />
+      );
+    }
+  };
+
+  const handleAppleMusicPermissionChange = async (
+    serviceName: string,
+    action: string
+  ) => {
+    try {
+      await loadAppleMusicKit();
+      const musicKitInstance = await setupAppleMusicKit(
+        appleAuth?.developer_token
+      );
+      // Delete or recreate the user in the database for this external service
+      const response = await fetch(
+        `/settings/music-services/apple/disconnect/`,
+        {
+          method: "POST",
+          body: JSON.stringify({ action }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (action === "disable") {
+        await musicKitInstance.unauthorize();
+        (appleAuth as AppleMusicUser).music_user_token = undefined;
+        toast.success(
+          <ToastMsg
+            title="Success"
+            message="Apple Music integration has been disabled."
+          />
+        );
+      } else {
+        // authorizeWithAppleMusic also sends the token to the server
+        const newToken = await authorizeWithAppleMusic(musicKitInstance);
+        if (newToken) {
+          // We know appleAuth is not undefined because we needed the developer_token
+          // it contains in order to authorize the user successfully
+          (appleAuth as AppleMusicUser).music_user_token = newToken;
+        }
+        toast.success(
+          <ToastMsg
+            title="Success"
+            message="You are now logged in to Apple Music."
+          />
+        );
+      }
+
+      setPermissions((prevState) => ({
+        ...prevState,
+        appleMusic: action,
+      }));
+    } catch (error) {
+      console.debug(error);
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={`Failed to change permissions for Apple Music:${error.toString()}`}
         />
       );
     }
@@ -249,6 +318,45 @@ export default function MusicServices() {
                   title="Disable"
                   details="You will not be able to listen to music on ListenBrainz using SoundCloud."
                   handlePermissionChange={handlePermissionChange}
+                />
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel panel-default">
+          <div className="panel-heading">
+            <h3 className="panel-title">Apple Music</h3>
+          </div>
+          <div className="panel-body">
+            <p>
+              Connect to your Apple Music account to play music on ListenBrainz.
+              <br />
+              <small>
+                Note: Full length track playback requires a paid Apple Music
+                subscription.
+                <br />
+                You will need to repeat the sign-in process every 6 months.
+              </small>
+            </p>
+            <br />
+            <div className="music-service-selection">
+              <form>
+                <ServicePermissionButton
+                  service="appleMusic"
+                  current={permissions.appleMusic}
+                  value="listen"
+                  title="Play music on ListenBrainz"
+                  details="Connect to your Apple Music account to play music using Apple Music on ListenBrainz."
+                  handlePermissionChange={handleAppleMusicPermissionChange}
+                />
+                <ServicePermissionButton
+                  service="appleMusic"
+                  current={permissions.appleMusic}
+                  value="disable"
+                  title="Disable"
+                  details="You will not be able to listen to music on ListenBrainz using Apple Music."
+                  handlePermissionChange={handleAppleMusicPermissionChange}
                 />
               </form>
             </div>

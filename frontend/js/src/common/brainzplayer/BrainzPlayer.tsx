@@ -29,6 +29,7 @@ import BrainzPlayerUI from "./BrainzPlayerUI";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
+import AppleMusicPlayer from "./AppleMusicPlayer";
 
 export type DataSourceType = {
   name: string;
@@ -40,7 +41,11 @@ export type DataSourceType = {
   datasourceRecordsListens: () => boolean;
 };
 
-export type DataSourceTypes = SpotifyPlayer | YoutubePlayer | SoundcloudPlayer;
+export type DataSourceTypes =
+  | SpotifyPlayer
+  | YoutubePlayer
+  | SoundcloudPlayer
+  | AppleMusicPlayer;
 
 export type DataSourceProps = {
   show: boolean;
@@ -112,6 +117,9 @@ function isListenFromDatasource(
   if (datasource instanceof SoundcloudPlayer) {
     return SoundcloudPlayer.isListenFromThisService(listen);
   }
+  if (datasource instanceof AppleMusicPlayer) {
+    return AppleMusicPlayer.isListenFromThisService(listen);
+  }
   return undefined;
 }
 
@@ -125,6 +133,7 @@ export default class BrainzPlayer extends React.Component<
   spotifyPlayer: React.RefObject<SpotifyPlayer>;
   youtubePlayer: React.RefObject<YoutubePlayer>;
   soundcloudPlayer: React.RefObject<SoundcloudPlayer>;
+  appleMusicPlayer: React.RefObject<AppleMusicPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
   playerStateTimerID?: NodeJS.Timeout;
@@ -148,6 +157,7 @@ export default class BrainzPlayer extends React.Component<
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
     this.youtubePlayer = React.createRef<YoutubePlayer>();
     this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
+    this.appleMusicPlayer = React.createRef<AppleMusicPlayer>();
 
     this.state = {
       currentDataSourceIndex: 0,
@@ -174,13 +184,24 @@ export default class BrainzPlayer extends React.Component<
     window.addEventListener("storage", this.onLocalStorageEvent);
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
     window.addEventListener("beforeunload", this.alertBeforeClosingPage);
-    const { spotifyAuth, soundcloudAuth, userPreferences } = this.context;
+    const {
+      spotifyAuth,
+      soundcloudAuth,
+      appleAuth,
+      userPreferences,
+    } = this.context;
 
     if (
       userPreferences?.brainzplayer?.spotifyEnabled !== false &&
       SpotifyPlayer.hasPermissions(spotifyAuth)
     ) {
       this.dataSources.push(this.spotifyPlayer);
+    }
+    if (
+      userPreferences?.brainzplayer?.appleMusicEnabled !== false &&
+      AppleMusicPlayer.hasPermissions(appleAuth)
+    ) {
+      this.dataSources.push(this.appleMusicPlayer);
     }
     if (
       userPreferences?.brainzplayer?.soundcloudEnabled !== false &&
@@ -227,7 +248,8 @@ export default class BrainzPlayer extends React.Component<
       const brainzPlayerDisabled =
         userPreferences?.brainzplayer?.spotifyEnabled === false &&
         userPreferences?.brainzplayer?.youtubeEnabled === false &&
-        userPreferences?.brainzplayer?.soundcloudEnabled === false;
+        userPreferences?.brainzplayer?.soundcloudEnabled === false &&
+        userPreferences?.brainzplayer?.appleMusicEnabled === false;
       if (brainzPlayerDisabled) {
         toast.info(
           <ToastMsg
@@ -851,12 +873,14 @@ export default class BrainzPlayer extends React.Component<
       youtubeAuth,
       spotifyAuth,
       soundcloudAuth,
+      appleAuth,
       userPreferences,
     } = this.context;
     const brainzPlayerDisabled =
       userPreferences?.brainzplayer?.spotifyEnabled === false &&
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
-      userPreferences?.brainzplayer?.soundcloudEnabled === false;
+      userPreferences?.brainzplayer?.soundcloudEnabled === false &&
+      userPreferences?.brainzplayer?.appleMusicEnabled === false;
     return (
       <div>
         <BrainzPlayerUI
@@ -939,6 +963,28 @@ export default class BrainzPlayer extends React.Component<
               ref={this.soundcloudPlayer}
               soundcloudUser={soundcloudAuth}
               refreshSoundcloudToken={refreshSoundcloudToken}
+              playerPaused={playerPaused}
+              onPlayerPausedChange={this.playerPauseChange}
+              onProgressChange={this.progressChange}
+              onDurationChange={this.durationChange}
+              onTrackInfoChange={this.throttledTrackInfoChange}
+              onTrackEnd={this.playNextTrack}
+              onTrackNotFound={this.failedToPlayTrack}
+              handleError={this.handleError}
+              handleWarning={this.handleWarning}
+              handleSuccess={this.handleSuccess}
+            />
+          )}
+          {userPreferences?.brainzplayer?.appleMusicEnabled !== false && (
+            <AppleMusicPlayer
+              show={
+                isActivated &&
+                this.dataSources[currentDataSourceIndex]?.current instanceof
+                  AppleMusicPlayer
+              }
+              appleMusicUser={appleAuth}
+              onInvalidateDataSource={this.invalidateDataSource}
+              ref={this.appleMusicPlayer}
               playerPaused={playerPaused}
               onPlayerPausedChange={this.playerPauseChange}
               onProgressChange={this.progressChange}
