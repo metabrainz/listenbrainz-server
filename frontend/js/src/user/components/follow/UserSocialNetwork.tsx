@@ -83,7 +83,11 @@ export default class UserSocialNetwork extends React.Component<
   getSimilarity = async () => {
     const { user } = this.props;
     const { APIService, currentUser } = this.context;
-    if (!currentUser || currentUser?.name === user?.name) {
+    if (
+      isNil(currentUser) ||
+      isEmpty(currentUser) ||
+      currentUser?.name === user?.name
+    ) {
       return;
     }
     const { getSimilarityBetweenUsers } = APIService;
@@ -114,7 +118,11 @@ export default class UserSocialNetwork extends React.Component<
   getSimilarArtists = async () => {
     const { user } = this.props;
     const { APIService, currentUser } = this.context;
-    if (!currentUser || currentUser?.name === user?.name) {
+    if (
+      isNil(currentUser) ||
+      isEmpty(currentUser) ||
+      currentUser?.name === user?.name
+    ) {
       return;
     }
     const { getUserEntity } = APIService;
@@ -256,13 +264,14 @@ export default class UserSocialNetwork extends React.Component<
     } = this.state;
     return (
       <>
-        {currentUser && currentUser.name !== user?.name && (
-          <CompatibilityCard
-            user={user}
-            similarityScore={similarityScore}
-            similarArtists={similarArtists}
-          />
-        )}
+        {!(isNil(currentUser) || isEmpty(currentUser)) &&
+          currentUser.name !== user?.name && (
+            <CompatibilityCard
+              user={user}
+              similarityScore={similarityScore}
+              similarArtists={similarArtists}
+            />
+          )}
         <Card className="card-user-sn hidden-xs hidden-sm">
           <FollowerFollowingModal
             user={user}
