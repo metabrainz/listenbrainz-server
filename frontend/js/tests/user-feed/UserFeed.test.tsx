@@ -75,8 +75,6 @@ describe("UserFeed", () => {
     expect(wrapper.find("#timeline")).toHaveLength(1);
     // contains a UserSocialNetwork component
     expect(wrapper.find(UserSocialNetwork)).toHaveLength(1);
-    // contains a BrainzPlayer component
-    expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
   });
 
   it("renders the correct number of timeline events", () => {

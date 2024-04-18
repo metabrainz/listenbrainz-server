@@ -19,6 +19,7 @@ const props = {
   durationMs: 10000,
   seekToPositionMs: (msTimeCode: number) => {},
   listenBrainzAPIBaseURI: "api.example.com",
+  clearQueue: () => {},
 };
 describe("BrainzPlayerUI", () => {
   it("renders", () => {
