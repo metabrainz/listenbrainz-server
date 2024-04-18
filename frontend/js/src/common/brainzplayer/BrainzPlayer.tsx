@@ -121,7 +121,6 @@ export default function BrainzPlayer() {
   const SUBMIT_LISTEN_AFTER_MS = 30000;
   // Check if it's time to submit the listen every X milliseconds
   const SUBMIT_LISTEN_UPDATE_INTERVAL = 5000;
-  const initialWindowTitle: string = window.document.title;
 
   // BrainzPlayerContext
   const {
@@ -155,6 +154,8 @@ export default function BrainzPlayer() {
     [spotifyPlayerRef, youtubePlayerRef, soundcloudPlayerRef]
   );
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
+  const initialWindowTitleRef = React.useRef<string>(window.document.title);
+  initialWindowTitleRef.current = window.document.title;
   const queueRef = React.useRef<BrainzPlayerQueue>(queue);
   queueRef.current = queue;
   const ambientQueueRef = React.useRef<BrainzPlayerQueue>(ambientQueue);
@@ -165,6 +166,8 @@ export default function BrainzPlayer() {
   currentDataSourceIndexRef.current = currentDataSourceIndex;
   const isActivatedRef = React.useRef(isActivated);
   isActivatedRef.current = isActivated;
+  const currentTrackNameRef = React.useRef(currentTrackName);
+  currentTrackNameRef.current = currentTrackName;
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
@@ -246,11 +249,12 @@ export default function BrainzPlayer() {
 
   // Set Title
   const updateWindowTitleWithTrackName = () => {
-    updateWindowTitle(currentTrackName, "🎵", ` — ${initialWindowTitle}`);
+    const trackName = currentTrackNameRef?.current || "";
+    updateWindowTitle(trackName, "🎵", ` — ${initialWindowTitleRef.current}`);
   };
 
   const reinitializeWindowTitle = () => {
-    updateWindowTitle(initialWindowTitle);
+    updateWindowTitle(initialWindowTitleRef.current);
   };
 
   const isCurrentlyPlaying = (element: BrainzPlayerQueueItem): boolean => {
