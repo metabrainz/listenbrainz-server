@@ -548,6 +548,18 @@ export default class BrainzPlayer extends React.Component<
       // Try playing the listen with the next dataSource
       this.playListen(currentListen, currentDataSourceIndex + 1);
     } else {
+      this.handleWarning(
+        <>
+          We tried searching for this track on the music services you are
+          connected to, but did not find a match to play.
+          <br />
+          To enable more music services please go to the{" "}
+          <a href="/settings/brainzplayer/" target="_blank" rel="noreferrer">
+            music player preferences.
+          </a>
+        </>,
+        "Could not find a match"
+      );
       this.stopPlayerStateTimer();
       this.playNextTrack();
     }

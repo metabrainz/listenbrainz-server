@@ -164,18 +164,14 @@ export default class SpotifyPlayer
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
     const trackName = getTrackName(listen);
-    const artistName = getArtistName(listen);
+    // use only the first artist without feat. artists as it can confuse Spotify search
+    const artistName = getArtistName(listen, true);
     // Using the releaseName has paradoxically given worst search results,
     // so we're only using it when track name isn't provided (for example for an album search)
     const releaseName = trackName
       ? ""
       : _get(listen, "track_metadata.release_name");
-    const {
-      handleError,
-      handleWarning,
-      handleSuccess,
-      onTrackNotFound,
-    } = this.props;
+    const { handleError, handleWarning, onTrackNotFound } = this.props;
     if (!trackName && !artistName && !releaseName) {
       handleWarning(
         "We are missing a track title, artist or album name to search on Spotify",
