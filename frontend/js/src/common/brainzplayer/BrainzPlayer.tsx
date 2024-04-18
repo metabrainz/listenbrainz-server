@@ -159,6 +159,12 @@ export default function BrainzPlayer() {
   queueRef.current = queue;
   const ambientQueueRef = React.useRef<BrainzPlayerQueue>(ambientQueue);
   ambientQueueRef.current = ambientQueue;
+  const currentListenRef = React.useRef(currentListen);
+  currentListenRef.current = currentListen;
+  const currentDataSourceIndexRef = React.useRef(currentDataSourceIndex);
+  currentDataSourceIndexRef.current = currentDataSourceIndex;
+  const isActivatedRef = React.useRef(isActivated);
+  isActivatedRef.current = isActivated;
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
@@ -248,10 +254,11 @@ export default function BrainzPlayer() {
   };
 
   const isCurrentlyPlaying = (element: BrainzPlayerQueueItem): boolean => {
-    if (_isNil(currentListen)) {
+    const currentListenValue = currentListenRef.current;
+    if (_isNil(currentListenValue)) {
       return false;
     }
-    return _isEqual(element.id, currentListen.id);
+    return _isEqual(element.id, currentListenValue.id);
   };
 
   const invalidateDataSource = React.useCallback(
@@ -401,10 +408,10 @@ export default function BrainzPlayer() {
     }
   );
 
-  const playListen = (
+  const playListen = async (
     listen: BrainzPlayerQueueItem,
     datasourceIndex: number = 0
-  ): void => {
+  ): Promise<void> => {
     dispatch({
       currentListen: listen,
       isActivated: true,
@@ -447,13 +454,20 @@ export default function BrainzPlayer() {
       return;
     }
     stopOtherBrainzPlayers();
-    dispatch({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
+    dispatch({ currentDataSourceIndex: selectedDatasourceIndex }, async () => {
+      while (
+        currentListenRef.current !== listen ||
+        currentDataSourceIndexRef.current !== selectedDatasourceIndex
+      ) {
+        // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
       datasource.playListen(listen);
     });
   };
 
   const playNextTrack = (invert: boolean = false): void => {
-    if (!isActivated) {
+    if (!isActivatedRef.current) {
       // Player has not been activated by the user, do nothing.
       return;
     }
@@ -501,7 +515,9 @@ export default function BrainzPlayer() {
     let nextListen = currentQueue[nextListenIndex];
     if (
       !nextListen ||
-      (_isEqual(queueRepeatMode, QueueRepeatModes.off) && nextListenIndex === 0)
+      (_isEqual(queueRepeatMode, QueueRepeatModes.off) &&
+        nextListenIndex === 0 &&
+        invert !== true)
     ) {
       // Add the top of the ambient queue to the end of the queue
       if (currentAmbientQueue.length === 0) {
@@ -513,12 +529,11 @@ export default function BrainzPlayer() {
       }
       const ambientQueueTop = currentAmbientQueue.shift();
       if (ambientQueueTop) {
-        dispatch(
-          { type: "ADD_LISTEN_TO_TOP_OF_QUEUE", data: ambientQueueTop },
-          () => {
-            nextListen = ambientQueueTop;
-          }
-        );
+        dispatch({
+          type: "ADD_LISTEN_TO_BOTTOM_OF_QUEUE",
+          data: ambientQueueTop,
+        });
+        nextListen = ambientQueueTop;
       }
       dispatch({ ambientQueue: currentAmbientQueue });
     }
@@ -534,7 +549,7 @@ export default function BrainzPlayer() {
   };
 
   const seekToPositionMs = (msTimecode: number): void => {
-    if (!isActivated) {
+    if (!isActivatedRef.current) {
       // Player has not been activated by the user, do nothing.
       return;
     }
@@ -616,14 +631,17 @@ export default function BrainzPlayer() {
 
   /* Listeners for datasource events */
   const failedToPlayTrack = (): void => {
-    if (!isActivated) {
+    if (!isActivatedRef.current) {
       // Player has not been activated by the user, do nothing.
       return;
     }
 
-    if (currentListen && currentDataSourceIndex < dataSourceRefs.length - 1) {
+    if (
+      currentListenRef.current &&
+      currentDataSourceIndex < dataSourceRefs.length - 1
+    ) {
       // Try playing the listen with the next dataSource
-      playListen(currentListen, currentDataSourceIndex + 1);
+      playListen(currentListenRef.current, currentDataSourceIndex + 1);
     } else {
       stopPlayerStateTimer();
       playNextTrack();
