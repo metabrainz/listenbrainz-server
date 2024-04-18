@@ -23,11 +23,7 @@ from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user_relationship as db_user_relationship
-import listenbrainz.db.user_timeline_event as db_user_timeline_event
-from listenbrainz.webserver.views.user_timeline_event_api import get_follow_events, get_recording_recommendation_events, \
-    get_personal_recording_recommendation_events, get_cb_review_events, get_cb_review_events, get_recording_pin_events, \
-    get_notification_events
-from listenbrainz.db.model.user_timeline_event import UserTimelineEventType
+from listenbrainz.webserver.views.user_timeline_event_api import get_feed_events_for_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -179,98 +175,31 @@ def search():
         "users": users
     })
 
-import pprint
 
 @index_bp.route('/feed/', methods=['POST', 'OPTIONS'])
 @login_required
 def feed():
     user_id = current_user.id
-    count = 25
-    min_ts = 0
-    max_ts = int(time.time())
+    count = request.args.get('count', 25)
+    min_ts = request.args.get('min_ts', 0)
+    max_ts = request.args.get('max_ts', int(time.time()))
     current_user_data = {
-            "id": current_user.id,
-            "musicbrainz_id": current_user.musicbrainz_id,
-        }
+        "id": current_user.id,
+        "musicbrainz_id": current_user.musicbrainz_id,
+    }
 
-    users_following = db_user_relationship.get_following_for_user(db_conn, user_id)
-    # for events like "follow" and "recording recommendations", we want to show the user
-    # their own events as well
-    print(f"{current_user_data}")
-    users_for_feed_events = users_following + [current_user_data]
-    print(f"{users_for_feed_events}")
-    follow_events = get_follow_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    users_following = db_user_relationship.get_following_for_user(
+        db_conn, user_id)
 
-    recording_recommendation_events = get_recording_recommendation_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    user_events = get_feed_events_for_user(
+        user=current_user_data, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
 
-    personal_recording_recommendation_events = get_personal_recording_recommendation_events(
-        user=current_user_data,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
+    for index, event in enumerate(user_events):
+        user_events[index].event_type = event.event_type.value
 
-    cb_review_events = get_cb_review_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    notification_events = get_notification_events(
-        user=current_user_data,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    recording_pin_events = get_recording_pin_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    hidden_events = db_user_timeline_event.get_hidden_timeline_events(db_conn, user_id, count)
-    hidden_events_pin = {}
-    hidden_events_recommendation = {}
-
-    for hidden_event in hidden_events:
-        if hidden_event.event_type.value == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
-            hidden_events_recommendation[hidden_event.event_id] = hidden_event
-        else:
-            hidden_events_pin[hidden_event.event_id] = hidden_event
-
-    for event in recording_recommendation_events:
-        if event.id in hidden_events_recommendation:
-            event.hidden = True
-
-    for event in recording_pin_events:
-        if event.id in hidden_events_pin:
-            event.hidden = True
-
-    # TODO: add playlist event and like event
-    all_events = sorted(
-        follow_events + recording_recommendation_events + recording_pin_events
-        + cb_review_events + notification_events + personal_recording_recommendation_events,
-        key=lambda event: -event.created,
-    )
-     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    for index, event in enumerate(all_events):
-        all_events[index].event_type = event.event_type.value
-    
     return jsonify({
-        'events': [event.dict() for event in all_events],
+        'events': [event.dict() for event in user_events],
         'following': users_following
     })
 
