@@ -157,7 +157,9 @@ function valueReducer(
     case "REMOVE_TRACK_FROM_QUEUE": {
       const trackToDelete = action.data as BrainzPlayerQueueItem;
       const { queue } = state;
-      const updatedQueue = queue.filter((track) => track !== trackToDelete);
+      const updatedQueue = queue.filter(
+        (track) => track.id !== trackToDelete.id
+      );
       return {
         ...state,
         queue: updatedQueue,
