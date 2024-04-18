@@ -157,26 +157,20 @@ export default function UserFeedPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObject = getObjectForURLSearchParams(searchParams);
 
-  const { data } = useQuery({
-    ...RouteQuery(
-      ["feed", params, searchParamsObject],
-      location.pathname
-    ),
+  const { data, isLoading } = useQuery<UserFeedLoaderData>({
+    ...RouteQuery(["feed", params], location.pathname),
     gcTime: !("max_ts" in searchParamsObject) ? 0 : 1,
-  }) as {
-    data: UserFeedLoaderData;
-  };
-  const { events: initialEvents = [] } = data;
+  });
+  const initialEvents = data?.events;
 
-  const [nextEventTs, setNextEventTs] = React.useState(
-    initialEvents?.[initialEvents.length - 1]?.created
-  );
-  const [previousEventTs, setPreviousEventTs] = React.useState(
+  const [events, setEvents] = React.useState(initialEvents ?? []);
+  const [earliestEventTs, setEarliestEventTs] = React.useState(
     initialEvents?.[0]?.created
   );
-  const [earliestEventTs, setEarliestEventTs] = React.useState();
-  const [events, setEvents] = React.useState(initialEvents ?? []);
-  const [loading, setLoading] = React.useState(false);
+
+  const nextEventTs =
+    events.length > 25 && events?.[events.length - 1]?.created;
+  const previousEventTs = Boolean(events.length) && events?.[0]?.created;
 
   const hideFeedEvent = React.useCallback(
     async (event: TimelineEvent) => {
@@ -527,9 +521,11 @@ export default function UserFeedPage() {
     .filter(isEventListenable)
     .map((event) => event.metadata) as Listen[];
 
-  const isNewerButtonDisabled =
+  const isNewerButtonDisabled = Boolean(
     !previousEventTs ||
-    (earliestEventTs && events?.[0]?.created >= earliestEventTs);
+      (earliestEventTs && events?.[0]?.created >= earliestEventTs)
+  );
+
   return (
     <>
       <Helmet>
@@ -548,9 +544,9 @@ export default function UserFeedPage() {
               zIndex: 1,
             }}
           >
-            <Loader isLoading={loading} />
+            <Loader isLoading={isLoading} />
           </div>
-          <div id="timeline" style={{ opacity: loading ? "0.4" : "1" }}>
+          <div id="timeline" style={{ opacity: isLoading ? "0.4" : "1" }}>
             <ul>
               {events.map((event) => {
                 const { created, event_type, user_name } = event;
@@ -634,88 +630,3 @@ export default function UserFeedPage() {
     </>
   );
 }
-
-// async componentDidMount(): Promise<void> {
-//   // Fetch initial events from API
-//   // TODO: Pass the required data in the props and remove this initial API call
-//   await this.getFeedFromAPI();
-// }
-
-// getFeedFromAPI = async (
-//   minTs?: number,
-//   maxTs?: number,
-//   successCallback?: () => void
-// ) => {
-//   const { earliestEventTs } = this.state;
-//   const { APIService, currentUser } = this.context;
-//   this.setState({ loading: true });
-//   let newEvents: TimelineEvent[] = [];
-//   try {
-//     newEvents = await APIService.getFeedForUser(
-//       currentUser.name,
-//       currentUser.auth_token as string,
-//       minTs,
-//       maxTs
-//     );
-//   } catch (error) {
-//     toast.warn(
-//       <ToastMsg
-//         title="Could not load timeline events"
-//         message={
-//           <div>
-//             Something went wrong when we tried to load your events, please try
-//             again or contact us if the problem persists.
-//             <br />
-//             <strong>
-//               {error.name}: {error.message}
-//             </strong>
-//           </div>
-//         }
-//       />,
-//       { toastId: "timeline-load-error" }
-//     );
-//     this.setState({ loading: false });
-//     return;
-//   }
-//   if (!newEvents.length) {
-//     // No more listens to fetch
-//     if (minTs !== undefined) {
-//       this.setState({
-//         loading: false,
-//         previousEventTs: undefined,
-//       });
-//     } else {
-//       this.setState({
-//         loading: false,
-//         nextEventTs: undefined,
-//       });
-//     }
-//     return;
-//   }
-//   const optionalProps: { earliestEventTs?: number } = {};
-//   if (!earliestEventTs || newEvents[0].created > earliestEventTs) {
-//     // We can use the newest event's timestamp to determine if the previous button should be disabled.
-//     // Also refresh the earlierst event timestamp if we have received events newer than at first page load.
-//     optionalProps.earliestEventTs = newEvents[0].created;
-//   }
-//   this.setState(
-//     {
-//       loading: false,
-//       events: newEvents,
-//       nextEventTs: newEvents[newEvents.length - 1].created,
-//       previousEventTs: newEvents[0].created,
-//       ...optionalProps,
-//     },
-//     () => {
-//       if (successCallback) {
-//         successCallback();
-//       }
-//     }
-//   );
-
-//   // Scroll window back to the top of the events container element
-//   const eventContainerElement = document.querySelector("#timeline");
-//   if (eventContainerElement) {
-//     eventContainerElement.scrollIntoView({ behavior: "smooth" });
-//   }
-// };
