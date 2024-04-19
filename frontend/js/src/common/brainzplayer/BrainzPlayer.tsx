@@ -171,13 +171,13 @@ export default function BrainzPlayer() {
     const dataSources = [];
     if (
       userPreferences?.brainzplayer?.spotifyEnabled !== false &&
-      SpotifyPlayer.hasPermissions(SPOtifyAuth)
+      SpotifyPlayer.hasPermissions(spotifyAuth)
     ) {
       dataSources.push(spotifyPlayerRef);
     }
     if (
       userPreferences?.brainzplayer?.appleMusicEnabled !== false &&
-      ApplePlayer.hasPermissions(appleAuth)
+      AppleMusicPlayer.hasPermissions(appleAuth)
     ) {
       dataSources.push(appleMusicPlayerRef);
     }
@@ -196,6 +196,7 @@ export default function BrainzPlayer() {
     userPreferences?.brainzplayer?.appleMusicEnabled,
     userPreferences?.brainzplayer?.soundcloudEnabled,
     userPreferences?.brainzplayer?.youtubeEnabled,
+    spotifyAuth,
     appleAuth,
     soundcloudAuth,
   ]);
@@ -996,7 +997,7 @@ export default function BrainzPlayer() {
             }
             appleMusicUser={appleAuth}
             onInvalidateDataSource={invalidateDataSource}
-            ref={appleMusicPlayer}
+            ref={appleMusicPlayerRef}
             playerPaused={playerPaused}
             onPlayerPausedChange={playerPauseChange}
             onProgressChange={progressChange}
