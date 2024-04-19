@@ -239,6 +239,15 @@ export default function AddData() {
           , a Discord Rich Presence client for Apple Music&apos;s native Windows
           app.
         </li>
+        <li>
+          <em>
+            <a href="https://github.com/Atelier-Shiori/OngakuKiroku">
+              OngakuKiroku
+            </a>
+          </em>
+          , a ListenBrainz scrobbler for Swinsian and Music.app on macOS
+          devices.
+        </li>
       </ul>
 
       <h4>Browser extensions</h4>
