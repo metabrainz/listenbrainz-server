@@ -624,55 +624,66 @@ describe("BrainzPlayer", () => {
   //       expect(instance.playListen).toHaveBeenCalledWith(listen, 1);
   //     });
 
-  //     it("calls playNextTrack if we ran out of datasources", async () => {
-  //       const mockProps = {
-  //         ...props,
-  //         listens: [listen, listen2],
-  //       };
-  //       const wrapper = mount<BrainzPlayer>(
-  //         <BrainzPlayer {...mockProps} />,
-  //         GlobalContextMock
-  //       );
-  //       const instance = wrapper.instance();
-  //       await act(async () => {
-  //         wrapper.setState({
-  //           isActivated: true,
-  //           currentDataSourceIndex: instance.dataSources.length - 1,
-  //           currentListen: listen,
-  //         });
+  //   it("calls playNextTrack if we ran out of datasources", async () => {
+  //     const mockProps = {
+  //       ...props,
+  //       listens: [listen, listen2],
+  //     };
+  //     const wrapper = mount<BrainzPlayer>(
+  //       <BrainzPlayer {...mockProps} />,
+  //       GlobalContextMock
+  //     );
+  //     const instance = wrapper.instance();
+  //     await act(async () => {
+  //       wrapper.setState({
+  //         isActivated: true,
+  //         currentDataSourceIndex: instance.dataSources.length - 1,
+  //         currentListen: listen,
   //       });
-  //       const playNextTrackSpy = jest.spyOn(instance, "playNextTrack");
-  //       instance.playListen = jest.fn();
-  //       instance.handleWarning = jest.fn();
-  //       await act(async () => {
-  //         instance.failedToPlayTrack();
-  //       });
-  //       expect(instance.handleWarning).not.toHaveBeenCalled();
-  //       expect(playNextTrackSpy).toHaveBeenCalledTimes(1);
-  //       expect(instance.playListen).toHaveBeenCalledTimes(1);
-  //       expect(instance.playListen).toHaveBeenCalledWith(listen2);
   //     });
+  //     const playNextTrackSpy = jest.spyOn(instance, "playNextTrack");
+  //     instance.playListen = jest.fn();
+  //     instance.handleWarning = jest.fn();
+  //     await act(async () => {
+  //       instance.failedToPlayTrack();
+  //     });
+  //     expect(instance.handleWarning).toHaveBeenCalledWith(
+  //       <>
+  //         We tried searching for this track on the music services you are
+  //         connected to, but did not find a match to play.
+  //         <br />
+  //         To enable more music services please go to the{" "}
+  //         <a href="/settings/brainzplayer/" rel="noreferrer" target="_blank">
+  //           music player preferences.
+  //         </a>
+  //       </>,
+  //       "Could not find a match"
+  //     );
+  //     expect(playNextTrackSpy).toHaveBeenCalledTimes(1);
+  //     expect(instance.playListen).toHaveBeenCalledTimes(1);
+  //     expect(instance.playListen).toHaveBeenCalledWith(listen2);
   //   });
-  //   describe("submitListenToListenBrainz", () => {
-  //     beforeAll(() => {
-  //       jest.useFakeTimers({advanceTimers: true});
-  //     });
-  //     afterAll(() => {
-  //       jest.useRealTimers();
-  //     });
-  //     it("does nothing if user is not logged in", async () => {
-  //       const wrapper = mount<BrainzPlayer>(
-  //         <BrainzPlayer {...props} />,
-  //         GlobalContextMock
-  //       );
-  //       const instance = wrapper.instance();
-  //       instance.playNextTrack = jest.fn();
-  //       const ds =
-  //         instance.dataSources[instance.state.currentDataSourceIndex].current;
-  //       const dsRecordsListens = ds && jest.spyOn(ds, "datasourceRecordsListens");
-  //       await instance.submitListenToListenBrainz("single", listen);
-  //       expect(dsRecordsListens).not.toHaveBeenCalled();
-  //     });
+  // });
+  // describe("submitListenToListenBrainz", () => {
+  //   beforeAll(() => {
+  //     jest.useFakeTimers({ advanceTimers: true });
+  //   });
+  //   afterAll(() => {
+  //     jest.useRealTimers();
+  //   });
+  //   it("does nothing if user is not logged in", async () => {
+  //     const wrapper = mount<BrainzPlayer>(
+  //       <BrainzPlayer {...props} />,
+  //       GlobalContextMock
+  //     );
+  //     const instance = wrapper.instance();
+  //     instance.playNextTrack = jest.fn();
+  //     const ds =
+  //       instance.dataSources[instance.state.currentDataSourceIndex].current;
+  //     const dsRecordsListens = ds && jest.spyOn(ds, "datasourceRecordsListens");
+  //     await instance.submitListenToListenBrainz("single", listen);
+  //     expect(dsRecordsListens).not.toHaveBeenCalled();
+  //   });
 
   //     it("does nothing if datasource already submits listens", async () => {
   //       const wrapper = mount<BrainzPlayer>(
