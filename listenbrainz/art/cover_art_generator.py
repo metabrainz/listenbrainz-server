@@ -306,9 +306,9 @@ class CoverArtGenerator:
         release_mbids = [r.release_mbid for r in releases]
         images = self.load_images(release_mbids, layout=layout)
         if images is None:
-            return None
+            return None, None
 
-        return images
+        return images, self.time_range_to_english[time_range]
 
     def create_artist_stats_cover(self, user_name, time_range):
         """ Given a user name and a stats time range, make an artist stats cover. Return

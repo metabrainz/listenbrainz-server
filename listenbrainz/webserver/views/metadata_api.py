@@ -12,7 +12,7 @@ from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.utils import parse_boolean_arg
-from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header, MAX_ITEMS_PER_GET
 
 metadata_bp = Blueprint('metadata', __name__)
 
@@ -20,10 +20,9 @@ metadata_bp = Blueprint('metadata', __name__)
 MAX_MAPPING_QUERY_LENGTH = 250
 
 
-def parse_incs():
+def parse_incs(incs):
     allowed_incs = ("artist", "tag", "release", "recording", "release_group")
 
-    incs = request.args.get("inc")
     if not incs:
         return []
     incs = incs.split()
@@ -101,7 +100,7 @@ def metadata_recording():
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid arguments
     """
-    incs = parse_incs()
+    incs = parse_incs(request.args.get("inc"))
 
     recordings = request.args.get("recording_mbids", default=None)
     if recordings is None:
@@ -115,6 +114,53 @@ def metadata_recording():
             raise APIBadRequest(f"Recording mbid {mbid} is not valid.")
 
         recording_mbids.append(mbid_clean)
+
+    result = fetch_metadata(recording_mbids, incs)
+    return jsonify(result)
+
+
+@metadata_bp.route("/recording/", methods=["POST"])
+@crossdomain
+@ratelimit()
+def metadata_recording_post():
+    """
+    This endpoint is the POST verson for fetching recording metadata, since it allows up to the
+    max number of items allowed. (:data:`~webserver.views.api.MAX_ITEMS_PER_GET` items)
+
+    A JSON document with a list of recording_mbids and inc string must be POSTed
+    to this endpoint to returns an array of dicts that contain
+    recording metadata suitable for showing in a context that requires as much detail about
+    a recording and the artist. Using the inc parameter, you can control which portions of metadata
+    to fetch.
+       { "recording_mbids": [ "25d47b0c-5177-49db-b740-c166e4acebd1", ... ], inc="artist tag" }
+
+    To see what data this endpoint returns, please look at the data above for the GET version.
+
+    :statuscode 200: you have data!
+    :statuscode 400: invalid recording_mbid arguments
+    """
+    data = request.json
+
+    try:
+        incs = parse_incs(data["inc"])
+    except KeyError:
+        incs = []
+
+    try:
+        recording_mbids = data["recording_mbids"]
+    except KeyError:
+        raise APIBadRequest(
+            "recording_mbids JSON element must be present and contain a list of recording_mbids")
+
+    for mbid in recording_mbids:
+        if not is_valid_uuid(mbid):
+            raise APIBadRequest(f"Recording mbid {mbid} is not valid.")
+
+    if len(recording_mbids) == 0:
+        raise APIBadRequest("At least one valid recording_mbid must be present.")
+
+    if len(recording_mbids) > MAX_ITEMS_PER_GET:
+        raise APIBadRequest("Maximum number of recordings_mbids that can be fetchs at once is %s" % MAX_ITEMS_PER_GET)
 
     result = fetch_metadata(recording_mbids, incs)
     return jsonify(result)
@@ -144,7 +190,7 @@ def metadata_release_group():
     :statuscode 200: you have data!
     :statuscode 400: invalid release_group_mbid arguments
     """
-    incs = parse_incs()
+    incs = parse_incs(request.args.get("inc"))
 
     release_groups = request.args.get("release_group_mbids", default=None)
     if release_groups is None:
@@ -214,7 +260,7 @@ def get_mbid_mapping():
                             f" arguments must be less than {MAX_MAPPING_QUERY_LENGTH}")
 
     metadata = parse_boolean_arg("metadata")
-    incs = parse_incs() if metadata else []
+    incs = parse_incs(request.args.get("inc")) if metadata else []
 
     params = [
         {
@@ -345,7 +391,7 @@ def metadata_artist():
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid arguments
     """
-    incs = parse_incs()
+    incs = parse_incs(request.args.get("inc"))
 
     artists = request.args.get("artist_mbids", default=None)
     if artists is None:

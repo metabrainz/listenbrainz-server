@@ -3,6 +3,7 @@ from flask_login import current_user
 import spotipy
 import requests
 
+from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
@@ -74,10 +75,18 @@ def get_current_soundcloud_user():
         "access_token": user["access_token"],
     }
 
-
-def get_user_playlists(spotify_token):
-    """ Get the user's playlists.
-    """
-    sp = spotipy.Spotify(auth=spotify_token)
-    playlists = sp.current_user_playlists()
-    return playlists
+def get_current_apple_music_user():
+    """Returns the apple music developer_token and the music_user_token for the
+    current authenticated user. If the user is unauthenticated or has not
+    linked their apple music account returns a dict with only the developer_token."""
+    tokens = AppleService().fetch_access_token()
+    developer_token = tokens["access_token"]
+    if not current_user.is_authenticated:
+        return {"developer_token": developer_token}
+    user = AppleService().get_user(current_user.id)
+    if user is None:
+        return {"developer_token": developer_token}
+    return {
+        "developer_token": developer_token,
+        "music_user_token": user["refresh_token"]
+    }
