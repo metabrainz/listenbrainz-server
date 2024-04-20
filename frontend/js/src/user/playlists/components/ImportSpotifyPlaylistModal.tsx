@@ -20,7 +20,10 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [playlists, setPlaylists] = React.useState<SpotifyPlaylistObject[]>([]);
-  const [loading, setLoading] = React.useState<string[]>([]);
+  const [newPlaylists, setNewPlaylists] = React.useState<JSPFPlaylist[]>([]);
+  const [playlistLoading, setPlaylistLoading] = React.useState<string | null>(
+    null
+  );
 
   React.useEffect(() => {
     async function getUserPlaylistsFromSpotify() {
@@ -50,6 +53,11 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
     }
   }, [APIService, currentUser]);
 
+  const resolveAndClose = () => {
+    modal.resolve(newPlaylists);
+    closeModal();
+  };
+
   const alertMustBeLoggedIn = () => {
     toast.error(
       <ToastMsg
@@ -68,13 +76,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
       alertMustBeLoggedIn();
       return;
     }
-
-    if (loading.includes(playlistID)) {
-      setLoading(loading.filter((i: string) => i !== playlistID));
-    } else {
-      setLoading([...loading, playlistID]);
-    }
-
+    setPlaylistLoading(playlistName);
     try {
       const newPlaylist: JSPFPlaylist = await APIService.importSpotifyPlaylistTracks(
         currentUser?.auth_token,
@@ -92,8 +94,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
         />,
         { toastId: "create-playlist-success" }
       );
-      setLoading(loading.filter((i: string) => i !== playlistID));
-      modal.resolve(newPlaylist);
+      setNewPlaylists([...newPlaylists, newPlaylist]);
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -102,8 +103,8 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
         />,
         { toastId: "save-playlist-error" }
       );
-      setLoading(loading.filter((i: string) => i !== playlistID));
     }
+    setPlaylistLoading(null);
   };
 
   return (
@@ -123,7 +124,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
               className="close"
               data-dismiss="modal"
               aria-label="Close"
-              onClick={closeModal}
+              onClick={() => resolveAndClose()}
             >
               <span aria-hidden="true">&times;</span>
             </button>
@@ -152,25 +153,24 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
                     display: "flex",
                     justifyContent: "space-between",
                   }}
+                  disabled={!!playlistLoading}
                   name={playlist.name}
                   onClick={() =>
                     importTracksToPlaylist(playlist.id, playlist.name)
                   }
                 >
                   <span>{playlist.name}</span>
-                  {loading.includes(playlist.id) && (
-                    <Loader
-                      isLoading={!!loading}
-                      style={{
-                        maxHeight: "2vh",
-                        paddingTop: "10px",
-                        marginRight: "5px",
-                      }}
-                    />
-                  )}
                 </button>
               ))}
             </div>
+            {!!playlistLoading && (
+              <div>
+                <p>
+                  Loading playlist {playlistLoading}... It might take some time
+                </p>
+                <Loader isLoading={!!playlistLoading} />
+              </div>
+            )}
           </div>
 
           <div className="modal-footer">
@@ -178,7 +178,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
               type="button"
               className="btn btn-default"
               data-dismiss="modal"
-              onClick={closeModal}
+              onClick={() => resolveAndClose()}
             >
               Close
             </button>

@@ -46,7 +46,7 @@ def import_from_spotify(token, user, playlist_id):
         return None  
     
     if result is not None and user:
-        for url, _ in playlist.submit("68fd28b9-37c2-41e1-97b2-31eda342c8c2", None):
+        for url, _ in playlist.submit(user, None):
             print("Submitted playlist: %s" % url)
 
     result = playlist.get_jspf()

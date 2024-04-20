@@ -178,10 +178,16 @@ export default class UserPlaylists extends React.Component<
                   <button
                     type="button"
                     onClick={() => {
-                      NiceModal.show<JSPFPlaylist, any>(
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
                         ImportSpotifyPlaylistModal
                       ).then((playlist) => {
-                        this.onPlaylistCreated(playlist);
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
                       });
                     }}
                     data-toggle="modal"
@@ -195,10 +201,16 @@ export default class UserPlaylists extends React.Component<
                   <button
                     type="button"
                     onClick={() => {
-                      NiceModal.show<JSPFPlaylist, any>(
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
                         ImportPlaylistModal
                       ).then((playlist) => {
-                        this.onPlaylistCreated(playlist);
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
                       });
                     }}
                     data-toggle="modal"
