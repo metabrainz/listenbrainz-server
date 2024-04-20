@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import bleach
 from kombu import Producer
 from kombu.entity import PERSISTENT_DELIVERY_MODE
+from more_itertools import chunked
 
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
@@ -52,6 +53,8 @@ MAX_DURATION_LIMIT = 24 * 24 * 60 * 60
 MAX_DURATION_MS_LIMIT = MAX_DURATION_LIMIT * 1000
 
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
+
+MAX_LISTENS_PER_RMQ_MESSAGE = 100  # internal limit on number of listens per RMQ message to avoid timeouts in TS writer
 
 
 # Define the values for types of listens
@@ -117,7 +120,8 @@ def _send_listens_to_queue(listen_type, listens):
         else:
             exchange = rabbitmq_connection.INCOMING_EXCHANGE
 
-        publish_data_to_queue(submit, exchange)
+        for chunk in chunked(submit, MAX_LISTENS_PER_RMQ_MESSAGE):
+            publish_data_to_queue(chunk, exchange)
 
 
 def _raise_error_if_has_unicode_null(value, listen):
