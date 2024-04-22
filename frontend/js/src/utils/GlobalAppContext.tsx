@@ -19,7 +19,7 @@ export type GlobalAppContextT = {
 };
 const apiService = new APIService(`${window.location.origin}/1`);
 
-const GlobalAppContext = createContext<GlobalAppContextT>({
+export const defaultGlobalContext: GlobalAppContextT = {
   APIService: apiService,
   websocketsUrl: "",
   currentUser: {} as ListenBrainzUser,
@@ -35,6 +35,8 @@ const GlobalAppContext = createContext<GlobalAppContextT>({
   userPreferences: {},
   musicbrainzGenres: [],
   recordingFeedbackManager: new RecordingFeedbackManager(apiService),
-});
+};
+
+const GlobalAppContext = createContext<GlobalAppContextT>(defaultGlobalContext);
 
 export default GlobalAppContext;
