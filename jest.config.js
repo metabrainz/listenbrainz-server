@@ -17,7 +17,7 @@ module.exports = {
   moduleFileExtensions: ["ts", "tsx", "js", "json", "jsx"],
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  setupFiles: ["<rootDir>/enzyme.config.ts", "jest-canvas-mock"],
+  setupFiles: ["<rootDir>/enzyme.config.ts", "jest-canvas-mock","<rootDir>/frontend/js/tests/node-globals-setup.ts"],
 
   setupFilesAfterEnv: [
     "jest-location-mock",
@@ -36,6 +36,7 @@ module.exports = {
   // This option sets the URL for the jsdom environment. It is reflected in properties such as location.href
   testEnvironmentOptions: {
     url: "http://localhost",
+    customExportConditions: [''],
   },
   moduleNameMapper: {
     'react-markdown': '<rootDir>/node_modules/react-markdown/react-markdown.min.js',
