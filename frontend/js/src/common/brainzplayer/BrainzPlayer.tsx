@@ -203,7 +203,6 @@ export default function BrainzPlayer() {
 
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
   const initialWindowTitleRef = React.useRef<string>(window.document.title);
-  initialWindowTitleRef.current = window.document.title;
   const queueRef = React.useRef<BrainzPlayerQueue>(queue);
   queueRef.current = queue;
   const ambientQueueRef = React.useRef<BrainzPlayerQueue>(ambientQueue);
