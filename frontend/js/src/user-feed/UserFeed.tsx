@@ -30,7 +30,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
@@ -154,28 +154,37 @@ export default function UserFeedPage() {
 
   const location = useLocation();
   const params = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const searchParamsObject = getObjectForURLSearchParams(searchParams);
+  const { queryFn, queryKey } = RouteQuery(["feed", params], location.pathname);
 
   const { data, isLoading } = useQuery<UserFeedLoaderData>({
-    ...RouteQuery(["feed", params], location.pathname),
+    queryKey,
+    queryFn,
     gcTime: !("max_ts" in searchParamsObject) ? 0 : 1,
   });
-  const initialEvents = data?.events;
 
-  const [events, setEvents] = React.useState(initialEvents ?? []);
+  const { events } = data || {}; // safe destructuring of possibly undefined data object
+
   const [earliestEventTs, setEarliestEventTs] = React.useState(
-    initialEvents?.[0]?.created
+    events?.[0]?.created
   );
 
   const nextEventTs =
-    events.length > 25 && events?.[events.length - 1]?.created;
-  const previousEventTs = Boolean(events.length) && events?.[0]?.created;
+    events?.length &&
+    events?.length > 25 &&
+    events?.[events.length - 1]?.created;
+  const previousEventTs = Boolean(events?.length) && events?.[0]?.created;
 
-  const hideFeedEvent = React.useCallback(
+  const queryClient = useQueryClient();
+
+  const changeEventVisibility = React.useCallback(
     async (event: TimelineEvent) => {
+      const { hideFeedEvent, unhideFeedEvent } = APIService;
+      // if the event was previously hidden, unhide it. Otherwise, hide the event
+      const action = event.hidden ? unhideFeedEvent : hideFeedEvent;
       try {
-        const status = await APIService.hideFeedEvent(
+        const status = await action(
           event.event_type,
           currentUser.name,
           currentUser.auth_token as string,
@@ -183,65 +192,38 @@ export default function UserFeedPage() {
         );
 
         if (status === 200) {
-          setEvents((prevEvents) =>
-            prevEvents.map((traversedEvent) => {
-              if (
-                traversedEvent.event_type === event.event_type &&
-                traversedEvent.id === event.id
-              ) {
-                // eslint-disable-next-line no-param-reassign
-                traversedEvent.hidden = true;
-              }
-              return traversedEvent;
-            })
-          );
-        }
-      } catch (error) {
-        toast.error(
-          <ToastMsg title="Could not hide event" message={error.toString()} />,
-          { toastId: "hide-error" }
-        );
-      }
-    },
-    [APIService, currentUser]
-  );
-
-  const unhideFeedEvent = React.useCallback(
-    async (event: TimelineEvent) => {
-      try {
-        const status = await APIService.unhideFeedEvent(
-          event.event_type,
-          currentUser.name,
-          currentUser.auth_token as string,
-          event.id!
-        );
-
-        if (status === 200) {
-          setEvents((prevEvents) =>
-            prevEvents.map((traversedEvent) => {
-              if (
-                traversedEvent.event_type === event.event_type &&
-                traversedEvent.id === event.id
-              ) {
-                // eslint-disable-next-line no-param-reassign
-                traversedEvent.hidden = false;
-              }
-              return traversedEvent;
-            })
-          );
+          return event;
         }
       } catch (error) {
         toast.error(
           <ToastMsg
-            title="Could not unhide event"
+            title="Could not hide or unhide event"
             message={error.toString()}
           />,
-          { toastId: "unhide-error" }
+          { toastId: "hide-error" }
         );
       }
+      return undefined;
     },
     [APIService, currentUser]
   );
+  // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
+  const { mutate: hideEventMutation } = useMutation({
+    mutationFn: changeEventVisibility,
+    onSuccess: (modifiedEvent, variables, context) => {
+      queryClient.setQueryData(queryKey, (oldEvents: TimelineEvent[]) =>
+        oldEvents.map((traversedEvent) => {
+          if (
+            traversedEvent.event_type === modifiedEvent?.event_type &&
+            traversedEvent.id === modifiedEvent?.id
+          ) {
+            return { ...traversedEvent, hidden: !modifiedEvent.hidden };
+          }
+          return traversedEvent;
+        })
+      );
+    },
+  });
 
   const deleteFeedEvent = React.useCallback(
     async (event: TimelineEvent) => {
@@ -264,18 +246,7 @@ export default function UserFeedPage() {
                 toastId: "deleted",
               }
             );
-            setEvents((prevEvents) =>
-              _reject(prevEvents, (element) => {
-                // Making sure the event that is getting deleted is either a recommendation or notification
-                // Since, recommendation and notification are in same db, and might have same id as a pin
-                // Similarly we later on filter by id and event_type for pin deletion
-                return (
-                  element?.id === event.id &&
-                  (element.event_type === EventType.RECORDING_RECOMMENDATION ||
-                    element.event_type === EventType.NOTIFICATION)
-                );
-              })
-            );
+            return event;
           }
         } catch (error) {
           toast.error(
@@ -308,14 +279,7 @@ export default function UserFeedPage() {
                 toastId: "deleted",
               }
             );
-            setEvents((prevEvents) =>
-              _reject(prevEvents, (element) => {
-                return (
-                  element?.id === event.id &&
-                  element.event_type === EventType.RECORDING_PIN
-                );
-              })
-            );
+            return event;
           }
         } catch (error) {
           toast.error(
@@ -336,9 +300,24 @@ export default function UserFeedPage() {
           );
         }
       }
+      return undefined;
     },
     [APIService, currentUser]
   );
+  // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
+  const { mutate: deleteEventMutation } = useMutation({
+    mutationFn: deleteFeedEvent,
+    onSuccess: (deletedEvent, variables, context) => {
+      queryClient.setQueryData<UserFeedLoaderData>(queryKey, (oldData) => ({
+        events: _reject(oldData?.events, (traversedEvent) => {
+          return (
+            traversedEvent.event_type === deletedEvent?.event_type &&
+            traversedEvent.id === deletedEvent?.id
+          );
+        }),
+      }));
+    },
+  });
 
   const renderEventActionButton = (event: TimelineEvent) => {
     if (
@@ -356,7 +335,7 @@ export default function UserFeedPage() {
           buttonClassName="btn btn-link btn-xs"
           // eslint-disable-next-line react/jsx-no-bind
           action={() => {
-            deleteFeedEvent(event);
+            deleteEventMutation(event);
           }}
         />
       );
@@ -375,7 +354,7 @@ export default function UserFeedPage() {
             buttonClassName="btn btn-link btn-xs"
             // eslint-disable-next-line react/jsx-no-bind
             action={() => {
-              unhideFeedEvent(event);
+              hideEventMutation(event);
             }}
           />
         );
@@ -388,7 +367,7 @@ export default function UserFeedPage() {
           buttonClassName="btn btn-link btn-xs"
           // eslint-disable-next-line react/jsx-no-bind
           action={() => {
-            hideFeedEvent(event);
+            hideEventMutation(event);
           }}
         />
       );
@@ -431,7 +410,7 @@ export default function UserFeedPage() {
             text="Delete Event"
             // eslint-disable-next-line react/jsx-no-bind
             action={() => {
-              deleteFeedEvent(event);
+              deleteEventMutation(event);
             }}
           />,
         ];
@@ -518,7 +497,7 @@ export default function UserFeedPage() {
   };
 
   const listens = events
-    .filter(isEventListenable)
+    ?.filter(isEventListenable)
     .map((event) => event.metadata) as Listen[];
 
   const isNewerButtonDisabled = Boolean(
@@ -546,9 +525,13 @@ export default function UserFeedPage() {
           >
             <Loader isLoading={isLoading} />
           </div>
-          <div id="timeline" style={{ opacity: isLoading ? "0.4" : "1" }}>
+          <div
+            id="timeline"
+            data-testid="timeline"
+            style={{ opacity: isLoading ? "0.4" : "1" }}
+          >
             <ul>
-              {events.map((event) => {
+              {events?.map((event) => {
                 const { created, event_type, user_name } = event;
                 return (
                   <li
