@@ -64,7 +64,7 @@ fetchMock.mockIf(
 );
 const getComponent = (componentProps: ListensProps) => (
   <BrowserRouter>
-    <Listens {...componentProps} />
+    <Listens />
   </BrowserRouter>
 );
 

@@ -27,7 +27,7 @@ import { RouteQuery } from "../../utils/Loader";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
   errorMsg?: string;
   lastUpdated?: string;
 };
@@ -91,7 +91,7 @@ export default class Recommendations extends React.Component<
     const { recommendations } = this.state;
     const recordings: string[] = [];
 
-    if (recommendations && recommendations.length > 0) {
+    if (recommendations && recommendations.length > 0 && user?.name) {
       recommendations.forEach((recommendation) => {
         const recordingMbid = getRecordingMBID(recommendation);
         if (recordingMbid) {
@@ -100,7 +100,7 @@ export default class Recommendations extends React.Component<
       });
       try {
         const data = await this.APIService.getFeedbackForUserForRecommendations(
-          user.name,
+          user?.name,
           recordings.join(",")
         );
         return data.feedback;
@@ -224,7 +224,7 @@ export default class Recommendations extends React.Component<
     return (
       <div role="main">
         <Helmet>
-          <title>{`User - ${user.name}`}</title>
+          <title>{`User - ${user?.name}`}</title>
         </Helmet>
         {errorMsg ? (
           <div>
@@ -377,13 +377,11 @@ export function RecommendationsPageWrapper() {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObject = getObjectForURLSearchParams(searchParams);
-  const { data } = useQuery(
+  const { data } = useQuery<RecommendationsLoaderData>(
     RouteQuery(
       ["recommendation", params, searchParamsObject],
       location.pathname
     )
-  ) as {
-    data: RecommendationsLoaderData;
-  };
+  );
   return <Recommendations {...data} />;
 }

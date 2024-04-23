@@ -43,7 +43,7 @@ import { RouteQuery } from "../../../utils/Loader";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
-  yearInMusicData: {
+  yearInMusicData?: {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
@@ -1250,12 +1250,15 @@ export default class YearInMusic extends React.Component<
 export function YearInMusicWrapper() {
   const location = useLocation();
   const params = useParams();
-  const {
-    data: { user, data: yearInMusicData },
-  } = useQuery(
+  const { data } = useQuery<YearInMusicLoaderData>(
     RouteQuery(["year-in-music-2022", params], location.pathname)
-  ) as {
-    data: YearInMusicLoaderData;
-  };
-  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
+  );
+  const { user, data: yearInMusicData } = data || {};
+  const fallbackUser = { name: "" };
+  return (
+    <YearInMusic
+      user={user ?? fallbackUser}
+      yearInMusicData={yearInMusicData}
+    />
+  );
 }

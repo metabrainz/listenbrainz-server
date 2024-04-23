@@ -40,12 +40,11 @@ const isColorTooDark = (color: tinycolor.Instance): boolean => {
 
 export default function MusicNeighborhood() {
   const location = useLocation();
-  const {
-    data: { algorithm: DEFAULT_ALGORITHM, artist_mbid: DEFAULT_ARTIST_MBID },
-  } = useQuery(RouteQuery(["music-neighborhood"], location.pathname)) as {
-    data: MusicNeighborhoodLoaderData;
-  };
-
+  const { data } = useQuery<MusicNeighborhoodLoaderData>(
+    RouteQuery(["music-neighborhood"], location.pathname)
+  );
+  const { algorithm: DEFAULT_ALGORITHM, artist_mbid: DEFAULT_ARTIST_MBID } =
+    data || {};
   const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbid=`;
   const DEFAULT_COLORS = colorGenerator();
 
@@ -110,14 +109,21 @@ export default function MusicNeighborhood() {
     async (artistMBID: string) => {
       try {
         const response = await fetch(BASE_URL + artistMBID);
-        const data = await response.json();
+        const artistSimilarityData = await response.json();
 
-        if (!data || !data.length || data.length === 3) {
+        if (
+          !artistSimilarityData ||
+          !artistSimilarityData.length ||
+          artistSimilarityData.length === 3
+        ) {
           throw new Error("No Similar Artists Found");
         }
 
-        setArtistGraphNodeInfo(data[1]?.data[0] ?? null);
-        const similarArtists = data[3]?.data ?? [];
+        setArtistGraphNodeInfo(
+          artistSimilarityData[1]?.artistSimilarityData[0] ?? null
+        );
+        const similarArtists =
+          artistSimilarityData[3]?.artistSimilarityData ?? [];
 
         setCompleteSimilarArtistsList(similarArtists);
         setSimilarArtistsList(similarArtists?.slice(0, similarArtistsLimit));
@@ -293,8 +299,8 @@ export default function MusicNeighborhood() {
   );
 
   React.useEffect(() => {
-    onArtistChange(DEFAULT_ARTIST_MBID);
-  }, []);
+    if (DEFAULT_ARTIST_MBID) onArtistChange(DEFAULT_ARTIST_MBID);
+  }, [DEFAULT_ARTIST_MBID, onArtistChange]);
 
   const browserHasClipboardAPI = "clipboard" in navigator;
 

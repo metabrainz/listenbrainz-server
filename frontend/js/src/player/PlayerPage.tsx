@@ -31,7 +31,7 @@ import { RouteQuery } from "../utils/Loader";
 import { getObjectForURLSearchParams } from "../utils/utils";
 
 export type PlayerPageProps = {
-  playlist: JSPFObject;
+  playlist?: JSPFObject;
 };
 
 type PlayerPageLoaderData = PlayerPageProps;
@@ -67,9 +67,11 @@ export default class PlayerPage extends React.Component<
         jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
       }
     );
-    this.state = {
-      playlist: props.playlist?.playlist || {},
-    };
+    if (props.playlist) {
+      this.state = {
+        playlist: props.playlist?.playlist || {},
+      };
+    }
   }
 
   getAlbumDetails(): JSX.Element {
@@ -90,6 +92,9 @@ export default class PlayerPage extends React.Component<
       return;
     }
     const { playlist } = this.props;
+    if (!playlist) {
+      return;
+    }
     try {
       const newPlaylistId = await APIService.createPlaylist(
         currentUser.auth_token,
@@ -264,12 +269,10 @@ export function PlayerPageWrapper() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObject = getObjectForURLSearchParams(searchParams);
   const location = useLocation();
-  const { data } = useQuery(
+  const { data } = useQuery<PlayerPageLoaderData>(
     RouteQuery(["player", searchParamsObject], location.pathname)
-  ) as {
-    data: PlayerPageLoaderData;
-  };
-  return <PlayerPage playlist={data.playlist} />;
+  );
+  return <PlayerPage playlist={data?.playlist} />;
 }
 
 export function PlayerPageRedirectToAlbum() {

@@ -37,11 +37,10 @@ type HomePageProps = {
 
 function HomePage() {
   const location = useLocation();
-  const {
-    data: { listenCount, artistCount },
-  } = useQuery(RouteQuery(["home"], location.pathname)) as {
-    data: HomePageProps;
-  };
+  const { data } = useQuery<HomePageProps>(
+    RouteQuery(["home"], location.pathname)
+  );
+  const { listenCount, artistCount } = data || {};
   const homepageUpperRef = React.useRef<HTMLDivElement>(null);
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
 

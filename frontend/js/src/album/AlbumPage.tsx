@@ -62,25 +62,25 @@ export default function AlbumPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams() as { albumMBID: string };
+  const { data } = useQuery<AlbumPageProps>(
+    RouteQuery(["album", params], location.pathname)
+  );
   const {
-    data: {
-      release_group_metadata: initialReleaseGroupMetadata,
-      recordings_release_mbid,
-      release_group_mbid,
-      mediums,
-      caa_id,
-      caa_release_mbid,
-      type,
-      listening_stats,
-    },
-  } = useQuery(RouteQuery(["album", params], location.pathname)) as {
-    data: AlbumPageProps;
-  };
+    release_group_metadata: initialReleaseGroupMetadata,
+    recordings_release_mbid,
+    release_group_mbid,
+    mediums,
+    caa_id,
+    caa_release_mbid,
+    type,
+    listening_stats,
+  } = data || {};
+
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
     total_user_count: userCount,
-  } = listening_stats;
+  } = listening_stats || {};
 
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
@@ -127,6 +127,9 @@ export default function AlbumPage(): JSX.Element {
 
   React.useEffect(() => {
     async function fetchCoverArt() {
+      if (!release_group_mbid) {
+        return;
+      }
       try {
         const fetchedCoverArtSrc = await getAlbumArtFromReleaseGroupMBID(
           release_group_mbid,
@@ -419,7 +422,7 @@ export default function AlbumPage(): JSX.Element {
             <div className="top-listeners">
               <h3 className="header-with-line">Top listeners</h3>
               {topListeners
-                .slice(0, 10)
+                ?.slice(0, 10)
                 .map(
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
