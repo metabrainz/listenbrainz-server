@@ -374,11 +374,11 @@ export default function ArtCreator() {
   ]);
 
   return (
-    <>
+    <div role="main">
       <Helmet>
         <title>Art Creator</title>
       </Helmet>
-      <div id="stats-art-creator" role="main">
+      <div id="stats-art-creator">
         <div className="artwork-container">
           <Gallery
             currentStyle={style}
@@ -694,6 +694,6 @@ export default function ArtCreator() {
           </div>
         </Sidebar>
       </div>
-    </>
+    </div>
   );
 }
