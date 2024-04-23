@@ -56,7 +56,7 @@ export default function Listen() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObject = getObjectForURLSearchParams(searchParams);
 
-  const { data, refetch } = useQuery({
+  const { data, refetch } = useQuery<ListenLoaderData>({
     ...RouteQuery(["dashboard", params, searchParamsObject], location.pathname),
     staleTime: !("max_ts" in searchParamsObject) ? 0 : 1000 * 60 * 5,
   });
@@ -65,9 +65,9 @@ export default function Listen() {
     listens: initialListens = [],
     user,
     userPinnedRecording = undefined,
-    latestListenTs,
-    oldestListenTs,
-  } = data as ListensProps;
+    latestListenTs = 0,
+    oldestListenTs = 0,
+  } = data || {};
 
   const previousListenTs = initialListens?.[0]?.listened_at;
   const nextListenTs = initialListens?.[initialListens.length - 1]?.listened_at;
@@ -222,7 +222,7 @@ export default function Listen() {
     if (playingNowListen) {
       receiveNewPlayingNow(playingNowListen);
     }
-  }, [APIService, user.name]);
+  }, [APIService, user]);
 
   React.useEffect(() => {
     getFollowing();
@@ -237,7 +237,9 @@ export default function Listen() {
     });
 
     const connectHandler = () => {
-      socket.emit("json", { user: user.name });
+      if (user){
+        socket.emit("json", { user: user.name });
+      }
     };
     const newListenHandler = (socketData: string) => {
       receiveNewListen(socketData);
@@ -257,7 +259,7 @@ export default function Listen() {
       socket.off("playing_now", newPlayingNowHandler);
       socket.close();
     };
-  }, [receiveNewPlayingNow, user.name, websocketsUrl]);
+  }, [receiveNewPlayingNow, user, websocketsUrl]);
 
   const updateFollowingList = (
     follower: ListenBrainzUser,
@@ -277,22 +279,12 @@ export default function Listen() {
   };
 
   const loggedInUserFollowsUser = (): boolean => {
-    if (_.isNil(currentUser) || _.isEmpty(currentUser)) {
+    if (_.isNil(currentUser) || _.isEmpty(currentUser) || !user) {
       return false;
     }
 
     return followingList.includes(user.name);
   };
-
-  const removeListenFromListenList = React.useCallback(
-    (listen: Listen) => {
-      const index = listens.indexOf(listen);
-      const listensCopy = [...listens];
-      listensCopy.splice(index, 1);
-      setListens(listensCopy);
-    },
-    [listens]
-  );
 
   const deleteListen = React.useCallback(
     async (listen: Listen) => {
@@ -434,7 +426,7 @@ export default function Listen() {
       <div className="row">
         <div className="col-md-4 col-md-push-8 side-column">
           <div className="listen-header">
-            {isUserLoggedIn && !isCurrentUsersPage && (
+            {isUserLoggedIn && !isCurrentUsersPage && user && (
               <FollowButton
                 type="icon-only"
                 user={user}
@@ -443,7 +435,7 @@ export default function Listen() {
               />
             )}
             <Link
-              to={`https://musicbrainz.org/user/${user.name}`}
+              to={`https://musicbrainz.org/user/${user?.name}`}
               className="btn musicbrainz-profile-button"
             >
               <img
@@ -461,7 +453,7 @@ export default function Listen() {
               removePinFromPinsList={() => {}}
             />
           )}
-          <ListenCountCard user={user} listenCount={listenCount} />
+          {user && <ListenCountCard user={user} listenCount={listenCount} />}
           {user && <UserSocialNetwork user={user} />}
         </div>
         <div className="col-md-8 col-md-pull-4">
@@ -472,7 +464,7 @@ export default function Listen() {
                 <div className="lead empty-text">Get listening</div>
               ) : (
                 <div className="lead empty-text">
-                  {user.name} hasn&apos;t listened to any songs yet.
+                  {user?.name} hasn&apos;t listened to any songs yet.
                 </div>
               )}
 
