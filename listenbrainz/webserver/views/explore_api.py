@@ -178,8 +178,8 @@ def lb_radio():
         raise APIBadRequest(
             f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
 
-    patch = LBRadioPatch({ "mode": mode, "prompt": prompt, "echo": False})
     try:
+        patch = LBRadioPatch({ "mode": mode, "prompt": prompt, "echo": False})
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
