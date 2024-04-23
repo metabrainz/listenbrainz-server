@@ -300,6 +300,7 @@ export default function MusicNeighborhood() {
 
   React.useEffect(() => {
     if (DEFAULT_ARTIST_MBID) onArtistChange(DEFAULT_ARTIST_MBID);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const browserHasClipboardAPI = "clipboard" in navigator;
