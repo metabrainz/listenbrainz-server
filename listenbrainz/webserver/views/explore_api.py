@@ -179,7 +179,8 @@ def lb_radio():
             f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
 
     try:
-        patch = LBRadioPatch({ "mode": mode, "prompt": prompt, "echo": False})
+        # TODO: Turn quiet on before merging!
+        patch = LBRadioPatch({ "mode": mode, "prompt": prompt, "quiet": False, "min_recordings": 1})
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
