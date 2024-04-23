@@ -12,7 +12,7 @@ export default function SimilarUsers() {
   const { similarUsers } = data || {};
 
   return (
-    <div id="similar-users">
+    <div id="similar-users" role="main">
       <Helmet>
         <title>Top Similar Users</title>
       </Helmet>

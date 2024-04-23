@@ -246,7 +246,7 @@ export default function FreshReleases() {
       <Helmet>
         <title>Fresh releases</title>
       </Helmet>
-      <div className="releases-page-container">
+      <div className="releases-page-container" role="main">
         <div className="releases-page">
           <div className="fresh-releases-pill-row" style={pillRowStyle}>
             {isLoggedIn ? (

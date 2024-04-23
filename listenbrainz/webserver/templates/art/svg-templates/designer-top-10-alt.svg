@@ -11,8 +11,12 @@
      xmlns:dc="http://purl.org/dc/elements/1.1/"
      height="{{ height }}"
      width="{{ width }}">
-  <title>{{ title }}</title>
-  <desc>{{ desc }}</desc>
+  <title>Top 10 releases {{ metadata["time_range"] }} for {{ metadata["user_name"] }}&#xA;</title>
+  <desc>
+      {%- for release in releases[:10] -%}
+        {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}. {{ release.release_name }} - {{ release.artist_name }}&#xA;
+      {%- endfor -%}
+  </desc>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;900');
     .artist-name *, .artist-name {

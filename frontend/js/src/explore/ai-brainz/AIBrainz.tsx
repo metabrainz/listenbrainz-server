@@ -217,7 +217,7 @@ export default function AIBrainzComponent(props: AIBrainzComponentProps) {
   };
 
   return (
-    <div id="AIBrainz">
+    <div id="AIBrainz" role="main">
       <AIBrainzHeader />
       <h3>AIBrainz playlist generator (beta)</h3>
       <br />

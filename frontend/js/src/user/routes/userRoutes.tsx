@@ -9,8 +9,8 @@ const getUserRoutes = (): RouteObject[] => {
     {
       path: "/user/:username/",
       lazy: async () => {
-        const UserFeedLayout = await import("../layout");
-        return { Component: UserFeedLayout.default };
+        const DashboardLayout = await import("../layout");
+        return { Component: DashboardLayout.default };
       },
       children: [
         {
