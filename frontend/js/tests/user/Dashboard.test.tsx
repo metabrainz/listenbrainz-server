@@ -13,6 +13,7 @@ import WS from "jest-websocket-mock";
 import { SocketIO as mockSocketIO } from "mock-socket";
 import userEvent from "@testing-library/user-event";
 import type { UserEvent } from "@testing-library/user-event/dist/types/setup/setup";
+import { BrowserRouter } from "react-router-dom";
 import APIServiceClass from "../../src/utils/APIService";
 
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
@@ -60,6 +61,11 @@ fetchMock.mockIf(
   () => {
     return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
   }
+);
+const getComponent = (componentProps: ListensProps) => (
+  <BrowserRouter>
+    <Listens {...componentProps} />
+  </BrowserRouter>
 );
 
 // eslint-disable-next-line jest/no-disabled-tests

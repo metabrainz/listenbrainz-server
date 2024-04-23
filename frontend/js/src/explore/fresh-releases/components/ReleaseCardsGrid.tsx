@@ -1,12 +1,13 @@
 import * as React from "react";
 import ReleaseCard from "./ReleaseCard";
 import { formatReleaseDate } from "../utils";
-import type { DisplaySettings } from "../FreshReleases";
+import type { DisplaySettings, SortDirection } from "../FreshReleases";
 
 type ReleaseCardReleaseProps = {
   filteredList: Array<FreshReleaseItem>;
   displaySettings: DisplaySettings;
   order: string;
+  direction: SortDirection;
 };
 
 const getKeyForOrder = (
@@ -42,7 +43,7 @@ const getMapping = (
 };
 
 export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
-  const { filteredList, displaySettings, order } = props;
+  const { filteredList, displaySettings, order, direction } = props;
 
   const releaseMapping = React.useMemo(() => getMapping(order, filteredList), [
     order,
@@ -62,9 +63,17 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     return releaseKey;
   };
 
+  const mappedEntries = Array.from(releaseMapping?.entries());
+  if (
+    (order !== "confidence" && direction === "descend") ||
+    (order === "confidence" && direction === "ascend")
+  ) {
+    mappedEntries.reverse();
+  }
+
   return (
     <>
-      {Array.from(releaseMapping?.entries()).map(([releaseKey, releases]) => (
+      {mappedEntries.map(([releaseKey, releases]) => (
         <React.Fragment key={`${releaseKey}-container`}>
           <div className="release-card-grid-title" key={`${releaseKey}-title`}>
             {getReleaseCardGridTitle(releaseKey, order)}
