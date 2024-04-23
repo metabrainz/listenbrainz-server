@@ -119,11 +119,8 @@ export default function MusicNeighborhood() {
           throw new Error("No Similar Artists Found");
         }
 
-        setArtistGraphNodeInfo(
-          artistSimilarityData[1]?.artistSimilarityData[0] ?? null
-        );
-        const similarArtists =
-          artistSimilarityData[3]?.artistSimilarityData ?? [];
+        setArtistGraphNodeInfo(artistSimilarityData[1]?.data[0] ?? null);
+        const similarArtists = artistSimilarityData[3]?.data ?? [];
 
         setCompleteSimilarArtistsList(similarArtists);
         setSimilarArtistsList(similarArtists?.slice(0, similarArtistsLimit));
