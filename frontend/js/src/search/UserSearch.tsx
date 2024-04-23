@@ -1,16 +1,26 @@
 import * as React from "react";
-import { Link, useLoaderData, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import { RouteQuery } from "../utils/Loader";
+import { getObjectForURLSearchParams } from "../utils/utils";
 
 type SearchResultsLoaderData = {
   users: [string, number, number?][];
 };
 
 export default function SearchResults() {
-  const { users } = useLoaderData() as SearchResultsLoaderData;
   const { currentUser } = React.useContext(GlobalAppContext);
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const { data } = useQuery<SearchResultsLoaderData>(
+    RouteQuery(
+      ["search-users", getObjectForURLSearchParams(searchParams)],
+      location.pathname
+    )
+  );
+  const { users } = data || {};
 
   const [searchTermInput, setSearchTermInput] = React.useState(
     searchParams.get("search_term") || ""
@@ -71,8 +81,8 @@ export default function SearchResults() {
           </tr>
         </thead>
         <tbody>
-          {users.length > 0 ? (
-            users.map((row, index) => (
+          {users?.length ? (
+            users?.map((row, index) => (
               <tr key={`similar-user-${row[0]}`}>
                 <td>{index + 1}</td>
                 <td>

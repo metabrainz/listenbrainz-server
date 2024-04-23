@@ -11,6 +11,8 @@ import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
 import { getPageProps } from "./utils/utils";
 import getRoutes from "./routes/routes";
+import queryClient from "./utils/QueryClient";
+import ReactQueryDevtool from "./utils/ReactQueryDevTools";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const { domContainer, globalAppContext, sentryProps } = await getPageProps();
@@ -48,7 +50,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             defaultTitle="ListenBrainz"
             titleTemplate="%s - ListenBrainz"
           />
-          <RouterProvider router={router} />
+          <ReactQueryDevtool client={queryClient}>
+            <RouterProvider router={router} />
+          </ReactQueryDevtool>
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

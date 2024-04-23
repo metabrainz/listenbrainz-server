@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router-dom";
-import RouteLoader from "../utils/Loader";
+import { RouteQueryLoader } from "../utils/Loader";
 
 const getEntityPages = (): RouteObject[] => {
   const routes = [
@@ -16,7 +16,7 @@ const getEntityPages = (): RouteObject[] => {
             const ArtistPage = await import("../artist/ArtistPage");
             return { Component: ArtistPage.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("artist"),
         },
         {
           path: "album/:albumMBID/",
@@ -24,7 +24,7 @@ const getEntityPages = (): RouteObject[] => {
             const AlbumPage = await import("../album/AlbumPage");
             return { Component: AlbumPage.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("album"),
         },
         {
           path: "release-group/:releaseGroupMBID/",
@@ -39,7 +39,7 @@ const getEntityPages = (): RouteObject[] => {
             const Release = await import("../release/Release");
             return { Component: Release.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("release"),
         },
       ],
     },

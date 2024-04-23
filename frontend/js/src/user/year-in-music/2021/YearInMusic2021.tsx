@@ -15,7 +15,8 @@ import {
   capitalize,
   toPairs,
 } from "lodash";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
@@ -32,10 +33,11 @@ import FollowButton from "../../components/follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import { ToastMsg } from "../../../notifications/Notifications";
 import SEO, { YIMYearMetaTags } from "../SEO";
+import { RouteQuery } from "../../../utils/Loader";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
-  yearInMusicData: {
+  yearInMusicData?: {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
@@ -239,10 +241,10 @@ export default class YearInMusic extends React.Component<
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
         <div className="flex-center flex-wrap">
-          <SEO year={2021} userName={user?.name} />
+          <SEO year={2021} userName={user?.name ?? ""} />
           <YIMYearMetaTags year={2021} />
           <h3>
-            We don&apos;t have enough listening data for {user.name} to produce
+            We don&apos;t have enough listening data for {user?.name} to produce
             any statistics or playlists. (If you received an email from us
             telling you that you had a report waiting for you, we apologize for
             the goof-up. We don&apos;t -- 2022 continues to suck, sorry!)
@@ -977,7 +979,17 @@ export default class YearInMusic extends React.Component<
 }
 
 export function YearInMusicWrapper() {
-  const props = useLoaderData() as YearInMusicLoaderData;
-  const { user, data: yearInMusicData } = props;
-  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
+  const location = useLocation();
+  const params = useParams();
+  const { data } = useQuery<YearInMusicLoaderData>(
+    RouteQuery(["year-in-music-2021", params], location.pathname)
+  );
+  const { user, data: yearInMusicData } = data || {};
+  const fallbackUser = { name: "" };
+  return (
+    <YearInMusic
+      user={user ?? fallbackUser}
+      yearInMusicData={yearInMusicData}
+    />
+  );
 }
