@@ -54,7 +54,9 @@ function UserFeedLayout() {
           />
         </ul>
       </div>
-      <Outlet />
+      <div role="main">
+        <Outlet />
+      </div>
     </>
   );
 }

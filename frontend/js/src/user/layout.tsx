@@ -81,7 +81,9 @@ function DashboardLayout() {
           />
         </ul>
       </div>
-      <Outlet />
+      <div role="main">
+        <Outlet />
+      </div>
     </>
   );
 }

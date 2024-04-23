@@ -374,7 +374,7 @@ export default function ArtCreator() {
   ]);
 
   return (
-    <>
+    <div role="main">
       <Helmet>
         <title>Art Creator</title>
       </Helmet>
@@ -694,6 +694,6 @@ export default function ArtCreator() {
           </div>
         </Sidebar>
       </div>
-    </>
+    </div>
   );
 }
