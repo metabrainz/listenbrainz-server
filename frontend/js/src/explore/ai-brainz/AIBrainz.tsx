@@ -91,7 +91,7 @@ function AIBrainzComponent(props: AIBrainzComponentProps) {
   };
 
   return (
-    <div id="AIBrainz">
+    <div id="AIBrainz" role="main">
       <h3>AIBrainz playlist generator (beta)</h3>
       <br />
       <p style={{ fontWeight: "bold" }}>

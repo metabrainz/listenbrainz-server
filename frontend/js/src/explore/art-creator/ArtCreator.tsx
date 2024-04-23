@@ -378,7 +378,7 @@ export default function ArtCreator() {
       <Helmet>
         <title>Art Creator</title>
       </Helmet>
-      <div id="stats-art-creator">
+      <div id="stats-art-creator" role="main">
         <div className="artwork-container">
           <Gallery
             currentStyle={style}

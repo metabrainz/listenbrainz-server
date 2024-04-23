@@ -5,7 +5,7 @@ import { Link, useLoaderData } from "react-router-dom";
 export default function SimilarUsers() {
   const { similarUsers } = useLoaderData() as { similarUsers: string[][] };
   return (
-    <div id="similar-users">
+    <div id="similar-users" role="main">
       <Helmet>
         <title>Top Similar Users</title>
       </Helmet>
