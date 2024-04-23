@@ -300,7 +300,7 @@ export default function MusicNeighborhood() {
 
   React.useEffect(() => {
     if (DEFAULT_ARTIST_MBID) onArtistChange(DEFAULT_ARTIST_MBID);
-  }, [DEFAULT_ARTIST_MBID, onArtistChange]);
+  }, []);
 
   const browserHasClipboardAPI = "clipboard" in navigator;
 
