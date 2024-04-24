@@ -200,7 +200,6 @@ def feed():
 
     return jsonify({
         'events': [event.dict() for event in user_events],
-        'following': users_following
     })
 
 
