@@ -94,7 +94,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'duration[0]': 300,
             'timestamp[0]': int(time.time()),
         }
-        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data, 
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data,
                              headers={'Content-Type': 'application/json'})
         self.assert200(r)
 
