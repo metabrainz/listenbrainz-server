@@ -1,5 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import React from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { RouteQuery } from "../../utils/Loader";
 
 type CurrentStatusLoaderData = {
   listenCount: number;
@@ -13,13 +15,11 @@ type CurrentStatusLoaderData = {
 };
 
 export default function CurrentStatus() {
-  const {
-    userCount,
-    listenCount,
-    listenCountsPerDay,
-    load,
-  } = useLoaderData() as CurrentStatusLoaderData;
-
+  const location = useLocation();
+  const { data } = useQuery<CurrentStatusLoaderData>(
+    RouteQuery(["current-status"], location.pathname)
+  );
+  const { userCount, listenCount, listenCountsPerDay, load } = data || {};
   return (
     <>
       <h2 className="page-title">Current status</h2>
@@ -48,12 +48,13 @@ export default function CurrentStatus() {
                 </tr>
               )}
               {listenCountsPerDay &&
-                listenCountsPerDay.map((data, index) => (
-                  <tr key={`listen-count-${data.date}`}>
+                listenCountsPerDay.map((listenCountData, index) => (
+                  <tr key={`listen-count-${listenCountData.date}`}>
                     <td>
-                      Number of listens submitted {data.label} ({data.date})
+                      Number of listens submitted {listenCountData.label} (
+                      {listenCountData.date})
                     </td>
-                    <td>{data.listenCount}</td>
+                    <td>{listenCountData.listenCount}</td>
                   </tr>
                 ))}
             </tbody>

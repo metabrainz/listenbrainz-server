@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
-import RouteLoader from "../../utils/Loader";
+import { RouteQueryLoader } from "../../utils/Loader";
 
 const getPlayerRoutes = () => {
   const routes = [
@@ -14,7 +14,7 @@ const getPlayerRoutes = () => {
             const PlayerPage = await import("../PlayerPage");
             return { Component: PlayerPage.PlayerPageWrapper };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("player", true),
         },
         {
           path: "release/:releaseMBID",

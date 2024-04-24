@@ -4,9 +4,10 @@ import * as React from "react";
 
 import { get, isInteger } from "lodash";
 import { toast } from "react-toastify";
-import { useLoaderData } from "react-router-dom";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
 
 import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import APIServiceClass from "../../utils/APIService";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
@@ -14,6 +15,7 @@ import Loader from "../../components/Loader";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getArtistName,
+  getObjectForURLSearchParams,
   getRecordingMBID,
   getTrackName,
   preciseTimestamp,
@@ -21,10 +23,11 @@ import {
 import ListenCard from "../../common/listens/ListenCard";
 import RecommendationFeedbackComponent from "../../common/listens/RecommendationFeedbackComponent";
 import { ToastMsg } from "../../notifications/Notifications";
+import { RouteQuery } from "../../utils/Loader";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
   errorMsg?: string;
   lastUpdated?: string;
 };
@@ -88,7 +91,7 @@ export default class Recommendations extends React.Component<
     const { recommendations } = this.state;
     const recordings: string[] = [];
 
-    if (recommendations && recommendations.length > 0) {
+    if (recommendations && recommendations.length > 0 && user?.name) {
       recommendations.forEach((recommendation) => {
         const recordingMbid = getRecordingMBID(recommendation);
         if (recordingMbid) {
@@ -97,7 +100,7 @@ export default class Recommendations extends React.Component<
       });
       try {
         const data = await this.APIService.getFeedbackForUserForRecommendations(
-          user.name,
+          user?.name,
           recordings.join(",")
         );
         return data.feedback;
@@ -221,7 +224,7 @@ export default class Recommendations extends React.Component<
     return (
       <div role="main">
         <Helmet>
-          <title>{`User - ${user.name}`}</title>
+          <title>{`User - ${user?.name}`}</title>
         </Helmet>
         {errorMsg ? (
           <div>
@@ -370,6 +373,15 @@ export default class Recommendations extends React.Component<
 }
 
 export function RecommendationsPageWrapper() {
-  const loaderData = useLoaderData() as RecommendationsLoaderData;
-  return <Recommendations {...loaderData} />;
+  const location = useLocation();
+  const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObject = getObjectForURLSearchParams(searchParams);
+  const { data } = useQuery<RecommendationsLoaderData>(
+    RouteQuery(
+      ["recommendation", params, searchParamsObject],
+      location.pathname
+    )
+  );
+  return <Recommendations {...data} />;
 }

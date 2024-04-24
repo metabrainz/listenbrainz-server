@@ -111,7 +111,7 @@ export default function LBRadio() {
   }, [jspfPlaylist?.playlist?.track]);
 
   return (
-    <>
+    <div role="main">
       <Helmet>
         <title>LB Radio</title>
       </Helmet>
@@ -133,6 +133,6 @@ export default function LBRadio() {
           </Loader>
         </div>
       </div>
-    </>
+    </div>
   );
 }

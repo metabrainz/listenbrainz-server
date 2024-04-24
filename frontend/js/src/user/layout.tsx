@@ -22,12 +22,12 @@ function NavItem({
   );
 }
 
-function UserFeedLayout() {
+function DashboardLayout() {
   const location = useLocation();
   const locationArr = location?.pathname?.split("/");
   const { currentUser } = React.useContext(GlobalAppContext);
   const sitewide = locationArr[1] !== "user";
-  const userName = sitewide ? currentUser?.name : locationArr[2];
+  const userName = sitewide ? currentUser?.name : decodeURIComponent(locationArr[2]);
 
   const [activeSection, setActiveSection] = React.useState<string>(
     sitewide ? locationArr[2] : locationArr[3]
@@ -81,9 +81,11 @@ function UserFeedLayout() {
           />
         </ul>
       </div>
-      <Outlet />
+      <div role="main">
+        <Outlet />
+      </div>
     </>
   );
 }
 
-export default UserFeedLayout;
+export default DashboardLayout;

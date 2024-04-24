@@ -4,8 +4,9 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { isEmpty, isEqual, kebabCase } from "lodash";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchBox from "./components/SearchBox";
@@ -13,6 +14,7 @@ import SimilarArtistsGraph from "./components/SimilarArtistsGraph";
 import Panel from "./components/Panel";
 import generateTransformedArtists from "./utils/generateTransformedArtists";
 import { downloadComponentAsImage, copyImageToClipboard } from "./utils/utils";
+import { RouteQuery } from "../../utils/Loader";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
 type MusicNeighborhoodLoaderData = {
@@ -37,11 +39,12 @@ const isColorTooDark = (color: tinycolor.Instance): boolean => {
 };
 
 export default function MusicNeighborhood() {
-  const {
-    algorithm: DEFAULT_ALGORITHM,
-    artist_mbid: DEFAULT_ARTIST_MBID,
-  } = useLoaderData() as MusicNeighborhoodLoaderData;
-
+  const location = useLocation();
+  const { data } = useQuery<MusicNeighborhoodLoaderData>(
+    RouteQuery(["music-neighborhood"], location.pathname)
+  );
+  const { algorithm: DEFAULT_ALGORITHM, artist_mbid: DEFAULT_ARTIST_MBID } =
+    data || {};
   const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbid=`;
   const DEFAULT_COLORS = colorGenerator();
 
@@ -115,14 +118,18 @@ export default function MusicNeighborhood() {
     async (artistMBID: string) => {
       try {
         const response = await fetch(BASE_URL + artistMBID);
-        const data = await response.json();
+        const artistSimilarityData = await response.json();
 
-        if (!data || !data.length || data.length === 3) {
+        if (
+          !artistSimilarityData ||
+          !artistSimilarityData.length ||
+          artistSimilarityData.length === 3
+        ) {
           throw new Error("No Similar Artists Found");
         }
 
-        setArtistGraphNodeInfo(data[1]?.data[0] ?? null);
-        const similarArtists = data[3]?.data ?? [];
+        setArtistGraphNodeInfo(artistSimilarityData[1]?.data[0] ?? null);
+        const similarArtists = artistSimilarityData[3]?.data ?? [];
 
         setCompleteSimilarArtistsList(similarArtists);
         setSimilarArtistsList(similarArtists?.slice(0, similarArtistsLimit));
@@ -298,7 +305,7 @@ export default function MusicNeighborhood() {
   );
 
   React.useEffect(() => {
-    onArtistChange(DEFAULT_ARTIST_MBID);
+    if (DEFAULT_ARTIST_MBID) onArtistChange(DEFAULT_ARTIST_MBID);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -309,7 +316,7 @@ export default function MusicNeighborhood() {
       <Helmet>
         <title>Music Neighborhood</title>
       </Helmet>
-      <div className="artist-similarity-main-container">
+      <div className="artist-similarity-main-container" role="main">
         <div className="artist-similarity-header">
           <SearchBox
             onArtistChange={onArtistChange}
