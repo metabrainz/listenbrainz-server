@@ -237,7 +237,7 @@ export default function Listen() {
     });
 
     const connectHandler = () => {
-      if (user){
+      if (user) {
         socket.emit("json", { user: user.name });
       }
     };
