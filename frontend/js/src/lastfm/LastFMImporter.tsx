@@ -464,7 +464,7 @@ export default class LastFmImporter extends React.Component<
           <br />
           <span style={{ fontSize: `${10}pt` }}>
             <a href={`${profileUrl}`}>
-              Close and go to your ListenBrainz profile
+              Close and go to your ListenBrainz settings
             </a>
           </span>
         </p>
@@ -527,7 +527,7 @@ export default class LastFmImporter extends React.Component<
         <br />
         <span style={{ fontSize: `${10}pt` }}>
           <a href={`${profileUrl}`}>
-            Close and go to your ListenBrainz profile
+            Close and go to your ListenBrainz settings
           </a>
         </span>
       </p>
@@ -553,7 +553,7 @@ export default class LastFmImporter extends React.Component<
           <br />
           <span style={{ fontSize: `${10}pt` }}>
             <a href={`${profileUrl}`}>
-              Close and go to your ListenBrainz profile
+              Close and go to your ListenBrainz settings
             </a>
           </span>
         </p>
