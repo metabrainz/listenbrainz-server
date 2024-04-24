@@ -56,7 +56,7 @@ export default function Login() {
         <p>
           If after creating an account you change your mind about processing
           your listening history, you will need to{" "}
-          <a href="/login/musicbrainz/">delete your ListenBrainz account</a>.
+          <Link to="/settings/delete/">delete your ListenBrainz account</Link>.
         </p>
       </div>
       <br />
