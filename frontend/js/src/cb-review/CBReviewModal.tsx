@@ -392,6 +392,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           You can connect to your CritiqueBrainz account by visiting the
           <Link
             to={`${window.location.origin}/settings/music-services/details/`}
+            onClick={closeModal}
           >
             {" "}
             music services page.
@@ -571,6 +572,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
     acceptLicense,
     handleLicenseChange,
     setEntityToReview,
+    closeModal,
   ]);
 
   const modalFooter = React.useMemo(() => {
@@ -581,6 +583,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           to={`${window.location.origin}/settings/music-services/details/`}
           className="btn btn-success"
           role="button"
+          onClick={closeModal}
         >
           {" "}
           Connect To CritiqueBrainz{" "}
@@ -621,7 +624,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="CBReviewModalLabel"
-      data-backdrop="static"
+      data-backdrop="true"
     >
       <div className="modal-dialog" role="document">
         <form className="modal-content" onSubmit={submitReviewToCB}>
