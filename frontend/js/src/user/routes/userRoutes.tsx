@@ -73,11 +73,11 @@ const getUserRoutes = (): RouteObject[] => {
         },
         {
           path: "history/",
-          element: <Navigate to="../stats/top-artists/" />,
+          element: <Navigate to="../stats/top-artists/" replace />,
         },
         {
           path: "artists/",
-          element: <Navigate to="../stats/top-artists/" />,
+          element: <Navigate to="../stats/top-artists/" replace />,
         },
         {
           path: "reports/",
@@ -101,7 +101,7 @@ const getUserRoutes = (): RouteObject[] => {
         },
         {
           path: "collaborations/",
-          element: <Navigate to="playlists/" />,
+          element: <Navigate to="playlists/" replace />,
         },
         {
           path: "recommendations/",
