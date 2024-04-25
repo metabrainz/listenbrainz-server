@@ -2,9 +2,9 @@ import * as React from "react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 
+import { Link } from "react-router-dom";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
-import { Link } from "react-router-dom";
 
 export default NiceModal.create(() => {
   const modal = useModal();

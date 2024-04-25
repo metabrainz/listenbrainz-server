@@ -6,10 +6,10 @@ import { faCheck, faSpinner, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { capitalize } from "lodash";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
-import { Link } from "react-router-dom";
 
 export const LASTFM_RETRIES = 3;
 

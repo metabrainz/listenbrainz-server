@@ -14,6 +14,7 @@ import {
 } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import {
   ToastMsg,
   createNotification,
@@ -30,7 +31,6 @@ import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import AppleMusicPlayer from "./AppleMusicPlayer";
-import { Link } from "react-router-dom";
 
 export type DataSourceType = {
   name: string;
