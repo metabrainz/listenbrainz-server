@@ -392,6 +392,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           You can connect to your CritiqueBrainz account by visiting the
           <Link
             to={`${window.location.origin}/settings/music-services/details/`}
+            data-dismiss="modal"
             onClick={closeModal}
           >
             {" "}
@@ -583,6 +584,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           to={`${window.location.origin}/settings/music-services/details/`}
           className="btn btn-success"
           role="button"
+          data-dismiss="modal"
           onClick={closeModal}
         >
           {" "}
