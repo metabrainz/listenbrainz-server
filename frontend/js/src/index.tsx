@@ -11,6 +11,8 @@ import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
 import { getPageProps } from "./utils/utils";
 import getRoutes from "./routes/routes";
+import queryClient from "./utils/QueryClient";
+import ReactQueryDevtool from "./utils/ReactQueryDevTools";
 import { BrainzPlayerProvider } from "./common/brainzplayer/BrainzPlayerContext";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -49,9 +51,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             defaultTitle="ListenBrainz"
             titleTemplate="%s - ListenBrainz"
           />
-          <BrainzPlayerProvider>
-            <RouterProvider router={router} />
-          </BrainzPlayerProvider>
+          <ReactQueryDevtool client={queryClient}>
+            <BrainzPlayerProvider>
+              <RouterProvider router={router} />
+            </BrainzPlayerProvider>
+          </ReactQueryDevtool>
         </NiceModal.Provider>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

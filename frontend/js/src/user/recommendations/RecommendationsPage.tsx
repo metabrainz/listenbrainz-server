@@ -372,7 +372,7 @@ export default class RecommendationsPage extends React.Component<
     const listensFromJSPFTracks =
       selectedPlaylist?.track.map(JSPFTrackToListen) ?? [];
     return (
-      <div id="recommendations">
+      <div id="recommendations" role="main">
         <Helmet>
           <title>{`Created for ${
             user?.name === currentUser?.name ? "you" : `${user?.name}`

@@ -1067,6 +1067,16 @@ export function getPersonalRecommendationEventContent(
   );
 }
 
+export function getObjectForURLSearchParams(
+  urlSearchParams: URLSearchParams
+): Record<string, string> {
+  const object: Record<string, string> = {};
+  urlSearchParams.forEach((value, key) => {
+    object[key] = value;
+  });
+  return object;
+}
+
 export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,

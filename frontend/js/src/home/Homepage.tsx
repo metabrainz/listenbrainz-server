@@ -22,16 +22,13 @@ import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
 import { isNumber, throttle } from "lodash";
-import {
-  Link,
-  Navigate,
-  useLoaderData,
-  useSearchParams,
-} from "react-router-dom";
+import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import NumberCounter from "./NumberCounter";
 import Blob from "./Blob";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import { RouteQuery } from "../utils/Loader";
 
 type HomePageProps = {
   listenCount: number;
@@ -39,7 +36,11 @@ type HomePageProps = {
 };
 
 function HomePage() {
-  const { listenCount, artistCount } = useLoaderData() as HomePageProps;
+  const location = useLocation();
+  const { data } = useQuery<HomePageProps>(
+    RouteQuery(["home"], location.pathname)
+  );
+  const { listenCount, artistCount } = data || {};
   const homepageUpperRef = React.useRef<HTMLDivElement>(null);
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
 

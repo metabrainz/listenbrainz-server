@@ -2,24 +2,24 @@ import * as React from "react";
 
 import { Navigate, Outlet } from "react-router-dom";
 import type { RouteObject } from "react-router-dom";
-import RouteLoader from "../../utils/Loader";
+import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 
 const getUserRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/user/:username/",
       lazy: async () => {
-        const UserFeedLayout = await import("../layout");
-        return { Component: UserFeedLayout.default };
+        const DashboardLayout = await import("../layout");
+        return { Component: DashboardLayout.default };
       },
       children: [
         {
           index: true,
           lazy: async () => {
             const Listens = await import("../Dashboard");
-            return { Component: Listens.ListensWrapper };
+            return { Component: Listens.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("dashboard", true),
         },
         {
           path: "stats/",
@@ -132,7 +132,7 @@ const getUserRoutes = (): RouteObject[] => {
             );
             return { Component: YearInMusic2023.YearInMusicWrapper };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("year-in-music-2023"),
         },
         {
           path: "2023/",
@@ -142,7 +142,7 @@ const getUserRoutes = (): RouteObject[] => {
             );
             return { Component: YearInMusic2023.YearInMusicWrapper };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("year-in-music-2023"),
         },
         {
           path: "2022/",
@@ -152,7 +152,7 @@ const getUserRoutes = (): RouteObject[] => {
             );
             return { Component: YearInMusic2022.YearInMusicWrapper };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("year-in-music-2022"),
         },
         {
           path: "2021/",
@@ -162,7 +162,7 @@ const getUserRoutes = (): RouteObject[] => {
             );
             return { Component: YearInMusic2021.YearInMusicWrapper };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("year-in-music-2021"),
         },
       ],
     },

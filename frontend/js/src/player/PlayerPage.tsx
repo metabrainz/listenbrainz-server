@@ -7,7 +7,14 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
-import { Link, Navigate, useLoaderData, useParams } from "react-router-dom";
+import {
+  Link,
+  Navigate,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 
@@ -20,9 +27,11 @@ import {
 import ListenControl from "../common/listens/ListenControl";
 import ListenCard from "../common/listens/ListenCard";
 import { ToastMsg } from "../notifications/Notifications";
+import { RouteQuery } from "../utils/Loader";
+import { getObjectForURLSearchParams } from "../utils/utils";
 
 export type PlayerPageProps = {
-  playlist: JSPFObject;
+  playlist?: JSPFObject;
 };
 
 type PlayerPageLoaderData = PlayerPageProps;
@@ -58,9 +67,11 @@ export default class PlayerPage extends React.Component<
         jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
       }
     );
-    this.state = {
-      playlist: props.playlist?.playlist || {},
-    };
+    if (props.playlist) {
+      this.state = {
+        playlist: props.playlist?.playlist || {},
+      };
+    }
   }
 
   getAlbumDetails(): JSX.Element {
@@ -81,6 +92,9 @@ export default class PlayerPage extends React.Component<
       return;
     }
     const { playlist } = this.props;
+    if (!playlist) {
+      return;
+    }
     try {
       const newPlaylistId = await APIService.createPlaylist(
         currentUser.auth_token,
@@ -252,8 +266,13 @@ export default class PlayerPage extends React.Component<
 }
 
 export function PlayerPageWrapper() {
-  const loaderData = useLoaderData() as PlayerPageLoaderData;
-  return <PlayerPage playlist={loaderData.playlist} />;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObject = getObjectForURLSearchParams(searchParams);
+  const location = useLocation();
+  const { data } = useQuery<PlayerPageLoaderData>(
+    RouteQuery(["player", searchParamsObject], location.pathname)
+  );
+  return <PlayerPage playlist={data?.playlist} />;
 }
 
 export function PlayerPageRedirectToAlbum() {
