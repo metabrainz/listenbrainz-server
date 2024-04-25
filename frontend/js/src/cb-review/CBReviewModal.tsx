@@ -576,7 +576,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
     acceptLicense,
     handleLicenseChange,
     setEntityToReview,
-    closeModal,
+    navigate,
   ]);
 
   const modalFooter = React.useMemo(() => {
@@ -622,7 +622,14 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
         Cancel
       </button>
     );
-  }, [hasPermissions, entityToReview, reviewValid, acceptLicense, closeModal]);
+  }, [
+    hasPermissions,
+    entityToReview,
+    reviewValid,
+    acceptLicense,
+    closeModal,
+    navigate,
+  ]);
 
   return (
     <div
