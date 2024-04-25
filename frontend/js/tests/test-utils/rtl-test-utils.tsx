@@ -51,10 +51,12 @@ export const renderWithProviders = (
     );
 
     return (
-      <GlobalAppContext.Provider value={globalProps}>
+      <BrowserRouter>
         <ToastContainer />
-        <BrowserRouter>{children}</BrowserRouter>
-      </GlobalAppContext.Provider>
+        <GlobalAppContext.Provider value={globalProps}>
+          {children}
+        </GlobalAppContext.Provider>
+      </BrowserRouter>
     );
   }
   return render(ui, { wrapper: WithProviders, ...renderOptions });
