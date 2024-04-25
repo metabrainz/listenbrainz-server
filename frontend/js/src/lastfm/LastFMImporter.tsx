@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
+import { Link } from "react-router-dom";
 
 export const LASTFM_RETRIES = 3;
 
@@ -336,7 +337,7 @@ export default class LastFmImporter extends React.Component<
           Succesfully imported {inserted} out of {total} tracks feedback from{" "}
           {capitalize(service)}
           <br />
-          <a href="/my/taste">Click here to see your newly loved tracks</a>
+          <Link to="/my/taste">Click here to see your newly loved tracks</Link>
         </div>
       );
     } catch (error) {

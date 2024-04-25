@@ -427,40 +427,40 @@ export default class YearInMusic extends React.Component<
             <ul>
               <li>
                 {yourOrUsersName} top{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-releases">
+                <a href="#top-releases">
                   albums
                 </a>
                 ,{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-recordings">
+                <a href="#top-recordings">
                   songs
                 </a>{" "}
                 and{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-artists">
+                <a href="#top-artists">
                   artists
                 </a>{" "}
                 of the year
               </li>
               <li>
                 some statistics about {yourOrUsersName}{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#calendar">
+                <a href="#calendar">
                   listening activity
                 </a>
               </li>
               <li>
                 a list of{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#similar-users">
+                <a href="#similar-users">
                   users similar to {youOrUsername}
                 </a>
               </li>
               <li>
                 new albums that {yourOrUsersName} top artists{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#new-releases">
+                <a href="#new-releases">
                   released in 2021
                 </a>
               </li>
               <li>
                 and finally four{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#playlists">
+                <a href="#playlists">
                   personalized playlists
                 </a>
                 &nbsp; of music {youOrUsername} listened to and new songs to

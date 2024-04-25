@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
+import { Link } from "react-router-dom";
 
 export default NiceModal.create(() => {
   const modal = useModal();
@@ -44,7 +45,7 @@ export default NiceModal.create(() => {
             message={
               <>
                 Created a new playlist with ID:
-                <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+                <Link to={`/playlist/${newPlaylistId}`}>{newPlaylistId}</Link>
               </>
             }
           />,
