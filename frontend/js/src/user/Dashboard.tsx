@@ -23,7 +23,6 @@ import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "./components/AddListenModal";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import UserSocialNetwork from "./components/follow/UserSocialNetwork";
 import ListenCard from "../common/listens/ListenCard";
 import ListenControl from "../common/listens/ListenControl";
@@ -39,6 +38,7 @@ import {
 } from "../utils/utils";
 import FollowButton from "./components/follow/FollowButton";
 import { RouteQuery } from "../utils/Loader";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -60,6 +60,7 @@ export default function Listen() {
     ...RouteQuery(["dashboard", params, searchParamsObject], location.pathname),
     staleTime: !("max_ts" in searchParamsObject) ? 0 : 1000 * 60 * 5,
   });
+  const dispatch = useBrainzPlayerDispatch();
 
   const {
     listens: initialListens = [],
@@ -237,7 +238,7 @@ export default function Listen() {
     });
 
     const connectHandler = () => {
-      if (user){
+      if (user) {
         socket.emit("json", { user: user.name });
       }
     };
@@ -405,6 +406,13 @@ export default function Listen() {
     const listenablePin = getListenablePin(userPinnedRecording);
     allListenables = [listenablePin, ...listens];
   }
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_CURRENT_LISTEN",
+      data: allListenables,
+    });
+  }, [allListenables]);
 
   const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
   const isNewerButtonDisabled =
