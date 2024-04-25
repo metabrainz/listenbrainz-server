@@ -92,3 +92,37 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
 
         prefs = db_user_setting.get_troi_prefs(self.db_conn, self.user["id"])
         self.assertEqual(prefs, {"troi": {"export_to_spotify": True}})
+
+    def test_invalid_brainzplayer_prefs(self):
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_brainzplayer_prefs"),
+            json={"fnord": True},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "Invalid preferences in the JSON: Additional properties are not allowed ('fnord' was unexpected)"
+        )
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_brainzplayer_prefs"),
+            json={"youtubeEnabled": "yes"},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Invalid preferences in the JSON: 'yes' is not of type 'boolean'")
+
+    def test_valid_brainzplayer_prefs(self):
+        prefs = db_user_setting.get_brainzplayer_prefs(self.db_conn, self.user["id"])
+        self.assertEqual(prefs, None)
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_brainzplayer_prefs"),
+            json={"youtubeEnabled": False, "spotifyEnabled": True},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert200(response)
+
+        prefs = db_user_setting.get_brainzplayer_prefs(self.db_conn, self.user["id"])
+        self.assertEqual(prefs, {"brainzplayer": {"youtubeEnabled": False, "spotifyEnabled": True}})

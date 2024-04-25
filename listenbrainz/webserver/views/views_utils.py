@@ -1,6 +1,7 @@
 from flask import current_app
 from flask_login import current_user
 
+from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
