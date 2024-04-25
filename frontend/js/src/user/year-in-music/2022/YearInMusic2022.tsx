@@ -1232,10 +1232,10 @@ export function YearInMusicWrapper() {
   const { data } = useQuery<YearInMusicLoaderData>(
     RouteQuery(["year-in-music-2022", params], location.pathname)
   );
-  const { user, data: yearInMusicData } = data || {};
   const fallbackUser = { name: "" };
+  const { user = fallbackUser, data: yearInMusicData } = data || {};
   const listens: BaseListenFormat[] = [];
-  if (yearInMusicData.top_artists) {
+  if (yearInMusicData?.top_artists) {
     yearInMusicData.top_artists.forEach((artist) => {
       const listen = {
         listened_at: 0,
@@ -1250,7 +1250,7 @@ export function YearInMusicWrapper() {
       listens.push(listen);
     });
   }
-  if (yearInMusicData.top_recordings) {
+  if (yearInMusicData?.top_recordings) {
     yearInMusicData.top_recordings.forEach((recording) => {
       const listen = {
         listened_at: 0,
@@ -1269,7 +1269,7 @@ export function YearInMusicWrapper() {
     });
   }
 
-  if (yearInMusicData.new_releases_of_top_artists) {
+  if (yearInMusicData?.new_releases_of_top_artists) {
     yearInMusicData.new_releases_of_top_artists.forEach((release) => {
       const listen = {
         listened_at: 0,

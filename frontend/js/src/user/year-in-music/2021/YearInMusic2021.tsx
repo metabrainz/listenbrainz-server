@@ -952,8 +952,8 @@ export function YearInMusicWrapper() {
   const { data } = useQuery<YearInMusicLoaderData>(
     RouteQuery(["year-in-music-2021", params], location.pathname)
   );
-  const { user, data: yearInMusicData } = data || {};
   const fallbackUser = { name: "" };
+  const { user = fallbackUser, data: yearInMusicData } = data || {};
   const listens: BaseListenFormat[] = [];
   if (yearInMusicData?.top_recordings) {
     yearInMusicData.top_recordings.forEach((recording) => {
