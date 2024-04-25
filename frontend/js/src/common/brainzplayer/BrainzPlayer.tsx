@@ -259,9 +259,7 @@ export default class BrainzPlayer extends React.Component<
               <>
                 You have disabled all music services for playback on
                 ListenBrainz. To enable them again, please go to the{" "}
-                <Link
-                  to="/settings/brainzplayer/"
-                >
+                <Link to="/settings/brainzplayer/">
                   music player preferences
                 </Link>{" "}
                 page
@@ -553,9 +551,7 @@ export default class BrainzPlayer extends React.Component<
           connected to, but did not find a match to play.
           <br />
           To enable more music services please go to the{" "}
-          <Link to="/settings/brainzplayer/">
-            music player preferences.
-          </Link>
+          <Link to="/settings/brainzplayer/">music player preferences.</Link>
         </>,
         "Could not find a match"
       );
