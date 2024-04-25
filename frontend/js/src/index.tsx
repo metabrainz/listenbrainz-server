@@ -32,13 +32,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
-          <Helmet
-            defaultTitle="ListenBrainz"
-            titleTemplate="%s - ListenBrainz"
-          />
-          <ReactQueryDevtool client={queryClient}>
-            <RouterProvider router={router} />
-          </ReactQueryDevtool>
+        <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
+        <ReactQueryDevtool client={queryClient}>
+          <RouterProvider router={router} />
+        </ReactQueryDevtool>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );
