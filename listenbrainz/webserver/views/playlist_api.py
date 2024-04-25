@@ -2,6 +2,7 @@ import datetime
 from uuid import UUID
 
 import psycopg2
+import spotipy
 from flask import Blueprint, current_app, jsonify, request, make_response
 from xml.etree import ElementTree as ET
 import requests
@@ -12,8 +13,6 @@ import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.troi.export import export_to_spotify
 from listenbrainz.troi.import_ms import import_from_spotify
-from listenbrainz.webserver.views.views_utils import get_user_playlists
-#     get_tracks_from_playlist, mbid_mapping_spotify, listen_to_jspf
 from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -860,8 +859,9 @@ def import_playlist_from_spotify(service):
                             f" to use this feature.")
     
     try:
-        user_playlists = get_user_playlists(token["access_token"]) 
-        return jsonify(user_playlists["items"])
+        sp = spotipy.Spotify(token["access_token"])
+        playlists = sp.current_user_playlists()
+        return jsonify(playlists["items"])
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)

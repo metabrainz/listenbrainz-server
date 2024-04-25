@@ -1,7 +1,5 @@
 from flask import current_app
 from flask_login import current_user
-import spotipy
-import requests
 
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.spotify import SpotifyService
@@ -74,10 +72,3 @@ def get_current_soundcloud_user():
         "access_token": user["access_token"],
     }
 
-
-def get_user_playlists(spotify_token):
-    """ Get the user's playlists.
-    """
-    sp = spotipy.Spotify(auth=spotify_token)
-    playlists = sp.current_user_playlists()
-    return playlists

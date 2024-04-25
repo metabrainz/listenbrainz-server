@@ -124,7 +124,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
               className="close"
               data-dismiss="modal"
               aria-label="Close"
-              onClick={() => resolveAndClose()}
+              onClick={resolveAndClose}
             >
               <span aria-hidden="true">&times;</span>
             </button>
@@ -178,7 +178,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
               type="button"
               className="btn btn-default"
               data-dismiss="modal"
-              onClick={() => resolveAndClose()}
+              onClick={resolveAndClose}
             >
               Close
             </button>
