@@ -291,7 +291,6 @@ def music_services_details():
     return jsonify(data)
 
 
-@profile_bp.route('/music-services/<service_name>/callback/')
 @settings_bp.route('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
