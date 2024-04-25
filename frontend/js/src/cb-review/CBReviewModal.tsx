@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { kebabCase, lowerCase } from "lodash";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
@@ -41,6 +41,7 @@ const allLanguagesKeyValue = Object.entries(iso.getNames("en"));
 
 export default NiceModal.create(({ listen }: CBReviewModalProps) => {
   const modal = useModal();
+  const navigate = useNavigate();
 
   const closeModal = React.useCallback(() => {
     modal.hide();
@@ -392,8 +393,10 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           You can connect to your CritiqueBrainz account by visiting the
           <Link
             to={`${window.location.origin}/settings/music-services/details/`}
+            onClick={() => {
+              navigate("/settings/music-services/details/");
+            }}
             data-dismiss="modal"
-            onClick={closeModal}
           >
             {" "}
             music services page.
@@ -584,8 +587,10 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           to={`${window.location.origin}/settings/music-services/details/`}
           className="btn btn-success"
           role="button"
+          onClick={() => {
+            navigate("/settings/music-services/details/");
+          }}
           data-dismiss="modal"
-          onClick={closeModal}
         >
           {" "}
           Connect To CritiqueBrainz{" "}
