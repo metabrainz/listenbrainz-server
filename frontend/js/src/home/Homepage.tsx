@@ -81,7 +81,7 @@ function HomePage() {
           {`.container-react {
             padding-bottom: 0 !important;
           }
-          .container-react-main {
+          .container-react-main, [role="main"] {
             padding: 0;
             max-width: none !important;
           }
