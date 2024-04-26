@@ -426,43 +426,24 @@ export default class YearInMusic extends React.Component<
             <p>You will find in this page:</p>
             <ul>
               <li>
-                {yourOrUsersName} top{" "}
-                <a href="#top-releases">
-                  albums
-                </a>
-                ,{" "}
-                <a href="#top-recordings">
-                  songs
-                </a>{" "}
-                and{" "}
-                <a href="#top-artists">
-                  artists
-                </a>{" "}
-                of the year
+                {yourOrUsersName} top <a href="#top-releases">albums</a>,{" "}
+                <a href="#top-recordings">songs</a> and{" "}
+                <a href="#top-artists">artists</a> of the year
               </li>
               <li>
                 some statistics about {yourOrUsersName}{" "}
-                <a href="#calendar">
-                  listening activity
-                </a>
+                <a href="#calendar">listening activity</a>
               </li>
               <li>
                 a list of{" "}
-                <a href="#similar-users">
-                  users similar to {youOrUsername}
-                </a>
+                <a href="#similar-users">users similar to {youOrUsername}</a>
               </li>
               <li>
                 new albums that {yourOrUsersName} top artists{" "}
-                <a href="#new-releases">
-                  released in 2021
-                </a>
+                <a href="#new-releases">released in 2021</a>
               </li>
               <li>
-                and finally four{" "}
-                <a href="#playlists">
-                  personalized playlists
-                </a>
+                and finally four <a href="#playlists">personalized playlists</a>
                 &nbsp; of music {youOrUsername} listened to and new songs to
                 discover
               </li>
