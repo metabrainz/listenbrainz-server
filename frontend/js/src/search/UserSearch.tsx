@@ -95,7 +95,7 @@ export default function SearchResults() {
                         return "100%, we hope!";
                       }
                       if (row[2]) {
-                        return `${(row[2] * 10).toFixed(1)}%`;
+                        return `${(row[2] * 100).toFixed(1)}%`;
                       }
                       return "Similarity score not available";
                     })()}

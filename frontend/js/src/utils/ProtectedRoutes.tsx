@@ -10,7 +10,7 @@ function ProtectedRoutes() {
   const urlEncodedPathname = encodeURIComponent(pathname);
 
   return currentUser?.name ? (
-    <></>
+    <div />
   ) : (
     <Navigate to={`/login/?next=${urlEncodedPathname}`} />
   );
