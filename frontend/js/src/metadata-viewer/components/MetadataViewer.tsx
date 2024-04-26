@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as tinycolor from "tinycolor2";
 import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
+import { Link } from "react-router-dom";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import TagsComponent from "../../tags/TagsComponent";
@@ -243,7 +244,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <br />
             <small>
               In order to receive these events, you will need to{" "}
-              <a href="/add-data/">send listens</a> to ListenBrainz.
+              <Link to="/add-data/">send listens</Link> to ListenBrainz.
               <br />
               We work hard to make this data available to you as soon as we
               receive it, but until your music service sends us a{" "}
@@ -322,13 +323,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                         return (
                           <tr key={artist_mbid}>
                             <td>
-                              <a
-                                href={`/artist/${artist_mbid}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
+                              <Link to={`/artist/${artist_mbid}/`}>
                                 {artist_name}
-                              </a>
+                              </Link>
                             </td>
                             <td>{instrument}</td>
                           </tr>
@@ -495,13 +492,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               </a>
             </div>
             <span className="artist-name small ellipsis" title={artistName}>
-              <a
-                href={artistMBID ? `/artist/${artistMBID}` : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {artistName}
-              </a>
+              {artistMBID ? (
+                <Link to={`/artist/${artistMBID}/`}>{artistName}</Link>
+              ) : (
+                artistName
+              )}
             </span>
           </div>
           <div className="love-hate">
@@ -545,7 +540,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           />
         </div>
         <div className="bottom">
-          <a href="https://listenbrainz.org/my/listens">
+          <Link to="/my/listens/">
             <small>
               Powered by&nbsp;
               <img
@@ -554,7 +549,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 alt="ListenBrainz"
               />
             </small>
-          </a>
+          </Link>
           <div className="support-artist-btn dropup">
             <button
               className={`dropdown-toggle btn btn-primary${

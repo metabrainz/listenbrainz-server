@@ -156,8 +156,6 @@ export default function CoverArtComposite() {
                       href={
                         preventClick ? undefined : `/release/${release_mbid}/`
                       }
-                      target="_blank"
-                      rel="noopener noreferrer"
                     />
                   );
                 })}

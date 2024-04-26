@@ -4,7 +4,7 @@ import listenbrainz.db.user as db_user
 from collections import defaultdict
 from yattag import Doc
 import yattag
-from flask import Blueprint, request, render_template, current_app, Response
+from flask import Blueprint, request, render_template, current_app, Response, jsonify
 from flask_login import login_required, current_user
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
@@ -30,11 +30,8 @@ api_bp = Blueprint('api_compat', __name__)
 def api_auth():
     """ Renders the token activation page.
     """
-    token = request.args['token']
     return render_template(
-        "user/auth.html",
-        user_id=current_user.musicbrainz_id,
-        token=token
+        "index.html",
     )
 
 
@@ -44,38 +41,21 @@ def api_auth():
 def api_auth_approve():
     """ Authenticate the user token provided.
     """
+    data = request.json
     user = User.load_by_name(db_conn, current_user.musicbrainz_id)
-    if "token" not in request.form:
-        return render_template(
-            "user/auth.html",
-            user_id=current_user.musicbrainz_id,
-            msg="Missing required parameters. Please provide correct parameters and try again."
-        )
-    token = Token.load(db_conn, request.form['token'])
+    if "token" not in data:
+        return jsonify({"message": "Missing required parameters. Please provide correct parameters and try again."})
+    token = Token.load(db_conn, data['token'])
     if not token:
-        return render_template(
-            "user/auth.html",
-            user_id=current_user.musicbrainz_id,
-            msg="Either this token is already used or invalid. Please try again."
-        )
+        return jsonify({"message": "Either this token is already used or invalid. Please try again."})
     if token.user:
-        return render_template(
-            "user/auth.html",
-            user_id=current_user.musicbrainz_id,
-            msg="This token is already approved. Please check the token and try again."
-        )
+        return jsonify({"message": "This token is already approved. Please check the token and try again."})
     if token.has_expired():
-        return render_template(
-            "user/auth.html",
-            user_id=current_user.musicbrainz_id,
-            msg="This token has expired. Please create a new token and try again."
-        )
+        return jsonify({"message": "This token has expired. Please create a new token and try again."})
     token.approve(db_conn, user.name)
-    return render_template(
-        "user/auth.html",
-        user_id=current_user.musicbrainz_id,
-        msg="Token %s approved for user %s, press continue in client." % (token.token, current_user.musicbrainz_id)
-    )
+    return jsonify({
+        "message": "Token %s approved for user %s, press continue in client." % (token.token, current_user.musicbrainz_id)
+    })
 
 
 @api_bp.route('/2.0/', methods=['POST', 'GET'])

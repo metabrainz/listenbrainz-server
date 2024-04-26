@@ -16,6 +16,7 @@ import GlobalAppContext, {
 import APIService from "../../../src/utils/APIService";
 import { waitForComponentToPaint } from "../../test-utils";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import { BrowserRouter } from "react-router-dom";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // // Mocking Math.random() fixes this
@@ -47,7 +48,9 @@ describe("MissingMBDataPage", () => {
       <GlobalAppContext.Provider
         value={{ ...mountOptions.context, currentUser: props.user }}
       >
-        <MissingMBDataPage {...props} />
+        <BrowserRouter>
+          <MissingMBDataPage {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find("#missingMBData")).toHaveLength(1);

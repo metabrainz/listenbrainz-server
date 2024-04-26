@@ -2,6 +2,7 @@ import * as React from "react";
 import { mount } from "enzyme";
 
 import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
+import { BrowserRouter } from "react-router-dom";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -22,7 +23,7 @@ const props = {
 };
 describe("BrainzPlayerUI", () => {
   it("renders", () => {
-    const wrapper = mount(<BrainzPlayerUI {...props} />);
+    const wrapper = mount(<BrowserRouter><BrainzPlayerUI {...props} /></BrowserRouter>);
     expect(wrapper.find("#brainz-player")).toHaveLength(1);
   });
 });
