@@ -127,7 +127,18 @@ class SettingsViewsTestCase(IntegrationTestCase):
         if not ok:
             self.assertEqual(json.loads(resp.data)['payload']['count'], 0)
 
-        # check that the latest_import timestamp has been reset too
-        resp = self.client.get(self.custom_url_for('api_v1.latest_import', user_name=self.user['musicbrainz_id']))
-        self.assert200(resp)
-        self.assertEqual(resp.json['latest_import'], 0)
+        # wait for background tasks to be processed -- max 30s allowed for the test to pass
+        ok = False
+        for i in range(30):
+            time.sleep(1)
+
+            # check that the latest_import timestamp has been reset too
+            resp = self.client.get(self.custom_url_for('api_v1.latest_import', user_name=self.user['musicbrainz_id']))
+            self.assert200(resp)
+            if json.loads(resp.data)['latest_import'] == 0:
+                continue
+            else:
+                ok = True
+
+        if not ok:
+            self.assertEqual(resp.json['latest_import'], 0)
