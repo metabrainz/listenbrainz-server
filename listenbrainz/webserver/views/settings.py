@@ -30,7 +30,6 @@ from listenbrainz.webserver.login import api_login_required
 
 
 settings_bp = Blueprint("settings", __name__)
-profile_bp = Blueprint("profile", __name__)
 
 EXPORT_FETCH_COUNT = 5000
 
@@ -395,8 +394,6 @@ def missing_mb_data():
     return jsonify(data)
 
 
-@profile_bp.route('/', defaults={'path': ''})
-@profile_bp.route('/<path:path>/')
 @settings_bp.route('/', defaults={'path': ''})
 @settings_bp.route('/<path:path>/')
 @login_required

@@ -43,7 +43,7 @@ function ExploreCard(props: ExploreCardProps) {
 export default function ExplorePage() {
   const { currentUser } = useContext(GlobalAppContext);
   return (
-    <>
+    <div role="main">
       <Helmet>
         <title>Explore</title>
       </Helmet>
@@ -137,6 +137,6 @@ export default function ExplorePage() {
           url="/explore/art-creator/"
         />
       </div>
-    </>
+    </div>
   );
 }
