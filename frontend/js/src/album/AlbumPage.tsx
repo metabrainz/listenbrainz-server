@@ -204,6 +204,7 @@ export default function AlbumPage(): JSX.Element {
   return (
     <div
       id="entity-page"
+      role="main"
       className="album-page"
       style={{ ["--bg-color" as string]: adjustedAlbumColor }}
     >
