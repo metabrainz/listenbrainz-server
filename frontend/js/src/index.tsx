@@ -1,11 +1,8 @@
 import * as React from "react";
-
-import NiceModal from "@ebay/nice-modal-react";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
 import { Helmet } from "react-helmet";
 import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
@@ -35,28 +32,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={5000}
-        hideProgressBar
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnHover
-        theme="light"
-      />
       <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <Helmet
-            defaultTitle="ListenBrainz"
-            titleTemplate="%s - ListenBrainz"
-          />
-          <ReactQueryDevtool client={queryClient}>
-            <BrainzPlayerProvider>
-              <RouterProvider router={router} />
-            </BrainzPlayerProvider>
-          </ReactQueryDevtool>
-        </NiceModal.Provider>
+        <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
+        <ReactQueryDevtool client={queryClient}>
+          <BrainzPlayerProvider>
+            <RouterProvider router={router} />
+          </BrainzPlayerProvider>
+        </ReactQueryDevtool>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

@@ -157,7 +157,7 @@ export default function ArtistPage(): JSX.Element {
   };
 
   return (
-    <div id="entity-page" className="artist-page">
+    <div id="entity-page" className="artist-page" role="main">
       <Helmet>
         <title>{artist?.name}</title>
       </Helmet>

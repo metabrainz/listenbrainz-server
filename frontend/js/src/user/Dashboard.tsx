@@ -19,7 +19,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "./components/AddListenModal";
@@ -55,27 +55,31 @@ export default function Listen() {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObject = getObjectForURLSearchParams(searchParams);
+  const isTimeNavigation =
+    _.has(searchParamsObject, "max_ts") || _.has(searchParamsObject, "min_ts");
+
+  const { queryKey, queryFn } = RouteQuery(
+    ["dashboard", params, searchParamsObject],
+    location.pathname
+  );
 
   const { data, refetch } = useQuery<ListenLoaderData>({
-    ...RouteQuery(["dashboard", params, searchParamsObject], location.pathname),
-    staleTime: !("max_ts" in searchParamsObject) ? 0 : 1000 * 60 * 5,
+    queryKey,
+    queryFn,
+    staleTime: isTimeNavigation ? 1000 * 60 * 5 : 0,
   });
   const dispatch = useBrainzPlayerDispatch();
 
   const {
-    listens: initialListens = [],
+    listens = [],
     user,
     userPinnedRecording = undefined,
     latestListenTs = 0,
     oldestListenTs = 0,
   } = data || {};
 
-  const previousListenTs = initialListens?.[0]?.listened_at;
-  const nextListenTs = initialListens?.[initialListens.length - 1]?.listened_at;
-
-  const [listens, setListens] = React.useState<Array<Listen>>(
-    initialListens || []
-  );
+  const previousListenTs = listens[0]?.listened_at;
+  const nextListenTs = listens[listens.length - 1]?.listened_at;
 
   const { currentUser, websocketsUrl, APIService } = React.useContext(
     GlobalAppContext
@@ -91,20 +95,15 @@ export default function Listen() {
   const [followingList, setFollowingList] = React.useState<Array<string>>([]);
   const [playingNowListen, setPlayingNowListen] = React.useState<
     Listen | undefined
-  >(
-    initialListens
-      ? _.remove(initialListens, (listen) => listen.playing_now)[0]
-      : undefined
-  );
+  >(listens ? _.remove(listens, (listen) => listen.playing_now)[0] : undefined);
+
   const [deletedListen, setDeletedListen] = React.useState<Listen | null>(null);
   const [listenCount, setListenCount] = React.useState<number | undefined>();
   const [dateTimePickerValue, setDateTimePickerValue] = React.useState<Date>(
     nextListenTs ? new Date(nextListenTs * 1000) : new Date(Date.now())
   );
 
-  React.useEffect(() => {
-    setListens(initialListens || []);
-  }, [initialListens]);
+  const queryClient = useQueryClient();
 
   const receiveNewListen = (newListen: string): void => {
     let json;
@@ -314,13 +313,10 @@ export default function Listen() {
               { toastId: "delete-listen" }
             );
             // wait for the delete animation to finish
-            setTimeout(() => {
-              setListens((prevListens) => {
-                const index = prevListens.indexOf(listen);
-                [...prevListens].splice(index, 1);
-                return prevListens;
-              });
-            }, 1000);
+            await new Promise((resolve) => {
+              setTimeout(resolve, 1000);
+            });
+            return listen;
           }
         } catch (error) {
           toast.error(
@@ -334,9 +330,24 @@ export default function Listen() {
           );
         }
       }
+      return undefined;
     },
     [APIService, currentUser]
   );
+  const { mutate: deleteListenMutation } = useMutation({
+    mutationFn: deleteListen,
+    onSuccess: (newlyDeletedListen) => {
+      queryClient.setQueryData<ListenLoaderData>(queryKey, (oldData) => {
+        if (!oldData?.listens || !newlyDeletedListen) {
+          return oldData;
+        }
+        return {
+          ...oldData,
+          listens: _.without(oldData.listens, newlyDeletedListen),
+        };
+      });
+    },
+  });
 
   const getListenCard = React.useCallback(
     (listen: Listen): JSX.Element => {
@@ -357,7 +368,7 @@ export default function Listen() {
             text="Delete Listen"
             key="Delete Listen"
             icon={faTrashAlt}
-            action={() => deleteListen(listen)}
+            action={() => deleteListenMutation(listen)}
           />
         );
       }
@@ -375,7 +386,7 @@ export default function Listen() {
         />
       );
     },
-    [currentUser?.name, deletedListen, deleteListen]
+    [currentUser?.name, deletedListen, deleteListenMutation]
   );
 
   const onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
@@ -414,12 +425,12 @@ export default function Listen() {
     });
   }, [allListenables]);
 
-  const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
+  const isNewestButtonDisabled = listens[0]?.listened_at >= latestListenTs;
   const isNewerButtonDisabled =
     !previousListenTs || previousListenTs >= latestListenTs;
   const isOlderButtonDisabled = !nextListenTs || nextListenTs <= oldestListenTs;
   const isOldestButtonDisabled =
-    listens?.length > 0 &&
+    listens.length > 0 &&
     listens[listens.length - 1]?.listened_at <= oldestListenTs;
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUsersPage = currentUser?.name === user?.name;
@@ -569,7 +580,7 @@ export default function Listen() {
                 ref={listensTable}
                 style={{ opacity: "1" }}
               >
-                {listens.map((listen) => getListenCard(listen))}
+                {listens.map(getListenCard)}
               </div>
               {listens.length < expectedListensPerPage && (
                 <h5 className="text-center">No more listens to show</h5>

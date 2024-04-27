@@ -1,7 +1,5 @@
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
-
 SPOTIFY_EXPORT_PREFERENCE = "export_to_spotify"
 
 

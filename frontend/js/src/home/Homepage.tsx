@@ -81,7 +81,7 @@ function HomePage() {
           {`.container-react {
             padding-bottom: 0 !important;
           }
-          .container-react-main {
+          .container-react-main, [role="main"] {
             padding: 0;
             max-width: none !important;
           }
@@ -268,7 +268,7 @@ export function HomePageWrapper() {
     currentUser?.name &&
     (redirectParam === "true" || redirectParam === null)
   ) {
-    return <Navigate to={`/user/${currentUser.name}`} />;
+    return <Navigate to={`/user/${currentUser.name}`} replace />;
   }
   return <HomePage />;
 }

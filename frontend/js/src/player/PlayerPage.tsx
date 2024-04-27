@@ -283,5 +283,5 @@ export function PlayerPageWrapper() {
 
 export function PlayerPageRedirectToAlbum() {
   const { releaseMBID } = useParams();
-  return <Navigate to={`/release/${releaseMBID}`} />;
+  return <Navigate to={`/release/${releaseMBID}`} replace />;
 }

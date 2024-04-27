@@ -540,7 +540,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           />
         </div>
         <div className="bottom">
-          <a href="https://listenbrainz.org/my/listens">
+          <Link to="/my/listens/">
             <small>
               Powered by&nbsp;
               <img
@@ -549,7 +549,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 alt="ListenBrainz"
               />
             </small>
-          </a>
+          </Link>
           <div className="support-artist-btn dropup">
             <button
               className={`dropdown-toggle btn btn-primary${

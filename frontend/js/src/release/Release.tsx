@@ -14,5 +14,5 @@ export default function Release() {
     RouteQuery(["release", params], location.pathname)
   );
   const { releaseGroupMBID } = data || {};
-  return <Navigate to={`/album/${releaseGroupMBID}/`} />;
+  return <Navigate to={`/album/${releaseGroupMBID}/`} replace />;
 }

@@ -16,6 +16,7 @@ import SoundcloudPlayer from "../../../src/common/brainzplayer/SoundcloudPlayer"
 import SpotifyPlayer from "../../../src/common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../../../src/common/brainzplayer/YoutubePlayer";
 import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
+import { BrowserRouter, Link } from "react-router-dom";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -338,10 +339,12 @@ describe("BrainzPlayer", () => {
 
   //     it("calls LocalStorage.setItem to fire event", () => {
   //       const wrapper = mount<BrainzPlayer>(
-  //         <BrainzPlayer {...props} />,
+  //         <BrowserRouter>
+          <BrainzPlayer {...props} />
+        </BrowserRouter>,
   //         GlobalContextMock
   //       );
-  //       const instance = wrapper.instance();
+  //       const instance = wrapper.find(BrainzPlayer).instance() as BrainzPlayer;
 
   //       const localStorageSpy = jest.spyOn(Storage.prototype, "setItem");
   //       const dateNowMock = jest.fn().mockReturnValue(1234567);

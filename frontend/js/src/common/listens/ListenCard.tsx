@@ -351,6 +351,7 @@ export class ListenCard extends React.Component<
     } else if (thumbnailSrc) {
       let thumbnailLink;
       let thumbnailTitle;
+      let optionalAttributes = {};
       if (releaseMBID) {
         thumbnailLink = `/release/${releaseMBID}`;
         thumbnailTitle = getReleaseName(listen);
@@ -363,20 +364,23 @@ export class ListenCard extends React.Component<
       } else {
         thumbnailLink = spotifyURL || youtubeURL || soundcloudURL;
         thumbnailTitle = "Cover art";
+        optionalAttributes = {
+          target: "_blank",
+          rel: "noopener noreferrer",
+        };
       }
-      thumbnail = (
+      thumbnail = thumbnailLink && (
         <div className="listen-thumbnail">
-          <a
-            href={thumbnailLink}
+          <Link
+            to={thumbnailLink}
             title={thumbnailTitle}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...optionalAttributes}
           >
             <CoverArtWithFallback
               imgSrc={thumbnailSrc}
               altText={thumbnailTitle}
             />
-          </a>
+          </Link>
         </div>
       );
     } else if (releaseMBID) {
@@ -434,31 +438,45 @@ export class ListenCard extends React.Component<
         </div>
       );
     } else if (recordingMBID || releaseGroupMBID) {
-      let link;
       if (recordingMBID) {
-        link = `https://musicbrainz.org/recording/${recordingMBID}`;
+        thumbnail = (
+          <a
+            href={`https://musicbrainz.org/recording/${recordingMBID}`}
+            title="Could not load cover art"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="listen-thumbnail"
+          >
+            <div className="cover-art-fallback">
+              <span className="fa-layers fa-fw">
+                <FontAwesomeIcon icon={faImage} />
+                <FontAwesomeIcon
+                  icon={faSquare}
+                  transform="shrink-10 left-5 up-2.5"
+                />
+              </span>
+            </div>
+          </a>
+        );
       } else {
-        link = `/album/${releaseGroupMBID}`;
+        thumbnail = (
+          <Link
+            to={`/album/${releaseGroupMBID}`}
+            title="Could not load cover art"
+            className="listen-thumbnail"
+          >
+            <div className="cover-art-fallback">
+              <span className="fa-layers fa-fw">
+                <FontAwesomeIcon icon={faImage} />
+                <FontAwesomeIcon
+                  icon={faSquare}
+                  transform="shrink-10 left-5 up-2.5"
+                />
+              </span>
+            </div>
+          </Link>
+        );
       }
-      thumbnail = (
-        <a
-          href={link}
-          title="Could not load cover art"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="listen-thumbnail"
-        >
-          <div className="cover-art-fallback">
-            <span className="fa-layers fa-fw">
-              <FontAwesomeIcon icon={faImage} />
-              <FontAwesomeIcon
-                icon={faSquare}
-                transform="shrink-10 left-5 up-2.5"
-              />
-            </span>
-          </div>
-        </a>
-      );
     } else {
       // eslint-disable-next-line react/jsx-no-useless-fragment
       thumbnail = (

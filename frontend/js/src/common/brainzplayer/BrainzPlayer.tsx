@@ -694,6 +694,16 @@ export default function BrainzPlayer() {
       // Try playing the listen with the next dataSource
       playListen(currentListenRef.current, currentDataSourceIndex + 1);
     } else {
+      handleWarning(
+        <>
+          We tried searching for this track on the music services you are
+          connected to, but did not find a match to play.
+          <br />
+          To enable more music services please go to the{" "}
+          <Link to="/settings/brainzplayer/">music player preferences.</Link>
+        </>,
+        "Could not find a match"
+      );
       stopPlayerStateTimer();
       playNextTrack();
     }

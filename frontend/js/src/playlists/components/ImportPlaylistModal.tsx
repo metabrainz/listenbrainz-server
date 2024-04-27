@@ -2,6 +2,7 @@ import * as React from "react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 
+import { Link } from "react-router-dom";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 
@@ -44,7 +45,7 @@ export default NiceModal.create(() => {
             message={
               <>
                 Created a new playlist with ID:
-                <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+                <Link to={`/playlist/${newPlaylistId}`}>{newPlaylistId}</Link>
               </>
             }
           />,
