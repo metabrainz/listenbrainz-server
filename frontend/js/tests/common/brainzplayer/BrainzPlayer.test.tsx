@@ -3,6 +3,7 @@ import * as React from "react";
 import { act } from "react-dom/test-utils";
 import fetchMock from "jest-fetch-mock";
 import { mount } from "enzyme";
+import { BrowserRouter, Link } from "react-router-dom";
 import BrainzPlayer, {
   DataSourceType,
 } from "../../../src/common/brainzplayer/BrainzPlayer";
@@ -16,7 +17,6 @@ import SoundcloudPlayer from "../../../src/common/brainzplayer/SoundcloudPlayer"
 import SpotifyPlayer from "../../../src/common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../../../src/common/brainzplayer/YoutubePlayer";
 import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
-import { BrowserRouter, Link } from "react-router-dom";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -340,8 +340,8 @@ describe("BrainzPlayer", () => {
   //     it("calls LocalStorage.setItem to fire event", () => {
   //       const wrapper = mount<BrainzPlayer>(
   //         <BrowserRouter>
-          <BrainzPlayer {...props} />
-        </BrowserRouter>,
+  //   <BrainzPlayer {...props} />
+  // </BrowserRouter>,
   //         GlobalContextMock
   //       );
   //       const instance = wrapper.find(BrainzPlayer).instance() as BrainzPlayer;
