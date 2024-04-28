@@ -89,7 +89,7 @@ export default function DeleteAccount() {
       </Helmet>
       <h3 className="page-title">Delete account: {name}</h3>
       <p>
-        <b>This will permanently all ListenBrainz data for user {name}.</b>
+        <b>This will permanently delete all ListenBrainz data for user {name}.</b>
       </p>
 
       <p>
