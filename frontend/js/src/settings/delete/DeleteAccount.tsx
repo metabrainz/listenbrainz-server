@@ -39,7 +39,7 @@ export default function DeleteAccount() {
       toast.success(
         <ToastMsg
           title="Success"
-          message="Your feedback have been downloaded."
+          message="Your feedback has been downloaded."
         />
       );
     } catch (error) {
@@ -87,19 +87,14 @@ export default function DeleteAccount() {
       <Helmet>
         <title>Delete Account</title>
       </Helmet>
-      <h3 className="page-title">Delete your account</h3>
+      <h3 className="page-title">Delete account: {name}</h3>
       <p>
-        Hi {name}, are you sure you want to delete your ListenBrainz account?
+        <b>This will permanently all ListenBrainz data for user {name}.</b>
       </p>
 
       <p>
-        Once deleted, all your ListenBrainz data will be removed PERMANENTLY and
-        will not be recoverable.
-      </p>
-
-      <p>
-        Note: you can export your ListenBrainz data before deleting your
-        account.
+        The data will not be recoverable. Please consider exporting
+        your ListenBrainz data before deleting your account.
       </p>
 
       <form onSubmit={downloadListens}>
@@ -108,7 +103,7 @@ export default function DeleteAccount() {
           type="submit"
           style={{ width: "250px" }}
         >
-          Export my listens.
+          Export listens
         </button>
       </form>
 
@@ -118,7 +113,7 @@ export default function DeleteAccount() {
           type="submit"
           style={{ width: "250px" }}
         >
-          Export my feedback.
+          Export feedback
         </button>
       </form>
 
@@ -129,7 +124,7 @@ export default function DeleteAccount() {
           type="submit"
           style={{ width: "250px" }}
         >
-          Delete my account.
+          Delete account
         </button>
       </form>
     </>
