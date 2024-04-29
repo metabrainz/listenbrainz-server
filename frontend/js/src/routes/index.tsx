@@ -161,7 +161,6 @@ const getIndexRoutes = (): RouteObject[] => {
                 const UserFeed = await import("../user-feed/UserFeed");
                 return { Component: UserFeed.default };
               },
-              loader: RouteQueryLoader("feed", true),
             },
             {
               path: "/recent/",
