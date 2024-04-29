@@ -57,7 +57,7 @@ export default function ResetImportTimestamp() {
         className="btn btn-info btn-lg"
         style={{ width: "200px" }}
       >
-        Reset import timestamp token
+        Reset import timestamp
       </button>
     </>
   );
