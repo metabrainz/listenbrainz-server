@@ -97,13 +97,11 @@ function BrainzPlayerSettings() {
         <title>BrainzPlayer Settings</title>
       </Helmet>
       <h2 className="page-title">BrainzPlayer settings</h2>
+      <p>Choose which music services to use for playback in ListenBrainz.</p>
+
       <p>
-        Choose which music services to use for playback in ListenBrainz.
-      </p>
-      
-      <p?
-        YouTube is enabled by default. For a better listening experience we recommend
-        enabling another service.
+        YouTube is enabled by default. For a better listening experience we
+        recommend enabling another service.
       </p>
       <div
         className="mb-15"
@@ -131,7 +129,7 @@ function BrainzPlayerSettings() {
         <br />
         <small>
           Spotify requires a premium account.
-        <br />
+          <br />
           Sign in on the{" "}
           <Link to="/settings/music-services/details/">
             &quot;connect services&quot; page
@@ -165,7 +163,7 @@ function BrainzPlayerSettings() {
         <br />
         <small>
           Apple Music requires a premium account.
-        <br />
+          <br />
           Sign in on the{" "}
           <Link to="/settings/music-services/details/">
             &quot;connect services&quot; page
@@ -200,7 +198,7 @@ function BrainzPlayerSettings() {
         <br />
         <small>
           SoundCloud requires a free account.
-        <br />
+          <br />
           Sign in on the{" "}
           <Link to="/settings/music-services/details/">
             &quot;connect services&quot; page
