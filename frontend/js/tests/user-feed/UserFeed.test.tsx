@@ -74,10 +74,10 @@ describe("UserFeed", () => {
     server = setupServer(...handlers);
     server.listen();
   });
-  afterEach(()=>{
+  afterEach(() => {
     queryClient.cancelQueries();
     queryClient.clear();
-  })
+  });
   afterAll(() => {
     server.close();
   });
@@ -100,7 +100,6 @@ describe("UserFeed", () => {
     await waitFor(() => {
       // Wait for data to be successfully loaded
       const state = queryClient.getQueryState(queryKey);
-      // const data = state?.data
       expect(state?.status === "success").toBeTruthy();
     });
 
@@ -173,7 +172,7 @@ describe("UserFeed", () => {
     });
     const timeline = screen.getByTestId("timeline");
     expect(timeline).toBeInTheDocument();
-    screen.debug(timeline)
+    screen.debug(timeline);
     expect(within(timeline).getAllByRole("listitem")).toHaveLength(7);
     expect(
       screen.getAllByText(textContentMatcher("reosarevok recommended a track"))
