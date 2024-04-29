@@ -3,6 +3,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import { act } from "react-dom/test-utils";
+import { BrowserRouter } from "react-router-dom";
 import { GlobalAppContextT } from "../../../src/utils/GlobalAppContext";
 import APIService from "../../../src/utils/APIService";
 import BrainzPlayer from "../../../src/common/brainzplayer/BrainzPlayer";
@@ -10,6 +11,7 @@ import * as colorPlayProps from "../../__mocks__/colorPlayProps.json";
 import ColorPlay from "../../../src/explore/huesound/ColorPlay";
 import ColorWheel from "../../../src/explore/huesound/components/ColorWheel";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import { waitForComponentToPaint } from "../../test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -48,20 +50,34 @@ const release: ColorReleaseItem = {
 
 describe("ColorPlay", () => {
   it("contains a ColorWheel instance", () => {
-    const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
+    const wrapper = mount(
+      <BrowserRouter>
+        <ColorPlay {...props} />
+      </BrowserRouter>,
+      mountOptions
+    );
     // const instance = wrapper.instance();
     expect(wrapper.find(ColorWheel)).toHaveLength(1);
   });
 
   it("contains a BrainzPlayer instance when a release is selected", async () => {
-    const wrapper = mount<ColorPlay>(<ColorPlay {...props} />, mountOptions);
+    const wrapper = mount(
+      <BrowserRouter>
+        <ColorPlay {...props} />
+      </BrowserRouter>,
+      mountOptions
+    );
 
-    expect(wrapper.state("selectedRelease")).toBeUndefined();
+    await waitForComponentToPaint(wrapper);
+    const instance = wrapper.find(ColorPlay).instance() as ColorPlay;
+
+    expect(instance.state.selectedRelease).toBeUndefined();
     expect(wrapper.find(BrainzPlayer)).toHaveLength(0);
 
     await act(() => {
-      wrapper.setState({ selectedRelease: release });
+      instance.setState({ selectedRelease: release });
     });
+    wrapper.update();
     expect(wrapper.find(BrainzPlayer)).toHaveLength(1);
   });
   // xdescribe("selectRelease", () => {

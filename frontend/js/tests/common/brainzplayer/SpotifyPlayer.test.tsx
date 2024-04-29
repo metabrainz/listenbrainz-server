@@ -2,6 +2,7 @@ import * as React from "react";
 import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 
 import { act } from "react-dom/test-utils";
+import { Link } from "react-router-dom";
 import SpotifyPlayer, {
   SpotifyPlayerProps,
   SpotifyPlayerState,
@@ -48,9 +49,9 @@ describe("SpotifyPlayer", () => {
       account linked to your ListenBrainz account.
       <br />
       Please try to{" "}
-      <a href="/settings/music-services/details/" target="_blank">
+      <Link to="/settings/music-services/details/">
         link for &quot;playing music&quot; feature
-      </a>{" "}
+      </Link>{" "}
       and refresh this page
     </p>
   );

@@ -19,26 +19,28 @@
  */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import { ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
 import { isNumber, throttle } from "lodash";
-import { getPageProps } from "../utils/utils";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import NumberCounter from "./NumberCounter";
 import Blob from "./Blob";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { RouteQuery } from "../utils/Loader";
 
 type HomePageProps = {
   listenCount: number;
   artistCount: number;
 };
 
-function HomePage({ listenCount, artistCount }: HomePageProps) {
+function HomePage() {
+  const location = useLocation();
+  const { data } = useQuery<HomePageProps>(
+    RouteQuery(["home"], location.pathname)
+  );
+  const { listenCount, artistCount } = data || {};
   const homepageUpperRef = React.useRef<HTMLDivElement>(null);
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
 
@@ -74,6 +76,20 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
   } as React.CSSProperties;
   return (
     <div id="homepage-container" style={styles}>
+      <Helmet>
+        <style type="text/css">
+          {`.container-react {
+            padding-bottom: 0 !important;
+          }
+          .container-react-main, [role="main"] {
+            padding: 0;
+            max-width: none !important;
+          }
+          .footer {
+            display: none;
+          }`}
+        </style>
+      </Helmet>
       <div className="homepage-upper" ref={homepageUpperRef}>
         <Blob
           width={200}
@@ -137,9 +153,9 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
             <p>Follow your favourites and discover great new music.</p>
           </div>
           <div className="homepage-info-links">
-            <a href="/login">Login</a>
+            <Link to="/login/">Login</Link>
             <span>|</span>
-            <a href="/about">About ListenBrainz</a>
+            <Link to="/about/">About ListenBrainz</Link>
           </div>
         </div>
         <FontAwesomeIcon
@@ -232,9 +248,9 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
             </p>
           </div>
           <div className="homepage-info-links">
-            <a href="/login">Login</a>
+            <Link to="/login/">Login</Link>
             <span>|</span>
-            <a href="/about">About ListenBrainz</a>
+            <Link to="/about/">About ListenBrainz</Link>
           </div>
         </div>
       </div>
@@ -242,41 +258,19 @@ function HomePage({ listenCount, artistCount }: HomePageProps) {
   );
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+export function HomePageWrapper() {
+  const { currentUser } = React.useContext(GlobalAppContext);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
+  const redirectParam = searchParams.get("redirect");
+
+  if (
+    currentUser?.name &&
+    (redirectParam === "true" || redirectParam === null)
+  ) {
+    return <Navigate to={`/user/${currentUser.name}`} replace />;
   }
+  return <HomePage />;
+}
 
-  const { listen_count, artist_count } = reactProps;
-
-  const HomePageWithAlertNotifications = withAlertNotifications(HomePage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <HomePageWithAlertNotifications
-          listenCount={listen_count}
-          artistCount={artist_count}
-        />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export default HomePage;

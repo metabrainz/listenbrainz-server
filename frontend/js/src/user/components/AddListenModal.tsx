@@ -7,6 +7,7 @@ import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { has } from "lodash";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import ListenControl from "../../common/listens/ListenControl";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { convertDateToUnixTimestamp } from "../../utils/utils";
@@ -105,7 +106,7 @@ export default NiceModal.create(() => {
       toast.error(
         <ToastMsg
           title="You need to be logged in to Add a Listen"
-          message={<a href="/login">Log in here</a>}
+          message={<Link to="/login/">Log in here</Link>}
         />,
         { toastId: "auth-error" }
       );

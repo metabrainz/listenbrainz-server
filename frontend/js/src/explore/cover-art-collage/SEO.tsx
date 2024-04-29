@@ -12,6 +12,9 @@ export function CACYearStyleTags({ year }: CACProps) {
         <style type="text/css">
           {`#react-container {
             background-color: #ff0e25;
+          }
+          #container-react {
+            overflow: hidden;
           }`}
         </style>
       </Helmet>
@@ -22,6 +25,9 @@ export function CACYearStyleTags({ year }: CACProps) {
       <style type="text/css">
         {`#react-container {
             background-color: #F0EEE2;
+          }
+          #container-react {
+            overflow: hidden;
           }`}
       </style>
     </Helmet>

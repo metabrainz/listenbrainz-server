@@ -23,7 +23,8 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
@@ -38,10 +39,11 @@ import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import SEO, { YIMYearMetaTags } from "../SEO";
+import { RouteQuery } from "../../../utils/Loader";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
-  yearInMusicData: {
+  yearInMusicData?: {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
@@ -351,12 +353,14 @@ export default class YearInMusic extends React.Component<
             </h3>
             <p className="center-p">
               Check out how you can submit listens by{" "}
-              <a href="/settings/music-services/details/">
+              <Link to="/settings/music-services/details/">
                 connecting a music service
-              </a>{" "}
+              </Link>{" "}
               or{" "}
-              <a href="/settings/import/">importing your listening history</a>,
-              and come back next year!
+              <Link to="/settings/import/">
+                importing your listening history
+              </Link>
+              , and come back next year!
             </p>
           </div>
         </div>
@@ -598,17 +602,13 @@ export default class YearInMusic extends React.Component<
                             />
                             <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                             <div title={release.release_name}>
-                              <a
-                                href={
-                                  release.release_mbid
-                                    ? `/release/${release.release_mbid}/`
-                                    : undefined
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {release.release_name}
-                              </a>
+                              {release.release_mbid ? (
+                                <Link to={`/release/${release.release_mbid}/`}>
+                                  {release.release_name}
+                                </Link>
+                              ) : (
+                                release.release_name
+                              )}
                               <div className="small text-muted">
                                 {release.artist_name}
                               </div>
@@ -1248,7 +1248,17 @@ export default class YearInMusic extends React.Component<
 }
 
 export function YearInMusicWrapper() {
-  const props = useLoaderData() as YearInMusicLoaderData;
-  const { user, data: yearInMusicData } = props;
-  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
+  const location = useLocation();
+  const params = useParams();
+  const { data } = useQuery<YearInMusicLoaderData>(
+    RouteQuery(["year-in-music-2022", params], location.pathname)
+  );
+  const { user, data: yearInMusicData } = data || {};
+  const fallbackUser = { name: "" };
+  return (
+    <YearInMusic
+      user={user ?? fallbackUser}
+      yearInMusicData={yearInMusicData}
+    />
+  );
 }

@@ -14,6 +14,7 @@ import {
 } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import {
   ToastMsg,
   createNotification,
@@ -258,13 +259,9 @@ export default class BrainzPlayer extends React.Component<
               <>
                 You have disabled all music services for playback on
                 ListenBrainz. To enable them again, please go to the{" "}
-                <a
-                  href="/settings/brainzplayer/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <Link to="/settings/brainzplayer/">
                   music player preferences
-                </a>{" "}
+                </Link>{" "}
                 page
               </>
             }
@@ -554,9 +551,7 @@ export default class BrainzPlayer extends React.Component<
           connected to, but did not find a match to play.
           <br />
           To enable more music services please go to the{" "}
-          <a href="/settings/brainzplayer/" target="_blank" rel="noreferrer">
-            music player preferences.
-          </a>
+          <Link to="/settings/brainzplayer/">music player preferences.</Link>
         </>,
         "Could not find a match"
       );

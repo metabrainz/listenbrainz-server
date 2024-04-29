@@ -8,6 +8,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { sanitize } from "dompurify";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import Card from "../../components/Card";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -74,9 +75,9 @@ export default function PlaylistCard({
           message={
             <>
               Duplicated to playlist&ensp;
-              <a href={`/playlist/${newPlaylistId}`}>
+              <Link to={`/playlist/${newPlaylistId}/`}>
                 {JSPFObject.playlist.title}
-              </a>
+              </Link>
             </>
           }
         />,
@@ -126,7 +127,7 @@ export default function PlaylistCard({
           />
         </div>
       )}
-      <a className="info" href={`/playlist/${sanitize(playlistId)}`}>
+      <Link className="info" to={`/playlist/${sanitize(playlistId)}/`}>
         <h4>{playlist.title}</h4>
         {playlist.annotation && (
           <div
@@ -154,7 +155,7 @@ export default function PlaylistCard({
               dateStyle: "short",
             })}`}
         </div>
-      </a>
+      </Link>
     </Card>
   );
 }

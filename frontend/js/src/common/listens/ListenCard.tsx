@@ -27,6 +27,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal from "@ebay/nice-modal-react";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
@@ -301,9 +302,9 @@ export default class ListenCard extends React.Component<
     } else if (listen.playing_now) {
       timeStampForDisplay = (
         <span className="listen-time">
-          <a href="/listening-now/" target="_blank" rel="noopener noreferrer">
+          <Link to="/listening-now/">
             <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
-          </a>
+          </Link>
         </span>
       );
     } else {
@@ -330,6 +331,7 @@ export default class ListenCard extends React.Component<
     } else if (thumbnailSrc) {
       let thumbnailLink;
       let thumbnailTitle;
+      let optionalAttributes = {};
       if (releaseMBID) {
         thumbnailLink = `/release/${releaseMBID}`;
         thumbnailTitle = getReleaseName(listen);
@@ -342,20 +344,23 @@ export default class ListenCard extends React.Component<
       } else {
         thumbnailLink = spotifyURL || youtubeURL || soundcloudURL;
         thumbnailTitle = "Cover art";
+        optionalAttributes = {
+          target: "_blank",
+          rel: "noopener noreferrer",
+        };
       }
-      thumbnail = (
+      thumbnail = thumbnailLink && (
         <div className="listen-thumbnail">
-          <a
-            href={thumbnailLink}
+          <Link
+            to={thumbnailLink}
             title={thumbnailTitle}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...optionalAttributes}
           >
             <CoverArtWithFallback
               imgSrc={thumbnailSrc}
               altText={thumbnailTitle}
             />
-          </a>
+          </Link>
         </div>
       );
     } else if (releaseMBID) {
@@ -413,31 +418,45 @@ export default class ListenCard extends React.Component<
         </div>
       );
     } else if (recordingMBID || releaseGroupMBID) {
-      let link;
       if (recordingMBID) {
-        link = `https://musicbrainz.org/recording/${recordingMBID}`;
+        thumbnail = (
+          <a
+            href={`https://musicbrainz.org/recording/${recordingMBID}`}
+            title="Could not load cover art"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="listen-thumbnail"
+          >
+            <div className="cover-art-fallback">
+              <span className="fa-layers fa-fw">
+                <FontAwesomeIcon icon={faImage} />
+                <FontAwesomeIcon
+                  icon={faSquare}
+                  transform="shrink-10 left-5 up-2.5"
+                />
+              </span>
+            </div>
+          </a>
+        );
       } else {
-        link = `/album/${releaseGroupMBID}`;
+        thumbnail = (
+          <Link
+            to={`/album/${releaseGroupMBID}`}
+            title="Could not load cover art"
+            className="listen-thumbnail"
+          >
+            <div className="cover-art-fallback">
+              <span className="fa-layers fa-fw">
+                <FontAwesomeIcon icon={faImage} />
+                <FontAwesomeIcon
+                  icon={faSquare}
+                  transform="shrink-10 left-5 up-2.5"
+                />
+              </span>
+            </div>
+          </Link>
+        );
       }
-      thumbnail = (
-        <a
-          href={link}
-          title="Could not load cover art"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="listen-thumbnail"
-        >
-          <div className="cover-art-fallback">
-            <span className="fa-layers fa-fw">
-              <FontAwesomeIcon icon={faImage} />
-              <FontAwesomeIcon
-                icon={faSquare}
-                transform="shrink-10 left-5 up-2.5"
-              />
-            </span>
-          </div>
-        </a>
-      );
     } else {
       // eslint-disable-next-line react/jsx-no-useless-fragment
       thumbnail = (
@@ -496,14 +515,12 @@ export default class ListenCard extends React.Component<
             {(showUsername || showTimestamp) && (
               <div className="username-and-timestamp">
                 {showUsername && (
-                  <a
-                    href={`/user/${listen.user_name}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    to={`/user/${listen.user_name}/`}
                     title={listen.user_name ?? undefined}
                   >
                     {listen.user_name}
-                  </a>
+                  </Link>
                 )}
                 {showTimestamp && timeStampForDisplay}
               </div>

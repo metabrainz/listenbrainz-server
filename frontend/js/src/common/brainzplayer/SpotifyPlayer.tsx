@@ -10,6 +10,7 @@ import {
   difference,
 } from "lodash";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { Link } from "react-router-dom";
 import {
   searchForSpotifyTrack,
   loadScriptAsync,
@@ -363,9 +364,9 @@ export default class SpotifyPlayer
         account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
-        <a href="/settings/music-services/details/" target="_blank">
+        <Link to="/settings/music-services/details/">
           link for &quot;playing music&quot; feature
-        </a>{" "}
+        </Link>{" "}
         and refresh this page
       </p>
     );
