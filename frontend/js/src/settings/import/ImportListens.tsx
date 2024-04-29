@@ -38,10 +38,11 @@ export default function Import() {
         <div className="alert alert-danger">
           You have not provided an email address. Please provide an{" "}
           <a href="https://musicbrainz.org/account/edit">email address</a> and{" "}
-          <em>verify it</em> to submit listens. Read this
-          <a href="https://blog.metabrainz.org/?p=8915">blog post</a>
+          <em>verify it</em>{" "}
+          to submit listens. Read this{" "}
+          <a href="https://blog.metabrainz.org/?p=8915">blog post</a>{" "}
           to understand why we need your email. You can provide us with an email
-          on your
+          on your{" "}
           <a href="https://musicbrainz.org/account/edit">
             MusicBrainz account
           </a>{" "}
@@ -50,13 +51,13 @@ export default function Import() {
       )}
       <p>
         Import your existing listen history from other databases. To submit{" "}
-        <em>new</em>
+        <em>new</em>{" "}
         listens, please visit the{" "}
-        <a href="https://listenbrainz.org/add-data/">Connect services</a>
+        <a href="https://listenbrainz.org/add-data/">Connect services</a>{" "}
         and{" "}
         <a href="https://listenbrainz.org/settings/music-services/details/">
           Submitting data
-        </a>
+        </a>{" "}
         pages.
         <br />
         Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
@@ -93,7 +94,7 @@ export default function Import() {
         </li>
         <li>
           Clicking the &quot;Import listens&quot; button will import your
-          profile without the need to open LastFM.
+          profile without the need to open Last.fm.
         </li>
         <li>
           Your listen counts may not be accurate for up to 24 hours after you
@@ -110,7 +111,7 @@ export default function Import() {
 
       <p>
         You need to keep this page open while it is importing, which may take a
-        while to complete.
+        while.
       </p>
 
       {userHasEmail && (
@@ -130,18 +131,18 @@ export default function Import() {
       )}
 
       <br />
-      <h4> Reset Last.FM Import timestamp </h4>
+      <h4> Reset Last.fm import timestamp </h4>
       <p>
-        If you think that a partial import has missed listens, you may reset
+        If you think that a import has missed listens, you can reset
         your previous import timestamp. This will cause your next import to be a
-        complete import which should add any missing listens, without adding
+        complete import, which will add missing listens without adding
         duplicates to your history.
       </p>
 
       <p>
-        <span className="btn btn-info btn-lg" style={{ width: "300px" }}>
+        <span className="btn btn-info btn-lg" style={{ width: "250px" }}>
           <Link to="/settings/resetlatestimportts/" style={{ color: "white" }}>
-            Reset Import Timestamp
+            Reset import timestamp
           </Link>
         </span>
       </p>
