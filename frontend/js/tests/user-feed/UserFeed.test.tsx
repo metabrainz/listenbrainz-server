@@ -25,6 +25,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
+import userEvent from "@testing-library/user-event";
 import UserFeedPage, { EventType } from "../../src/user-feed/UserFeed";
 import * as timelineProps from "../__mocks__/timelineProps.json";
 
@@ -36,6 +37,8 @@ import GlobalAppContext, {
   defaultGlobalContext,
 } from "../../src/utils/GlobalAppContext";
 
+jest.unmock("react-toastify");
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -44,14 +47,9 @@ const queryClient = new QueryClient({
   },
 });
 const queryKey = ["feed", {}];
-queryClient.setQueryDefaults(queryKey, {
-  queryFn: () => ({ events: timelineProps.events }),
-});
 
 const reactQueryWrapper = ({ children }: any) => (
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  </BrowserRouter>
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
 describe("UserFeed", () => {
@@ -59,28 +57,68 @@ describe("UserFeed", () => {
   beforeAll(async () => {
     // Mock the server responses
     const handlers = [
-      http.post("/", () => {
+      http.get("http://localhost/1/user/*/feed/events", async (path) => {
         // return feed events
-        return HttpResponse.json({ events: timelineProps.events });
+        return HttpResponse.json({ payload: timelineProps });
       }),
-      http.get("/1/user/*/following", () =>
+      http.get("http://localhost/1/user/*/following", () =>
         HttpResponse.json({ following: [] })
       ),
-      http.get("/1/user/*/followers", () =>
+      http.get("http://localhost/1/user/*/followers", () =>
         HttpResponse.json({ followers: [] })
       ),
-      http.get("/1/user/*/similar-users", () =>
+      http.get("http://localhost/1/user/*/similar-users", () =>
         HttpResponse.json({ payload: [] })
       ),
     ];
     server = setupServer(...handlers);
     server.listen();
   });
+  afterEach(()=>{
+    queryClient.cancelQueries();
+    queryClient.clear();
+  })
   afterAll(() => {
     server.close();
   });
 
   it("renders correctly", async () => {
+    renderWithProviders(
+      <UserFeedPage />,
+      {
+        currentUser: {
+          id: 1,
+          name: "FNORD",
+          auth_token: "never_gonna",
+        },
+      },
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
+
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      // const data = state?.data
+      expect(state?.status === "success").toBeTruthy();
+    });
+
+    const timeline = screen.getByTestId("timeline");
+    expect(timeline).toBeInTheDocument();
+    expect(within(timeline).getAllByRole("listitem")).toHaveLength(
+      timelineProps.events.length
+    );
+
+    expect(screen.getByText("Latest activity")).toBeInTheDocument();
+    // contains a UserSocialNetwork component
+    expect(screen.getByText("Similar Users")).toBeInTheDocument();
+    expect(
+      screen.getByText("You aren't following anyone.")
+    ).toBeInTheDocument();
+  });
+
+  it("has infinite pagination", async () => {
     renderWithProviders(
       <UserFeedPage />,
       {},
@@ -100,19 +138,25 @@ describe("UserFeed", () => {
       timelineProps.events.length
     );
 
-    expect(screen.getByText("Latest activity")).toBeInTheDocument();
-    // contains a UserSocialNetwork component
-    expect(screen.getByText("Similar Users")).toBeInTheDocument();
+    const loadMoreButton = screen.getByText("Load More");
+    const rightNow = Date.now();
+    await userEvent.click(loadMoreButton);
     expect(
-      screen.getByText("You aren't following anyone.")
-    ).toBeInTheDocument();
+      queryClient.getQueryState(queryKey)?.dataUpdatedAt
+    ).toBeGreaterThanOrEqual(rightNow);
   });
 
   it("renders recording recommendation events", async () => {
+    queryClient.cancelQueries();
     queryClient.setQueryData(queryKey, {
-      events: timelineProps.events.filter(
-        (event) => event.event_type === EventType.RECORDING_RECOMMENDATION
-      ),
+      pages: [
+        {
+          events: timelineProps.events.filter(
+            (event) => event.event_type === EventType.RECORDING_RECOMMENDATION
+          ),
+        },
+      ],
+      pageParams: [Date.now()],
     });
 
     renderWithProviders(
@@ -129,6 +173,7 @@ describe("UserFeed", () => {
     });
     const timeline = screen.getByTestId("timeline");
     expect(timeline).toBeInTheDocument();
+    screen.debug(timeline)
     expect(within(timeline).getAllByRole("listitem")).toHaveLength(7);
     expect(
       screen.getAllByText(textContentMatcher("reosarevok recommended a track"))
@@ -139,9 +184,14 @@ describe("UserFeed", () => {
 
   it("renders follow relationship events", async () => {
     queryClient.setQueryData(queryKey, {
-      events: timelineProps.events.filter(
-        (event) => event.event_type === EventType.FOLLOW
-      ),
+      pages: [
+        {
+          events: timelineProps.events.filter(
+            (event) => event.event_type === EventType.FOLLOW
+          ),
+        },
+      ],
+      pageParams: [Date.now()],
     });
     renderWithProviders(
       // Not sure why we have to pass a context here, as one is alreqady added when we
@@ -175,9 +225,14 @@ describe("UserFeed", () => {
 
   it("renders notification events", async () => {
     queryClient.setQueryData(queryKey, {
-      events: timelineProps.events.filter(
-        (event) => event.event_type === EventType.NOTIFICATION
-      ),
+      pages: [
+        {
+          events: timelineProps.events.filter(
+            (event) => event.event_type === EventType.NOTIFICATION
+          ),
+        },
+      ],
+      pageParams: [Date.now()],
     });
 
     renderWithProviders(
@@ -209,9 +264,14 @@ describe("UserFeed", () => {
 
   it("renders recording pin events", async () => {
     queryClient.setQueryData(queryKey, {
-      events: timelineProps.events.filter(
-        (event) => event.event_type === EventType.RECORDING_PIN
-      ),
+      pages: [
+        {
+          events: timelineProps.events.filter(
+            (event) => event.event_type === EventType.RECORDING_PIN
+          ),
+        },
+      ],
+      pageParams: [Date.now()],
     });
 
     renderWithProviders(
