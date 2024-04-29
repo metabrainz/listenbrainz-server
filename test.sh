@@ -256,7 +256,6 @@ if [ $DB_EXISTS -eq 1 ] && [ $DB_RUNNING -eq 1 ] ; then
     echo "Running tests"
     docker_compose_run listenbrainz pytest "$@"
     RET=$?
-    docker logs listenbrainz_test-background_tasks-1
     unit_dcdown
     exit $RET
 else
