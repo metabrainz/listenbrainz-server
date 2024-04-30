@@ -39,7 +39,8 @@ const defaultGlobalContext: GlobalAppContextT = {
 export const renderWithProviders = (
   ui: React.ReactElement,
   globalContext?: Partial<GlobalAppContextT>,
-  renderOptions?: RenderOptions
+  renderOptions?: RenderOptions,
+  customOptions?: { withRouter?: boolean }
 ) => {
   function WithProviders({ children }: { children: React.ReactElement }) {
     const globalProps = React.useMemo<GlobalAppContextT>(
@@ -49,15 +50,17 @@ export const renderWithProviders = (
       }),
       []
     );
-
-    return (
-      <BrowserRouter>
-        <GlobalAppContext.Provider value={globalProps}>
-          <ToastContainer />
-          {children}
-        </GlobalAppContext.Provider>
-      </BrowserRouter>
+    const components = (
+      <GlobalAppContext.Provider value={globalProps}>
+        <ToastContainer />
+        {children}
+      </GlobalAppContext.Provider>
     );
+    if (customOptions?.withRouter !== false) {
+      return <BrowserRouter>{components}</BrowserRouter>;
+    }
+
+    return components;
   }
   return render(ui, { wrapper: WithProviders, ...renderOptions });
 };
