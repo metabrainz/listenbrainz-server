@@ -14,7 +14,7 @@ import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData, useNavigate } from "react-router-dom";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -60,7 +60,7 @@ export default function PlaylistPage() {
     GlobalAppContext
   );
   const dispatch = useBrainzPlayerDispatch();
-
+  const navigate = useNavigate();
   // Loader data
   const { playlist: playlistProps } = useLoaderData() as PlaylistPageProps;
   // React-SortableJS expects an 'id' attribute and we can't change it, so add it to each object
@@ -167,7 +167,7 @@ export default function PlaylistPage() {
     await new Promise((resolve) => {
       setTimeout(resolve, 1500);
     });
-    window.location.href = `${window.location.origin}/user/${currentUser?.name}/playlists`;
+    navigate(`/user/${currentUser?.name}/playlists`);
   };
 
   const onPlaylistSave = (newPlaylist: JSPFPlaylist) => {
