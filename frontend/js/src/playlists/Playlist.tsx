@@ -306,9 +306,9 @@ export default function PlaylistPage() {
 
   return (
     <div role="main">
-      {/* <Helmet>
+      <Helmet>
         <title>{playlist.title} - Playlist</title>
-      </Helmet> */}
+      </Helmet>
       <div className="row">
         <div
           id="playlist"
