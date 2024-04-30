@@ -37,11 +37,10 @@ type HomePageProps = {
 
 function HomePage() {
   const location = useLocation();
-  const {
-    data: { listenCount, artistCount },
-  } = useQuery(RouteQuery(["home"], location.pathname)) as {
-    data: HomePageProps;
-  };
+  const { data } = useQuery<HomePageProps>(
+    RouteQuery(["home"], location.pathname)
+  );
+  const { listenCount, artistCount } = data || {};
   const homepageUpperRef = React.useRef<HTMLDivElement>(null);
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
 
@@ -82,7 +81,7 @@ function HomePage() {
           {`.container-react {
             padding-bottom: 0 !important;
           }
-          .container-react-main {
+          .container-react-main, [role="main"] {
             padding: 0;
             max-width: none !important;
           }
@@ -269,7 +268,7 @@ export function HomePageWrapper() {
     currentUser?.name &&
     (redirectParam === "true" || redirectParam === null)
   ) {
-    return <Navigate to={`/user/${currentUser.name}`} />;
+    return <Navigate to={`/user/${currentUser.name}`} replace />;
   }
   return <HomePage />;
 }

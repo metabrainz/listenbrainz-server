@@ -10,7 +10,7 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg
 from listenbrainz.db.color import get_releases_for_color
 from troi.patches.lb_radio import LBRadioPatch
-from troi.core import generate_playlist
+from troi.patch import Patch
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
@@ -178,14 +178,9 @@ def lb_radio():
         raise APIBadRequest(
             f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
 
-    patch = LBRadioPatch()
     try:
-        playlist = generate_playlist(
-            patch,
-            args={
-                "mode": mode,
-                "prompt": prompt,
-                "echo": False})
+        patch = LBRadioPatch({ "mode": mode, "prompt": prompt, "quiet": True, "min_recordings": 1})
+        playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
 

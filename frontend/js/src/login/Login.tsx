@@ -56,18 +56,17 @@ export default function Login() {
         <p>
           If after creating an account you change your mind about processing
           your listening history, you will need to{" "}
-          <Link to="/login/musicbrainz/">delete your ListenBrainz account</Link>
-          .
+          <Link to="/settings/delete/">delete your ListenBrainz account</Link>.
         </p>
       </div>
       <br />
       <div className="well" style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <Link
-          to={`/login/musicbrainz/${next ? `?next=${next}` : ""}`}
+        <a
+          href={`/login/musicbrainz/${next ? `?next=${next}` : ""}`}
           className="btn btn-primary btn-lg btn-block"
         >
           Sign in with MusicBrainz
-        </Link>
+        </a>
       </div>
     </div>
   );

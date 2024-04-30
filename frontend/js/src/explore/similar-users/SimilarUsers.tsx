@@ -6,14 +6,13 @@ import { RouteQuery } from "../../utils/Loader";
 
 export default function SimilarUsers() {
   const location = useLocation();
-  const {
-    data: { similarUsers },
-  } = useQuery(RouteQuery(["similar-users"], location.pathname)) as {
-    data: { similarUsers: string[][] };
-  };
+  const { data } = useQuery<{ similarUsers: string[][] }>(
+    RouteQuery(["similar-users"], location.pathname)
+  );
+  const { similarUsers } = data || {};
 
   return (
-    <div id="similar-users">
+    <div id="similar-users" role="main">
       <Helmet>
         <title>Top Similar Users</title>
       </Helmet>
@@ -29,8 +28,8 @@ export default function SimilarUsers() {
 
       <table className="table table-striped">
         <tbody>
-          {similarUsers.length > 0 ? (
-            similarUsers.map((row, index) => (
+          {similarUsers?.length ? (
+            similarUsers?.map((row, index) => (
               <tr>
                 <td>
                   <Link to={`/user/${row[0]}/`}>{row[0]}</Link>

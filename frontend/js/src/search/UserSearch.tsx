@@ -14,16 +14,13 @@ export default function SearchResults() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  const {
-    data: { users },
-  } = useQuery(
+  const { data } = useQuery<SearchResultsLoaderData>(
     RouteQuery(
       ["search-users", getObjectForURLSearchParams(searchParams)],
       location.pathname
     )
-  ) as {
-    data: SearchResultsLoaderData;
-  };
+  );
+  const { users } = data || {};
 
   const [searchTermInput, setSearchTermInput] = React.useState(
     searchParams.get("search_term") || ""
@@ -84,8 +81,8 @@ export default function SearchResults() {
           </tr>
         </thead>
         <tbody>
-          {users.length > 0 ? (
-            users.map((row, index) => (
+          {users?.length ? (
+            users?.map((row, index) => (
               <tr key={`similar-user-${row[0]}`}>
                 <td>{index + 1}</td>
                 <td>
@@ -98,7 +95,7 @@ export default function SearchResults() {
                         return "100%, we hope!";
                       }
                       if (row[2]) {
-                        return `${(row[2] * 10).toFixed(1)}%`;
+                        return `${(row[2] * 100).toFixed(1)}%`;
                       }
                       return "Similarity score not available";
                     })()}

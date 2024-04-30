@@ -38,6 +38,15 @@ const getSettingsRoutes = (): RouteObject[] => {
           },
         },
         {
+          path: "brainzplayer/",
+          lazy: async () => {
+            const BrainzPlayerSettings = await import(
+              "../brainzplayer/BrainzPlayerSettings"
+            );
+            return { Component: BrainzPlayerSettings.default };
+          },
+        },
+        {
           path: "import/",
           loader: RouteLoader,
           lazy: async () => {

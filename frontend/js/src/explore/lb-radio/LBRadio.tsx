@@ -102,7 +102,7 @@ export default function LBRadio() {
   );
 
   return (
-    <>
+    <div role="main">
       <Helmet>
         <title>LB Radio</title>
       </Helmet>
@@ -131,6 +131,6 @@ export default function LBRadio() {
         refreshYoutubeToken={APIService.refreshYoutubeToken}
         refreshSoundcloudToken={APIService.refreshSoundcloudToken}
       />
-    </>
+    </div>
   );
 }

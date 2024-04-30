@@ -46,23 +46,23 @@ export default function ArtistPage(): JSX.Element {
   const location = useLocation();
   const params = useParams() as { artistMBID: string };
   const { artistMBID } = params;
+  const { data } = useQuery<ArtistPageProps>(
+    RouteQuery(["artist", params], location.pathname)
+  );
   const {
-    data: {
-      artist,
-      popularRecordings,
-      releaseGroups,
-      similarArtists,
-      listeningStats,
-      coverArt: coverArtSVG,
-    },
-  } = useQuery(RouteQuery(["artist", params], location.pathname)) as {
-    data: ArtistPageProps;
-  };
+    artist,
+    popularRecordings,
+    releaseGroups,
+    similarArtists,
+    listeningStats,
+    coverArt: coverArtSVG,
+  } = data || {};
+
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
     total_user_count: userCount,
-  } = listeningStats;
+  } = listeningStats || {};
 
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
@@ -71,7 +71,7 @@ export default function ArtistPage(): JSX.Element {
 
   const [albumsByThisArtist, alsoAppearsOn] = partition(
     releaseGroups,
-    (rg) => rg.artists[0].artist_mbid === artist.artist_mbid
+    (rg) => rg.artists[0].artist_mbid === artist?.artist_mbid
   );
 
   React.useEffect(() => {
@@ -108,9 +108,9 @@ export default function ArtistPage(): JSX.Element {
   }, [artistMBID]);
 
   const listensFromPopularRecordings =
-    popularRecordings.map(popularRecordingToListen) ?? [];
+    popularRecordings?.map(popularRecordingToListen) ?? [];
 
-  const filteredTags = chain(artist.tag?.artist)
+  const filteredTags = chain(artist?.tag?.artist)
     .sortBy("count")
     .value()
     .reverse();
@@ -148,7 +148,7 @@ export default function ArtistPage(): JSX.Element {
   };
 
   return (
-    <div id="entity-page" className="artist-page">
+    <div id="entity-page" className="artist-page" role="main">
       <Helmet>
         <title>{artist?.name}</title>
       </Helmet>
@@ -162,16 +162,16 @@ export default function ArtistPage(): JSX.Element {
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
           }}
-          title={`Album art for ${artist.name}`}
+          title={`Album art for ${artist?.name}`}
         />
         <div className="artist-info">
-          <h1>{artist.name}</h1>
+          <h1>{artist?.name}</h1>
           <div className="details">
             <small className="help-block">
-              {artist.begin_year}
-              {Boolean(artist.end_year) && ` — ${artist.end_year}`}
+              {artist?.begin_year}
+              {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
               <br />
-              {artist.area}
+              {artist?.area}
             </small>
           </div>
           {wikipediaExtract && (
@@ -196,76 +196,79 @@ export default function ArtistPage(): JSX.Element {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {!isEmpty(artist.rels) &&
+            {artist &&
+              !isEmpty(artist?.rels) &&
               Object.entries(artist.rels).map(([relName, relValue]) =>
                 getRelIconLink(relName, relValue)
               )}
             <OpenInMusicBrainzButton
               entityType="artist"
-              entityMBID={artist.artist_mbid}
+              entityMBID={artist?.artist_mbid}
             />
           </div>
-          <div className="btn-group lb-radio-button">
-            <Link
-              type="button"
-              className="btn btn-info"
-              to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                artist.name
-              )})&mode=easy`}
-            >
-              <FontAwesomeIcon icon={faPlayCircle} /> Radio
-            </Link>
-            <button
-              type="button"
-              className="btn btn-info dropdown-toggle"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <span className="caret" />
-              <span className="sr-only">Toggle Dropdown</span>
-            </button>
-            <ul className="dropdown-menu">
-              <li>
-                <Link
-                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artist.name
-                  )})::nosim&mode=easy`}
-                >
-                  This artist
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artist.name
-                  )})&mode=easy`}
-                >
-                  Similar artists
-                </Link>
-              </li>
-              {Boolean(filteredTags?.length) && (
+          {artist && (
+            <div className="btn-group lb-radio-button">
+              <Link
+                type="button"
+                className="btn btn-info"
+                to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                  artist?.name
+                )})&mode=easy`}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} /> Radio
+              </Link>
+              <button
+                type="button"
+                className="btn btn-info dropdown-toggle"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span className="caret" />
+                <span className="sr-only">Toggle Dropdown</span>
+              </button>
+              <ul className="dropdown-menu">
                 <li>
                   <Link
-                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                      filteredTagsAsString
-                    )})::or&mode=easy`}
+                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                      artist?.name
+                    )})::nosim&mode=easy`}
                   >
-                    Tags (
-                    <span className="tags-list">{filteredTagsAsString}</span>)
+                    This artist
                   </Link>
                 </li>
-              )}
-            </ul>
-          </div>
+                <li>
+                  <Link
+                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                      artist?.name
+                    )})&mode=easy`}
+                  >
+                    Similar artists
+                  </Link>
+                </li>
+                {Boolean(filteredTags?.length) && (
+                  <li>
+                    <Link
+                      to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                        filteredTagsAsString
+                      )})::or&mode=easy`}
+                    >
+                      Tags (
+                      <span className="tags-list">{filteredTagsAsString}</span>)
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
       <div className="tags">
         <TagsComponent
-          key={artist.name}
+          key={artist?.name}
           tags={filteredTags}
           entityType="artist"
-          entityMBID={artist.artist_mbid}
+          entityMBID={artist?.artist_mbid}
         />
       </div>
       <div className="entity-page-content">
@@ -348,7 +351,7 @@ export default function ArtistPage(): JSX.Element {
             <div className="top-listeners">
               <h3 className="header-with-line">Top listeners</h3>
               {topListeners
-                .slice(0, 10)
+                ?.slice(0, 10)
                 .map(
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
@@ -426,7 +429,7 @@ export default function ArtistPage(): JSX.Element {
             <>
               {reviews.slice(0, 3).map(getReviewEventContent)}
               <a
-                href={`https://critiquebrainz.org/artist/${artist.artist_mbid}`}
+                href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
                 className="critiquebrainz-button btn btn-link"
               >
                 More on CritiqueBrainz…
@@ -436,7 +439,7 @@ export default function ArtistPage(): JSX.Element {
             <>
               <p>Be the first to review this artist on CritiqueBrainz</p>
               <a
-                href={`https://critiquebrainz.org/review/write/artist/${artist.artist_mbid}`}
+                href={`https://critiquebrainz.org/review/write/artist/${artist?.artist_mbid}`}
                 className="btn btn-outline"
               >
                 Add my review
