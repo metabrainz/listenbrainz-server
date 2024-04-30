@@ -1,5 +1,4 @@
 import { cloneDeep, has } from "lodash";
-import { v4 as uuidv4 } from "uuid";
 import { JSPFTrackToListen } from "../../playlists/utils";
 import {
   getArtistMBIDs,
