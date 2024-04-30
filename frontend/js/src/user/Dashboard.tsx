@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
-import { Socket, io } from "socket.io-client";
+import { io } from "socket.io-client";
 import {
   Link,
   useLocation,
@@ -19,7 +19,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "./components/AddListenModal";
@@ -55,28 +55,30 @@ export default function Listen() {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObject = getObjectForURLSearchParams(searchParams);
+  const isTimeNavigation =
+    _.has(searchParamsObject, "max_ts") || _.has(searchParamsObject, "min_ts");
 
-  const { data } = useQuery({
-    ...RouteQuery(["dashboard", params, searchParamsObject], location.pathname),
-    gcTime: !("max_ts" in searchParamsObject) ? 0 : 1,
-  }) as {
-    data: ListenLoaderData;
-  };
+  const { queryKey, queryFn } = RouteQuery(
+    ["dashboard", params, searchParamsObject],
+    location.pathname
+  );
+
+  const { data, refetch } = useQuery<ListenLoaderData>({
+    queryKey,
+    queryFn,
+    staleTime: isTimeNavigation ? 1000 * 60 * 5 : 0,
+  });
 
   const {
-    listens: initialListens = [],
+    listens = [],
     user,
     userPinnedRecording = undefined,
-    latestListenTs,
-    oldestListenTs,
-  } = data;
+    latestListenTs = 0,
+    oldestListenTs = 0,
+  } = data || {};
 
-  const previousListenTs = initialListens?.[0]?.listened_at;
-  const nextListenTs = initialListens?.[initialListens.length - 1]?.listened_at;
-
-  const [listens, setListens] = React.useState<Array<Listen>>(
-    initialListens || []
-  );
+  const previousListenTs = listens[0]?.listened_at;
+  const nextListenTs = listens[listens.length - 1]?.listened_at;
 
   const { currentUser, websocketsUrl, APIService } = React.useContext(
     GlobalAppContext
@@ -92,20 +94,15 @@ export default function Listen() {
   const [followingList, setFollowingList] = React.useState<Array<string>>([]);
   const [playingNowListen, setPlayingNowListen] = React.useState<
     Listen | undefined
-  >(
-    initialListens
-      ? _.remove(initialListens, (listen) => listen.playing_now)[0]
-      : undefined
-  );
+  >(listens ? _.remove(listens, (listen) => listen.playing_now)[0] : undefined);
+
   const [deletedListen, setDeletedListen] = React.useState<Listen | null>(null);
   const [listenCount, setListenCount] = React.useState<number | undefined>();
   const [dateTimePickerValue, setDateTimePickerValue] = React.useState<Date>(
     nextListenTs ? new Date(nextListenTs * 1000) : new Date(Date.now())
   );
 
-  React.useEffect(() => {
-    setListens(initialListens || []);
-  }, [initialListens]);
+  const queryClient = useQueryClient();
 
   const receiveNewListen = (newListen: string): void => {
     let json;
@@ -224,7 +221,7 @@ export default function Listen() {
     if (playingNowListen) {
       receiveNewPlayingNow(playingNowListen);
     }
-  }, [APIService, user.name]);
+  }, [APIService, user]);
 
   React.useEffect(() => {
     getFollowing();
@@ -239,7 +236,9 @@ export default function Listen() {
     });
 
     const connectHandler = () => {
-      socket.emit("json", { user: user.name });
+      if (user) {
+        socket.emit("json", { user: user.name });
+      }
     };
     const newListenHandler = (socketData: string) => {
       receiveNewListen(socketData);
@@ -259,7 +258,7 @@ export default function Listen() {
       socket.off("playing_now", newPlayingNowHandler);
       socket.close();
     };
-  }, [receiveNewPlayingNow, user.name, websocketsUrl]);
+  }, [receiveNewPlayingNow, user, websocketsUrl]);
 
   const updateFollowingList = (
     follower: ListenBrainzUser,
@@ -279,22 +278,12 @@ export default function Listen() {
   };
 
   const loggedInUserFollowsUser = (): boolean => {
-    if (_.isNil(currentUser) || _.isEmpty(currentUser)) {
+    if (_.isNil(currentUser) || _.isEmpty(currentUser) || !user) {
       return false;
     }
 
     return followingList.includes(user.name);
   };
-
-  const removeListenFromListenList = React.useCallback(
-    (listen: Listen) => {
-      const index = listens.indexOf(listen);
-      const listensCopy = [...listens];
-      listensCopy.splice(index, 1);
-      setListens(listensCopy);
-    },
-    [listens]
-  );
 
   const deleteListen = React.useCallback(
     async (listen: Listen) => {
@@ -323,12 +312,10 @@ export default function Listen() {
               { toastId: "delete-listen" }
             );
             // wait for the delete animation to finish
-            setTimeout(() => {
-              setListens((prevListens) => {
-                const index = prevListens.indexOf(listen);
-                return [...prevListens].splice(index, 1);
-              });
-            }, 1000);
+            await new Promise((resolve) => {
+              setTimeout(resolve, 1000);
+            });
+            return listen;
           }
         } catch (error) {
           toast.error(
@@ -342,9 +329,24 @@ export default function Listen() {
           );
         }
       }
+      return undefined;
     },
     [APIService, currentUser]
   );
+  const { mutate: deleteListenMutation } = useMutation({
+    mutationFn: deleteListen,
+    onSuccess: (newlyDeletedListen) => {
+      queryClient.setQueryData<ListenLoaderData>(queryKey, (oldData) => {
+        if (!oldData?.listens || !newlyDeletedListen) {
+          return oldData;
+        }
+        return {
+          ...oldData,
+          listens: _.without(oldData.listens, newlyDeletedListen),
+        };
+      });
+    },
+  });
 
   const getListenCard = React.useCallback(
     (listen: Listen): JSX.Element => {
@@ -365,7 +367,7 @@ export default function Listen() {
             text="Delete Listen"
             key="Delete Listen"
             icon={faTrashAlt}
-            action={() => deleteListen(listen)}
+            action={() => deleteListenMutation(listen)}
           />
         );
       }
@@ -383,7 +385,7 @@ export default function Listen() {
         />
       );
     },
-    [currentUser?.name, deletedListen, deleteListen]
+    [currentUser?.name, deletedListen, deleteListenMutation]
   );
 
   const onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
@@ -415,12 +417,12 @@ export default function Listen() {
     allListenables = [listenablePin, ...listens];
   }
 
-  const isNewestButtonDisabled = listens?.[0]?.listened_at >= latestListenTs;
+  const isNewestButtonDisabled = listens[0]?.listened_at >= latestListenTs;
   const isNewerButtonDisabled =
     !previousListenTs || previousListenTs >= latestListenTs;
   const isOlderButtonDisabled = !nextListenTs || nextListenTs <= oldestListenTs;
   const isOldestButtonDisabled =
-    listens?.length > 0 &&
+    listens.length > 0 &&
     listens[listens.length - 1]?.listened_at <= oldestListenTs;
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUsersPage = currentUser?.name === user?.name;
@@ -435,7 +437,7 @@ export default function Listen() {
       <div className="row">
         <div className="col-md-4 col-md-push-8 side-column">
           <div className="listen-header">
-            {isUserLoggedIn && !isCurrentUsersPage && (
+            {isUserLoggedIn && !isCurrentUsersPage && user && (
               <FollowButton
                 type="icon-only"
                 user={user}
@@ -444,7 +446,7 @@ export default function Listen() {
               />
             )}
             <Link
-              to={`https://musicbrainz.org/user/${user.name}`}
+              to={`https://musicbrainz.org/user/${user?.name}`}
               className="btn musicbrainz-profile-button"
             >
               <img
@@ -462,7 +464,7 @@ export default function Listen() {
               removePinFromPinsList={() => {}}
             />
           )}
-          <ListenCountCard user={user} listenCount={listenCount} />
+          {user && <ListenCountCard user={user} listenCount={listenCount} />}
           {user && <UserSocialNetwork user={user} />}
         </div>
         <div className="col-md-8 col-md-pull-4">
@@ -473,7 +475,7 @@ export default function Listen() {
                 <div className="lead empty-text">Get listening</div>
               ) : (
                 <div className="lead empty-text">
-                  {user.name} hasn&apos;t listened to any songs yet.
+                  {user?.name} hasn&apos;t listened to any songs yet.
                 </div>
               )}
 
@@ -499,13 +501,16 @@ export default function Listen() {
                 {webSocketListens.map((listen) => getListenCard(listen))}
               </div>
               <div className="read-more">
-                <Link
+                <button
                   type="button"
                   className="btn btn-outline"
-                  to={location.pathname}
+                  onClick={() => {
+                    refetch();
+                    setWebSocketListens([]);
+                  }}
                 >
                   See more fresh listens
-                </Link>
+                </button>
               </div>
             </div>
           )}
@@ -567,7 +572,7 @@ export default function Listen() {
                 ref={listensTable}
                 style={{ opacity: "1" }}
               >
-                {listens.map((listen) => getListenCard(listen))}
+                {listens.map(getListenCard)}
               </div>
               {listens.length < expectedListensPerPage && (
                 <h5 className="text-center">No more listens to show</h5>

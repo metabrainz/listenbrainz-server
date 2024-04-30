@@ -95,22 +95,24 @@ export default class SelectTimezone extends React.Component<
     return (
       <>
         <Helmet>
-          <title>Select Timezone</title>
+          <title>Select your timezone</title>
         </Helmet>
-        <h3>Select Timezone</h3>
+        <h3>Select your timezone</h3>
         <p>
-          Your current timezone setting is{" "}
+          Your timezone is{" "}
           <span style={{ fontWeight: "bold" }}>{userTimezone}.</span>
-          <br />
-          By choosing your local time zone, you will have a local timestamps
-          part of your submitted listens. This also informs as when to generate
-          daily playlists and other recommendations for you.
+        </p>
+        
+        <p>
+          Setting your timezone allows us to generate local timestamps and
+          better statistics for your listens. It also influences when your
+          daily playlists and recommendations are generated.
         </p>
 
         <div>
           <form onSubmit={this.submitTimezone}>
             <label>
-              Select your local timezone:
+              Select your local timezone:{" "}
               <select
                 defaultValue={userTimezone}
                 onChange={(e) => this.zoneSelection(e.target.value)}
@@ -131,7 +133,7 @@ export default class SelectTimezone extends React.Component<
             <br />
             <p>
               <button type="submit" className="btn btn-info btn-lg">
-                Save Timezone
+                Save timezone
               </button>
             </p>
           </form>

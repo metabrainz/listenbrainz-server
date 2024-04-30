@@ -68,8 +68,8 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
         r = self.client.post(
             self.custom_url_for('api_compat.api_auth_approve'),
-            data=data,
-            headers={'Content-Type': 'application/json'}
+            data=json.dumps(data),
+            content_type="application/json"
         )
         self.assert200(r)
 
@@ -94,7 +94,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'duration[0]': 300,
             'timestamp[0]': int(time.time()),
         }
-        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data, headers={'Content-Type': 'application/json'})
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
 
         expected = {

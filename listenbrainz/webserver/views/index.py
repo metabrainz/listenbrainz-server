@@ -194,13 +194,14 @@ def feed():
     user_events = get_feed_events_for_user(
         user=current_user_data, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
 
+    user_events = user_events[:count]
+
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(user_events):
         user_events[index].event_type = event.event_type.value
 
     return jsonify({
         'events': [event.dict() for event in user_events],
-        'following': users_following
     })
 
 

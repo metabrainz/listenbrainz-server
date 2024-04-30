@@ -6,10 +6,12 @@
       {% set host = 'listenbrainz' %}
     {% endif %}
     <a href="https://{{ host }}.org/{{ entity }}/{{ mbid }}" target="_blank">
-      {{ name }}
+      {{ name|upper }}
+      <title>{{ name }}</title>
     </a>
   {%- else -%}
-    {{ name }}
+    {{ name|upper }}
+    <title>{{ name }}</title>
   {%- endif -%}
 {% endmacro %}
 

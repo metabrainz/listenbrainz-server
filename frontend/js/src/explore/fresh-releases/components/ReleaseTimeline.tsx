@@ -2,14 +2,16 @@ import * as React from "react";
 import Slider from "rc-slider";
 import { countBy, debounce, zipObject } from "lodash";
 import { formatReleaseDate, useMediaQuery } from "../utils";
+import { SortDirection } from "../FreshReleases";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
   order: string;
+  direction: SortDirection;
 };
 
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
-  const { releases, order } = props;
+  const { releases, order, direction } = props;
 
   const [currentValue, setCurrentValue] = React.useState<number | number[]>();
   const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
@@ -27,7 +29,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     return scrollTo;
   }, []);
 
-  function createMarks(data: Array<FreshReleaseItem>) {
+  function createMarks(data: Array<FreshReleaseItem>, sortDirection: string) {
     let dataArr: Array<string> = [];
     let percentArr: Array<number> = [];
     // We want to filter out the keys that have less than 1.5% of the total releases
@@ -56,7 +58,6 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       );
 
       dataArr = filteredInitials.sort();
-
       percentArr = filteredInitials
         .map((item) => (artistInitialsCount[item] / data.length) * 100)
         .map((_, index, arr) =>
@@ -71,25 +72,28 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       );
 
       dataArr = filteredInitials.sort();
-
       percentArr = filteredInitials
         .map((item) => (releaseInitialsCount[item] / data.length) * 100)
         .map((_, index, arr) =>
           arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
         );
     } else {
+      // conutBy gives us an asc-sorted Dict by confidence
       const confidenceInitialsCount = countBy(
         data,
         (item: FreshReleaseItem) => item?.confidence
       );
-
-      dataArr = Object.keys(confidenceInitialsCount).sort();
-
+      dataArr = Object.keys(confidenceInitialsCount);
       percentArr = Object.values(confidenceInitialsCount)
         .map((item) => (item / data.length) * 100)
         .map((_, index, arr) =>
           arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
         );
+    }
+
+    if (sortDirection === "descend") {
+      dataArr.reverse();
+      percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
     }
 
     /**
@@ -98,9 +102,14 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
      * With the same logic, we don't want the last date to be at 100% because
      * that will mean we're at the bottom of the grid.
      * The last date should start before 100%. That explains the pop().
+     * For descending sort, the reverse computation above possibly already ensures that
+     * the percentArr starts with 0 and ends with a non-100% value, which is desired.
+     * Hence, we add a check to skip the unshift(0) and pop() operations in that case.
      */
-    percentArr.unshift(0);
-    percentArr.pop();
+    if (percentArr[0] !== 0) {
+      percentArr.unshift(0);
+      percentArr.pop();
+    }
 
     return zipObject(percentArr, dataArr);
   }
@@ -116,8 +125,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   );
 
   React.useEffect(() => {
-    setMarks(createMarks(releases));
-  }, [releases]);
+    setMarks(createMarks(releases, direction));
+  }, [releases, direction]);
 
   React.useEffect(() => {
     window.addEventListener("scroll", handleScroll);

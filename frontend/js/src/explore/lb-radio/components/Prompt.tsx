@@ -65,7 +65,7 @@ function Prompt(props: PromptProps) {
               id="doc-link"
               href="https://troi.readthedocs.io/en/latest/lb_radio.html"
             >
-              How do I write a query?
+              How do I write a prompt?
             </a>
           </small>
         </h3>

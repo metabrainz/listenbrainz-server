@@ -24,13 +24,13 @@ import { reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
 import { Helmet } from "react-helmet";
 
+import { Link, useParams } from "react-router-dom";
 import {
-  Link,
-  useLocation,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+  InfiniteData,
+} from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import Loader from "../components/Loader";
@@ -42,9 +42,7 @@ import {
   getReviewEventContent,
   personalRecommendationEventToListen,
   getPersonalRecommendationEventContent,
-  getObjectForURLSearchParams,
 } from "../utils/utils";
-import { RouteQuery } from "../utils/Loader";
 import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import ListenControl from "../common/listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
@@ -63,7 +61,7 @@ export enum EventType {
 }
 
 export type UserFeedPageProps = {
-  events?: TimelineEvent[];
+  events: TimelineEvent[];
 };
 
 export type UserFeedPageState = {
@@ -74,7 +72,10 @@ export type UserFeedPageState = {
   loading: boolean;
 };
 
-function isEventListenable(event: TimelineEvent): boolean {
+function isEventListenable(event?: TimelineEvent): boolean {
+  if (!event) {
+    return false;
+  }
   const { event_type } = event;
   return (
     event_type === EventType.RECORDING_RECOMMENDATION ||
@@ -152,31 +153,46 @@ type UserFeedLoaderData = UserFeedPageProps;
 export default function UserFeedPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
-  const location = useLocation();
   const params = useParams();
-  const [searchParams] = useSearchParams();
-  const searchParamsObject = getObjectForURLSearchParams(searchParams);
-  const { queryFn, queryKey } = RouteQuery(["feed", params], location.pathname);
+  const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery<UserFeedLoaderData>({
-    queryKey,
-    queryFn,
-    gcTime: !("max_ts" in searchParamsObject) ? 0 : 1,
-  });
+  const queryKey = ["feed", params];
 
-  const { events } = data || {}; // safe destructuring of possibly undefined data object
-
-  const [earliestEventTs, setEarliestEventTs] = React.useState(
-    events?.[0]?.created
+  const fetchEvents = React.useCallback(
+    async ({ pageParam }: any) => {
+      const newEvents = await APIService.getFeedForUser(
+        currentUser.name,
+        currentUser.auth_token!,
+        undefined,
+        pageParam
+      );
+      return { events: newEvents };
+    },
+    [APIService, currentUser]
   );
 
-  const nextEventTs =
-    events?.length &&
-    events?.length > 25 &&
-    events?.[events.length - 1]?.created;
-  const previousEventTs = Boolean(events?.length) && events?.[0]?.created;
+  const {
+    refetch,
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery<UserFeedLoaderData>({
+    queryKey,
+    initialPageParam: Math.ceil(Date.now() / 1000),
+    queryFn: fetchEvents,
+    getNextPageParam: (lastPage, pages) =>
+      lastPage?.events?.length
+        ? lastPage.events[lastPage.events.length - 1].created
+        : undefined,
+  });
 
-  const queryClient = useQueryClient();
+  const { pages } = data || {}; // safe destructuring of possibly undefined data object
+  // Flatten the pages of events from the infite query
+  const events = pages?.map((page) => page.events).flat();
 
   const changeEventVisibility = React.useCallback(
     async (event: TimelineEvent) => {
@@ -211,16 +227,22 @@ export default function UserFeedPage() {
   const { mutate: hideEventMutation } = useMutation({
     mutationFn: changeEventVisibility,
     onSuccess: (modifiedEvent, variables, context) => {
-      queryClient.setQueryData(queryKey, (oldEvents: TimelineEvent[]) =>
-        oldEvents.map((traversedEvent) => {
-          if (
-            traversedEvent.event_type === modifiedEvent?.event_type &&
-            traversedEvent.id === modifiedEvent?.id
-          ) {
-            return { ...traversedEvent, hidden: !modifiedEvent.hidden };
-          }
-          return traversedEvent;
-        })
+      queryClient.setQueryData<InfiniteData<UserFeedPageProps, unknown>>(
+        queryKey,
+        (oldData) => {
+          const newPages = oldData?.pages.map((page) => ({
+            events: page.events.map((traversedEvent) => {
+              if (
+                traversedEvent.event_type === modifiedEvent?.event_type &&
+                traversedEvent.id === modifiedEvent?.id
+              ) {
+                return { ...traversedEvent, hidden: !modifiedEvent.hidden };
+              }
+              return traversedEvent;
+            }),
+          }));
+          return { pages: newPages ?? [], pageParams: queryKey };
+        }
       );
     },
   });
@@ -307,15 +329,22 @@ export default function UserFeedPage() {
   // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
   const { mutate: deleteEventMutation } = useMutation({
     mutationFn: deleteFeedEvent,
-    onSuccess: (deletedEvent, variables, context) => {
-      queryClient.setQueryData<UserFeedLoaderData>(queryKey, (oldData) => ({
-        events: _reject(oldData?.events, (traversedEvent) => {
-          return (
-            traversedEvent.event_type === deletedEvent?.event_type &&
-            traversedEvent.id === deletedEvent?.id
-          );
-        }),
-      }));
+    onSuccess: (deletedEvent) => {
+      queryClient.setQueryData(
+        queryKey,
+        (oldData: { pages: UserFeedPageProps[] }) => {
+          const newPagesArray =
+            oldData?.pages?.map((page) =>
+              _reject(page.events, (traversedEvent) => {
+                return (
+                  traversedEvent.event_type === deletedEvent?.event_type &&
+                  traversedEvent.id === deletedEvent?.id
+                );
+              })
+            ) ?? [];
+          return { pages: newPagesArray };
+        }
+      );
     },
   });
 
@@ -498,13 +527,30 @@ export default function UserFeedPage() {
 
   const listens = events
     ?.filter(isEventListenable)
-    .map((event) => event.metadata) as Listen[];
-
-  const isNewerButtonDisabled = Boolean(
-    !previousEventTs ||
-      (earliestEventTs && events?.[0]?.created >= earliestEventTs)
-  );
-
+    .map((event) => event?.metadata) as Listen[];
+  if (isError) {
+    return (
+      <>
+        <Helmet>
+          <title>Feed</title>
+        </Helmet>
+        <div className="alert alert-warning text-center">
+          There was an error while trying to load your feed. Please try again
+        </div>
+        <div className="text-center">
+          <button
+            type="button"
+            className="btn btn-warning"
+            onClick={() => {
+              refetch();
+            }}
+          >
+            Reload feed
+          </button>
+        </div>
+      </>
+    );
+  }
   return (
     <>
       <Helmet>
@@ -523,7 +569,7 @@ export default function UserFeedPage() {
               zIndex: 1,
             }}
           >
-            <Loader isLoading={isLoading} />
+            <Loader isLoading={isLoading || isFetching || isFetchingNextPage} />
           </div>
           <div
             id="timeline"
@@ -566,38 +612,22 @@ export default function UserFeedPage() {
               })}
             </ul>
           </div>
-          <ul
-            className="pager"
-            style={{ marginRight: "-1em", marginLeft: "1.5em" }}
+          <div
+            className="text-center"
+            style={{ width: "50%", marginLeft: "auto", marginRight: "auto" }}
           >
-            <li
-              className={`previous ${isNewerButtonDisabled ? "disabled" : ""}`}
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              onClick={() => fetchNextPage()}
+              disabled={!hasNextPage || isFetchingNextPage}
             >
-              <Link
-                aria-label="Navigate to older listens"
-                type="button"
-                aria-disabled={isNewerButtonDisabled}
-                tabIndex={0}
-                to={`?min_ts=${previousEventTs}`}
-              >
-                &larr; Newer
-              </Link>
-            </li>
-            <li
-              className={`next ${!nextEventTs ? "disabled" : ""}`}
-              style={{ marginLeft: "auto" }}
-            >
-              <Link
-                aria-label="Navigate to older listens"
-                type="button"
-                aria-disabled={!nextEventTs}
-                tabIndex={0}
-                to={`?max_ts=${nextEventTs}`}
-              >
-                Older &rarr;
-              </Link>
-            </li>
-          </ul>
+              {isFetchingNextPage && "Loading more..."}
+              {!isFetchingNextPage && hasNextPage
+                ? "Load More"
+                : "Nothing more to load"}
+            </button>
+          </div>
         </div>
         <div className="col-md-offset-1 col-md-4">
           <UserSocialNetwork user={currentUser} />
