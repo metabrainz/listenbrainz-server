@@ -23,7 +23,7 @@ const getRecommendationsRoutes = (): RouteObject[] => {
           lazy: async () => {
             const RecommendationsPage = await import("../Recommendations");
             return {
-              Component: RecommendationsPage.RecommendationsPageWrapper,
+              Component: RecommendationsPage.default,
             };
           },
           loader: RouteQueryLoader("recommendation", true),
