@@ -41,8 +41,6 @@ export interface PlaylistPageState {
   loading: boolean;
 }
 
-type OptionType = { label: string; value: ACRMSearchResult };
-
 const makeJSPFTrack = (trackMetadata: TrackMetadata): JSPFTrack => {
   return {
     identifier: `${PLAYLIST_TRACK_URI_PREFIX}${
@@ -105,18 +103,6 @@ export default function PlaylistPage() {
     toast.error(<ToastMsg title="Error" message={error.message} />, {
       toastId: "error",
     });
-  };
-
-  const exportAsXSPF = async (
-    playlistId: string,
-    playlistTitle: string,
-    auth_token: string
-  ) => {
-    const result = await APIService.exportPlaylistToXSPF(
-      auth_token,
-      playlistId
-    );
-    saveAs(result, `${playlistTitle}.xspf`);
   };
 
   const handlePlaylistChange = React.useCallback((data: JSPFPlaylist): void => {
