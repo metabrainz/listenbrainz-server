@@ -102,8 +102,8 @@ class SelectTroiPreferences extends React.Component<
           your generated playlists (Weekly Jams, Weekly Exploration, etc) to
           Spotify.
           <br />
-          You can export playlists manually, regardless of whether
-          auto-export is turned on or off.
+          You can export playlists manually, regardless of whether auto-export
+          is turned on or off.
         </p>
 
         <div>

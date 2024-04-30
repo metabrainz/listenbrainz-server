@@ -179,14 +179,14 @@ export default function MusicServices() {
               play music on ListenBrainz (requires Spotify Premium), or both.
               <br />
               <small>
-              Full length playback requires Spotify Premium.
-              <br />
-              To play music, your browser must allow autoplaying media on listenbrainz.org.
-              <br />
-              If you encounter issues, try disconnecting and reconnecting your
-              Spotify account and select the permissions to
-              &apos;record listens and play music&apos; or &apos;play music
-              only&apos;.
+                Full length playback requires Spotify Premium.
+                <br />
+                To play music, your browser must allow autoplaying media on
+                listenbrainz.org.
+                <br />
+                If you encounter issues, try disconnecting and reconnecting your
+                Spotify account and select the permissions to &apos;record
+                listens and play music&apos; or &apos;play music only&apos;.
               </small>
             </p>
             <br />
@@ -235,12 +235,13 @@ export default function MusicServices() {
             </p>
 
             <p>
-              To play music on the ListenBrainz pages you will need to
-              grant the permission to play streams from your account and create
-              playlists. Spotify also requires permission to
-              read your email address, your private information and your
-              birthdate, to determine if you are a premium user -{" "}
-              <b>ListenBrainz will never read these pieces of data</b>. Please feel free to{" "}
+              To play music on the ListenBrainz pages you will need to grant the
+              permission to play streams from your account and create playlists.
+              Spotify also requires permission to read your email address, your
+              private information and your birthdate, to determine if you are a
+              premium user -{" "}
+              <b>ListenBrainz will never read these pieces of data</b>. Please
+              feel free to{" "}
               <a href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/spotify_updater/spotify_read_listens.py">
                 inspect our source code
               </a>{" "}
@@ -248,8 +249,8 @@ export default function MusicServices() {
             </p>
 
             <p>
-              Revoke these permissions any time by disabling
-              your Spotify connection.
+              Revoke these permissions any time by disabling your Spotify
+              connection.
             </p>
           </div>
         </div>
@@ -260,11 +261,10 @@ export default function MusicServices() {
           </div>
           <div className="panel-body">
             <p>
-              Connect to your CritiqueBrainz account to publish reviews
-              directly from ListenBrainz. Reviews are public on ListenBrainz
-              and CritiqueBrainz. To view or delete your reviews, visit your
-              <a href="https://critiquebrainz.org/">
-              CritiqueBrainz profile.</a>
+              Connect to your CritiqueBrainz account to publish reviews directly
+              from ListenBrainz. Reviews are public on ListenBrainz and
+              CritiqueBrainz. To view or delete your reviews, visit your
+              <a href="https://critiquebrainz.org/">CritiqueBrainz profile.</a>
             </p>
             <br />
             <div className="music-service-selection">
@@ -366,7 +366,8 @@ export default function MusicServices() {
           </div>
           <div className="panel-body">
             <p>
-              Playing music using YouTube on ListenBrainz does not require an account to be connected.
+              Playing music using YouTube on ListenBrainz does not require an
+              account to be connected.
             </p>
           </div>
         </div>

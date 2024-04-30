@@ -43,13 +43,11 @@ export default function ResetImportTimestamp() {
       <p>Are you sure you want to reset your timestamp? </p>
 
       <p>
-        The Last.fm importer only checks for new Last.fm
-        listens, since your last Last.fm import. To do this,
-        it stores the timestamp of the most recent listen
-        submitted in your last import. Resetting the timestamp
-        will make the next import check your entire Last.fm
-        history. This will not create duplicates in your
-        ListenBrainz listen history.
+        The Last.fm importer only checks for new Last.fm listens, since your
+        last Last.fm import. To do this, it stores the timestamp of the most
+        recent listen submitted in your last import. Resetting the timestamp
+        will make the next import check your entire Last.fm history. This will
+        not create duplicates in your ListenBrainz listen history.
       </p>
       <button
         type="button"
