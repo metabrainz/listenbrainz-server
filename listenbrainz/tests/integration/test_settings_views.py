@@ -124,7 +124,6 @@ class SettingsViewsTestCase(IntegrationTestCase):
             if json.loads(resp.data)['payload']['count'] == 0:
                 break
 
-        print("listen count:", cache.get(REDIS_USER_LISTEN_COUNT + str(self.user['id'])))
         self.assertEqual(json.loads(resp.data)['payload']['count'], 0)
 
         # check that the latest_import timestamp has been reset too
