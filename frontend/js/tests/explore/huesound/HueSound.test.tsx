@@ -74,18 +74,32 @@ describe("HueSound", () => {
       textContentMatcher("Click an album cover to start playing!")
     );
     const releaseButton = screen.getByRole("button");
-    within(releaseButton).getByAltText("Cover art for Release Prelude to Heliogabalus");
+    within(releaseButton).getByAltText(
+      "Cover art for Release Prelude to Heliogabalus"
+    );
   });
 
-  it("renders a release when one is selected", async () => {
-    renderWithProviders(<HueSound />);
+  it("renders a release and plays it when selected", async () => {
+    const messages: MessageEvent[] = [];
+    window.addEventListener("message", (message: MessageEvent) =>
+      messages.push(message)
+    );
 
+    renderWithProviders(<HueSound />);
     const canvasElement = screen.getByTestId("colour-picker");
     await user.click(canvasElement);
     const releaseButton = screen.getByRole("button");
     await user.click(releaseButton);
-    const links =  screen.getAllByRole("link");
-    expect(links.at(0)).toHaveTextContent("Prelude to Heliogabalus")
-    expect(links.at(1)).toHaveTextContent("Rorcal & Music For The Space")
+    const links = screen.getAllByRole("link");
+    expect(links.at(0)).toHaveTextContent("Prelude to Heliogabalus");
+    expect(links.at(1)).toHaveTextContent("Rorcal & Music For The Space");
+    
+    const brainzPlayerMessages = messages.filter(
+      (m) => m.data.brainzplayer_event
+    );
+    expect(brainzPlayerMessages).toHaveLength(1);
+    expect(brainzPlayerMessages[0].data.brainzplayer_event).toEqual(
+      "play-listen"
+    );
   });
 });

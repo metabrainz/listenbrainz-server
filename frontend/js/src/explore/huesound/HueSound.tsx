@@ -180,6 +180,7 @@ export default function HueSound() {
                   (recording: BaseListenFormat) => {
                     return (
                       <ListenCard
+                        key={recording.track_metadata.track_name}
                         listen={recording}
                         showTimestamp={false}
                         showUsername={false}
