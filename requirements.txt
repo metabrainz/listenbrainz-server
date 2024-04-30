@@ -29,7 +29,7 @@ eventlet == 0.35.2
 dnspython==2.2.1
 uWSGI==2.0.23
 sentry-sdk[flask]==1.38.0
-pydantic == 1.9.1
+pydantic == 1.10.13
 pycountry==22.3.5
 Flask==3.0.0
 Jinja2==3.1.3
