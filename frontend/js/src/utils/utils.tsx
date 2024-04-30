@@ -280,15 +280,7 @@ const getStatsArtistLink = (
   }
   const firstArtist = _.first(artist_mbids);
   if (firstArtist) {
-    return (
-      <Link
-        to={`/artist/${firstArtist}/`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {artist_name}
-      </Link>
-    );
+    return <Link to={`/artist/${firstArtist}/`}>{artist_name}</Link>;
   }
   return artist_name;
 };
