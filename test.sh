@@ -10,7 +10,7 @@ fi
 # ./test.sh                build unit test containers, bring up, make database, test, bring down
 # for development:
 # ./test.sh -u             build unit test containers, bring up background and load database if needed
-# ./test.sh [params]       run unit tests, passing optional params to inner test
+# ./test.sh [path-to-tests-file-or-directory]  # run specific tests
 # ./test.sh -s             stop unit test containers without removing
 # ./test.sh -d             clean unit test containers
 

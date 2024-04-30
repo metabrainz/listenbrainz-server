@@ -273,10 +273,10 @@ once so that subsequent running of the tests is faster:
 
 .. code-block:: bash
 
-   ./test.sh -u                      # build unit test containers, start up and initialise the database
-   ./test.sh [path-to-test-file.py]  # run tests, do this as often as you need to
-   ./test.sh -s                      # stop test containers, but don't remove them
-   ./test.sh -d                      # stop and remove all test containers
+   ./test.sh -u                                 # build unit test containers, start up and initialise the database
+   ./test.sh [path-to-tests-file-or-directory]  # run specific tests, do this as often as you need to
+   ./test.sh -s                                 # stop test containers, but don't remove them
+   ./test.sh -d                                 # stop and remove all test containers
 
 If you made any changes to the frontend, you can run the tests for frontend using
 
