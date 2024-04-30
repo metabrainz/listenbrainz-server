@@ -37,7 +37,7 @@ import { RouteQuery } from "../../../utils/Loader";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
-  yearInMusicData: {
+  yearInMusicData?: {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
@@ -241,10 +241,10 @@ export default class YearInMusic extends React.Component<
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
         <div className="flex-center flex-wrap">
-          <SEO year={2021} userName={user?.name} />
+          <SEO year={2021} userName={user?.name ?? ""} />
           <YIMYearMetaTags year={2021} />
           <h3>
-            We don&apos;t have enough listening data for {user.name} to produce
+            We don&apos;t have enough listening data for {user?.name} to produce
             any statistics or playlists. (If you received an email from us
             telling you that you had a report waiting for you, we apologize for
             the goof-up. We don&apos;t -- 2022 continues to suck, sorry!)
@@ -426,43 +426,24 @@ export default class YearInMusic extends React.Component<
             <p>You will find in this page:</p>
             <ul>
               <li>
-                {yourOrUsersName} top{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-releases">
-                  albums
-                </a>
-                ,{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-recordings">
-                  songs
-                </a>{" "}
-                and{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-artists">
-                  artists
-                </a>{" "}
-                of the year
+                {yourOrUsersName} top <a href="#top-releases">albums</a>,{" "}
+                <a href="#top-recordings">songs</a> and{" "}
+                <a href="#top-artists">artists</a> of the year
               </li>
               <li>
                 some statistics about {yourOrUsersName}{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#calendar">
-                  listening activity
-                </a>
+                <a href="#calendar">listening activity</a>
               </li>
               <li>
                 a list of{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#similar-users">
-                  users similar to {youOrUsername}
-                </a>
+                <a href="#similar-users">users similar to {youOrUsername}</a>
               </li>
               <li>
                 new albums that {yourOrUsersName} top artists{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#new-releases">
-                  released in 2021
-                </a>
+                <a href="#new-releases">released in 2021</a>
               </li>
               <li>
-                and finally four{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#playlists">
-                  personalized playlists
-                </a>
+                and finally four <a href="#playlists">personalized playlists</a>
                 &nbsp; of music {youOrUsername} listened to and new songs to
                 discover
               </li>
@@ -981,12 +962,15 @@ export default class YearInMusic extends React.Component<
 export function YearInMusicWrapper() {
   const location = useLocation();
   const params = useParams();
-  const {
-    data: { user, data: yearInMusicData },
-  } = useQuery(
+  const { data } = useQuery<YearInMusicLoaderData>(
     RouteQuery(["year-in-music-2021", params], location.pathname)
-  ) as {
-    data: YearInMusicLoaderData;
-  };
-  return <YearInMusic user={user} yearInMusicData={yearInMusicData} />;
+  );
+  const { user, data: yearInMusicData } = data || {};
+  const fallbackUser = { name: "" };
+  return (
+    <YearInMusic
+      user={user ?? fallbackUser}
+      yearInMusicData={yearInMusicData}
+    />
+  );
 }

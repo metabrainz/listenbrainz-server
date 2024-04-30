@@ -96,14 +96,14 @@ class SelectTroiPreferences extends React.Component<
         <Helmet>
           <title>Select Playlist Preferences</title>
         </Helmet>
-        <h3>Configure auto export of generated playlists</h3>
+        <h3>Auto-export playlists</h3>
         <p>
-          If this setting is turned on, ListenBrainz will automatically export
-          your generated playlists (Weekly Jams, Weekly Exploration, ...) to
-          Spotify everyday.
+          If auto-export is turned on, ListenBrainz will automatically export
+          your generated playlists (Weekly Jams, Weekly Exploration, etc) to
+          Spotify.
           <br />
-          You can always export playlists manually regardless of whether this
-          setting is turned on or off.
+          You can export playlists manually, regardless of whether
+          auto-export is turned on or off.
         </p>
 
         <div>
@@ -125,7 +125,7 @@ class SelectTroiPreferences extends React.Component<
             </div>
             <p>
               <button type="submit" className="btn btn-info btn-lg">
-                Save Changes
+                Save changes
               </button>
             </p>
           </form>

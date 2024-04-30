@@ -6,6 +6,7 @@ import { faCheck, faSpinner, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { capitalize } from "lodash";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
@@ -336,7 +337,7 @@ export default class LastFmImporter extends React.Component<
           Succesfully imported {inserted} out of {total} tracks feedback from{" "}
           {capitalize(service)}
           <br />
-          <a href="/my/taste">Click here to see your newly loved tracks</a>
+          <Link to="/my/taste">Click here to see your newly loved tracks</Link>
         </div>
       );
     } catch (error) {
@@ -464,7 +465,7 @@ export default class LastFmImporter extends React.Component<
           <br />
           <span style={{ fontSize: `${10}pt` }}>
             <a href={`${profileUrl}`}>
-              Close and go to your ListenBrainz profile
+              Close and go to your ListenBrainz settings
             </a>
           </span>
         </p>
@@ -527,7 +528,7 @@ export default class LastFmImporter extends React.Component<
         <br />
         <span style={{ fontSize: `${10}pt` }}>
           <a href={`${profileUrl}`}>
-            Close and go to your ListenBrainz profile
+            Close and go to your ListenBrainz settings
           </a>
         </span>
       </p>
@@ -553,7 +554,7 @@ export default class LastFmImporter extends React.Component<
           <br />
           <span style={{ fontSize: `${10}pt` }}>
             <a href={`${profileUrl}`}>
-              Close and go to your ListenBrainz profile
+              Close and go to your ListenBrainz settings
             </a>
           </span>
         </p>

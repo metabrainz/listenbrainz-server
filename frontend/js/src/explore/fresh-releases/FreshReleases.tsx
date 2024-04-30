@@ -10,6 +10,7 @@ import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
+import { useMediaQuery } from "./utils";
 
 export enum DisplaySettingsPropertiesEnum {
   releaseTitle = "Release Title",
@@ -51,6 +52,26 @@ const SortOptions = {
 } as const;
 
 export type SortOption = typeof SortOptions[keyof typeof SortOptions]["value"];
+
+const SortDirections = {
+  ascend: {
+    value: "ascend",
+    label: "Ascending",
+  },
+  descend: {
+    value: "descend",
+    label: "Descending",
+  },
+};
+
+export type SortDirection = typeof SortDirections[keyof typeof SortDirections]["value"];
+
+const DefaultSortDirections: Record<SortOption, SortDirection> = {
+  release_date: "descend",
+  artist_credit_name: "ascend",
+  release_name: "ascend",
+  confidence: "descend",
+};
 
 export const filterRangeOptions = {
   week: {
@@ -105,6 +126,13 @@ export default function FreshReleases() {
     true
   );
   const [sort, setSort] = React.useState<SortOption>("release_date");
+  const [sortDirection, setSortDirection] = React.useState<SortDirection>(
+    "descend"
+  ); // Default sort direction for release_date
+  const [
+    hasSelectedSortDirection,
+    setHasSelectedSortDirection,
+  ] = React.useState(false);
 
   const releaseCardGridRef = React.useRef(null);
 
@@ -121,6 +149,14 @@ export default function FreshReleases() {
       [setting]: !displaySettings[setting],
     });
   };
+
+  const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
+  let pillRowStyle = {};
+  if (screenMd) {
+    pillRowStyle = { justifyContent: "center" };
+  } else if (!isLoggedIn) {
+    pillRowStyle = { justifyContent: "flex-end" };
+  }
 
   React.useEffect(() => {
     const fetchReleases = async () => {
@@ -210,12 +246,9 @@ export default function FreshReleases() {
       <Helmet>
         <title>Fresh releases</title>
       </Helmet>
-      <div className="releases-page-container">
+      <div className="releases-page-container" role="main">
         <div className="releases-page">
-          <div
-            className="fresh-releases-pill-row"
-            style={!isLoggedIn ? { justifyContent: "flex-end" } : {}}
-          >
+          <div className="fresh-releases-pill-row" style={pillRowStyle}>
             {isLoggedIn ? (
               <div className="fresh-releases-row">
                 <Pill
@@ -246,13 +279,36 @@ export default function FreshReleases() {
                   id="fresh-releases-sort-select"
                   className="form-control"
                   value={sort}
-                  onChange={(event) =>
-                    setSort(event.target.value as SortOption)
-                  }
+                  onChange={(event) => {
+                    setSort(event.target.value as SortOption);
+                    if (!hasSelectedSortDirection) {
+                      setSortDirection(
+                        DefaultSortDirections[event.target.value as SortOption]
+                      );
+                    }
+                  }}
                 >
                   {availableSortOptions.map((option) => (
                     <option value={option.value} key={option.value}>
                       {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <span>Direction:</span>{" "}
+              <div className="input-group">
+                <select
+                  id="fresh-releases-sort-direction-select"
+                  className="form-control"
+                  value={sortDirection}
+                  onChange={(event) => {
+                    setSortDirection(event.target.value as SortDirection);
+                    setHasSelectedSortDirection(true);
+                  }}
+                >
+                  {Object.entries(SortDirections).map(([_, direction]) => (
+                    <option value={direction.value} key={direction.value}>
+                      {direction.label}
                     </option>
                   ))}
                 </select>
@@ -298,13 +354,18 @@ export default function FreshReleases() {
                   filteredList={filteredList}
                   displaySettings={displaySettings}
                   order={sort}
+                  direction={sortDirection}
                 />
               )}
             </div>
           )}
         </div>
-        {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 && (
-          <ReleaseTimeline releases={filteredList} order={sort} />
+        {filteredList.length > 0 && (
+          <ReleaseTimeline
+            releases={filteredList}
+            order={sort}
+            direction={sortDirection}
+          />
         )}
         <ReleaseFilters
           allFilters={allFilters}

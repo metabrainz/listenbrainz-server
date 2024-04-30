@@ -10,6 +10,7 @@ export type GlobalAppContextT = {
   youtubeAuth?: YoutubeUser;
   soundcloudAuth?: SoundCloudUser;
   critiquebrainzAuth?: MetaBrainzProjectUser;
+  appleAuth?: AppleMusicUser;
   musicbrainzAuth?: MetaBrainzProjectUser & {
     refreshMBToken: () => Promise<string | undefined>;
   };
@@ -26,6 +27,7 @@ export const defaultGlobalContext: GlobalAppContextT = {
   spotifyAuth: {},
   youtubeAuth: {},
   soundcloudAuth: {},
+  appleAuth: {},
   critiquebrainzAuth: {},
   musicbrainzAuth: {
     refreshMBToken: async () => {

@@ -51,7 +51,11 @@ const getRoutes = (musicbrainzID?: string): RouteObject[] => {
       ],
     },
     {
-      element: <ProtectedRoutes />,
+      element: (
+        <Layout>
+          <ProtectedRoutes />
+        </Layout>
+      ),
       errorElement: (
         <Layout>
           <ErrorBoundary />

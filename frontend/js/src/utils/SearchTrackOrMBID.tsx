@@ -191,7 +191,10 @@ export default function SearchTrackOrMBID({
                 <button
                   key={track.recording_mbid}
                   type="button"
-                  onClick={() => selectSearchResult(track)}
+                  onClick={() => {
+                    selectSearchResult(track);
+                    reset();
+                  }}
                 >
                   {`${track.recording_name} - ${track.artist_credit_name}`}
                 </button>

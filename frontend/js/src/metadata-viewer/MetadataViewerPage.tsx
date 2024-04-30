@@ -2,7 +2,7 @@
 import * as React from "react";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import MetadataViewer from "./components/MetadataViewer";
@@ -96,8 +96,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   if (!currentUser) {
     return (
       <div>
-        Please{" "}
-        <a href="https://listenbrainz.org/login/">log in to ListenBrainz</a>
+        Please <Link to="/login/">log in to ListenBrainz</Link>
       </div>
     );
   }
