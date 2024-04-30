@@ -79,7 +79,6 @@ def profile(user_name):
     for listen in data:
         listens.append(listen.to_api())
 
-  
     playing_now = playing_now_conn.get_playing_now(user.id)
     if playing_now:
         playing_now = playing_now.to_api()
