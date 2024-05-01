@@ -4,7 +4,7 @@ from uuid import UUID
 
 import psycopg2
 import psycopg2.extras
-from datasethoster import Query
+from datasethoster import Query, RequestSource, QueryOutputLine
 from flask import current_app
 from markupsafe import Markup
 from pydantic import BaseModel, Field
@@ -30,17 +30,6 @@ class SimilarRecordingsViewerOutputItem(BaseModel):
     caa_release_mbid: Optional[UUID]
     score: Optional[int]
     reference_mbid: Optional[UUID]
-
-
-SimilarRecordingsViewerOutput = Union[QueryOutputLine, SimilarRecordingsViewerOutputItem]
-
-
-class SimilarRecordingsViewerOutputItem(BaseModel):
-    artist_credit_name: Optional[str]
-    recording_name: Optional[str]
-    artist_credit_id: Optional[int]
-    artist_credit_mbids: Optional[list[UUID]]
-    recording_mbid: Optional[UUID]
 
 
 class SimilarRecordingsViewerOutputComment(BaseModel):
@@ -102,7 +91,7 @@ class SimilarRecordingsViewerQuery(Query):
 
     def fetch(self, params, source, offset=-1, count=-1):
         recording_mbids = [str(x) for x in params[0].recording_mbids]
-        algorithm = params[0].algorithm
+        algorithm = params[0].algorithm.value.strip()
         count = count if count > 0 else 100
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
