@@ -90,7 +90,7 @@ class RecordingLookupBaseQuery(Query, ABC):
                     if param.get("release_name") is not None:
                         data["release_name_arg"] = param.get("release_name")
                     data["index"] = index
-                    results.append(data)
+                    results.append(RecordingLookupBaseOutput(**data))
 
                     if self.debug:
                         self.log_lines.append(

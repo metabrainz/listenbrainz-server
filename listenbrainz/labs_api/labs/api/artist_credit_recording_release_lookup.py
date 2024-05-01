@@ -15,7 +15,7 @@ class ArtistCreditRecordingReleaseLookupQuery(RecordingLookupBaseQuery):
         return "mapping.canonical_musicbrainz_data_release_support"
 
     def get_lookup_string(self, param) -> str:
-        return param["[artist_credit_name]"] + param["[recording_name]"] + param["[release_name]"]
+        return param.artist_credit_name + param.recording_name + param.release_name
 
     def names(self):
         return "acrr-lookup", "MusicBrainz Artist Credit Recording Release lookup"

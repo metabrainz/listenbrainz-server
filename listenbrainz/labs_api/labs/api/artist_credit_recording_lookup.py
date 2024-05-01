@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from pydantic import BaseModel
 
 from listenbrainz.labs_api.labs.api.recording_lookup_base import RecordingLookupBaseQuery
