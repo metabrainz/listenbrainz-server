@@ -102,11 +102,11 @@ export default class SelectTimezone extends React.Component<
           Your timezone is{" "}
           <span style={{ fontWeight: "bold" }}>{userTimezone}.</span>
         </p>
-        
+
         <p>
           Setting your timezone allows us to generate local timestamps and
-          better statistics for your listens. It also influences when your
-          daily playlists and recommendations are generated.
+          better statistics for your listens. It also influences when your daily
+          playlists and recommendations are generated.
         </p>
 
         <div>

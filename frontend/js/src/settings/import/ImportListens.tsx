@@ -38,23 +38,18 @@ export default function Import() {
         <div className="alert alert-danger">
           You have not provided an email address. Please provide an{" "}
           <a href="https://musicbrainz.org/account/edit">email address</a> and{" "}
-          <em>verify it</em>{" "}
-          to submit listens. Read this{" "}
-          <a href="https://blog.metabrainz.org/?p=8915">blog post</a>{" "}
-          to understand why we need your email. You can provide us with an email
-          on your{" "}
-          <a href="https://musicbrainz.org/account/edit">
-            MusicBrainz account
-          </a>{" "}
+          <em>verify it</em> to submit listens. Read this{" "}
+          <a href="https://blog.metabrainz.org/?p=8915">blog post</a> to
+          understand why we need your email. You can provide us with an email on
+          your{" "}
+          <a href="https://musicbrainz.org/account/edit">MusicBrainz account</a>{" "}
           page.
         </div>
       )}
       <p>
         Import your existing listen history from other databases. To submit{" "}
-        <em>new</em>{" "}
-        listens, please visit the{" "}
-        <a href="https://listenbrainz.org/add-data/">Connect services</a>{" "}
-        and{" "}
+        <em>new</em> listens, please visit the{" "}
+        <a href="https://listenbrainz.org/add-data/">Connect services</a> and{" "}
         <a href="https://listenbrainz.org/settings/music-services/details/">
           Submitting data
         </a>{" "}
@@ -133,8 +128,8 @@ export default function Import() {
       <br />
       <h4> Reset Last.fm import timestamp </h4>
       <p>
-        If you think that a import has missed listens, you can reset
-        your previous import timestamp. This will cause your next import to be a
+        If you think that a import has missed listens, you can reset your
+        previous import timestamp. This will cause your next import to be a
         complete import, which will add missing listens without adding
         duplicates to your history.
       </p>
