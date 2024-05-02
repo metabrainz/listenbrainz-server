@@ -623,6 +623,7 @@ export default class BrainzPlayer extends React.Component<
     album?: string,
     artwork?: Array<MediaImage>
   ): void => {
+    const { playerPaused } = this.state;
     this.setState(
       {
         currentTrackName: title,
@@ -630,9 +631,14 @@ export default class BrainzPlayer extends React.Component<
         currentTrackURL: trackURL,
         currentTrackAlbum: album,
       },
-      this.updateWindowTitle
+      () => {
+        this.updateWindowTitle();
+        if (!playerPaused) {
+          this.submitNowPlayingToListenBrainz();
+        }
+      }
     );
-    const { playerPaused } = this.state;
+
     if (playerPaused) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)
@@ -670,8 +676,6 @@ export default class BrainzPlayer extends React.Component<
         this.handleInfoMessage(message, `Playing a track`);
       }
     });
-
-    this.submitNowPlayingToListenBrainz();
   };
 
   // eslint-disable-next-line react/sort-comp
