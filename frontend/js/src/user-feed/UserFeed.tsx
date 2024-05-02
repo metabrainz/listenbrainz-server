@@ -613,7 +613,7 @@ export default function UserFeedPage() {
                   disabled={!hasNextPage || isFetchingNextPage}
                 >
                   {(isLoading || isFetchingNextPage) && "Loading more..."}
-                  {!isFetchingNextPage &&
+                  {!(isLoading || isFetchingNextPage) &&
                     (hasNextPage ? "Load More" : "Nothing more to load")}
                 </button>
               </div>
