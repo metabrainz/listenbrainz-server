@@ -74,19 +74,21 @@ export default function DeleteListens() {
       </Helmet>
       <h3 className="page-title">Delete listens: {name}</h3>
       <p>
-        <b>This will permanently delete all ListenBrainz listens for user {name}.</b>
+        <b>
+          This will permanently delete all ListenBrainz listens for user {name}.
+        </b>
       </p>
 
       <p>
-        If you are still connected to Spotify, the last 50 Spotify
-        tracks may be auto-reimported. You can {" "}
+        If you are still connected to Spotify, the last 50 Spotify tracks may be
+        auto-reimported. You can{" "}
         <Link to="/settings/music-services/details/">Disconnect</Link> Spotify
         before deleting.
       </p>
 
       <p>
-        The listens will not be recoverable. Please consider exporting
-        your ListenBrainz data before deleting your account.
+        The listens will not be recoverable. Please consider exporting your
+        ListenBrainz data before deleting your account.
       </p>
 
       <form onSubmit={downloadListens}>
