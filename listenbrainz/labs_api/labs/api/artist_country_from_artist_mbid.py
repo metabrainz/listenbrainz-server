@@ -15,6 +15,7 @@ class ArtistCountryFromArtistMBIDOutput(BaseModel):
     artist_mbid: UUID
     artist_name: str
     country_code: str
+    area_id: int
 
 
 class ArtistCountryFromArtistMBIDQuery(Query):
