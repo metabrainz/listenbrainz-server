@@ -13,6 +13,12 @@ class RecordingFromRecordingMBIDInput(BaseModel):
     recording_mbid: str
 
 
+class RecordingFromRecordingMBIDArtist(BaseModel):
+    artist_credit_name: str
+    artist_mbid: UUID
+    join_phrase: str
+
+
 class RecordingFromRecordingMBIDOutput(BaseModel):
     artist_credit_name: Optional[str]
     recording_name: Optional[str]
@@ -22,6 +28,9 @@ class RecordingFromRecordingMBIDOutput(BaseModel):
     length: Optional[int]
     canonical_recording_mbid: Optional[UUID]
     original_recording_mbid: Optional[UUID]
+    release_name: Optional[str]
+    release_mbid: Optional[UUID]
+    artists: list[RecordingFromRecordingMBIDArtist]
 
 
 class RecordingFromRecordingMBIDQuery(Query):
@@ -37,9 +46,7 @@ class RecordingFromRecordingMBIDQuery(Query):
         return """Look up recording and artist information given a recording MBID"""
 
     def outputs(self):
-        return ['recording_mbid', 'recording_name', 'length', 'artist_credit_id', 'artist_credit_name',
-                '[artist_credit_mbids]', 'canonical_recording_mbid', 'original_recording_mbid',
-                'release_name', 'release_mbid']
+        return RecordingFromRecordingMBIDOutput
 
     def fetch(self, params, source, offset=-1, count=-1):
         if not current_app.config["MB_DATABASE_URI"]:
@@ -56,6 +63,8 @@ class RecordingFromRecordingMBIDQuery(Query):
                 item.pop("caa_id", None)
                 item.pop("caa_release_mbid", None)
 
+        output = [RecordingFromRecordingMBIDOutput(**row) for row in output]
+
         # Ideally offset and count should be handled by the postgres query itself, but the 1:1 relationship
         # of what the user requests and what we need to fetch is no longer true, so we can't easily use LIMIT/OFFSET.
         # We might be able to use a RIGHT JOIN to fix this, but for now I'm happy to leave this as it. We need to
@@ -69,4 +78,4 @@ class RecordingFromRecordingMBIDQuery(Query):
         if offset < 0 and count > 0:
             return output[:count]
 
-        return [RecordingFromRecordingMBIDOutput(**row) for row in output]
+        return output
