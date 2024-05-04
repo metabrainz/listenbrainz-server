@@ -18,6 +18,7 @@ class BaseMBIDMappingOutput(BaseModel):
     artist_mbids: Optional[list[UUID]]
     release_mbid: Optional[UUID]
     recording_mbid: Optional[UUID]
+    match_type: int
 
 
 class BaseMBIDMappingQuery(Query):
