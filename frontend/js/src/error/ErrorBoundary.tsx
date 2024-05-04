@@ -1,6 +1,6 @@
 import React from "react";
 import { Helmet } from "react-helmet";
-import { isRouteErrorResponse, useRouteError } from "react-router-dom";
+import { isRouteErrorResponse, Link, useRouteError } from "react-router-dom";
 
 const ErrorStatusMessage: { [key: number]: string } = {
   400: "Invalid request",
@@ -35,7 +35,7 @@ export function ErrorBoundary() {
         <code>{`${errorStatus}: ${errorMessage}`}</code>
       </p>
       <p>
-        <a href="/">Back to home page</a>
+        <Link to="/">Back to home page</Link>
       </p>
     </>
   ) : (
