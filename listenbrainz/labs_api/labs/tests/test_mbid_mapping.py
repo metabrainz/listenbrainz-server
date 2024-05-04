@@ -98,6 +98,7 @@ json_response_0 = [
         "artist_mbids": ["a3cb23fc-acd3-4ce0-8f36-1e5aa6a18432"],
         "artist_credit_name": "U2",
         "index": 0,
+        "match_type": 4,
         "recording_arg": "gloria",
         "recording_mbid": "398a5f12-80ba-4d29-8b6b-bfe2176341a6",
         "recording_name": "Gloria",
@@ -110,6 +111,7 @@ json_response_0 = [
         "artist_mbids": ["8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"],
         "artist_credit_name": "Portishead",
         "index": 1,
+        "match_type": 4,
         "recording_arg": "strangers",
         "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
         "recording_name": "Strangers",
@@ -122,6 +124,7 @@ json_response_0 = [
         "artist_mbids": ["8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"],
         "artist_credit_name": "Portishead",
         "index": 2,
+        "match_type": 1,
         "recording_arg": "glory box (feat. your mom)",
         "recording_mbid": "145f5c43-0ac2-4886-8b09-63d0e92ded5d",
         "recording_name": "Glory Box",
@@ -137,6 +140,7 @@ json_response_1 = [
         "artist_mbids": ["8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"],
         "artist_credit_name": "Portishead",
         "index": 0,
+        "match_type": 3,
         "recording_arg": "strangers a",
         "recording_mbid": "e97f805a-ab48-4c52-855e-07049142113d",
         "recording_name": "Strangers",
@@ -171,7 +175,7 @@ class MainTestCase(flask_testing.TestCase):
             q.outputs().__fields__.keys(),
             ['index', 'artist_credit_arg', 'recording_arg',  'artist_credit_name',
              'artist_mbids', 'release_name', 'recording_name', 'release_mbid', 'recording_mbid',
-             'artist_credit_id'])
+             'artist_credit_id', 'match_type'])
 
     @patch('typesense.documents.Documents.search')
     def test_fetch(self, search):
@@ -180,7 +184,6 @@ class MainTestCase(flask_testing.TestCase):
         q = MBIDMappingQuery()
         resp = q.fetch(json_request_0, RequestSource.json_post)
         self.assertEqual(len(resp), 3)
-        self.maxDiff = None
         self.assertDictEqual(json.loads(resp[0].json()), json_response_0[0])
         self.assertDictEqual(json.loads(resp[1].json()), json_response_0[1])
         self.assertDictEqual(json.loads(resp[2].json()), json_response_0[2])

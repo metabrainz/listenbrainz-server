@@ -1,4 +1,5 @@
 from brainzutils.ratelimit import ratelimit
+from datasethoster import RequestSource
 from flask import Blueprint, request, jsonify, current_app
 
 from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
@@ -6,7 +7,7 @@ from listenbrainz.db.metadata import get_metadata_for_recording, get_metadata_fo
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup import \
-    ArtistCreditRecordingReleaseLookupQuery
+    ArtistCreditRecordingReleaseLookupQuery, ArtistCreditRecordingReleaseLookupInput
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
 from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.decorators import crossdomain
@@ -210,11 +211,11 @@ def metadata_release_group():
 
 
 def process_results(match, metadata, incs):
-    recording_mbid = match["recording_mbid"]
+    recording_mbid = str(match["recording_mbid"])
     result = {
         "recording_mbid": recording_mbid,
-        "release_mbid": match["release_mbid"],
-        "artist_mbids": match["artist_mbids"],
+        "release_mbid": str(match["release_mbid"]),
+        "artist_mbids": [str(artist_mbid) for artist_mbid in match["artist_mbids"]],
         "recording_name": match["recording_name"],
         "release_name": match["release_name"],
         "artist_credit_name": match["artist_credit_name"]
@@ -263,24 +264,24 @@ def get_mbid_mapping():
     incs = parse_incs(request.args.get("inc")) if metadata else []
 
     params = [
-        {
-            "[artist_credit_name]": artist_name,
-            "[recording_name]": recording_name,
-            "[release_name]": release_name
-        }
+        ArtistCreditRecordingReleaseLookupInput(
+            artist_credit_name=artist_name,
+            recording_name=recording_name,
+            release_name=release_name or "",
+        )
     ]
 
     try:
         if release_name:
             q = ArtistCreditRecordingReleaseLookupQuery(debug=False)
-            exact_results = q.fetch(params)
+            exact_results = q.fetch(params, RequestSource.json_post)
             if exact_results:
-                return process_results(exact_results[0], metadata, incs)
+                return process_results(exact_results[0].dict(), metadata, incs)
 
         q = ArtistCreditRecordingLookupQuery(debug=False)
-        exact_results = q.fetch(params)
+        exact_results = q.fetch(params, RequestSource.json_post)
         if exact_results:
-            return process_results(exact_results[0], metadata, incs)
+            return process_results(exact_results[0].dict(), metadata, incs)
 
         q = MBIDMapper(timeout=10, remove_stop_words=True, debug=False, retry_on_timeout=False)
         fuzzy_result = q.search(artist_name, recording_name, release_name)
