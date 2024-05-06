@@ -46,6 +46,7 @@ export type ListensProps = {
   oldestListenTs: number;
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
+  playingNow?: Listen;
 };
 
 type ListenLoaderData = ListensProps;
@@ -73,6 +74,7 @@ export default function Listen() {
     listens = [],
     user,
     userPinnedRecording = undefined,
+    playingNow = undefined,
     latestListenTs = 0,
     oldestListenTs = 0,
   } = data || {};
@@ -92,9 +94,6 @@ export default function Listen() {
     []
   );
   const [followingList, setFollowingList] = React.useState<Array<string>>([]);
-  const [playingNowListen, setPlayingNowListen] = React.useState<
-    Listen | undefined
-  >(listens ? _.remove(listens, (listen) => listen.playing_now)[0] : undefined);
 
   const [deletedListen, setDeletedListen] = React.useState<Listen | null>(null);
   const [listenCount, setListenCount] = React.useState<number | undefined>();
@@ -131,12 +130,12 @@ export default function Listen() {
   };
 
   const receiveNewPlayingNow = React.useCallback(
-    async (newPlayingNow: Listen): Promise<void> => {
-      let playingNow = newPlayingNow;
+    async (receivedPlayingNow: Listen): Promise<Listen> => {
+      let newPlayingNow = receivedPlayingNow;
       try {
         const response = await APIService.lookupRecordingMetadata(
-          playingNow.track_metadata.track_name,
-          playingNow.track_metadata.artist_name,
+          newPlayingNow.track_metadata.track_name,
+          newPlayingNow.track_metadata.artist_name,
           true
         );
         if (response) {
@@ -149,8 +148,8 @@ export default function Listen() {
           // ListenCard does not deepcopy the listen passed to it in props, therefore modifying the object here would
           // change the object stored inside ListenCard's state even before react can propagate updates. therefore, clone
           // first
-          playingNow = cloneDeep(playingNow);
-          playingNow.track_metadata.mbid_mapping = {
+          newPlayingNow = cloneDeep(newPlayingNow);
+          newPlayingNow.track_metadata.mbid_mapping = {
             recording_mbid,
             release_mbid,
             artist_mbids,
@@ -176,7 +175,7 @@ export default function Listen() {
           { toastId: "load-listen-error" }
         );
       }
-      setPlayingNowListen(playingNow);
+      return newPlayingNow;
     },
     [APIService]
   );
@@ -218,14 +217,28 @@ export default function Listen() {
           );
         });
     }
-    if (playingNowListen) {
-      receiveNewPlayingNow(playingNowListen);
-    }
   }, [APIService, user]);
 
   React.useEffect(() => {
     getFollowing();
   }, [currentUser, getFollowing]);
+
+  const { mutate: updatePlayingNowMutation } = useMutation({
+    mutationFn: receiveNewPlayingNow,
+    onSuccess: (newPlayingNowListen) => {
+      queryClient.setQueryData(queryKey, (oldData: ListenLoaderData) => {
+        return {
+          ...oldData,
+          playingNow: newPlayingNowListen,
+        };
+      });
+    },
+  });
+
+  React.useEffect(() => {
+    // On first load, run the function to load the metadata for the playing_now listen
+    if (playingNow) updatePlayingNowMutation(playingNow);
+  }, []);
 
   React.useEffect(() => {
     // if modifying the uri or path, lookup socket.io namespace vs paths.
@@ -244,8 +257,8 @@ export default function Listen() {
       receiveNewListen(socketData);
     };
     const newPlayingNowHandler = (socketData: string) => {
-      const playingNow = JSON.parse(socketData) as Listen;
-      receiveNewPlayingNow(playingNow);
+      const newPlayingNow = JSON.parse(socketData) as Listen;
+      updatePlayingNowMutation(newPlayingNow);
     };
 
     socket.on("connect", connectHandler);
@@ -258,7 +271,7 @@ export default function Listen() {
       socket.off("playing_now", newPlayingNowHandler);
       socket.close();
     };
-  }, [receiveNewPlayingNow, user, websocketsUrl]);
+  }, [updatePlayingNowMutation, user, websocketsUrl]);
 
   const updateFollowingList = (
     follower: ListenBrainzUser,
@@ -456,7 +469,7 @@ export default function Listen() {
               MusicBrainz
             </Link>
           </div>
-          {playingNowListen && getListenCard(playingNowListen)}
+          {playingNow && getListenCard(playingNow)}
           {userPinnedRecording && (
             <PinnedRecordingCard
               pinnedRecording={userPinnedRecording}
