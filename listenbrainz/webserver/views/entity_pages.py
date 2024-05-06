@@ -10,7 +10,6 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
-import orjson
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -115,7 +114,7 @@ def artist_entity(artist_mbid):
     """ Show a artist page with all their relevant information """
     # VA artist mbid
     if artist_mbid in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
-        raise BadRequest(f"Provided artist mbid is disabled for viewing on ListenBrainz")
+        return jsonify({"error": "Provided artist mbid is disabled for viewing on ListenBrainz"}), 400
 
     if not is_valid_uuid(artist_mbid):
         return jsonify({"error": "Provided artist mbid is invalid: %s" % artist_mbid}), 400
