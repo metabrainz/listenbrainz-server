@@ -27,7 +27,7 @@ describe("User settings", () => {
     it("renders correctly", async () => {
       render(<SelectTimezone {...props} />);
 
-      await screen.findByRole("heading", { name: /select timezone/i });
+      await screen.findByRole("heading", { name: /select your timezone/i });
       await screen.findByRole("button", { name: /save timezone/i });
       const defaultOption = await screen.findByRole<HTMLOptionElement>(
         "option",

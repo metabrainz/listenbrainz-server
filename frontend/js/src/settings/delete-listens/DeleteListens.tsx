@@ -72,24 +72,23 @@ export default function DeleteListens() {
       <Helmet>
         <title>Delete Listens</title>
       </Helmet>
-      <h3 className="page-title">Delete your listens</h3>
+      <h3 className="page-title">Delete listens: {name}</h3>
       <p>
-        Hi {name}, are you sure you want to delete listens imported into your
-        ListenBrainz account?
-      </p>
-
-      <p>Once deleted, all your listens data will be removed PERMANENTLY.</p>
-
-      <p>
-        Warning: if you are still connected to Spotify, the last 50 Spotify
-        tracks might be auto-reimported.{" "}
-        <Link to="/settings/music-services/details/">Disconnect</Link> before
-        deleting.
+        <b>
+          This will permanently delete all ListenBrainz listens for user {name}.
+        </b>
       </p>
 
       <p>
-        Note: you can export your ListenBrainz data before deleting your
-        listens.
+        If you are still connected to Spotify, the last 50 Spotify tracks may be
+        auto-reimported. You can{" "}
+        <Link to="/settings/music-services/details/">Disconnect</Link> Spotify
+        before deleting.
+      </p>
+
+      <p>
+        The listens will not be recoverable. Please consider exporting your
+        ListenBrainz data before deleting your account.
       </p>
 
       <form onSubmit={downloadListens}>
@@ -98,11 +97,10 @@ export default function DeleteListens() {
           type="submit"
           style={{ width: "250px" }}
         >
-          Export my listens.
+          Export listens
         </button>
       </form>
       <br />
-      <p>Yes, I am sure I want to erase my entire listening history</p>
 
       <form onSubmit={deleteListens}>
         <button
@@ -111,7 +109,7 @@ export default function DeleteListens() {
           type="submit"
           style={{ width: "250px" }}
         >
-          Delete my listens.
+          Delete listens
         </button>
       </form>
     </>
