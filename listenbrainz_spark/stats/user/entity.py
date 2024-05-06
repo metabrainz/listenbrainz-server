@@ -103,8 +103,7 @@ def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, c
                            to_date=to_date, message_type=message_type, database=database)
 
 
-def parse_one_user_stats(entry, entity: str, stats_range: str) \
-        -> Optional[UserEntityRecords]:
+def parse_one_user_stats(entry, entity: str, stats_range: str):
     _dict = entry.asDict(recursive=True)
     count_key = entity + "_count"
     total_entity_count = _dict[count_key]
@@ -112,17 +111,18 @@ def parse_one_user_stats(entry, entity: str, stats_range: str) \
     entity_list = []
     for item in _dict[entity]:
         try:
-            entity_list.append(entity_model_map[entity](**item))
+            entity_model_map[entity](**item)
+            entity_list.append(item)
         except ValidationError:
             logger.error("Invalid entry in entity stats", exc_info=True)
             total_entity_count -= 1
 
     try:
-        return UserEntityRecords(
-            user_id=_dict["user_id"],
-            data=entity_list,
-            count=total_entity_count
-        )
+        return {
+            "user_id": _dict["user_id"],
+            "data": entity_list,
+            "count": total_entity_count
+        }
     except ValidationError:
         logger.error(f"""ValidationError while calculating {stats_range} top {entity} for user: 
         {_dict["user_id"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
@@ -166,21 +166,15 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             processed_stat = parse_one_user_stats(entry, entity, stats_range)
             multiple_user_stats.append(processed_stat)
 
-        try:
-            model = UserEntityStatMessage(**{
-                "type": message_type,
-                "stats_range": stats_range,
-                "from_ts": from_ts,
-                "to_ts": to_ts,
-                "entity": entity,
-                "data": multiple_user_stats,
-                "database": database
-            })
-            result = model.dict(exclude_none=True)
-            yield result
-        except ValidationError:
-            logger.error(f"ValidationError while calculating {stats_range} top {entity}:", exc_info=True)
-            yield None
+        yield {
+            "type": message_type,
+            "stats_range": stats_range,
+            "from_ts": from_ts,
+            "to_ts": to_ts,
+            "entity": entity,
+            "data": multiple_user_stats,
+            "database": database
+        }
 
     yield {
         "type": "couchdb_data_end",
