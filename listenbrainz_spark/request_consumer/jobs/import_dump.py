@@ -37,7 +37,9 @@ def import_full_dump_to_hdfs(dump_id: int = None, local: bool = False) -> str:
             dump_type=DumpType.FULL,
             listens_dump_id=dump_id
         )
-        ListenbrainzDataUploader().upload_new_listens_full_dump(src)
+        uploader = ListenbrainzDataUploader()
+        uploader.upload_new_listens_full_dump(src)
+        uploader.process_full_listens_dump()
     utils.insert_dump_data(dump_id, DumpType.FULL, datetime.utcnow())
     return dump_name
 
