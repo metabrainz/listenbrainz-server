@@ -10,6 +10,7 @@ import {
   difference,
 } from "lodash";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { Link } from "react-router-dom";
 import {
   searchForSpotifyTrack,
   loadScriptAsync,
@@ -219,14 +220,16 @@ export default class SpotifyPlayer
     retryCount = 0
   ): Promise<void> => {
     const { device_id } = this.state;
-    const { handleError } = this.props;
+    const { handleError, onTrackNotFound } = this.props;
     if (retryCount > 5) {
       handleError("Could not play Spotify track", "Playback error");
+      onTrackNotFound();
       return;
     }
     if (!this.spotifyPlayer || !device_id) {
       this.connectSpotifyPlayer(
-        this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1)
+        this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1),
+        retryCount + 1
       );
       return;
     }
@@ -339,14 +342,14 @@ export default class SpotifyPlayer
       this.handleAccountError();
       return;
     }
-    const { onTrackNotFound } = this.props;
+    const { onInvalidateDataSource } = this.props;
     if (this.authenticationRetries > 5) {
       const { handleError } = this.props;
       handleError(
         isString(error) ? error : error?.message,
         "Spotify token error"
       );
-      onTrackNotFound();
+      onInvalidateDataSource();
       return;
     }
     this.authenticationRetries += 1;
@@ -361,9 +364,9 @@ export default class SpotifyPlayer
         account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
-        <a href="/settings/music-services/details/" target="_blank">
+        <Link to="/settings/music-services/details/">
           link for &quot;playing music&quot; feature
-        </a>{" "}
+        </Link>{" "}
         and refresh this page
       </p>
     );
@@ -406,11 +409,22 @@ export default class SpotifyPlayer
     );
   };
 
-  connectSpotifyPlayer = (callbackFunction?: () => void): void => {
+  connectSpotifyPlayer = (
+    callbackFunction?: () => void,
+    retryCount = 0
+  ): void => {
+    const { handleError, onInvalidateDataSource } = this.props;
     this.disconnectSpotifyPlayer();
-
+    if (retryCount > 5) {
+      handleError("Could not connect to Spotify", "Spotify error");
+      onInvalidateDataSource();
+      return;
+    }
     if (!window.Spotify) {
-      setTimeout(this.connectSpotifyPlayer.bind(this, callbackFunction), 1000);
+      setTimeout(
+        this.connectSpotifyPlayer.bind(this, callbackFunction, retryCount + 1),
+        1000
+      );
       return;
     }
     const { refreshSpotifyToken } = this.props;
@@ -426,7 +440,11 @@ export default class SpotifyPlayer
         } catch (error) {
           handleError(error, "Error connecting to Spotify");
           setTimeout(
-            this.connectSpotifyPlayer.bind(this, callbackFunction),
+            this.connectSpotifyPlayer.bind(
+              this,
+              callbackFunction,
+              retryCount + 1
+            ),
             1000
           );
         }
@@ -434,7 +452,6 @@ export default class SpotifyPlayer
       volume: 0.7, // Careful with this, now…
     });
 
-    const { handleError } = this.props;
     // Error handling
     this.spotifyPlayer.on(
       "initialization_error",

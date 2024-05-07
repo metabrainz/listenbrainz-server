@@ -42,6 +42,9 @@ def profile(user_name):
     playing_now_conn = webserver.redis_connection._redis
 
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
@@ -76,11 +79,9 @@ def profile(user_name):
     for listen in data:
         listens.append(listen.to_api())
 
-    # If there are no previous listens then display now_playing
-    if not listens or listens[0]['listened_at'] >= max_ts_per_user:
-        playing_now = playing_now_conn.get_playing_now(user.id)
-        if playing_now:
-            listens.insert(0, playing_now.to_api())
+    playing_now = playing_now_conn.get_playing_now(user.id)
+    if playing_now:
+        playing_now = playing_now.to_api()
 
     already_reported_user = False
     if current_user.is_authenticated:
@@ -100,6 +101,7 @@ def profile(user_name):
         "oldestListenTs": min_ts_per_user,
         "profile_url": url_for('user.index', path="", user_name=user_name),
         "userPinnedRecording": pin,
+        "playingNow": playing_now,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
     }
@@ -113,6 +115,8 @@ def profile(user_name):
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
 
     user_data = {
         "name": user.musicbrainz_id,
@@ -131,6 +135,8 @@ def charts(user_name):
 def stats(user_name: str):
     """ Show user stats """
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
 
     user_data = {
         "name": user.musicbrainz_id,
@@ -151,6 +157,9 @@ def playlists(user_name: str):
     """ Show user playlists """
 
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
@@ -195,6 +204,9 @@ def recommendation_playlists(user_name: str):
         return jsonify({"error": "Incorrect int argument count: %s" %
                         request.args.get("count")}), 400
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
@@ -239,7 +251,7 @@ def _get_user(user_name):
     else:
         user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
-            raise NotFound("Cannot find user: %s" % user_name)
+            return None
         return User.from_dbrow(user)
 
 
@@ -278,6 +290,9 @@ def taste(user_name: str):
                         request.args.get("score")}), 400
 
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     user_data = {
         "name": user.musicbrainz_id,
         "id": user.id,
@@ -315,6 +330,9 @@ def year_in_music(user_name, year: int = 2023):
         return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
 
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
     try:
         yearInMusicData = db_year_in_music.get(user.id, year) or {}
     except Exception as e:

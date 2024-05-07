@@ -3,6 +3,7 @@ import json
 import time
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 
+
 class WebSocketTests(ListenAPIIntegrationTestCase):
 
     def setUp(self):
@@ -20,22 +21,24 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        received_listen = False
-        timeout =5  # 5 seconds timeout
+        received_listen = None
+        timeout = 5  # 5 seconds timeout
 
         @self.sio.event
-        def listen(data):
+        def listen(message):
             nonlocal received_listen
-            received_listen = True
-            self.assertEqual(data['listens'][0]['track_metadata']['track_name'], 'Fade')
-            self.assertEqual(data['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
-            self.assertEqual(data['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
-            self.assertEqual(data['listens'][0]['track_metadata']['additional_info']['music_service'], 'spotify.com')
+            received_listen = message
 
         start_time = time.time()
-        while not received_listen and time.time() - start_time < timeout:
+        while received_listen is None and time.time() - start_time < timeout:
             self.sio.sleep(1)
-        self.assertTrue(received_listen, "Did not receive the listen event within the timeout period.")
+        self.assertIsNotNone(received_listen, "Did not receive the listen event within the timeout period.")
+
+        received_listen = json.loads(received_listen)
+        self.assertEqual(received_listen['track_metadata']['track_name'], 'Fade')
+        self.assertEqual(received_listen['track_metadata']['artist_name'], 'Kanye West')
+        self.assertEqual(received_listen['track_metadata']['release_name'], 'The Life of Pablo')
+        self.assertEqual(received_listen['track_metadata']['additional_info']['music_service'], 'spotify.com')
 
     def test_valid_playing_now(self):
         """Test for valid submission of listen_type 'playing_now'"""
@@ -47,23 +50,25 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        received_playing_now = False
+        received_playing_now = None
         timeout = 5  # 5 seconds timeout
 
         @self.sio.event
-        def playing_now(data):
+        def playing_now(message):
             nonlocal received_playing_now
-            received_playing_now = True
-            self.assertEqual(data['listens'][0]['track_metadata']['track_name'], 'Fade')
-            self.assertEqual(data['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
-            self.assertEqual(data['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
+            received_playing_now = message
 
         # Wait for the 'playing_now' event
         start_time = time.time()
-        while not received_playing_now and time.time() - start_time < timeout:
+        while received_playing_now is None and time.time() - start_time < timeout:
             self.sio.sleep(1)
 
-        self.assertTrue(received_playing_now, "Did not receive the 'playing_now' event within the timeout period.")
+        self.assertIsNotNone(received_playing_now, "Did not receive the 'playing_now' event within the timeout period.")
+
+        received_playing_now = json.loads(received_playing_now)
+        self.assertEqual(received_playing_now['track_metadata']['track_name'], 'Fade')
+        self.assertEqual(received_playing_now['track_metadata']['artist_name'], 'Kanye West')
+        self.assertEqual(received_playing_now['track_metadata']['release_name'], 'The Life of Pablo')
 
         # Verify the data returned by the 'playing_now' endpoint
         r = self.client.get(self.custom_url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))

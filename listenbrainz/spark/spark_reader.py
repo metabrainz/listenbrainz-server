@@ -46,7 +46,7 @@ from listenbrainz.spark.handlers import (
 )
 from listenbrainz.spark.spark_dataset import CouchDbDataset
 from listenbrainz.utils import get_fallback_connection_name
-from listenbrainz.webserver import create_app
+from listenbrainz.webserver import create_app, db_conn, ts_conn
 
 
 class SparkReader(ConsumerMixin):
@@ -127,7 +127,9 @@ class SparkReader(ConsumerMixin):
             self.app.logger.error("Error in the spark reader response handler: data: %s",
                                   json.dumps(response, indent=4), exc_info=True)
             sentry_sdk.capture_exception(e)
-            return
+        finally:
+            db_conn.rollback()
+            ts_conn.rollback()
 
     def callback(self, message: Message):
         """ Handle the data received from the queue and

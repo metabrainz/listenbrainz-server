@@ -1,10 +1,6 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
@@ -13,11 +9,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { Link, useLoaderData, useLocation, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import Loader from "../components/Loader";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import { getPageProps, getReviewEventContent } from "../utils/utils";
+import { getReviewEventContent } from "../utils/utils";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -33,6 +29,7 @@ import type {
   SimilarArtist,
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
+import { RouteQuery } from "../utils/Loader";
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
@@ -43,63 +40,45 @@ export type ArtistPageProps = {
   coverArt?: string;
 };
 
-export default function ArtistPage(props: ArtistPageProps): JSX.Element {
+export default function ArtistPage(): JSX.Element {
+  const _ = useLoaderData();
   const { APIService } = React.useContext(GlobalAppContext);
+  const location = useLocation();
+  const params = useParams() as { artistMBID: string };
+  const { artistMBID } = params;
+  const { data } = useQuery<ArtistPageProps>(
+    RouteQuery(["artist", params], location.pathname)
+  );
   const {
-    artist: initialArtist,
-    popularRecordings: initialPopularRecordings,
+    artist,
+    popularRecordings,
     releaseGroups,
     similarArtists,
     listeningStats,
     coverArt: coverArtSVG,
-  } = props;
+  } = data || {};
+
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
     total_user_count: userCount,
-  } = listeningStats;
+  } = listeningStats || {};
 
-  const [artist, setArtist] = React.useState(initialArtist);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
   >();
-  // Data we get from the back end
-  const [popularRecordings, setPopularRecordings] = React.useState(
-    initialPopularRecordings
-  );
-  const [loading, setLoading] = React.useState(false);
 
   const [albumsByThisArtist, alsoAppearsOn] = partition(
     releaseGroups,
-    (rg) => rg.artists[0].artist_mbid === artist.artist_mbid
+    (rg) => rg.artists[0].artist_mbid === artist?.artist_mbid
   );
-  /** Navigation from one artist to a similar artist */
-  //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
-  //     event
-  //   ) => {
-  //     setLoading(true);
-  //   	try{
-  //     // Hit the API to get all the required info for the artist we clicked on
-  //    const response = await fetch(…)
-  //   if(!response.ok){
-  // 	throw new Error(response.status);
-  //   }
-  //	setArtist(response.artist)
-  //  setArtistTags(…)
-  //  setPopularRecordings(…)
-  // }
-  // catch(err){
-  // toast.error(<ToastMsg title={"Could no load similar artist"} message={err.toString()})
-  // }
-  //     setLoading(false);
-  //   };
 
   React.useEffect(() => {
     async function fetchReviews() {
       try {
         const response = await fetch(
-          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artist.artist_mbid}&entity_type=artist`
+          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artistMBID}&entity_type=artist`
         );
         const body = await response.json();
         if (!response.ok) {
@@ -113,7 +92,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     async function fetchWikipediaExtract() {
       try {
         const response = await fetch(
-          `https://musicbrainz.org/artist/${artist.artist_mbid}/wikipedia-extract`
+          `https://musicbrainz.org/artist/${artistMBID}/wikipedia-extract`
         );
         const body = await response.json();
         if (!response.ok) {
@@ -126,12 +105,12 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     }
     fetchReviews();
     fetchWikipediaExtract();
-  }, [artist, releaseGroups, APIService.APIBaseURI]);
+  }, [artistMBID]);
 
   const listensFromPopularRecordings =
-    popularRecordings.map(popularRecordingToListen) ?? [];
+    popularRecordings?.map(popularRecordingToListen) ?? [];
 
-  const filteredTags = chain(artist.tag?.artist)
+  const filteredTags = chain(artist?.tag?.artist)
     .sortBy("count")
     .value()
     .reverse();
@@ -169,8 +148,10 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   };
 
   return (
-    <div id="entity-page" className="artist-page">
-      <Loader isLoading={loading} />
+    <div id="entity-page" className="artist-page" role="main">
+      <Helmet>
+        <title>{artist?.name}</title>
+      </Helmet>
       <div className="entity-page-header flex">
         <div
           className="cover-art"
@@ -181,16 +162,16 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
           }}
-          title={`Album art for ${artist.name}`}
+          title={`Album art for ${artist?.name}`}
         />
         <div className="artist-info">
-          <h1>{artist.name}</h1>
+          <h1>{artist?.name}</h1>
           <div className="details">
             <small className="help-block">
-              {artist.begin_year}
-              {Boolean(artist.end_year) && ` — ${artist.end_year}`}
+              {artist?.begin_year}
+              {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
               <br />
-              {artist.area}
+              {artist?.area}
             </small>
           </div>
           {wikipediaExtract && (
@@ -215,82 +196,79 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {!isEmpty(artist.rels) &&
+            {artist &&
+              !isEmpty(artist?.rels) &&
               Object.entries(artist.rels).map(([relName, relValue]) =>
                 getRelIconLink(relName, relValue)
               )}
             <OpenInMusicBrainzButton
               entityType="artist"
-              entityMBID={artist.artist_mbid}
+              entityMBID={artist?.artist_mbid}
             />
           </div>
-          <div className="btn-group lb-radio-button">
-            <a
-              type="button"
-              className="btn btn-info"
-              href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                artist.name
-              )})&mode=easy`}
-            >
-              <FontAwesomeIcon icon={faPlayCircle} /> Radio
-            </a>
-            <button
-              type="button"
-              className="btn btn-info dropdown-toggle"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <span className="caret" />
-              <span className="sr-only">Toggle Dropdown</span>
-            </button>
-            <ul className="dropdown-menu">
-              <li>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artist.name
-                  )})::nosim&mode=easy`}
-                >
-                  This artist
-                </a>
-              </li>
-              <li>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artist.name
-                  )})&mode=easy`}
-                >
-                  Similar artists
-                </a>
-              </li>
-              {Boolean(filteredTags?.length) && (
+          {artist && (
+            <div className="btn-group lb-radio-button">
+              <Link
+                type="button"
+                className="btn btn-info"
+                to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                  artist?.name
+                )})&mode=easy`}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} /> Radio
+              </Link>
+              <button
+                type="button"
+                className="btn btn-info dropdown-toggle"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span className="caret" />
+                <span className="sr-only">Toggle Dropdown</span>
+              </button>
+              <ul className="dropdown-menu">
                 <li>
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                      filteredTagsAsString
-                    )})::or&mode=easy`}
+                  <Link
+                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                      artist?.name
+                    )})::nosim&mode=easy`}
                   >
-                    Tags (
-                    <span className="tags-list">{filteredTagsAsString}</span>)
-                  </a>
+                    This artist
+                  </Link>
                 </li>
-              )}
-            </ul>
-          </div>
+                <li>
+                  <Link
+                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
+                      artist?.name
+                    )})&mode=easy`}
+                  >
+                    Similar artists
+                  </Link>
+                </li>
+                {Boolean(filteredTags?.length) && (
+                  <li>
+                    <Link
+                      to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                        filteredTagsAsString
+                      )})::or&mode=easy`}
+                    >
+                      Tags (
+                      <span className="tags-list">{filteredTagsAsString}</span>)
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
       <div className="tags">
         <TagsComponent
-          key={artist.name}
+          key={artist?.name}
           tags={filteredTags}
           entityType="artist"
-          entityMBID={artist.artist_mbid}
+          entityMBID={artist?.artist_mbid}
         />
       </div>
       <div className="entity-page-content">
@@ -373,18 +351,14 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             <div className="top-listeners">
               <h3 className="header-with-line">Top listeners</h3>
               {topListeners
-                .slice(0, 10)
+                ?.slice(0, 10)
                 .map(
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <a
-                          href={`/user/${listener.user_name}/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                        <Link to={`/user/${listener.user_name}/`}>
                           {listener.user_name}
-                        </a>
+                        </Link>
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
@@ -419,9 +393,9 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               .map((similarArtist) => {
                 const listenDetails = (
                   <div>
-                    <a href={`/artist/${similarArtist.artist_mbid}`}>
+                    <Link to={`/artist/${similarArtist.artist_mbid}/`}>
                       {similarArtist.name}
-                    </a>
+                    </Link>
                   </div>
                 );
                 const artistAsListen: BaseListenFormat = {
@@ -455,7 +429,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             <>
               {reviews.slice(0, 3).map(getReviewEventContent)}
               <a
-                href={`https://critiquebrainz.org/artist/${artist.artist_mbid}`}
+                href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
                 className="critiquebrainz-button btn btn-link"
               >
                 More on CritiqueBrainz…
@@ -465,7 +439,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             <>
               <p>Be the first to review this artist on CritiqueBrainz</p>
               <a
-                href={`https://critiquebrainz.org/review/write/artist/${artist.artist_mbid}`}
+                href={`https://critiquebrainz.org/review/write/artist/${artist?.artist_mbid}`}
                 className="btn btn-outline"
               >
                 Add my review
@@ -484,54 +458,3 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const {
-    artist_data,
-    popular_recordings,
-    release_groups,
-    similar_artists,
-    listening_stats,
-    cover_art,
-  } = reactProps;
-
-  const ArtistPageWithAlertNotifications = withAlertNotifications(ArtistPage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <ArtistPageWithAlertNotifications
-            artist={artist_data}
-            popularRecordings={popular_recordings}
-            releaseGroups={release_groups}
-            similarArtists={similar_artists}
-            listeningStats={listening_stats}
-            coverArt={cover_art}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

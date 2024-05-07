@@ -1,6 +1,7 @@
 import locale
 import os
 import requests
+import time
 
 from brainzutils import cache
 from datetime import datetime
@@ -21,6 +22,8 @@ from listenbrainz.webserver import flash, db_conn
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user_relationship as db_user_relationship
+from listenbrainz.webserver.views.user_timeline_event_api import get_feed_events_for_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -32,11 +35,8 @@ NUMBER_OF_RECENT_LISTENS = 50
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
 
-@index_bp.route("/")
+@index_bp.route("/", methods=['POST'])
 def index():
-    if current_user.is_authenticated and request.args.get("redirect", "true") == "true":
-        return redirect(url_for("user.index", path="", user_name=current_user.musicbrainz_id))
-
     if _ts:
         try:
             listen_count = _ts.get_total_listen_count()
@@ -55,57 +55,11 @@ def index():
         current_app.logger.error('Error while trying to get total artist count: %s', str(e))
 
     props = {
-        "listen_count": listen_count,
-        "artist_count": artist_count,
+        "listenCount": listen_count,
+        "artistCount": artist_count,
     }
 
-    return render_template(
-        "index/index.html",
-        props=orjson.dumps(props).decode("utf-8")
-    )
-
-
-@index_bp.route("/import/")
-def import_data():
-    if current_user.is_authenticated:
-        return redirect(url_for("settings.index", path='import/'))
-    else:
-        return current_app.login_manager.unauthorized()
-
-
-@index_bp.route("/download/")
-def downloads():
-    return redirect(url_for('index.data'))
-
-
-@index_bp.route("/data/")
-def data():
-    return render_template("index/data.html",active_about_section="using-data")
-
-
-@index_bp.route("/add-data/")
-def add_data_info():
-    return render_template("index/add-data.html", active_about_section="add-listens")
-
-
-@index_bp.route("/import-data/")
-def import_data_info():
-    return render_template("index/import-data.html")
-
-
-@index_bp.route("/lastfm-proxy/")
-def proxy():
-    return render_template("index/lastfm-proxy.html")
-
-
-@index_bp.route("/about/")
-def about():
-    return render_template("index/about.html", active_about_section="about")
-
-
-@index_bp.route("/terms-of-service/")
-def terms_of_service():
-    return render_template("index/terms-of-service.html", active_about_section="terms-of-service")
+    return jsonify(props)
 
 
 @index_bp.route("/blog-data/")
@@ -129,7 +83,7 @@ def blog_data():
         return jsonify({}), 503
 
 
-@index_bp.route("/current-status/")
+@index_bp.route("/current-status/", methods=['POST'])
 @web_listenstore_needed
 def current_status():
 
@@ -151,25 +105,22 @@ def current_status():
             day_listen_count = None
         listen_counts_per_day.append({
             "date": day.strftime('%Y-%m-%d'),
-            "listen_count": format(day_listen_count, ',d') if day_listen_count else "0",
+            "listenCount": format(day_listen_count, ',d') if day_listen_count else "0",
             "label": "today" if delta == 0 else "yesterday",
         })
 
-    return render_template(
-        "index/current-status.html",
-        load=load,
-        listen_count=format(int(listen_count), ",d") if listen_count else "0",
-        user_count=user_count,
-        listen_counts_per_day=listen_counts_per_day,
-        active_about_section="site-status"
-    )
+    data = {
+        "load": load,
+        "listenCount": format(int(listen_count), ",d") if listen_count else "0",
+        "userCount": user_count,
+        "listenCountsPerDay": listen_counts_per_day,
+    }
+
+    return jsonify(data)
 
 
-@index_bp.route("/recent/", methods=['GET', 'POST'])
+@index_bp.route("/recent/", methods=['POST'])
 def recent_listens():
-    if request.method == 'GET':
-        return render_template('index.html')
-
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
         recent.append({
@@ -194,36 +145,23 @@ def recent_listens():
     return jsonify(props)
 
 
-@index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
-@login_required
-@web_listenstore_needed
-def feed():
-    return render_template('index.html')
-
-
 @index_bp.route('/agree-to-terms/', methods=['GET', 'POST'])
 @login_required
 def gdpr_notice():
     if request.method == 'GET':
-        return render_template('index/gdpr.html', next=request.args.get('next'))
+        return render_template('index.html')
     elif request.method == 'POST':
         if request.form.get('gdpr-options') == 'agree':
             try:
                 db_user.agree_to_gdpr(db_conn, current_user.musicbrainz_id)
             except DatabaseException as e:
                 flash.error('Could not store agreement to GDPR terms')
-            next = request.form.get('next')
-            if next:
-                return redirect(next)
-            return redirect(url_for('index.index'))
-        elif request.form.get('gdpr-options') == 'disagree':
-            return redirect(url_for('settings.index',  path='delete'))
+            return jsonify({'status': 'agreed'})
         else:
-            flash.error('You must agree to or decline our terms')
-            return render_template('index/gdpr.html', next=request.args.get('next'))
+            return jsonify({'status': 'not_agreed'}), 400
 
 
-@index_bp.route('/search/', methods=['GET', 'OPTIONS'])
+@index_bp.route('/search/', methods=['POST', 'OPTIONS'])
 def search():
     search_term = request.args.get("search_term")
     user_id = current_user.id if current_user.is_authenticated else None
@@ -231,12 +169,40 @@ def search():
         users = db_user.search(db_conn, search_term, SEARCH_USER_LIMIT, user_id)
     else:
         users = []
-    return render_template("index/search-users.html", search_term=search_term, users=users)
+
+    return jsonify({
+        "searchTerm": search_term,
+        "users": users
+    })
 
 
-@index_bp.route('/messybrainz/', methods=['GET', 'OPTIONS'])
-def messybrainz():
-    return render_template("index/messybrainz.html")
+@index_bp.route('/feed/', methods=['POST', 'OPTIONS'])
+@login_required
+def feed():
+    user_id = current_user.id
+    count = request.args.get('count', 25)
+    min_ts = request.args.get('min_ts', 0)
+    max_ts = request.args.get('max_ts', int(time.time()))
+    current_user_data = {
+        "id": current_user.id,
+        "musicbrainz_id": current_user.musicbrainz_id,
+    }
+
+    users_following = db_user_relationship.get_following_for_user(
+        db_conn, user_id)
+
+    user_events = get_feed_events_for_user(
+        user=current_user_data, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
+
+    user_events = user_events[:count]
+
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
+    for index, event in enumerate(user_events):
+        user_events[index].event_type = event.event_type.value
+
+    return jsonify({
+        'events': [event.dict() for event in user_events],
+    })
 
 
 @index_bp.route('/delete-user/<int:musicbrainz_row_id>')
@@ -300,35 +266,8 @@ def _get_user_count():
         return user_count
 
 
-@index_bp.route("/similar-users/")
-def similar_users():
-    return redirect(url_for('explore.index', path="similar-users"))
-
-
-@index_bp.route("/listens-offline/")
-def listens_offline():
-    """
-        Show the "listenstore offline" message.
-    """
-
-    return render_template("index/listens_offline.html")
-
-
-@index_bp.route("/musicbrainz-offline/")
-def musicbrainz_offline():
-    """ Show the "musicbrainz offline" message. """
-    return render_template("index/musicbrainz-offline.html")
-
-
-@index_bp.route("/huesound/")
-def huesound():
-    """ Redirect to /explore/huesound """
-
-    return redirect(url_for('explore.index', path="huesound"))
-
-
-@index_bp.route("/statistics/",  defaults={'path': ''})
-@index_bp.route('/statistics/<path:path>/')
-def stats(path):
-    """ Show sitewide stats """
+@index_bp.route("/",  defaults={'path': ''})
+@index_bp.route('/<path:path>/')
+@web_listenstore_needed
+def index_pages(path):
     return render_template("index.html")
