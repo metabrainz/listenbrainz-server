@@ -180,7 +180,7 @@ def init_error_handlers(app):
         # We specifically return json in the case that the request was within our API path
         original = getattr(error, "original_exception", None)
 
-        if request.path.startswith(API_PREFIX):
+        if request.path.startswith(API_PREFIX) or request.method == 'POST' :
             error = APIError("An unknown error occured.", 500)
             return jsonify(error.to_dict()), error.status_code
         else:
