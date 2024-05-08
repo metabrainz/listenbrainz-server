@@ -1613,7 +1613,7 @@ export default class APIService {
   getTopRecordingsForArtist = async (
     artistMBID: string
   ): Promise<RecordingType[]> => {
-    const url = `${this.APIBaseURI}/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
+    const url = `${this.APIBaseURI}/popularity/top-recordings-for-artist/${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1622,7 +1622,7 @@ export default class APIService {
   getTopReleaseGroupsForArtist = async (
     artistMBID: string
   ): Promise<ReleaseGroupType[]> => {
-    const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist?artist_mbid=${artistMBID}`;
+    const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist/${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

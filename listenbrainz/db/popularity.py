@@ -156,8 +156,10 @@ def get_counts(ts_conn, entity, mbids):
         entity_mbid = "release_group_mbid"
     elif entity == "release":
         entity_mbid = "release_mbid"
+    elif entity == "artist":
+        entity_mbid = "artist_mbid"
     else:
-        return []
+        return [], {}
 
     query = SQL("""
           WITH mbids (mbid) AS (

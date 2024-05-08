@@ -155,13 +155,13 @@ def metadata_recording_post():
 
     for mbid in recording_mbids:
         if not is_valid_uuid(mbid):
-            raise APIBadRequest(f"Recording mbid {mbid} is not valid.")
+            raise APIBadRequest(f"recording_mbid {mbid} is not valid.")
 
     if len(recording_mbids) == 0:
         raise APIBadRequest("At least one valid recording_mbid must be present.")
 
     if len(recording_mbids) > MAX_ITEMS_PER_GET:
-        raise APIBadRequest("Maximum number of recordings_mbids that can be fetchs at once is %s" % MAX_ITEMS_PER_GET)
+        raise APIBadRequest("Maximum number of recordings_mbids that can be fetched at once is %s" % MAX_ITEMS_PER_GET)
 
     result = fetch_metadata(recording_mbids, incs)
     return jsonify(result)
