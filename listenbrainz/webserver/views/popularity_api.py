@@ -114,7 +114,8 @@ def top_release_groups_for_artist(artist_mbid):
         raise APIInternalServerError("Failed to fetch metadata for release groups. Please try again.")
 
 
-def _popularity_entity_helper(entity):
+def fetch_entity_popularity_counts(entity):
+    """ Validate API request and retrieve popularity counts for the requested entities """
     entity_mbid_key = f"{entity}_mbids"
     try:
         entity_mbids = request.json[entity_mbid_key]
@@ -141,7 +142,7 @@ def _popularity_entity_helper(entity):
 def popularity_recording():
     """ Get the total listen count and total unique listeners count for a given recording.
 
-    A JSON document with a list of recording_mbids and inc string must be POSTed. Upto
+    A JSON document with a list of recording_mbids and inc string must be POSTed. Up to
     :data:`~webserver.views.api.MAX_ITEMS_PER_GET` items can be requested at once. Example:
 
     .. code-block:: json
@@ -174,7 +175,7 @@ def popularity_recording():
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid(s)
     """
-    return _popularity_entity_helper("recording")
+    return fetch_entity_popularity_counts("recording")
 
 
 @popularity_api_bp.post("/artist")
@@ -183,7 +184,7 @@ def popularity_recording():
 def popularity_artist():
     """ Get the total listen count and total unique listeners count for a given artist.
 
-    A JSON document with a list of artists and inc string must be POSTed. Upto
+    A JSON document with a list of artists and inc string must be POSTed. Up to
     :data:`~webserver.views.api.MAX_ITEMS_PER_GET` items can be requested at once. Example:
 
     .. code-block:: json
@@ -216,7 +217,7 @@ def popularity_artist():
     :statuscode 200: you have data!
     :statuscode 400: invalid artist_mbid(s)
     """
-    return _popularity_entity_helper("artist")
+    return fetch_entity_popularity_counts("artist")
 
 
 @popularity_api_bp.post("/release")
@@ -225,7 +226,7 @@ def popularity_artist():
 def popularity_release():
     """ Get the total listen count and total unique listeners count for a given release.
 
-    A JSON document with a list of releases and inc string must be POSTed. Upto
+    A JSON document with a list of releases and inc string must be POSTed. Up to
     :data:`~webserver.views.api.MAX_ITEMS_PER_GET` items can be requested at once. Example:
 
     .. code-block:: json
@@ -258,7 +259,7 @@ def popularity_release():
     :statuscode 200: you have data!
     :statuscode 400: invalid release_mbid(s)
     """
-    return _popularity_entity_helper("release")
+    return fetch_entity_popularity_counts("release")
 
 
 @popularity_api_bp.post("/release-group")
@@ -267,7 +268,7 @@ def popularity_release():
 def popularity_release_group():
     """ Get the total listen count and total unique listeners count for a given release group.
 
-    A JSON document with a list of release groups and inc string must be POSTed. Upto
+    A JSON document with a list of release groups and inc string must be POSTed. Up to
     :data:`~webserver.views.api.MAX_ITEMS_PER_GET` items can be requested at once. Example:
 
     .. code-block:: json
@@ -300,4 +301,4 @@ def popularity_release_group():
     :statuscode 200: you have data!
     :statuscode 400: invalid release_group_mbid(s)
     """
-    return _popularity_entity_helper("release_group")
+    return fetch_entity_popularity_counts("release_group")
