@@ -248,6 +248,15 @@ export default function AddData() {
           , a ListenBrainz scrobbler for Swinsian and Music.app on macOS
           devices.
         </li>
+        <li>
+          <em>
+            <a href="https://mopidy.com/">Mopidy</a>
+          </em>
+          , an extensible music player written in Python:{" "}
+          <a href="https://github.com/suaviloquence/mopidy-listenbrainz">
+            <code>Mopidy-Listenbrainz extension</code>
+          </a>
+        </li>
       </ul>
 
       <h4>Browser extensions</h4>
