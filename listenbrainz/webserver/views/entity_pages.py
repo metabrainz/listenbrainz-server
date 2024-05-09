@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from flask import Blueprint, render_template, current_app, jsonify
+from werkzeug.exceptions import BadRequest
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
