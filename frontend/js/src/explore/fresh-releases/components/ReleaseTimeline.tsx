@@ -124,11 +124,12 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
 
   React.useEffect(() => {
     const handleScroll = debounce(() => {
-      const container = document.getElementById("#release-cards-grid");
+      const container = document.getElementById("release-card-grids");
       if (!container) {
         return;
       }
-      const scrollPos = (window.scrollY / container.scrollHeight) * 100;
+      const scrollPos =
+        ((window.scrollY - container.offsetTop) / container.scrollHeight) * 100;
       setCurrentValue(scrollPos);
     }, 500);
 
