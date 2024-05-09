@@ -78,7 +78,7 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
           <div className="release-card-grid-title" key={`${releaseKey}-title`}>
             {getReleaseCardGridTitle(releaseKey, order)}
           </div>
-          <div key={releaseKey} className="release-cards-grid">
+          <div key={releaseKey} id="release-cards-grid">
             {releases?.map((release) => (
               <ReleaseCard
                 key={release.release_mbid}
