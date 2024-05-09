@@ -141,7 +141,7 @@ def init_error_handlers(app):
                 A Response which will be a json error if request was made to the LB api and an html page
                 otherwise
         """
-        if current_app.config.get('IS_API_COMPAT_APP') or request.path.startswith(API_PREFIX):
+        if current_app.config.get('IS_API_COMPAT_APP') or request.path.startswith(API_PREFIX) or request.accept_mimetypes.accept_json:
             response = jsonify({'code': code, 'error': error.description})
             response.headers["Access-Control-Allow-Origin"] = "*"
             return response, code
@@ -180,11 +180,7 @@ def init_error_handlers(app):
         # We specifically return json in the case that the request was within our API path
         original = getattr(error, "original_exception", None)
 
-        if request.path.startswith(API_PREFIX) or request.method == 'POST':
-            error = APIError("An unknown error occured.", 500)
-            return jsonify(error.to_dict()), error.status_code
-        else:
-            return handle_error(original or error, 500)
+        return handle_error(original or error, 500)
 
     @app.errorhandler(502)
     def bad_gateway(error):
