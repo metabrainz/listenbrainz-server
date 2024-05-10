@@ -429,7 +429,9 @@ export default class APIService {
     await this.checkStatus(response);
     // if response code is 204, then statistics havent been calculated, send empty object
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -450,7 +452,9 @@ export default class APIService {
     const response = await fetch(`${url}?range=${range}`);
     await this.checkStatus(response);
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -466,7 +470,9 @@ export default class APIService {
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -489,7 +495,9 @@ export default class APIService {
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
