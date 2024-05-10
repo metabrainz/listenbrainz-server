@@ -55,7 +55,9 @@ describe.each([
       });
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.getDOMNode()).toHaveTextContent("Invalid range: invalid_range");
+      expect(wrapper.getDOMNode()).toHaveTextContent(
+        "Invalid range: invalid_range"
+      );
       expect(wrapper.find(CustomChoropleth)).toHaveLength(0);
     });
   });
@@ -123,22 +125,8 @@ describe.each([
       expect(wrapper.state()).toMatchObject({
         loading: false,
         hasError: true,
-        errorMessage: "There are no statistics available for this user for this period",
+        errorMessage: "NO CONTENT",
       });
-    });
-
-    it("throws error", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(instance.APIService, "getUserArtistMap");
-      const notFoundError = new APIError("NOT FOUND");
-      notFoundError.response = {
-        status: 404,
-      } as Response;
-      spy.mockImplementation(() => Promise.reject(notFoundError));
-
-      await expect(instance.getData()).rejects.toThrow("NOT FOUND");
     });
   });
 

@@ -66,16 +66,11 @@ export default class UserDailyActivity extends React.Component<
       const data = await this.APIService.getUserDailyActivity(user.name, range);
       return data;
     } catch (error) {
-      if (error.response && error.response.status === 204) {
-        this.setState({
-          loading: false,
-          hasError: true,
-          errorMessage:
-            "There are no statistics available for this user for this period",
-        });
-      } else {
-        throw error;
-      }
+      this.setState({
+        loading: false,
+        hasError: true,
+        errorMessage: error.message,
+      });
     }
     return {} as UserDailyActivityResponse;
   };
