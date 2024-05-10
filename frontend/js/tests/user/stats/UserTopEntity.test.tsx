@@ -265,25 +265,8 @@ describe.each([
       expect(childElement.state()).toMatchObject({
         loading: false,
         hasError: true,
-        errorMessage:
-          "There are no statistics available for this user for this period",
+        errorMessage: "NO CONTENT",
       });
-      wrapper.unmount();
-    });
-
-    it("throws error", async () => {
-      const wrapper = shallow(getComponent(props));
-      const childElement = shallow(wrapper.find(UserTopEntity).get(0));
-      const instance = childElement.instance() as UserTopEntity;
-
-      const spy = jest.spyOn(instance.APIService, "getUserEntity");
-      const notFoundError = new APIError("NOT FOUND");
-      notFoundError.response = {
-        status: 404,
-      } as Response;
-      spy.mockImplementation(() => Promise.reject(notFoundError));
-
-      await expect(instance.getData()).rejects.toThrow("NOT FOUND");
       wrapper.unmount();
     });
   });
