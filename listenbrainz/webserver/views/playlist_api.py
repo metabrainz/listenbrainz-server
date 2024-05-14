@@ -75,12 +75,12 @@ def validate_playlist(jspf):
         return
 
     for i, track in enumerate(jspf["playlist"].get("track", [])):
-        recording_uri = track.get("identifier")
-        if not recording_uri:
-            log_raise_400("JSPF playlist track %d must contain an identifier element with recording MBID." % i)
+        recording_uris = track.get("identifier")
+        if not recording_uris:
+            log_raise_400("JSPF playlist track %d must contain an identifier list with at least one recording MBID." % i)
 
-        if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
-            recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
+        if recording_uris[0].startswith(PLAYLIST_TRACK_URI_PREFIX):
+            recording_mbid = recording_uris[0][len(PLAYLIST_TRACK_URI_PREFIX):]
         else:
             log_raise_400("JSPF playlist track %d identifier must have the namespace '%s' prepended to it." %
                           (i, PLAYLIST_TRACK_URI_PREFIX))
@@ -104,6 +104,8 @@ def serialize_xspf(playlist: Playlist):
 
     title = ET.SubElement(playlist_root, "title")
     title.text = playlist.name
+
+    # TODO: Fix XML version
 
     identifier = ET.SubElement(playlist_root, "identifier")
     identifier.text = PLAYLIST_URI_PREFIX + str(playlist.mbid)
@@ -350,7 +352,7 @@ def create_playlist():
     if data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
             raise APIForbidden("Playlist contains a created_for field, but submitting user is not an approved playlist bot.")
-        created_for_user = users.get(data["playlist"]["created_for"].lower())
+        created_for_user = users.get(data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["created_for"].lower())
         if not created_for_user:
             log_raise_400("created_for user does not exist.")
         playlist.created_for_id = created_for_user["id"]
@@ -359,7 +361,7 @@ def create_playlist():
         for track in data["playlist"]["track"]:
             try:
                 playlist.recordings.append(
-                    WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                    WritablePlaylistRecording(mbid=UUID(track['identifier'][0][len(PLAYLIST_TRACK_URI_PREFIX):]),
                                               added_by_id=user["id"]))
             except ValueError:
                 log_raise_400("Invalid recording MBID found in submitted recordings")
