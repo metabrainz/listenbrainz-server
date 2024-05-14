@@ -311,7 +311,7 @@ def create_playlist():
         collaborators.remove(user["musicbrainz_id"])
 
     username_lookup = collaborators
-    created_for = data["playlist"].get("created_for", None)
+    created_for = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None)
     if created_for:
         username_lookup.append(created_for)
 
@@ -347,7 +347,7 @@ def create_playlist():
                                 public=public,
                                 additional_metadata=additional_metadata)
 
-    if data["playlist"].get("created_for", None):
+    if data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
             raise APIForbidden("Playlist contains a created_for field, but submitting user is not an approved playlist bot.")
         created_for_user = users.get(data["playlist"]["created_for"].lower())
