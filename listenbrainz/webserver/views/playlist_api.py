@@ -74,13 +74,21 @@ def validate_playlist(jspf):
     if "track" not in jspf["playlist"]:
         return
 
+    # Support the old way of doing it, and make with deadline to remove code
     for i, track in enumerate(jspf["playlist"].get("track", [])):
         recording_uris = track.get("identifier")
         if not recording_uris:
             log_raise_400("JSPF playlist track %d must contain an identifier list with at least one recording MBID." % i)
 
-        if recording_uris[0].startswith(PLAYLIST_TRACK_URI_PREFIX):
-            recording_mbid = recording_uris[0][len(PLAYLIST_TRACK_URI_PREFIX):]
+        # This allows identifier to be a list, tuple or string. The string support is a leftover and should be removed 
+        # after 2025-06, which marks a year or backward compatibility. Only the first option of the if statement should remain.
+        if isinstance(recording_uris, list) or isinstance(recording_uris, tuple):
+            recording_uri = recording_uris[0]
+        else:
+            recording_uri = recording_uris
+
+        if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
+            recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
         else:
             log_raise_400("JSPF playlist track %d identifier must have the namespace '%s' prepended to it." %
                           (i, PLAYLIST_TRACK_URI_PREFIX))
@@ -316,6 +324,11 @@ def create_playlist():
     created_for = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None)
     if created_for:
         username_lookup.append(created_for)
+    # The else: clause below can be removed as of 2025-06.
+    else:
+        created_for = data["playlist"].get("created_for", None)
+        if created_for:
+            username_lookup.append(created_for)
 
     users = {}
     if username_lookup:
@@ -360,9 +373,15 @@ def create_playlist():
     if "track" in data["playlist"]:
         for track in data["playlist"]["track"]:
             try:
-                playlist.recordings.append(
-                    WritablePlaylistRecording(mbid=UUID(track['identifier'][0][len(PLAYLIST_TRACK_URI_PREFIX):]),
-                                              added_by_id=user["id"]))
+                # This if statement can be replaced with the first option (is list) as of 2025-06.
+                if isinstance(track['identifier'], list) or isinstance(track['identifier'], tuple):
+                    playlist.recordings.append(
+                        WritablePlaylistRecording(mbid=UUID(track['identifier'][0][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                                  added_by_id=user["id"]))
+                else:
+                    playlist.recordings.append(
+                        WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                                  added_by_id=user["id"]))
             except ValueError:
                 log_raise_400("Invalid recording MBID found in submitted recordings")
 
