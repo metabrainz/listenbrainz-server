@@ -74,7 +74,6 @@ def validate_playlist(jspf):
     if "track" not in jspf["playlist"]:
         return
 
-    # Support the old way of doing it, and make with deadline to remove code
     for i, track in enumerate(jspf["playlist"].get("track", [])):
         recording_uris = track.get("identifier")
         if not recording_uris:
