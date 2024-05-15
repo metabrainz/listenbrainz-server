@@ -10,6 +10,95 @@ type ReleaseTimelineProps = {
   direction: SortDirection;
 };
 
+function createMarks(
+  releases: Array<FreshReleaseItem>,
+  sortDirection: string,
+  order: string
+) {
+  let dataArr: Array<string> = [];
+  let percentArr: Array<number> = [];
+  // We want to filter out the keys that have less than 1.5% of the total releases
+  const minReleasesThreshold = Math.floor(releases.length * 0.015);
+  if (order === "release_date") {
+    const releasesPerDate = countBy(
+      releases,
+      (item: FreshReleaseItem) => item.release_date
+    );
+    const filteredDates = Object.keys(releasesPerDate).filter(
+      (date) => releasesPerDate[date] >= minReleasesThreshold
+    );
+
+    dataArr = filteredDates.map((item) => formatReleaseDate(item));
+    percentArr = filteredDates
+      .map((item) => (releasesPerDate[item] / releases.length) * 100)
+      .map((_, index, arr) =>
+        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+      );
+  } else if (order === "artist_credit_name") {
+    const artistInitialsCount = countBy(releases, (item: FreshReleaseItem) =>
+      item.artist_credit_name.charAt(0).toUpperCase()
+    );
+    const filteredInitials = Object.keys(artistInitialsCount).filter(
+      (initial) => artistInitialsCount[initial] >= minReleasesThreshold
+    );
+
+    dataArr = filteredInitials.sort();
+    percentArr = filteredInitials
+      .map((item) => (artistInitialsCount[item] / releases.length) * 100)
+      .map((_, index, arr) =>
+        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+      );
+  } else if (order === "release_name") {
+    const releaseInitialsCount = countBy(releases, (item: FreshReleaseItem) =>
+      item.release_name.charAt(0).toUpperCase()
+    );
+    const filteredInitials = Object.keys(releaseInitialsCount).filter(
+      (initial) => releaseInitialsCount[initial] >= minReleasesThreshold
+    );
+
+    dataArr = filteredInitials.sort();
+    percentArr = filteredInitials
+      .map((item) => (releaseInitialsCount[item] / releases.length) * 100)
+      .map((_, index, arr) =>
+        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+      );
+  } else {
+    // conutBy gives us an asc-sorted Dict by confidence
+    const confidenceInitialsCount = countBy(
+      releases,
+      (item: FreshReleaseItem) => item?.confidence
+    );
+    dataArr = Object.keys(confidenceInitialsCount);
+    percentArr = Object.values(confidenceInitialsCount)
+      .map((item) => (item / releases.length) * 100)
+      .map((_, index, arr) =>
+        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
+      );
+  }
+
+  if (sortDirection === "descend") {
+    dataArr.reverse();
+    percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
+  }
+
+  /**
+   * We want the timeline dates or marks to start where the grid starts.
+   * So the 0% should always have the first date. Therefore we use unshift(0) here.
+   * With the same logic, we don't want the last date to be at 100% because
+   * that will mean we're at the bottom of the grid.
+   * The last date should start before 100%. That explains the pop().
+   * For descending sort, the reverse computation above possibly already ensures that
+   * the percentArr starts with 0 and ends with a non-100% value, which is desired.
+   * Hence, we add a check to skip the unshift(0) and pop() operations in that case.
+   */
+  if (percentArr[0] !== 0) {
+    percentArr.unshift(0);
+    percentArr.pop();
+  }
+
+  return zipObject(percentArr, dataArr);
+}
+
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases, order, direction } = props;
 
@@ -29,108 +118,24 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     return scrollTo;
   }, []);
 
-  function createMarks(data: Array<FreshReleaseItem>, sortDirection: string) {
-    let dataArr: Array<string> = [];
-    let percentArr: Array<number> = [];
-    // We want to filter out the keys that have less than 1.5% of the total releases
-    const minReleasesThreshold = Math.floor(data.length * 0.015);
-    if (order === "release_date") {
-      const releasesPerDate = countBy(
-        releases,
-        (item: FreshReleaseItem) => item.release_date
-      );
-      const filteredDates = Object.keys(releasesPerDate).filter(
-        (date) => releasesPerDate[date] >= minReleasesThreshold
-      );
+  React.useEffect(() => {
+    setMarks(createMarks(releases, direction, order));
+  }, [releases, direction, order]);
 
-      dataArr = filteredDates.map((item) => formatReleaseDate(item));
-      percentArr = filteredDates
-        .map((item) => (releasesPerDate[item] / data.length) * 100)
-        .map((_, index, arr) =>
-          arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
-        );
-    } else if (order === "artist_credit_name") {
-      const artistInitialsCount = countBy(data, (item: FreshReleaseItem) =>
-        item.artist_credit_name.charAt(0).toUpperCase()
-      );
-      const filteredInitials = Object.keys(artistInitialsCount).filter(
-        (initial) => artistInitialsCount[initial] >= minReleasesThreshold
-      );
-
-      dataArr = filteredInitials.sort();
-      percentArr = filteredInitials
-        .map((item) => (artistInitialsCount[item] / data.length) * 100)
-        .map((_, index, arr) =>
-          arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
-        );
-    } else if (order === "release_name") {
-      const releaseInitialsCount = countBy(data, (item: FreshReleaseItem) =>
-        item.release_name.charAt(0).toUpperCase()
-      );
-      const filteredInitials = Object.keys(releaseInitialsCount).filter(
-        (initial) => releaseInitialsCount[initial] >= minReleasesThreshold
-      );
-
-      dataArr = filteredInitials.sort();
-      percentArr = filteredInitials
-        .map((item) => (releaseInitialsCount[item] / data.length) * 100)
-        .map((_, index, arr) =>
-          arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
-        );
-    } else {
-      // conutBy gives us an asc-sorted Dict by confidence
-      const confidenceInitialsCount = countBy(
-        data,
-        (item: FreshReleaseItem) => item?.confidence
-      );
-      dataArr = Object.keys(confidenceInitialsCount);
-      percentArr = Object.values(confidenceInitialsCount)
-        .map((item) => (item / data.length) * 100)
-        .map((_, index, arr) =>
-          arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
-        );
-    }
-
-    if (sortDirection === "descend") {
-      dataArr.reverse();
-      percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
-    }
-
-    /**
-     * We want the timeline dates or marks to start where the grid starts.
-     * So the 0% should always have the first date. Therefore we use unshift(0) here.
-     * With the same logic, we don't want the last date to be at 100% because
-     * that will mean we're at the bottom of the grid.
-     * The last date should start before 100%. That explains the pop().
-     * For descending sort, the reverse computation above possibly already ensures that
-     * the percentArr starts with 0 and ends with a non-100% value, which is desired.
-     * Hence, we add a check to skip the unshift(0) and pop() operations in that case.
-     */
-    if (percentArr[0] !== 0) {
-      percentArr.unshift(0);
-      percentArr.pop();
-    }
-
-    return zipObject(percentArr, dataArr);
-  }
-
-  const handleScroll = React.useCallback(
-    debounce(() => {
-      // TODO change to relative position of #release-cards-grid instead of window
+  React.useEffect(() => {
+    const handleScroll = debounce(() => {
+      const container = document.getElementById("release-card-grids");
+      if (!container) {
+        return;
+      }
       const scrollPos =
-        (window.scrollY / document.documentElement.scrollHeight) * 100;
+        ((window.scrollY - container.offsetTop) / container.scrollHeight) * 100;
       setCurrentValue(scrollPos);
-    }, 300),
-    []
-  );
+    }, 500);
 
-  React.useEffect(() => {
-    setMarks(createMarks(releases, direction));
-  }, [releases, direction]);
-
-  React.useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => {
+      handleScroll.cancel();
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);

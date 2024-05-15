@@ -33,7 +33,6 @@ import {
 } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
-import Loader from "../components/Loader";
 import ListenCard from "../common/listens/ListenCard";
 import {
   preciseTimestamp,
@@ -69,7 +68,6 @@ export type UserFeedPageState = {
   previousEventTs?: number;
   earliestEventTs?: number;
   events: TimelineEvent[];
-  loading: boolean;
 };
 
 function isEventListenable(event?: TimelineEvent): boolean {
@@ -227,7 +225,7 @@ export default function UserFeedPage() {
   const { mutate: hideEventMutation } = useMutation({
     mutationFn: changeEventVisibility,
     onSuccess: (modifiedEvent, variables, context) => {
-      queryClient.setQueryData<InfiniteData<UserFeedPageProps, unknown>>(
+      queryClient.setQueryData<InfiniteData<UserFeedLoaderData, unknown>>(
         queryKey,
         (oldData) => {
           const newPages = oldData?.pages.map((page) => ({
@@ -528,29 +526,7 @@ export default function UserFeedPage() {
   const listens = events
     ?.filter(isEventListenable)
     .map((event) => event?.metadata) as Listen[];
-  if (isError) {
-    return (
-      <>
-        <Helmet>
-          <title>Feed</title>
-        </Helmet>
-        <div className="alert alert-warning text-center">
-          There was an error while trying to load your feed. Please try again
-        </div>
-        <div className="text-center">
-          <button
-            type="button"
-            className="btn btn-warning"
-            onClick={() => {
-              refetch();
-            }}
-          >
-            Reload feed
-          </button>
-        </div>
-      </>
-    );
-  }
+
   return (
     <>
       <Helmet>
@@ -561,73 +537,88 @@ export default function UserFeedPage() {
       </div>
       <div className="row">
         <div className="col-md-7 col-xs-12">
-          <div
-            style={{
-              height: 0,
-              position: "sticky",
-              top: "50%",
-              zIndex: 1,
-            }}
-          >
-            <Loader isLoading={isLoading || isFetching || isFetchingNextPage} />
-          </div>
-          <div
-            id="timeline"
-            data-testid="timeline"
-            style={{ opacity: isLoading ? "0.4" : "1" }}
-          >
-            <ul>
-              {events?.map((event) => {
-                const { created, event_type, user_name } = event;
-                return (
-                  <li
-                    className="timeline-event"
-                    key={`event-${user_name}-${created}`}
-                  >
-                    <div className="event-description">
-                      <span className={`event-icon ${event_type}`}>
-                        <span className="fa-layers">
-                          <FontAwesomeIcon
-                            icon={faCircle as IconProp}
-                            transform="grow-8"
-                          />
-                          <FontAwesomeIcon
-                            icon={getEventTypeIcon(event_type) as IconProp}
-                            inverse
-                            transform="shrink-4"
-                          />
-                        </span>
-                      </span>
-                      {renderEventText(event)}
+          {isError ? (
+            <>
+              <div className="alert alert-warning text-center">
+                There was an error while trying to load your feed. Please try
+                again
+              </div>
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="btn btn-warning"
+                  onClick={() => {
+                    refetch();
+                  }}
+                >
+                  Reload feed
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div
+                id="timeline"
+                data-testid="timeline"
+                style={{ opacity: isLoading ? "0.4" : "1" }}
+              >
+                <ul>
+                  {events?.map((event) => {
+                    const { created, event_type, user_name } = event;
+                    return (
+                      <li
+                        className="timeline-event"
+                        key={`event-${user_name}-${created}`}
+                      >
+                        <div className="event-description">
+                          <span className={`event-icon ${event_type}`}>
+                            <span className="fa-layers">
+                              <FontAwesomeIcon
+                                icon={faCircle as IconProp}
+                                transform="grow-8"
+                              />
+                              <FontAwesomeIcon
+                                icon={getEventTypeIcon(event_type) as IconProp}
+                                inverse
+                                transform="shrink-4"
+                              />
+                            </span>
+                          </span>
+                          {renderEventText(event)}
 
-                      <span className="event-time">
-                        {preciseTimestamp(created * 1000)}
-                        {renderEventActionButton(event)}
-                      </span>
-                    </div>
+                          <span className="event-time">
+                            {preciseTimestamp(created * 1000)}
+                            {renderEventActionButton(event)}
+                          </span>
+                        </div>
 
-                    {renderEventContent(event)}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-          <div
-            className="text-center"
-            style={{ width: "50%", marginLeft: "auto", marginRight: "auto" }}
-          >
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
-              onClick={() => fetchNextPage()}
-              disabled={!hasNextPage || isFetchingNextPage}
-            >
-              {isFetchingNextPage && "Loading more..."}
-              {!isFetchingNextPage && hasNextPage
-                ? "Load More"
-                : "Nothing more to load"}
-            </button>
-          </div>
+                        {renderEventContent(event)}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+              <div
+                className="text-center"
+                style={{
+                  width: "50%",
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block"
+                  onClick={() => fetchNextPage()}
+                  disabled={!hasNextPage || isFetchingNextPage}
+                >
+                  {(isLoading || isFetchingNextPage) && "Loading more..."}
+                  {!(isLoading || isFetchingNextPage) &&
+                    (hasNextPage ? "Load More" : "Nothing more to load")}
+                </button>
+              </div>
+            </>
+          )}
         </div>
         <div className="col-md-offset-1 col-md-4">
           <UserSocialNetwork user={currentUser} />

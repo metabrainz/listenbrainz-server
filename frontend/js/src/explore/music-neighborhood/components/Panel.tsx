@@ -1,10 +1,7 @@
 import * as React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowUpRightFromSquare,
-  faInfo,
-} from "@fortawesome/free-solid-svg-icons";
+import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import Spinner from "react-loader-spinner";
+import { Link } from "react-router-dom";
 import ReleaseCard from "../../fresh-releases/components/ReleaseCard";
 import SideBar from "../../../components/Sidebar";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
@@ -53,15 +50,16 @@ function Panel({ artistInfo, loading }: PanelProps) {
               </div>
               <div id="artist-wiki">{artistInfo.wiki}</div>
               <div className="artist-mb-link">
-                <a
+                <Link
                   id="artist-mb-link-button"
-                  href={artistInfo.link}
-                  target="_blank"
-                  rel="noreferrer"
+                  to={
+                    artistInfo.link.endsWith("/")
+                      ? artistInfo.link
+                      : `${artistInfo.link}/`
+                  }
                 >
-                  <strong>More </strong>
-                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-                </a>
+                  <strong>Artist page</strong>
+                </Link>
               </div>
             </div>
             {artistInfo.topAlbum && (

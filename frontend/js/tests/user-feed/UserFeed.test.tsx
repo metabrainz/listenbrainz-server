@@ -172,7 +172,6 @@ describe("UserFeed", () => {
     });
     const timeline = screen.getByTestId("timeline");
     expect(timeline).toBeInTheDocument();
-    screen.debug(timeline);
     expect(within(timeline).getAllByRole("listitem")).toHaveLength(7);
     expect(
       screen.getAllByText(textContentMatcher("reosarevok recommended a track"))

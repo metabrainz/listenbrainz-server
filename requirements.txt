@@ -21,8 +21,8 @@ oauth2client == 4.1.3
 pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@upgrade-deps
 spotipy>=2.22.1
-datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@a1e12968af93d2f296a42a8094ebff83f3ed33f3
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2024-04-29.0
+datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@830ecb2b2120acbd5deed2dab4587784c7be04b6
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v-2024-05-03.0
 PyYAML==6.0
 eventlet == 0.35.2
 # eventlet fails to patch dnspython >= 2.3 https://github.com/eventlet/eventlet/issues/781
@@ -32,8 +32,8 @@ sentry-sdk[flask]==1.38.0
 pydantic == 1.10.13
 pycountry==22.3.5
 Flask==3.0.0
-Jinja2==3.1.3
-Werkzeug==3.0.1
+Jinja2==3.1.4
+Werkzeug==3.0.3
 Flask-DebugToolbar@git+https://github.com/amCap1712/flask-debugtoolbar.git@f42bb238cd3fbc79c51b93c341164c2be820025e
 Flask-UUID==0.2
 msgpack==0.5.6
