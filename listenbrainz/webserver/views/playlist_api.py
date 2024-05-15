@@ -112,8 +112,6 @@ def serialize_xspf(playlist: Playlist):
     title = ET.SubElement(playlist_root, "title")
     title.text = playlist.name
 
-    # TODO: Fix XML version
-
     identifier = ET.SubElement(playlist_root, "identifier")
     identifier.text = PLAYLIST_URI_PREFIX + str(playlist.mbid)
 
