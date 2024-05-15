@@ -79,7 +79,7 @@ def validate_playlist(jspf):
         if not recording_uris:
             log_raise_400("JSPF playlist track %d must contain an identifier list with at least one recording MBID." % i)
 
-        # This allows identifier to be a list, tuple or string. The string support is a leftover and should be removed 
+        # This allows identifier to be a list, tuple or string. The string support is a leftover and should be removed
         # after 2025-06, which marks a year or backward compatibility. Only the first option of the if statement should remain.
         if isinstance(recording_uris, list) or isinstance(recording_uris, tuple):
             recording_uri = recording_uris[0]
@@ -875,7 +875,7 @@ def import_playlist_from_spotify(service):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
-    
+
     try:
         sp = spotipy.Spotify(token["access_token"])
         playlists = sp.current_user_playlists()
@@ -915,7 +915,7 @@ def import_tracks_from_spotify_to_playlist(service, playlist_id):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
-        
+
     try:
         playlist = import_from_spotify(token["access_token"], user["auth_token"], playlist_id)
         return playlist
