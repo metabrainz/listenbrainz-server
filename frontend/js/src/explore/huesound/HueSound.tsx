@@ -17,8 +17,9 @@ import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
 import { ToastMsg } from "../../notifications/Notifications";
 
-export default function HueSound() {
+export default function HueSound({ initialColor }: { initialColor?: string }) {
   const { APIService } = React.useContext(GlobalAppContext);
+  const { lookupReleaseFromColor } = APIService;
   const [loading, setLoading] = React.useState(false);
   const [colorReleases, setColorReleases] = React.useState<ColorReleaseItem[]>(
     []
@@ -26,17 +27,20 @@ export default function HueSound() {
   const [selectedRelease, setSelectedRelease] = React.useState<
     ColorReleaseItem
   >();
-  const [selectedColorString, setSelectedColorString] = React.useState<
-    string
-  >();
+  const [selectedColorString, setSelectedColorString] = React.useState(
+    initialColor
+  );
   const [gridBackground, setGridBackground] = React.useState<string>(
     COLOR_WHITE
   );
 
   React.useEffect(() => {
+    if (!selectedColorString) {
+      return;
+    }
     setLoading(true);
     const hex = tinycolor(selectedColorString).toHex(); // returns hex value without leading '#'
-    APIService.lookupReleaseFromColor(hex)
+    lookupReleaseFromColor(hex)
       .then((newColorReleases) => {
         const { releases } = newColorReleases.payload;
         const lighterColor = tinycolor(selectedColorString).lighten(40);
@@ -51,8 +55,9 @@ export default function HueSound() {
           />,
           { toastId: "error" }
         );
-      });
-  }, [selectedColorString, APIService]);
+      })
+      .finally(() => setLoading(false));
+  }, [selectedColorString, lookupReleaseFromColor]);
 
   const selectRelease = React.useCallback((release: ColorReleaseItem) => {
     setSelectedRelease(release);

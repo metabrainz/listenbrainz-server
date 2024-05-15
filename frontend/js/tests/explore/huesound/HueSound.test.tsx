@@ -1,5 +1,5 @@
 /* eslint-disable jest/no-disabled-tests */
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
@@ -45,7 +45,7 @@ describe("HueSound", () => {
   beforeAll(async () => {
     // Mock the server responses
     const handlers = [
-      http.get("/1/explore/color/000000", () =>
+      http.get("/1/explore/color/123321", () =>
         HttpResponse.json({ payload: { releases: [release] } })
       ),
     ];
@@ -66,17 +66,17 @@ describe("HueSound", () => {
   });
 
   it("renders a release when a color is selected", async () => {
-    renderWithProviders(<HueSound />);
+    renderWithProviders(<HueSound initialColor="#123321" />);
 
-    const canvasElement = screen.getByTestId("colour-picker");
-    await user.click(canvasElement);
-    screen.getByText(
+    await screen.findByText(
       textContentMatcher("Click an album cover to start playing!")
     );
-    const releaseButton = screen.getByRole("button");
-    within(releaseButton).getByAltText(
-      "Cover art for Release Prelude to Heliogabalus"
-    );
+    await waitFor(() => {
+      const releaseButton = screen.getByRole("button");
+      within(releaseButton).getByAltText(
+        "Cover art for Release Prelude to Heliogabalus"
+      );
+    });
   });
 
   it("renders a release and plays it when selected", async () => {
@@ -85,15 +85,16 @@ describe("HueSound", () => {
       messages.push(message)
     );
 
-    renderWithProviders(<HueSound />);
-    const canvasElement = screen.getByTestId("colour-picker");
-    await user.click(canvasElement);
-    const releaseButton = screen.getByRole("button");
-    await user.click(releaseButton);
+    renderWithProviders(<HueSound initialColor="#123321" />);
+
+    await waitFor(async () => {
+      const releaseButton = screen.getByRole("button");
+      await user.click(releaseButton);
+    });
     const links = screen.getAllByRole("link");
     expect(links.at(0)).toHaveTextContent("Prelude to Heliogabalus");
     expect(links.at(1)).toHaveTextContent("Rorcal & Music For The Space");
-    
+
     const brainzPlayerMessages = messages.filter(
       (m) => m.data.brainzplayer_event
     );
