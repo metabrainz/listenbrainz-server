@@ -1,35 +1,43 @@
-from operator import itemgetter
+from uuid import UUID
 
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
 from flask import current_app
+from pydantic import BaseModel
 
-from listenbrainz import config
+
+class ArtistCreditIdFromArtistMBIDInput(BaseModel):
+    artist_mbid: UUID
+
+
+class ArtistCreditIdFromArtistMBIDOutput(BaseModel):
+    artist_mbid: UUID
+    artist_credit_id: list[int]
 
 
 class ArtistCreditIdFromArtistMBIDQuery(Query):
 
     def names(self):
-        return ("artist-credit-from-artist-mbid", "MusicBrainz Artist Credit From Artist MBID")
+        return "artist-credit-from-artist-mbid", "MusicBrainz Artist Credit From Artist MBID"
 
     def inputs(self):
-        return ['artist_mbid']
+        return ArtistCreditIdFromArtistMBIDInput
 
     def introduction(self):
         return """Look up all available artist credit ids from an artist mbid."""
 
     def outputs(self):
-        return ['artist_mbid', 'artist_credit_id']
+        return ArtistCreditIdFromArtistMBIDOutput
 
-    def fetch(self, params, count=-1, offset=-1):
+    def fetch(self, params, source, count=-1, offset=-1):
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
-                acs = tuple([p['artist_mbid'] for p in params])
+                acs = tuple([p.artist_mbid for p in params])
                 query = """SELECT a.gid AS artist_mbid,
                                        array_agg(ac.id) AS artist_credit_id
                                   FROM artist_credit ac
@@ -57,4 +65,4 @@ class ArtistCreditIdFromArtistMBIDQuery(Query):
 
                     output.append(dict(row))
 
-                return output
+                return [ArtistCreditIdFromArtistMBIDOutput(**row) for row in output]

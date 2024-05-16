@@ -61,26 +61,20 @@ export default function Export() {
         <title>Export for {currentUser?.name}</title>
       </Helmet>
       <h3>Export from ListenBrainz</h3>
-      <p>
-        <strong> Notes about the ListenBrainz export process : </strong>
-      </p>
-      <p>
-        Export your listen history in JSON format and download it. Click
-        Download to proceed.
-      </p>
+      <p>Export and download your listen history in JSON format.</p>
       <form onSubmit={downloadListens}>
         <button className="btn btn-warning btn-lg" type="submit">
-          Download Listens
+          Download listens
         </button>
       </form>
       <br />
       <p>
-        Export your recording feedback (your loved and hated recordings) in JSON
-        format and download it. Click Download to proceed.
+        Export and download your recording feedback (your loved and hated
+        recordings) in JSON format.
       </p>
       <form onSubmit={downloadFeedback}>
         <button className="btn btn-warning btn-lg" type="submit">
-          Download Feedback
+          Download feedback
         </button>
       </form>
     </>
