@@ -788,8 +788,8 @@ def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Pl
 
     for rec, row in zip(playlist.recordings, rows):
         rec.artist_credit = row.get("artist_credit_name", "")
-        if "[artist_credit_mbids]" in row and row["[artist_credit_mbids]"] is not None:
-            rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"]]
+        if "artist_credit_mbids" in row and row["artist_credit_mbids"] is not None:
+            rec.artist_mbids = [UUID(mbid) for mbid in row["artist_credit_mbids"]]
         rec.title = row.get("recording_name", "")
         rec.release_name = row.get("release_name", "")
         rec.duration_ms = row.get("length", "")

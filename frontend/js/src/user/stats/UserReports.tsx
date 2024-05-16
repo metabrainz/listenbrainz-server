@@ -10,7 +10,6 @@ import { useLoaderData, useNavigate } from "react-router-dom";
 import type { NavigateFunction } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
-import ErrorBoundary from "../../utils/ErrorBoundary";
 import Pill from "../../components/Pill";
 import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
@@ -170,58 +169,46 @@ export default class UserReports extends React.Component<
           </a>
         </small>
         <section id="listening-activity">
-          <ErrorBoundary>
-            <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
-          </ErrorBoundary>
+          <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
         </section>
         <section id="top-entity">
           <div className="row">
             <div className="col-md-4">
-              <ErrorBoundary>
-                <UserTopEntity
-                  range={range}
-                  entity="artist"
-                  apiUrl={apiUrl}
-                  user={user}
-                  terminology="artist"
-                />
-              </ErrorBoundary>
+              <UserTopEntity
+                range={range}
+                entity="artist"
+                apiUrl={apiUrl}
+                user={user}
+                terminology="artist"
+              />
             </div>
             <div className="col-md-4">
-              <ErrorBoundary>
-                <UserTopEntity
-                  range={range}
-                  entity="release-group"
-                  apiUrl={apiUrl}
-                  user={user}
-                  terminology="album"
-                />
-              </ErrorBoundary>
+              <UserTopEntity
+                range={range}
+                entity="release-group"
+                apiUrl={apiUrl}
+                user={user}
+                terminology="album"
+              />
             </div>
             <div className="col-md-4">
-              <ErrorBoundary>
-                <UserTopEntity
-                  range={range}
-                  entity="recording"
-                  apiUrl={apiUrl}
-                  user={user}
-                  terminology="track"
-                />
-              </ErrorBoundary>
+              <UserTopEntity
+                range={range}
+                entity="recording"
+                apiUrl={apiUrl}
+                user={user}
+                terminology="track"
+              />
             </div>
           </div>
         </section>
         {user && (
           <section id="daily-activity">
-            <ErrorBoundary>
-              <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
-            </ErrorBoundary>
+            <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
           </section>
         )}
         <section id="artist-origin">
-          <ErrorBoundary>
-            <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
-          </ErrorBoundary>
+          <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
         </section>
       </div>
     );

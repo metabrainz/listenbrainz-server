@@ -2,6 +2,7 @@ import datetime
 from uuid import UUID
 
 import psycopg2
+import spotipy
 from flask import Blueprint, current_app, jsonify, request, make_response
 from xml.etree import ElementTree as ET
 import requests
@@ -11,6 +12,7 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.troi.export import export_to_spotify
+from listenbrainz.troi.import_ms import import_from_spotify
 from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -821,6 +823,84 @@ def export_playlist(playlist_mbid, service):
     try:
         url = export_to_spotify(user["auth_token"], token["access_token"], is_public, playlist_mbid=playlist_mbid)
         return jsonify({"external_url": url})
+    except requests.exceptions.HTTPError as exc:
+        error = exc.response.json()
+        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+
+
+@playlist_api_bp.route("/import/<service>", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_playlist_from_spotify(service):
+    """
+
+    Get playlists from Spotify.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlists are fetched.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: Playlists not found
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    if service != "spotify":
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+
+    spotify_service = SpotifyService()
+    token = spotify_service.get_user(user["id"], refresh=True)
+    if not token:
+        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
+
+    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+        raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
+                            f" to use this feature.")
+    
+    try:
+        sp = spotipy.Spotify(token["access_token"])
+        playlists = sp.current_user_playlists()
+        return jsonify(playlists["items"])
+    except requests.exceptions.HTTPError as exc:
+        error = exc.response.json()
+        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+
+
+@playlist_api_bp.route("/<service>/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_tracks_from_spotify_to_playlist(service, playlist_id):
+    """
+
+    Import a playlist tracks from a Spotify and convert them to JSPF.
+
+    :reqheader Authorization: Token <user token>
+    :param playlist_id: The Spotify playlist id to get the tracks from
+    :statuscode 200: tracks are fetched and converted.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: Playlist not found
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    if service != "spotify":
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+
+    spotify_service = SpotifyService()
+    token = spotify_service.get_user(user["id"], refresh=True)
+    if not token:
+        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
+
+    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+        raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
+                            f" to use this feature.")
+        
+    try:
+        playlist = import_from_spotify(token["access_token"], user["auth_token"], playlist_id)
+        return playlist
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)

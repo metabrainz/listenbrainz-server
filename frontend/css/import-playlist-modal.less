@@ -1,0 +1,150 @@
+#ImportPlaylistModal {
+  .add-listen {
+    border-radius: 15px;
+    height: 30px;
+    margin-right: 15px;
+    outline: none;
+  }
+
+  .add-listen-header {
+    display: flex;
+  }
+
+  .option-active {
+    background-color: #353070;
+    color: #fff;
+  }
+
+  .option-inactive {
+    background-color: #f9f6f5;
+    border: 2px solid rgb(141, 141, 141);
+    color: rgb(141, 141, 141);
+  }
+
+  .add-track-field {
+    margin-top: 15px;
+    padding: 5px 20px;
+  }
+
+  .add-track-pill {
+    display: inline-block;
+    background-color: #fff;
+    border-radius: 7px;
+    margin-top: 10px;
+    width: 100%;
+    border: 2px solid;
+    outline: none;
+    > div {
+      display: flex;
+      margin: 5px;
+      justify-content: space-between;
+      // We want pills to be always 32px height or more
+      // Texts are 10px, hence minimum height of 22px here
+      min-height: 22px;
+      span {
+        color: #000000;
+        margin-top: auto;
+        margin-bottom: auto;
+        margin-left: 6px;
+        margin-right: 6px;
+        font-style: normal;
+      }
+      button {
+        background-color: #fff;
+        color: #000000;
+        border: none;
+        border-radius: 100px;
+      }
+    }
+  }
+  .track-info {
+    > div {
+      width: 100%;
+      margin: 10px 0px;
+    }
+  }
+  .cross-details {
+    > button {
+      border: 0px;
+      background-color: #353070;
+      color: white;
+      margin: 5px;
+    }
+  }
+  .new-details {
+    margin: 20px 0px;
+    margin-right: 10px;
+    background-color: #353070;
+    width: 100%;
+    border-bottom-right-radius: 12px;
+    border-top-right-radius: 12px;
+    display: flex;
+  }
+  .recording-heading {
+    margin: 0px 15px;
+    > h5 {
+      color: white;
+      font-weight: 700;
+    }
+  }
+  .single-entity {
+    display: flex;
+    margin: auto 15px;
+    > h6 {
+      color: white;
+    }
+  }
+  .entity-heading {
+    font-weight: 700;
+    margin: 0px;
+  }
+  .entity-details {
+    font-size: 12px;
+    margin: 0px 18px;
+  }
+  .cover-art-img {
+    margin: 20px 10px;
+    margin-right: 0px;
+    > img {
+      width: 98px;
+      height: 98px;
+      border-bottom-left-radius: 12px;
+      border-top-left-radius: 12px;
+    }
+  }
+  .timestamp {
+    margin-left: 18px;
+    > h5 {
+      font-weight: 700;
+      font-size: 16px;
+    }
+  }
+  .timestamp-entities {
+    > button {
+      border-radius: 15px;
+      height: 30px;
+      margin-right: 15px;
+      outline: none;
+      padding: 0px 30px;
+    }
+  }
+  .timestamp-active {
+    background-color: #353070;
+    color: #fff;
+  }
+  .timestamp-inactive {
+    background-color: #fff;
+    border: 2px solid rgb(141, 141, 141);
+    color: #000000;
+  }
+  .timestamp-date-picker {
+    margin-left: 30px;
+    margin-top: 7px;
+  }
+
+  @media (min-width: 560px) {
+    .timestamp-entities {
+      display: flex;
+    }
+  }
+}

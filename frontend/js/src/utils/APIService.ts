@@ -429,7 +429,9 @@ export default class APIService {
     await this.checkStatus(response);
     // if response code is 204, then statistics havent been calculated, send empty object
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -450,7 +452,9 @@ export default class APIService {
     const response = await fetch(`${url}?range=${range}`);
     await this.checkStatus(response);
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -466,7 +470,9 @@ export default class APIService {
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -489,7 +495,9 @@ export default class APIService {
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -693,7 +701,6 @@ export default class APIService {
     });
     await this.checkStatus(response);
     const result = await response.json();
-
     return result.playlist_mbid;
   };
 
@@ -1118,6 +1125,35 @@ export default class APIService {
       url += `&inc=${inc}`;
     }
     const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importPlaylistToSpotify = async (userToken?: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/import/spotify`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importSpotifyPlaylistTracks = async (
+    userToken: string,
+    playlistID: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/spotify/${playlistID}/tracks`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -1585,7 +1621,7 @@ export default class APIService {
   getTopRecordingsForArtist = async (
     artistMBID: string
   ): Promise<RecordingType[]> => {
-    const url = `${this.APIBaseURI}/popularity/top-recordings-for-artist?artist_mbid=${artistMBID}`;
+    const url = `${this.APIBaseURI}/popularity/top-recordings-for-artist/${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1594,7 +1630,7 @@ export default class APIService {
   getTopReleaseGroupsForArtist = async (
     artistMBID: string
   ): Promise<ReleaseGroupType[]> => {
-    const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist?artist_mbid=${artistMBID}`;
+    const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist/${artistMBID}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

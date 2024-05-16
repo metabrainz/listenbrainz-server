@@ -37,18 +37,17 @@ export default function ResetImportTimestamp() {
   return (
     <>
       <Helmet>
-        <title>Reset import timestamp</title>
+        <title>Reset your import timestamp</title>
       </Helmet>
-      <h3 className="page-title">Reset Import Timestamp</h3>
-      <p>Are you sure you want to reset your token? </p>
+      <h3 className="page-title">Reset your import timestamp</h3>
+      <p>Are you sure you want to reset your timestamp? </p>
 
       <p>
-        ur last.fm importer keeps track of the listens you&apos;ve imported and
-        then only imports new listens added after previous imports. To do this,
-        we keep track of the timestamp of the newest listen submitted in your
-        last.fm import. By resetting this timestamp, you&apos;ll be able to
-        import your entire last.fm data again. However, this will not create
-        duplicates in your ListenBrainz listen history.
+        The Last.fm importer only checks for new Last.fm listens, since your
+        last Last.fm import. To do this, it stores the timestamp of the most
+        recent listen submitted in your last import. Resetting the timestamp
+        will make the next import check your entire Last.fm history. This will
+        not create duplicates in your ListenBrainz listen history.
       </p>
       <button
         type="button"
@@ -56,7 +55,7 @@ export default function ResetImportTimestamp() {
         className="btn btn-info btn-lg"
         style={{ width: "200px" }}
       >
-        Yes, reset it
+        Reset import timestamp
       </button>
     </>
   );

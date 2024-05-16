@@ -53,6 +53,18 @@ export default class UserSocialNetwork extends React.Component<
     await this.getSimilarArtists();
   }
 
+  async componentDidUpdate(prevProps: UserSocialNetworkProps) {
+    const { user: currentUser } = this.props;
+    if (prevProps.user.name !== currentUser.name) {
+      await this.getFollowing();
+      await this.getFollowers();
+      await this.getSimilarUsers();
+      await this.getCurrentUserFollowing();
+      await this.getSimilarity();
+      await this.getSimilarArtists();
+    }
+  }
+
   getSimilarUsers = async () => {
     const { user } = this.props;
     const { APIService } = this.context;
