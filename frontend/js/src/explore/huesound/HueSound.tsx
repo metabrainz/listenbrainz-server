@@ -5,7 +5,7 @@ import { get, has } from "lodash";
 import * as tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -17,7 +17,9 @@ import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
 import { ToastMsg } from "../../notifications/Notifications";
 
-export default function HueSound({ initialColor }: { initialColor?: string }) {
+export default function HueSound() {
+  const { colorURLParam } = useParams();
+  const navigate = useNavigate();
   const { APIService } = React.useContext(GlobalAppContext);
   const { lookupReleaseFromColor } = APIService;
   const [loading, setLoading] = React.useState(false);
@@ -27,23 +29,24 @@ export default function HueSound({ initialColor }: { initialColor?: string }) {
   const [selectedRelease, setSelectedRelease] = React.useState<
     ColorReleaseItem
   >();
-  const [selectedColorString, setSelectedColorString] = React.useState(
-    initialColor
-  );
   const [gridBackground, setGridBackground] = React.useState<string>(
     COLOR_WHITE
   );
+  const navigateToColor = (rgbValue: string) => {
+    const hexValue = tinycolor(rgbValue).toHex();
+    navigate(`/explore/huesound/${hexValue}`);
+  };
 
   React.useEffect(() => {
-    if (!selectedColorString) {
+    if (!tinycolor(colorURLParam).isValid()) {
       return;
     }
     setLoading(true);
-    const hex = tinycolor(selectedColorString).toHex(); // returns hex value without leading '#'
+    const hex = tinycolor(colorURLParam).toHex(); // returns hex value without leading '#'
     lookupReleaseFromColor(hex)
       .then((newColorReleases) => {
         const { releases } = newColorReleases.payload;
-        const lighterColor = tinycolor(selectedColorString).lighten(40);
+        const lighterColor = tinycolor(colorURLParam).lighten(40);
         setColorReleases(releases);
         setGridBackground(lighterColor.toRgbString());
       })
@@ -57,7 +60,7 @@ export default function HueSound({ initialColor }: { initialColor?: string }) {
         );
       })
       .finally(() => setLoading(false));
-  }, [selectedColorString, lookupReleaseFromColor]);
+  }, [colorURLParam, lookupReleaseFromColor]);
 
   const selectRelease = React.useCallback((release: ColorReleaseItem) => {
     setSelectedRelease(release);
@@ -90,17 +93,17 @@ export default function HueSound({ initialColor }: { initialColor?: string }) {
               radius={175}
               padding={1}
               lineWidth={70}
-              onColorSelected={setSelectedColorString}
+              onColorSelected={navigateToColor}
               spacers={{
                 colour: COLOR_WHITE,
                 shadowColor: "grey",
                 shadowBlur: 5,
               }}
-              preset={false} // You can set this bool depending on whether you have a pre-selected colour in state.
-              presetColor={selectedColorString}
+              preset={!!colorURLParam} // You can set this bool depending on whether you have a pre-selected colour in state.
+              presetColor={colorURLParam}
               animated
             />
-            {colorReleases.length === 0 && (
+            {!tinycolor(colorURLParam).isValid() && (
               <h2 className="text-center">
                 Choose a color
                 <br />

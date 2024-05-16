@@ -72,7 +72,7 @@ const getExploreRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "huesound/",
+          path: "huesound/:colorURLParam?",
           lazy: async () => {
             const HueSound = await import("../huesound/HueSound");
             return { Component: HueSound.default };
