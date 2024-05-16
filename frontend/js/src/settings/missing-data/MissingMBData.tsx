@@ -35,11 +35,10 @@ export interface MissingMBDataState {
   missingData: Array<MissingMBData>;
   deletedListens: Array<string>; // array of recording_msid of deleted items
   currPage?: number;
-  totalPages: number;
   loading: boolean;
 }
 
-const expectedDataPerPage = 25;
+const EXPECTED_ITEMS_PER_PAGE = 25;
 
 export default function MissingMBDataPage() {
   // Context
@@ -52,15 +51,13 @@ export default function MissingMBDataPage() {
 
   // State
   const [missingData, setMissingData] = React.useState<Array<MissingMBData>>(
-    missingDataProps.slice(0, expectedDataPerPage) || []
+    missingDataProps.slice(0, EXPECTED_ITEMS_PER_PAGE) || []
   );
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
   const [currPage, setCurrPage] = React.useState<number>(1);
-  const [totalPages, setTotalPages] = React.useState<number>(
-    missingDataProps
-      ? Math.ceil(missingDataProps.length / expectedDataPerPage)
-      : 0
-  );
+  const totalPages = missingDataProps
+    ? Math.ceil(missingDataProps.length / EXPECTED_ITEMS_PER_PAGE)
+    : 0;
   const [loading, setLoading] = React.useState<boolean>(false);
 
   // Ref
@@ -158,12 +155,11 @@ export default function MissingMBDataPage() {
 
   const handleClickPrevious = () => {
     if (currPage && currPage > 1) {
-      // this.setState({ loading: true });
       setLoading(true);
-      const offset = (currPage - 1) * expectedDataPerPage;
+      const offset = (currPage - 1) * EXPECTED_ITEMS_PER_PAGE;
       const updatedPage = currPage - 1;
       setMissingData(
-        missingDataProps.slice(offset - expectedDataPerPage, offset) || []
+        missingDataProps.slice(offset - EXPECTED_ITEMS_PER_PAGE, offset) || []
       );
       setCurrPage(updatedPage);
       afterDisplay();
@@ -174,10 +170,10 @@ export default function MissingMBDataPage() {
   const handleClickNext = () => {
     if (currPage && currPage < totalPages) {
       setLoading(true);
-      const offset = currPage * expectedDataPerPage;
+      const offset = currPage * EXPECTED_ITEMS_PER_PAGE;
       const updatedPage = currPage + 1;
       setMissingData(
-        missingDataProps.slice(offset, offset + expectedDataPerPage) || []
+        missingDataProps.slice(offset, offset + EXPECTED_ITEMS_PER_PAGE) || []
       );
       setCurrPage(updatedPage);
       afterDisplay();
