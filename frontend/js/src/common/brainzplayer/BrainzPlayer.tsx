@@ -753,6 +753,9 @@ export default function BrainzPlayer() {
       },
       () => {
         updateWindowTitleWithTrackName();
+        if (!playerPaused) {
+          submitNowPlayingToListenBrainz();
+        }
       }
     );
     if (playerPaused) {
@@ -792,8 +795,6 @@ export default function BrainzPlayer() {
         handleInfoMessage(message, `Playing a track`);
       }
     });
-
-    submitNowPlayingToListenBrainz();
   };
 
   const clearQueue = async (): Promise<void> => {
