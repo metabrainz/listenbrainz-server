@@ -102,7 +102,7 @@ export default function ExportButtons({ listens = true, feedback = true }) {
       )}
       {loading && (
         <div
-          className="alert alert-info"
+          className="mt-15 alert alert-info"
           role="alert"
           style={{ maxWidth: "fit-content" }}
         >
