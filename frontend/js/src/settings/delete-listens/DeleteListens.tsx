@@ -1,36 +1,17 @@
 import * as React from "react";
 
-import { redirect, useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { downloadFile } from "../export/ExportData";
+import ExportButtons from "../export/ExportButtons";
 
 export default function DeleteListens() {
   const { currentUser } = React.useContext(GlobalAppContext);
   const { name } = currentUser;
   const location = useLocation();
-  const downloadListens = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    try {
-      await downloadFile("/settings/export/");
-      toast.success(
-        <ToastMsg
-          title="Success"
-          message="Your listens have been downloaded."
-        />
-      );
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={`Failed to download listens: ${error}`}
-        />
-      );
-    }
-  };
+  const navigate = useNavigate();
 
   // eslint-disable-next-line consistent-return
   const deleteListens = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,27 +24,42 @@ export default function DeleteListens() {
           "Content-Type": "application/json",
         },
       });
+      if (!response.ok) {
+        const errJson = await response.json();
+        throw errJson.message ?? "Error";
+      }
 
       toast.success(
         <ToastMsg
           title="Success"
-          message="Your listens have been enqueued for deletion."
+          message="Your listens have been enqueued for deletion. Please note your listens will still be visible for up to an hour."
         />
       );
 
-      // TODO: Should be replaced by redirect using react-router-dom
       setTimeout(() => {
-        window.location.href = `/user/${name}/`;
+        navigate(`/user/${name}/`);
       }, 3000);
     } catch (error) {
       toast.error(
         <ToastMsg
           title="Error"
-          message={`Error while deleting listens for user ${name}`}
+          message={
+            <>
+              Error while deleting listens for user {name}:{error.toString()}
+              <button
+                type="button"
+                onClick={() => {
+                  navigate("/settings/");
+                }}
+              >
+                Back to setting
+              </button>
+            </>
+          }
         />
       );
 
-      return redirect("/settings/");
+      return navigate("/settings/");
     }
   };
 
@@ -91,15 +87,7 @@ export default function DeleteListens() {
         ListenBrainz data before deleting your account.
       </p>
 
-      <form onSubmit={downloadListens}>
-        <button
-          className="btn btn-warning btn-lg"
-          type="submit"
-          style={{ width: "250px" }}
-        >
-          Export listens
-        </button>
-      </form>
+      <ExportButtons feedback={false} />
       <br />
 
       <form onSubmit={deleteListens}>
