@@ -96,20 +96,12 @@ function BrainzPlayerSettings() {
       <Helmet>
         <title>BrainzPlayer Settings</title>
       </Helmet>
-      <h2 className="page-title">BrainzPlayer Settings</h2>
-      <h4 className="page-title">Music Players</h4>
+      <h2 className="page-title">BrainzPlayer settings</h2>
+      <p>Choose which music services to use for playback in ListenBrainz.</p>
+
       <p>
-        You can choose which music services to play music from on listenBrainz.
-        To sign in and authorize your account please go to the{" "}
-        <Link to="/settings/music-services/details/">
-          &quot;connect services&quot; page
-        </Link>
-        . <br />
-        If you don&apos;t have a subscription to a music service listed below,
-        Youtube will be used by default as it does not require an account.
-        However the search results from Youtube are often inaccurate, and for a
-        better listening experience we recommend one of the other services (if
-        you have one available).
+        YouTube is enabled by default. For a better listening experience we
+        recommend enabling another service.
       </p>
       <div
         className="mb-15"
@@ -136,8 +128,9 @@ function BrainzPlayerSettings() {
         />
         <br />
         <small>
-          Spotify requires a premium account to play full songs on third-party
-          websites. To sign in, please go to the{" "}
+          Spotify requires a premium account.
+          <br />
+          Sign in on the{" "}
           <Link to="/settings/music-services/details/">
             &quot;connect services&quot; page
           </Link>
@@ -169,12 +162,13 @@ function BrainzPlayerSettings() {
         />
         <br />
         <small>
-          Apple Music requires a premium account to play full songs on
-          third-party websites. To sign in, please go to the{" "}
+          Apple Music requires a premium account.
+          <br />
+          Sign in on the{" "}
           <Link to="/settings/music-services/details/">
             &quot;connect services&quot; page
           </Link>
-          . You will need to sign in every 6 months as the authorization
+          . You will need to sign in every 6 months, as the authorization
           expires.
         </small>
       </div>
@@ -197,14 +191,15 @@ function BrainzPlayerSettings() {
               <span className={soundcloudEnabled ? "text-success" : ""}>
                 <FontAwesomeIcon icon={faSoundcloud} />
               </span>
-              <span>&nbsp;Soundcloud</span>
+              <span>&nbsp;SoundCloud</span>
             </span>
           }
         />
         <br />
         <small>
-          Soundcloud requires a free account to play full songs on third-party
-          websites. To sign in, please go to the{" "}
+          SoundCloud requires a free account.
+          <br />
+          Sign in on the{" "}
           <Link to="/settings/music-services/details/">
             &quot;connect services&quot; page
           </Link>
@@ -223,17 +218,17 @@ function BrainzPlayerSettings() {
               <span className={youtubeEnabled ? "text-success" : ""}>
                 <FontAwesomeIcon icon={faYoutube} />
               </span>
-              <span>&nbsp;Youtube</span>
+              <span>&nbsp;YouTube</span>
             </span>
           }
         />
         <br />
         <small>
-          Youtube does not require signing in and provides a good fallback. Be
-          aware the search results from Youtube are often inaccurate.
+          YouTube does not require an account and is the default fallback.
+          Search results from YouTube are often inaccurate.
           <br />
-          By using Youtube to play music, you agree to be bound by the YouTube
-          Terms of Service. See their terms of service and privacy policy below:
+          By using YouTube you agree to be bound by the YouTube Terms of
+          Service:
           <ul>
             <li>
               <a
@@ -262,7 +257,7 @@ function BrainzPlayerSettings() {
         type="button"
         onClick={saveSettings}
       >
-        Save preferences
+        Save BrainzPlayer settings
       </button>
       <ReactTooltip id="login-first" aria-haspopup="true" delayHide={500}>
         You must login to this service in the &quot;Connect services&quot;

@@ -1,6 +1,7 @@
 import locale
 import os
 import requests
+import time
 
 from brainzutils import cache
 from datetime import datetime
@@ -21,6 +22,8 @@ from listenbrainz.webserver import flash, db_conn
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user_relationship as db_user_relationship
+from listenbrainz.webserver.views.user_timeline_event_api import get_feed_events_for_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -170,6 +173,35 @@ def search():
     return jsonify({
         "searchTerm": search_term,
         "users": users
+    })
+
+
+@index_bp.route('/feed/', methods=['POST', 'OPTIONS'])
+@login_required
+def feed():
+    user_id = current_user.id
+    count = request.args.get('count', 25)
+    min_ts = request.args.get('min_ts', 0)
+    max_ts = request.args.get('max_ts', int(time.time()))
+    current_user_data = {
+        "id": current_user.id,
+        "musicbrainz_id": current_user.musicbrainz_id,
+    }
+
+    users_following = db_user_relationship.get_following_for_user(
+        db_conn, user_id)
+
+    user_events = get_feed_events_for_user(
+        user=current_user_data, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
+
+    user_events = user_events[:count]
+
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
+    for index, event in enumerate(user_events):
+        user_events[index].event_type = event.event_type.value
+
+    return jsonify({
+        'events': [event.dict() for event in user_events],
     })
 
 

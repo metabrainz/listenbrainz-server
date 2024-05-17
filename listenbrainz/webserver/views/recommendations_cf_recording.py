@@ -94,7 +94,7 @@ def _get_props(active_section, user):
             "name": user.musicbrainz_id,
         },
         "recommendations": recommendations,
-        "last_updated": data.created.strftime('%d %b %Y'),
+        "lastUpdated": data.created.strftime('%d %b %Y'),
         "errorMsg": ""
     }
 

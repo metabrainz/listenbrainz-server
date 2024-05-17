@@ -8,7 +8,7 @@ const RouteLoader = async ({ request }: { request: Request }) => {
   const response = await fetch(request.url, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      Accept: "application/json",
     },
   });
   const data = await response.json();
@@ -24,7 +24,7 @@ const RouteLoaderURL = async (url: string) => {
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      Accept: "application/json",
     },
   });
   const data = await response.json();
