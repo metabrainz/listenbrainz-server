@@ -45,7 +45,7 @@ export default function DeleteListens() {
           title="Error"
           message={
             <>
-              Error while deleting listens for user {name}:{error.toString()}
+              Error while deleting listens for user {name}: {error.toString()}
               <button
                 type="button"
                 onClick={() => {
