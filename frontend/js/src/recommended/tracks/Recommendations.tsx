@@ -297,43 +297,57 @@ export default function Recommendations() {
                     );
                   })}
                 </div>
-                <ul className="pager" style={{ display: "flex" }}>
-                  <li
-                    className={`previous ${
-                      currRecPage && currRecPage <= 1 ? "hidden" : ""
-                    }`}
-                  >
-                    <a
-                      role="button"
-                      onClick={handleClickPrevious}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleClickPrevious();
-                      }}
-                      tabIndex={0}
+                <nav role="navigation" aria-label="Pagination">
+                  <ul className="pager" style={{ display: "flex" }}>
+                    <li
+                      className={`previous ${
+                        currRecPage && currRecPage <= 1 ? "hidden" : ""
+                      }`}
                     >
-                      &larr; Previous
-                    </a>
-                  </li>
-                  <li
-                    className={`next ${
-                      currRecPage && currRecPage >= totalRecPages
-                        ? "hidden"
-                        : ""
-                    }`}
-                    style={{ marginLeft: "auto" }}
-                  >
-                    <a
-                      role="button"
-                      onClick={handleClickNext}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleClickNext();
-                      }}
-                      tabIndex={0}
+                      <a
+                        role="button"
+                        onClick={handleClickPrevious}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleClickPrevious();
+                        }}
+                        tabIndex={0}
+                        aria-disabled={Boolean(currRecPage && currRecPage <= 1)}
+                        aria-label={`Go to page ${Math.max(
+                          currRecPage - 1,
+                          0
+                        )}`}
+                      >
+                        &larr; Previous
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
+                        currRecPage && currRecPage >= totalRecPages
+                          ? "hidden"
+                          : ""
+                      }`}
+                      style={{ marginLeft: "auto" }}
                     >
-                      Next &rarr;
-                    </a>
-                  </li>
-                </ul>
+                      <a
+                        role="button"
+                        onClick={handleClickNext}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleClickNext();
+                        }}
+                        tabIndex={0}
+                        aria-disabled={Boolean(
+                          currRecPage && currRecPage >= totalRecPages
+                        )}
+                        aria-label={`Go to page ${Math.min(
+                          currRecPage + 1,
+                          totalRecPages
+                        )}`}
+                      >
+                        Next &rarr;
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
               </div>
 
               <br />
