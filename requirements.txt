@@ -37,7 +37,7 @@ Werkzeug==3.0.3
 Flask-DebugToolbar@git+https://github.com/amCap1712/flask-debugtoolbar.git@f42bb238cd3fbc79c51b93c341164c2be820025e
 Flask-UUID==0.2
 msgpack==0.5.6
-requests==2.31.0
+requests==2.32.0
 SQLAlchemy==2.0.23
 mbdata@git+https://github.com/amCap1712/mbdata.git@fix-sqlalchemy-warnings
 sqlalchemy-dst==1.0.1
