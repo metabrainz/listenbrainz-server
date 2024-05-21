@@ -198,13 +198,13 @@ export default function HueSound() {
                 )}
               </div>
             </div>
-            <BrainzPlayer
+            {/* <BrainzPlayer
               listens={selectedReleaseTracks}
               listenBrainzAPIBaseURI={APIService.APIBaseURI}
               refreshSpotifyToken={APIService.refreshSpotifyToken}
               refreshYoutubeToken={APIService.refreshYoutubeToken}
               refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-            />
+            /> */}
           </div>
         )}
       </div>
