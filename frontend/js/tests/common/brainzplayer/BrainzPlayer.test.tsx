@@ -89,6 +89,7 @@ describe("BrainzPlayer", () => {
     window.location = {
       href: "http://nevergonnagiveyouup.com",
     } as Window["location"];
+    fetchMock.enableMocks();
   });
 
   it("renders correctly", () => {
