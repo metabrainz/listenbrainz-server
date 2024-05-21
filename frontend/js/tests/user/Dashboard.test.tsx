@@ -56,12 +56,6 @@ const propsOneListen = {
   ...recentListensPropsOneListen,
 };
 
-fetchMock.mockIf(
-  (input) => input.url.endsWith("/listen-count"),
-  () => {
-    return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
-  }
-);
 const getComponent = (componentProps: ListensProps) => (
   <BrowserRouter>
     <Listens />
@@ -75,6 +69,13 @@ xdescribe("Listens page", () => {
   let userEventSession: UserEvent;
   beforeAll(async () => {
     userEventSession = await userEvent.setup();
+    fetchMock.enableMocks();
+    fetchMock.mockIf(
+      (input) => input.url.endsWith("/listen-count"),
+      () => {
+        return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
+      }
+    );
   });
   it("renders correctly on the profile page", async () => {});
 
