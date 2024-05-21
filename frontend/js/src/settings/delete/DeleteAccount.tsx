@@ -5,52 +5,11 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { downloadFile } from "../export/ExportData";
+import ExportButtons from "../export/ExportButtons";
 
 export default function DeleteAccount() {
   const { currentUser } = React.useContext(GlobalAppContext);
   const { name } = currentUser;
-  const downloadListens = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    try {
-      await downloadFile("/settings/export/");
-      toast.success(
-        <ToastMsg
-          title="Success"
-          message="Your listens have been downloaded."
-        />
-      );
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={`Failed to download listens: ${error}`}
-        />
-      );
-    }
-  };
-
-  const downloadFeedback = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    try {
-      await downloadFile("/settings/export-feedback/");
-      toast.success(
-        <ToastMsg
-          title="Success"
-          message="Your feedback has been downloaded."
-        />
-      );
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={`Failed to download feedback: ${error}`}
-        />
-      );
-    }
-  };
 
   // eslint-disable-next-line consistent-return
   const deleteAccount = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -95,30 +54,13 @@ export default function DeleteAccount() {
       </p>
 
       <p>
-        The data will not be recoverable. Please consider exporting your
+        <b>The data will not be recoverable.</b> Please consider exporting your
         ListenBrainz data before deleting your account.
       </p>
 
-      <form onSubmit={downloadListens}>
-        <button
-          className="btn btn-warning btn-lg"
-          type="submit"
-          style={{ width: "250px" }}
-        >
-          Export listens
-        </button>
-      </form>
-
-      <form onSubmit={downloadFeedback}>
-        <button
-          className="btn btn-warning btn-lg"
-          type="submit"
-          style={{ width: "250px" }}
-        >
-          Export feedback
-        </button>
-      </form>
-
+      <ExportButtons />
+      <br />
+      <p className="text-brand text-danger">This cannot be undone!</p>
       <form onSubmit={deleteAccount}>
         <button
           id="btn-delete-user"
