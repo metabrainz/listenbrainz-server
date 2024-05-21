@@ -156,8 +156,10 @@ def get_counts(ts_conn, entity, mbids):
         entity_mbid = "release_group_mbid"
     elif entity == "release":
         entity_mbid = "release_mbid"
+    elif entity == "artist":
+        entity_mbid = "artist_mbid"
     else:
-        return []
+        return [], {}
 
     query = SQL("""
           WITH mbids (mbid) AS (
@@ -219,7 +221,7 @@ def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
             data.pop("original_recording_mbid", None)
             data.update({
                 "artist_name": data.pop("artist_credit_name"),
-                "artist_mbids": data.pop("[artist_credit_mbids]"),
+                "artist_mbids": data.pop("artist_credit_mbids"),
                 "total_listen_count": recording["total_listen_count"],
                 "total_user_count": recording["total_user_count"],
                 "release_color": releases_color.get(str(data["release_mbid"]), {})

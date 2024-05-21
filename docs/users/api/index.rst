@@ -74,6 +74,7 @@ Reference
    playlist
    recordings
    statistics
+   popularity
    metadata
    social
    recommendation

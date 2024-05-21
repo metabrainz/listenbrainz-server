@@ -43,6 +43,7 @@ class BackgroundTasks:
         current_app.logger.info("Background tasks processor started.")
         while True:
             try:
+                db_conn.rollback()
                 task = get_task()
                 if task is None:
                     time.sleep(5)
@@ -55,7 +56,6 @@ class BackgroundTasks:
                 break
             except Exception:
                 current_app.logger.error("Error in background tasks processor:", exc_info=True)
-                db_conn.rollback()
                 time.sleep(5)
 
 

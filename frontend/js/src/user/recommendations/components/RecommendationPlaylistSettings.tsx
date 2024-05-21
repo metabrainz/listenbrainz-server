@@ -108,7 +108,7 @@ export default function RecommendationPlaylistSettings({
           {playlist.creator} |{" "}
           {extension?.created_for && `For ${extension?.created_for}`}
           <br />
-          <Link to={playlist.identifier}>Link to this playlist</Link>
+          <Link to={`/playlist/${playlistId}/`}>Link to this playlist</Link>
         </div>
         <hr />
         {playlist.annotation && (

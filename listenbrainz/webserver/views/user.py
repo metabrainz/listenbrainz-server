@@ -79,11 +79,9 @@ def profile(user_name):
     for listen in data:
         listens.append(listen.to_api())
 
-    # If there are no previous listens then display now_playing
-    if not listens or listens[0]['listened_at'] >= max_ts_per_user:
-        playing_now = playing_now_conn.get_playing_now(user.id)
-        if playing_now:
-            listens.insert(0, playing_now.to_api())
+    playing_now = playing_now_conn.get_playing_now(user.id)
+    if playing_now:
+        playing_now = playing_now.to_api()
 
     already_reported_user = False
     if current_user.is_authenticated:
@@ -103,6 +101,7 @@ def profile(user_name):
         "oldestListenTs": min_ts_per_user,
         "profile_url": url_for('user.index', path="", user_name=user_name),
         "userPinnedRecording": pin,
+        "playingNow": playing_now,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
     }
