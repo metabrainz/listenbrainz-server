@@ -33,12 +33,7 @@ const router = createMemoryRouter(
 
 describe("PlaylistPage", () => {
   it("renders correctly", () => {
-    renderWithProviders(
-      <RouterProvider router={router} />,
-      {},
-      {},
-      { withRouter: false }
-    );
+    renderWithProviders(<RouterProvider router={router} />, {}, {}, false);
     screen.getByTestId("playlist");
     const h1 = screen.getByRole("heading");
     expect(h1).toHaveTextContent("1980s flashback jams");
@@ -46,12 +41,7 @@ describe("PlaylistPage", () => {
   });
 
   it("hides exportPlaylistToSpotify button if playlist permissions are absent", () => {
-    renderWithProviders(
-      <RouterProvider router={router} />,
-      {},
-      {},
-      { withRouter: false }
-    );
+    renderWithProviders(<RouterProvider router={router} />, {}, {}, false);
     expect(
       screen.queryByText("Export to Spotify", { exact: false })
     ).not.toBeInTheDocument();
@@ -73,7 +63,7 @@ describe("PlaylistPage", () => {
       <RouterProvider router={router} />,
       alternativeContextMock,
       {},
-      { withRouter: false }
+      false
     );
     screen.getByText("Export to Spotify", { exact: false });
   });
