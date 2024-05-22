@@ -36,7 +36,7 @@ export default function ExportButtons({ listens = true, feedback = true }) {
     try {
       await downloadFile(window.location.href);
     } catch (error) {
-      setErrorMessage(error);
+      setErrorMessage(error.toString());
       toast.error(
         <ToastMsg
           title="Error"
@@ -55,7 +55,7 @@ export default function ExportButtons({ listens = true, feedback = true }) {
     try {
       await downloadFile("/settings/export-feedback/");
     } catch (error) {
-      setErrorMessage(error);
+      setErrorMessage(error.toString());
       toast.error(
         <ToastMsg
           title="Error"
