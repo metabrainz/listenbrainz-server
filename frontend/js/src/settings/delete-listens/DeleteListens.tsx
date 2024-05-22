@@ -21,7 +21,9 @@ export default function DeleteListens() {
     try {
       const confirmMessage = (
         <>
-          You are about to delete all of your listens.
+          <span className="text-danger">
+            You are about to delete all of your listens.
+          </span>
           <br />
           <b>This action cannot be undone.</b>
           <br />

@@ -19,7 +19,9 @@ export default function DeleteAccount() {
     try {
       const confirmMessage = (
         <>
-          You are about to delete your account.
+          <span className="text-danger">
+            You are about to delete your account.
+          </span>
           <br />
           <b>This action cannot be undone.</b>
           <br />
