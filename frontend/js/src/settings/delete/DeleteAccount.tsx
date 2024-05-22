@@ -16,7 +16,7 @@ export default function DeleteAccount() {
     e.preventDefault();
 
     try {
-      const response = await fetch(window.location.href, {
+      const response = await fetch("/settings/delete/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

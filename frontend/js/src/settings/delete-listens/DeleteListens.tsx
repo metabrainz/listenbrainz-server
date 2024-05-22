@@ -18,7 +18,7 @@ export default function DeleteListens() {
     e.preventDefault();
 
     try {
-      const response = await fetch(location.pathname, {
+      const response = await fetch("/settings/delete-listens/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
