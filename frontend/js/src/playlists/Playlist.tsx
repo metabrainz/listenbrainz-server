@@ -139,7 +139,7 @@ export default function PlaylistPage() {
 
     return () => {
       socket.off("connect", connectHandler);
-      socket.off("listen", playlistChangeHandler);
+      socket.off("playlist_changed", playlistChangeHandler);
       socket.close();
     };
   }, [handlePlaylistChange, playlist, websocketsUrl]);
@@ -194,6 +194,10 @@ export default function PlaylistPage() {
         getPlaylistId(playlist),
         [jspfTrack]
       );
+      dispatch({
+        type: "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE",
+        data: JSPFTrackToListen(jspfTrack),
+      });
       toast.success(
         <ToastMsg
           title="Added Track"
@@ -237,6 +241,10 @@ export default function PlaylistPage() {
           ...playlist,
           track: [...tracks],
         };
+        dispatch({
+          type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
+          data: JSPFTrackToListen(trackToDelete),
+        });
         setPlaylist(newPlaylist);
         emitPlaylistChanged(newPlaylist);
       }
@@ -263,6 +271,10 @@ export default function PlaylistPage() {
         evt.newIndex,
         1
       );
+      dispatch({
+        type: "MOVE_AMBIENT_QUEUE_ITEM",
+        data: evt,
+      });
       emitPlaylistChanged(playlist);
     } catch (error) {
       handleError(error);
@@ -288,7 +300,7 @@ export default function PlaylistPage() {
       data: listens,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tracks]);
+  }, [playlistProps]);
 
   return (
     <div role="main">
