@@ -28,7 +28,7 @@ export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
   user?: ListenBrainzUser;
   errorMsg?: string;
-  last_updated?: string;
+  lastUpdated?: string;
 };
 
 type RecommendationsLoaderData = RecommendationsProps;
@@ -61,12 +61,8 @@ export default function Recommendations() {
     )
   );
 
-  const {
-    recommendations: recommendationProps,
-    errorMsg,
-    user,
-    last_updated: lastUpdated,
-  } = props || {};
+  const { recommendations: recommendationProps, errorMsg, user, lastUpdated } =
+    props || {};
 
   // State
   const [recommendations, setRecommendations] = React.useState<
@@ -297,7 +293,11 @@ export default function Recommendations() {
                     );
                   })}
                 </div>
-                <nav role="navigation" aria-label="Pagination">
+                <nav
+                  role="navigation"
+                  aria-label="Pagination"
+                  style={{ maxWidth: "none" }}
+                >
                   <ul className="pager" style={{ display: "flex" }}>
                     <li
                       className={`previous ${

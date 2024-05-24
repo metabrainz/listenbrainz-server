@@ -26,7 +26,7 @@ const routes = getRecommendationsRoutes();
 const fetchedProps: RecommendationsProps = {
   recommendations,
   user: userProp,
-  last_updated: lastUpdated,
+  lastUpdated,
 };
 
 const queryClient = new QueryClient({
