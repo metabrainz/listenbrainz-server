@@ -276,6 +276,7 @@ export class ListenCard extends React.Component<
       additionalMenuItems,
       additionalActions,
       listen: listenFromProps,
+      dispatch: dispatchProp,
       ...otherProps
     } = this.props;
     const { listen, isCurrentlyPlaying, thumbnailSrc } = this.state;
