@@ -116,14 +116,22 @@ export default function AddData() {
             <a href="https://ampcast.app/">Ampcast</a>
           </em>
           , a player, scrobbler and visualiser for personal media servers and
-          streaming services.
+          streaming services
         </li>
         <li>
           <em>
             <a href="https://github.com/Mastermindzh/tidal-hifi">TIDAL Hi-Fi</a>
           </em>
           , the web version of Tidal running in electron with Hi-Fi (High & Max)
-          support.
+          support
+        </li>
+        <li>
+          <em>
+            <a href="https://audacious-media-player.org/">Audacious</a>
+          </em>
+          , a cross-platform open source audio player:{" "}
+          <a href="https://codeberg.org/punkscience/clscrobble">
+            <code>clscrobble</code>
         </li>
       </ul>
 
@@ -277,7 +285,7 @@ export default function AddData() {
               The official ListenBrainz app
             </a>
           </em>{" "}
-          for Android devices
+          , for Android devices
         </li>
         <li>
           <em>
