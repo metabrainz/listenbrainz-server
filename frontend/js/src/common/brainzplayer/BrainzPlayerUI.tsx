@@ -315,10 +315,10 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           ) : (
             <MenuOptions currentListen={currentListen} />
           )}
+          <Link to="/settings/brainzplayer/">
+            <FontAwesomeIcon icon={faCog} title="Player preferences" />
+          </Link>
         </div>
-        <Link to="/settings/brainzplayer/">
-          <FontAwesomeIcon icon={faCog} title="Player preferences" />
-        </Link>
       </div>
     </>
   );
