@@ -3,13 +3,7 @@ import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import {
-  useLoaderData,
-  Link,
-  useNavigate,
-  json,
-  useLocation,
-} from "react-router-dom";
+import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
@@ -29,14 +23,12 @@ import ListenCard from "../../common/listens/ListenCard";
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
   entity: Entity;
-  terminology: string;
+  terminology: "artist" | "album" | "track";
   range: UserStatsAPIRange;
   currPage: number;
 };
 
 type UserEntityChartLoaderData = UserEntityChartProps;
-
-type StatsEntity = "artist" | "album" | "track";
 
 export const TERMINOLOGY_ENTITY_MAP: Record<string, Entity> = {
   artist: "artist",
@@ -48,27 +40,9 @@ const ROWS_PER_PAGE = 25;
 
 export default function UserEntityChart() {
   const loaderData = useLoaderData() as UserEntityChartLoaderData;
-  const {
-    user,
-    entity: initialEntityType,
-    terminology,
-    range,
-    currPage,
-  } = loaderData;
+  const { user, entity, terminology, range, currPage } = loaderData;
   const prevPage = currPage - 1;
   const nextPage = currPage + 1;
-  const location = useLocation();
-  let entity: Entity = initialEntityType;
-  const entityType = /top-(artist|album|track)s/.exec(location.pathname)
-    ?.groups?.[1] as StatsEntity;
-  // Convert vernacular entity type to what the API expects
-  if (entityType === "artist") {
-    entity = "artist";
-  } else if (entityType === "album") {
-    entity = "release-group";
-  } else if (entityType === "track") {
-    entity = "recording";
-  }
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
@@ -162,7 +136,7 @@ export default function UserEntityChart() {
         <Loader isLoading={loading}>
           <div className="row">
             <div className="col-xs-12">
-              <Pill active={entityType === "artist"} type="secondary">
+              <Pill active={terminology === "artist"} type="secondary">
                 <Link
                   to="../top-artists/"
                   relative="route"
@@ -172,7 +146,7 @@ export default function UserEntityChart() {
                   Artists
                 </Link>
               </Pill>
-              <Pill active={entityType === "album"} type="secondary">
+              <Pill active={terminology === "album"} type="secondary">
                 <Link
                   to="../top-albums/"
                   relative="route"
@@ -182,7 +156,7 @@ export default function UserEntityChart() {
                   Albums
                 </Link>
               </Pill>
-              <Pill active={entityType === "track"} type="secondary">
+              <Pill active={terminology === "track"} type="secondary">
                 <Link
                   to="../top-tracks/"
                   relative="route"
@@ -292,7 +266,7 @@ export default function UserEntityChart() {
                   <Bar data={data} maxValue={maxListens} />
                 </div>
               </div>
-              {entityType === "album" && (
+              {terminology === "album" && (
                 <div className="row">
                   <div className="col-xs-12">
                     <small>
@@ -376,11 +350,7 @@ export const UserEntityChartLoader = async ({
   const range: UserStatsAPIRange =
     (currentURL.searchParams.get("range") as UserStatsAPIRange) ?? "all_time";
 
-  const reg = new RegExp(
-    `/user/${user?.name}/stats/top-(artist|album|track)s`,
-    "gm"
-  );
-  const match = reg.exec(currentURL.pathname);
+  const match = currentURL.pathname.match(/\/stats\/top-(artist|album|track)s/);
   const urlEntityName = match?.[1] ?? "artist";
   const entity = TERMINOLOGY_ENTITY_MAP[urlEntityName];
 
@@ -403,9 +373,7 @@ export const StatisticsChartLoader = async ({
   const range: UserStatsAPIRange =
     (currentURL.searchParams.get("range") as UserStatsAPIRange) ?? "all_time";
 
-  const match = /\/statistics\/top-(artist|album|track)s/gm.exec(
-    currentURL.pathname
-  );
+  const match = currentURL.pathname.match(/\/stats\/top-(artist|album|track)s/);
   const urlEntityName = match?.[1] ?? "artist";
   const entity = TERMINOLOGY_ENTITY_MAP[urlEntityName];
 
