@@ -117,15 +117,17 @@ function Queue(props: BrainzPlayerQueueProps) {
             onEnd={moveQueueItem}
             setList={() => {}}
           >
-            {queueNextUp.map((queueItem: BrainzPlayerQueueItem) => {
-              return (
-                <QueueItemCard
-                  key={queueItem.id}
-                  track={queueItem}
-                  removeTrackFromQueue={removeTrackFromQueue}
-                />
-              );
-            })}
+            {queueNextUp.map(
+              (queueItem: BrainzPlayerQueueItem, index: number) => {
+                return (
+                  <QueueItemCard
+                    key={`${queueItem.id}-${index.toString()}`}
+                    track={queueItem}
+                    removeTrackFromQueue={removeTrackFromQueue}
+                  />
+                );
+              }
+            )}
           </ReactSortable>
         ) : (
           <div className="lead text-center">
@@ -140,10 +142,10 @@ function Queue(props: BrainzPlayerQueueProps) {
         {ambientQueue.length > 0
           ? ambientQueue
               .slice(0, MAX_AMBIENT_QUEUE_ITEMS)
-              .map((queueItem: BrainzPlayerQueueItem) => {
+              .map((queueItem: BrainzPlayerQueueItem, index: number) => {
                 return (
                   <ListenCard
-                    key={queueItem.id}
+                    key={`${queueItem.id}-${index.toString()}-ambient`}
                     listen={queueItem as Listen}
                     showTimestamp={false}
                     showUsername={false}
