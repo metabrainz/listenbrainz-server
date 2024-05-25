@@ -65,6 +65,10 @@ function on_exit {
         rm -rf "$DUMP_TEMP_DIR"
     fi
 
+    if [ -n "$PRIVATE_DUMP_TEMP_DIR" ]; then
+        rm -rf "$PRIVATE_DUMP_TEMP_DIR"
+    fi
+
     if [ -n "$START_TIME" ]; then
         local duration=$(( $(date +%s) - START_TIME ))
         echo "create-dumps took ${duration}s to run"
@@ -84,7 +88,7 @@ if [ -z $DUMP_BASE_DIR ]; then
 fi
 
 if [ -z $PRIVATE_DUMP_BASE_DIR ]; then
-    echo "DUMP_BASE_PRIVATE_DIR isn't set"
+    echo "PRIVATE_DUMP_BASE_DIR isn't set"
     exit 1
 fi
 
@@ -117,13 +121,13 @@ echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
 echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
 mkdir -p "$DUMP_TEMP_DIR"
 
-PRIVATE_DUMP_BASE_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
-echo "DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
-echo "creating PRIVATE_DUMP_BASE_DIR $PRIVATE_DUMP_BASE_DIR"
-mkdir -p "$PRIVATE_DUMP_BASE_DIR"
+PRIVATE_DUMP_TEMP_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
+echo "PRIVATE_DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
+echo "creating PRIVATE_DUMP_TEMP_DIR $PRIVATE_DUMP_TEMP_DIR"
+mkdir -p "$PRIVATE_DUMP_TEMP_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -lp "$PRIVATE_DUMP_BASE_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -lp "$PRIVATE_DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
@@ -179,11 +183,11 @@ retry rsync -a "$DUMP_DIR/" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"
 chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"*
 echo "Dumps copied to backup directory!"
 
-HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_BASE_DIR" -empty)
+HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_TEMP_DIR" -empty)
 if [ -z "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
     # private dumps directory is not empty
 
-    PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_BASE_DIR" -type f -name 'DUMP_ID.txt')
+    PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_TEMP_DIR" -type f -name 'DUMP_ID.txt')
     if [ -z "$PRIVATE_DUMP_ID_FILE" ]; then
         echo "DUMP_ID.txt not found, exiting."
         exit 1
@@ -259,6 +263,7 @@ cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
 /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
+/usr/local/bin/python manage.py dump delete_old_dumps "$PRIVATE_BACKUP_DIR/$SUB_DIR"
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh "$DUMP_TYPE"
