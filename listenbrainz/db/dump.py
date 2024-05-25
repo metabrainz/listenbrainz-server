@@ -70,7 +70,23 @@ PUBLIC_TABLES_DUMP = {
         'id',
         'user_id',
         'recording_msid',
+        'recording_mbid',
         'score',
+        'created'
+    ),
+    'pinned_recording': (
+        'id',
+        'user_id',
+        'recording_msid',
+        'recording_mbid',
+        'blurb_content',
+        'pinned_until',
+        'created'
+    ),
+    'user_relationship': (
+        'user_0',
+        'user_1',
+        'relationship_type',
         'created'
     ),
 }
@@ -139,6 +155,13 @@ PRIVATE_TABLES = {
         'gdpr_agreed',
         'email',
     ),
+    'reported_users': (
+        'id',
+        'reporter_user_id',
+        'reported_user_id',
+        'reported_at',
+        'session'
+    ),
     'external_service_oauth': (
         'id',
         'user_id',
@@ -157,6 +180,27 @@ PRIVATE_TABLES = {
         'last_updated',
         'latest_listened_at',
         'error_message'
+    ),
+    'user_setting': (
+        'id',
+        'user_id',
+        'timezone_name',
+        'troi',
+        'brainzplayer',
+    ),
+    'user_timeline_event': (
+        'id',
+        'user_id',
+        'event_type',
+        'metadata',
+        'created',
+    ),
+    'hide_user_timeline_event': (
+        'id',
+        'user_id',
+        'event_type',
+        'event_id',
+        'created',
     ),
     'api_compat.token': (
         'id',
