@@ -350,7 +350,9 @@ export const UserEntityChartLoader = async ({
   const range: UserStatsAPIRange =
     (currentURL.searchParams.get("range") as UserStatsAPIRange) ?? "all_time";
 
-  const match = currentURL.pathname.match(/\/stats\/top-(artist|album|track)s/);
+  const match = currentURL.pathname.match(
+    /\/user\/.+\/stats\/top-(artist|album|track)s/
+  );
   const urlEntityName = match?.[1] ?? "artist";
   const entity = TERMINOLOGY_ENTITY_MAP[urlEntityName];
 
@@ -373,7 +375,9 @@ export const StatisticsChartLoader = async ({
   const range: UserStatsAPIRange =
     (currentURL.searchParams.get("range") as UserStatsAPIRange) ?? "all_time";
 
-  const match = currentURL.pathname.match(/\/stats\/top-(artist|album|track)s/);
+  const match = currentURL.pathname.match(
+    /\/statistics\/top-(artist|album|track)s/
+  );
   const urlEntityName = match?.[1] ?? "artist";
   const entity = TERMINOLOGY_ENTITY_MAP[urlEntityName];
 
