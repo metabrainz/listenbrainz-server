@@ -3,11 +3,17 @@ import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
+import {
+  useLoaderData,
+  Link,
+  useNavigate,
+  json,
+  useLocation,
+} from "react-router-dom";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import { getInitData, getData, processData } from "./utils";
+import { getData, processData } from "./utils";
 
 import Bar from "./components/Bar";
 import Loader from "../../components/Loader";
@@ -30,6 +36,8 @@ export type UserEntityChartProps = {
 
 type UserEntityChartLoaderData = UserEntityChartProps;
 
+type StatsEntity = "artist" | "album" | "track";
+
 export const TERMINOLOGY_ENTITY_MAP: Record<string, Entity> = {
   artist: "artist",
   album: "release-group",
@@ -40,9 +48,27 @@ const ROWS_PER_PAGE = 25;
 
 export default function UserEntityChart() {
   const loaderData = useLoaderData() as UserEntityChartLoaderData;
-  const { user, entity, terminology, range, currPage } = loaderData;
+  const {
+    user,
+    entity: initialEntityType,
+    terminology,
+    range,
+    currPage,
+  } = loaderData;
   const prevPage = currPage - 1;
   const nextPage = currPage + 1;
+  const location = useLocation();
+  let entity: Entity = initialEntityType;
+  const entityType = /top-(artist|album|track)s/.exec(location.pathname)
+    ?.groups?.[1] as StatsEntity;
+  // Convert vernacular entity type to what the API expects
+  if (entityType === "artist") {
+    entity = "artist";
+  } else if (entityType === "album") {
+    entity = "release-group";
+  } else if (entityType === "track") {
+    entity = "recording";
+  }
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
@@ -73,26 +99,27 @@ export default function UserEntityChart() {
       }
 
       try {
-        const [initData, fetchedData] = await Promise.all([
-          getInitData(APIService, entity, range, ROWS_PER_PAGE, user),
-          getData(
-            APIService,
-            entity,
-            currPage,
-            range,
-            ROWS_PER_PAGE,
-            user
-          ).then((dataFetched) => {
-            return processData(dataFetched, currPage, entity, ROWS_PER_PAGE);
-          }),
-        ]);
+        const fetchedData = await getData(
+          APIService,
+          entity,
+          currPage,
+          range,
+          ROWS_PER_PAGE,
+          user
+        );
+        const entityData = processData(
+          fetchedData.entityData,
+          currPage,
+          entity,
+          ROWS_PER_PAGE
+        );
 
-        setData(fetchedData);
-        setMaxListens(initData.maxListens);
-        setTotalPages(initData.totalPages);
-        setEntityCount(initData.entityCount);
-        setStartDate(initData.startDate);
-        setEndDate(initData.endDate);
+        setData(entityData);
+        setMaxListens(fetchedData.maxListens);
+        setTotalPages(fetchedData.totalPages);
+        setEntityCount(fetchedData.entityCount);
+        setStartDate(fetchedData.startDate);
+        setEndDate(fetchedData.endDate);
       } catch (error) {
         setHasError(true);
         setErrorMessage(error.message);
@@ -135,7 +162,7 @@ export default function UserEntityChart() {
         <Loader isLoading={loading}>
           <div className="row">
             <div className="col-xs-12">
-              <Pill active={entity === "artist"} type="secondary">
+              <Pill active={entityType === "artist"} type="secondary">
                 <Link
                   to="../top-artists/"
                   relative="route"
@@ -145,7 +172,7 @@ export default function UserEntityChart() {
                   Artists
                 </Link>
               </Pill>
-              <Pill active={entity === "release-group"} type="secondary">
+              <Pill active={entityType === "album"} type="secondary">
                 <Link
                   to="../top-albums/"
                   relative="route"
@@ -155,7 +182,7 @@ export default function UserEntityChart() {
                   Albums
                 </Link>
               </Pill>
-              <Pill active={entity === "recording"} type="secondary">
+              <Pill active={entityType === "track"} type="secondary">
                 <Link
                   to="../top-tracks/"
                   relative="route"
@@ -265,7 +292,7 @@ export default function UserEntityChart() {
                   <Bar data={data} maxValue={maxListens} />
                 </div>
               </div>
-              {entity === "release-group" && (
+              {entityType === "album" && (
                 <div className="row">
                   <div className="col-xs-12">
                     <small>
