@@ -154,6 +154,20 @@ function valueReducer(
         queue: newQueue,
       };
     }
+    case "MOVE_AMBIENT_QUEUE_ITEM": {
+      const { ambientQueue } = state;
+      const evt = action.data as any;
+
+      const newQueue = [...ambientQueue];
+      const toMove = newQueue[evt.newIndex];
+      newQueue[evt.newIndex] = newQueue[evt.oldIndex];
+      newQueue[evt.oldIndex] = toMove;
+
+      return {
+        ...state,
+        ambientQueue: newQueue,
+      };
+    }
     case "REMOVE_TRACK_FROM_QUEUE": {
       const trackToDelete = action.data as BrainzPlayerQueueItem;
       const { queue } = state;
@@ -163,6 +177,17 @@ function valueReducer(
       return {
         ...state,
         queue: updatedQueue,
+      };
+    }
+    case "REMOVE_TRACK_FROM_AMBIENT_QUEUE": {
+      const trackToDelete = action.data as BrainzPlayerQueueItem;
+      const { ambientQueue } = state;
+      const updatedQueue = ambientQueue.filter(
+        (track) => track.id !== trackToDelete.id
+      );
+      return {
+        ...state,
+        ambientQueue: updatedQueue,
       };
     }
     case "ADD_LISTEN_TO_TOP_OF_QUEUE": {
@@ -186,6 +211,14 @@ function valueReducer(
       return {
         ...state,
         queue: [...queue, trackToAdd],
+      };
+    }
+    case "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE": {
+      const trackToAdd = listenOrJSPFTrackToQueueItem(action.data);
+      const { ambientQueue } = state;
+      return {
+        ...state,
+        ambientQueue: [...ambientQueue, trackToAdd],
       };
     }
     default: {
