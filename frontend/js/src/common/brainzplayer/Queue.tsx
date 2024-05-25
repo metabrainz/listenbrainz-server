@@ -25,19 +25,24 @@ function Queue(props: BrainzPlayerQueueProps) {
 
   const { clearQueue } = props;
 
-  const removeTrackFromQueue = (track: BrainzPlayerQueueItem) => {
-    dispatch({
-      type: "REMOVE_TRACK_FROM_QUEUE",
-      data: track,
-    });
-  };
+  const removeTrackFromQueue = React.useCallback(
+    (track: BrainzPlayerQueueItem) => {
+      dispatch({
+        type: "REMOVE_TRACK_FROM_QUEUE",
+        data: track,
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
-  const moveQueueItem = (evt: any) => {
+  const moveQueueItem = React.useCallback((evt: any) => {
     dispatch({
       type: "MOVE_QUEUE_ITEM",
       data: evt,
     });
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [queueNextUp, setQueueNextUp] = React.useState<BrainzPlayerQueue>([]);
 
@@ -119,9 +124,10 @@ function Queue(props: BrainzPlayerQueueProps) {
           >
             {queueNextUp.map(
               (queueItem: BrainzPlayerQueueItem, index: number) => {
+                if (!queueItem) return null;
                 return (
                   <QueueItemCard
-                    key={`${queueItem.id}-${index.toString()}`}
+                    key={`${queueItem?.id}-${index.toString()}`}
                     track={queueItem}
                     removeTrackFromQueue={removeTrackFromQueue}
                   />
@@ -143,12 +149,12 @@ function Queue(props: BrainzPlayerQueueProps) {
           ? ambientQueue
               .slice(0, MAX_AMBIENT_QUEUE_ITEMS)
               .map((queueItem: BrainzPlayerQueueItem, index: number) => {
+                if (!queueItem) return null;
                 return (
-                  <ListenCard
-                    key={`${queueItem.id}-${index.toString()}-ambient`}
-                    listen={queueItem as Listen}
-                    showTimestamp={false}
-                    showUsername={false}
+                  <QueueItemCard
+                    key={`${queueItem?.id}-${index.toString()}`}
+                    track={queueItem}
+                    removeTrackFromQueue={removeTrackFromQueue}
                   />
                 );
               })
