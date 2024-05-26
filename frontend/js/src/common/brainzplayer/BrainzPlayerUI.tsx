@@ -324,4 +324,4 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   );
 }
 
-export default BrainzPlayerUI;
+export default React.memo(BrainzPlayerUI);

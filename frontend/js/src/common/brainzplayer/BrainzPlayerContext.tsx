@@ -277,9 +277,12 @@ export function BrainzPlayerProvider({
 }) {
   const [value, dispatch] = useReducerWithCallback(valueReducer, initialValue);
 
+  const memoizedValue = React.useMemo(() => value, [value]);
+  const memoizedDispatch = React.useMemo(() => dispatch, []);
+
   return (
-    <BrainzPlayerContext.Provider value={value}>
-      <BrainzPlayerDispatchContext.Provider value={dispatch}>
+    <BrainzPlayerContext.Provider value={memoizedValue}>
+      <BrainzPlayerDispatchContext.Provider value={memoizedDispatch}>
         {children}
       </BrainzPlayerDispatchContext.Provider>
     </BrainzPlayerContext.Provider>
