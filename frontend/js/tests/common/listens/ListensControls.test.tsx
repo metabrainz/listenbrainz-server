@@ -36,25 +36,25 @@ const props: ListensProps = {
   user,
 };
 
-fetchMock.mockIf(
-  (input) => input.url.endsWith("/listen-count"),
-  () => {
-    return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
-  }
-);
-
-fetchMock.mockIf(
-  (input) => input.url.endsWith("/delete-listen"),
-  () => Promise.resolve({ status: 200, statusText: "ok" })
-);
-
 // const userEventSession = userEvent.setup();
 
 // eslint-disable-next-line jest/no-disabled-tests
 xdescribe("ListensControls", () => {
   describe("removeListenFromListenList", () => {
     beforeAll(() => {
+      fetchMock.enableMocks();
       fetchMock.doMock();
+      fetchMock.mockIf(
+        (input) => input.url.endsWith("/listen-count"),
+        () => {
+          return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
+        }
+      );
+
+      fetchMock.mockIf(
+        (input) => input.url.endsWith("/delete-listen"),
+        () => Promise.resolve({ status: 200, statusText: "ok" })
+      );
     });
     it("updates the listens state for particular recording", async () => {});
     // it("updates the listens state for particular recording", async () => {

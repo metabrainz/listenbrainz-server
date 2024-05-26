@@ -1,24 +1,42 @@
 import * as React from "react";
 
-import { useLocation, Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import NiceModal from "@ebay/nice-modal-react";
+import { isString } from "lodash";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ExportButtons from "../export/ExportButtons";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 export default function DeleteListens() {
   const { currentUser } = React.useContext(GlobalAppContext);
   const { name } = currentUser;
-  const location = useLocation();
   const navigate = useNavigate();
 
   // eslint-disable-next-line consistent-return
-  const deleteListens = async (e: React.FormEvent<HTMLFormElement>) => {
+  const deleteListens = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
     try {
-      const response = await fetch(location.pathname, {
+      const confirmMessage = (
+        <>
+          <span className="text-danger">
+            You are about to delete all of your listens.
+          </span>
+          <br />
+          <b>This action cannot be undone.</b>
+          <br />
+          Are you certain you want to proceed?
+        </>
+      );
+      await NiceModal.show(ConfirmationModal, { body: confirmMessage });
+    } catch (error) {
+      toast.info("Canceled listen deletion");
+      return undefined;
+    }
+    try {
+      const response = await fetch("/settings/delete-listens/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,7 +44,9 @@ export default function DeleteListens() {
       });
       if (!response.ok) {
         const errJson = await response.json();
-        throw errJson.message ?? "Error";
+        throw isString(errJson.error)
+          ? errJson.error
+          : errJson.toString() || "Error";
       }
 
       toast.success(
@@ -46,14 +66,6 @@ export default function DeleteListens() {
           message={
             <>
               Error while deleting listens for user {name}: {error.toString()}
-              <button
-                type="button"
-                onClick={() => {
-                  navigate("/settings/");
-                }}
-              >
-                Back to setting
-              </button>
             </>
           }
         />
@@ -90,16 +102,17 @@ export default function DeleteListens() {
       <ExportButtons feedback={false} />
       <br />
 
-      <form onSubmit={deleteListens}>
-        <button
-          id="btn-delete-listens"
-          className="btn btn-danger btn-lg"
-          type="submit"
-          style={{ width: "250px" }}
-        >
-          Delete listens
-        </button>
-      </form>
+      <button
+        id="btn-delete-listens"
+        className="btn btn-danger btn-lg"
+        type="button"
+        style={{ width: "250px" }}
+        onClick={deleteListens}
+        data-toggle="modal"
+        data-target="#ConfirmationModal"
+      >
+        Delete listens
+      </button>
     </>
   );
 }

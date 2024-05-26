@@ -78,20 +78,22 @@ const propsOneListen = {
   ...recentListensPropsOneListen,
 };
 
-fetchMock.mockIf(
-  (input) => input.url.endsWith("/listen-count"),
-  () => {
-    return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
-  }
-);
-fetchMock.mockIf(
-  (input) => input.url.startsWith("https://api.spotify.com"),
-  () => {
-    return Promise.resolve(JSON.stringify({}));
-  }
-);
-
 describe("Recentlistens", () => {
+  beforeAll(() => {
+    fetchMock.enableMocks();
+    fetchMock.mockIf(
+      (input) => input.url.endsWith("/listen-count"),
+      () => {
+        return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
+      }
+    );
+    fetchMock.mockIf(
+      (input) => input.url.startsWith("https://api.spotify.com"),
+      () => {
+        return Promise.resolve(JSON.stringify({}));
+      }
+    );
+  });
   it("renders the page correctly", () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>

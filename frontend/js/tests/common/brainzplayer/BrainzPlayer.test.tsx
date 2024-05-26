@@ -89,6 +89,7 @@ describe("BrainzPlayer", () => {
     window.location = {
       href: "http://nevergonnagiveyouup.com",
     } as Window["location"];
+    fetchMock.enableMocks();
   });
 
   // A Placeholder test to get the test suite running
