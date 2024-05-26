@@ -120,6 +120,7 @@ export default class UserReports extends React.Component<
             {Array.from(ranges, ([stat_type, stat_name]) => {
               return (
                 <Pill
+                  key={`${stat_type}-${stat_name}`}
                   active={range === stat_type}
                   type="secondary"
                   onClick={() => this.changeRange(stat_type)}
