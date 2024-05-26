@@ -7,7 +7,6 @@ from more_itertools import chunked
 from pydantic import ValidationError
 
 from data.model.user_artist_stat import ArtistRecord
-from data.model.user_entity import UserEntityStatMessage, UserEntityRecords
 from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord

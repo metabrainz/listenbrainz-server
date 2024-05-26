@@ -1,11 +1,11 @@
 import json
 import os.path
 
-from listenbrainz_spark import utils
 from listenbrainz_spark.missing_mb_data import missing_mb_data
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
 from listenbrainz_spark.tests import SparkNewTestCase
 from listenbrainz_spark.hdfs.utils import upload_to_HDFS
+
 
 class MissingMBDataTestCase(SparkNewTestCase):
 

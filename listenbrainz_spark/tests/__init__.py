@@ -7,13 +7,12 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import listenbrainz_spark
-from listenbrainz_spark import hdfs_connection, utils, config
+from listenbrainz_spark import hdfs_connection, config
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
+from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY
 from listenbrainz_spark.utils import get_listens_from_dump
-from listenbrainz_spark.hdfs.utils import delete_dir
-from listenbrainz_spark.hdfs.utils import path_exists
-from listenbrainz_spark.hdfs.utils import hdfs_walk
+from listenbrainz_spark.hdfs.utils import delete_dir, path_exists, hdfs_walk
+
 TEST_PLAYCOUNTS_PATH = '/tests/playcounts.parquet'
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 PLAYCOUNTS_COUNT = 100
@@ -71,6 +70,7 @@ class SparkNewTestCase(unittest.TestCase):
         inc_dump1_tar = cls.create_temp_listens_tar('incremental-dump-1')
         inc_dump2_tar = cls.create_temp_listens_tar('incremental-dump-2')
         cls.uploader.upload_new_listens_full_dump(full_dump_tar.name)
+        cls.uploader.process_full_listens_dump()
         cls.uploader.upload_new_listens_incremental_dump(inc_dump1_tar.name)
         cls.uploader.upload_new_listens_incremental_dump(inc_dump2_tar.name)
 
@@ -78,6 +78,8 @@ class SparkNewTestCase(unittest.TestCase):
     def delete_uploaded_listens():
         if path_exists(LISTENBRAINZ_NEW_DATA_DIRECTORY):
             delete_dir(LISTENBRAINZ_NEW_DATA_DIRECTORY, recursive=True)
+        if path_exists(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY):
+            delete_dir(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, recursive=True)
 
     @staticmethod
     def path_to_data_file(file_name):

@@ -158,44 +158,20 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         return str(Path(HDFS_TEMP_DIR).joinpath(archive_name))
 
     def process_full_listens_dump(self):
+        """ Partition the imported full listens parquet dump by year and month """
         query = f"""
-            with intermediate as (
-                select extract(year from listened_at) as year
-                     , extract(month from listened_at) as month
-                     , listened_at
-                     , user_id
-                     , recording_msid
-                     , artist_name
-                     , artist_credit_id
-                     , release_name
-                     , release_mbid
-                     , recording_name
-                     , recording_mbid
-                     , artist_credit_mbids
-                  from parquet.`{path.LISTENBRAINZ_NEW_DATA_DIRECTORY}`
-            )   select year
-                     , month
-                     , user_id
-                     , recording_msid
-                     , artist_name
-                     , artist_credit_id
-                     , release_name
-                     , release_mbid
-                     , recording_name
-                     , recording_mbid
-                     , artist_credit_mbids
-                     , count(*) as listen_count
-                  from intermediate
-              group by year
-                     , month
-                     , user_id
-                     , recording_msid
-                     , artist_name
-                     , artist_credit_id
-                     , release_name
-                     , release_mbid
-                     , recording_name
-                     , recording_mbid
-                     , artist_credit_mbids
+            select extract(year from listened_at) as year
+                 , extract(month from listened_at) as month
+                 , listened_at
+                 , user_id
+                 , recording_msid
+                 , artist_name
+                 , artist_credit_id
+                 , release_name
+                 , release_mbid
+                 , recording_name
+                 , recording_mbid
+                 , artist_credit_mbids
+              from parquet.`{path.LISTENBRAINZ_NEW_DATA_DIRECTORY}`
         """
         run_query(query).write.partitionBy("year", "month").parquet(path.LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)
