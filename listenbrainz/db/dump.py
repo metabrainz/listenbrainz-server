@@ -160,7 +160,7 @@ PRIVATE_TABLES = {
         'reporter_user_id',
         'reported_user_id',
         'reported_at',
-        'session'
+        'reason'
     ),
     'external_service_oauth': (
         'id',
