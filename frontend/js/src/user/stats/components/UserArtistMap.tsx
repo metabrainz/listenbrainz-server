@@ -124,24 +124,22 @@ export default function UserArtistMap(props: UserArtistMapProps) {
               <li
                 className={selectedMetric === "listen" ? "active" : undefined}
               >
-                <a
-                  href=""
-                  role="button"
+                <button
+                  type="button"
                   onClick={() => changeSelectedMetric("listen")}
                 >
                   Listens
-                </a>
+                </button>
               </li>
               <li
                 className={selectedMetric === "artist" ? "active" : undefined}
               >
-                <a
-                  href=""
-                  role="button"
+                <button
+                  type="button"
                   onClick={() => changeSelectedMetric("artist")}
                 >
                   Artists
-                </a>
+                </button>
               </li>
             </ul>
           </span>
