@@ -157,21 +157,6 @@ def import_incremental_dump_by_id_handler(dump_id: int, local: bool = False):
     }]
 
 
-def import_artist_relation_to_hdfs():
-    ts = time.monotonic()
-    temp_dir = tempfile.mkdtemp()
-    src, artist_relation_name = ListenbrainzDataDownloader().download_artist_relation(directory=temp_dir)
-    ListenbrainzDataUploader().upload_artist_relation(archive=src)
-    shutil.rmtree(temp_dir)
-
-    return [{
-        'type': 'import_artist_relation',
-        'imported_artist_relation': artist_relation_name,
-        'import_time': str(datetime.utcnow()),
-        'time_taken_to_import': '{:.2f}'.format(time.monotonic() - ts)
-    }]
-
-
 def import_release_json_dump_to_hdfs():
     with tempfile.TemporaryDirectory() as temp_dir:
         downloader = ListenbrainzDataDownloader()
