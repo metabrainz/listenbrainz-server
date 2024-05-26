@@ -117,6 +117,7 @@ export default function ArtistPage(): JSX.Element {
       type: "SET_CURRENT_LISTEN",
       data: listensFromPopularRecordings,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listensFromPopularRecordings]);
 
   const filteredTags = chain(artist?.tag?.artist)

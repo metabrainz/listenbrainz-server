@@ -286,7 +286,6 @@ export default function PlaylistPage() {
       newTracks[evt.newIndex] = newTracks[evt.oldIndex];
       newTracks[evt.oldIndex] = toMoveBack;
 
-      // this.setState({ playlist: { ...playlist, track: newTracks } });
       setPlaylist({ ...playlist, track: newTracks });
     }
   };
