@@ -107,7 +107,7 @@ const getIndexRoutes = (): RouteObject[] => {
               index: true,
               lazy: async () => {
                 const UserReports = await import("../user/stats/UserReports");
-                return { Component: UserReports.StatisticsPage };
+                return { Component: UserReports.default };
               },
             },
             {
