@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Pill from "../components/Pill";
 import ArtistSearch from "./ArtistSearch";
 import SongSearch from "./SongSearch";
+import UserSearch from "./UserSearch";
 
 export default function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -114,6 +115,7 @@ export default function Search() {
         </div>
         {searchType === "artist" && <ArtistSearch searchQuery={searchTerm} />}
         {searchType === "song" && <SongSearch searchQuery={searchTerm} />}
+        {searchType === "user" && <UserSearch searchQuery={searchTerm} />}
       </div>
     </>
   );

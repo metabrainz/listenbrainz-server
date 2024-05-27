@@ -1,87 +1,92 @@
 import * as React from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { RouteQuery } from "../utils/Loader";
-import { getObjectForURLSearchParams } from "../utils/utils";
+import Loader from "../components/Loader";
 
 type SearchResultsLoaderData = {
   users: [string, number, number?][];
 };
 
-export default function SearchResults() {
+type UserSearchProps = {
+  searchQuery: string;
+};
+
+export default function UserSearch(props: UserSearchProps) {
+  const { searchQuery } = props;
+
   const { currentUser } = React.useContext(GlobalAppContext);
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
-  const { data } = useQuery<SearchResultsLoaderData>(
-    RouteQuery(
-      ["search-users", getObjectForURLSearchParams(searchParams)],
-      location.pathname
-    )
-  );
-  const { users } = data || {};
+  const { data: loaderData, isLoading: loading } = useQuery({
+    queryKey: ["search-users", searchQuery],
+    queryFn: async () => {
+      try {
+        const queryData = await fetch(window.location.href, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ searchQuery }),
+        }).then((res) => res.json());
+        return {
+          data: queryData as SearchResultsLoaderData,
+          hasError: false,
+          errorMessage: "",
+        };
+      } catch (error) {
+        return {
+          data: {} as SearchResultsLoaderData,
+          hasError: true,
+          errorMessage: error.message,
+        };
+      }
+    },
+  });
 
-  const [searchTermInput, setSearchTermInput] = React.useState(
-    searchParams.get("search_term") || ""
-  );
+  const { data: rawData = {}, hasError = false, errorMessage = "" } =
+    loaderData || {};
+
+  const { users = [] } = rawData as SearchResultsLoaderData;
+
   const username = currentUser ? currentUser.name : null;
 
-  const search = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!searchTermInput) {
-      return;
-    }
-    setSearchParams({ search_term: searchTermInput });
-  };
-
   return (
-    <>
-      <form className="form-group row" onSubmit={search}>
-        <h2 className="col-sm-4">Username Search Results</h2>
-        <div className="col-xs-6">
-          <input
-            type="text"
-            className="form-control"
-            name="search_term"
-            placeholder="Not found yet?"
-            value={searchTermInput}
-            style={{ marginTop: "25px" }}
-            onChange={(e) => setSearchTermInput(e.target.value)}
-            required
-          />
-        </div>
-        <div className="col-xs-2">
-          <span className="input-group-btn">
-            <button
-              className="btn btn-default"
-              type="submit"
-              style={{ marginTop: "27px" }}
-            >
-              Search Again!
-            </button>
-          </span>
-        </div>
-      </form>
-
-      <table className="table table-striped">
-        <thead>
+    <table className="table table-striped">
+      <thead>
+        <tr>
+          <th>{}</th>
+          <th>User</th>
+          {username && (
+            <th>
+              Similarity to you{" "}
+              <span
+                className="glyphicon glyphicon-question-sign"
+                title="Similarity between users is calculated based on their listen history."
+              />
+            </th>
+          )}
+        </tr>
+      </thead>
+      <tbody>
+        {loading && (
           <tr>
-            <th>{}</th>
-            <th>User</th>
-            {username && (
-              <th>
-                Similarity to you{" "}
-                <span
-                  className="glyphicon glyphicon-question-sign"
-                  title="Similarity between users is calculated based on their listen history."
-                />
-              </th>
-            )}
+            <td colSpan={3}>
+              <Loader
+                isLoading={loading}
+                message="Loading search results..."
+                style={{ height: "300px" }}
+              />
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {users?.length ? (
+        )}
+        {hasError && (
+          <tr>
+            <td colSpan={3}>{errorMessage}</td>
+          </tr>
+        )}
+        {!loading &&
+          !hasError &&
+          (users?.length ? (
             users?.map((row, index) => (
               <tr key={`similar-user-${row[0]}`}>
                 <td>{index + 1}</td>
@@ -105,11 +110,10 @@ export default function SearchResults() {
             ))
           ) : (
             <tr>
-              <td>No search results found.</td>
+              <td colSpan={3}>No search results found.</td>
             </tr>
-          )}
-        </tbody>
-      </table>
-    </>
+          ))}
+      </tbody>
+    </table>
   );
 }
