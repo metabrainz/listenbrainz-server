@@ -1599,6 +1599,20 @@ export default class APIService {
     return response.json();
   };
 
+  albumLookup = async (searchQuery: string): Promise<any> => {
+    const url = `${this.MBBaseURI}/release-group?query=${searchQuery}&fmt=json`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  recordingLookup = async (searchQuery: string): Promise<any> => {
+    const url = `${this.MBBaseURI}/recording?query=${searchQuery}&fmt=json`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   getArtistWikipediaExtract = async (artistMBID: string): Promise<string> => {
     const url = `https://musicbrainz.org/artist/${artistMBID}/wikipedia-extract`;
     const response = await fetch(url);
