@@ -7,21 +7,34 @@ import ArtistSearch from "./ArtistSearch";
 import SongSearch from "./SongSearch";
 import UserSearch from "./UserSearch";
 
+const invalidSearchTypes = (searchType?: string) => {
+  if (!searchType) {
+    return true;
+  }
+  return !["artist", "album", "song", "playlist", "user"].includes(searchType);
+};
+
 export default function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchTerm = searchParams.get("search_term") || "";
+  const searchType = searchParams.get("search_type");
+
+  if (invalidSearchTypes(searchType!)) {
+    setSearchParams({ search_term: searchTerm, search_type: "artist" });
+  }
+
+  const setSearchType = (newSearchType: string) => {
+    setSearchParams({ search_term: searchTerm, search_type: newSearchType });
+  };
 
   const [searchTermInput, setSearchTermInput] = React.useState(searchTerm);
-  const [searchType, setSearchType] = React.useState<
-    "artist" | "album" | "song" | "playlist" | "user"
-  >("artist");
 
   const search = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!searchTermInput) {
       return;
     }
-    setSearchParams({ search_term: searchTermInput });
+    setSearchParams({ search_term: searchTermInput, search_type: searchType! });
   };
 
   return (
