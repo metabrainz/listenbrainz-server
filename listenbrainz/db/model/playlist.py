@@ -151,7 +151,7 @@ class Playlist(BaseModel):
 
         tracks = []
         for rec in self.recordings:
-            tr = {"identifier": [PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid)]}
+            tr = {"identifier": PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid)}
             if rec.artist_credit:
                 tr["creator"] = rec.artist_credit
 
