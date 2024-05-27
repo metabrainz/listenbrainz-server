@@ -1,0 +1,23 @@
+.search-bar {
+  position: relative;
+  margin-top: 1em;
+  input {
+    background-color: @nav-tabs-border-color;
+    color: @nav-link-color;
+    border-radius: 33px;
+    border: none;
+    &:focus {
+      -webkit-box-shadow: inset 1px 2px 4px darkgrey;
+      box-shadow: inset 1px 2px 4px darkgrey;
+    }
+  }
+  button {
+    position: absolute;
+    right: 0.5em;
+    top: 0;
+    background: none;
+    border: none;
+    height: 100%;
+    font-size: 1.2em;
+  }
+}
