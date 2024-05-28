@@ -8,6 +8,7 @@ import ArtistSearch from "./ArtistSearch";
 import SongSearch from "./SongSearch";
 import UserSearch from "./UserSearch";
 import AlbumSearch from "./AlbumSearch";
+import PlaylistSearch from "./PlaylistSearch";
 
 const invalidSearchTypes = (searchType?: string) => {
   if (!searchType) {
@@ -163,6 +164,9 @@ export default function Search() {
         )}
         {searchType === "album" && searchTermValid && (
           <AlbumSearch searchQuery={searchTerm} />
+        )}
+        {searchType === "playlist" && searchTermValid && (
+          <PlaylistSearch searchQuery={searchTerm} />
         )}
       </div>
     </>

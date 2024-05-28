@@ -1661,4 +1661,27 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  searchPlaylistForUser = async (
+    searchQuery: string,
+    musicbrainzID: string,
+    count: number = 25,
+    offset: number = 0
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/user/${musicbrainzID}/playlists/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchPlaylists = async (
+    searchQuery: string,
+    count: number = 25,
+    offset: number = 0
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
 }
