@@ -49,9 +49,11 @@ export default function Search() {
       </div>
       <div role="main">
         <form className="form-group row" onSubmit={search}>
-          <h2 className="header-with-line">
-            Search Results for
-            <strong style={{ marginLeft: "5px" }}>{searchTerm}</strong>
+          <h2 className="header-with-line" style={{ alignItems: "center" }}>
+            <div>
+              Search Results for
+              <strong style={{ marginLeft: "5px" }}>{searchTerm}</strong>
+            </div>
             <div
               className="search-bar"
               style={{
@@ -70,7 +72,7 @@ export default function Search() {
                 required
               />
               <button type="submit">
-                <FontAwesomeIcon icon={faMagnifyingGlass} />
+                <FontAwesomeIcon icon={faMagnifyingGlass} size="sm" />
               </button>
             </div>
           </h2>
