@@ -66,7 +66,7 @@ export default function Search() {
                 type="text"
                 className="form-control input-lg"
                 name="search_term"
-                placeholder="Not found yet?"
+                placeholder="Search"
                 value={searchTermInput}
                 onChange={(e) => setSearchTermInput(e.target.value)}
                 required
