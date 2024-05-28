@@ -29,9 +29,11 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen
-from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, SimilarUserTimelineEvent, UserTimelineEventType, \
+from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, \
+    SimilarUserTimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
-    CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent
+    CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent, \
+    WritePersonalRecordingRecommendationMetadata
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
@@ -600,7 +602,7 @@ def create_personal_recommendation_event(user_name):
     metadata = data['metadata']
 
     try:
-        metadata = PersonalRecordingRecommendationMetadata(**metadata)
+        metadata = WritePersonalRecordingRecommendationMetadata(**metadata)
         follower_results = db_user_relationship.multiple_users_by_username_following_user(
             db_conn,
             user['id'],

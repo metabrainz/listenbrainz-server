@@ -1071,6 +1071,44 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
         self.assertCountEqual(metadata["users"], received["users"])
 
+    def test_personal_recommendation_user_deleted(self):
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+
+        metadata = {
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": [user_one['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+
+        self.assert200(r)
+        db_user.delete(self.db_conn, user_one['id'])
+
+        events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            self.db_conn,
+            user_id=self.user['id'],
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=50
+        )
+
+        self.assertEqual(1, len(events))
+
+        received = events[0].metadata.dict(exclude_none=True)
+        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
+        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
+        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
+        self.assertCountEqual([], received["users"])
+
     def test_personal_recommendation_mbid_only(self):
         """ Test that we can recommend a recording with only mbid """
         # Let's create 2 users, who follow the request sender
