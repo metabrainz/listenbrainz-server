@@ -115,7 +115,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         # Submit a playlist on a different user's behalf
         playlist = get_test_data()
-        playlist["playlist"]["created_for"] = self.user["musicbrainz_id"]
+        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["created_for"] = self.user["musicbrainz_id"]
 
         response = self.client.post(
             self.custom_url_for("playlist_api_v1.create_playlist"),
