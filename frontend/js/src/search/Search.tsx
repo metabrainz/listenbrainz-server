@@ -2,6 +2,7 @@ import * as React from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { faMagnifyingGlass, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Helmet } from "react-helmet";
 import Pill from "../components/Pill";
 import ArtistSearch from "./ArtistSearch";
 import SongSearch from "./SongSearch";
@@ -40,6 +41,9 @@ export default function Search() {
 
   return (
     <>
+      <Helmet>
+        <title>Search Results - {searchTerm}</title>
+      </Helmet>
       <div className="secondary-nav">
         <ol className="breadcrumb">
           <li>
@@ -48,8 +52,11 @@ export default function Search() {
         </ol>
       </div>
       <div role="main">
-        <form className="form-group row" onSubmit={search}>
-          <h2 className="header-with-line" style={{ alignItems: "center" }}>
+        <form className="form-group" onSubmit={search}>
+          <h2
+            className="header-with-line"
+            style={{ alignItems: "center", flexWrap: "wrap" }}
+          >
             <div>
               Search Results for
               <strong style={{ marginLeft: "5px" }}>{searchTerm}</strong>
@@ -77,7 +84,7 @@ export default function Search() {
             </div>
           </h2>
         </form>
-        <div className="row" style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "20px" }}>
           <Pill
             id="search-type-artist"
             onClick={() => {
