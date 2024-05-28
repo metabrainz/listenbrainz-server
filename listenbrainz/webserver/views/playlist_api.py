@@ -75,11 +75,10 @@ def validate_playlist(jspf):
         return
 
     for i, track in enumerate(jspf["playlist"].get("track", [])):
-        recording_uris = track.get("identifier")
-        if not recording_uris:
-            log_raise_400("JSPF playlist track %d must contain an identifier list with at least one recording MBID." % i)
+        recording_uri = track.get("identifier")
+        if not recording_uri:
+            log_raise_400("JSPF playlist track %d must contain an identifier element with recording MBID." % i)
 
-        recording_uri = recording_uris
         if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
             recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
         else:
