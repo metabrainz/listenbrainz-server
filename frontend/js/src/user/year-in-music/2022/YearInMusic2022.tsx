@@ -151,7 +151,13 @@ export default class YearInMusic extends React.Component<
       /* Add a track image if it exists in the `{playlistName}-coverart` key */
       playlist.track = playlist.track.map((track: JSPFTrack) => {
         const newTrack = { ...track };
-        const track_id = track.identifier;
+        let track_id;
+        if (Array.isArray(track.identifier)) {
+          // eslint-disable-next-line prefer-destructuring
+          track_id = track.identifier[0];
+        } else {
+          track_id = track.identifier;
+        }
         const found = track_id.match(uuidMatch);
         if (found) {
           const recording_mbid = found[0];
