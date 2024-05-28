@@ -100,41 +100,61 @@ export default function SongSearch(props: SongSearchProps) {
     });
   };
 
+  const getListenCard = (recording: SongTypeSearchResult["recordings"][0]) => {
+    const artists: MBIDMappingArtist[] = [];
+    const artistMBIDs: Array<string> = [];
+    const artistCredit = recording["artist-credit"];
+    artistCredit.map((ac) => {
+      artists.push({
+        artist_mbid: ac.artist.id,
+        artist_credit_name: ac.name,
+        join_phrase: ac.joinphrase ?? "",
+      });
+      artistMBIDs.push(ac.artist.id);
+      return null;
+    });
+
+    return (
+      <ListenCard
+        key={recording.id}
+        listen={{
+          listened_at: 0,
+          track_metadata: {
+            mbid_mapping: {
+              artists,
+              artist_mbids: artistMBIDs,
+              release_mbid:
+                recording.releases?.length > 0 ? recording.releases[0].id : "",
+              recording_mbid: recording.id,
+            },
+            artist_name: recording["artist-credit"]
+              .map((ac) => ac.name + (ac?.joinphrase ?? ""))
+              .join(""),
+            track_name: recording.title,
+            release_name:
+              recording.releases?.length > 0 ? recording.releases[0].title : "",
+            additional_info: {
+              artist_mbids: recording["artist-credit"].map(
+                (ac) => ac?.artist?.id
+              ),
+              recording_mbid: recording.id,
+              release_mbid:
+                recording.releases?.length > 0 ? recording.releases[0].id : "",
+            },
+          },
+        }}
+        showTimestamp={false}
+        showUsername={false}
+      />
+    );
+  };
+
   return (
     <>
       <Loader isLoading={loading} />
       {hasError && <div className="alert alert-danger">{errorMessage}</div>}
       {recordings.length > 0 &&
-        recordings.map((recording) => (
-          <ListenCard
-            key={recording.id}
-            listen={{
-              listened_at: 0,
-              track_metadata: {
-                artist_name: recording["artist-credit"]
-                  .map((ac) => ac.name + (ac?.joinphrase ?? ""))
-                  .join(""),
-                track_name: recording.title,
-                release_name:
-                  recording.releases?.length > 0
-                    ? recording.releases[0].title
-                    : "",
-                additional_info: {
-                  artist_mbids: recording["artist-credit"].map(
-                    (ac) => ac?.artist?.id
-                  ),
-                  recording_mbid: recording.id,
-                  release_mbid:
-                    recording.releases?.length > 0
-                      ? recording.releases[0].id
-                      : "",
-                },
-              },
-            }}
-            showTimestamp={false}
-            showUsername={false}
-          />
-        ))}
+        recordings.map((recording) => getListenCard(recording))}
       <Pagination
         currentPageNo={currPageNo}
         totalPageCount={totalPageCount}
