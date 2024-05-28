@@ -76,7 +76,7 @@ export default function SongSearch(props: SongSearchProps) {
               listened_at: 0,
               track_metadata: {
                 artist_name: recording["artist-credit"]
-                  .map((ac) => ac.name + ac.joinphrase)
+                  .map((ac) => ac.name + (ac?.joinphrase ?? ""))
                   .join(""),
                 track_name: recording.title,
                 release_name:
