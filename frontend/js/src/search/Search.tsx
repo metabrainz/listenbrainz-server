@@ -19,11 +19,14 @@ const invalidSearchTypes = (searchType?: string) => {
 export default function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchTerm = searchParams.get("search_term") || "";
-  const searchType = searchParams.get("search_type");
+  const searchType = searchParams.get("search_type") || "";
 
-  if (invalidSearchTypes(searchType!)) {
-    setSearchParams({ search_term: searchTerm, search_type: "artist" });
-  }
+  React.useEffect(() => {
+    if (invalidSearchTypes(searchType)) {
+      setSearchParams({ search_term: searchTerm, search_type: "artist" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchType]);
 
   const setSearchType = (newSearchType: string) => {
     setSearchParams({ search_term: searchTerm, search_type: newSearchType });
@@ -36,7 +39,7 @@ export default function Search() {
     if (!searchTermInput) {
       return;
     }
-    setSearchParams({ search_term: searchTermInput, search_type: searchType! });
+    setSearchParams({ search_term: searchTermInput, search_type: searchType });
   };
 
   return (
