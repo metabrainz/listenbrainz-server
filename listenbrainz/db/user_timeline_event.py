@@ -215,7 +215,7 @@ def get_personal_recommendation_events_for_feed(db_conn, user_id: int, min_ts: i
                 SELECT jsonb_build_object(
                             'recording_mbid', user_timeline_event.metadata->'recording_mbid',
                             'recording_msid', user_timeline_event.metadata->'recording_msid',
-                            'users', jsonb_agg("user".musicbrainz_id ORDER BY idx),
+                            'users', COALESCE(jsonb_agg("user".musicbrainz_id ORDER BY idx), '[]'::jsonb),
                             'blurb_content', user_timeline_event.metadata->'blurb_content'
                         ) AS metadata
                   FROM jsonb_array_elements_text(user_timeline_event.metadata->'users') WITH ORDINALITY AS arr (value, idx)
