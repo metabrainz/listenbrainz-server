@@ -75,7 +75,7 @@ export default function Search() {
             </div>
           </h2>
         </form>
-        <div className="row">
+        <div className="row" style={{ marginBottom: "20px" }}>
           <Pill
             id="search-type-artist"
             onClick={() => {
@@ -127,6 +127,7 @@ export default function Search() {
             Users
           </Pill>
         </div>
+
         {searchType === "artist" && <ArtistSearch searchQuery={searchTerm} />}
         {searchType === "song" && <SongSearch searchQuery={searchTerm} />}
         {searchType === "user" && <UserSearch searchQuery={searchTerm} />}

@@ -18,6 +18,10 @@ type SongTypeSearchResult = {
     "artist-credit": {
       name: string;
       joinphrase?: string;
+      artist: {
+        id: string;
+        name: string;
+      };
     }[];
     releases: {
       id: string;
@@ -84,7 +88,9 @@ export default function SongSearch(props: SongSearchProps) {
                     ? recording.releases[0].title
                     : "",
                 additional_info: {
-                  artist_mbids: recording["artist-credit"].map((ac) => ac.name),
+                  artist_mbids: recording["artist-credit"].map(
+                    (ac) => ac?.artist?.id
+                  ),
                   recording_mbid: recording.id,
                   release_mbid:
                     recording.releases?.length > 0
