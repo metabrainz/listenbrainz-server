@@ -196,7 +196,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   return (
     <>
       <div className={`queue ${showQueue ? "show" : ""}`}>
-        <Queue clearQueue={clearQueue} />
+        <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
       <div id="brainz-player" aria-label="Playback control">
         <ProgressBar

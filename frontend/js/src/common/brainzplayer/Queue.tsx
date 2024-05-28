@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ReactSortable } from "react-sortablejs";
 import NiceModal from "@ebay/nice-modal-react";
-import { faSave } from "@fortawesome/free-solid-svg-icons";
+import { faChevronDown, faSave } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import QueueItemCard from "./QueueItemCard";
 import ListenCard from "../listens/ListenCard";
@@ -15,6 +15,7 @@ import {
 
 type BrainzPlayerQueueProps = {
   clearQueue: () => void;
+  onHide: () => void;
 };
 
 const MAX_AMBIENT_QUEUE_ITEMS = 15;
@@ -23,7 +24,7 @@ function Queue(props: BrainzPlayerQueueProps) {
   const dispatch = useBrainzPlayerDispatch();
   const { queue, ambientQueue, currentListen } = useBrainzPlayerContext();
 
-  const { clearQueue } = props;
+  const { clearQueue, onHide } = props;
 
   const removeTrackFromQueue = React.useCallback(
     (track: BrainzPlayerQueueItem) => {
@@ -79,6 +80,12 @@ function Queue(props: BrainzPlayerQueueProps) {
 
   return (
     <>
+      <FontAwesomeIcon
+        className="btn hide-queue"
+        icon={faChevronDown}
+        title="Hide queue"
+        onClick={onHide}
+      />
       {currentListen && (
         <>
           <div className="queue-headers">
