@@ -549,7 +549,7 @@ declare type JSPFPlaylist = {
 declare type JSPFTrack = {
   id?: string; // React-sortable library expects an id attribute, this is not part of JSPF specification
   location?: string[];
-  identifier: string;
+  identifier: string | string[];
   title: string;
   creator: string;
   annotation?: string;

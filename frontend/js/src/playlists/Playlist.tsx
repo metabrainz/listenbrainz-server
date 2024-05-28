@@ -53,10 +53,12 @@ export default class PlaylistPage extends React.Component<
 
   static makeJSPFTrack(trackMetadata: TrackMetadata): JSPFTrack {
     return {
-      identifier: `${PLAYLIST_TRACK_URI_PREFIX}${
-        trackMetadata.recording_mbid ??
-        trackMetadata.additional_info?.recording_mbid
-      }`,
+      identifier: [
+        `${PLAYLIST_TRACK_URI_PREFIX}${
+          trackMetadata.recording_mbid ??
+          trackMetadata.additional_info?.recording_mbid
+        }`,
+      ],
       title: trackMetadata.track_name,
       creator: trackMetadata.artist_name,
     };

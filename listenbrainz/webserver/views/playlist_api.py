@@ -74,19 +74,29 @@ def validate_playlist(jspf):
     if "track" not in jspf["playlist"]:
         return
 
+    recording_uri_error = (
+        "JSPF playlist track %d must contain a identifier field having a fully qualified URI to a recording_mbid. "
+        "(e.g. https://musicbrainz.org/recording/8f3471b5-7e6a-48da-86a9-c1c07a0f47ae)"
+    )
+
     for i, track in enumerate(jspf["playlist"].get("track", [])):
-        recording_uri = track.get("identifier")
-        if not recording_uri:
-            log_raise_400("JSPF playlist track %d must contain an identifier element with recording MBID." % i)
+        recording_uris = track.get("identifier")
 
-        if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
-            recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
-        else:
-            log_raise_400("JSPF playlist track %d identifier must have the namespace '%s' prepended to it." %
-                          (i, PLAYLIST_TRACK_URI_PREFIX))
+        if not recording_uris:
+            log_raise_400(recording_uri_error % i)
 
-        if not is_valid_uuid(recording_mbid):
-            log_raise_400("JSPF playlist track %d does not contain a valid track identifier field." % i)
+        # This allows identifier to be a list, tuple or string. The string support is a leftover and should
+        # be removed after 2025-06, which marks a year or backward compatibility.
+        if isinstance(recording_uris, str):
+            recording_uris = [recording_uris]
+
+        recording_mbid = None
+        for recording_uri in recording_uris:
+            if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
+                recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
+
+        if recording_mbid is None or not is_valid_uuid(recording_mbid):
+            log_raise_400(recording_uri_error % i)
 
 
 def serialize_xspf(playlist: Playlist):

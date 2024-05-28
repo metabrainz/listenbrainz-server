@@ -46,14 +46,6 @@ export default class PlayerPage extends React.Component<
 > {
   static contextType = GlobalAppContext;
 
-  static makeJSPFTrack(track: ACRMSearchResult): JSPFTrack {
-    return {
-      identifier: `${PLAYLIST_TRACK_URI_PREFIX}${track.recording_mbid}`,
-      title: track.recording_name,
-      creator: track.artist_credit_name,
-    };
-  }
-
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: PlayerPageProps) {
