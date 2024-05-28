@@ -42,6 +42,12 @@ export default function Search() {
     setSearchParams({ search_term: searchTermInput, search_type: searchType });
   };
 
+  const searchTermValid = searchTerm.trim();
+
+  React.useEffect(() => {
+    setSearchTermInput(searchTerm);
+  }, [searchTerm]);
+
   return (
     <>
       <Helmet>
@@ -140,10 +146,24 @@ export default function Search() {
           </Pill>
         </div>
 
-        {searchType === "artist" && <ArtistSearch searchQuery={searchTerm} />}
-        {searchType === "song" && <SongSearch searchQuery={searchTerm} />}
-        {searchType === "user" && <UserSearch searchQuery={searchTerm} />}
-        {searchType === "album" && <AlbumSearch searchQuery={searchTerm} />}
+        {!searchTermValid && (
+          <div className="alert alert-info">
+            <strong>Search for something!</strong> Enter a search term in the
+            search bar above to get started.
+          </div>
+        )}
+        {searchType === "artist" && searchTermValid && (
+          <ArtistSearch searchQuery={searchTerm} />
+        )}
+        {searchType === "song" && searchTermValid && (
+          <SongSearch searchQuery={searchTerm} />
+        )}
+        {searchType === "user" && searchTermValid && (
+          <UserSearch searchQuery={searchTerm} />
+        )}
+        {searchType === "album" && searchTermValid && (
+          <AlbumSearch searchQuery={searchTerm} />
+        )}
       </div>
     </>
   );
