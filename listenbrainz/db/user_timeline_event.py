@@ -30,7 +30,7 @@ from listenbrainz.db.model.user_timeline_event import (
     RecordingRecommendationMetadata,
     NotificationMetadata,
     HiddenUserTimelineEvent,
-    PersonalRecordingRecommendationMetadata
+    PersonalRecordingRecommendationMetadata, WritePersonalRecordingRecommendationMetadata
 )
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
@@ -114,7 +114,7 @@ def create_user_cb_review_event(db_conn, user_id: int, metadata: CBReviewTimelin
     )
 
 
-def create_personal_recommendation_event(db_conn, user_id: int, metadata: PersonalRecordingRecommendationMetadata)\
+def create_personal_recommendation_event(db_conn, user_id: int, metadata: WritePersonalRecordingRecommendationMetadata)\
         -> UserTimelineEvent:
     """ Creates a personal recommendation event in the database and returns it.
         The User ID in the table is the recommender, meanwhile the users in the
