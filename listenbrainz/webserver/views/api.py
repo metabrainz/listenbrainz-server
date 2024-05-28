@@ -688,11 +688,11 @@ def search_user_playlist(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    name = request.args.get("name")
+    query = request.args.get("query")
     count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param("offset", 0)
 
-    playlists, playlist_count = db_playlist.search_playlists_for_user(db_conn, ts_conn, playlist_user.id, name, count, offset)
+    playlists, playlist_count = db_playlist.search_playlists_for_user(db_conn, ts_conn, playlist_user.id, query, count, offset)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 

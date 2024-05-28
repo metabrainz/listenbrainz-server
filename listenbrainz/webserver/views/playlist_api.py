@@ -391,14 +391,14 @@ def search_playlist():
     :resheader Content-Type: *application/json*
     """
 
-    name = request.args.get("name")
+    query = request.args.get("query")
     count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param("offset", 0)
 
-    if not name or len(name) < 3:
+    if not query or len(query) < 3:
         log_raise_400("Query string must be at least 3 characters long.")
 
-    playlists, playlist_count = db_playlist.search_playlist(db_conn, ts_conn, name, count, offset)
+    playlists, playlist_count = db_playlist.search_playlist(db_conn, ts_conn, query, count, offset)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
