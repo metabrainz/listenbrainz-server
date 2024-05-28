@@ -66,7 +66,17 @@ const initialValue: BrainzPlayerContextT = {
 };
 
 export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
-  type?: string;
+  type?:
+    | "SET_CURRENT_LISTEN"
+    | "SET_PLAYBACK_TIMER"
+    | "TOGGLE_REPEAT_MODE"
+    | "MOVE_QUEUE_ITEM"
+    | "MOVE_AMBIENT_QUEUE_ITEM"
+    | "REMOVE_TRACK_FROM_QUEUE"
+    | "REMOVE_TRACK_FROM_AMBIENT_QUEUE"
+    | "ADD_LISTEN_TO_TOP_OF_QUEUE"
+    | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
+    | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
   data?: any;
 };
 
