@@ -6,6 +6,7 @@ import Pill from "../components/Pill";
 import ArtistSearch from "./ArtistSearch";
 import SongSearch from "./SongSearch";
 import UserSearch from "./UserSearch";
+import AlbumSearch from "./AlbumSearch";
 
 const invalidSearchTypes = (searchType?: string) => {
   if (!searchType) {
@@ -129,6 +130,7 @@ export default function Search() {
         {searchType === "artist" && <ArtistSearch searchQuery={searchTerm} />}
         {searchType === "song" && <SongSearch searchQuery={searchTerm} />}
         {searchType === "user" && <UserSearch searchQuery={searchTerm} />}
+        {searchType === "album" && <AlbumSearch searchQuery={searchTerm} />}
       </div>
     </>
   );
