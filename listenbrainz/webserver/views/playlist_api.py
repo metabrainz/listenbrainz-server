@@ -79,13 +79,7 @@ def validate_playlist(jspf):
         if not recording_uris:
             log_raise_400("JSPF playlist track %d must contain an identifier list with at least one recording MBID." % i)
 
-        # This allows identifier to be a list, tuple or string. The string support is a leftover and should be removed
-        # after 2025-06, which marks a year or backward compatibility. Only the first option of the if statement should remain.
-        if isinstance(recording_uris, list) or isinstance(recording_uris, tuple):
-            recording_uri = recording_uris[0]
-        else:
-            recording_uri = recording_uris
-
+        recording_uri = recording_uris
         if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
             recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
         else:
