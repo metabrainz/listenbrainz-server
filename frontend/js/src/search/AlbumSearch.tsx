@@ -1,9 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import _ from "lodash";
+import { useSearchParams } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
+import { getObjectForURLSearchParams } from "../utils/utils";
+import Pagination from "../common/Pagination";
+
+const ALBUM_COUNT_PER_PAGE = 30;
 
 type AlbumSearchProps = {
   searchQuery: string;
@@ -34,14 +39,23 @@ type AlbumTypeSearchResult = {
 
 export default function AlbumSearch(props: AlbumSearchProps) {
   const { APIService } = React.useContext(GlobalAppContext);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObj = getObjectForURLSearchParams(searchParams);
+  const currPageNoStr = searchParams.get("page") || "1";
+  const currPageNo = parseInt(currPageNoStr, 10);
 
   const { searchQuery } = props;
 
   const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: ["search-album", searchQuery],
+    queryKey: ["search-album", searchQuery, currPageNoStr],
     queryFn: async () => {
       try {
-        const queryData = await APIService.albumLookup(searchQuery);
+        const offset = (currPageNo - 1) * ALBUM_COUNT_PER_PAGE;
+        const queryData = await APIService.albumLookup(
+          searchQuery,
+          offset,
+          ALBUM_COUNT_PER_PAGE
+        );
         return {
           data: queryData as AlbumTypeSearchResult,
           hasError: false,
@@ -57,12 +71,29 @@ export default function AlbumSearch(props: AlbumSearchProps) {
     },
   });
 
-  const { data: rawData = {}, hasError = false, errorMessage = "" } =
-    loaderData || {};
-
   const {
-    "release-groups": releaseGroups = [],
-  } = rawData as AlbumTypeSearchResult;
+    data: rawData = {} as AlbumTypeSearchResult,
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
+
+  const { "release-groups": releaseGroups = [] } = rawData;
+
+  const totalPageCount = Math.ceil(rawData.count / ALBUM_COUNT_PER_PAGE);
+
+  const handleClickPrevious = () => {
+    setSearchParams({
+      ...searchParamsObj,
+      page: Math.max(currPageNo - 1, 1).toString(),
+    });
+  };
+
+  const handleClickNext = () => {
+    setSearchParams({
+      ...searchParamsObj,
+      page: Math.min(currPageNo + 1, totalPageCount).toString(),
+    });
+  };
 
   const getReleaseCard = (
     releaseGroup: AlbumTypeSearchResult["release-groups"][0]
@@ -109,6 +140,12 @@ export default function AlbumSearch(props: AlbumSearchProps) {
           {releaseGroups?.map((releaseGroup) => getReleaseCard(releaseGroup))}
         </div>
       )}
+      <Pagination
+        currentPageNo={currPageNo}
+        totalPageCount={totalPageCount}
+        handleClickPrevious={handleClickPrevious}
+        handleClickNext={handleClickNext}
+      />
     </>
   );
 }

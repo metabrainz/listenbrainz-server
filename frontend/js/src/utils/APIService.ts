@@ -1592,22 +1592,34 @@ export default class APIService {
     }
   };
 
-  artistLookup = async (searchQuery: string): Promise<any> => {
-    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json`;
+  artistLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<any> => {
+    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
-  albumLookup = async (searchQuery: string): Promise<any> => {
-    const url = `${this.MBBaseURI}/release-group?query=${searchQuery}&fmt=json`;
+  albumLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<any> => {
+    const url = `${this.MBBaseURI}/release-group?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
-  recordingLookup = async (searchQuery: string): Promise<any> => {
-    const url = `${this.MBBaseURI}/recording?query=${searchQuery}&fmt=json`;
+  recordingLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<any> => {
+    const url = `${this.MBBaseURI}/recording?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

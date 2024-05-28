@@ -1,9 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import _ from "lodash";
+import { useSearchParams } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ListenCard from "../common/listens/ListenCard";
+import { getObjectForURLSearchParams } from "../utils/utils";
+import Pagination from "../common/Pagination";
+
+const RECORDING_COUNT_PER_PAGE = 50;
 
 type SongSearchProps = {
   searchQuery: string;
@@ -40,14 +45,23 @@ type SongTypeSearchResult = {
 
 export default function SongSearch(props: SongSearchProps) {
   const { APIService } = React.useContext(GlobalAppContext);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObj = getObjectForURLSearchParams(searchParams);
+  const currPageNoStr = searchParams.get("page") || "1";
+  const currPageNo = parseInt(currPageNoStr, 10);
 
   const { searchQuery } = props;
 
   const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: ["search-song", searchQuery],
+    queryKey: ["search-song", searchQuery, currPageNoStr],
     queryFn: async () => {
       try {
-        const queryData = await APIService.recordingLookup(searchQuery);
+        const offset = (currPageNo - 1) * RECORDING_COUNT_PER_PAGE;
+        const queryData = await APIService.recordingLookup(
+          searchQuery,
+          offset,
+          RECORDING_COUNT_PER_PAGE
+        );
         return {
           data: queryData as SongTypeSearchResult,
           hasError: false,
@@ -63,10 +77,28 @@ export default function SongSearch(props: SongSearchProps) {
     },
   });
 
-  const { data: rawData = {}, hasError = false, errorMessage = "" } =
-    loaderData || {};
+  const {
+    data: rawData = {} as SongTypeSearchResult,
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
 
-  const { recordings = [] } = rawData as SongTypeSearchResult;
+  const { recordings = [] } = rawData;
+  const totalPageCount = Math.ceil(rawData.count / RECORDING_COUNT_PER_PAGE);
+
+  const handleClickPrevious = () => {
+    setSearchParams({
+      ...searchParamsObj,
+      page: Math.max(currPageNo - 1, 1).toString(),
+    });
+  };
+
+  const handleClickNext = () => {
+    setSearchParams({
+      ...searchParamsObj,
+      page: Math.min(currPageNo + 1, totalPageCount).toString(),
+    });
+  };
 
   return (
     <>
@@ -103,6 +135,12 @@ export default function SongSearch(props: SongSearchProps) {
             showUsername={false}
           />
         ))}
+      <Pagination
+        currentPageNo={currPageNo}
+        totalPageCount={totalPageCount}
+        handleClickPrevious={handleClickPrevious}
+        handleClickNext={handleClickNext}
+      />
     </>
   );
 }
