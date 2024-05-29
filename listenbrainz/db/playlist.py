@@ -377,7 +377,7 @@ def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count:
         query: The search query
         count: Return this many playlists. If 0, return all playlists
         offset: if set, get playlists from this offset
-    
+
     Returns:
         a tuple (playlists, total_playlists)
     """
@@ -471,7 +471,7 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
 
     if count == 0:
         count = None
-    
+
     params = {"query": query, "count": count, "offset": offset}
     query = text(f"""
     WITH playlist_similarities AS (

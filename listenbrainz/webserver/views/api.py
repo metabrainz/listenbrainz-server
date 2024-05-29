@@ -679,7 +679,7 @@ def search_user_playlist(playlist_user_name):
     :queryparam name: the name of the playlist to search for.
     :queryparam count: the number of playlists to return. Default: 25.
     :queryparam offset: the offset of the playlists to return. Default: 0.
-    
+
     :statuscode 200: success
     :statuscode 404: user not found
     :resheader Content-Type: *application/json*

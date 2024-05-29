@@ -22,7 +22,7 @@ class PlaylistTestCase(IntegrationTestCase):
             collaborator_ids=[],
             collaborators=[],
             public=False,
-            additional_metadata={}            
+            additional_metadata={}
         )
         new_playlist = db_playlist.create(self.db_conn, self.ts_conn, playlist_1)
 
@@ -30,7 +30,7 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(playlist.name, playlist_1.name)
         self.assertEqual(playlist.creator_id, playlist_1.creator_id)
         self.assertEqual(playlist.description, playlist_1.description)
-    
+
     def test_search_playlist(self):
         playlist_1 = WritablePlaylist(
             name="playlist_1",
@@ -39,7 +39,7 @@ class PlaylistTestCase(IntegrationTestCase):
             collaborator_ids=[self.user_2['id']],
             collaborators=["ansh_2"],
             public=False,
-            additional_metadata={}            
+            additional_metadata={}
         )
 
         playlist_2 = WritablePlaylist(
@@ -49,7 +49,7 @@ class PlaylistTestCase(IntegrationTestCase):
             collaborator_ids=[],
             collaborators=[],
             public=True,
-            additional_metadata={}            
+            additional_metadata={}
         )
 
         # Since the playlist playlist_2 is public, it should be returned in the search results
@@ -59,10 +59,10 @@ class PlaylistTestCase(IntegrationTestCase):
 
         playlists, count = db_playlist.search_playlist(self.db_conn, self.ts_conn, "playlist")
 
-
         self.assertEqual(len(playlists), 1)
         self.assertEqual(count, 1)
         self.assertEqual(playlists[0].name, playlist_2.name)
+
 
     def test_search_playlist_for_user(self):
         playlist_1 = WritablePlaylist(
@@ -72,7 +72,7 @@ class PlaylistTestCase(IntegrationTestCase):
             collaborator_ids=[self.user_2['id']],
             collaborators=["ansh_2"],
             public=False,
-            additional_metadata={}            
+            additional_metadata={}
         )
 
         playlist_2 = WritablePlaylist(
@@ -82,7 +82,7 @@ class PlaylistTestCase(IntegrationTestCase):
             collaborator_ids=[],
             collaborators=[],
             public=False,
-            additional_metadata={}            
+            additional_metadata={}
         )
 
         playlist_3 = WritablePlaylist(
@@ -92,7 +92,7 @@ class PlaylistTestCase(IntegrationTestCase):
             collaborator_ids=[],
             collaborators=[],
             public=True,
-            additional_metadata={}            
+            additional_metadata={}
         )
 
         playlist_4 = WritablePlaylist(
@@ -102,7 +102,7 @@ class PlaylistTestCase(IntegrationTestCase):
             collaborator_ids=[],
             collaborators=[],
             public=True,
-            additional_metadata={}            
+            additional_metadata={}
         )
 
         new_playlist_1 = db_playlist.create(self.db_conn, self.ts_conn, playlist_1)
@@ -112,7 +112,7 @@ class PlaylistTestCase(IntegrationTestCase):
 
         playlists, count = db_playlist.search_playlists_for_user(self.db_conn, self.ts_conn, self.user_1['id'], "testing")
 
-        # Since playlist_2 is private, and user_1 does not have access to it, it will not 
+        # Since playlist_2 is private, and user_1 does not have access to it, it will not
 
         self.assertEqual(len(playlists), 2)
         self.assertEqual(count, 2)
@@ -128,4 +128,3 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(playlists[0].name, playlist_3.name)
         self.assertEqual(playlists[1].name, playlist_2.name)
         self.assertEqual(playlists[2].name, playlist_1.name)
-
