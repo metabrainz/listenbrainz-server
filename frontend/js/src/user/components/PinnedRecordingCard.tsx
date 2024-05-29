@@ -24,6 +24,7 @@ export type PinnedRecordingCardProps = {
 export type PinnedRecordingCardState = {
   currentlyPinned?: Boolean;
   isDeleted: Boolean;
+  updatedBlurb?: string;
 };
 
 export default class PinnedRecordingCard extends React.Component<
@@ -123,7 +124,7 @@ export default class PinnedRecordingCard extends React.Component<
 
   render() {
     const { pinnedRecording } = this.props;
-    const { currentlyPinned, isDeleted } = this.state;
+    const { currentlyPinned, isDeleted, updatedBlurb } = this.state;
 
     const thumbnail = currentlyPinned ? (
       <div className="pinned-recording-icon">
@@ -133,10 +134,10 @@ export default class PinnedRecordingCard extends React.Component<
         <span className="small">Pinned</span>
       </div>
     ) : undefined;
-
-    const blurb = pinnedRecording.blurb_content ? (
-      <div className="blurb-content" title={pinnedRecording.blurb_content}>
-        &quot;{pinnedRecording.blurb_content}&quot;
+    const blurbContent = updatedBlurb ?? pinnedRecording.blurb_content;
+    const blurb = blurbContent ? (
+      <div className="blurb-content" title={blurbContent}>
+        &quot;{blurbContent}&quot;
       </div>
     ) : undefined;
 
@@ -157,9 +158,15 @@ export default class PinnedRecordingCard extends React.Component<
           key="Edit Comment"
           icon={faPencilAlt}
           action={() => {
-            NiceModal.show(PinRecordingModal, {
+            NiceModal.show<string, any>(PinRecordingModal, {
               recordingToPin: listen,
               rowId: pinnedRecording.row_id,
+              initialBlurbContent: updatedBlurb ?? pinnedRecording.blurb_content,
+            }).then((newBlurb: string) => {
+              if (!newBlurb) {
+                return;
+              }
+              this.setState({ updatedBlurb: newBlurb });
             });
           }}
           dataToggle="modal"

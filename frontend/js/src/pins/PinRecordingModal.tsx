@@ -15,6 +15,7 @@ export type PinRecordingModalProps = {
   recordingToPin: Listen;
   onSuccessfulPin?: (pinnedrecording: PinnedRecording) => void;
   rowId?: number;
+  initialBlurbContent?: string | null;
 };
 
 export const maxBlurbContentLength = 280;
@@ -33,10 +34,13 @@ export default NiceModal.create(
     recordingToPin,
     onSuccessfulPin,
     rowId,
+    initialBlurbContent,
   }: PinRecordingModalProps) => {
     const modal = useModal();
     const isUpdate = Boolean(rowId);
-    const [blurbContent, setBlurbContent] = React.useState("");
+    const [blurbContent, setBlurbContent] = React.useState(
+      initialBlurbContent ?? ""
+    );
 
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
 
@@ -127,13 +131,10 @@ export default NiceModal.create(
               rowId,
               blurbContent
             );
-            toast.success(
-              <ToastMsg
-                title="Comment updated" message=''/>,
-              {
-                toastId: "pin-update-success",
-              }
-            );
+            toast.success(<ToastMsg title="Comment updated" message="" />, {
+              toastId: "pin-update-success",
+            });
+            modal.resolve(blurbContent);
           }
         } catch (error) {
           handleError(error, "Error while updating pinned recording");
