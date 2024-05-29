@@ -1319,7 +1319,9 @@ export function YearInMusicWrapper() {
       /* Add a track image if it exists in the `{playlistName}-coverart` key */
       playlist.track = playlist.track.map((track: JSPFTrack) => {
         const newTrack = { ...track };
-        const track_id = track.identifier;
+        const track_id = Array.isArray(track.identifier)
+          ? track.identifier[0]
+          : track.identifier;
         const found = track_id.match(uuidMatch);
         if (found) {
           const recording_mbid = found[0];

@@ -1016,7 +1016,9 @@ export function YearInMusicWrapper() {
       playlist.jspf.playlist.track = playlist.jspf.playlist.track.map(
         (track: JSPFTrack) => {
           const newTrack = { ...track };
-          const track_id = track.identifier;
+          const track_id = Array.isArray(track.identifier)
+            ? track.identifier[0]
+            : track.identifier;
           const found = track_id.match(uuidMatch);
           if (found) {
             const recording_mbid = found[0];
