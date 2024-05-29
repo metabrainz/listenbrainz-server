@@ -63,7 +63,6 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(count, 1)
         self.assertEqual(playlists[0].name, playlist_2.name)
 
-
     def test_search_playlist_for_user(self):
         playlist_1 = WritablePlaylist(
             name="playlist_1",
