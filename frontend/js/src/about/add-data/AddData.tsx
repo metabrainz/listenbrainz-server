@@ -25,6 +25,7 @@ export default function AddData() {
           , a cross-platform open source audio player:{" "}
           <a href="https://codeberg.org/punkscience/clscrobble">
             <code>clscrobble</code>
+          </a>
         </li>
         <li>
           <em>
