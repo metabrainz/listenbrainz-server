@@ -152,7 +152,13 @@ export default class YearInMusic extends React.Component<
       playlist.jspf.playlist.track = playlist.jspf.playlist.track.map(
         (track: JSPFTrack) => {
           const newTrack = { ...track };
-          const track_id = track.identifier;
+          let track_id;
+          if (Array.isArray(track.identifier)) {
+            // eslint-disable-next-line prefer-destructuring
+            track_id = track.identifier[0];
+          } else {
+            track_id = track.identifier;
+          }
           const found = track_id.match(uuidMatch);
           if (found) {
             const recording_mbid = found[0];

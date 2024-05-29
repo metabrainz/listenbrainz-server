@@ -111,29 +111,26 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
         for entry in entries:
             _dict = entry.asDict(recursive=True)
             try:
-                user_stat = UserStatRecords[ListeningActivityRecord](
+                UserStatRecords[ListeningActivityRecord](
                     user_id=_dict["user_id"],
                     data=_dict["listening_activity"]
                 )
-                multiple_user_stats.append(user_stat)
+                multiple_user_stats.append({
+                    "user_id": _dict["user_id"],
+                    "data": _dict["listening_activity"]
+                })
             except ValidationError:
                 logger.error(f"""ValidationError while calculating {stats_range} listening_activity for user:
                 {_dict["user_id"]}. Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
 
-        try:
-            model = StatMessage[UserStatRecords[ListeningActivityRecord]](**{
-                "type": message_type,
-                "stats_range": stats_range,
-                "from_ts": from_ts,
-                "to_ts": to_ts,
-                "data": multiple_user_stats,
-                "database": database
-            })
-            result = model.dict(exclude_none=True)
-            yield result
-        except ValidationError:
-            logger.error(f"ValidationError while calculating {stats_range} listening_activity:", exc_info=True)
-            yield None
+        yield {
+            "type": message_type,
+            "stats_range": stats_range,
+            "from_ts": from_ts,
+            "to_ts": to_ts,
+            "data": multiple_user_stats,
+            "database": database
+        }
 
     yield {
         "type": "couchdb_data_end",

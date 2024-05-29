@@ -71,7 +71,8 @@ def parse_one_entity_stats(entry, entity: str, stats_range: str) \
         -> Optional[EntityListenerRecord]:
     try:
         data = entry.asDict(recursive=True)
-        return entity_model_map[entity](**data)
+        entity_model_map[entity](**data)
+        return data
     except ValidationError:
         logger.error(f"""ValidationError while calculating {stats_range} listeners of {entity}.
          Data: {json.dumps(data, indent=2)}""", exc_info=True)
@@ -112,20 +113,15 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             processed_stat = parse_one_entity_stats(entry, entity, stats_range)
             multiple_entity_stats.append(processed_stat)
 
-        try:
-            model = EntityListenerStatMessage(**{
-                "type": "entity_listener",
-                "stats_range": stats_range,
-                "from_ts": from_ts,
-                "to_ts": to_ts,
-                "entity": entity,
-                "data": multiple_entity_stats,
-                "database": database
-            })
-            result = model.dict(exclude_none=True)
-            yield result
-        except ValidationError:
-            logger.error(f"ValidationError while calculating {stats_range} top {entity}:", exc_info=True)
+        yield {
+            "type": "entity_listener",
+            "stats_range": stats_range,
+            "from_ts": from_ts,
+            "to_ts": to_ts,
+            "entity": entity,
+            "data": multiple_entity_stats,
+            "database": database
+        }
 
     yield {
         "type": "couchdb_data_end",

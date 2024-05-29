@@ -24,6 +24,7 @@ class FreshReleasesTestCase(SparkNewTestCase):
             os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "0.parquet"),
             os.path.join(TEST_DATA_PATH, "fresh_releases_listens.parquet")
         )
+        self.uploader.process_full_listens_dump()
         
     def tearDown(self):
         super(FreshReleasesTestCase, self).tearDown()

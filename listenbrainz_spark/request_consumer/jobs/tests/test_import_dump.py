@@ -47,8 +47,9 @@ class DumpImporterJobTestCase(SparkNewTestCase):
     @patch('ftplib.FTP')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.load_listens')
     @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.upload_new_listens_full_dump')
+    @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.process_full_listens_dump')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.datetime')
-    def test_import_full_dump_handler(self, mock_datetime, mock_upload, mock_download, _):
+    def test_import_full_dump_handler(self, mock_datetime, _, mock_upload, mock_download, __):
         mock_src = MagicMock()
         mock_download.return_value = (mock_src, 'listenbrainz-spark-dump-202-20200915-180002-full.tar', 202)
         mock_datetime.utcnow.return_value = datetime(2020, 8, 18)
@@ -71,8 +72,9 @@ class DumpImporterJobTestCase(SparkNewTestCase):
     @patch('ftplib.FTP')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.load_listens')
     @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.upload_new_listens_full_dump')
+    @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.process_full_listens_dump')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.datetime')
-    def test_import_full_dump_by_id_handler(self, mock_datetime, mock_upload, mock_download, _):
+    def test_import_full_dump_by_id_handler(self, mock_datetime, _, mock_upload, mock_download, __):
         mock_src = MagicMock()
         mock_download.return_value = (mock_src, 'listenbrainz-spark-dump-202-20200915-180002-full.tar', 202)
         mock_datetime.utcnow.return_value = datetime(2020, 8, 18)

@@ -164,7 +164,7 @@ ALTER TABLE recording_feedback
     ADD CONSTRAINT feedback_recording_msid_or_recording_mbid_check
     CHECK ( recording_msid IS NOT NULL OR recording_mbid IS NOT NULL );
 
-CREATE TABLE release_color(
+CREATE TABLE release_color (
     id                      SERIAL, -- PK
     caa_id                  BIGINT NOT NULL,
     release_mbid            UUID NOT NULL,
@@ -184,7 +184,7 @@ CREATE TABLE user_relationship (
     created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE pinned_recording(
+CREATE TABLE pinned_recording (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
     recording_msid          UUID,
@@ -198,7 +198,7 @@ ALTER TABLE pinned_recording
     ADD CONSTRAINT pinned_rec_recording_msid_or_recording_mbid_check
     CHECK ( recording_msid IS NOT NULL OR recording_mbid IS NOT NULL );
 
-CREATE TABLE user_setting(
+CREATE TABLE user_setting (
     id                     SERIAL, --PK
     user_id                INTEGER NOT NULL, --FK to "user".id
     timezone_name          TEXT,

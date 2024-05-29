@@ -31,7 +31,7 @@ def get_test_data():
             },
             "track": [
                 {
-                    "identifier": "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                    "identifier": ["https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"]
                 }
             ],
         }
@@ -115,7 +115,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         # Submit a playlist on a different user's behalf
         playlist = get_test_data()
-        playlist["playlist"]["created_for"] = self.user["musicbrainz_id"]
+        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["created_for"] = self.user["musicbrainz_id"]
 
         response = self.client.post(
             self.custom_url_for("playlist_api_v1.create_playlist"),
@@ -362,8 +362,11 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"],
-                         "JSPF playlist track 0 identifier must have the namespace 'https://musicbrainz.org/recording/' prepended to it.")
+        self.assertEqual(
+            response.json["error"],
+            "JSPF playlist track 0 must contain a identifier field having a fully qualified URI to a"
+            " recording_mbid. (e.g. https://musicbrainz.org/recording/8f3471b5-7e6a-48da-86a9-c1c07a0f47ae)"
+        )
 
     def test_playlist_create_with_collaborators(self):
         """ Test to ensure creating a playlist with collaborators works """
@@ -487,7 +490,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             "playlist": {
                 "track": [
                     {
-                        "identifier": PLAYLIST_TRACK_URI_PREFIX + "4a77a078-e91a-4522-a409-3b58aa7de3ae"
+                        "identifier": [PLAYLIST_TRACK_URI_PREFIX + "4a77a078-e91a-4522-a409-3b58aa7de3ae"]
                     }
                 ],
                 "extension": {
@@ -539,10 +542,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
                 "title": "1980s flashback jams",
                 "track": [
                     {
-                        "identifier": PLAYLIST_TRACK_URI_PREFIX + "e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                        "identifier": [PLAYLIST_TRACK_URI_PREFIX + "e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"]
                     },
                     {
-                        "identifier": PLAYLIST_TRACK_URI_PREFIX + "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
+                        "identifier": [PLAYLIST_TRACK_URI_PREFIX + "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"]
                     }
                 ],
                 "extension": {
@@ -586,10 +589,10 @@ class PlaylistAPITestCase(IntegrationTestCase):
                 "title": "1980s flashback jams",
                 "track": [
                     {
-                        "identifier": PLAYLIST_TRACK_URI_PREFIX + "e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                        "identifier": [PLAYLIST_TRACK_URI_PREFIX + "e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"]
                     },
                     {
-                        "identifier": PLAYLIST_TRACK_URI_PREFIX + "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"
+                        "identifier": [PLAYLIST_TRACK_URI_PREFIX + "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a"]
                     }
                 ],
                 "extension": {
