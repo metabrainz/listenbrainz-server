@@ -72,7 +72,7 @@ export default function ArtistSearch(props: ArtistSearchProps) {
 
   return (
     <>
-      <table className="table table-striped">
+      <table className="table table-striped table-strong-header">
         <thead>
           <tr>
             <th>{}</th>

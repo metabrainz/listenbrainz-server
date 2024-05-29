@@ -88,7 +88,7 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
 
   return (
     <>
-      <table className="table table-striped">
+      <table className="table table-striped table-strong-header">
         <thead>
           <tr>
             <th>{}</th>

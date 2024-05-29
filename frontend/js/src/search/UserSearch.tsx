@@ -51,7 +51,7 @@ export default function UserSearch(props: UserSearchProps) {
   const username = currentUser ? currentUser.name : null;
 
   return (
-    <table className="table table-striped">
+    <table className="table table-striped table-strong-header">
       <thead>
         <tr>
           <th>{}</th>
