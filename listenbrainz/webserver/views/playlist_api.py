@@ -44,6 +44,22 @@ def validate_create_playlist_required_items(jspf):
         log_raise_400("JSPF playlist.extension.https://musicbrainz.org/doc/jspf#playlist.public field must be given.")
 
 
+def get_track_recording_mbid(track):
+    recording_uris = track.get("identifier", [])
+    # This allows identifier to be a list, tuple or string. The string support is a leftover and should
+    # be removed after 2025-06, which marks a year or backward compatibility.
+    if isinstance(recording_uris, str):
+        recording_uris = [recording_uris]
+
+    for recording_uri in recording_uris:
+        if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
+            recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
+            if is_valid_uuid(recording_mbid):
+                return recording_mbid
+
+    return None
+
+
 def validate_playlist(jspf):
     """
         Given a JSPF dict, ensure that title is present and that if tracks are present
@@ -74,19 +90,15 @@ def validate_playlist(jspf):
     if "track" not in jspf["playlist"]:
         return
 
+    recording_uri_error = (
+        "JSPF playlist track %d must contain a identifier field having a fully qualified URI to a recording_mbid. "
+        "(e.g. https://musicbrainz.org/recording/8f3471b5-7e6a-48da-86a9-c1c07a0f47ae)"
+    )
+
     for i, track in enumerate(jspf["playlist"].get("track", [])):
-        recording_uri = track.get("identifier")
-        if not recording_uri:
-            log_raise_400("JSPF playlist track %d must contain an identifier element with recording MBID." % i)
-
-        if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
-            recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
-        else:
-            log_raise_400("JSPF playlist track %d identifier must have the namespace '%s' prepended to it." %
-                          (i, PLAYLIST_TRACK_URI_PREFIX))
-
-        if not is_valid_uuid(recording_mbid):
-            log_raise_400("JSPF playlist track %d does not contain a valid track identifier field." % i)
+        recording_mbid = get_track_recording_mbid(track)
+        if not recording_mbid:
+            log_raise_400(recording_uri_error % i)
 
 
 def serialize_xspf(playlist: Playlist):
@@ -311,9 +323,14 @@ def create_playlist():
         collaborators.remove(user["musicbrainz_id"])
 
     username_lookup = collaborators
-    created_for = data["playlist"].get("created_for", None)
+    created_for = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None)
     if created_for:
         username_lookup.append(created_for)
+    # The else: clause below can be removed as of 2025-06.
+    else:
+        created_for = data["playlist"].get("created_for", None)
+        if created_for:
+            username_lookup.append(created_for)
 
     users = {}
     if username_lookup:
@@ -347,10 +364,10 @@ def create_playlist():
                                 public=public,
                                 additional_metadata=additional_metadata)
 
-    if data["playlist"].get("created_for", None):
+    if data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
             raise APIForbidden("Playlist contains a created_for field, but submitting user is not an approved playlist bot.")
-        created_for_user = users.get(data["playlist"]["created_for"].lower())
+        created_for_user = users.get(data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["created_for"].lower())
         if not created_for_user:
             log_raise_400("created_for user does not exist.")
         playlist.created_for_id = created_for_user["id"]
@@ -358,9 +375,15 @@ def create_playlist():
     if "track" in data["playlist"]:
         for track in data["playlist"]["track"]:
             try:
-                playlist.recordings.append(
-                    WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
-                                              added_by_id=user["id"]))
+                # This if statement can be replaced with the first option (is list) as of 2025-06.
+                if isinstance(track['identifier'], list) or isinstance(track['identifier'], tuple):
+                    playlist.recordings.append(
+                        WritablePlaylistRecording(mbid=UUID(track['identifier'][0][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                                  added_by_id=user["id"]))
+                else:
+                    playlist.recordings.append(
+                        WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                                  added_by_id=user["id"]))
             except ValueError:
                 log_raise_400("Invalid recording MBID found in submitted recordings")
 
@@ -594,11 +617,10 @@ def add_playlist_item(playlist_mbid, offset):
     precordings = []
     if "track" in data["playlist"]:
         for track in data["playlist"]["track"]:
-            try:
-                mbid = UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):])
-            except (KeyError, ValueError):
+            recording_mbid = get_track_recording_mbid(track)
+            if not recording_mbid:
                 log_raise_400("Track %d has an invalid identifier field, it must be a complete URI.")
-            precordings.append(WritablePlaylistRecording(mbid=mbid, added_by_id=user["id"]))
+            precordings.append(WritablePlaylistRecording(mbid=UUID(recording_mbid), added_by_id=user["id"]))
 
     try:
         db_playlist.add_recordings_to_playlist(db_conn, ts_conn, playlist, precordings, offset)
@@ -857,7 +879,7 @@ def import_playlist_from_spotify(service):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
-    
+
     try:
         sp = spotipy.Spotify(token["access_token"])
         playlists = sp.current_user_playlists()
@@ -897,7 +919,7 @@ def import_tracks_from_spotify_to_playlist(service, playlist_id):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
-        
+
     try:
         playlist = import_from_spotify(token["access_token"], user["auth_token"], playlist_id)
         return playlist
