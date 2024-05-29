@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Helmet } from "react-helmet";
 import Pill from "../components/Pill";
 import ArtistSearch from "./ArtistSearch";
-import SongSearch from "./SongSearch";
+import TrackSearch from "./TrackSearch";
 import UserSearch from "./UserSearch";
 import AlbumSearch from "./AlbumSearch";
 import PlaylistSearch from "./PlaylistSearch";
@@ -14,7 +14,7 @@ const invalidSearchTypes = (searchType?: string) => {
   if (!searchType) {
     return true;
   }
-  return !["artist", "album", "song", "playlist", "user"].includes(searchType);
+  return !["artist", "album", "track", "playlist", "user"].includes(searchType);
 };
 
 export default function Search() {
@@ -67,8 +67,8 @@ export default function Search() {
             className="header-with-line"
             style={{ alignItems: "center", flexWrap: "wrap" }}
           >
-            <div>
-              Search Results for
+            <div className="search-result-header">
+              Search results for
               <strong style={{ marginLeft: "5px" }}>{searchTerm}</strong>
             </div>
             <div
@@ -116,14 +116,14 @@ export default function Search() {
             Albums
           </Pill>
           <Pill
-            id="search-type-song"
+            id="search-type-track"
             onClick={() => {
-              setSearchType("song");
+              setSearchType("track");
             }}
-            active={searchType === "song"}
+            active={searchType === "track"}
             type="secondary"
           >
-            Songs
+            Tracks
           </Pill>
           <Pill
             id="search-type-playlist"
@@ -156,8 +156,8 @@ export default function Search() {
         {searchType === "artist" && searchTermValid && (
           <ArtistSearch searchQuery={searchTerm} />
         )}
-        {searchType === "song" && searchTermValid && (
-          <SongSearch searchQuery={searchTerm} />
+        {searchType === "track" && searchTermValid && (
+          <TrackSearch searchQuery={searchTerm} />
         )}
         {searchType === "user" && searchTermValid && (
           <UserSearch searchQuery={searchTerm} />

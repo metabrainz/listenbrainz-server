@@ -48,7 +48,7 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
         const offset = (currPageNo - 1) * PLAYLIST_COUNT_PER_PAGE;
         let queryData;
         if (currentUser?.name) {
-          queryData = await APIService.searchPlaylistForUser(
+          queryData = await APIService.searchPlaylistsForUser(
             searchQuery,
             currentUser.name,
             PLAYLIST_COUNT_PER_PAGE,
@@ -110,7 +110,7 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
             <th>Title</th>
             <th>Description</th>
             <th>Creator</th>
-            <th>Date of Creation</th>
+            <th>Date of creation</th>
           </tr>
         </thead>
         <tbody>
@@ -154,13 +154,13 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
                   </td>
                   <td>{playlist?.annotation}</td>
                   <td>
-                    <a
-                      href={`https://musicbrainz.org/user/${playlist?.creator}`}
+                    <Link
+                      to={`https://musicbrainz.org/user/${playlist?.creator}`}
                       target="_blank"
                       rel="noreferrer"
                     >
                       {playlist.creator}
-                    </a>
+                    </Link>
                   </td>
                   <td>{playlistDate}</td>
                 </tr>

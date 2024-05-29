@@ -10,11 +10,11 @@ import Pagination from "../common/Pagination";
 
 const RECORDING_COUNT_PER_PAGE = 50;
 
-type SongSearchProps = {
+type TrackSearchProps = {
   searchQuery: string;
 };
 
-type SongTypeSearchResult = {
+type TrackTypeSearchResult = {
   count: number;
   offset: number;
   recordings: {
@@ -43,7 +43,7 @@ type SongTypeSearchResult = {
   }[];
 };
 
-export default function SongSearch(props: SongSearchProps) {
+export default function TrackSearch(props: TrackSearchProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObj = getObjectForURLSearchParams(searchParams);
@@ -53,7 +53,7 @@ export default function SongSearch(props: SongSearchProps) {
   const { searchQuery } = props;
 
   const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: ["search-song", searchQuery, currPageNoStr],
+    queryKey: ["search-track", searchQuery, currPageNoStr],
     queryFn: async () => {
       try {
         const offset = (currPageNo - 1) * RECORDING_COUNT_PER_PAGE;
@@ -63,13 +63,13 @@ export default function SongSearch(props: SongSearchProps) {
           RECORDING_COUNT_PER_PAGE
         );
         return {
-          data: queryData as SongTypeSearchResult,
+          data: queryData as TrackTypeSearchResult,
           hasError: false,
           errorMessage: "",
         };
       } catch (error) {
         return {
-          data: {} as SongTypeSearchResult,
+          data: {} as TrackTypeSearchResult,
           hasError: true,
           errorMessage: error.message,
         };
@@ -78,7 +78,7 @@ export default function SongSearch(props: SongSearchProps) {
   });
 
   const {
-    data: rawData = {} as SongTypeSearchResult,
+    data: rawData = {} as TrackTypeSearchResult,
     hasError = false,
     errorMessage = "",
   } = loaderData || {};
@@ -100,7 +100,7 @@ export default function SongSearch(props: SongSearchProps) {
     });
   };
 
-  const getListenCard = (recording: SongTypeSearchResult["recordings"][0]) => {
+  const getListenCard = (recording: TrackTypeSearchResult["recordings"][0]) => {
     const artists: MBIDMappingArtist[] = [];
     const artistMBIDs: Array<string> = [];
     const artistCredit = recording["artist-credit"];

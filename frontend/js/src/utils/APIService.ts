@@ -1662,7 +1662,7 @@ export default class APIService {
     return response.json();
   };
 
-  searchPlaylistForUser = async (
+  searchPlaylistsForUser = async (
     searchQuery: string,
     musicbrainzID: string,
     count: number = 25,
