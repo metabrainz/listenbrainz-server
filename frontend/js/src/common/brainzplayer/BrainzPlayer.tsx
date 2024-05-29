@@ -15,6 +15,7 @@ import {
 import * as React from "react";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import {
   ToastMsg,
   createNotification,
@@ -160,6 +161,14 @@ export default function BrainzPlayer() {
 
   const dispatch = useBrainzPlayerDispatch();
 
+  // State
+  const [htmlTitle, setHtmlTitle] = React.useState<string>(
+    window.document.title
+  );
+  const [currentHTMLTitle, setCurrentHTMLTitle] = React.useState<string | null>(
+    null
+  );
+
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);
   const youtubePlayerRef = React.useRef<YoutubePlayer>(null);
@@ -202,7 +211,6 @@ export default function BrainzPlayer() {
   ]);
 
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
-  const initialWindowTitleRef = React.useRef<string>(window.document.title);
   const queueRef = React.useRef<BrainzPlayerQueue>(queue);
   queueRef.current = queue;
   const ambientQueueRef = React.useRef<BrainzPlayerQueue>(ambientQueue);
@@ -297,11 +305,11 @@ export default function BrainzPlayer() {
   // Set Title
   const updateWindowTitleWithTrackName = () => {
     const trackName = currentTrackNameRef?.current || "";
-    updateWindowTitle(trackName, "🎵", ` — ${initialWindowTitleRef.current}`);
+    setCurrentHTMLTitle(`🎵 ${trackName}`);
   };
 
   const reinitializeWindowTitle = () => {
-    updateWindowTitle(initialWindowTitleRef.current);
+    setCurrentHTMLTitle(htmlTitle);
   };
 
   const isCurrentlyPlaying = (element: BrainzPlayerQueueItem): boolean => {
@@ -907,6 +915,18 @@ export default function BrainzPlayer() {
 
   return (
     <div>
+      {!playerPaused && (
+        <Helmet
+          key={htmlTitle}
+          onChangeClientState={(newState) => {
+            if (newState.title && !newState.title.includes("🎵")) {
+              setHtmlTitle(newState.title?.replace(" - ListenBrainz", ""));
+            }
+          }}
+        >
+          <title>{currentHTMLTitle}</title>
+        </Helmet>
+      )}
       <BrainzPlayerUI
         disabled={brainzPlayerDisabled}
         playPreviousTrack={playPreviousTrack}
