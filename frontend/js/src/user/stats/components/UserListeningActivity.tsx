@@ -133,16 +133,11 @@ export default class UserListeningActivity extends React.Component<
     try {
       return await this.APIService.getUserListeningActivity(user?.name, range);
     } catch (error) {
-      if (error.response && error.response.status === 204) {
-        this.setState({
-          loading: false,
-          hasError: true,
-          errorMessage:
-            "There are no statistics available for this user for this period",
-        });
-      } else {
-        throw error;
-      }
+      this.setState({
+        loading: false,
+        hasError: true,
+        errorMessage: error.message,
+      });
     }
     return {} as UserListeningActivityResponse;
   };

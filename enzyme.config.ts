@@ -6,7 +6,6 @@ import { enableFetchMocks } from "jest-fetch-mock";
 
 Enzyme.configure({ adapter: new Adapter() });
 
-enableFetchMocks();
 
 // In Node > v15 unhandled promise rejections will terminate the process
 if (!process.env.LISTENING_TO_UNHANDLED_REJECTION) {

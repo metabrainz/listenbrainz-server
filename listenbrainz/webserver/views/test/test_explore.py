@@ -8,23 +8,15 @@ from listenbrainz.tests.integration import IntegrationTestCase
 class ExploreViewsTestCase(IntegrationTestCase):
 
     def test_hue_sound(self):
-        resp = self.client.get(self.custom_url_for('explore.huesound', color="FF00FF"))
+        resp = self.client.get(self.custom_url_for('explore.index', path="huesound"))
         self.assert200(resp)
-
-    def test_hue_sound_redirect(self):
-        resp = self.client.get(self.custom_url_for('index.huesound', color="FF00FF"))
-        self.assertStatus(resp, 302)
 
     def test_similar_users(self):
-        resp = self.client.get(self.custom_url_for('explore.similar_users'))
+        resp = self.client.get(self.custom_url_for('explore.index', path="similar-users"))
         self.assert200(resp)
 
-    def test_similar_users_redirect(self):
-        resp = self.client.get(self.custom_url_for('index.similar_users'))
-        self.assertStatus(resp, 302)
-
     def test_fresh_releases(self):
-        resp = self.client.get(self.custom_url_for('explore.fresh_releases'))
+        resp = self.client.get(self.custom_url_for('explore.index', path="fresh-releases"))
         self.assert200(resp)
 
     @patch('listenbrainz.db.fresh_releases.get_sitewide_fresh_releases', side_effect=[([], 0), ([], 0), ([], 0)])
@@ -42,5 +34,5 @@ class ExploreViewsTestCase(IntegrationTestCase):
         mock_fresh.assert_called_with(mock.ANY, datetime.date.today(), 14, 'artist_credit_name', False, True)
 
     def test_lb_radio(self):
-        resp = self.client.get(self.custom_url_for('explore.lb_radio'))
+        resp = self.client.get(self.custom_url_for('explore.index', path="lb-radio"))
         self.assert200(resp)

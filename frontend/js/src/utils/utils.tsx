@@ -4,10 +4,10 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
-import SpotifyAPIService from "./SpotifyAPIService";
 import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
@@ -32,13 +32,13 @@ const searchForSpotifyTrack = async (
   }
   let queryString = `type=track&q=`;
   if (trackName) {
-    queryString += `track:${encodeURIComponent(trackName)}`;
+    queryString += encodeURIComponent(trackName);
   }
   if (artistName) {
-    queryString += ` artist:${encodeURIComponent(artistName)}`;
+    queryString += encodeURIComponent(` artist:${artistName}`);
   }
   if (releaseName) {
-    queryString += ` album:${encodeURIComponent(releaseName)}`;
+    queryString += encodeURIComponent(` album:${releaseName}`);
   }
 
   const response = await fetch(
@@ -230,7 +230,8 @@ const getTrackDurationInMs = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "duration", "");
 
 const getArtistName = (
-  listen?: Listen | JSPFTrack | PinnedRecording
+  listen?: Listen | JSPFTrack | PinnedRecording,
+  firstArtistOnly: boolean = false
 ): string => {
   const artists: MBIDMappingArtist[] = _.get(
     listen,
@@ -238,6 +239,9 @@ const getArtistName = (
     []
   );
   if (artists?.length) {
+    if (firstArtistOnly) {
+      return artists[0].artist_credit_name;
+    }
     return artists
       .map((artist) => `${artist.artist_credit_name}${artist.join_phrase}`)
       .join("");
@@ -253,14 +257,12 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
     <>
       {artists.map((artist) => (
         <>
-          <a
-            href={`/artist/${artist.artist_mbid}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to={`/artist/${artist.artist_mbid}/`}
             title={artist.artist_credit_name}
           >
             {artist.artist_credit_name}
-          </a>
+          </Link>
           {artist.join_phrase}
         </>
       ))}
@@ -278,15 +280,7 @@ const getStatsArtistLink = (
   }
   const firstArtist = _.first(artist_mbids);
   if (firstArtist) {
-    return (
-      <a
-        href={`/artist/${firstArtist}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {artist_name}
-      </a>
-    );
+    return <Link to={`/artist/${firstArtist}/`}>{artist_name}</Link>;
   }
   return artist_name;
 };
@@ -544,6 +538,7 @@ type GlobalAppProps = {
   soundcloud?: SoundCloudUser;
   critiquebrainz?: MetaBrainzProjectUser;
   musicbrainz?: MetaBrainzProjectUser;
+  appleMusic?: AppleMusicUser;
   user_preferences?: UserPreferences;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
@@ -590,18 +585,21 @@ const getPageProps = async (): Promise<{
       soundcloud,
       critiquebrainz,
       musicbrainz,
+      appleMusic,
       sentry_traces_sample_rate,
       sentry_dsn,
+      user_preferences,
     } = globalReactProps;
 
-    let { user_preferences } = globalReactProps;
-
-    user_preferences = { ...user_preferences, saveData: false };
+    const userPreferences = {
+      ...user_preferences,
+      saveData: false,
+    };
 
     if ("connection" in navigator) {
       // @ts-ignore
       if (navigator.connection?.saveData === true) {
-        user_preferences.saveData = true;
+        userPreferences.saveData = true;
       }
     }
 
@@ -616,6 +614,7 @@ const getPageProps = async (): Promise<{
       youtubeAuth: youtube,
       soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
+      appleAuth: appleMusic,
       musicbrainzAuth: {
         ...musicbrainz,
         refreshMBToken: async function refreshMBToken() {
@@ -633,7 +632,7 @@ const getPageProps = async (): Promise<{
           return undefined;
         },
       },
-      userPreferences: user_preferences,
+      userPreferences,
       musicbrainzGenres: await getOrFetchMBGenres(),
       recordingFeedbackManager: new RecordingFeedbackManager(
         apiService,
@@ -814,6 +813,31 @@ const getAlbumArtFromReleaseMBID = async (
   return undefined;
 };
 
+const getAlbumArtFromSpotifyTrackID = async (
+  spotifyTrackID: string,
+  spotifyUser?: SpotifyUser
+): Promise<string | undefined> => {
+  const APIBaseURI = "https://api.spotify.com/v1";
+  if (!spotifyUser || !spotifyTrackID) {
+    return undefined;
+  }
+  try {
+    const response = await fetch(`${APIBaseURI}/tracks/${spotifyTrackID}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${spotifyUser?.access_token}`,
+      },
+    });
+    if (response.ok) {
+      const track: SpotifyTrack = await response.json();
+      return track.album?.images?.[0]?.url;
+    }
+  } catch (error) {
+    return undefined;
+  }
+  return undefined;
+};
+
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
   spotifyUser?: SpotifyUser,
@@ -825,9 +849,7 @@ const getAlbumArtFromListenMetadata = async (
     SpotifyPlayer.hasPermissions(spotifyUser)
   ) {
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
-    return new SpotifyAPIService(spotifyUser).getAlbumArtFromSpotifyTrackID(
-      trackID
-    );
+    return getAlbumArtFromSpotifyTrackID(trackID, spotifyUser);
   }
   if (YoutubePlayer.isListenFromThisService(listen)) {
     const videoId = YoutubePlayer.getVideoIDFromListen(listen);
@@ -1035,6 +1057,16 @@ export function getPersonalRecommendationEventContent(
       {additionalContent}
     </>
   );
+}
+
+export function getObjectForURLSearchParams(
+  urlSearchParams: URLSearchParams
+): Record<string, string> {
+  const object: Record<string, string> = {};
+  urlSearchParams.forEach((value, key) => {
+    object[key] = value;
+  });
+  return object;
 }
 
 export {

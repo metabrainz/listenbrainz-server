@@ -1,20 +1,15 @@
+import json
 from unittest.mock import patch
 
 import flask_testing
+from datasethoster import RequestSource
 from datasethoster.main import create_app
-from listenbrainz.labs_api.labs.api.recording_search import RecordingSearchQuery
-
+from listenbrainz.labs_api.labs.api.recording_search import RecordingSearchQuery, RecordingSearchInput
 
 json_request = [
-    {
-        "query": "sun shines tv",
-    },
-    {
-        "query": "portishead strangers",
-    },
-    {
-        "query": "morcheeba good girl down",
-    }
+    RecordingSearchInput(query="sun shines tv"),
+    RecordingSearchInput(query="portishead strangers"),
+    RecordingSearchInput(query="morcheeba good girl down"),
 ]
 
 typesense_response = [
@@ -105,24 +100,24 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(q.names()[0], "recording-search")
         self.assertEqual(q.names()[1], "MusicBrainz Recording search")
         self.assertNotEqual(q.introduction(), "")
-        self.assertEqual(q.inputs(), ['query'])
-        self.assertEqual(q.outputs(), ['recording_name', 'recording_mbid',
-                                       'release_name', 'release_mbid',
-                                       'artist_credit_name', 'artist_credit_id'])
+        self.assertCountEqual(q.inputs().__fields__.keys(), ['query'])
+        self.assertCountEqual(q.outputs().__fields__.keys(),
+                         ['recording_name', 'recording_mbid', 'release_name',
+                          'release_mbid', 'artist_credit_name', 'artist_credit_id'])
 
     @patch('typesense.documents.Documents.search')
     def test_fetch(self, search):
         search.side_effect = typesense_response
 
         q = RecordingSearchQuery()
-        resp = q.fetch([json_request[0]])
+        resp = q.fetch([json_request[0]], RequestSource.json_post)
         self.assertEqual(len(resp), 1)
-        self.assertDictEqual(resp[0], json_response[0])
+        self.assertDictEqual(json.loads(resp[0].json()), json_response[0])
 
-        resp = q.fetch([json_request[1]])
+        resp = q.fetch([json_request[1]], RequestSource.json_post)
         self.assertEqual(len(resp), 1)
-        self.assertDictEqual(resp[0], json_response[1])
+        self.assertDictEqual(json.loads(resp[0].json()), json_response[1])
 
-        resp = q.fetch([json_request[2]])
+        resp = q.fetch([json_request[2]], RequestSource.json_post)
         self.assertEqual(len(resp), 1)
-        self.assertDictEqual(resp[0], json_response[2])
+        self.assertDictEqual(json.loads(resp[0].json()), json_response[2])

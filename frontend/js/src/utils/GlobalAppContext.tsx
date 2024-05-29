@@ -10,6 +10,7 @@ export type GlobalAppContextT = {
   youtubeAuth?: YoutubeUser;
   soundcloudAuth?: SoundCloudUser;
   critiquebrainzAuth?: MetaBrainzProjectUser;
+  appleAuth?: AppleMusicUser;
   musicbrainzAuth?: MetaBrainzProjectUser & {
     refreshMBToken: () => Promise<string | undefined>;
   };
@@ -19,13 +20,14 @@ export type GlobalAppContextT = {
 };
 const apiService = new APIService(`${window.location.origin}/1`);
 
-const GlobalAppContext = createContext<GlobalAppContextT>({
+export const defaultGlobalContext: GlobalAppContextT = {
   APIService: apiService,
   websocketsUrl: "",
   currentUser: {} as ListenBrainzUser,
   spotifyAuth: {},
   youtubeAuth: {},
   soundcloudAuth: {},
+  appleAuth: {},
   critiquebrainzAuth: {},
   musicbrainzAuth: {
     refreshMBToken: async () => {
@@ -35,6 +37,8 @@ const GlobalAppContext = createContext<GlobalAppContextT>({
   userPreferences: {},
   musicbrainzGenres: [],
   recordingFeedbackManager: new RecordingFeedbackManager(apiService),
-});
+};
+
+const GlobalAppContext = createContext<GlobalAppContextT>(defaultGlobalContext);
 
 export default GlobalAppContext;

@@ -5,24 +5,24 @@ import {
   faListAlt,
   faPlusCircle,
   faUsers,
+  faFileImport,
 } from "@fortawesome/free-solid-svg-icons";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
+import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import Card from "../../components/Card";
 import Pill from "../../components/Pill";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import { ToastMsg } from "../../notifications/Notifications";
-import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getPageProps } from "../../utils/utils";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
+import ImportPlaylistModal from "./components/ImportJSPFPlaylistModal";
+import ImportSpotifyPlaylistModal from "./components/ImportSpotifyPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import { getPlaylistId, PlaylistType } from "../../playlists/utils";
 
@@ -37,6 +37,8 @@ export type UserPlaylistsState = {
   playlistCount: number;
   playlistType: PlaylistType;
 };
+
+type UserPlaylistsLoaderData = UserPlaylistsProps;
 
 export default class UserPlaylists extends React.Component<
   UserPlaylistsProps,
@@ -129,24 +131,98 @@ export default class UserPlaylists extends React.Component<
   render() {
     const { user } = this.props;
     const { playlists, playlistCount, playlistType } = this.state;
+    const { currentUser } = this.context;
 
     return (
       <div role="main" id="playlists-page">
-        <div style={{ marginTop: "1em" }}>
-          <Pill
-            active={playlistType === PlaylistType.playlists}
-            type="secondary"
-            onClick={() => this.setPlaylistType(PlaylistType.playlists)}
-          >
-            <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
-          </Pill>
-          <Pill
-            active={playlistType === PlaylistType.collaborations}
-            type="secondary"
-            onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
-          >
-            <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
-          </Pill>
+        <Helmet>
+          <title>{`${
+            user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
+          } Playlists`}</title>
+        </Helmet>
+        <div className="tertiary-nav">
+          <div>
+            <Pill
+              active={playlistType === PlaylistType.playlists}
+              type="secondary"
+              onClick={() => this.setPlaylistType(PlaylistType.playlists)}
+            >
+              <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
+            </Pill>
+            <Pill
+              active={playlistType === PlaylistType.collaborations}
+              type="secondary"
+              onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
+            >
+              <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
+            </Pill>
+          </div>
+          {this.isCurrentUserPage() && (
+            <div className="dropdown">
+              <button
+                className="btn btn-info dropdown-toggle"
+                type="button"
+                id="ImportPlaylistDropdown"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+              >
+                <FontAwesomeIcon icon={faPlusCircle} title="Import from" />
+                &nbsp;Import from...&nbsp;
+                <span className="caret" />
+              </button>
+              <ul
+                className="dropdown-menu dropdown-menu-right"
+                aria-labelledby="ImportPlaylistDropdown"
+              >
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                        ImportSpotifyPlaylistModal
+                      ).then((playlist) => {
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
+                      });
+                    }}
+                    data-toggle="modal"
+                    data-target="#ImportSpotifyPlaylistModal"
+                  >
+                    <FontAwesomeIcon icon={faSpotify} />
+                    &nbsp;Spotify
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                        ImportPlaylistModal
+                      ).then((playlist) => {
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
+                      });
+                    }}
+                    data-toggle="modal"
+                    data-target="#ImportPlaylistModal"
+                  >
+                    <FontAwesomeIcon icon={faFileImport} />
+                    &nbsp;Upload JSPF file
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
         <PlaylistsList
           onPaginatePlaylists={this.updatePlaylists}
@@ -158,65 +234,33 @@ export default class UserPlaylists extends React.Component<
           onPlaylistEdited={this.onPlaylistEdited}
           onPlaylistDeleted={this.onPlaylistDeleted}
         >
-          {this.isCurrentUserPage() && (
+          {this.isCurrentUserPage() && [
             <Card
+              key="new-playlist"
               className="new-playlist"
               data-toggle="modal"
               data-target="#CreateOrEditPlaylistModal"
               onClick={() => {
-                NiceModal.show(CreateOrEditPlaylistModal)
-                  // @ts-ignore
-                  .then((playlist: JSPFPlaylist) => {
-                    this.onPlaylistCreated(playlist);
-                  });
+                NiceModal.show<JSPFPlaylist, any>(
+                  CreateOrEditPlaylistModal
+                ).then((playlist) => {
+                  this.onPlaylistCreated(playlist);
+                });
               }}
             >
               <div>
                 <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
                 <span>Create new playlist</span>
               </div>
-            </Card>
-          )}
+            </Card>,
+          ]}
         </PlaylistsList>
       </div>
     );
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { playlists, user, playlist_count: playlistCount } = reactProps;
-
-  const UserPlaylistsWithAlertNotifications = withAlertNotifications(
-    UserPlaylists
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserPlaylistsWithAlertNotifications
-            playlistCount={playlistCount}
-            playlists={playlists}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function UserPlaylistsWrapper() {
+  const data = useLoaderData() as UserPlaylistsLoaderData;
+  return <UserPlaylists {...data} />;
+}

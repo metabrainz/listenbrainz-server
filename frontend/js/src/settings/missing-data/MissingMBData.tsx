@@ -5,6 +5,7 @@ import * as React from "react";
 import { faLink, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 
 import NiceModal from "@ebay/nice-modal-react";
 
@@ -227,6 +228,9 @@ export default class MissingMBDataPage extends React.Component<
     });
     return (
       <>
+        <Helmet>
+          <title>Missing MusicBrainz Data of {currentUser?.name}</title>
+        </Helmet>
         <h2 className="page-title">
           Missing MusicBrainz Data of {currentUser?.name}
         </h2>
@@ -391,14 +395,3 @@ export function MissingMBDataPageWrapper() {
   const { currentUser: user } = React.useContext(GlobalAppContext);
   return <MissingMBDataPage missingData={data.missing_data} user={user} />;
 }
-
-export const MissingMBDataPageLoader = async () => {
-  const response = await fetch("/settings/missing-data/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-};

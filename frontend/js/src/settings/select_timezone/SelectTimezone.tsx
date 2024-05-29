@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
@@ -93,20 +94,25 @@ export default class SelectTimezone extends React.Component<
 
     return (
       <>
-        <h3>Select Timezone</h3>
+        <Helmet>
+          <title>Select your timezone</title>
+        </Helmet>
+        <h3>Select your timezone</h3>
         <p>
-          Your current timezone setting is{" "}
+          Your timezone is{" "}
           <span style={{ fontWeight: "bold" }}>{userTimezone}.</span>
-          <br />
-          By choosing your local time zone, you will have a local timestamps
-          part of your submitted listens. This also informs as when to generate
-          daily playlists and other recommendations for you.
+        </p>
+
+        <p>
+          Setting your timezone allows us to generate local timestamps and
+          better statistics for your listens. It also influences when your daily
+          playlists and recommendations are generated.
         </p>
 
         <div>
           <form onSubmit={this.submitTimezone}>
             <label>
-              Select your local timezone:
+              Select your local timezone:{" "}
               <select
                 defaultValue={userTimezone}
                 onChange={(e) => this.zoneSelection(e.target.value)}
@@ -127,7 +133,7 @@ export default class SelectTimezone extends React.Component<
             <br />
             <p>
               <button type="submit" className="btn btn-info btn-lg">
-                Save Timezone
+                Save timezone
               </button>
             </p>
           </form>
@@ -141,14 +147,3 @@ export function SelectTimezoneWrapper() {
   const data = useLoaderData() as SelectTimezoneLoaderData;
   return <SelectTimezone {...data} />;
 }
-
-export const SelectTimezoneLoader = async () => {
-  const response = await fetch("/settings/select_timezone/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-};

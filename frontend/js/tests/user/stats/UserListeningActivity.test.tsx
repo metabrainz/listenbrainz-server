@@ -2,6 +2,8 @@ import * as React from "react";
 import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 
 import { act } from "react-dom/test-utils";
+import { ResponsiveBar } from "@nivo/bar";
+import { Context as ResponsiveContext } from "react-responsive";
 import UserListeningActivity, {
   UserListeningActivityProps,
   UserListeningActivityState,
@@ -16,8 +18,6 @@ import * as userListeningActivityProcessedDataMonth from "../../__mocks__/userLi
 import * as userListeningActivityProcessedDataYear from "../../__mocks__/userListeningActivityProcessDataYear.json";
 import * as userListeningActivityProcessedDataAllTime from "../../__mocks__/userListeningActivityProcessDataAllTime.json";
 import { waitForComponentToPaint } from "../../test-utils";
-import { ResponsiveBar } from "@nivo/bar";
-import { Context as ResponsiveContext } from 'react-responsive'
 
 const userProps: UserListeningActivityProps = {
   user: {
@@ -124,13 +124,18 @@ describe.each([
 
     it("renders corectly when range is invalid", async () => {
       const wrapper = mount<UserListeningActivity>(
-          <UserListeningActivity {...props} range={"invalid_range" as UserStatsAPIRange } />
+        <UserListeningActivity
+          {...props}
+          range={"invalid_range" as UserStatsAPIRange}
+        />
       );
       await waitForComponentToPaint(wrapper);
 
       expect(wrapper.state().hasError).toBeTruthy();
       expect(wrapper.find(ResponsiveBar)).toHaveLength(0);
-      expect(wrapper.getDOMNode()).toHaveTextContent("Invalid range: invalid_range");
+      expect(wrapper.getDOMNode()).toHaveTextContent(
+        "Invalid range: invalid_range"
+      );
     });
   });
 
@@ -205,24 +210,8 @@ describe.each([
       expect(wrapper.state()).toMatchObject({
         loading: false,
         hasError: true,
-        errorMessage: "There are no statistics available for this user for this period",
+        errorMessage: "NO CONTENT",
       });
-    });
-
-    it("throws error", async () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(instance.APIService, "getUserListeningActivity");
-      const notFoundError = new APIError("NOT FOUND");
-      notFoundError.response = {
-        status: 404,
-      } as Response;
-      spy.mockImplementation(() => Promise.reject(notFoundError));
-
-      await expect(instance.getData()).rejects.toThrow("NOT FOUND");
     });
   });
 

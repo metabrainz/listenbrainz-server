@@ -1,112 +1,118 @@
 import * as React from "react";
 
-import { redirect, useLocation, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
+import NiceModal from "@ebay/nice-modal-react";
+import { isString } from "lodash";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { downloadFile } from "../export/ExportData";
+import ExportButtons from "../export/ExportButtons";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 export default function DeleteListens() {
   const { currentUser } = React.useContext(GlobalAppContext);
   const { name } = currentUser;
-  const location = useLocation();
-  const downloadListens = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    try {
-      await downloadFile("/settings/export/");
-      toast.success(
-        <ToastMsg
-          title="Success"
-          message="Your listens have been downloaded."
-        />
-      );
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={`Failed to download listens: ${error}`}
-        />
-      );
-    }
-  };
+  const navigate = useNavigate();
 
   // eslint-disable-next-line consistent-return
-  const deleteListens = async (e: React.FormEvent<HTMLFormElement>) => {
+  const deleteListens = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
     try {
-      const response = await fetch(location.pathname, {
+      const confirmMessage = (
+        <>
+          <span className="text-danger">
+            You are about to delete all of your listens.
+          </span>
+          <br />
+          <b>This action cannot be undone.</b>
+          <br />
+          Are you certain you want to proceed?
+        </>
+      );
+      await NiceModal.show(ConfirmationModal, { body: confirmMessage });
+    } catch (error) {
+      toast.info("Canceled listen deletion");
+      return undefined;
+    }
+    try {
+      const response = await fetch("/settings/delete-listens/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
       });
+      if (!response.ok) {
+        const errJson = await response.json();
+        throw isString(errJson.error)
+          ? errJson.error
+          : errJson.toString() || "Error";
+      }
 
       toast.success(
         <ToastMsg
           title="Success"
-          message="Your listens have been deleted. You will be logged out in 5 seconds."
+          message="Your listens have been enqueued for deletion. Please note your listens will still be visible for up to an hour."
         />
       );
 
-      // TODO: Should be replaced by redirect using react-router-dom
       setTimeout(() => {
-        window.location.href = `/user/${name}/`;
+        navigate(`/user/${name}/`);
       }, 3000);
     } catch (error) {
       toast.error(
         <ToastMsg
           title="Error"
-          message={`Error while deleting listens for user ${name}`}
+          message={
+            <>
+              Error while deleting listens for user {name}: {error.toString()}
+            </>
+          }
         />
       );
 
-      return redirect("/settings/");
+      return navigate("/settings/");
     }
   };
 
   return (
     <>
-      <h3 className="page-title">Delete your listens</h3>
+      <Helmet>
+        <title>Delete Listens</title>
+      </Helmet>
+      <h3 className="page-title">Delete listens: {name}</h3>
       <p>
-        Hi {name}, are you sure you want to delete listens imported into your
-        ListenBrainz account?
-      </p>
-
-      <p>Once deleted, all your listens data will be removed PERMANENTLY.</p>
-
-      <p>
-        Warning: if you are still connected to Spotify, the last 50 Spotify tracks might be auto-reimported. <Link to="/settings/music-services/details/">Disconnect</Link> before deleting. 
+        <b>
+          This will permanently delete all ListenBrainz listens for user {name}.
+        </b>
       </p>
 
       <p>
-        Note: you can export your ListenBrainz data before deleting your
-        listens.
+        If you are still connected to Spotify, the last 50 Spotify tracks may be
+        auto-reimported. You can{" "}
+        <Link to="/settings/music-services/details/">Disconnect</Link> Spotify
+        before deleting.
       </p>
 
-      <form onSubmit={downloadListens}>
-        <button
-          className="btn btn-warning btn-lg"
-          type="submit"
-          style={{ width: "250px" }}
-        >
-          Export my listens.
-        </button>
-      </form>
+      <p>
+        The listens will not be recoverable. Please consider exporting your
+        ListenBrainz data before deleting your account.
+      </p>
+
+      <ExportButtons feedback={false} />
       <br />
-      <p>Yes, I am sure I want to erase my entire listening history</p>
 
-      <form onSubmit={deleteListens}>
-        <button
-          id="btn-delete-listens"
-          className="btn btn-danger btn-lg"
-          type="submit"
-          style={{ width: "250px" }}
-        >
-          Delete my listens.
-        </button>
-      </form>
+      <button
+        id="btn-delete-listens"
+        className="btn btn-danger btn-lg"
+        type="button"
+        style={{ width: "250px" }}
+        onClick={deleteListens}
+        data-toggle="modal"
+        data-target="#ConfirmationModal"
+      >
+        Delete listens
+      </button>
     </>
   );
 }

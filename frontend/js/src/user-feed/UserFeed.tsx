@@ -1,11 +1,8 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
 import { toast } from "react-toastify";
 import {
   faBell,
-  faBullhorn,
   faCircle,
   faHeadphones,
   faHeart,
@@ -23,26 +20,25 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { get as _get, reject as _reject } from "lodash";
+import { reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
-import { Integrations } from "@sentry/tracing";
-import * as _ from "lodash";
-import NiceModal from "@ebay/nice-modal-react";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { Helmet } from "react-helmet";
 
+import { Link, useParams } from "react-router-dom";
+import {
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+  InfiniteData,
+} from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import Loader from "../components/Loader";
 import ListenCard from "../common/listens/ListenCard";
 import {
-  getPageProps,
   preciseTimestamp,
   getAdditionalContent,
   feedReviewEventToListen,
   getReviewEventContent,
-  getRecordingMBID,
-  getRecordingMSID,
   personalRecommendationEventToListen,
   getPersonalRecommendationEventContent,
 } from "../utils/utils";
@@ -72,399 +68,285 @@ export type UserFeedPageState = {
   previousEventTs?: number;
   earliestEventTs?: number;
   events: TimelineEvent[];
-  loading: boolean;
 };
 
-export default class UserFeedPage extends React.Component<
-  UserFeedPageProps,
-  UserFeedPageState
-> {
-  static contextType = GlobalAppContext;
-
-  static isEventListenable(event: TimelineEvent): boolean {
-    const { event_type } = event;
-    return (
-      event_type === EventType.RECORDING_RECOMMENDATION ||
-      event_type === EventType.RECORDING_PIN ||
-      event_type === EventType.LIKE ||
-      event_type === EventType.LISTEN ||
-      event_type === EventType.REVIEW ||
-      event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION
-    );
+function isEventListenable(event?: TimelineEvent): boolean {
+  if (!event) {
+    return false;
   }
+  const { event_type } = event;
+  return (
+    event_type === EventType.RECORDING_RECOMMENDATION ||
+    event_type === EventType.RECORDING_PIN ||
+    event_type === EventType.LIKE ||
+    event_type === EventType.LISTEN ||
+    event_type === EventType.REVIEW ||
+    event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION
+  );
+}
 
-  declare context: React.ContextType<typeof GlobalAppContext>;
-
-  static getEventTypeIcon(eventType: EventTypeT) {
-    switch (eventType) {
-      case EventType.RECORDING_RECOMMENDATION:
-        return faThumbsUp;
-      case EventType.LISTEN:
-        return faHeadphones;
-      case EventType.LIKE:
-        return faHeart;
-      case EventType.FOLLOW:
-        return faUserPlus;
-      case EventType.STOP_FOLLOW:
-        return faUserSlash;
-      case EventType.BLOCK_FOLLOW:
-        return faUserSecret;
-      case EventType.NOTIFICATION:
-        return faBell;
-      case EventType.RECORDING_PIN:
-        return faThumbtack;
-      case EventType.REVIEW:
-        return faComments;
-      case EventType.PERSONAL_RECORDING_RECOMMENDATION:
-        return faPaperPlane;
-      default:
-        return faQuestion;
-    }
+function getEventTypeIcon(eventType: EventTypeT) {
+  switch (eventType) {
+    case EventType.RECORDING_RECOMMENDATION:
+      return faThumbsUp;
+    case EventType.LISTEN:
+      return faHeadphones;
+    case EventType.LIKE:
+      return faHeart;
+    case EventType.FOLLOW:
+      return faUserPlus;
+    case EventType.STOP_FOLLOW:
+      return faUserSlash;
+    case EventType.BLOCK_FOLLOW:
+      return faUserSecret;
+    case EventType.NOTIFICATION:
+      return faBell;
+    case EventType.RECORDING_PIN:
+      return faThumbtack;
+    case EventType.REVIEW:
+      return faComments;
+    case EventType.PERSONAL_RECORDING_RECOMMENDATION:
+      return faPaperPlane;
+    default:
+      return faQuestion;
   }
+}
 
-  static getReviewEntityName(entity_type: ReviewableEntityType): string {
-    switch (entity_type) {
-      case "artist":
-        return "an artist";
-      case "recording":
-        return "a track";
-      case "release_group":
-        return "an album";
-      default:
-        return entity_type;
-    }
+function getReviewEntityName(entity_type: ReviewableEntityType): string {
+  switch (entity_type) {
+    case "artist":
+      return "an artist";
+    case "recording":
+      return "a track";
+    case "release_group":
+      return "an album";
+    default:
+      return entity_type;
   }
+}
 
-  static getEventTypePhrase(event: TimelineEvent): string {
-    const { event_type } = event;
-    let review: CritiqueBrainzReview;
-    switch (event_type) {
-      case EventType.RECORDING_RECOMMENDATION:
-        return "recommended a track";
-      case EventType.LISTEN:
-        return "listened to a track";
-      case EventType.LIKE:
-        return "added a track to their favorites";
-      case EventType.RECORDING_PIN:
-        return "pinned a track";
-      case EventType.REVIEW: {
-        review = event.metadata as CritiqueBrainzReview;
-        return `reviewed ${UserFeedPage.getReviewEntityName(
-          review.entity_type
-        )}`;
-      }
-      case EventType.PERSONAL_RECORDING_RECOMMENDATION:
-        return "personally recommended a track";
-      default:
-        return "";
+function getEventTypePhrase(event: TimelineEvent): string {
+  const { event_type } = event;
+  let review: CritiqueBrainzReview;
+  switch (event_type) {
+    case EventType.RECORDING_RECOMMENDATION:
+      return "recommended a track";
+    case EventType.LISTEN:
+      return "listened to a track";
+    case EventType.LIKE:
+      return "added a track to their favorites";
+    case EventType.RECORDING_PIN:
+      return "pinned a track";
+    case EventType.REVIEW: {
+      review = event.metadata as CritiqueBrainzReview;
+      return `reviewed ${getReviewEntityName(review.entity_type)}`;
     }
+    case EventType.PERSONAL_RECORDING_RECOMMENDATION:
+      return "personally recommended a track";
+    default:
+      return "";
   }
+}
+type UserFeedLoaderData = UserFeedPageProps;
+export default function UserFeedPage() {
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
-  constructor(props: UserFeedPageProps) {
-    super(props);
-    this.state = {
-      nextEventTs: props.events?.[props.events.length - 1]?.created,
-      previousEventTs: props.events?.[0]?.created,
-      events: props.events || [],
-      loading: false,
-    };
-  }
+  const params = useParams();
+  const queryClient = useQueryClient();
 
-  async componentDidMount(): Promise<void> {
-    const { currentUser } = this.context;
-    // Listen to browser previous/next events and load page accordingly
-    window.addEventListener("popstate", this.handleURLChange);
-    // Fetch initial events from API
-    // TODO: Pass the required data in the props and remove this initial API call
-    await this.getFeedFromAPI();
-  }
+  const queryKey = ["feed", params];
 
-  componentWillUnmount() {
-    window.removeEventListener("popstate", this.handleURLChange);
-  }
-
-  handleURLChange = async (): Promise<void> => {
-    const url = new URL(window.location.href);
-    let maxTs;
-    let minTs;
-    if (url.searchParams.get("max_ts")) {
-      maxTs = Number(url.searchParams.get("max_ts"));
-    }
-    if (url.searchParams.get("min_ts")) {
-      minTs = Number(url.searchParams.get("min_ts"));
-    }
-    await this.getFeedFromAPI(minTs, maxTs);
-  };
-
-  handleClickOlder = async (event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
-    const { nextEventTs } = this.state;
-    // No more events to fetch
-    if (!nextEventTs) {
-      return;
-    }
-    await this.getFeedFromAPI(undefined, nextEventTs, () => {
-      window.history.pushState(null, "", `?max_ts=${nextEventTs}`);
-    });
-  };
-
-  handleClickNewer = async (event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
-    const { previousEventTs, earliestEventTs } = this.state;
-    // No more events to fetch
-    if (
-      !previousEventTs ||
-      (earliestEventTs && previousEventTs >= earliestEventTs)
-    ) {
-      return;
-    }
-    await this.getFeedFromAPI(previousEventTs, undefined, () => {
-      window.history.pushState(null, "", `?min_ts=${previousEventTs}`);
-    });
-  };
-
-  getFeedFromAPI = async (
-    minTs?: number,
-    maxTs?: number,
-    successCallback?: () => void
-  ) => {
-    const { earliestEventTs } = this.state;
-    const { APIService, currentUser } = this.context;
-    this.setState({ loading: true });
-    let newEvents: TimelineEvent[] = [];
-    try {
-      newEvents = await APIService.getFeedForUser(
+  const fetchEvents = React.useCallback(
+    async ({ pageParam }: any) => {
+      const newEvents = await APIService.getFeedForUser(
         currentUser.name,
-        currentUser.auth_token as string,
-        minTs,
-        maxTs
+        currentUser.auth_token!,
+        undefined,
+        pageParam
       );
-    } catch (error) {
-      toast.warn(
-        <ToastMsg
-          title="Could not load timeline events"
-          message={
-            <div>
-              Something went wrong when we tried to load your events, please try
-              again or contact us if the problem persists.
-              <br />
-              <strong>
-                {error.name}: {error.message}
-              </strong>
-            </div>
-          }
-        />,
-        { toastId: "timeline-load-error" }
-      );
-      this.setState({ loading: false });
-      return;
-    }
-    if (!newEvents.length) {
-      // No more listens to fetch
-      if (minTs !== undefined) {
-        this.setState({
-          loading: false,
-          previousEventTs: undefined,
-        });
-      } else {
-        this.setState({
-          loading: false,
-          nextEventTs: undefined,
-        });
-      }
-      return;
-    }
-    const optionalProps: { earliestEventTs?: number } = {};
-    if (!earliestEventTs || newEvents[0].created > earliestEventTs) {
-      // We can use the newest event's timestamp to determine if the previous button should be disabled.
-      // Also refresh the earlierst event timestamp if we have received events newer than at first page load.
-      optionalProps.earliestEventTs = newEvents[0].created;
-    }
-    this.setState(
-      {
-        loading: false,
-        events: newEvents,
-        nextEventTs: newEvents[newEvents.length - 1].created,
-        previousEventTs: newEvents[0].created,
-        ...optionalProps,
-      },
-      () => {
-        if (successCallback) {
-          successCallback();
-        }
-      }
-    );
+      return { events: newEvents };
+    },
+    [APIService, currentUser]
+  );
 
-    // Scroll window back to the top of the events container element
-    const eventContainerElement = document.querySelector("#timeline");
-    if (eventContainerElement) {
-      eventContainerElement.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const {
+    refetch,
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery<UserFeedLoaderData>({
+    queryKey,
+    initialPageParam: Math.ceil(Date.now() / 1000),
+    queryFn: fetchEvents,
+    getNextPageParam: (lastPage, pages) =>
+      lastPage?.events?.length
+        ? lastPage.events[lastPage.events.length - 1].created
+        : undefined,
+  });
 
-  deleteFeedEvent = async (event: TimelineEvent) => {
-    const { currentUser, APIService } = this.context;
+  const { pages } = data || {}; // safe destructuring of possibly undefined data object
+  // Flatten the pages of events from the infite query
+  const events = pages?.map((page) => page.events).flat();
 
-    const { events } = this.state;
-    if (
-      event.event_type === EventType.RECORDING_RECOMMENDATION ||
-      event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-      event.event_type === EventType.NOTIFICATION
-    ) {
+  const changeEventVisibility = React.useCallback(
+    async (event: TimelineEvent) => {
+      const { hideFeedEvent, unhideFeedEvent } = APIService;
+      // if the event was previously hidden, unhide it. Otherwise, hide the event
+      const action = event.hidden ? unhideFeedEvent : hideFeedEvent;
       try {
-        const status = await APIService.deleteFeedEvent(
+        const status = await action(
           event.event_type,
           currentUser.name,
           currentUser.auth_token as string,
           event.id!
         );
+
         if (status === 200) {
-          toast.success(<ToastMsg title="Successfully deleted!" message="" />, {
-            toastId: "deleted",
-          });
-          const new_events = _reject(events, (element) => {
-            // Making sure the event that is getting deleted is either a recommendation or notification
-            // Since, recommendation and notification are in same db, and might have same id as a pin
-            // Similarly we later on filter by id and event_type for pin deletion
-            return (
-              element?.id === event.id &&
-              (element.event_type === EventType.RECORDING_RECOMMENDATION ||
-                element.event_type === EventType.NOTIFICATION)
-            );
-          });
-          this.setState({ events: new_events });
+          return event;
         }
       } catch (error) {
         toast.error(
           <ToastMsg
-            title="Could not delete event"
-            message={
-              <>
-                Something went wrong when we tried to delete your event, please
-                try again or contact us if the problem persists.
-                <br />
-                <strong>
-                  {error.name}: {error.message}
-                </strong>
-              </>
-            }
+            title="Could not hide or unhide event"
+            message={error.toString()}
           />,
-          { toastId: "delete-error" }
+          { toastId: "hide-error" }
         );
       }
-    } else if (event.event_type === EventType.RECORDING_PIN) {
-      try {
-        const status = await APIService.deletePin(
-          currentUser.auth_token as string,
-          event.id as number
-        );
-        if (status === 200) {
-          toast.success(<ToastMsg title="Successfully deleted!" message="" />, {
-            toastId: "deleted",
-          });
-          const new_events = _reject(events, (element) => {
-            return (
-              element?.id === event.id &&
-              element.event_type === EventType.RECORDING_PIN
-            );
-          });
-          this.setState({ events: new_events });
+      return undefined;
+    },
+    [APIService, currentUser]
+  );
+  // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
+  const { mutate: hideEventMutation } = useMutation({
+    mutationFn: changeEventVisibility,
+    onSuccess: (modifiedEvent, variables, context) => {
+      queryClient.setQueryData<InfiniteData<UserFeedLoaderData, unknown>>(
+        queryKey,
+        (oldData) => {
+          const newPages = oldData?.pages.map((page) => ({
+            events: page.events.map((traversedEvent) => {
+              if (
+                traversedEvent.event_type === modifiedEvent?.event_type &&
+                traversedEvent.id === modifiedEvent?.id
+              ) {
+                return { ...traversedEvent, hidden: !modifiedEvent.hidden };
+              }
+              return traversedEvent;
+            }),
+          }));
+          return { pages: newPages ?? [], pageParams: queryKey };
         }
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="Could not delete event"
-            message={
-              <>
-                Something went wrong when we tried to delete your event, please
-                try again or contact us if the problem persists.
-                <br />
-                <strong>
-                  {error.name}: {error.message}
-                </strong>
-              </>
-            }
-          />,
-          { toastId: "delete-error" }
-        );
-      }
-    }
-  };
-
-  hideFeedEvent = async (event: TimelineEvent) => {
-    const { currentUser, APIService } = this.context;
-
-    const { events } = this.state;
-
-    try {
-      const status = await APIService.hideFeedEvent(
-        event.event_type,
-        currentUser.name,
-        currentUser.auth_token as string,
-        event.id!
       );
+    },
+  });
 
-      if (status === 200) {
-        const new_events = events.map((traversedEvent) => {
-          if (
-            traversedEvent.event_type === event.event_type &&
-            traversedEvent.id === event.id
-          ) {
-            // eslint-disable-next-line no-param-reassign
-            traversedEvent.hidden = true;
+  const deleteFeedEvent = React.useCallback(
+    async (event: TimelineEvent) => {
+      if (
+        event.event_type === EventType.RECORDING_RECOMMENDATION ||
+        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
+        event.event_type === EventType.NOTIFICATION
+      ) {
+        try {
+          const status = await APIService.deleteFeedEvent(
+            event.event_type,
+            currentUser.name,
+            currentUser.auth_token as string,
+            event.id!
+          );
+          if (status === 200) {
+            toast.success(
+              <ToastMsg title="Successfully deleted!" message="" />,
+              {
+                toastId: "deleted",
+              }
+            );
+            return event;
           }
-          return traversedEvent;
-        });
-        this.setState({ events: new_events });
-      }
-    } catch (error) {
-      toast.error(
-        <ToastMsg title="Could not hide event" message={error.toString()} />,
-        { toastId: "hide-error" }
-      );
-    }
-  };
-
-  unhideFeedEvent = async (event: TimelineEvent) => {
-    const { currentUser, APIService } = this.context;
-
-    const { events } = this.state;
-
-    try {
-      const status = await APIService.unhideFeedEvent(
-        event.event_type,
-        currentUser.name,
-        currentUser.auth_token as string,
-        event.id!
-      );
-
-      if (status === 200) {
-        const new_events = events.map((traversedEvent) => {
-          if (
-            traversedEvent.event_type === event.event_type &&
-            traversedEvent.id === event.id
-          ) {
-            // eslint-disable-next-line no-param-reassign
-            traversedEvent.hidden = false;
+        } catch (error) {
+          toast.error(
+            <ToastMsg
+              title="Could not delete event"
+              message={
+                <>
+                  Something went wrong when we tried to delete your event,
+                  please try again or contact us if the problem persists.
+                  <br />
+                  <strong>
+                    {error.name}: {error.message}
+                  </strong>
+                </>
+              }
+            />,
+            { toastId: "delete-error" }
+          );
+        }
+      } else if (event.event_type === EventType.RECORDING_PIN) {
+        try {
+          const status = await APIService.deletePin(
+            currentUser.auth_token as string,
+            event.id as number
+          );
+          if (status === 200) {
+            toast.success(
+              <ToastMsg title="Successfully deleted!" message="" />,
+              {
+                toastId: "deleted",
+              }
+            );
+            return event;
           }
-          return traversedEvent;
-        });
-        this.setState({ events: new_events });
+        } catch (error) {
+          toast.error(
+            <ToastMsg
+              title="Could not delete event"
+              message={
+                <>
+                  Something went wrong when we tried to delete your event,
+                  please try again or contact us if the problem persists.
+                  <br />
+                  <strong>
+                    {error.name}: {error.message}
+                  </strong>
+                </>
+              }
+            />,
+            { toastId: "delete-error" }
+          );
+        }
       }
-    } catch (error) {
-      toast.error(
-        <ToastMsg title="Could not unhide event" message={error.toString()} />,
-        { toastId: "unhide-error" }
+      return undefined;
+    },
+    [APIService, currentUser]
+  );
+  // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
+  const { mutate: deleteEventMutation } = useMutation({
+    mutationFn: deleteFeedEvent,
+    onSuccess: (deletedEvent) => {
+      queryClient.setQueryData(
+        queryKey,
+        (oldData: { pages: UserFeedPageProps[] }) => {
+          const newPagesArray =
+            oldData?.pages?.map((page) =>
+              _reject(page.events, (traversedEvent) => {
+                return (
+                  traversedEvent.event_type === deletedEvent?.event_type &&
+                  traversedEvent.id === deletedEvent?.id
+                );
+              })
+            ) ?? [];
+          return { pages: newPagesArray };
+        }
       );
-    }
-  };
+    },
+  });
 
-  renderEventActionButton(event: TimelineEvent) {
-    const { currentUser } = this.context;
+  const renderEventActionButton = (event: TimelineEvent) => {
     if (
       ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
@@ -479,7 +361,9 @@ export default class UserFeedPage extends React.Component<
           icon={faTrash}
           buttonClassName="btn btn-link btn-xs"
           // eslint-disable-next-line react/jsx-no-bind
-          action={this.deleteFeedEvent.bind(this, event)}
+          action={() => {
+            deleteEventMutation(event);
+          }}
         />
       );
     }
@@ -496,7 +380,9 @@ export default class UserFeedPage extends React.Component<
             icon={faEye}
             buttonClassName="btn btn-link btn-xs"
             // eslint-disable-next-line react/jsx-no-bind
-            action={this.unhideFeedEvent.bind(this, event)}
+            action={() => {
+              hideEventMutation(event);
+            }}
           />
         );
       }
@@ -507,18 +393,18 @@ export default class UserFeedPage extends React.Component<
           icon={faEyeSlash}
           buttonClassName="btn btn-link btn-xs"
           // eslint-disable-next-line react/jsx-no-bind
-          action={this.hideFeedEvent.bind(this, event)}
+          action={() => {
+            hideEventMutation(event);
+          }}
         />
       );
     }
     return null;
-  }
+  };
 
-  renderEventContent(event: TimelineEvent) {
-    if (UserFeedPage.isEventListenable(event) && !event.hidden) {
+  const renderEventContent = (event: TimelineEvent) => {
+    if (isEventListenable(event) && !event.hidden) {
       const { metadata, event_type } = event;
-      const { currentUser } = this.context;
-
       let listen: Listen;
       let additionalContent: string | JSX.Element;
       if (event_type === EventType.REVIEW) {
@@ -550,7 +436,9 @@ export default class UserFeedPage extends React.Component<
             title="Delete Event"
             text="Delete Event"
             // eslint-disable-next-line react/jsx-no-bind
-            action={this.deleteFeedEvent.bind(this, event)}
+            action={() => {
+              deleteEventMutation(event);
+            }}
           />,
         ];
       }
@@ -567,10 +455,9 @@ export default class UserFeedPage extends React.Component<
       );
     }
     return null;
-  }
+  };
 
-  renderEventText(event: TimelineEvent) {
-    const { currentUser } = this.context;
+  const renderEventText = (event: TimelineEvent) => {
     const { event_type, user_name, metadata } = event;
     if (event.hidden) {
       return (
@@ -590,22 +477,22 @@ export default class UserFeedPage extends React.Component<
         return (
           <span className="event-description-text">
             You are now following{" "}
-            <a href={`/user/${user_name_1}`}>{user_name_1}</a>
+            <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
           </span>
         );
       }
       if (currentUserFollowed) {
         return (
           <span className="event-description-text">
-            <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following
-            you
+            <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
+            following you
           </span>
         );
       }
       return (
         <span className="event-description-text">
-          <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following{" "}
-          <a href={`/user/${user_name_1}`}>{user_name_1}</a>
+          <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
+          following <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
         </span>
       );
     }
@@ -627,84 +514,56 @@ export default class UserFeedPage extends React.Component<
       user_name === currentUser.name ? (
         "You"
       ) : (
-        <a
-          href={`/user/${user_name}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {user_name}
-        </a>
+        <Link to={`/user/${user_name}/`}>{user_name}</Link>
       );
     return (
       <span className="event-description-text">
-        {userLinkOrYou} {UserFeedPage.getEventTypePhrase(event)}
+        {userLinkOrYou} {getEventTypePhrase(event)}
       </span>
     );
-  }
+  };
 
-  render() {
-    const { currentUser, APIService } = this.context;
+  const listens = events
+    ?.filter(isEventListenable)
+    .map((event) => event?.metadata) as Listen[];
 
-    const {
-      events,
-      previousEventTs,
-      nextEventTs,
-      earliestEventTs,
-      loading,
-    } = this.state;
-
-    const listens = events
-      .filter(UserFeedPage.isEventListenable)
-      .map((event) => event.metadata) as Listen[];
-
-    const isNewerButtonDisabled =
-      !previousEventTs ||
-      (earliestEventTs && events?.[0]?.created >= earliestEventTs);
-    return (
-      <>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-          }}
-        >
-          <h2>Latest activity</h2>
-          <a
-            id="feedback-button"
-            href="mailto:support@listenbrainz.org?subject=Feed%20page%20feedback"
-            type="button"
-            className="btn btn-primary"
-          >
-            <span className="fa-layers icon">
-              <FontAwesomeIcon
-                icon={faCircle as IconProp}
-                transform="grow-10"
-              />
-              <FontAwesomeIcon
-                icon={faBullhorn as IconProp}
-                transform="rotate--20"
-              />
-            </span>{" "}
-            Feedback
-          </a>
-        </div>
-        <div role="main">
-          <div className="row">
-            <div className="col-md-7 col-xs-12">
-              <div
-                style={{
-                  height: 0,
-                  position: "sticky",
-                  top: "50%",
-                  zIndex: 1,
-                }}
-              >
-                <Loader isLoading={loading} />
+  return (
+    <>
+      <Helmet>
+        <title>Feed</title>
+      </Helmet>
+      <div className="listen-header">
+        <h3 className="header-with-line">Latest activity</h3>
+      </div>
+      <div className="row">
+        <div className="col-md-7 col-xs-12">
+          {isError ? (
+            <>
+              <div className="alert alert-warning text-center">
+                There was an error while trying to load your feed. Please try
+                again
               </div>
-              <div id="timeline" style={{ opacity: loading ? "0.4" : "1" }}>
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="btn btn-warning"
+                  onClick={() => {
+                    refetch();
+                  }}
+                >
+                  Reload feed
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div
+                id="timeline"
+                data-testid="timeline"
+                style={{ opacity: isLoading ? "0.4" : "1" }}
+              >
                 <ul>
-                  {events.map((event) => {
+                  {events?.map((event) => {
                     const { created, event_type, user_name } = event;
                     return (
                       <li
@@ -719,119 +578,59 @@ export default class UserFeedPage extends React.Component<
                                 transform="grow-8"
                               />
                               <FontAwesomeIcon
-                                icon={
-                                  UserFeedPage.getEventTypeIcon(
-                                    event_type
-                                  ) as IconProp
-                                }
+                                icon={getEventTypeIcon(event_type) as IconProp}
                                 inverse
                                 transform="shrink-4"
                               />
                             </span>
                           </span>
-                          {this.renderEventText(event)}
+                          {renderEventText(event)}
 
                           <span className="event-time">
                             {preciseTimestamp(created * 1000)}
-                            {this.renderEventActionButton(event)}
+                            {renderEventActionButton(event)}
                           </span>
                         </div>
 
-                        {this.renderEventContent(event)}
+                        {renderEventContent(event)}
                       </li>
                     );
                   })}
                 </ul>
               </div>
-              <ul
-                className="pager"
-                style={{ marginRight: "-1em", marginLeft: "1.5em" }}
+              <div
+                className="text-center"
+                style={{
+                  width: "50%",
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                }}
               >
-                <li
-                  className={`previous ${
-                    isNewerButtonDisabled ? "disabled" : ""
-                  }`}
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block"
+                  onClick={() => fetchNextPage()}
+                  disabled={!hasNextPage || isFetchingNextPage}
                 >
-                  <a
-                    role="button"
-                    onClick={this.handleClickNewer}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickNewer();
-                    }}
-                    tabIndex={0}
-                    href={
-                      isNewerButtonDisabled
-                        ? undefined
-                        : `?min_ts=${previousEventTs}`
-                    }
-                  >
-                    &larr; Newer
-                  </a>
-                </li>
-                <li
-                  className={`next ${!nextEventTs ? "disabled" : ""}`}
-                  style={{ marginLeft: "auto" }}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickOlder}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickOlder();
-                    }}
-                    tabIndex={0}
-                    href={!nextEventTs ? undefined : `?max_ts=${nextEventTs}`}
-                  >
-                    Older &rarr;
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div className="col-md-offset-1 col-md-4">
-              <UserSocialNetwork user={currentUser} />
-            </div>
-          </div>
-          <BrainzPlayer
-            listens={listens}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-          />
+                  {(isLoading || isFetchingNextPage) && "Loading more..."}
+                  {!(isLoading || isFetchingNextPage) &&
+                    (hasNextPage ? "Load More" : "Nothing more to load")}
+                </button>
+              </div>
+            </>
+          )}
         </div>
-      </>
-    );
-  }
+        <div className="col-md-offset-1 col-md-4">
+          <UserSocialNetwork user={currentUser} />
+        </div>
+      </div>
+      <BrainzPlayer
+        listens={listens}
+        listenBrainzAPIBaseURI={APIService.APIBaseURI}
+        refreshSpotifyToken={APIService.refreshSpotifyToken}
+        refreshYoutubeToken={APIService.refreshYoutubeToken}
+        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
+      />
+    </>
+  );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { events } = reactProps;
-
-  const UserFeedPageWithAlertNotifications = withAlertNotifications(
-    UserFeedPage
-  );
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserFeedPageWithAlertNotifications events={events} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

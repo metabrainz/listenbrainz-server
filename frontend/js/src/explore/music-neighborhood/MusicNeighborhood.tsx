@@ -1,26 +1,23 @@
 import * as React from "react";
-import NiceModal from "@ebay/nice-modal-react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import { ErrorBoundary } from "@sentry/react";
 import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { isEmpty, isEqual, kebabCase } from "lodash";
+import { useLoaderData, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import { ToastMsg } from "../../notifications/Notifications";
-import { getPageProps } from "../../utils/utils";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import SearchBox from "./artist-search/SearchBox";
-import SimilarArtistsGraph from "./SimilarArtistsGraph";
-import Panel from "./artist-panel/Panel";
+import SearchBox from "./components/SearchBox";
+import SimilarArtistsGraph from "./components/SimilarArtistsGraph";
+import Panel from "./components/Panel";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import generateTransformedArtists from "./generateTransformedArtists";
-import { downloadComponentAsImage, copyImageToClipboard } from "./utils";
+import generateTransformedArtists from "./utils/generateTransformedArtists";
+import { downloadComponentAsImage, copyImageToClipboard } from "./utils/utils";
+import { RouteQuery } from "../../utils/Loader";
 
-type MusicNeighborhoodProps = {
+type MusicNeighborhoodLoaderData = {
   algorithm: string;
   artist_mbid: string;
 };
@@ -41,12 +38,13 @@ const isColorTooDark = (color: tinycolor.Instance): boolean => {
   return color.getLuminance() < MINIMUM_LUMINANCE;
 };
 
-function MusicNeighborhood(props: MusicNeighborhoodProps) {
-  const {
-    algorithm: DEFAULT_ALGORITHM,
-    artist_mbid: DEFAULT_ARTIST_MBID,
-  } = props;
-
+export default function MusicNeighborhood() {
+  const location = useLocation();
+  const { data } = useQuery<MusicNeighborhoodLoaderData>(
+    RouteQuery(["music-neighborhood"], location.pathname)
+  );
+  const { algorithm: DEFAULT_ALGORITHM, artist_mbid: DEFAULT_ARTIST_MBID } =
+    data || {};
   const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbid=`;
   const DEFAULT_COLORS = colorGenerator();
 
@@ -111,14 +109,18 @@ function MusicNeighborhood(props: MusicNeighborhoodProps) {
     async (artistMBID: string) => {
       try {
         const response = await fetch(BASE_URL + artistMBID);
-        const data = await response.json();
+        const artistSimilarityData = await response.json();
 
-        if (!data || !data.length || data.length === 3) {
+        if (
+          !artistSimilarityData ||
+          !artistSimilarityData.length ||
+          artistSimilarityData.length === 3
+        ) {
           throw new Error("No Similar Artists Found");
         }
 
-        setArtistGraphNodeInfo(data[1]?.data[0] ?? null);
-        const similarArtists = data[3]?.data ?? [];
+        setArtistGraphNodeInfo(artistSimilarityData[1]?.data[0] ?? null);
+        const similarArtists = artistSimilarityData[3]?.data ?? [];
 
         setCompleteSimilarArtistsList(similarArtists);
         setSimilarArtistsList(similarArtists?.slice(0, similarArtistsLimit));
@@ -294,93 +296,60 @@ function MusicNeighborhood(props: MusicNeighborhoodProps) {
   );
 
   React.useEffect(() => {
-    onArtistChange(DEFAULT_ARTIST_MBID);
+    if (DEFAULT_ARTIST_MBID) onArtistChange(DEFAULT_ARTIST_MBID);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const browserHasClipboardAPI = "clipboard" in navigator;
 
   return (
-    <div className="artist-similarity-main-container">
-      <div className="artist-similarity-header">
-        <SearchBox
-          onArtistChange={onArtistChange}
-          onSimilarArtistsLimitChange={updateSimilarArtistsLimit}
-          currentSimilarArtistsLimit={similarArtistsLimit}
-        />
-        <div className="share-buttons">
-          <button
-            type="button"
-            className="btn btn-icon btn-info"
-            onClick={onClickDownload}
-          >
-            <FontAwesomeIcon icon={faDownload} color="white" />
-          </button>
-          {browserHasClipboardAPI && (
+    <>
+      <Helmet>
+        <title>Music Neighborhood</title>
+      </Helmet>
+      <div className="artist-similarity-main-container" role="main">
+        <div className="artist-similarity-header">
+          <SearchBox
+            onArtistChange={onArtistChange}
+            onSimilarArtistsLimitChange={updateSimilarArtistsLimit}
+            currentSimilarArtistsLimit={similarArtistsLimit}
+          />
+          <div className="share-buttons">
             <button
               type="button"
               className="btn btn-icon btn-info"
-              onClick={copyImage}
+              onClick={onClickDownload}
             >
-              <FontAwesomeIcon icon={faCopy} color="white" />
+              <FontAwesomeIcon icon={faDownload} color="white" />
             </button>
-          )}
+            {browserHasClipboardAPI && (
+              <button
+                type="button"
+                className="btn btn-icon btn-info"
+                onClick={copyImage}
+              >
+                <FontAwesomeIcon icon={faCopy} color="white" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-      <div className="artist-similarity-graph-panel-container">
-        <SimilarArtistsGraph
-          onArtistChange={onArtistChange}
-          data={transformedArtists}
-          background={backgroundGradient}
-          graphParentElementRef={graphParentElementRef}
+        <div className="artist-similarity-graph-panel-container">
+          <SimilarArtistsGraph
+            onArtistChange={onArtistChange}
+            data={transformedArtists}
+            background={backgroundGradient}
+            graphParentElementRef={graphParentElementRef}
+          />
+          {artistInfo && <Panel artistInfo={artistInfo} loading={loading} />}
+        </div>
+        <BrainzPlayer
+          listens={currentTracks ?? []}
+          listenBrainzAPIBaseURI={APIService.APIBaseURI}
+          refreshSpotifyToken={APIService.refreshSpotifyToken}
+          refreshYoutubeToken={APIService.refreshYoutubeToken}
+          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
         />
-        {artistInfo && <Panel artistInfo={artistInfo} loading={loading} />}
       </div>
-      <BrainzPlayer
-        listens={currentTracks ?? []}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
-    </div>
+    </>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const { algorithm, artist_mbid } = reactProps;
-
-  const MusicNeighborhoodPageWithAlertNotifications = withAlertNotifications(
-    MusicNeighborhood
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <MusicNeighborhoodPageWithAlertNotifications
-            algorithm={algorithm}
-            artist_mbid={artist_mbid}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

@@ -63,7 +63,7 @@ def login_forbidden(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not current_user.is_anonymous:
-            return redirect(url_for('index.index'))
+            return redirect(url_for('index.index_pages', path=''))
         return f(*args, **kwargs)
 
     return decorated
