@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { faMagnifyingGlass, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Helmet } from "react-helmet";
+import _ from "lodash";
 import Pill from "../components/Pill";
 import ArtistSearch from "./ArtistSearch";
 import TrackSearch from "./TrackSearch";
@@ -49,6 +50,8 @@ export default function Search() {
     setSearchTermInput(searchTerm);
   }, [searchTerm]);
 
+  const activeLabel = _.capitalize(searchType);
+
   return (
     <>
       <Helmet>
@@ -57,8 +60,9 @@ export default function Search() {
       <div className="secondary-nav">
         <ol className="breadcrumb">
           <li>
-            <Link to="/search/">Search Results</Link>
+            <Link to="/search/">Search</Link>
           </li>
+          {activeLabel && <li className="active">{activeLabel}</li>}
         </ol>
       </div>
       <div role="main">

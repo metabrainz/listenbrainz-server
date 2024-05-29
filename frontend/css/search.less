@@ -1,7 +1,14 @@
 .search-bar {
   position: relative;
   margin-top: 1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: initial;
+  max-width: 400px;
+  width: 45%;
   input {
+    padding-right: calc(45px + 10px + 0.5em);
     background-color: @nav-tabs-border-color;
     color: @nav-link-color;
     border-radius: 33px;
