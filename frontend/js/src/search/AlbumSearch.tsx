@@ -14,29 +14,6 @@ type AlbumSearchProps = {
   searchQuery: string;
 };
 
-type AlbumTypeSearchResult = {
-  count: number;
-  offset: number;
-  "release-groups": {
-    id: string;
-    title: string;
-    "primary-type"?: string;
-    "first-release-date"?: string;
-    "artist-credit": {
-      name: string;
-      joinphrase?: string;
-      artist: {
-        id: string;
-        name: string;
-      };
-    }[];
-    releases: {
-      id: string;
-      title: string;
-    }[];
-  }[];
-};
-
 export default function AlbumSearch(props: AlbumSearchProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const [searchParams, setSearchParams] = useSearchParams();

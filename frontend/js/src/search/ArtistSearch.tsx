@@ -13,21 +13,6 @@ type ArtistSearchProps = {
   searchQuery: string;
 };
 
-type ArtistTypeSearchResult = {
-  count: number;
-  offset: number;
-  artists: {
-    name: string;
-    id: string;
-    type?: string;
-    country?: string;
-    gender?: string;
-    area?: {
-      name: string;
-    };
-  }[];
-};
-
 export default function ArtistSearch(props: ArtistSearchProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const [searchParams, setSearchParams] = useSearchParams();

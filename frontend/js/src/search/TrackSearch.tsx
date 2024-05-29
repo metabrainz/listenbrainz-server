@@ -14,35 +14,6 @@ type TrackSearchProps = {
   searchQuery: string;
 };
 
-type TrackTypeSearchResult = {
-  count: number;
-  offset: number;
-  recordings: {
-    id: string;
-    title: string;
-    "artist-credit": {
-      name: string;
-      joinphrase?: string;
-      artist: {
-        id: string;
-        name: string;
-      };
-    }[];
-    releases: {
-      id: string;
-      title: string;
-      "artist-credit": {
-        name: string;
-        joinphrase?: string;
-      }[];
-      "release-groups": {
-        id: string;
-        title: string;
-      }[];
-    }[];
-  }[];
-};
-
 export default function TrackSearch(props: TrackSearchProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const [searchParams, setSearchParams] = useSearchParams();

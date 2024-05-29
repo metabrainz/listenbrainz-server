@@ -1596,7 +1596,7 @@ export default class APIService {
     searchQuery: string,
     offset: number = 0,
     count: number = 25
-  ): Promise<any> => {
+  ): Promise<ArtistTypeSearchResult> => {
     const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
@@ -1607,7 +1607,7 @@ export default class APIService {
     searchQuery: string,
     offset: number = 0,
     count: number = 25
-  ): Promise<any> => {
+  ): Promise<AlbumTypeSearchResult> => {
     const url = `${this.MBBaseURI}/release-group?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
@@ -1618,7 +1618,7 @@ export default class APIService {
     searchQuery: string,
     offset: number = 0,
     count: number = 25
-  ): Promise<any> => {
+  ): Promise<TrackTypeSearchResult> => {
     const url = `${this.MBBaseURI}/recording?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
@@ -1667,7 +1667,7 @@ export default class APIService {
     musicbrainzID: string,
     count: number = 25,
     offset: number = 0
-  ): Promise<any> => {
+  ): Promise<PlaylistTypeSearchResult> => {
     const url = `${this.APIBaseURI}/user/${musicbrainzID}/playlists/search?query=${searchQuery}&count=${count}&offset=${offset}`;
     const response = await fetch(url);
     await this.checkStatus(response);
@@ -1678,7 +1678,7 @@ export default class APIService {
     searchQuery: string,
     count: number = 25,
     offset: number = 0
-  ): Promise<any> => {
+  ): Promise<PlaylistTypeSearchResult> => {
     const url = `${this.APIBaseURI}/playlist/search?query=${searchQuery}&count=${count}&offset=${offset}`;
     const response = await fetch(url);
     await this.checkStatus(response);

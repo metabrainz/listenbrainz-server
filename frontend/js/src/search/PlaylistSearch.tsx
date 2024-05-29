@@ -12,21 +12,6 @@ type PlayListSearchProps = {
   searchQuery: string;
 };
 
-type PlaylistTypeSearchResult = {
-  count: number;
-  offset: number;
-  playlist_count: number;
-  playlists: {
-    playlist: {
-      annotation?: string;
-      creator: string;
-      date: string;
-      identifier: string;
-      title: string;
-    };
-  }[];
-};
-
 export default function PlaylistSearch(props: PlayListSearchProps) {
   const { searchQuery } = props;
 
