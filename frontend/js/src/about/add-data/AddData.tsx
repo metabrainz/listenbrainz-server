@@ -6,9 +6,7 @@ export default function AddData() {
     <>
       <h2 className="page-title">Adding your data to Listenbrainz</h2>
       <h3>Submitting Listens</h3>
-      <p>
-        Submit your listening history to ListenBrainz.
-      </p>
+      <p>Submit your listening history to ListenBrainz.</p>
       <h4>Music players</h4>
       <ul>
         <li>
@@ -248,8 +246,7 @@ export default function AddData() {
               OngakuKiroku
             </a>
           </em>
-          , a ListenBrainz scrobbler for Swinsian and Music.app on macOS
-          devices
+          , a ListenBrainz scrobbler for Swinsian and Music.app on macOS devices
         </li>
         <li>
           <em>
@@ -285,7 +282,7 @@ export default function AddData() {
             <a href="https://play.google.com/store/apps/details?id=org.listenbrainz.android">
               The official ListenBrainz app
             </a>
-          </em>{" "}
+          </em>
           , for Android devices
         </li>
         <li>
@@ -334,9 +331,7 @@ export default function AddData() {
       </p>
 
       <h3>Playlist submissions and tools</h3>
-      <p>
-        Submit and store playlists.
-      </p>
+      <p>Submit and store playlists.</p>
       <h4>Tools</h4>
       <ul>
         <li>
