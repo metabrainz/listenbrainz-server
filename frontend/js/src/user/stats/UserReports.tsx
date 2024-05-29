@@ -39,9 +39,13 @@ export default function UserReports(props: UserReportsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const range = searchParams.get("range") as UserStatsAPIRange;
-  if (!range) {
-    navigate(`?range=week`);
-  }
+
+  React.useEffect(() => {
+    if (!range || !getAllStatRanges().has(range)) {
+      setSearchParams({ range: "week" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range]);
 
   const handleRangeChange = (newRange: UserStatsAPIRange) => {
     setSearchParams({ range: newRange });
