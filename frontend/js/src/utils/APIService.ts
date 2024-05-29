@@ -1026,6 +1026,26 @@ export default class APIService {
     return response.json();
   };
 
+  updatePinRecordingBlurbContent = async (
+    userToken: string,
+    rowId: number,
+    blurbContent: string
+  ): Promise<{ status: string }> => {
+    const url = `${this.APIBaseURI}/pin/update/${rowId}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        blurb_content: blurbContent,
+      }),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   submitMBIDMapping = async (
     userToken: string,
     recordingMSID: string,
