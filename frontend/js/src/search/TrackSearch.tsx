@@ -85,35 +85,35 @@ export default function TrackSearch(props: TrackSearchProps) {
       return null;
     });
 
+    const listen = {
+      listened_at: 0,
+      track_metadata: {
+        mbid_mapping: {
+          artists,
+          artist_mbids: artistMBIDs,
+          release_mbid:
+            recording.releases?.length > 0 ? recording.releases[0].id : "",
+          recording_mbid: recording.id,
+        },
+        artist_name: artistCredit
+          .map((ac) => ac.name + (ac?.joinphrase ?? ""))
+          .join(""),
+        track_name: recording.title,
+        release_name:
+          recording.releases?.length > 0 ? recording.releases[0].title : "",
+        additional_info: {
+          artist_mbids: artistMBIDs,
+          recording_mbid: recording.id,
+          release_mbid:
+            recording.releases?.length > 0 ? recording.releases[0].id : "",
+        },
+      },
+    };
+
     return (
       <ListenCard
         key={recording.id}
-        listen={{
-          listened_at: 0,
-          track_metadata: {
-            mbid_mapping: {
-              artists,
-              artist_mbids: artistMBIDs,
-              release_mbid:
-                recording.releases?.length > 0 ? recording.releases[0].id : "",
-              recording_mbid: recording.id,
-            },
-            artist_name: recording["artist-credit"]
-              .map((ac) => ac.name + (ac?.joinphrase ?? ""))
-              .join(""),
-            track_name: recording.title,
-            release_name:
-              recording.releases?.length > 0 ? recording.releases[0].title : "",
-            additional_info: {
-              artist_mbids: recording["artist-credit"].map(
-                (ac) => ac?.artist?.id
-              ),
-              recording_mbid: recording.id,
-              release_mbid:
-                recording.releases?.length > 0 ? recording.releases[0].id : "",
-            },
-          },
-        }}
+        listen={listen}
         showTimestamp={false}
         showUsername={false}
       />
