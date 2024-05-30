@@ -11,6 +11,8 @@ import type {
 } from "../FreshReleases";
 import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
 
+const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
+
 type ReleaseFiltersProps = {
   allFilters: {
     releaseTypes: Array<string | undefined>;
@@ -55,6 +57,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const [releaseTagsCheckList, setReleaseTagsCheckList] = React.useState<
     Array<string | undefined>
   >([]);
+  const [includeVariousArtists, setIncludeVariousArtists] = React.useState<
+    boolean
+  >(false);
 
   const [
     releaseTagsExcludeCheckList,
@@ -162,11 +167,17 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         releaseTagsExcludeCheckList.includes(tag)
       );
 
+      const isVariousArtists = item.artist_mbids.some(
+        (mbid) => mbid === VARIOUS_ARTISTS_MBID
+      );
+      const isVariousArtistsValid = !isVariousArtists || includeVariousArtists;
+
       return (
         isCoverArtValid &&
         isReleaseTypeValid &&
         isReleaseTagValid &&
-        !isReleaseTagExcluded
+        !isReleaseTagExcluded &&
+        isVariousArtistsValid
       );
     });
 
@@ -174,11 +185,13 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     if (releaseCardGridRef.current) {
       window.scrollTo(0, releaseCardGridRef.current.offsetTop);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     checkedList,
     releaseTagsCheckList,
     releaseTagsExcludeCheckList,
     coverartOnly,
+    includeVariousArtists,
     releases,
   ]);
 
@@ -362,6 +375,15 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               checked={coverartOnly}
               onChange={(e) => setCoverartOnly(!coverartOnly)}
               switchLabel="Only Releases with artwork"
+            />
+
+            <Switch
+              id="include-various-artists-switch"
+              key="include-various-artists-switch"
+              value="various-artists"
+              checked={includeVariousArtists}
+              onChange={(e) => setIncludeVariousArtists(!includeVariousArtists)}
+              switchLabel="Include Various Artists"
             />
 
             {Object.keys(displaySettings).map((setting, index) =>
