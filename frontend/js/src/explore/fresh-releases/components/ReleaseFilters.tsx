@@ -399,7 +399,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               value="various-artists"
               checked={includeVariousArtists}
               onChange={(e) => setIncludeVariousArtists(!includeVariousArtists)}
-              switchLabel="Include Various Artists"
+              switchLabel="Releases by Various Artists"
             />
 
             {Object.keys(displaySettings).map((setting, index) =>
