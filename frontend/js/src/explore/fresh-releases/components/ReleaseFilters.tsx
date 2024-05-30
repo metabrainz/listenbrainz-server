@@ -2,6 +2,7 @@ import * as React from "react";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as _ from "lodash";
 import Switch from "../../../components/Switch";
 import SideBar from "../../../components/Sidebar";
 import type {
@@ -19,6 +20,7 @@ type ReleaseFiltersProps = {
     releaseTags: Array<string | undefined>;
   };
   releases: Array<FreshReleaseItem>;
+  filteredList: Array<FreshReleaseItem>;
   setFilteredList: React.Dispatch<
     React.SetStateAction<Array<FreshReleaseItem>>
   >;
@@ -38,6 +40,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const {
     allFilters,
     releases,
+    filteredList,
     setFilteredList,
     range,
     handleRangeChange,
@@ -147,8 +150,12 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
       : Object.values(filterRangeOptions);
 
   React.useEffect(() => {
-    setCoverartOnly(false);
-    setCheckedList([]);
+    if (coverartOnly === true) {
+      setCoverartOnly(false);
+    }
+    if (checkedList?.length > 0) {
+      setCheckedList([]);
+    }
   }, [allFilters]);
 
   React.useEffect(() => {
@@ -181,7 +188,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
       );
     });
 
-    setFilteredList(filteredReleases);
+    if (!_.isEqual(filteredReleases, filteredList)) {
+      setFilteredList(filteredReleases);
+    }
     if (releaseCardGridRef.current) {
       window.scrollTo(0, releaseCardGridRef.current.offsetTop);
     }

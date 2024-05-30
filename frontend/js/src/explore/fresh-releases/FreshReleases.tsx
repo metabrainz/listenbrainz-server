@@ -3,6 +3,7 @@ import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import ReleaseFilters from "./components/ReleaseFilters";
@@ -96,23 +97,20 @@ export const PAGE_TYPE_SITEWIDE: string = "sitewide";
 
 export type filterRangeOption = keyof typeof filterRangeOptions;
 
+type FreshReleasesData = {
+  releases: Array<FreshReleaseItem>;
+  releaseTypes: Array<string | undefined>;
+  releaseTags: Array<string | undefined>;
+};
+
 export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
 
-  const [releases, setReleases] = React.useState<Array<FreshReleaseItem>>([]);
   const [filteredList, setFilteredList] = React.useState<
     Array<FreshReleaseItem>
   >([]);
-  const [allFilters, setAllFilters] = React.useState<{
-    releaseTypes: Array<string | undefined>;
-    releaseTags: Array<string | undefined>;
-  }>({
-    releaseTypes: [],
-    releaseTags: [],
-  });
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [pageType, setPageType] = React.useState<string>(
     isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
@@ -158,11 +156,28 @@ export default function FreshReleases() {
     pillRowStyle = { justifyContent: "flex-end" };
   }
 
-  React.useEffect(() => {
-    const fetchReleases = async () => {
-      setIsLoading(true);
-      let freshReleases: Array<FreshReleaseItem>;
+  const queryKey =
+    pageType === PAGE_TYPE_SITEWIDE
+      ? [
+          "fresh-release-sitewide",
+          filterRangeOptions[range].value,
+          showPastReleases,
+          showFutureReleases,
+          sort,
+        ]
+      : [
+          "fresh-release-user",
+          currentUser.name,
+          showPastReleases,
+          showFutureReleases,
+          sort,
+        ];
+
+  const { data: loaderData, isLoading } = useQuery({
+    queryKey,
+    queryFn: async () => {
       try {
+        let freshReleases: Array<FreshReleaseItem>;
         if (pageType === PAGE_TYPE_SITEWIDE) {
           const allFreshReleases = await APIService.fetchSitewideFreshReleases(
             filterRangeOptions[range].value,
@@ -180,7 +195,6 @@ export default function FreshReleases() {
           );
           freshReleases = userFreshReleases.payload.releases;
         }
-
         const cleanReleases = uniqBy(freshReleases, (datum) => {
           return (
             /*
@@ -217,29 +231,60 @@ export default function FreshReleases() {
         const releaseTags = Array.from(uniqueReleaseTagsSet);
         releaseTags.sort();
 
-        setReleases(cleanReleases);
-        setFilteredList(cleanReleases);
-        setAllFilters({
-          releaseTypes,
-          releaseTags,
-        });
-        setIsLoading(false);
+        return {
+          data: {
+            releases: cleanReleases,
+            releaseTypes,
+            releaseTags,
+          } as FreshReleasesData,
+          hasError: false,
+          errorMessage: "",
+        };
       } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="Couldn't fetch fresh releases"
-            message={
-              typeof error === "object" ? error.message : error.toString()
-            }
-          />,
-          { toastId: "fetch-error" }
-        );
+        return {
+          data: {
+            releases: [],
+            releaseTypes: [],
+            releaseTags: [],
+          } as FreshReleasesData,
+          hasError: true,
+          errorMessage: error.message,
+        };
       }
-    };
-    // Call the async function defined above (useEffect can't return a Promise)
-    fetchReleases();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageType, range, showPastReleases, showFutureReleases, sort]);
+    },
+  });
+
+  const {
+    data: rawData = {
+      releases: [],
+      releaseTypes: [],
+      releaseTags: [],
+    } as FreshReleasesData,
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
+
+  const { releases, releaseTypes, releaseTags } = rawData;
+  const allFilters = {
+    releaseTypes,
+    releaseTags,
+  };
+
+  React.useEffect(() => {
+    if (hasError) {
+      toast.error(
+        <ToastMsg
+          title="Couldn't fetch fresh releases"
+          message={errorMessage}
+        />,
+        { toastId: "fetch-error" }
+      );
+    } else if (releases.length > 0) {
+      setFilteredList(releases);
+    } else if (releases.length === 0 && filteredList.length > 0) {
+      setFilteredList([]);
+    }
+  }, [releases, hasError, errorMessage]);
 
   return (
     <>
@@ -370,6 +415,7 @@ export default function FreshReleases() {
         <ReleaseFilters
           allFilters={allFilters}
           releases={releases}
+          filteredList={filteredList}
           setFilteredList={setFilteredList}
           range={range}
           handleRangeChange={setRange}
