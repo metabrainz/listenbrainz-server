@@ -99,8 +99,8 @@ export type filterRangeOption = keyof typeof filterRangeOptions;
 
 type FreshReleasesData = {
   releases: Array<FreshReleaseItem>;
-  releaseTypes: Array<string | undefined>;
-  releaseTags: Array<string | undefined>;
+  releaseTypes: Array<string>;
+  releaseTags: Array<string>;
 };
 
 export default function FreshReleases() {
@@ -111,6 +111,13 @@ export default function FreshReleases() {
   const [filteredList, setFilteredList] = React.useState<
     Array<FreshReleaseItem>
   >([]);
+  const [allFilters, setAllFilters] = React.useState<{
+    releaseTypes: Array<string | undefined>;
+    releaseTags: Array<string | undefined>;
+  }>({
+    releaseTypes: [],
+    releaseTags: [],
+  });
   const [pageType, setPageType] = React.useState<string>(
     isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
@@ -265,10 +272,6 @@ export default function FreshReleases() {
   } = loaderData || {};
 
   const { releases, releaseTypes, releaseTags } = rawData;
-  const allFilters = {
-    releaseTypes,
-    releaseTags,
-  };
 
   React.useEffect(() => {
     if (hasError) {
@@ -279,12 +282,32 @@ export default function FreshReleases() {
         />,
         { toastId: "fetch-error" }
       );
-    } else if (releases.length > 0) {
+    }
+  }, [hasError, errorMessage]);
+
+  React.useEffect(() => {
+    if (releases.length > 0) {
       setFilteredList(releases);
     } else if (releases.length === 0 && filteredList.length > 0) {
       setFilteredList([]);
     }
-  }, [releases, hasError, errorMessage]);
+  }, [releases]);
+
+  React.useEffect(() => {
+    if (releaseTypes.length === 0 && releaseTags.length === 0) return;
+    setAllFilters({
+      releaseTypes,
+      releaseTags,
+    });
+  }, [releaseTypes, releaseTags]);
+
+  React.useEffect(() => {
+    if (releases.length > 0) {
+      setFilteredList(releases);
+    } else if (releases.length === 0 && filteredList.length > 0) {
+      setFilteredList([]);
+    }
+  }, [releases]);
 
   return (
     <>
