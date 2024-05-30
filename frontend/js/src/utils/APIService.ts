@@ -1668,7 +1668,7 @@ export default class APIService {
     count: number = 25,
     offset: number = 0
   ): Promise<PlaylistTypeSearchResult> => {
-    const url = `${this.APIBaseURI}/user/${musicbrainzID}/playlists/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const url = `${this.APIBaseURI}/user/${musicbrainzID}/playlists/search?query=${searchQuery}&count=${count}&offset=${offset}&get_total_count=false`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1679,7 +1679,7 @@ export default class APIService {
     count: number = 25,
     offset: number = 0
   ): Promise<PlaylistTypeSearchResult> => {
-    const url = `${this.APIBaseURI}/playlist/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const url = `${this.APIBaseURI}/playlist/search?query=${searchQuery}&count=${count}&offset=${offset}&get_total_count=false`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

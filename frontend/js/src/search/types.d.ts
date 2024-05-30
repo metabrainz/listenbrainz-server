@@ -1,7 +1,6 @@
 type PlaylistTypeSearchResult = {
   count: number;
   offset: number;
-  playlist_count: number;
   playlists: {
     playlist: {
       annotation?: string;
@@ -11,6 +10,7 @@ type PlaylistTypeSearchResult = {
       title: string;
     };
   }[];
+  contains_more: boolean;
 };
 
 type TrackTypeSearchResult = {

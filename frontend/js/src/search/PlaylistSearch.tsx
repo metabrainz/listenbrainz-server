@@ -68,9 +68,7 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
   } = loaderData || {};
 
   const { playlists = [] } = rawData;
-  const totalPageCount = Math.ceil(
-    rawData.playlist_count / PLAYLIST_COUNT_PER_PAGE
-  );
+  const containsMore = rawData.contains_more;
 
   const handleClickPrevious = () => {
     setSearchParams({
@@ -82,7 +80,7 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
   const handleClickNext = () => {
     setSearchParams({
       ...searchParamsObj,
-      page: Math.min(currPageNo + 1, totalPageCount).toString(),
+      page: containsMore ? (currPageNo + 1).toString() : currPageNo.toString(),
     });
   };
 
@@ -155,7 +153,7 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
       </table>
       <Pagination
         currentPageNo={currPageNo}
-        totalPageCount={totalPageCount}
+        totalPageCount={currPageNo + 1}
         handleClickPrevious={handleClickPrevious}
         handleClickNext={handleClickNext}
       />

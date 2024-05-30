@@ -371,9 +371,12 @@ def _get_playlist_for_search(db_conn, result):
 
     Fill in related data (username, created_for username) required for search results
     """
+    # This count is used to handle the pagination in the search results when the user does not exist in development mode
+    count = 0
     user_id_map = {}
     temp_playlist_rows = []
     for row in result.mappings():
+        count += 1
         row = dict(row)
         creator_id = row.get("creator_id")
         if creator_id and creator_id not in user_id_map:
@@ -407,7 +410,7 @@ def _get_playlist_for_search(db_conn, result):
         playlist = model_playlist.Playlist.parse_obj(row)
         playlists.append(playlist)
 
-    return playlists
+    return playlists, count
 
 
 def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count: int = 0, offset: int = 0, get_total_count: bool = True):
@@ -466,8 +469,7 @@ def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count:
     """)
 
     result = ts_conn.execute(query, params)
-    playlists = _get_playlist_for_search(db_conn, result)
-    playlists_count = len(playlists)
+    playlists, playlists_count = _get_playlist_for_search(db_conn, result)
     contains_more = False
     if playlists_count > count:
         contains_more = True
@@ -558,8 +560,7 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
     """)
 
     result = ts_conn.execute(query, params)
-    playlists = _get_playlist_for_search(db_conn, result)
-    playlists_count = len(playlists)
+    playlists, playlists_count = _get_playlist_for_search(db_conn, result)
     contains_more = False
     if playlists_count > count:
         contains_more = True
