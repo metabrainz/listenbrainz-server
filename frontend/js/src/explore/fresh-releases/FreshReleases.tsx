@@ -248,6 +248,13 @@ export default function FreshReleases() {
           errorMessage: "",
         };
       } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="Couldn't fetch fresh releases"
+            message={error.message}
+          />,
+          { toastId: "fetch-error" }
+        );
         return {
           data: {
             releases: [],
@@ -274,18 +281,6 @@ export default function FreshReleases() {
   const { releases, releaseTypes, releaseTags } = rawData;
 
   React.useEffect(() => {
-    if (hasError) {
-      toast.error(
-        <ToastMsg
-          title="Couldn't fetch fresh releases"
-          message={errorMessage}
-        />,
-        { toastId: "fetch-error" }
-      );
-    }
-  }, [hasError, errorMessage]);
-
-  React.useEffect(() => {
     if (releases.length > 0) {
       setFilteredList(releases);
     } else if (releases.length === 0 && filteredList.length > 0) {
@@ -301,13 +296,18 @@ export default function FreshReleases() {
     });
   }, [releaseTypes, releaseTags]);
 
-  React.useEffect(() => {
-    if (releases.length > 0) {
-      setFilteredList(releases);
-    } else if (releases.length === 0 && filteredList.length > 0) {
-      setFilteredList([]);
-    }
-  }, [releases]);
+  let alt;
+  let message;
+  if (hasError) {
+    alt = "Error fetching releases";
+    message = `Error fetching releases: ${errorMessage}`;
+  } else if (releases.length === 0) {
+    alt = "No releases";
+    message = "No releases";
+  } else {
+    alt = "No filtered releases";
+    message = `0/${releases.length} releases match your filters.`;
+  }
 
   return (
     <>
@@ -406,17 +406,9 @@ export default function FreshReleases() {
                 <div className="no-release">
                   <img
                     src="/static/img/recommendations/no-freshness.png"
-                    alt={
-                      releases.length === 0
-                        ? "No releases"
-                        : "No filtered releases"
-                    }
+                    alt={alt}
                   />
-                  <div className="text-muted">
-                    {releases.length === 0
-                      ? "No releases"
-                      : `0/${releases.length} releases match your filters.`}
-                  </div>
+                  <div className="text-muted">{message}</div>
                 </div>
               ) : (
                 <ReleaseCardsGrid
