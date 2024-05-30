@@ -693,7 +693,9 @@ def search_user_playlist(playlist_user_name):
     offset = get_non_negative_param("offset", 0)
     get_total_count = parse_boolean_arg("get_total_count", True)
 
-    playlists, playlist_count, contains_more = db_playlist.search_playlists_for_user(db_conn, ts_conn, playlist_user.id, query, count, offset)
+    playlists, playlist_count, contains_more = db_playlist.search_playlists_for_user(db_conn, ts_conn,
+                                                                                     playlist_user.id,
+                                                                                     query, count, offset)
 
     data = {
         "playlists": [playlist.serialize_jspf() for playlist in playlists],

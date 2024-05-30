@@ -399,7 +399,8 @@ def search_playlist():
     if not query or len(query) < 3:
         log_raise_400("Query string must be at least 3 characters long.")
 
-    playlists, playlist_count, contains_more = db_playlist.search_playlist(db_conn, ts_conn, query, count, offset, get_total_count)
+    playlists, playlist_count, contains_more = db_playlist.search_playlist(db_conn, ts_conn, query,
+                                                                           count, offset, get_total_count)
 
     data = {
         "playlists": [playlist.serialize_jspf() for playlist in playlists],

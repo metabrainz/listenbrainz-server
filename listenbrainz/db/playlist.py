@@ -413,7 +413,8 @@ def _get_playlist_for_search(db_conn, result):
     return playlists, count
 
 
-def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count: int = 0, offset: int = 0, get_total_count: bool = True):
+def search_playlists_for_user(db_conn, ts_conn, user_id: int,
+                              query: str, count: int = 0, offset: int = 0, get_total_count: bool = True):
     """
     Search for playlists by name or description
 
