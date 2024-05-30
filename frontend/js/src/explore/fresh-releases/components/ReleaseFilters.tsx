@@ -206,7 +206,10 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
   return (
     <SideBar>
-      <div className="sidebar-header">
+      <div
+        className="sidebar-header"
+        data-testid="sidebar-header-fresh-releases"
+      >
         <p>Fresh Releases</p>
         <p>Listen to recent releases, and browse what&apos;s dropping soon.</p>
         <p>

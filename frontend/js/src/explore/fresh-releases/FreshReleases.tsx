@@ -298,6 +298,7 @@ export default function FreshReleases() {
               <div className="fresh-releases-row">
                 <Pill
                   id="sitewide-releases"
+                  data-testid="sitewide-releases-pill"
                   onClick={() => {
                     setPageType(PAGE_TYPE_SITEWIDE);
                     setSort("release_date");
