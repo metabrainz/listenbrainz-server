@@ -366,6 +366,50 @@ def get_playlists_collaborated_on(db_conn, ts_conn, user_id: int, include_privat
     return playlists, count
 
 
+def _get_playlist_for_search(db_conn, result):
+    """Parse the result of an sql query to get playlists
+
+    Fill in related data (username, created_for username) required for search results
+    """
+    user_id_map = {}
+    temp_playlist_rows = []
+    for row in result.mappings():
+        row = dict(row)
+        creator_id = row.get("creator_id")
+        if creator_id and creator_id not in user_id_map:
+            user_id_map[creator_id] = None
+
+        created_for_id = row.get("created_for_id")
+        if created_for_id and created_for_id not in user_id_map:
+            user_id_map[created_for_id] = None
+
+        temp_playlist_rows.append(row)
+
+    user_ids = list(user_id_map.keys())
+    if user_ids:
+        users = db_user.get_users_by_id(db_conn, user_ids)
+        for user_id, musicbrainz_id in users.items():
+            user_id_map[user_id] = musicbrainz_id
+
+    playlists = []
+    for row in temp_playlist_rows:
+        creator_id = row.get("creator_id")
+        if creator_id and creator_id in user_id_map and user_id_map[creator_id]:
+            row["creator"] = user_id_map[creator_id]
+        else:
+            continue
+
+        created_for_id = row.get("created_for_id")
+        if created_for_id and created_for_id in user_id_map:
+            row["created_for"] = user_id_map[created_for_id]
+
+        row["recordings"] = []
+        playlist = model_playlist.Playlist.parse_obj(row)
+        playlists.append(playlist)
+
+    return playlists
+
+
 def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count: int = 0, offset: int = 0):
     """
     Search for playlists by name or description
@@ -421,7 +465,7 @@ def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count:
     """)
 
     result = ts_conn.execute(query, params)
-    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, False)
+    playlists =  _get_playlist_for_search(db_conn, result)
 
     # Fetch the total count of playlists
     total_count = 0
@@ -506,7 +550,7 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
     """)
 
     result = ts_conn.execute(query, params)
-    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, False)
+    playlists =  _get_playlist_for_search(db_conn, result)
 
     # Fetch the total count of playlists
     total_count = 0
