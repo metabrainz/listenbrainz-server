@@ -410,7 +410,7 @@ def _get_playlist_for_search(db_conn, result):
     return playlists
 
 
-def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count: int = 0, offset: int = 0):
+def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count: int = 0, offset: int = 0, get_total_count: bool = True):
     """
     Search for playlists by name or description
 
@@ -421,6 +421,7 @@ def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count:
         query: The search query
         count: Return this many playlists. If 0, return all playlists
         offset: if set, get playlists from this offset
+        get_total_count: If True, return the total count of playlists that match the query
 
     Returns:
         a tuple (playlists, total_playlists)
@@ -428,7 +429,7 @@ def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count:
     if count == 0:
         count = None
 
-    params = {"query": query, "count": count, "offset": offset, "user_id": user_id}
+    params = {"query": query, "count": count + 1, "offset": offset, "user_id": user_id}
     query = text(f"""
     WITH playlist_similarities AS (
         SELECT pl.id
@@ -466,37 +467,43 @@ def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count:
 
     result = ts_conn.execute(query, params)
     playlists = _get_playlist_for_search(db_conn, result)
+    playlists_count = len(playlists)
+    contains_more = False
+    if playlists_count > count:
+        contains_more = True
+        playlists = playlists[:count]
 
     # Fetch the total count of playlists
     total_count = 0
-    query = text(f"""
-    WITH playlist_similarities AS (
-        SELECT similarity(pl.name, :query) AS name_similarity
-             , similarity(pl.description, :query) AS description_similarity
-          FROM playlist.playlist AS pl
-     LEFT JOIN playlist.playlist AS copy
-            ON pl.copied_from_id = copy.id
-     LEFT JOIN playlist.playlist_collaborator
-            ON pl.id = playlist_collaborator.playlist_id
-        WHERE pl.creator_id = :user_id
-            OR pl.created_for_id = :user_id
-            OR playlist.playlist_collaborator.collaborator_id = :user_id
-            OR pl.public = true
-    )
-    SELECT COUNT(*)
-      FROM playlist_similarities
-     WHERE name_similarity > 0.1
-        OR description_similarity > 0.1
-    """)
-    result = ts_conn.execute(query, params)
-    row = result.fetchone()
-    if row:
-        total_count = row[0]
+    if get_total_count:
+        query = text(f"""
+        WITH playlist_similarities AS (
+            SELECT similarity(pl.name, :query) AS name_similarity
+                , similarity(pl.description, :query) AS description_similarity
+            FROM playlist.playlist AS pl
+        LEFT JOIN playlist.playlist AS copy
+                ON pl.copied_from_id = copy.id
+        LEFT JOIN playlist.playlist_collaborator
+                ON pl.id = playlist_collaborator.playlist_id
+            WHERE pl.creator_id = :user_id
+                OR pl.created_for_id = :user_id
+                OR playlist.playlist_collaborator.collaborator_id = :user_id
+                OR pl.public = true
+        )
+        SELECT COUNT(*)
+        FROM playlist_similarities
+        WHERE name_similarity > 0.1
+            OR description_similarity > 0.1
+        """)
+        result = ts_conn.execute(query, params)
+        row = result.fetchone()
+        if row:
+            total_count = row[0]
 
-    return playlists, total_count
+    return playlists, total_count, contains_more
 
 
-def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 0):
+def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 0, get_total_count: bool = True):
     """
     Search for playlists by name or description
 
@@ -508,6 +515,7 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
                  playlists returned will include private playlists if True
         count: Return this many playlists. If 0, return all playlists
         offset: if set, get playlists from this offset
+        get_total_count: If True, return the total count of playlists that match the query
 
     Returns:
         a tuple (playlists, total_playlists)
@@ -516,7 +524,7 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
     if count == 0:
         count = None
 
-    params = {"query": query, "count": count, "offset": offset}
+    params = {"query": query, "count": count + 1, "offset": offset}
     query = text(f"""
     WITH playlist_similarities AS (
         SELECT pl.id
@@ -551,31 +559,37 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
 
     result = ts_conn.execute(query, params)
     playlists = _get_playlist_for_search(db_conn, result)
+    playlists_count = len(playlists)
+    contains_more = False
+    if playlists_count > count:
+        contains_more = True
+        playlists = playlists[:count]
 
     # Fetch the total count of playlists
     total_count = 0
-    query = text(f"""
-    WITH playlist_similarities AS (
-        SELECT similarity(pl.name, :query) AS name_similarity
-             , similarity(pl.description, :query) AS description_similarity
-          FROM playlist.playlist AS pl
-     LEFT JOIN playlist.playlist AS copy
-            ON pl.copied_from_id = copy.id
-     LEFT JOIN playlist.playlist_collaborator
-            ON pl.id = playlist_collaborator.playlist_id
-        WHERE pl.public = true
-    )
-    SELECT COUNT(*)
-      FROM playlist_similarities
-     WHERE name_similarity > 0.1
-        OR description_similarity > 0.1
-    """)
-    result = ts_conn.execute(query, params)
-    row = result.fetchone()
-    if row:
-        total_count = row[0]
+    if get_total_count:
+        query = text(f"""
+        WITH playlist_similarities AS (
+            SELECT similarity(pl.name, :query) AS name_similarity
+                , similarity(pl.description, :query) AS description_similarity
+            FROM playlist.playlist AS pl
+        LEFT JOIN playlist.playlist AS copy
+                ON pl.copied_from_id = copy.id
+        LEFT JOIN playlist.playlist_collaborator
+                ON pl.id = playlist_collaborator.playlist_id
+            WHERE pl.public = true
+        )
+        SELECT COUNT(*)
+        FROM playlist_similarities
+        WHERE name_similarity > 0.1
+            OR description_similarity > 0.1
+        """)
+        result = ts_conn.execute(query, params)
+        row = result.fetchone()
+        if row:
+            total_count = row[0]
 
-    return playlists, total_count
+    return playlists, total_count, contains_more
 
 
 def get_collaborators_for_playlists(ts_conn, playlist_ids: List[int]):

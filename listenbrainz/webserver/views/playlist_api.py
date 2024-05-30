@@ -394,13 +394,24 @@ def search_playlist():
     query = request.args.get("query")
     count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param("offset", 0)
+    get_total_count = parse_boolean_arg("get_total_count", True)
 
     if not query or len(query) < 3:
         log_raise_400("Query string must be at least 3 characters long.")
 
-    playlists, playlist_count = db_playlist.search_playlist(db_conn, ts_conn, query, count, offset)
+    playlists, playlist_count, contains_more = db_playlist.search_playlist(db_conn, ts_conn, query, count, offset, get_total_count)
 
-    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+    data = {
+        "playlists": [playlist.serialize_jspf() for playlist in playlists],
+        "offset": offset,
+        "count": count,
+        "contains_more": contains_more
+    }
+
+    if get_total_count:
+        data["playlist_count"] = playlist_count
+
+    return jsonify(data)
 
 
 @playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])

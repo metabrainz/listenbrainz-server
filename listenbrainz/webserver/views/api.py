@@ -21,7 +21,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
@@ -691,10 +691,21 @@ def search_user_playlist(playlist_user_name):
     query = request.args.get("query")
     count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param("offset", 0)
+    get_total_count = parse_boolean_arg("get_total_count", True)
 
-    playlists, playlist_count = db_playlist.search_playlists_for_user(db_conn, ts_conn, playlist_user.id, query, count, offset)
+    playlists, playlist_count, contains_more = db_playlist.search_playlists_for_user(db_conn, ts_conn, playlist_user.id, query, count, offset)
 
-    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+    data = {
+        "playlists": [playlist.serialize_jspf() for playlist in playlists],
+        "offset": offset,
+        "count": count,
+        "contains_more": contains_more
+    }
+
+    if get_total_count:
+        data["playlist_count"] = playlist_count
+
+    return jsonify(data)
 
 
 @api_bp.route("/user/<user_name>/services", methods=['GET', 'OPTIONS'])

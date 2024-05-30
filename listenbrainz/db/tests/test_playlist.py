@@ -57,7 +57,7 @@ class PlaylistTestCase(IntegrationTestCase):
         new_playlist_1 = db_playlist.create(self.db_conn, self.ts_conn, playlist_1)
         new_playlist_2 = db_playlist.create(self.db_conn, self.ts_conn, playlist_2)
 
-        playlists, count = db_playlist.search_playlist(self.db_conn, self.ts_conn, "playlist")
+        playlists, count, contains_more = db_playlist.search_playlist(self.db_conn, self.ts_conn, "playlist")
 
         self.assertEqual(len(playlists), 1)
         self.assertEqual(count, 1)
@@ -109,7 +109,8 @@ class PlaylistTestCase(IntegrationTestCase):
         new_playlist_3 = db_playlist.create(self.db_conn, self.ts_conn, playlist_3)
         new_playlist_4 = db_playlist.create(self.db_conn, self.ts_conn, playlist_4)
 
-        playlists, count = db_playlist.search_playlists_for_user(self.db_conn, self.ts_conn, self.user_1['id'], "testing")
+        playlists, count, contains_more = db_playlist.search_playlists_for_user(self.db_conn, self.ts_conn, 
+                                                                                 self.user_1['id'], "testing")
 
         # Since playlist_2 is private, and user_1 does not have access to it, it will not
 
@@ -118,7 +119,8 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(playlists[0].name, playlist_3.name)
         self.assertEqual(playlists[1].name, playlist_1.name)
 
-        playlists, count = db_playlist.search_playlists_for_user(self.db_conn, self.ts_conn, self.user_2['id'], "test")
+        playlists, count, contains_more = db_playlist.search_playlists_for_user(self.db_conn, self.ts_conn, 
+                                                                                self.user_2['id'], "test")
 
         # Since user_2 has access to all the 4 playlists, all the playlists will be searched.
 
