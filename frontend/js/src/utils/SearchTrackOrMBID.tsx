@@ -14,6 +14,8 @@ import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
 
 const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
+const THROTTLE_MILLISECONDS = 1000;
+
 type SearchTrackOrMBIDProps = {
   onSelectRecording: (selectedRecordingMetadata: TrackMetadata) => void;
   defaultValue?: string;
@@ -78,7 +80,7 @@ export default function SearchTrackOrMBID({
             handleError(error);
           }
         },
-        800,
+        THROTTLE_MILLISECONDS,
         { leading: false, trailing: true }
       ),
     [handleError, setSearchResults]
@@ -125,7 +127,7 @@ export default function SearchTrackOrMBID({
           }
           setSearchResults([]);
         },
-        800,
+        THROTTLE_MILLISECONDS,
         { leading: false, trailing: true }
       ),
     [lookupMBRecording, handleError, onSelectRecording]

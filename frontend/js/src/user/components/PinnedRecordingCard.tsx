@@ -161,7 +161,8 @@ export default class PinnedRecordingCard extends React.Component<
             NiceModal.show<string, any>(PinRecordingModal, {
               recordingToPin: listen,
               rowId: pinnedRecording.row_id,
-              initialBlurbContent: updatedBlurb ?? pinnedRecording.blurb_content,
+              initialBlurbContent:
+                updatedBlurb ?? pinnedRecording.blurb_content,
             }).then((newBlurb: string) => {
               if (!newBlurb) {
                 return;

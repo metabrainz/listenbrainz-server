@@ -8,6 +8,7 @@
 
   .add-listen-header {
     display: flex;
+    margin-bottom: 1em;
   }
 
   .option-active {
@@ -57,9 +58,13 @@
     }
   }
   .track-info {
-    > div {
+    > * {
       width: 100%;
       margin: 10px 0px;
+      &.content {
+        max-height: 50vh;
+        overflow-y: auto;
+      }
     }
   }
   .cross-details {
@@ -113,7 +118,7 @@
   }
 
   .timestamp {
-    margin-left: 18px;
+    margin-top: 1em;
     > h5 {
       font-weight: 700;
       font-size: 16px;
@@ -145,6 +150,19 @@
   @media (min-width: 560px) {
     .timestamp-entities {
       display: flex;
+    }
+  }
+  .add-album-track {
+    display: flex;
+    gap: 1em;
+    .track-number{
+      align-self: end;
+    }
+    input[type=checkbox]{
+      margin: 0;
+    }
+    *:last-child{
+      margin-left: auto;
     }
   }
 }

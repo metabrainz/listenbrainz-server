@@ -50,7 +50,7 @@ declare type MusicBrainzTrack = {
 declare type MusicBrainzMedia = {
   title: string;
   position: number;
-  tracks: Array<MusicBrainzTrack>;
+  tracks: Array<MusicBrainzTrack | (MusicBrainzTrack & WithArtistCredits)>;
   format: string;
   "format-id": string;
   "track-offset": number;
@@ -69,12 +69,21 @@ declare type MusicBrainzRelease = {
   quality: string;
   country: string;
 };
-declare type MusicBrainzReleaseWithMedia = MusicBrainzRelease & {
+// With ?inc=media
+declare type WithMedia = {
   media: Array<MusicBrainzMedia>;
 };
+// With ?inc=artist-credits
+declare type WithArtistCredits = {
+  "artist-credit": Array<MusicBrainzArtistCredit>;
+};
 // With ?inc=release-groups
-declare type MusicBrainzReleaseWithReleaseGroup = MusicBrainzRelease & {
+declare type WithReleaseGroup = {
   "release-group": MusicBrainzReleaseGroup;
+};
+// With ?inc=releases
+declare type WithReleases = {
+  releases: MusicBrainzRelease[];
 };
 
 declare type MusicBrainzRecording = {

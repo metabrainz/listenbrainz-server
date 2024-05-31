@@ -792,9 +792,9 @@ const getAlbumArtFromReleaseMBID = async (
     if (CAAResponse.status === 404 && useReleaseGroupFallback) {
       let releaseGroupMBID = useReleaseGroupFallback;
       if (!_.isString(useReleaseGroupFallback) && APIService) {
-        const releaseGroupResponse = await APIService.lookupMBRelease(
+        const releaseGroupResponse = (await APIService.lookupMBRelease(
           userSubmittedReleaseMBID
-        );
+        )) as MusicBrainzRelease & WithReleaseGroup;
         releaseGroupMBID = releaseGroupResponse["release-group"].id;
       }
       if (!_.isString(releaseGroupMBID)) {

@@ -1,43 +1,20 @@
 import React, { useCallback, useContext, useState } from "react";
-import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { has } from "lodash";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import ListenControl from "../../common/listens/ListenControl";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { convertDateToUnixTimestamp } from "../../utils/utils";
-import ListenCard from "../../common/listens/ListenCard";
-import SearchTrackOrMBID from "../../utils/SearchTrackOrMBID";
 import { ToastMsg } from "../../notifications/Notifications";
+import AddSingleListen from "./AddSingleListen";
+import AddAlbumListens from "./AddAlbumListens";
 
 enum SubmitListenType {
   "track",
   "album",
-}
-
-function getListenFromTrack(
-  selectedDate: Date,
-  selectedTrackMetadata?: TrackMetadata
-): Listen | undefined {
-  if (!selectedTrackMetadata) {
-    return undefined;
-  }
-
-  return {
-    listened_at: convertDateToUnixTimestamp(selectedDate),
-    track_metadata: {
-      ...selectedTrackMetadata,
-      additional_info: {
-        ...selectedTrackMetadata.additional_info,
-        submission_client: "listenbrainz web",
-      },
-    },
-  };
 }
 
 export default NiceModal.create(() => {
@@ -47,9 +24,37 @@ export default NiceModal.create(() => {
   const [listenOption, setListenOption] = useState<SubmitListenType>(
     SubmitListenType.track
   );
-  const [selectedTrack, setSelectedTrack] = useState<TrackMetadata>();
+  const [selectedListens, setSelectedListens] = useState<Listen[]>([]);
   const [customTimestamp, setCustomTimestamp] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const getListenFromTrack = useCallback(
+    (track: MusicBrainzTrack & WithArtistCredits): Listen => {
+      return {
+        listened_at: convertDateToUnixTimestamp(selectedDate),
+        track_metadata: {
+          track_name: track.title,
+          artist_name:
+            track["artist-credit"]
+              ?.map((artist) => `${artist.name}${artist.joinphrase}`)
+              .join("") ?? "",
+          additional_info: {
+            recording_mbid: track.recording.id,
+            // ...track.additional_info,
+            submission_client: "listenbrainz web",
+          },
+        },
+      };
+    },
+    [selectedDate]
+  );
+
+  const setSelectedAlbumTracks = useCallback(
+    (selectedTracks: Array<MusicBrainzTrack & WithArtistCredits>) => {
+      setSelectedListens(selectedTracks.map(getListenFromTrack));
+    },
+    [setSelectedListens]
+  );
 
   const closeModal = useCallback(() => {
     modal.hide();
@@ -73,57 +78,39 @@ export default NiceModal.create(() => {
     []
   );
 
-  const resetTrackSelection = () => {
-    setSelectedTrack(undefined);
-    setListenOption(SubmitListenType.track);
-  };
-
   const submitListen = useCallback(async () => {
     if (auth_token) {
-      if (selectedTrack) {
-        const payload = getListenFromTrack(selectedDate, selectedTrack)!;
-
+      if (selectedListens) {
         try {
           const response = await APIService.submitListens(
             auth_token,
             "single",
-            [payload]
+            selectedListens
           );
           await APIService.checkStatus(response);
+
           toast.success(
             <ToastMsg
-              title="You added the Listen"
-              message={`${selectedTrack.track_name} - ${selectedTrack.artist_name}`}
+              title="Success"
+              message={`You added ${selectedListens.length} listens`}
             />,
-            { toastId: "added-listen-success" }
+            { toastId: "added-listens-success" }
           );
           closeModal();
         } catch (error) {
-          handleError(error, "Error while adding a listen");
+          handleError(error, "Error while submitting listens");
         }
       }
     } else {
       toast.error(
         <ToastMsg
-          title="You need to be logged in to Add a Listen"
+          title="You need to be logged in to submit listens"
           message={<Link to="/login/">Log in here</Link>}
         />,
         { toastId: "auth-error" }
       );
     }
-  }, [
-    APIService,
-    closeModal,
-    auth_token,
-    handleError,
-    selectedDate,
-    selectedTrack,
-  ]);
-
-  const listenFromSelectedTrack = getListenFromTrack(
-    selectedDate,
-    selectedTrack
-  );
+  }, [APIService, closeModal, auth_token, handleError, selectedListens]);
 
   return (
     <div
@@ -159,92 +146,84 @@ export default NiceModal.create(() => {
                     ? "option-active"
                     : "option-inactive"
                 }`}
-                onClick={resetTrackSelection}
+                onClick={() => {
+                  setListenOption(SubmitListenType.track);
+                }}
               >
                 Add track
               </button>
+              <button
+                type="button"
+                className={`btn btn-primary add-listen ${
+                  listenOption === SubmitListenType.album
+                    ? "option-active"
+                    : "option-inactive"
+                }`}
+                onClick={() => {
+                  setListenOption(SubmitListenType.album);
+                }}
+              >
+                Add album
+              </button>
             </div>
             {listenOption === SubmitListenType.track && (
-              <div>
-                <SearchTrackOrMBID
-                  onSelectRecording={(newSelectedTrackMetadata) => {
-                    setSelectedTrack(newSelectedTrackMetadata);
+              <AddSingleListen
+                selectedDate={selectedDate}
+                onPayloadChange={setSelectedListens}
+              />
+            )}
+            {listenOption === SubmitListenType.album && (
+              <AddAlbumListens onPayloadChange={setSelectedAlbumTracks} />
+            )}
+            <hr />
+            <div className="timestamp">
+              <h5>Timestamp</h5>
+              <div className="timestamp-entities">
+                <button
+                  type="button"
+                  className={`btn btn-primary add-listen ${
+                    customTimestamp === false
+                      ? "timestamp-active"
+                      : "timestamp-inactive"
+                  }`}
+                  onClick={() => {
+                    setCustomTimestamp(false);
+                    setSelectedDate(new Date());
                   }}
-                />
-                <div className="track-info">
-                  <div>
-                    {listenFromSelectedTrack && (
-                      <ListenCard
-                        listen={listenFromSelectedTrack}
-                        showTimestamp={false}
-                        showUsername={false}
-                        // eslint-disable-next-line react/jsx-no-useless-fragment
-                        feedbackComponent={<></>}
-                        compact
-                        additionalActions={
-                          <ListenControl
-                            buttonClassName="btn btn-transparent"
-                            text=""
-                            title="Reset"
-                            icon={faTimesCircle}
-                            iconSize="lg"
-                            action={resetTrackSelection}
-                          />
-                        }
-                      />
-                    )}
-                  </div>
-                  <div className="timestamp">
-                    <h5>Timestamp</h5>
-                    <div className="timestamp-entities">
-                      <button
-                        type="button"
-                        className={`btn btn-primary add-listen ${
-                          customTimestamp === false
-                            ? "timestamp-active"
-                            : "timestamp-inactive"
-                        }`}
-                        onClick={() => {
-                          setCustomTimestamp(false);
-                          setSelectedDate(new Date());
-                        }}
-                      >
-                        Now
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn btn-primary add-listen ${
-                          customTimestamp === true
-                            ? "timestamp-active"
-                            : "timestamp-inactive"
-                        }`}
-                        onClick={() => {
-                          setCustomTimestamp(true);
-                          setSelectedDate(new Date());
-                        }}
-                      >
-                        Custom
-                      </button>
-                      <div className="timestamp-date-picker">
-                        <DateTimePicker
-                          value={selectedDate}
-                          onChange={(newDateTimePickerValue: Date) => {
-                            setSelectedDate(newDateTimePickerValue);
-                          }}
-                          calendarIcon={
-                            <FontAwesomeIcon icon={faCalendar as IconProp} />
-                          }
-                          maxDate={new Date()}
-                          clearIcon={null}
-                          format="yyyy-MM-dd h:mm:ss a"
-                          disabled={!customTimestamp}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                >
+                  Now
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-primary add-listen ${
+                    customTimestamp === true
+                      ? "timestamp-active"
+                      : "timestamp-inactive"
+                  }`}
+                  onClick={() => {
+                    setCustomTimestamp(true);
+                    setSelectedDate(new Date());
+                  }}
+                >
+                  Custom
+                </button>
+                <div className="timestamp-date-picker">
+                  <DateTimePicker
+                    value={selectedDate}
+                    onChange={(newDateTimePickerValue: Date) => {
+                      setSelectedDate(newDateTimePickerValue);
+                    }}
+                    calendarIcon={
+                      <FontAwesomeIcon icon={faCalendar as IconProp} />
+                    }
+                    maxDate={new Date()}
+                    clearIcon={null}
+                    format="yyyy-MM-dd h:mm:ss a"
+                    disabled={!customTimestamp}
+                  />
                 </div>
               </div>
-            )}
+            </div>
           </div>
           <div className="modal-footer">
             <button
@@ -259,10 +238,11 @@ export default NiceModal.create(() => {
               type="submit"
               className="btn btn-success"
               data-dismiss="modal"
-              disabled={!selectedTrack}
+              disabled={!selectedListens?.length}
               onClick={submitListen}
             >
-              Add Listen
+              Add {selectedListens.length} listen
+              {selectedListens.length > 1 ? "s" : ""}
             </button>
           </div>
         </form>
