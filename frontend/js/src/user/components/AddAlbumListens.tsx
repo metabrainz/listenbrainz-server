@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { sortBy, without } from "lodash";
+import { padStart, sortBy, without } from "lodash";
 import SearchAlbumOrMBID from "../../utils/SearchAlbumOrMBID";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { millisecondsToStr } from "../../playlists/utils";
@@ -35,10 +35,12 @@ function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
         }}
         checked={isChecked}
       />
-      <strong className="small track-number">{track.position}</strong>
+      <strong className="small track-number">
+        {padStart(track.position.toString(), 2, "0")}
+      </strong>
       <span>{track.title}</span>
       {track.length && (
-        <span className="pull-right">{millisecondsToStr(track.length)}</span>
+        <span className="duration">{millisecondsToStr(track.length)}</span>
       )}
     </div>
   );
