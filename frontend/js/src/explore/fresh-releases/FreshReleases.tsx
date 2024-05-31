@@ -111,13 +111,6 @@ export default function FreshReleases() {
   const [filteredList, setFilteredList] = React.useState<
     Array<FreshReleaseItem>
   >([]);
-  const [allFilters, setAllFilters] = React.useState<{
-    releaseTypes: Array<string | undefined>;
-    releaseTags: Array<string | undefined>;
-  }>({
-    releaseTypes: [],
-    releaseTags: [],
-  });
   const [pageType, setPageType] = React.useState<string>(
     isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
@@ -288,14 +281,6 @@ export default function FreshReleases() {
     }
   }, [releases]);
 
-  React.useEffect(() => {
-    if (releaseTypes.length === 0 && releaseTags.length === 0) return;
-    setAllFilters({
-      releaseTypes,
-      releaseTags,
-    });
-  }, [releaseTypes, releaseTags]);
-
   let alt;
   let message;
   if (hasError) {
@@ -429,8 +414,9 @@ export default function FreshReleases() {
           />
         )}
         <ReleaseFilters
-          allFilters={allFilters}
           releases={releases}
+          releaseTypes={releaseTypes}
+          releaseTags={releaseTags}
           filteredList={filteredList}
           setFilteredList={setFilteredList}
           range={range}

@@ -153,7 +153,8 @@ describe("FreshReleases", () => {
 
     render(
       <ReleaseFilters
-        allFilters={sitewideFilters}
+        releaseTags={sitewideFilters.releaseTags}
+        releaseTypes={sitewideFilters.releaseTypes}
         displaySettings={userDisplayFilters}
         releases={sitewideData.payload.releases}
         filteredList={sitewideData.payload.releases}

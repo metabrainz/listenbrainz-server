@@ -15,11 +15,9 @@ import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
 type ReleaseFiltersProps = {
-  allFilters: {
-    releaseTypes: Array<string | undefined>;
-    releaseTags: Array<string | undefined>;
-  };
   releases: Array<FreshReleaseItem>;
+  releaseTypes: Array<string>;
+  releaseTags: Array<string>;
   filteredList: Array<FreshReleaseItem>;
   setFilteredList: React.Dispatch<
     React.SetStateAction<Array<FreshReleaseItem>>
@@ -38,7 +36,8 @@ type ReleaseFiltersProps = {
 
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const {
-    allFilters,
+    releaseTypes,
+    releaseTags,
     releases,
     filteredList,
     setFilteredList,
@@ -160,7 +159,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     if (includeVariousArtists === true) {
       setIncludeVariousArtists(false);
     }
-  }, [allFilters]);
+  }, [releaseTags, releaseTypes]);
 
   React.useEffect(() => {
     const filteredReleases = releases.filter((item) => {
@@ -275,10 +274,10 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               onChange={(e) => setShowFutureReleases(!showFutureReleases)}
               switchLabel="Future"
             />
-            {allFilters.releaseTypes.length > 0 && (
+            {releaseTypes.length > 0 && (
               <>
                 <span id="types">Types:</span>
-                {allFilters.releaseTypes?.map((type, index) => (
+                {releaseTypes?.map((type, index) => (
                   <Switch
                     id={`filters-item-${index}`}
                     key={`filters-item-${type}`}
@@ -291,7 +290,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               </>
             )}
 
-            {allFilters.releaseTags.length > 0 && (
+            {releaseTags.length > 0 && (
               <>
                 <span id="tags">Include (only):</span>
                 <select
@@ -303,7 +302,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                   <option value="" disabled>
                     selection genre/tag...
                   </option>
-                  {allFilters.releaseTags
+                  {releaseTags
                     ?.filter((tag) => !releaseTagsCheckList.includes(tag))
                     ?.map((tag, index) => (
                       <option value={tag} key={tag}>
@@ -334,7 +333,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                   <option value="" disabled>
                     selection genre/tag...
                   </option>
-                  {allFilters.releaseTags
+                  {releaseTags
                     ?.filter(
                       (tag) => !releaseTagsExcludeCheckList.includes(tag)
                     )
@@ -403,7 +402,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
             />
 
             {Object.keys(displaySettings).map((setting, index) =>
-              (setting === "Tags" && allFilters.releaseTags.length === 0) ||
+              (setting === "Tags" && releaseTags.length === 0) ||
               (setting === "Listens" && !totalListenCount) ? null : (
                 <Switch
                   id={`display-item-${index}`}
