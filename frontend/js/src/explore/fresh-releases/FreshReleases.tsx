@@ -273,13 +273,11 @@ export default function FreshReleases() {
 
   const { releases, releaseTypes, releaseTags } = rawData;
 
+  const releasesString = JSON.stringify(releases);
   React.useEffect(() => {
-    if (releases.length > 0) {
-      setFilteredList(releases);
-    } else if (releases.length === 0 && filteredList.length > 0) {
-      setFilteredList([]);
-    }
-  }, [releases]);
+    const newReleases = JSON.parse(releasesString);
+    setFilteredList(newReleases);
+  }, [releasesString]);
 
   let alt;
   let message;
