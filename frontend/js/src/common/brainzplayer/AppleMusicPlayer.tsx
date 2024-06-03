@@ -178,8 +178,9 @@ export default class AppleMusicPlayer
     const { onTrackNotFound } = this.props;
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
-    const releaseName = _get(listen, "track_metadata.release_name");
-    const searchTerm = `${trackName} ${artistName} ${releaseName}`;
+    // Album name can give worse results, re;oving it from search terms
+    // const releaseName = _get(listen, "track_metadata.release_name");
+    const searchTerm = `${trackName} ${artistName}`;
     if (!searchTerm) {
       onTrackNotFound();
       return;
