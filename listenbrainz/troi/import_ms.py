@@ -35,7 +35,7 @@ def import_from_spotify(token, user, playlist_id):
     try:
         playlist = troi.playlist.PlaylistElement()
         playlist.set_sources(recording_list)
-        result = playlist.generate()
+        result = playlist.generate(False)
         
         playlist.playlists[0].name = title
         playlist.playlists[0].descripton = description
