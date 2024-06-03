@@ -1,7 +1,8 @@
 import * as React from "react";
-import { get as _get, isString } from "lodash";
+import { get as _get, escapeRegExp, isString } from "lodash";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
 import { Link } from "react-router-dom";
+import fuzzysort from "fuzzysort";
 import {
   getArtistName,
   getTrackName,
@@ -190,11 +191,27 @@ export default class AppleMusicPlayer
         `/v1/catalog/{{storefrontId}}/search`,
         { term: searchTerm, types: "songs" }
       );
-      const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
-      if (apple_music_id) {
-        await this.playAppleMusicId(apple_music_id);
+      const candidateMatches = response?.data?.results?.songs?.data;
+      // Check if the first API result is a match
+      if (
+        new RegExp(escapeRegExp(`${trackName}`), "ig").test(
+          candidateMatches?.[0]?.attributes.name
+        )
+      ) {
+        // First result matches track title, assume it's the correct result
+        await this.playAppleMusicId(candidateMatches[0].id);
         return;
       }
+      // Fallback to best fuzzy match based on track title
+      const fruzzyMatches = fuzzysort.go(trackName, candidateMatches, {
+        key: "attributes.name",
+        limit: 1,
+      });
+      if (fruzzyMatches[0]) {
+        await this.playAppleMusicId(fruzzyMatches[0].obj.id);
+        return;
+      }
+      // No good match, onTrackNotFound will be called in the code block below
     } catch (error) {
       console.debug("Apple Music API request failed:", error);
     }
