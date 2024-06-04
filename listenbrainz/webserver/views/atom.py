@@ -24,15 +24,16 @@ def get_listens(user_name):
     fg.title(f"Listens for {user_name}")
     fg.author({"name": "ListenBrainz"})
     fg.link(href=f"https://listenbrainz.org/user/{user_name}", rel="alternate")
-    fg.link(href=f"https://listenbrainz.org/feed/user/{user_name}/listens", rel="self")
+    fg.link(href=f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens", rel="self")
     fg.logo("https://listenbrainz.org/static/img/listenbrainz_logo_icon.svg")
     fg.language("en")
     
     for listen in listens:
         fe = fg.add_entry()
-        fe.id(f"https://listenbrainz.org/user/{user_name}")
-        fe.title(f"{listen.user_name} listened to {listen.data['track_name']} - {listen.data['artist_name']} on {listen.timestamp}")
-        fe.link(href=f"https://listenbrainz.org/feed/user/{user_name}/listens", rel="self")
+        # according to spec, ids don't have to be deferencable.
+        fe.id(f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens/{listen.ts_since_epoch}/{listen.data['track_name']}")
+        fe.title(f"{listen.data['track_name']} - {listen.data['artist_name']}")
+        fe.content(f"{listen.user_name} listened to {listen.data['track_name']} - {listen.data['artist_name']} on {listen.timestamp}")
     
     atomfeed = fg.atom_str(pretty=True)
 
