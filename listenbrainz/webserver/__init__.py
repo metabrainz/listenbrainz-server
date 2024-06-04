@@ -409,4 +409,4 @@ def _register_blueprints(app):
     app.register_blueprint(release_group_bp, url_prefix='/release-group')
     
     from listenbrainz.webserver.views.atom import atom_bp
-    app.register_blueprint(atom_bp, url_prefix='/atom')
+    app.register_blueprint(atom_bp, url_prefix='/syndication-feed')
