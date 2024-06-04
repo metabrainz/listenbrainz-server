@@ -21,6 +21,8 @@ metadata_bp = Blueprint('metadata', __name__)
 
 #: The maximum length of the query permitted for a mapping search
 MAX_MAPPING_QUERY_LENGTH = 250
+#: The maximum number of lookups permitted in a bulk POST query
+MAX_LOOKUPS_PER_POST = 50
 
 
 def parse_incs(incs):
@@ -298,6 +300,7 @@ def get_mbid_mapping():
 
 
 def make_acrr_input(recording):
+    """ Create input for ArtistCreditRecordingReleaseLookup labs api query """
     if "release_name" in recording:
         return ArtistCreditRecordingReleaseLookupInput(
             artist_credit_name=recording["artist_name"],
@@ -309,6 +312,7 @@ def make_acrr_input(recording):
 
 
 def make_acr_input(recording):
+    """ Create input for ArtistCreditRecordingLookup labs api query """
     return ArtistCreditRecordingLookupInput(
         artist_credit_name=recording["artist_name"],
         recording_name=recording["recording_name"],
@@ -316,6 +320,7 @@ def make_acr_input(recording):
 
 
 def make_mapping_input(recording):
+    """ Create input for MBIDMapper labs api query """
     return MBIDMappingInput(
         artist_credit_name=recording["artist_name"],
         recording_name=recording["recording_name"],
@@ -323,6 +328,7 @@ def make_mapping_input(recording):
 
 
 def process_bulk_lookup_results(all_results, all_params, query, make_input):
+    """ Lookup recordings using the specified query and update successful lookups in all results"""
     query_params = []
     reverse_index = {}
     param_idx = 0
@@ -357,7 +363,7 @@ def process_bulk_lookup_results(all_results, all_params, query, make_input):
 def get_mbid_mapping_post():
     """
     This endpoint is the POST version for looking up recording mbids and associated MusicBrainz data. It allows up to
-    max number of items allowed. (:data:`~webserver.views.api.MAX_ITEMS_PER_GET` items)
+    max number of items allowed. (:data:`~webserver.views.api.MAX_LOOKUPS_PER_POST` items)
 
     A JSON document with a list of dicts each of which contain metadata (artist_name, recording_name and optionally
     a release name) for the recording to be looked up. The total number of characters in the artist name, recording name
@@ -389,6 +395,9 @@ def get_mbid_mapping_post():
     recordings = data.get("recordings", [])
     if not recordings:
         raise APIBadRequest("recordings is invalid or not present in body")
+
+    if len(recordings) > MAX_LOOKUPS_PER_POST:
+        raise APIBadRequest(f"Number of recordings in request body exceeds maximum permitted. ({MAX_LOOKUPS_PER_POST})")
 
     all_params = {}
     all_results = []
