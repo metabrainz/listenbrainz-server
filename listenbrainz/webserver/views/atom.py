@@ -1,5 +1,6 @@
+from datetime import datetime, timedelta
 from feedgen.feed import FeedGenerator
-from flask import Blueprint, Response
+from flask import Blueprint, Response, request
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
@@ -13,11 +14,34 @@ atom_bp = Blueprint("atom", __name__)
 @ratelimit()
 @api_listenstore_needed
 def get_listens(user_name):
+    """
+    Get listens feed for a user.
+    
+    :param interval: The time interval in minutes from current time to fetch listens for. For example, if interval=60, listens from the last hour will be fetched. Default is 60.
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 400: Bad request.
+    :statuscode 404: The user does not exist.
+    :resheader Content-Type: *application/atom+xml*
+    """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         return Response(status=404)
     
-    listens, _, _ = timescale_connection._ts.fetch_listens(user)
+    # Get and validate interval
+    interval = request.args.get("interval", 60)
+    if interval:
+        try:
+            interval = int(interval)
+        except ValueError:
+            return Response(status=400)
+    
+    if interval < 1:
+        return Response(status=400)
+    
+    # Construct UTC timestamp for interval
+    from_ts = datetime.now() - timedelta(minutes=interval)
+
+    listens, _, _ = timescale_connection._ts.fetch_listens(user, from_ts=from_ts)
 
     fg = FeedGenerator()
     fg.id(f"https://listenbrainz.org/user/{user_name}")
