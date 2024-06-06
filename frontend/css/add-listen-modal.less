@@ -168,4 +168,14 @@
   .release-cards-grid {
     grid-template-columns:repeat(auto-fit,minmax(150px,max-content));
   }
+  // Chevron indicator
+  #select-release{
+    > svg{
+      transition: rotate .4s ease-in-out;
+      rotate: -180deg;
+    }
+    &.collapsed > svg{
+      rotate: 0deg;
+    }
+  }
 }

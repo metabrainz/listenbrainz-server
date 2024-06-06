@@ -95,9 +95,9 @@ export default function AddSingleListen({
               cursor: "pointer",
             }}
           >
-            Choose from {selectedRecording?.releases?.length} releases{" "}
-            <small>(optional)</small>{" "}
-            <FontAwesomeIcon icon={faChevronDown} size="sm" />
+            Choose from {selectedRecording?.releases?.length} releases&nbsp;
+            <small>(optional)</small>&nbsp;
+            <FontAwesomeIcon icon={faChevronDown} size="xs" />
           </h5>
           <div className="collapse" id="select-release-collapsible">
             <div className="release-cards-grid">
