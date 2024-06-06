@@ -155,26 +155,26 @@
   .add-album-track {
     display: flex;
     gap: 1em;
-    .track-number{
+    .track-number {
       align-self: end;
     }
-    input[type=checkbox]{
+    input[type="checkbox"] {
       margin: 0;
     }
-    .duration{
+    .duration {
       margin-left: auto;
     }
   }
   .release-cards-grid {
-    grid-template-columns:repeat(auto-fit,minmax(150px,max-content));
+    grid-template-columns: repeat(auto-fit, minmax(150px, max-content));
   }
   // Chevron indicator
-  #select-release{
-    > svg{
-      transition: rotate .4s ease-in-out;
+  #select-release {
+    > svg {
+      transition: rotate 0.4s ease-in-out;
       rotate: -180deg;
     }
-    &.collapsed > svg{
+    &.collapsed > svg {
       rotate: 0deg;
     }
   }
