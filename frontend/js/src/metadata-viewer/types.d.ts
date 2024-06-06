@@ -99,6 +99,10 @@ declare type MusicBrainzRecording = {
 declare type MusicBrainzRecordingWithReleases = MusicBrainzRecording & {
   releases: Array<MusicBrainzRelease>;
 };
+// With ?inc=releases+release-groups
+declare type MusicBrainzRecordingWithReleasesAndRGs = MusicBrainzRecording & {
+  releases: Array<MusicBrainzRelease & WithReleaseGroup>;
+};
 
 declare type MusicBrainzRecordingRel = {
   artist_mbid: string;

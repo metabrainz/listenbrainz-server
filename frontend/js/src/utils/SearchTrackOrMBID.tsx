@@ -22,7 +22,7 @@ type PayloadType = "trackmetadata" | "recording";
 type ConditionalReturnValue =
   | {
       onSelectRecording: (
-        selectedRecording: MusicBrainzRecordingWithReleases
+        selectedRecording: MusicBrainzRecordingWithReleasesAndRGs
       ) => void;
       expectedPayload: "recording";
     }
@@ -113,8 +113,8 @@ export default function SearchTrackOrMBID({
           try {
             const recordingLookupResponse = (await lookupMBRecording(
               newRecordingMBID,
-              "artists+releases"
-            )) as MusicBrainzRecordingWithReleases;
+              "artists+releases+release-groups"
+            )) as MusicBrainzRecordingWithReleasesAndRGs;
 
             const canonicalReleaseIndex = recordingLookupResponse.releases.findIndex(
               (r) => r.id === canonicalReleaseMBID

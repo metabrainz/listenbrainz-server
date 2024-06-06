@@ -9,7 +9,7 @@ import { MBTrackWithAC } from "./AddListenModal";
 interface AddAlbumListensProps {
   onPayloadChange: (
     tracks: Array<MBTrackWithAC>,
-    release?: MusicBrainzRelease
+    release?: MusicBrainzRelease & WithReleaseGroup
   ) => void;
 }
 

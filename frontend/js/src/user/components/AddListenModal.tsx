@@ -20,10 +20,11 @@ enum SubmitListenType {
 export type MBTrackWithAC = MusicBrainzTrack & WithArtistCredits;
 
 export function getListenFromRecording(
-  recording: MusicBrainzRecordingWithReleases,
+  recording: MusicBrainzRecordingWithReleasesAndRGs,
   date?: Date,
-  release?: MusicBrainzRelease
+  release?: MusicBrainzRelease & WithReleaseGroup
 ): Listen {
+  const releaseOrCanonical = release ?? recording.releases[0];
   const listen: Listen = {
     listened_at: date ? convertDateToUnixTimestamp(date) : 0,
     track_metadata: {
@@ -32,10 +33,10 @@ export function getListenFromRecording(
           ?.map((artist) => `${artist.name}${artist.joinphrase}`)
           .join("") ?? "",
       track_name: recording.title,
-      release_mbid: release?.id ?? recording.releases[0].id,
-      release_name: release?.title ?? recording.releases[0].title,
+      release_name: releaseOrCanonical.title,
       additional_info: {
-        release_mbid: release?.id ?? recording.releases[0].id,
+        release_mbid: releaseOrCanonical.id,
+        release_group_mbid: releaseOrCanonical["release-group"].id,
         recording_mbid: recording.id,
         submission_client: "listenbrainz web",
         duration_ms: recording.length,
@@ -86,12 +87,14 @@ export default NiceModal.create(() => {
     SubmitListenType.track
   );
   const [selectedRecording, setSelectedRecording] = useState<
-    MusicBrainzRecordingWithReleases
+    MusicBrainzRecordingWithReleasesAndRGs
   >();
   const [selectedAlbumTracks, setSelectedAlbumTracks] = useState<
     MBTrackWithAC[]
   >([]);
-  const [selectedRelease, setSelectedRelease] = useState<MusicBrainzRelease>();
+  const [selectedRelease, setSelectedRelease] = useState<
+    MusicBrainzRelease & WithReleaseGroup
+  >();
   // const [selectedListens, setSelectedListens] = useState<Listen[]>([]);
   const [customTimestamp, setCustomTimestamp] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());

@@ -12,8 +12,8 @@ import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 
 interface AddSingleListenProps {
   onPayloadChange: (
-    recording?: MusicBrainzRecordingWithReleases,
-    release?: MusicBrainzRelease
+    recording?: MusicBrainzRecordingWithReleasesAndRGs,
+    release?: MusicBrainzRelease & WithReleaseGroup
   ) => void;
 }
 
@@ -21,9 +21,11 @@ export default function AddSingleListen({
   onPayloadChange,
 }: AddSingleListenProps) {
   const [selectedRecording, setSelectedRecording] = useState<
-    MusicBrainzRecordingWithReleases
+    MusicBrainzRecordingWithReleasesAndRGs
   >();
-  const [selectedRelease, setSelectedRelease] = useState<MusicBrainzRelease>();
+  const [selectedRelease, setSelectedRelease] = useState<
+    MusicBrainzRelease & WithReleaseGroup
+  >();
 
   const resetTrackSelection = () => {
     setSelectedRecording(undefined);
@@ -87,21 +89,34 @@ export default function AddSingleListen({
             data-toggle="collapse"
             data-target="#select-release-collapsible"
             aria-controls="select-release-collapsible"
-            className="header-with-line"
+            className="header-with-line collapsed"
             style={{
               gap: "5px",
               marginBottom: "0.5em",
-              alignItems: "baseline",
+              alignItems: "center",
               cursor: "pointer",
             }}
+            id="select-release"
           >
             Choose from {selectedRecording?.releases?.length} releases&nbsp;
             <small>(optional)</small>&nbsp;
             <FontAwesomeIcon icon={faChevronDown} size="xs" />
           </h5>
           <div className="collapse" id="select-release-collapsible">
+            <div className="help-block">
+              Too many choices? See more details{" "}
+              <a
+                href={`https://musicbrainz.org/recording/${selectedRecording.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                on MusicBrainz
+              </a>
+              .
+            </div>
             <div className="release-cards-grid">
               {selectedRecording.releases.map((release) => {
+                const releaseGroup = release["release-group"];
                 return (
                   <span
                     data-toggle="collapse"
@@ -109,6 +124,7 @@ export default function AddSingleListen({
                     key={release.id}
                   >
                     <ReleaseCard
+                      key={release.id}
                       onClick={() => {
                         setSelectedRelease(release);
                       }}
@@ -116,6 +132,7 @@ export default function AddSingleListen({
                       releaseDate={release.date}
                       dateFormatOptions={{ year: "numeric", month: "short" }}
                       releaseMBID={release.id}
+                      releaseGroupMBID={releaseGroup?.id}
                       artistCreditName={selectedRecording["artist-credit"]
                         ?.map((artist) => `${artist.name}${artist.joinphrase}`)
                         .join("")}
@@ -129,13 +146,15 @@ export default function AddSingleListen({
                       artistMBIDs={selectedRecording["artist-credit"]?.map(
                         (ac) => ac.artist.id
                       )}
-                      releaseTypePrimary={
-                        release.packaging === "None" ? null : release.packaging
-                      }
+                      releaseTypePrimary={releaseGroup?.["primary-type"]}
+                      releaseTypeSecondary={releaseGroup?.[
+                        "secondary-types"
+                      ].join("+")}
                       caaID={null}
                       caaReleaseMBID={release.id}
                       showTags={false}
                       showArtist
+                      showReleaseTitle
                       showInformation
                     />
                   </span>
