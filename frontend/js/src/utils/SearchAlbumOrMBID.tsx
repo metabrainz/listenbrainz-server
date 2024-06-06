@@ -15,7 +15,7 @@ import GlobalAppContext from "./GlobalAppContext";
 
 const RELEASE_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const RELEASE_GROUP_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release-group\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
-const THROTTLE_MILLISECONDS = 1000;
+const THROTTLE_MILLISECONDS = 1500;
 
 type SearchTrackOrMBIDProps = {
   onSelectAlbum: (releaseMBID?: string) => void;

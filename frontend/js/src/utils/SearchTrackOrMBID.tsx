@@ -14,7 +14,7 @@ import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
 
 const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
-const THROTTLE_MILLISECONDS = 1000;
+const THROTTLE_MILLISECONDS = 1500;
 
 type PayloadType = "trackmetadata" | "recording";
 // Allow for returning results of two different types while maintaining
