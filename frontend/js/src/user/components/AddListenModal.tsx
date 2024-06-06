@@ -252,8 +252,12 @@ export default NiceModal.create(() => {
             </div>
             {listenOption === SubmitListenType.track && (
               <AddSingleListen
-                selectedDate={selectedDate}
-                onPayloadChange={setSelectedListens}
+                onPayloadChange={(recording, release) => {
+                  setSelectedRecording(recording);
+                  if (release) {
+                    setSelectedRelease(release);
+                  }
+                }}
               />
             )}
             {listenOption === SubmitListenType.album && (

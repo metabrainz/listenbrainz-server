@@ -1,68 +1,56 @@
 import React, { useEffect, useState } from "react";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import ListenControl from "../../common/listens/ListenControl";
-import { convertDateToUnixTimestamp } from "../../utils/utils";
 import ListenCard from "../../common/listens/ListenCard";
 import SearchTrackOrMBID from "../../utils/SearchTrackOrMBID";
+import { getListenFromRecording } from "./AddListenModal";
+import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 
-function getListenFromTrack(
-  selectedDate: Date,
-  selectedTrackMetadata?: TrackMetadata
-): Listen | undefined {
-  if (!selectedTrackMetadata) {
-    return undefined;
-  }
-
-  return {
-    listened_at: convertDateToUnixTimestamp(selectedDate),
-    track_metadata: {
-      ...selectedTrackMetadata,
-      additional_info: {
-        ...selectedTrackMetadata.additional_info,
-        submission_client: "listenbrainz web",
-      },
-    },
-  };
-}
 interface AddSingleListenProps {
-  selectedDate: Date;
-  onPayloadChange: (listens: Listen[]) => void;
+  onPayloadChange: (
+    recording?: MusicBrainzRecordingWithReleases,
+    release?: MusicBrainzRelease
+  ) => void;
 }
 
 export default function AddSingleListen({
-  selectedDate,
   onPayloadChange,
 }: AddSingleListenProps) {
-  const [selectedTrack, setSelectedTrack] = useState<TrackMetadata>();
+  const [selectedRecording, setSelectedRecording] = useState<
+    MusicBrainzRecordingWithReleases
+  >();
+  const [selectedRelease, setSelectedRelease] = useState<MusicBrainzRelease>();
 
   const resetTrackSelection = () => {
-    setSelectedTrack(undefined);
+    setSelectedRecording(undefined);
   };
-  const listenFromSelectedTrack = getListenFromTrack(
-    selectedDate,
-    selectedTrack
-  );
+  const listenFromSelectedRecording =
+    selectedRecording && getListenFromRecording(selectedRecording);
 
   useEffect(() => {
-    if (listenFromSelectedTrack) {
-      onPayloadChange([listenFromSelectedTrack]);
+    if (selectedRecording) {
+      onPayloadChange(selectedRecording, selectedRelease);
     } else {
-      onPayloadChange([]);
+      onPayloadChange(undefined);
     }
-  }, [listenFromSelectedTrack, onPayloadChange]);
+  }, [selectedRecording, selectedRelease, onPayloadChange]);
 
   return (
     <div>
       <SearchTrackOrMBID
-        onSelectRecording={(newSelectedTrackMetadata) => {
-          setSelectedTrack(newSelectedTrackMetadata);
+        expectedPayload="recording"
+        onSelectRecording={(newSelectedRecording) => {
+          setSelectedRecording(newSelectedRecording);
+          if (newSelectedRecording.releases?.length === 1) {
+            setSelectedRelease(newSelectedRecording.releases[0]);
+          }
         }}
       />
       <div className="track-info">
         <div className="content">
-          {listenFromSelectedTrack && (
+          {listenFromSelectedRecording && (
             <ListenCard
-              listen={listenFromSelectedTrack}
+              listen={listenFromSelectedRecording}
               showTimestamp={false}
               showUsername={false}
               // eslint-disable-next-line react/jsx-no-useless-fragment
@@ -82,6 +70,52 @@ export default function AddSingleListen({
           )}
         </div>
       </div>
+      {!selectedRelease &&
+        selectedRecording &&
+        selectedRecording?.releases?.length > 1 && (
+          <>
+            <h4>
+              Choose a release <small>(optional)</small>
+            </h4>
+            <br />
+            <div>
+              {selectedRecording.releases.map((release) => {
+                return (
+                  <ReleaseCard
+                    onClick={() => {
+                      setSelectedRelease(release);
+                    }}
+                    releaseName={release.title}
+                    releaseDate={release.date}
+                    dateFormatOptions={{ year: "numeric", month: "short" }}
+                    releaseMBID={release.id}
+                    artistCreditName={selectedRecording["artist-credit"]
+                      ?.map((artist) => `${artist.name}${artist.joinphrase}`)
+                      .join("")}
+                    artistCredits={selectedRecording["artist-credit"].map(
+                      (ac) => ({
+                        artist_credit_name: ac.name,
+                        artist_mbid: ac.artist.id,
+                        join_phrase: ac.joinphrase,
+                      })
+                    )}
+                    artistMBIDs={selectedRecording["artist-credit"]?.map(
+                      (ac) => ac.artist.id
+                    )}
+                    releaseTypePrimary={
+                      release.packaging === "None" ? null : release.packaging
+                    }
+                    caaID={null}
+                    caaReleaseMBID={release.id}
+                    showTags={false}
+                    showArtist
+                    showInformation
+                  />
+                );
+              })}
+            </div>
+          </>
+        )}
     </div>
   );
 }
