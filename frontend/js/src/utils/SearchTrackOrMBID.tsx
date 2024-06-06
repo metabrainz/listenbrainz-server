@@ -105,7 +105,7 @@ export default function SearchTrackOrMBID({
   const throttledHandleValidMBID = useMemo(
     () =>
       throttle(
-        async (input: string) => {
+        async (input: string, canonicalReleaseMBID?: string) => {
           const newRecordingMBID = RECORDING_MBID_REGEXP.exec(
             input
           )![2].toLowerCase();
@@ -116,6 +116,17 @@ export default function SearchTrackOrMBID({
               "artists+releases"
             )) as MusicBrainzRecordingWithReleases;
 
+            const canonicalReleaseIndex = recordingLookupResponse.releases.findIndex(
+              (r) => r.id === canonicalReleaseMBID
+            );
+            if (canonicalReleaseIndex !== -1) {
+              // sort the canonical release as #1, for use in
+              const canonicalRelease = recordingLookupResponse.releases.splice(
+                canonicalReleaseIndex,
+                1
+              );
+              recordingLookupResponse.releases.unshift(canonicalRelease[0]);
+            }
             if (expectedPayload === "recording") {
               onSelectRecording(recordingLookupResponse);
             } else {
@@ -156,7 +167,7 @@ export default function SearchTrackOrMBID({
   const selectSearchResult = (track: ACRMSearchResult) => {
     if (expectedPayload === "recording") {
       // Expecting a recording, fetch it so we can return it
-      throttledHandleValidMBID(track.recording_mbid);
+      throttledHandleValidMBID(track.recording_mbid, track.release_mbid);
     } else {
       const metadata: TrackMetadata = {
         additional_info: {

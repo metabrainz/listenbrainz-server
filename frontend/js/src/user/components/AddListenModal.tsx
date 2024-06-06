@@ -35,6 +35,7 @@ export function getListenFromRecording(
       release_mbid: release?.id ?? recording.releases[0].id,
       release_name: release?.title ?? recording.releases[0].title,
       additional_info: {
+        release_mbid: release?.id ?? recording.releases[0].id,
         recording_mbid: recording.id,
         submission_client: "listenbrainz web",
         duration_ms: recording.length,
