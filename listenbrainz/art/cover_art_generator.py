@@ -148,9 +148,9 @@ class CoverArtGenerator:
         y2 = int((y + 1) * self.tile_size)
 
         if x == self.dimension - 1:
-            x2 = self.image_size - 1
+            x2 = self.image_size
         if y == self.dimension - 1:
-            y2 = self.image_size - 1
+            y2 = self.image_size
 
         return (x1, y1, x2, y2)
 

@@ -184,6 +184,11 @@ def init_ts_db(force, create_db):
         if not res:
             raise Exception('Failed to create ts extension! Exit code: %i' % res)
 
+        res = ts.run_sql_query_without_transaction(
+            [f"ALTER DATABASE {ts_connect['DB_NAME']} SET pg_trgm.word_similarity_threshold = 0.1"])
+        if not res:
+            raise Exception('Failed to create to set pg_trgm.word_similarity_threshold! Exit code: %i' % res)
+
 
     if "PYTHON_TESTS_RUNNING" in os.environ:
         ts.init_db_connection(ts_connect["DB_CONNECT"])

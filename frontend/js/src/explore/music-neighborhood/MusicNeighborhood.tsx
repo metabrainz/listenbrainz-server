@@ -45,7 +45,7 @@ export default function MusicNeighborhood() {
   );
   const { algorithm: DEFAULT_ALGORITHM, artist_mbid: DEFAULT_ARTIST_MBID } =
     data || {};
-  const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbid=`;
+  const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbids=`;
   const DEFAULT_COLORS = colorGenerator();
 
   const { APIService } = React.useContext(GlobalAppContext);
@@ -73,6 +73,8 @@ export default function MusicNeighborhood() {
   const [artistInfo, setArtistInfo] = React.useState<ArtistInfoType | null>(
     null
   );
+  const artistInfoRef = React.useRef<ArtistInfoType | null>(null);
+  artistInfoRef.current = artistInfo;
 
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
 
@@ -111,16 +113,16 @@ export default function MusicNeighborhood() {
         const response = await fetch(BASE_URL + artistMBID);
         const artistSimilarityData = await response.json();
 
-        if (
-          !artistSimilarityData ||
-          !artistSimilarityData.length ||
-          artistSimilarityData.length === 3
-        ) {
+        if (!artistSimilarityData || !artistSimilarityData.length) {
           throw new Error("No Similar Artists Found");
         }
 
-        setArtistGraphNodeInfo(artistSimilarityData[1]?.data[0] ?? null);
-        const similarArtists = artistSimilarityData[3]?.data ?? [];
+        const currentArtistName = artistInfoRef.current?.name;
+        setArtistGraphNodeInfo({
+          artist_mbid: artistMBID,
+          name: currentArtistName ?? "Unknown",
+        });
+        const similarArtists = artistSimilarityData ?? [];
 
         setCompleteSimilarArtistsList(similarArtists);
         setSimilarArtistsList(similarArtists?.slice(0, similarArtistsLimit));
@@ -266,10 +268,8 @@ export default function MusicNeighborhood() {
     async (artistMBID: string) => {
       try {
         setLoading(true);
-        const [newArtistInfo, _] = await Promise.all([
-          fetchArtistInfo(artistMBID),
-          fetchArtistSimilarityInfo(artistMBID),
-        ]);
+        const newArtistInfo = await fetchArtistInfo(artistMBID);
+        await fetchArtistSimilarityInfo(artistMBID);
         setLoading(false);
         const topTracksAsListen = newArtistInfo?.topTracks?.map((topTrack) => ({
           listened_at: 0,
