@@ -16,13 +16,29 @@ import GlobalAppContext from "./GlobalAppContext";
 const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const THROTTLE_MILLISECONDS = 1000;
 
+type PayloadType = "trackmetadata" | "recording";
+// Allow for returning results of two different types while maintaining
+// type safety, depending on the value of expectedPayload
+type ConditionalReturnValue =
+  | {
+      onSelectRecording: (
+        selectedRecording: MusicBrainzRecordingWithReleases
+      ) => void;
+      expectedPayload: "recording";
+    }
+  | {
+      onSelectRecording: (selectedRecording: TrackMetadata) => void;
+      expectedPayload: "trackmetadata";
+    };
+
 type SearchTrackOrMBIDProps = {
-  onSelectRecording: (selectedRecordingMetadata: TrackMetadata) => void;
   defaultValue?: string;
-};
+  expectedPayload: PayloadType;
+} & ConditionalReturnValue;
 
 export default function SearchTrackOrMBID({
   onSelectRecording,
+  expectedPayload,
   defaultValue,
 }: SearchTrackOrMBIDProps) {
   const { APIService } = useContext(GlobalAppContext);
@@ -100,24 +116,28 @@ export default function SearchTrackOrMBID({
               "artists+releases"
             )) as MusicBrainzRecordingWithReleases;
 
-            const newMetadata: TrackMetadata = {
-              track_name: recordingLookupResponse.title,
-              artist_name: recordingLookupResponse["artist-credit"]
-                .map((ac) => ac.name + ac.joinphrase)
-                .join(""),
-              additional_info: {
-                duration_ms: recordingLookupResponse.length,
-                artist_mbids: recordingLookupResponse["artist-credit"].map(
-                  (ac) => ac.artist.id
-                ),
-                release_artist_names: recordingLookupResponse[
-                  "artist-credit"
-                ].map((ac) => ac.artist.name),
-                recording_mbid: recordingLookupResponse.id,
-                release_mbid: recordingLookupResponse.releases[0]?.id,
-              },
-            };
-            onSelectRecording(newMetadata);
+            if (expectedPayload === "recording") {
+              onSelectRecording(recordingLookupResponse);
+            } else {
+              const newMetadata: TrackMetadata = {
+                track_name: recordingLookupResponse.title,
+                artist_name: recordingLookupResponse["artist-credit"]
+                  .map((ac) => ac.name + ac.joinphrase)
+                  .join(""),
+                additional_info: {
+                  duration_ms: recordingLookupResponse.length,
+                  artist_mbids: recordingLookupResponse["artist-credit"].map(
+                    (ac) => ac.artist.id
+                  ),
+                  release_artist_names: recordingLookupResponse[
+                    "artist-credit"
+                  ].map((ac) => ac.artist.name),
+                  recording_mbid: recordingLookupResponse.id,
+                  release_mbid: recordingLookupResponse.releases[0]?.id,
+                },
+              };
+              onSelectRecording(newMetadata);
+            }
           } catch (error) {
             handleError(
               `We could not find a recording on MusicBrainz with the MBID ${newRecordingMBID} ('${error.message}')`,
@@ -130,21 +150,26 @@ export default function SearchTrackOrMBID({
         THROTTLE_MILLISECONDS,
         { leading: false, trailing: true }
       ),
-    [lookupMBRecording, handleError, onSelectRecording]
+    [lookupMBRecording, expectedPayload, onSelectRecording, handleError]
   );
 
   const selectSearchResult = (track: ACRMSearchResult) => {
-    const metadata: TrackMetadata = {
-      additional_info: {
-        release_mbid: track.release_mbid,
-        recording_mbid: track.recording_mbid,
-      },
+    if (expectedPayload === "recording") {
+      // Expecting a recording, fetch it so we can return it
+      throttledHandleValidMBID(track.recording_mbid);
+    } else {
+      const metadata: TrackMetadata = {
+        additional_info: {
+          release_mbid: track.release_mbid,
+          recording_mbid: track.recording_mbid,
+        },
 
-      artist_name: track.artist_credit_name,
-      track_name: track.recording_name,
-      release_name: track.release_name,
-    };
-    onSelectRecording(metadata);
+        artist_name: track.artist_credit_name,
+        track_name: track.recording_name,
+        release_name: track.release_name,
+      };
+      onSelectRecording(metadata);
+    }
   };
 
   const reset = () => {

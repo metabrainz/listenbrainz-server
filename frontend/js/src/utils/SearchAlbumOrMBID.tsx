@@ -22,7 +22,7 @@ type SearchTrackOrMBIDProps = {
   defaultValue?: string;
 };
 
-export default function SearchTrackOrMBID({
+export default function SearchAlbumOrMBID({
   onSelectAlbum,
   defaultValue,
 }: SearchTrackOrMBIDProps) {
