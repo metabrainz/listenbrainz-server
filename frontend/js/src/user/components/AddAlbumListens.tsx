@@ -4,12 +4,14 @@ import { padStart, sortBy, without } from "lodash";
 import SearchAlbumOrMBID from "../../utils/SearchAlbumOrMBID";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { millisecondsToStr } from "../../playlists/utils";
+import { MBTrackWithAC } from "./AddListenModal";
 
 interface AddAlbumListensProps {
-  onPayloadChange: (tracks: Array<MusicBrainzTrackWithArtistCredits>) => void;
+  onPayloadChange: (
+    tracks: Array<MBTrackWithAC>,
+    release?: MusicBrainzRelease
+  ) => void;
 }
-
-type MusicBrainzTrackWithArtistCredits = MusicBrainzTrack & WithArtistCredits;
 
 type MBReleaseWithMetadata = MusicBrainzRelease &
   WithMedia &
@@ -17,12 +19,9 @@ type MBReleaseWithMetadata = MusicBrainzRelease &
   WithReleaseGroup;
 
 type TrackRowProps = {
-  track: MusicBrainzTrackWithArtistCredits;
+  track: MBTrackWithAC;
   isChecked: boolean;
-  onClickCheckbox: (
-    track: MusicBrainzTrackWithArtistCredits,
-    checked: boolean
-  ) => void;
+  onClickCheckbox: (track: MBTrackWithAC, checked: boolean) => void;
 };
 
 function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
@@ -53,14 +52,14 @@ export default function AddAlbumListens({
   const { lookupMBRelease } = APIService;
   const [selectedAlbumMBID, setSelectedAlbumMBID] = useState<string>();
   const [selectedAlbum, setSelectedAlbum] = useState<MBReleaseWithMetadata>();
-  const [selectedTracks, setSelectedTracks] = useState<
-    Array<MusicBrainzTrackWithArtistCredits>
-  >([]);
+  const [selectedTracks, setSelectedTracks] = useState<Array<MBTrackWithAC>>(
+    []
+  );
 
   useEffect(() => {
     // Update parent on selection change
-    onPayloadChange(selectedTracks);
-  }, [selectedTracks, onPayloadChange]);
+    onPayloadChange(selectedTracks, selectedAlbum);
+  }, [selectedTracks, selectedAlbum, onPayloadChange]);
 
   const artistsName = selectedAlbum?.["artist-credit"]
     ?.map((artist) => `${artist.name}${artist.joinphrase}`)
@@ -76,7 +75,7 @@ export default function AddAlbumListens({
         )) as MBReleaseWithMetadata;
         setSelectedAlbum(fetchedRelease);
         const newSelection = fetchedRelease.media
-          .map(({ tracks }) => tracks as MusicBrainzTrackWithArtistCredits[])
+          .map(({ tracks }) => tracks as MBTrackWithAC[])
           .flat();
         setSelectedTracks(newSelection);
       } catch (error) {
@@ -92,9 +91,9 @@ export default function AddAlbumListens({
   }, [selectedAlbumMBID, lookupMBRelease]);
 
   const onTrackSelectionChange = React.useCallback(
-    (track: MusicBrainzTrackWithArtistCredits, isChecked: boolean) => {
+    (track: MBTrackWithAC, isChecked: boolean) => {
       setSelectedTracks((prevSelectedTracks) => {
-        let newSelection: MusicBrainzTrackWithArtistCredits[];
+        let newSelection: MBTrackWithAC[];
         if (isChecked) {
           newSelection = sortBy([...prevSelectedTracks, track], "position");
         } else {
@@ -154,10 +153,10 @@ export default function AddAlbumListens({
                           return (
                             <TrackRow
                               key={track.id}
-                              track={track as MusicBrainzTrackWithArtistCredits}
+                              track={track as MBTrackWithAC}
                               onClickCheckbox={onTrackSelectionChange}
                               isChecked={selectedTracks.includes(
-                                track as MusicBrainzTrackWithArtistCredits
+                                track as MBTrackWithAC
                               )}
                             />
                           );
