@@ -128,7 +128,7 @@ function Navbar() {
               type="text"
               name="search_term"
               className="form-control input-sm"
-              placeholder="Search users"
+              placeholder="Search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               required

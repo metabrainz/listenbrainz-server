@@ -73,10 +73,9 @@ const getIndexRoutes = (): RouteObject[] => {
         {
           path: "search/",
           lazy: async () => {
-            const SearchResults = await import("../search/UserSearch");
+            const SearchResults = await import("../search/Search");
             return { Component: SearchResults.default };
           },
-          loader: RouteQueryLoader("search-users", true),
         },
         {
           path: "playlist/:playlistID/",

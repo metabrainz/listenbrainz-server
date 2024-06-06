@@ -1629,8 +1629,34 @@ export default class APIService {
     }
   };
 
-  artistLookup = async (searchQuery: string): Promise<any> => {
-    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json`;
+  artistLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<ArtistTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  albumLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<AlbumTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/release-group?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  recordingLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<TrackTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/recording?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1683,6 +1709,29 @@ export default class APIService {
     artistMBID: string
   ): Promise<ReleaseGroupType[]> => {
     const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist/${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchPlaylistsForUser = async (
+    searchQuery: string,
+    musicbrainzID: string,
+    count: number = 25,
+    offset: number = 0
+  ): Promise<PlaylistTypeSearchResult> => {
+    const url = `${this.APIBaseURI}/user/${musicbrainzID}/playlists/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchPlaylists = async (
+    searchQuery: string,
+    count: number = 25,
+    offset: number = 0
+  ): Promise<PlaylistTypeSearchResult> => {
+    const url = `${this.APIBaseURI}/playlist/search?query=${searchQuery}&count=${count}&offset=${offset}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
