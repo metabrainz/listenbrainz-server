@@ -32,8 +32,8 @@ export function getListenFromRecording(
           ?.map((artist) => `${artist.name}${artist.joinphrase}`)
           .join("") ?? "",
       track_name: recording.title,
-      release_mbid: recording.releases[0].id,
-      release_name: recording.releases[0].title,
+      release_mbid: release?.id ?? recording.releases[0].id,
+      release_name: release?.title ?? recording.releases[0].title,
       additional_info: {
         recording_mbid: recording.id,
         submission_client: "listenbrainz web",
@@ -42,10 +42,6 @@ export function getListenFromRecording(
       },
     },
   };
-  if (release) {
-    listen.track_metadata.release_mbid = release.id;
-    listen.track_metadata.release_name = release.title;
-  }
   return listen;
 }
 
@@ -327,16 +323,29 @@ export default NiceModal.create(() => {
             >
               Close
             </button>
-            <button
-              type="submit"
-              className="btn btn-success"
-              data-dismiss="modal"
-              disabled={!selectedAlbumTracks?.length}
-              onClick={submitListens}
-            >
-              Submit {selectedAlbumTracks.length} listen
-              {selectedAlbumTracks.length > 1 ? "s" : ""}
-            </button>
+            {listenOption === SubmitListenType.track && (
+              <button
+                type="submit"
+                className="btn btn-success"
+                data-dismiss="modal"
+                disabled={!selectedRecording}
+                onClick={submitListens}
+              >
+                Submit 1 listen
+              </button>
+            )}
+            {listenOption === SubmitListenType.album && (
+              <button
+                type="submit"
+                className="btn btn-success"
+                data-dismiss="modal"
+                disabled={!selectedAlbumTracks?.length}
+                onClick={submitListens}
+              >
+                Submit {selectedAlbumTracks.length} listen
+                {selectedAlbumTracks.length > 1 ? "s" : ""}
+              </button>
+            )}
           </div>
         </form>
       </div>

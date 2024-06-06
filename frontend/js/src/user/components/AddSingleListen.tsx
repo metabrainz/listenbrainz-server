@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronDown,
+  faTimesCircle,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ListenControl from "../../common/listens/ListenControl";
 import ListenCard from "../../common/listens/ListenCard";
 import SearchTrackOrMBID from "../../utils/SearchTrackOrMBID";
@@ -23,15 +27,20 @@ export default function AddSingleListen({
 
   const resetTrackSelection = () => {
     setSelectedRecording(undefined);
+    setSelectedRelease(undefined);
   };
-  const listenFromSelectedRecording =
-    selectedRecording && getListenFromRecording(selectedRecording);
+  const listenFromSelectedRecording = React.useMemo(() => {
+    return (
+      selectedRecording &&
+      getListenFromRecording(selectedRecording, new Date(), selectedRelease)
+    );
+  }, [selectedRecording, selectedRelease]);
 
   useEffect(() => {
     if (selectedRecording) {
       onPayloadChange(selectedRecording, selectedRelease);
     } else {
-      onPayloadChange(undefined);
+      onPayloadChange(undefined, undefined);
     }
   }, [selectedRecording, selectedRelease, onPayloadChange]);
 
@@ -43,6 +52,8 @@ export default function AddSingleListen({
           setSelectedRecording(newSelectedRecording);
           if (newSelectedRecording.releases?.length === 1) {
             setSelectedRelease(newSelectedRecording.releases[0]);
+          } else {
+            setSelectedRelease(undefined);
           }
         }}
       />
@@ -70,52 +81,70 @@ export default function AddSingleListen({
           )}
         </div>
       </div>
-      {!selectedRelease &&
-        selectedRecording &&
-        selectedRecording?.releases?.length > 1 && (
-          <>
-            <h4>
-              Choose a release <small>(optional)</small>
-            </h4>
-            <br />
-            <div>
+      {selectedRecording && selectedRecording?.releases?.length > 1 && (
+        <>
+          <h5
+            data-toggle="collapse"
+            data-target="#select-release-collapsible"
+            aria-controls="select-release-collapsible"
+            className="header-with-line"
+            style={{
+              gap: "5px",
+              marginBottom: "0.5em",
+              alignItems: "baseline",
+              cursor: "pointer",
+            }}
+          >
+            Choose from {selectedRecording?.releases?.length} releases{" "}
+            <small>(optional)</small>{" "}
+            <FontAwesomeIcon icon={faChevronDown} size="sm" />
+          </h5>
+          <div className="collapse" id="select-release-collapsible">
+            <div className="release-cards-grid">
               {selectedRecording.releases.map((release) => {
                 return (
-                  <ReleaseCard
-                    onClick={() => {
-                      setSelectedRelease(release);
-                    }}
-                    releaseName={release.title}
-                    releaseDate={release.date}
-                    dateFormatOptions={{ year: "numeric", month: "short" }}
-                    releaseMBID={release.id}
-                    artistCreditName={selectedRecording["artist-credit"]
-                      ?.map((artist) => `${artist.name}${artist.joinphrase}`)
-                      .join("")}
-                    artistCredits={selectedRecording["artist-credit"].map(
-                      (ac) => ({
-                        artist_credit_name: ac.name,
-                        artist_mbid: ac.artist.id,
-                        join_phrase: ac.joinphrase,
-                      })
-                    )}
-                    artistMBIDs={selectedRecording["artist-credit"]?.map(
-                      (ac) => ac.artist.id
-                    )}
-                    releaseTypePrimary={
-                      release.packaging === "None" ? null : release.packaging
-                    }
-                    caaID={null}
-                    caaReleaseMBID={release.id}
-                    showTags={false}
-                    showArtist
-                    showInformation
-                  />
+                  <span
+                    data-toggle="collapse"
+                    data-target="#select-release-collapsible"
+                    key={release.id}
+                  >
+                    <ReleaseCard
+                      onClick={() => {
+                        setSelectedRelease(release);
+                      }}
+                      releaseName={release.title}
+                      releaseDate={release.date}
+                      dateFormatOptions={{ year: "numeric", month: "short" }}
+                      releaseMBID={release.id}
+                      artistCreditName={selectedRecording["artist-credit"]
+                        ?.map((artist) => `${artist.name}${artist.joinphrase}`)
+                        .join("")}
+                      artistCredits={selectedRecording["artist-credit"].map(
+                        (ac) => ({
+                          artist_credit_name: ac.name,
+                          artist_mbid: ac.artist.id,
+                          join_phrase: ac.joinphrase,
+                        })
+                      )}
+                      artistMBIDs={selectedRecording["artist-credit"]?.map(
+                        (ac) => ac.artist.id
+                      )}
+                      releaseTypePrimary={
+                        release.packaging === "None" ? null : release.packaging
+                      }
+                      caaID={null}
+                      caaReleaseMBID={release.id}
+                      showTags={false}
+                      showArtist
+                      showInformation
+                    />
+                  </span>
                 );
               })}
             </div>
-          </>
-        )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
