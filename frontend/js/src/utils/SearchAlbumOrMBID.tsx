@@ -83,16 +83,18 @@ export default function SearchAlbumOrMBID({
         async (input: string) => {
           const newReleaseMBID = RELEASE_MBID_REGEXP.exec(
             input
-          )![2].toLowerCase();
-          const newReleaseGroupMBID = RELEASE_MBID_REGEXP.exec(
+          )?.[2].toLowerCase();
+          const newReleaseGroupMBID = RELEASE_GROUP_MBID_REGEXP.exec(
             input
-          )![2].toLowerCase();
+          )?.[2].toLowerCase();
           try {
             if (newReleaseMBID) {
               onSelectAlbum(newReleaseMBID);
               setSearchResults([]);
             } else if (newReleaseGroupMBID) {
-              const lookupResponse = await lookupMBReleaseGroup(newReleaseMBID);
+              const lookupResponse = await lookupMBReleaseGroup(
+                newReleaseGroupMBID
+              );
               const releasesWithAC = lookupResponse?.releases.map(
                 (release) => ({
                   ...release,
