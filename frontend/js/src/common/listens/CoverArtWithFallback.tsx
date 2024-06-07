@@ -33,6 +33,7 @@ export default function CoverArtWithFallback({
       onError={(err) => {
         setError(true);
       }}
+      loading="lazy"
     />
   );
 }
