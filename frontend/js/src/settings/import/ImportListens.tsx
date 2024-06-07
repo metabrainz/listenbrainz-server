@@ -135,7 +135,7 @@ export default function Import() {
       </p>
 
       <p>
-        <span className="btn btn-info btn-lg" style={{ width: "250px" }}>
+        <span className="btn btn-info btn-lg">
           <Link to="/settings/resetlatestimportts/" style={{ color: "white" }}>
             Reset import timestamp
           </Link>

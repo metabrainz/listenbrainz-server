@@ -44,10 +44,12 @@ export default function SearchTrackOrMBID({
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRecording } = APIService;
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLSelectElement>(null);
   const [inputValue, setInputValue] = useState(defaultValue ?? "");
   const [searchResults, setSearchResults] = useState<Array<ACRMSearchResult>>(
     []
   );
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   useEffect(() => {
     // autoFocus property on the input element does not work
@@ -186,6 +188,7 @@ export default function SearchTrackOrMBID({
   const reset = () => {
     setInputValue("");
     setSearchResults([]);
+    setSelectedIndex(-1);
   };
 
   useEffect(() => {
@@ -201,6 +204,28 @@ export default function SearchTrackOrMBID({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputValue]);
 
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "ArrowDown") {
+      setSelectedIndex((prevIndex) =>
+        prevIndex < searchResults.length - 1 ? prevIndex + 1 : prevIndex
+      );
+    } else if (event.key === "ArrowUp") {
+      setSelectedIndex((prevIndex) =>
+        prevIndex > 0 ? prevIndex - 1 : prevIndex
+      );
+    } else if (event.key === "Enter" && selectedIndex >= 0) {
+      selectSearchResult(searchResults[selectedIndex]);
+      reset();
+    }
+  };
+
+  React.useEffect(() => {
+    if (selectedIndex >= 0 && dropdownRef.current) {
+      const option = dropdownRef.current.options[selectedIndex];
+      option.scrollIntoView({ block: "nearest" });
+    }
+  }, [selectedIndex]);
+
   return (
     <div>
       <div className="input-group track-search">
@@ -213,6 +238,7 @@ export default function SearchTrackOrMBID({
           onChange={(event) => {
             setInputValue(event.target.value);
           }}
+          onKeyDown={handleKeyDown}
           placeholder="Track name or MusicBrainz URL/MBID"
           required
           ref={inputRef}
@@ -223,22 +249,35 @@ export default function SearchTrackOrMBID({
           </button>
         </span>
         {Boolean(searchResults?.length) && (
-          <div className="track-search-dropdown">
-            {searchResults.map((track) => {
-              return (
-                <button
-                  key={track.recording_mbid}
-                  type="button"
-                  onClick={() => {
-                    selectSearchResult(track);
-                    reset();
-                  }}
-                >
-                  {`${track.recording_name} - ${track.artist_credit_name}`}
-                </button>
+          <select
+            className="track-search-dropdown"
+            size={Math.min(searchResults.length, 8)}
+            onChange={(e) => {
+              const selectedTrack = searchResults.find(
+                (track) => track.recording_mbid === e.target.value
               );
-            })}
-          </div>
+              selectSearchResult(selectedTrack!);
+              reset();
+            }}
+            onKeyDown={handleKeyDown}
+            tabIndex={-1}
+            ref={dropdownRef}
+          >
+            {searchResults.map((track, index) => (
+              <option
+                key={track.recording_mbid}
+                value={track.recording_mbid}
+                style={
+                  index === selectedIndex
+                    ? { backgroundColor: "#353070", color: "white" }
+                    : {}
+                }
+                aria-selected={index === selectedIndex}
+              >
+                {`${track.recording_name} - ${track.artist_credit_name}`}
+              </option>
+            ))}
+          </select>
         )}
       </div>
     </div>
