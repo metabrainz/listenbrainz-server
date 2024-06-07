@@ -16,7 +16,11 @@
   cursor: pointer;
 
   // Options within the dropdown menu
-  option {
+  > option, > button {
+    .track-search-dropdown>a,.track-search-dropdown>button {
+    display: block;
+    width: 100%;
+    outline: inherit;
     padding: 5px 20px;
     font: inherit;
     text-align: left;
