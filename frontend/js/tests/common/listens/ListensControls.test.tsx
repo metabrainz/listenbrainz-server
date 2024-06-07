@@ -34,6 +34,7 @@ const props: ListensProps = {
   listens,
   oldestListenTs,
   user,
+  already_reported_user: false,
 };
 
 // const userEventSession = userEvent.setup();
