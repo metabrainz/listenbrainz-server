@@ -108,9 +108,6 @@ export default function FreshReleases() {
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
 
-  const [filteredList, setFilteredList] = React.useState<
-    Array<FreshReleaseItem>
-  >([]);
   const [pageType, setPageType] = React.useState<string>(
     isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
@@ -273,11 +270,9 @@ export default function FreshReleases() {
 
   const { releases, releaseTypes, releaseTags } = rawData;
 
-  const releasesString = JSON.stringify(releases);
-  React.useEffect(() => {
-    const newReleases = JSON.parse(releasesString);
-    setFilteredList(newReleases);
-  }, [releasesString]);
+  const [filteredList, setFilteredList] = React.useState<
+    Array<FreshReleaseItem>
+  >(releases);
 
   let alt;
   let message;

@@ -197,7 +197,6 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     if (releaseCardGridRef.current) {
       window.scrollTo(0, releaseCardGridRef.current.offsetTop);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     checkedList,
     releaseTagsCheckList,
@@ -205,6 +204,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     coverartOnly,
     includeVariousArtists,
     releases,
+    filteredList,
+    releaseCardGridRef,
+    setFilteredList,
   ]);
 
   return (
