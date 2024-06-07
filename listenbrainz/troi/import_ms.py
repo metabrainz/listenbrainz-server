@@ -5,25 +5,26 @@ import troi.playlist
 from troi.musicbrainz.recording import RecordingListElement
 import sys
 
+
 def import_from_spotify(token, user, playlist_id):
     tracks_from_playlist, title, description = get_tracks_from_playlist(token, playlist_id)
     tracks = []
     for track in tracks_from_playlist["items"]:
-        artists = track['track'].get('artists', [])
+        artists = track["track"].get("artists", [])
         artist_names = []
         for a in artists:
-            name = a.get('name')
+            name = a.get("name")
             if name is not None:
                 artist_names.append(name)
-        artist_name = ', '.join(artist_names)
+        artist_name = ", ".join(artist_names)
         tracks.append({
-            "track_name": track['track']['name'],
+            "recording_name": track["track"]["name"],
             "artist_name": artist_name,
         })
     # select track_name and artist_name for each track
-    mbid_mapped_tracks = [mbid_mapping_spotify(track["track_name"], track["artist_name"]) for track in tracks]
+    mbid_mapped_tracks = mbid_mapping_spotify(tracks)
     # pass the tracks as Recording
-    recordings=[]
+    recordings = []
     if mbid_mapped_tracks:
         for track in mbid_mapped_tracks:
             if track is not None and "recording_mbid" in track:
@@ -35,7 +36,7 @@ def import_from_spotify(token, user, playlist_id):
     try:
         playlist = troi.playlist.PlaylistElement()
         playlist.set_sources(recording_list)
-        result = playlist.generate()
+        result = playlist.generate(True)
         
         playlist.playlists[0].name = title
         playlist.playlists[0].descripton = description
@@ -50,9 +51,10 @@ def import_from_spotify(token, user, playlist_id):
             print("Submitted playlist: %s" % url)
 
     result = playlist.get_jspf()
-    result.update({'identifier': url})
+    result.update({"identifier": url})
     
     return result
+
 
 def get_tracks_from_playlist(spotify_token, playlist_id):
     """ Get the tracks from Spotify playlist.
@@ -65,15 +67,12 @@ def get_tracks_from_playlist(spotify_token, playlist_id):
     
     return playlists, name, description
 
-def mbid_mapping_spotify(track_name, artist_name):
+
+def mbid_mapping_spotify(tracks):
     url = "https://api.listenbrainz.org/1/metadata/lookup/"
-    params = {
-        "artist_name": artist_name,
-        "recording_name": track_name,
-    }
-    response = requests.get(url, params=params)
+    response = requests.post(url, json={"recordings": tracks})
     if response.status_code == 200:
         data = response.json()
         return data
     else:
-        print("Error occurred:", response.status_code)
+        print("Error occurred: ", response.status_code, response.text)

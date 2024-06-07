@@ -145,6 +145,7 @@ const buddiesImages = [
 
 export type YearInMusicState = {
   followingList: Array<string>;
+  followingListForLoggedInUser: Array<string>;
   selectedMetric: "artist" | "listen";
   selectedColor: YIM2023Color;
 };
@@ -161,6 +162,7 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
+      followingListForLoggedInUser: [],
       selectedMetric: "listen",
       selectedColor: YIM2023Color.green,
     };
@@ -169,6 +171,7 @@ export default class YearInMusic extends React.Component<
 
   async componentDidMount() {
     await this.getFollowing();
+    await this.getFollowingForLoggedInUser();
   }
 
   async componentDidUpdate(prevProps: YearInMusicProps) {
@@ -206,6 +209,28 @@ export default class YearInMusic extends React.Component<
     } catch (err) {
       toast.error(
         <ToastMsg
+          title={`Error while fetching the users ${user.name} follows`}
+          message={err.toString()}
+        />,
+        { toastId: "fetch-following-error" }
+      );
+    }
+  };
+
+  getFollowingForLoggedInUser = async () => {
+    const { APIService, currentUser } = this.context;
+    const { getFollowingForUser } = APIService;
+    if (!currentUser?.name) {
+      return;
+    }
+    try {
+      const response = await getFollowingForUser(currentUser.name);
+      const { following } = response;
+
+      this.setState({ followingListForLoggedInUser: following });
+    } catch (err) {
+      toast.error(
+        <ToastMsg
           title="Error while fetching the users you follow"
           message={err.toString()}
         />,
@@ -218,8 +243,8 @@ export default class YearInMusic extends React.Component<
     user: ListenBrainzUser,
     action: "follow" | "unfollow"
   ) => {
-    const { followingList } = this.state;
-    const newFollowingList = [...followingList];
+    const { followingListForLoggedInUser } = this.state;
+    const newFollowingList = [...followingListForLoggedInUser];
     const index = newFollowingList.findIndex(
       (following) => following === user.name
     );
@@ -229,18 +254,18 @@ export default class YearInMusic extends React.Component<
     if (action === "unfollow" && index !== -1) {
       newFollowingList.splice(index, 1);
     }
-    this.setState({ followingList: newFollowingList });
+    this.setState({ followingListForLoggedInUser: newFollowingList });
   };
 
   loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
     const { currentUser } = this.context;
-    const { followingList } = this.state;
+    const { followingListForLoggedInUser } = this.state;
 
     if (isNil(currentUser) || isEmpty(currentUser)) {
       return false;
     }
 
-    return followingList.includes(user.name);
+    return followingListForLoggedInUser.includes(user.name);
   };
 
   sharePage = () => {

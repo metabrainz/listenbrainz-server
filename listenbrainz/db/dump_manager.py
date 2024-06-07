@@ -398,6 +398,9 @@ def _cleanup_dumps(location):
     Returns:
         (int, int): the number of dumps remaining, the number of dumps deleted
     """
+    if not os.path.exists(location):
+        print(f'Location {location} does not exist!')
+        return
 
     # Clean up full dumps
     full_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-full')
