@@ -1,4 +1,5 @@
-.track-search-dropdown {
+.track-search-dropdown,
+.user-search-dropdown {
   display: none; // hidden by default
   position: absolute;
   width: calc(100% - 55px);
@@ -32,6 +33,7 @@
     }
   }
 }
-.track-search:focus-within .track-search-dropdown {
+.track-search:focus-within .track-search-dropdown,
+.user-search:focus-within .user-search-dropdown {
   display: block; // show when parent container is focused
 }

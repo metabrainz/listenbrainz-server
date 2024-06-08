@@ -1,10 +1,7 @@
 import * as React from "react";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { throttle as _throttle } from "lodash";
 import { toast } from "react-toastify";
-import debounceAsync from "debounce-async";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import ListenControl from "./listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
 
 export type UserSearchProps = {
@@ -14,97 +11,131 @@ export type UserSearchProps = {
   initialValue?: string;
 };
 
-export type UserSearchState = {
-  newUser: string;
-  userSearchResults: Array<SearchUser>;
-};
+export default function UserSearch(props: UserSearchProps) {
+  // Context
+  const { APIService } = React.useContext(GlobalAppContext);
 
-export default class UserSearch extends React.Component<
-  UserSearchProps,
-  UserSearchState
-> {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
+  // Props
+  const { onSelectUser, placeholder, clearOnSelect, initialValue } = props;
 
-  // eslint-disable-next-line react/sort-comp
-  constructor(props: UserSearchProps) {
-    super(props);
-    this.state = {
-      newUser: props.initialValue ?? "",
-      userSearchResults: [],
-    };
-  }
+  // States
+  const [newUser, setNewUser] = React.useState(initialValue ?? "");
+  const [userSearchResults, setUserSearchResults] = React.useState<
+    Array<SearchUser>
+  >([]);
+  const [selectedIndex, setSelectedIndex] = React.useState(-1);
 
-  throttledSearchUsers = _throttle(async () => {
-    await this.searchUsers();
-  }, 300);
+  // Refs
+  const dropdownRef = React.useRef<HTMLSelectElement>(null);
 
-  searchUsers = async () => {
-    const { APIService } = this.context;
-    const { newUser } = this.state;
+  const searchUsers = async () => {
     try {
       const response = await APIService.searchUsers(newUser);
-      this.setState({
-        userSearchResults: response.users,
-      });
+      setUserSearchResults(response.users);
     } catch (error) {
-      this.handleError(error);
+      toast.error(<ToastMsg title="Error" message={error.message} />, {
+        toastId: "error",
+      });
     }
   };
 
-  handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState(
-      {
-        newUser: event.target.value,
-      },
-      this.throttledSearchUsers
-    );
-  };
+  const throttledSearchUsers = _throttle(async () => {
+    await searchUsers();
+  }, 300);
 
-  handleResultClick = (user: string) => {
-    const { onSelectUser, clearOnSelect } = this.props;
+  const handleResultClick = (user: string) => {
     onSelectUser(user);
-    this.setState({
-      newUser: clearOnSelect ? "" : user,
-      userSearchResults: [],
-    });
+    setNewUser(clearOnSelect ? "" : user);
+    setUserSearchResults([]);
   };
 
-  handleError = (error: any) => {
-    toast.error(<ToastMsg title="Error" message={error.message} />, {
-      toastId: "error",
-    });
+  const reset = () => {
+    setUserSearchResults([]);
+    setSelectedIndex(-1);
   };
 
-  render() {
-    const { newUser, userSearchResults } = this.state;
-    const { placeholder } = this.props;
-    return (
-      <>
-        <input
-          id="user-name-search"
-          type="text"
-          className="form-control"
-          name="newUser"
-          onChange={this.handleInputChange}
-          placeholder={placeholder}
-          value={newUser}
-          aria-haspopup={Boolean(userSearchResults?.length)}
-        />
-        <div className="search-dropdown">
-          {userSearchResults?.map((user) => {
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "ArrowDown") {
+      setSelectedIndex((prevIndex) =>
+        prevIndex < userSearchResults.length - 1 ? prevIndex + 1 : prevIndex
+      );
+    } else if (event.key === "ArrowUp") {
+      setSelectedIndex((prevIndex) =>
+        prevIndex > 0 ? prevIndex - 1 : prevIndex
+      );
+    } else if (event.key === "Enter" && selectedIndex >= 0) {
+      handleResultClick(userSearchResults[selectedIndex].user_name);
+      reset();
+    }
+  };
+
+  React.useEffect(() => {
+    if (!newUser) {
+      return;
+    }
+    throttledSearchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newUser]);
+
+  React.useEffect(() => {
+    if (selectedIndex >= 0 && dropdownRef.current) {
+      const option = dropdownRef.current.options[selectedIndex];
+      option.scrollIntoView({ block: "nearest" });
+    }
+  }, [selectedIndex]);
+
+  return (
+    <div
+      className="input-group user-search"
+      style={{
+        width: "100%",
+      }}
+    >
+      <input
+        id="user-name-search"
+        type="text"
+        className="form-control"
+        name="newUser"
+        onChange={(event) => {
+          setNewUser(event.target.value);
+        }}
+        placeholder={placeholder}
+        value={newUser}
+        aria-haspopup={Boolean(userSearchResults?.length)}
+        onKeyDown={handleKeyDown}
+      />
+      {Boolean(userSearchResults?.length) && (
+        <select
+          className="user-search-dropdown"
+          size={Math.min(userSearchResults.length, 8)}
+          onChange={(e) => {
+            handleResultClick(e.target.value);
+          }}
+          tabIndex={-1}
+          ref={dropdownRef}
+          onKeyDown={handleKeyDown}
+          style={{
+            width: "100%",
+          }}
+        >
+          {userSearchResults?.map((user, index) => {
             return (
-              <ListenControl
+              <option
                 key={user.user_name}
-                text={user.user_name}
-                icon={faUser}
-                // eslint-disable-next-line react/jsx-no-bind
-                action={this.handleResultClick.bind(this, user.user_name)}
-              />
+                value={user.user_name}
+                style={
+                  index === selectedIndex
+                    ? { backgroundColor: "#353070", color: "white" }
+                    : {}
+                }
+                aria-selected={index === selectedIndex}
+              >
+                {user.user_name}
+              </option>
             );
           })}
-        </div>
-      </>
-    );
-  }
+        </select>
+      )}
+    </div>
+  );
 }
