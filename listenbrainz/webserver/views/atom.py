@@ -16,7 +16,7 @@ atom_bp = Blueprint("atom", __name__)
 def get_listens(user_name):
     """
     Get listens feed for a user.
-    
+
     :param interval: The time interval in minutes from current time to fetch listens for. For example, if interval=60, listens from the last hour will be fetched. Default is 60.
     :statuscode 200: The feed was successfully generated.
     :statuscode 400: Bad request.
@@ -26,7 +26,7 @@ def get_listens(user_name):
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         return Response(status=404)
-    
+
     # Get and validate interval
     interval = request.args.get("interval", 60)
     if interval:
@@ -34,10 +34,10 @@ def get_listens(user_name):
             interval = int(interval)
         except ValueError:
             return Response(status=400)
-    
+
     if interval < 1:
         return Response(status=400)
-    
+
     # Construct UTC timestamp for interval
     from_ts = datetime.now() - timedelta(minutes=interval)
 
@@ -48,17 +48,24 @@ def get_listens(user_name):
     fg.title(f"Listens for {user_name}")
     fg.author({"name": "ListenBrainz"})
     fg.link(href=f"https://listenbrainz.org/user/{user_name}", rel="alternate")
-    fg.link(href=f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens", rel="self")
+    fg.link(
+        href=f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens",
+        rel="self",
+    )
     fg.logo("https://listenbrainz.org/static/img/listenbrainz_logo_icon.svg")
     fg.language("en")
-    
+
     for listen in listens:
         fe = fg.add_entry()
         # according to spec, ids don't have to be deferencable.
-        fe.id(f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens/{listen.ts_since_epoch}/{listen.data['track_name']}")
+        fe.id(
+            f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens/{listen.ts_since_epoch}/{listen.data['track_name']}"
+        )
         fe.title(f"{listen.data['track_name']} - {listen.data['artist_name']}")
-        fe.content(f"{listen.user_name} listened to {listen.data['track_name']} - {listen.data['artist_name']} on {listen.timestamp}")
-    
+        fe.content(
+            f"{listen.user_name} listened to {listen.data['track_name']} - {listen.data['artist_name']} on {listen.timestamp}"
+        )
+
     atomfeed = fg.atom_str(pretty=True)
 
     return Response(atomfeed, mimetype="application/atom+xml")
