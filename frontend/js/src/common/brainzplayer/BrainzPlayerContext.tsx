@@ -49,7 +49,7 @@ export type BrainzPlayerContextT = {
   queueRepeatMode: QueueRepeatMode;
 };
 
-const initialValue: BrainzPlayerContextT = {
+export const initialValue: BrainzPlayerContextT = {
   currentDataSourceIndex: 0,
   currentTrackName: "",
   currentTrackArtist: "",

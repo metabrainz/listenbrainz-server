@@ -4,6 +4,7 @@ import { act } from "react-dom/test-utils";
 import fetchMock from "jest-fetch-mock";
 import { mount } from "enzyme";
 import { BrowserRouter, Link } from "react-router-dom";
+import { screen, fireEvent } from "@testing-library/react";
 import BrainzPlayer, {
   DataSourceType,
 } from "../../../src/common/brainzplayer/BrainzPlayer";
@@ -17,6 +18,11 @@ import SoundcloudPlayer from "../../../src/common/brainzplayer/SoundcloudPlayer"
 import SpotifyPlayer from "../../../src/common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../../../src/common/brainzplayer/YoutubePlayer";
 import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
+import {
+  BrainzPlayerProvider,
+  initialValue as initialBrainzPlayerContextValue,
+} from "../../../src/common/brainzplayer/BrainzPlayerContext";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -66,6 +72,9 @@ const GlobalContextMock: { context: GlobalAppContextT } = {
   },
 };
 
+const useBrainzPlayerDispatch = jest.fn();
+const useBrainzPlayerContext = jest.fn();
+
 // Give yourself a two minute break and go listen to this gem
 // https://musicbrainz.org/recording/7fcaf5b3-e682-4ce6-be61-d3bce775a43f
 const listen: Listen = {
@@ -84,6 +93,26 @@ const listen2: Listen = {
   },
 };
 
+function BrainzPlayerWithWrapper() {
+  return (
+    <BrainzPlayerProvider>
+      <BrainzPlayer />
+    </BrainzPlayerProvider>
+  );
+}
+
+const mockDispatch = jest.fn();
+
+beforeEach(() => {
+  (useBrainzPlayerContext as jest.MockedFunction<
+    typeof useBrainzPlayerContext
+  >).mockReturnValue(initialBrainzPlayerContextValue);
+
+  (useBrainzPlayerDispatch as jest.MockedFunction<
+    typeof useBrainzPlayerDispatch
+  >).mockReturnValue(mockDispatch);
+});
+
 describe("BrainzPlayer", () => {
   beforeAll(() => {
     window.location = {
@@ -92,45 +121,55 @@ describe("BrainzPlayer", () => {
     fetchMock.enableMocks();
   });
 
-  // A Placeholder test to get the test suite running
-  it("renders correctly", () => {});
+  test("renders correctly", () => {
+    renderWithProviders(<BrainzPlayerWithWrapper />);
 
-  //   it("renders correctly", () => {
-  //     const wrapper = mount<BrainzPlayer>(
-  //       <BrainzPlayer {...props} />,
-  //       GlobalContextMock
-  //     );
-  //     expect(wrapper.find(BrainzPlayerUI)).toHaveLength(1);
-  //     expect(wrapper.find("#brainz-player")).toHaveLength(1);
-  //   });
+    expect(screen.getByTestId("brainzplayer")).toBeInTheDocument();
+    expect(screen.getByTestId("brainzplayer-ui")).toBeInTheDocument();
+  });
 
-  //   it("creates Youtube datasource by default", () => {
-  //     const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...props} />, {
-  //       context: {
-  //         ...GlobalContextMock.context,
-  //         spotifyUser: {},
-  //         soundcloudUser: {},
-  //       },
-  //     });
-  //     const instance = wrapper.instance();
-  //     expect(instance.dataSources).toHaveLength(1);
-  //     expect(instance.dataSources[0].current).toBeInstanceOf(YoutubePlayer);
-  //   });
+  test("creates Youtube datasource by default", () => {
+    renderWithProviders(
+      <BrainzPlayerWithWrapper />,
+      {
+        ...GlobalContextMock.context,
+        spotifyAuth: {},
+        soundcloudAuth: {},
+      },
+      {}
+    );
 
-  //   it("creates a Spotify datasource when passed a spotify user with right permissions", () => {
-  //     const wrapper = mount<BrainzPlayer>(
-  //       <GlobalAppContext.Provider
-  //         value={{
-  //           ...GlobalContextMock.context,
-  //           spotifyAuth: spotifyAccountWithPermissions,
-  //         }}
-  //       >
-  //         <BrainzPlayer {...props} />
-  //       </GlobalAppContext.Provider>
-  //     );
-  //     const instance = wrapper.instance();
-  //     expect(instance.dataSources[0].current).toBeInstanceOf(SpotifyPlayer);
-  //   });
+    const playButton = screen.getByTestId("bp-play-button");
+
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    act(() => {
+      fireEvent.click(playButton);
+    });
+
+    expect(screen.getByTestId("youtube-wrapper")).toBeInTheDocument();
+    expect(screen.getByTestId("soundcloud hidden")).toBeInTheDocument();
+    expect(screen.queryByTestId("spotify-player")).toBeNull();
+  });
+
+  test("creates a Spotify datasource when passed a spotify user with right permissions", () => {
+    renderWithProviders(
+      <BrainzPlayerWithWrapper />,
+      {
+        ...GlobalContextMock.context,
+        spotifyAuth: spotifyAccountWithPermissions,
+      },
+      {}
+    );
+
+    const playButton = screen.getByTestId("bp-play-button");
+
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    act(() => {
+      fireEvent.click(playButton);
+    });
+
+    expect(screen.getByTestId("spotify-player")).toBeInTheDocument();
+  });
 
   //   it("removes a datasource when calling invalidateDataSource", () => {
   //     const wrapper = mount<BrainzPlayer>(

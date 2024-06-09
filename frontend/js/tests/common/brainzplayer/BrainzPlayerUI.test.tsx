@@ -1,8 +1,8 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
 import { BrowserRouter } from "react-router-dom";
+import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -24,7 +24,11 @@ const props = {
 };
 describe("BrainzPlayerUI", () => {
   it("renders", () => {
-    const wrapper = mount(<BrowserRouter><BrainzPlayerUI {...props} /></BrowserRouter>);
+    const wrapper = mount(
+      <BrowserRouter>
+        <BrainzPlayerUI {...props} />
+      </BrowserRouter>
+    );
     expect(wrapper.find("#brainz-player")).toHaveLength(1);
   });
 });

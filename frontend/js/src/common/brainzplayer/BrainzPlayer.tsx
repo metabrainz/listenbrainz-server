@@ -914,7 +914,7 @@ export default function BrainzPlayer() {
   }, []);
 
   return (
-    <div>
+    <div data-testid="brainzplayer">
       {!playerPaused && (
         <Helmet
           key={htmlTitle}

@@ -67,6 +67,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
       onClick={disabled ? noop : action}
       type="button"
       tabIndex={0}
+      data-testid={`bp-${className}-button`}
     >
       <FontAwesomeIcon icon={icon as IconProp} size={size} fixedWidth />
     </button>
@@ -198,7 +199,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       <div className={`queue ${showQueue ? "show" : ""}`}>
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
-      <div id="brainz-player" aria-label="Playback control">
+      <div
+        id="brainz-player"
+        aria-label="Playback control"
+        data-testid="brainzplayer-ui"
+      >
         <ProgressBar
           progressMs={progressMs}
           durationMs={durationMs}

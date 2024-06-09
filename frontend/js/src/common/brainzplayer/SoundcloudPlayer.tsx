@@ -396,7 +396,10 @@ export default class SoundcloudPlayer
   render() {
     const { show } = this.props;
     return (
-      <div className={`soundcloud ${!show ? "hidden" : ""}`}>
+      <div
+        className={`soundcloud ${!show ? "hidden" : ""}`}
+        data-testid={`soundcloud ${!show ? "hidden" : ""}`}
+      >
         <iframe
           id="soundcloud-iframe"
           ref={this.iFrameRef}
