@@ -12,6 +12,7 @@ import { convertDateToUnixTimestamp } from "../../utils/utils";
 import { ToastMsg } from "../../notifications/Notifications";
 import AddSingleListen from "./AddSingleListen";
 import AddAlbumListens from "./AddAlbumListens";
+import Pill from "../../components/Pill";
 
 enum SubmitListenType {
   "track",
@@ -223,32 +224,24 @@ export default NiceModal.create(() => {
           </div>
           <div className="modal-body">
             <div className="add-listen-header">
-              <button
-                type="button"
-                className={`btn btn-primary add-listen ${
-                  listenOption === SubmitListenType.track
-                    ? "option-active"
-                    : "option-inactive"
-                }`}
+              <Pill
+                active={listenOption === SubmitListenType.track}
                 onClick={() => {
                   setListenOption(SubmitListenType.track);
                 }}
+                type="secondary"
               >
                 Add track
-              </button>
-              <button
-                type="button"
-                className={`btn btn-primary add-listen ${
-                  listenOption === SubmitListenType.album
-                    ? "option-active"
-                    : "option-inactive"
-                }`}
+              </Pill>
+              <Pill
+                active={listenOption === SubmitListenType.album}
                 onClick={() => {
                   setListenOption(SubmitListenType.album);
                 }}
+                type="secondary"
               >
                 Add album
-              </button>
+              </Pill>
             </div>
             {listenOption === SubmitListenType.track && (
               <AddSingleListen
@@ -272,34 +265,26 @@ export default NiceModal.create(() => {
             <div className="timestamp">
               <h5>Timestamp</h5>
               <div className="timestamp-entities">
-                <button
-                  type="button"
-                  className={`btn btn-primary add-listen ${
-                    customTimestamp === false
-                      ? "timestamp-active"
-                      : "timestamp-inactive"
-                  }`}
+                <Pill
+                  active={customTimestamp === false}
                   onClick={() => {
                     setCustomTimestamp(false);
                     setSelectedDate(new Date());
                   }}
+                  type="secondary"
                 >
                   Now
-                </button>
-                <button
-                  type="button"
-                  className={`btn btn-primary add-listen ${
-                    customTimestamp === true
-                      ? "timestamp-active"
-                      : "timestamp-inactive"
-                  }`}
+                </Pill>
+                <Pill
+                  active={customTimestamp === true}
                   onClick={() => {
                     setCustomTimestamp(true);
                     setSelectedDate(new Date());
                   }}
+                  type="secondary"
                 >
                   Custom
-                </button>
+                </Pill>
                 <div className="timestamp-date-picker">
                   <DateTimePicker
                     value={selectedDate}
