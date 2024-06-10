@@ -170,26 +170,24 @@ export default function AddAlbumListens({
                         .length === 0;
                     return (
                       <div key={medium.format + medium.position + medium.title}>
-                        {selectedAlbum.media.length > 1 && (
-                          <div className="add-album-track">
-                            <input
-                              type="checkbox"
-                              onChange={(e) => {
-                                toggleSelectionAllMediumTracks(
-                                  medium.tracks as MBTrackWithAC[],
-                                  e.target.checked
-                                );
-                              }}
-                              title="select/deselect all tracks from this medium"
-                              checked={allMediumTracksSelected}
-                            />
-                            <span className="badge badge-info">
-                              {medium.format}&nbsp;
-                              {medium.position}
-                              {medium.title && ` - ${medium.title}`}
-                            </span>
-                          </div>
-                        )}
+                        <div className="add-album-track">
+                          <input
+                            type="checkbox"
+                            onChange={(e) => {
+                              toggleSelectionAllMediumTracks(
+                                medium.tracks as MBTrackWithAC[],
+                                e.target.checked
+                              );
+                            }}
+                            title="select/deselect all tracks from this medium"
+                            checked={allMediumTracksSelected}
+                          />
+                          <span className="badge badge-info">
+                            {medium.format}&nbsp;
+                            {medium.position}
+                            {medium.title && ` - ${medium.title}`}
+                          </span>
+                        </div>
                         {medium?.tracks?.map((track) => {
                           return (
                             <TrackRow
