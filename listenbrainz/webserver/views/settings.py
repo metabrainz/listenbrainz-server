@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 import orjson
@@ -11,9 +12,11 @@ import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
+from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db import listens_importer
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 from listenbrainz.domain.musicbrainz import MusicBrainzService
@@ -24,11 +27,9 @@ from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.views.user import delete_user, delete_listens_history
 
 
 settings_bp = Blueprint("settings", __name__)
-profile_bp = Blueprint("profile", __name__)
 
 EXPORT_FETCH_COUNT = 5000
 
@@ -89,7 +90,7 @@ def import_data():
 
     # Return error if LASTFM_API_KEY is not given in config.py
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
-        return NotFound("LASTFM_API_KEY not specified.")
+        return jsonify({"error": "LASTFM_API_KEY not specified."}), 404
 
     data = {
         "user_has_email": user_has_email,
@@ -200,7 +201,7 @@ def delete():
     that they wish to delete their ListenBrainz account.
     """
     try:
-        delete_user(current_user.id)
+        add_task(current_user.id, 'delete_user')
         return jsonify({"success": True})
     except Exception:
         current_app.logger.error('Error while deleting user: %s', current_user.musicbrainz_id, exc_info=True)
@@ -221,14 +222,14 @@ def delete_listens():
     wish to delete their listens.
     """
     try:
-        delete_listens_history(current_user.id)
+        add_task(current_user.id, 'delete_listens')
         return jsonify({"success": True})
     except Exception:
         current_app.logger.error('Error while deleting listens for user: %s', current_user.musicbrainz_id, exc_info=True)
         raise APIInternalServerError("Error while deleting listens for user: %s" % current_user.musicbrainz_id)
 
 
-def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
+def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) -> ExternalService:
     """Returns the music service for the given name and raise 404 if
     service is not found
 
@@ -243,6 +244,8 @@ def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
             return CritiqueBrainzService()
         elif service == ExternalServiceType.SOUNDCLOUD:
             return SoundCloudService()
+        elif not exclude_apple and service == ExternalServiceType.APPLE:
+            return AppleService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
             return MusicBrainzService()
     except KeyError:
@@ -274,24 +277,30 @@ def music_services_details():
     soundcloud_user = soundcloud_service.get_user(current_user.id)
     current_soundcloud_permissions = "listen" if soundcloud_user else "disable"
 
+    apple_service = AppleService()
+    apple_user = apple_service.get_user(current_user.id)
+    current_apple_permissions = "listen" if apple_user and apple_user["refresh_token"] else "disable"
+
     data = {
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
         "current_soundcloud_permissions": current_soundcloud_permissions,
+        "current_apple_permissions": current_apple_permissions,
     }
 
     return jsonify(data)
 
 
 @settings_bp.route('/music-services/<service_name>/callback/')
-@profile_bp.route('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
-    service = _get_service_or_raise_404(service_name)
+    service = _get_service_or_raise_404(service_name, exclude_apple=True)
+
     code = request.args.get('code')
     if not code:
         raise BadRequest('missing code')
     token = service.fetch_access_token(code)
+
     service.add_new_user(current_user.id, token)
     return redirect(url_for('settings.index', path='music-services/details'))
 
@@ -299,7 +308,7 @@ def music_services_callback(service_name: str):
 @settings_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
 @api_login_required
 def refresh_service_token(service_name: str):
-    service = _get_service_or_raise_404(service_name, include_mb=True)
+    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
     user = service.get_user(current_user.id)
     if not user:
         raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
@@ -350,8 +359,28 @@ def music_services_disconnect(service_name: str):
         elif service_name == 'critiquebrainz':
             if action:
                 return jsonify({"url": service.get_authorize_url(CRITIQUEBRAINZ_SCOPES)})
+        elif service_name == 'apple':
+            service.add_new_user(user_id=current_user.id)
+            return jsonify({"success": True})
 
     raise BadRequest('Invalid action')
+
+
+@settings_bp.route('/music-services/<service_name>/set-token/', methods=['POST'])
+@api_login_required
+def music_services_set_token(service_name: str):
+    if service_name != 'apple':
+        raise APIInternalServerError("The set-token method not implemented for this service")
+
+    music_user_token = request.data
+
+    if music_user_token is None:
+        raise BadRequest('Missing user token in request body')
+
+    apple_service = AppleService()
+    apple_service.set_token(user_id=current_user.id, music_user_token=music_user_token)
+
+    return jsonify({"success": True})
 
 
 @settings_bp.route('/missing-data/', methods=['POST'])
@@ -365,10 +394,8 @@ def missing_mb_data():
     return jsonify(data)
 
 
-@profile_bp.route('/', defaults={'path': ''})
-@profile_bp.route('/<path:path>/')
 @settings_bp.route('/', defaults={'path': ''})
 @settings_bp.route('/<path:path>/')
 @login_required
 def index(path):
-    return render_template("settings/index.html")
+    return render_template("index.html")

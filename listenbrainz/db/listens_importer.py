@@ -2,7 +2,7 @@ import datetime
 from typing import Optional, Union
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz import db, utils
+from listenbrainz import utils
 import sqlalchemy
 
 

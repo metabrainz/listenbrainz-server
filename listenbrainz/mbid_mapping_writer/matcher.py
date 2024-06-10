@@ -1,13 +1,12 @@
-import uuid
-from operator import itemgetter
+from operator import attrgetter
 
 import sqlalchemy
 import psycopg2
-from flask import current_app
-from psycopg2.extras import execute_values
-from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
-from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_NO_MATCH, MATCH_TYPE_EXACT_MATCH
-from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
+from datasethoster import RequestSource
+from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMappingInput
+from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_EXACT_MATCH
+from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery, \
+    ArtistCreditRecordingLookupInput
 from listenbrainz.db import timescale
 
 
@@ -69,7 +68,7 @@ def process_listens(app, listens, priority):
     for typ in MATCH_TYPES:
         stats[typ] = 0
 
-    msids = {str(listen['recording_msid']): listen for listen in listens}
+    msids = {str(listen["recording_msid"]): listen for listen in listens}
     stats["total"] = len(msids)
     if priority == NEW_LISTEN:
         stats["listen_count"] += len(msids)
@@ -108,8 +107,8 @@ def process_listens(app, listens, priority):
             # For all listens that are not matched, enter a no match entry, so we don't
             # keep attempting to look up more listens.
             for listen in remaining_listens:
-                matches.append((listen['recording_msid'], None, None, None, None, None, None, None, MATCH_TYPES[0]))
-                stats['no_match'] += 1
+                matches.append((listen["recording_msid"], None, None, None, None, None, None, None, MATCH_TYPES[0]))
+                stats["no_match"] += 1
 
             stats["processed"] += len(matches)
 
@@ -199,40 +198,46 @@ def lookup_listens(app, listens, stats, exact, debug):
         return [], [], stats
 
     if debug:
-        app.logger.info(f"""Lookup (exact {exact}) '{listens[0]["data"]["artist_name"]}', '{listens[0]["data"]["track_name"]}'""")
+        app.logger.info(f"""Lookup (exact {exact}) "{listens[0]["data"]["artist_name"]}", "{listens[0]["data"]["track_name"]}" """)
 
     if exact:
         q = ArtistCreditRecordingLookupQuery(debug=debug)
+        ModelT = ArtistCreditRecordingLookupInput
     else:
         q = MBIDMappingQuery(timeout=SEARCH_TIMEOUT, remove_stop_words=True, debug=debug)
+        ModelT = MBIDMappingInput
 
     params = []
     for listen in listens:
-        params.append({'[artist_credit_name]': listen["track_metadata"]["artist_name"],
-                       '[recording_name]': listen["track_metadata"]["track_name"]})
+        params.append(ModelT(
+            artist_credit_name=listen["track_metadata"]["artist_name"],
+            recording_name=listen["track_metadata"]["track_name"]
+        ))
 
     rows = []
-    hits = q.fetch(params)
-    for hit in sorted(hits, key=itemgetter("index"), reverse=True):
-        listen = listens[hit["index"]]
+    hits = q.fetch(params, RequestSource.json_post)
+    for hit in sorted(hits, key=attrgetter("index"), reverse=True):
+        listen = listens[hit.index]
 
         if exact:
-            hit["match_type"] = MATCH_TYPE_EXACT_MATCH
-        stats[MATCH_TYPES[hit["match_type"]]] += 1
-        rows.append((listen['recording_msid'],
-                     hit["recording_mbid"],
-                     hit["release_mbid"],
-                     hit["release_name"],
-                     hit["artist_mbids"],
-                     hit["artist_credit_id"],
-                     hit["artist_credit_name"],
-                     hit["recording_name"],
-                     MATCH_TYPES[hit["match_type"]]))
+            match_type = MATCH_TYPE_EXACT_MATCH
+        else:
+            match_type = hit.match_type
+        stats[MATCH_TYPES[match_type]] += 1
+        rows.append((listen["recording_msid"],
+                     str(hit.recording_mbid),
+                     str(hit.release_mbid),
+                     hit.release_name,
+                     [str(artist_mbid) for artist_mbid in hit.artist_mbids],
+                     hit.artist_credit_id,
+                     hit.artist_credit_name,
+                     hit.recording_name,
+                     MATCH_TYPES[match_type]))
 
         if debug:
             app.logger.info("\n".join(q.get_debug_log_lines()))
 
-        listens.pop(hit["index"])
+        listens.pop(hit.index)
         if len(listens) == 0:
             break
 

@@ -53,7 +53,7 @@ def web_listenstore_needed(func):
     @wraps(func)
     def decorator(*args, **kwargs):
         if timescale_connection._ts is None:
-            return redirect(url_for("index.listens_offline"))
+            return redirect(url_for("index.index_pages", page="listens-offline"))
         return func(*args, **kwargs)
 
     return decorator
@@ -70,6 +70,6 @@ def web_musicbrainz_needed(func):
         # if config item is missing, consider the database to be up (useful for local development)
         is_musicbrainz_up = current_app.config.get("IS_MUSICBRAINZ_UP", True)
         if not is_musicbrainz_up:
-            return redirect(url_for("index.musicbrainz_offline"))
+            return redirect(url_for("index.index_pages", page="musicbrainz-offline"))
         return func(*args, **kwargs)
     return decorator

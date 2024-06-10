@@ -40,7 +40,7 @@ class PopularityDataset(DatabaseDataset):
         values = [(r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
-    def get_indexes(self):
+    def get_indices(self):
         if self.mlhd:
             prefix = "mlhd_popularity"
         else:
@@ -58,10 +58,10 @@ class PopularityTopDataset(DatabaseDataset):
     def __init__(self, entity, mlhd):
         if mlhd:
             name = "mlhd_popularity_top_" + entity
-            table_name = "top_" + entity
+            table_name = "mlhd_top_" + entity
         else:
             name = "popularity_top_" + entity
-            table_name = "mlhd_top_" + entity
+            table_name = "top_" + entity
         super().__init__(name, table_name, "popularity")
         self.entity = entity
         self.entity_mbid = f"{entity}_mbid"
@@ -82,7 +82,7 @@ class PopularityTopDataset(DatabaseDataset):
         values = [(r["artist_mbid"], r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
-    def get_indexes(self):
+    def get_indices(self):
         if self.mlhd:
             prefix = "mlhd_popularity_top"
         else:
@@ -156,8 +156,10 @@ def get_counts(ts_conn, entity, mbids):
         entity_mbid = "release_group_mbid"
     elif entity == "release":
         entity_mbid = "release_mbid"
+    elif entity == "artist":
+        entity_mbid = "artist_mbid"
     else:
-        return []
+        return [], {}
 
     query = SQL("""
           WITH mbids (mbid) AS (
@@ -219,7 +221,7 @@ def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
             data.pop("original_recording_mbid", None)
             data.update({
                 "artist_name": data.pop("artist_credit_name"),
-                "artist_mbids": data.pop("[artist_credit_mbids]"),
+                "artist_mbids": data.pop("artist_credit_mbids"),
                 "total_listen_count": recording["total_listen_count"],
                 "total_user_count": recording["total_user_count"],
                 "release_color": releases_color.get(str(data["release_mbid"]), {})

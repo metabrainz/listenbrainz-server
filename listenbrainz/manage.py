@@ -184,6 +184,12 @@ def init_ts_db(force, create_db):
         if not res:
             raise Exception('Failed to create ts extension! Exit code: %i' % res)
 
+        res = ts.run_sql_query_without_transaction(
+            [f"ALTER DATABASE {ts_connect['DB_NAME']} SET pg_trgm.word_similarity_threshold = 0.1"])
+        if not res:
+            raise Exception('Failed to create to set pg_trgm.word_similarity_threshold! Exit code: %i' % res)
+
+
     if "PYTHON_TESTS_RUNNING" in os.environ:
         ts.init_db_connection(ts_connect["DB_CONNECT"])
     else:
@@ -199,6 +205,9 @@ def init_ts_db(force, create_db):
 
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
+
+        print('TS: Insert default rows...')
+        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'insert_default_data.sql'))
 
         print('TS: Creating views...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))

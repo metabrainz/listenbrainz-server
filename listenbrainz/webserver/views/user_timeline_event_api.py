@@ -29,9 +29,11 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen
-from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, SimilarUserTimelineEvent, UserTimelineEventType, \
+from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, \
+    SimilarUserTimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
-    CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent
+    CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent, \
+    WritePersonalRecordingRecommendationMetadata
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
@@ -256,101 +258,29 @@ def user_feed(user_name: str):
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIForbidden("You don't have permissions to view this user's timeline.")
+        raise APIForbidden(
+            "You don't have permissions to view this user's timeline.")
 
     min_ts, max_ts, count = _validate_get_endpoint_params()
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
-    users_following = db_user_relationship.get_following_for_user(db_conn, user['id'])
+    users_following = db_user_relationship.get_following_for_user(
+        db_conn, user['id'])
 
-    # TODO: Remove these listen events from event list after listen events endpoint is active.
-    # get all listen events
-    if len(users_following) == 0:
-        listen_events = []
-    else:
-        listen_events = get_listen_events(users_following, min_ts, max_ts)
-
-    # for events like "follow" and "recording recommendations", we want to show the user
-    # their own events as well
-    users_for_feed_events = users_following + [user]
-    follow_events = get_follow_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    recording_recommendation_events = get_recording_recommendation_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    personal_recording_recommendation_events = get_personal_recording_recommendation_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    cb_review_events = get_cb_review_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    notification_events = get_notification_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    recording_pin_events = get_recording_pin_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    hidden_events = db_user_timeline_event.get_hidden_timeline_events(db_conn, user['id'], count)
-    hidden_events_pin = {}
-    hidden_events_recommendation = {}
-
-    for hidden_event in hidden_events:
-        if hidden_event.event_type.value == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
-            hidden_events_recommendation[hidden_event.event_id] = hidden_event
-        else:
-            hidden_events_pin[hidden_event.event_id] = hidden_event
-
-    for event in recording_recommendation_events:
-        if event.id in hidden_events_recommendation:
-            event.hidden = True
-
-    for event in recording_pin_events:
-        if event.id in hidden_events_pin:
-            event.hidden = True
-
-    # TODO: add playlist event and like event
-    all_events = sorted(
-        listen_events + follow_events + recording_recommendation_events + recording_pin_events
-        + cb_review_events + notification_events + personal_recording_recommendation_events,
-        key=lambda event: -event.created,
-    )
+    user_events = get_feed_events_for_user(
+        user=user, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    for index, event in enumerate(all_events):
-        all_events[index].event_type = event.event_type.value
+    for index, event in enumerate(user_events):
+        user_events[index].event_type = event.event_type.value
 
-    all_events = all_events[:count]
+    user_events = user_events[:count]
 
     return jsonify({'payload': {
-        'count': len(all_events),
+        'count': len(user_events),
         'user_id': user_name,
-        'events': [event.dict() for event in all_events],
+        'events': [event.dict() for event in user_events],
     }})
 
 
@@ -674,7 +604,7 @@ def create_personal_recommendation_event(user_name):
     metadata = data['metadata']
 
     try:
-        metadata = PersonalRecordingRecommendationMetadata(**metadata)
+        metadata = WritePersonalRecordingRecommendationMetadata(**metadata)
         follower_results = db_user_relationship.multiple_users_by_username_following_user(
             db_conn,
             user['id'],
@@ -696,6 +626,92 @@ def create_personal_recommendation_event(user_name):
     event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
     return jsonify(event_data)
+
+
+def get_feed_events_for_user(
+    user: Dict,
+    followed_users: List[Dict],
+    min_ts: int,
+    max_ts: int,
+    count: int,
+) -> List[APITimelineEvent]:
+    """ Gets all user events in the feed.
+    """
+    # TODO: Remove these listen events from event list after listen events endpoint is active.
+    # get all listen events
+    if len(followed_users) == 0:
+        listen_events = []
+    else:
+        listen_events = get_listen_events(followed_users, min_ts, max_ts)
+
+    users_for_events = followed_users + [user]
+    follow_events = get_follow_events(
+        users_for_events=users_for_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    recording_recommendation_events = get_recording_recommendation_events(
+        users_for_events=users_for_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    personal_recording_recommendation_events = get_personal_recording_recommendation_events(
+        user=user,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    cb_review_events = get_cb_review_events(
+        users_for_events=users_for_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    notification_events = get_notification_events(
+        user=user,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    recording_pin_events = get_recording_pin_events(
+        users_for_events=users_for_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    hidden_events = db_user_timeline_event.get_hidden_timeline_events(db_conn, user['id'], count)
+    hidden_events_pin = {}
+    hidden_events_recommendation = {}
+
+    for hidden_event in hidden_events:
+        if hidden_event.event_type.value == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
+            hidden_events_recommendation[hidden_event.event_id] = hidden_event
+        else:
+            hidden_events_pin[hidden_event.event_id] = hidden_event
+
+    for event in recording_recommendation_events:
+        if event.id in hidden_events_recommendation:
+            event.hidden = True
+
+    for event in recording_pin_events:
+        if event.id in hidden_events_pin:
+            event.hidden = True
+
+    # TODO: add playlist event and like event
+    all_events = sorted(
+        listen_events + follow_events + recording_recommendation_events + recording_pin_events
+        + cb_review_events + notification_events + personal_recording_recommendation_events,
+        key=lambda event: -event.created,
+    )
+    return all_events
 
 
 def get_listen_events(

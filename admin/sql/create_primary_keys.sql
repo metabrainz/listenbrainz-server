@@ -30,4 +30,6 @@ ALTER TABLE user_setting ADD CONSTRAINT user_setting_pkey PRIMARY KEY (id);
 
 ALTER TABLE recommendation.do_not_recommend ADD CONSTRAINT rec_do_not_recommend_pkey PRIMARY KEY (id);
 
+ALTER TABLE background_tasks ADD CONSTRAINT background_tasks_id_pkey PRIMARY KEY (id);
+
 COMMIT;

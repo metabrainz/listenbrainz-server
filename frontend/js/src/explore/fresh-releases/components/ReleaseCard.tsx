@@ -3,6 +3,7 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 import { faPlay, faHourglass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isArray, isString, isUndefined } from "lodash";
+import { Link } from "react-router-dom";
 import { formatListenCount, formatReleaseDate } from "../utils";
 import {
   generateAlbumArtThumbnailLink,
@@ -137,8 +138,8 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   }, [releaseMBID, releaseGroupMBID, caaID, caaReleaseMBID, setCoverartSrc]);
 
   const linkToEntity = releaseGroupMBID
-    ? `/album/${releaseGroupMBID}`
-    : `/release/${releaseMBID}`;
+    ? `/album/${releaseGroupMBID}/`
+    : `/release/${releaseMBID}/`;
   return (
     <div className="release-card-container">
       <div className="release-item">
@@ -188,12 +189,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
             </div>
           )}
         </div>
-        <a
-          href={linkToEntity}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="release-coverart-container"
-        >
+        <Link to={linkToEntity} className="release-coverart-container">
           {coverartSrc ? (
             <>
               {coverArtPlaceholder}
@@ -212,14 +208,12 @@ export default function ReleaseCard(props: ReleaseCardProps) {
               {releaseCoverArtIcon}
             </div>
           )}
-        </a>
+        </Link>
       </div>
       {showReleaseTitle && (
         <div className="name-type-container">
           <div className="release-name" title={releaseName}>
-            <a href={linkToEntity} target="_blank" rel="noopener noreferrer">
-              {releaseName}
-            </a>
+            <Link to={linkToEntity}>{releaseName}</Link>
           </div>
         </div>
       )}
@@ -227,13 +221,9 @@ export default function ReleaseCard(props: ReleaseCardProps) {
         <div className="release-artist" title={artistCreditName}>
           {artistCredits.map((ac) => (
             <>
-              <a
-                href={`/artist/${ac.artist_mbid}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <Link to={`/artist/${ac.artist_mbid}/`}>
                 {ac.artist_credit_name}
-              </a>
+              </Link>
               {ac.join_phrase}
             </>
           ))}
@@ -241,13 +231,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       )}
       {showArtist && !isArray(artistCredits) && (
         <div className="release-artist" title={artistCreditName}>
-          <a
-            href={`/artist/${artistMBIDs[0]}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {artistCreditName}
-          </a>
+          <Link to={`/artist/${artistMBIDs[0]}/`}>{artistCreditName}</Link>
         </div>
       )}
     </div>

@@ -68,6 +68,15 @@ export default function LBRadio() {
                             caa_release_mbid:
                               recordingMetadataMap[mbid].release
                                 ?.caa_release_mbid,
+                            artists: recordingMetadataMap[
+                              mbid
+                            ].artist?.artists?.map((a) => {
+                              return {
+                                artist_credit_name: a.name,
+                                artist_mbid: a.artist_mbid,
+                                join_phrase: a.join_phrase || "",
+                              };
+                            }),
                           },
                         },
                       },
@@ -102,7 +111,7 @@ export default function LBRadio() {
   );
 
   return (
-    <>
+    <div role="main">
       <Helmet>
         <title>LB Radio</title>
       </Helmet>
@@ -131,6 +140,6 @@ export default function LBRadio() {
         refreshYoutubeToken={APIService.refreshYoutubeToken}
         refreshSoundcloudToken={APIService.refreshSoundcloudToken}
       />
-    </>
+    </div>
   );
 }

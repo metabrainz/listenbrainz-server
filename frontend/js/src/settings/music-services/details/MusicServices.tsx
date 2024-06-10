@@ -6,20 +6,34 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
+import {
+  authorizeWithAppleMusic,
+  loadAppleMusicKit,
+  setupAppleMusicKit,
+} from "../../../common/brainzplayer/AppleMusicPlayer";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 type MusicServicesLoaderData = {
   current_spotify_permissions: string;
   current_critiquebrainz_permissions: string;
   current_soundcloud_permissions: string;
+  current_apple_permissions: string;
 };
 
 export default function MusicServices() {
+  const { spotifyAuth, soundcloudAuth, critiquebrainzAuth } = React.useContext(
+    GlobalAppContext
+  );
+
   const loaderData = useLoaderData() as MusicServicesLoaderData;
+
+  const { appleAuth } = React.useContext(GlobalAppContext);
 
   const [permissions, setPermissions] = React.useState({
     spotify: loaderData.current_spotify_permissions,
     critiquebrainz: loaderData.current_critiquebrainz_permissions,
     soundcloud: loaderData.current_soundcloud_permissions,
+    appleMusic: loaderData.current_apple_permissions,
   });
 
   const handlePermissionChange = async (
@@ -52,6 +66,22 @@ export default function MusicServices() {
           ...prevState,
           [serviceName]: newValue,
         }));
+        switch (serviceName) {
+          case "spotify":
+            if (spotifyAuth) {
+              spotifyAuth.access_token = undefined;
+              spotifyAuth.permission = [];
+            }
+            break;
+          case "soundcloud":
+            if (soundcloudAuth) soundcloudAuth.access_token = undefined;
+            break;
+          case "critiquebrainz":
+            if (critiquebrainzAuth) critiquebrainzAuth.access_token = undefined;
+            break;
+          default:
+            break;
+        }
         return;
       }
 
@@ -71,13 +101,73 @@ export default function MusicServices() {
     }
   };
 
+  const handleAppleMusicPermissionChange = async (
+    serviceName: string,
+    action: string
+  ) => {
+    try {
+      await loadAppleMusicKit();
+      const musicKitInstance = await setupAppleMusicKit(
+        appleAuth?.developer_token
+      );
+      // Delete or recreate the user in the database for this external service
+      const response = await fetch(
+        `/settings/music-services/apple/disconnect/`,
+        {
+          method: "POST",
+          body: JSON.stringify({ action }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (action === "disable") {
+        await musicKitInstance.unauthorize();
+        (appleAuth as AppleMusicUser).music_user_token = undefined;
+        toast.success(
+          <ToastMsg
+            title="Success"
+            message="Apple Music integration has been disabled."
+          />
+        );
+      } else {
+        // authorizeWithAppleMusic also sends the token to the server
+        const newToken = await authorizeWithAppleMusic(musicKitInstance);
+        if (newToken) {
+          // We know appleAuth is not undefined because we needed the developer_token
+          // it contains in order to authorize the user successfully
+          (appleAuth as AppleMusicUser).music_user_token = newToken;
+        }
+        toast.success(
+          <ToastMsg
+            title="Success"
+            message="You are now logged in to Apple Music."
+          />
+        );
+      }
+
+      setPermissions((prevState) => ({
+        ...prevState,
+        appleMusic: action,
+      }));
+    } catch (error) {
+      console.debug(error);
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={`Failed to change permissions for Apple Music:${error.toString()}`}
+        />
+      );
+    }
+  };
+
   return (
     <>
       <Helmet>
         <title>External Music Services</title>
       </Helmet>
       <div id="user-profile">
-        <h2 className="page-title">Connect with third-party music services</h2>
+        <h2 className="page-title">Connect third-party music services</h2>
 
         <div className="panel panel-default">
           <div className="panel-heading">
@@ -86,16 +176,18 @@ export default function MusicServices() {
           <div className="panel-body">
             <p>
               Connect to your Spotify account to read your listening history,
-              play music on ListenBrainz (requires Spotify Premium) or both. We
-              encourage users to choose both options for the best experience,
-              but you may also choose only one option. For music playing, make
-              sure your browser allows autoplaying media on listenbrainz.org. If
-              you have a Spotify account connected, you&apos;ll have much better
-              results. Otherwise, we will search for a match on YouTube. If you
-              ever face an issue, try disconnecting and reconnecting your
-              Spotify account and make sure you select the permissions to
-              &apos;record listens and play music&apos; or &apos;play music
-              only&apos;.
+              play music on ListenBrainz (requires Spotify Premium), or both.
+              <br />
+              <small>
+                Full length playback requires Spotify Premium.
+                <br />
+                To play music, your browser must allow autoplaying media on
+                listenbrainz.org.
+                <br />
+                If you encounter issues, try disconnecting and reconnecting your
+                Spotify account and select the permissions to &apos;record
+                listens and play music&apos; or &apos;play music only&apos;.
+              </small>
             </p>
             <br />
             <div className="music-service-selection">
@@ -104,8 +196,8 @@ export default function MusicServices() {
                   service="spotify"
                   current={permissions.spotify}
                   value="both"
-                  title="Activate both features (Recommended)"
-                  details="We will record your listening history permanently and make it available for others to view and explore. Discover and play songs directly on ListenBrainz, and import/export your playlist to and from Spotify."
+                  title="Activate both features (recommended)"
+                  details="Permanently record your listening history and make it available for others to view and explore. Discover and play songs on ListenBrainz, and import/export playlists to and from Spotify."
                   handlePermissionChange={handlePermissionChange}
                 />
                 <ServicePermissionButton
@@ -113,7 +205,7 @@ export default function MusicServices() {
                   current={permissions.spotify}
                   value="listen"
                   title="Play music on ListenBrainz"
-                  details="Discover and play songs directly on ListenBrainz, and import/export your playlist to and from Spotify. Note: Full length track playback requires Spotify Premium"
+                  details="Discover and play songs on ListenBrainz, and import/export playlists to and from Spotify."
                   handlePermissionChange={handlePermissionChange}
                 />
                 <ServicePermissionButton
@@ -121,7 +213,7 @@ export default function MusicServices() {
                   current={permissions.spotify}
                   value="import"
                   title="Record listening history"
-                  details="We will record your listening history permanently and make it available for others to view and explore."
+                  details="Record your listening history permanently and make it available for others to view and explore."
                   handlePermissionChange={handlePermissionChange}
                 />
                 <ServicePermissionButton
@@ -129,39 +221,36 @@ export default function MusicServices() {
                   current={permissions.spotify}
                   value="disable"
                   title="Disable"
-                  details="Spotify integration will be disabled. You won't be able to import your listens or listen to music on ListenBrainz using Spotify."
+                  details="You won't be able to listen to music on ListenBrainz or import listens using Spotify."
                   handlePermissionChange={handlePermissionChange}
                 />
               </form>
             </div>
 
-            <h3>A note about permissions</h3>
+            <h3>A note about Spotify permissions</h3>
 
             <p>
-              In order to enable the feature to record your listens you will
-              need to grant the permission to view your recent listens and your
-              current listen.
+              To record your listens you will need to grant permission to view
+              your recent listens and your current listen.
             </p>
 
             <p>
-              In order to play tracks on the ListenBrainz pages you will need to
-              grant the permission to play streams from your account and create
-              playlists. Oddly enough, Spotify also requires the permission to
-              read your email address, your private information and your
-              birthdate in order to play tracks. These permissions are required
-              to determine if you are a premium user and can play full length
-              tracks or will be limited to 30 second previews. However,{" "}
-              <b>ListenBrainz will never read these pieces of data</b>. We
-              promise! Please feel free to
+              To play music on the ListenBrainz pages you will need to grant the
+              permission to play streams from your account and create playlists.
+              Spotify also requires permission to read your email address, your
+              private information and your birthdate, to determine if you are a
+              premium user -{" "}
+              <b>ListenBrainz will never read these pieces of data</b>. Please
+              feel free to{" "}
               <a href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/spotify_updater/spotify_read_listens.py">
-                inspect our source
+                inspect our source code
               </a>{" "}
-              code yourself!
+              any time!
             </p>
 
             <p>
-              You can revoke these permissions whenever you want by unlinking
-              your Spotify account.
+              Revoke these permissions any time by disabling your Spotify
+              connection.
             </p>
           </div>
         </div>
@@ -172,11 +261,10 @@ export default function MusicServices() {
           </div>
           <div className="panel-body">
             <p>
-              Connect to your CritiqueBrainz account to publish reviews for your
-              Listens directly from ListenBrainz. Your reviews will be
-              independently visible on CritiqueBrainz and appear publicly on
-              your CritiqueBrainz profile unless removed. To view or delete your
-              reviews, visit your CritiqueBrainz profile.
+              Connect to your CritiqueBrainz account to publish reviews directly
+              from ListenBrainz. Reviews are public on ListenBrainz and
+              CritiqueBrainz. To view or delete your reviews, visit your
+              <a href="https://critiquebrainz.org/">CritiqueBrainz profile.</a>
             </p>
             <br />
             <div className="music-service-selection">
@@ -185,8 +273,8 @@ export default function MusicServices() {
                   service="critiquebrainz"
                   current={permissions.critiquebrainz}
                   value="review"
-                  title="Publish reviews for your Listens"
-                  details="You will be able to publish mini-reviews for your Listens directly from ListenBrainz."
+                  title="Publish reviews for your listens"
+                  details="Publish reviews from ListenBrainz."
                   handlePermissionChange={handlePermissionChange}
                 />
                 <ServicePermissionButton
@@ -194,7 +282,7 @@ export default function MusicServices() {
                   current={permissions.critiquebrainz}
                   value="disable"
                   title="Disable"
-                  details="You will not be able to publish mini-reviews for your Listens directly from ListenBrainz."
+                  details="You will not be able to publish reviews from ListenBrainz."
                   handlePermissionChange={handlePermissionChange}
                 />
               </form>
@@ -236,14 +324,50 @@ export default function MusicServices() {
 
         <div className="panel panel-default">
           <div className="panel-heading">
+            <h3 className="panel-title">Apple Music</h3>
+          </div>
+          <div className="panel-body">
+            <p>
+              Connect to your Apple Music account to play music on ListenBrainz.
+              <br />
+              <small>
+                Full length track playback requires a Apple Music subscription.
+                <br />
+                You will need to repeat the sign-in process every 6 months.
+              </small>
+            </p>
+            <br />
+            <div className="music-service-selection">
+              <form>
+                <ServicePermissionButton
+                  service="appleMusic"
+                  current={permissions.appleMusic}
+                  value="listen"
+                  title="Play music on ListenBrainz"
+                  details="Play music using Apple Music on ListenBrainz."
+                  handlePermissionChange={handleAppleMusicPermissionChange}
+                />
+                <ServicePermissionButton
+                  service="appleMusic"
+                  current={permissions.appleMusic}
+                  value="disable"
+                  title="Disable"
+                  details="You won't be able to listen to music on ListenBrainz using Apple Music."
+                  handlePermissionChange={handleAppleMusicPermissionChange}
+                />
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel panel-default">
+          <div className="panel-heading">
             <h3 className="panel-title">Youtube</h3>
           </div>
           <div className="panel-body">
             <p>
-              ListenBrainz integrates with YouTube to let you play music tracks
-              from ListenBrainz pages. You do not need to do anything to enable
-              this. ListenBrainz will automatically search for tracks on YouTube
-              and play one if it finds a match.
+              Playing music using YouTube on ListenBrainz does not require an
+              account to be connected.
             </p>
           </div>
         </div>

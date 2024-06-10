@@ -2,6 +2,7 @@ import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 
 import { act } from "react-dom/test-utils";
+import { BrowserRouter } from "react-router-dom";
 import * as recommendationProps from "../__mocks__/recommendations.json";
 
 import Recommendations, {
@@ -79,7 +80,9 @@ describe("Recommendations", () => {
       <GlobalAppContext.Provider
         value={{ ...mountOptions.context, currentUser: props.user }}
       >
-        <Recommendations {...props} />
+        <BrowserRouter>
+          <Recommendations {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find("#recommendations")).toHaveLength(1);
@@ -91,11 +94,15 @@ describe("Recommendations", () => {
         <GlobalAppContext.Provider
           value={{ ...mountOptions.context, currentUser: props.user }}
         >
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
 
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
       instance.loadFeedback = jest.fn();
 
       instance.componentDidMount();
@@ -109,10 +116,14 @@ describe("Recommendations", () => {
         <GlobalAppContext.Provider
           value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
         >
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
       instance.loadFeedback = jest.fn();
 
       instance.componentDidMount();
@@ -125,10 +136,14 @@ describe("Recommendations", () => {
   describe("getFeedback", () => {
     it("calls the API correctly", async () => {
       const wrapper = mount<Recommendations>(
-        <Recommendations {...(propsOne as RecommendationsProps)} />
+        <BrowserRouter>
+          <Recommendations {...(propsOne as RecommendationsProps)} />
+        </BrowserRouter>
       );
 
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
       const spy = jest.fn().mockImplementation(() => {
         return Promise.resolve(feedback);
       });
@@ -150,11 +165,15 @@ describe("Recommendations", () => {
     it("updates the recommendationFeedbackMap state", async () => {
       const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
 
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
 
       instance.getFeedback = jest.fn().mockResolvedValue(feedback.feedback);
 
@@ -163,7 +182,7 @@ describe("Recommendations", () => {
         await instance.loadFeedback();
       });
 
-      expect(wrapper.state("recommendationFeedbackMap")).toMatchObject({
+      expect(instance.state.recommendationFeedbackMap).toMatchObject({
         "cdae1a9e-de70-46b1-9189-5d857bc40c67": "love",
         "96b34c7d-d9fc-4db8-a94f-abc9fa3a6759": "hate",
       });
@@ -174,18 +193,22 @@ describe("Recommendations", () => {
     it("returns the feedback after fetching from recommendationFeedbackMap state", async () => {
       const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
 
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
 
       const recommendationFeedbackMap: RecommendationFeedbackMap = {
         "973e5620-829d-46dd-89a8-760d87076287": "hate",
       };
       await waitForComponentToPaint(wrapper);
       await act(() => {
-        wrapper.setState({ recommendationFeedbackMap });
+        instance.setState({ recommendationFeedbackMap });
       });
 
       const res = await instance.getFeedbackForRecordingMbid(
@@ -198,11 +221,15 @@ describe("Recommendations", () => {
     it("returns null if the recording is not in recommendationFeedbackMap state", async () => {
       const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
 
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
 
       const res = await instance.getFeedbackForRecordingMbid(
         "073e5620-829d-46dd-89a8-760d87076287"
@@ -216,16 +243,20 @@ describe("Recommendations", () => {
     it("updates the recommendationFeedbackMap state for particular recording", async () => {
       const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
 
       const recommendationFeedbackMap: RecommendationFeedbackMap = {
         "973e5620-829d-46dd-89a8-760d87076287": "like",
       };
       await act(async () => {
-        wrapper.setState({ recommendationFeedbackMap });
+        instance.setState({ recommendationFeedbackMap });
       });
       await instance.updateFeedback(
         "973e5620-829d-46dd-89a8-760d87076287",
@@ -233,7 +264,7 @@ describe("Recommendations", () => {
       );
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("recommendationFeedbackMap")).toMatchObject({
+      expect(instance.state.recommendationFeedbackMap).toMatchObject({
         "973e5620-829d-46dd-89a8-760d87076287": "love",
       });
     });
@@ -247,19 +278,23 @@ describe("Recommendations", () => {
     it("doesn't do anything if already on first page", async () => {
       const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
       instance.afterRecommendationsDisplay = jest.fn();
 
       await instance.handleClickPrevious();
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("currRecPage")).toEqual(1);
-      expect(wrapper.state("totalRecPages")).toEqual(3);
-      expect(wrapper.state("recommendations")).toEqual(
+      expect(instance.state.loading).toBeFalsy();
+      expect(instance.state.currRecPage).toEqual(1);
+      expect(instance.state.totalRecPages).toEqual(3);
+      expect(instance.state.recommendations).toEqual(
         props.recommendations.slice(0, 25)
       );
       expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(0);
@@ -268,16 +303,20 @@ describe("Recommendations", () => {
     it("go to the previous page if not on first page", async () => {
       const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
       const afterRecommendationsDisplaySpy = jest.spyOn(
         instance,
         "afterRecommendationsDisplay"
       );
       await act(async () => {
-        wrapper.setState({
+        instance.setState({
           currRecPage: 3,
           recommendations: props.recommendations.slice(50, 73),
         });
@@ -286,10 +325,10 @@ describe("Recommendations", () => {
       await instance.handleClickPrevious();
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("currRecPage")).toEqual(2);
-      expect(wrapper.state("totalRecPages")).toEqual(3);
-      expect(wrapper.state("recommendations")).toEqual(
+      expect(instance.state.loading).toBeFalsy();
+      expect(instance.state.currRecPage).toEqual(2);
+      expect(instance.state.totalRecPages).toEqual(3);
+      expect(instance.state.recommendations).toEqual(
         props.recommendations.slice(25, 50)
       );
       expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(1);
@@ -300,16 +339,20 @@ describe("Recommendations", () => {
     it("doesn't do anything if already on last page", async () => {
       const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
       const afterRecommendationsDisplaySpy = jest.spyOn(
         instance,
         "afterRecommendationsDisplay"
       );
       await act(async () => {
-        wrapper.setState({
+        instance.setState({
           currRecPage: 3,
           recommendations: props.recommendations.slice(50, 74),
         });
@@ -318,10 +361,10 @@ describe("Recommendations", () => {
       await instance.handleClickNext();
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("currRecPage")).toEqual(3);
-      expect(wrapper.state("totalRecPages")).toEqual(3);
-      expect(wrapper.state("recommendations")).toEqual(
+      expect(instance.state.loading).toBeFalsy();
+      expect(instance.state.currRecPage).toEqual(3);
+      expect(instance.state.totalRecPages).toEqual(3);
+      expect(instance.state.recommendations).toEqual(
         props.recommendations.slice(50, 73)
       );
       expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(0);
@@ -330,16 +373,20 @@ describe("Recommendations", () => {
     it("go to the next page if not on last page", async () => {
       const wrapper = mount<Recommendations>(
         <GlobalAppContext.Provider value={mountOptions.context}>
-          <Recommendations {...props} />
+          <BrowserRouter>
+            <Recommendations {...props} />
+          </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const instance = wrapper
+        .find(Recommendations)
+        .instance() as Recommendations;
       const afterRecommendationsDisplaySpy = jest.spyOn(
         instance,
         "afterRecommendationsDisplay"
       );
       await act(async () => {
-        wrapper.setState({
+        instance.setState({
           currRecPage: 2,
           recommendations: props.recommendations.slice(25, 50),
         });
@@ -348,9 +395,9 @@ describe("Recommendations", () => {
       await instance.handleClickNext();
       await waitForComponentToPaint(wrapper);
 
-      expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("currRecPage")).toEqual(3);
-      expect(wrapper.state("recommendations")).toEqual(
+      expect(instance.state.loading).toBeFalsy();
+      expect(instance.state.currRecPage).toEqual(3);
+      expect(instance.state.recommendations).toEqual(
         props.recommendations.slice(50, 73)
       );
       expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(1);

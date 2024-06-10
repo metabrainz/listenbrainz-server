@@ -3,12 +3,15 @@ import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import ReleaseFilters from "./components/ReleaseFilters";
 import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
+import { COLOR_LB_ORANGE } from "../../utils/constants";
+import { useMediaQuery } from "./utils";
 
 export enum DisplaySettingsPropertiesEnum {
   releaseTitle = "Release Title",
@@ -51,6 +54,26 @@ const SortOptions = {
 
 export type SortOption = typeof SortOptions[keyof typeof SortOptions]["value"];
 
+const SortDirections = {
+  ascend: {
+    value: "ascend",
+    label: "Ascending",
+  },
+  descend: {
+    value: "descend",
+    label: "Descending",
+  },
+};
+
+export type SortDirection = typeof SortDirections[keyof typeof SortDirections]["value"];
+
+const DefaultSortDirections: Record<SortOption, SortDirection> = {
+  release_date: "descend",
+  artist_credit_name: "ascend",
+  release_name: "ascend",
+  confidence: "descend",
+};
+
 export const filterRangeOptions = {
   week: {
     value: 7,
@@ -74,23 +97,17 @@ export const PAGE_TYPE_SITEWIDE: string = "sitewide";
 
 export type filterRangeOption = keyof typeof filterRangeOptions;
 
+type FreshReleasesData = {
+  releases: Array<FreshReleaseItem>;
+  releaseTypes: Array<string>;
+  releaseTags: Array<string>;
+};
+
 export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
 
-  const [releases, setReleases] = React.useState<Array<FreshReleaseItem>>([]);
-  const [filteredList, setFilteredList] = React.useState<
-    Array<FreshReleaseItem>
-  >([]);
-  const [allFilters, setAllFilters] = React.useState<{
-    releaseTypes: Array<string | undefined>;
-    releaseTags: Array<string | undefined>;
-  }>({
-    releaseTypes: [],
-    releaseTags: [],
-  });
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [pageType, setPageType] = React.useState<string>(
     isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
@@ -104,6 +121,13 @@ export default function FreshReleases() {
     true
   );
   const [sort, setSort] = React.useState<SortOption>("release_date");
+  const [sortDirection, setSortDirection] = React.useState<SortDirection>(
+    "descend"
+  ); // Default sort direction for release_date
+  const [
+    hasSelectedSortDirection,
+    setHasSelectedSortDirection,
+  ] = React.useState(false);
 
   const releaseCardGridRef = React.useRef(null);
 
@@ -121,11 +145,36 @@ export default function FreshReleases() {
     });
   };
 
-  React.useEffect(() => {
-    const fetchReleases = async () => {
-      setIsLoading(true);
-      let freshReleases: Array<FreshReleaseItem>;
+  const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
+  let pillRowStyle = {};
+  if (screenMd) {
+    pillRowStyle = { justifyContent: "center" };
+  } else if (!isLoggedIn) {
+    pillRowStyle = { justifyContent: "flex-end" };
+  }
+
+  const queryKey =
+    pageType === PAGE_TYPE_SITEWIDE
+      ? [
+          "fresh-release-sitewide",
+          filterRangeOptions[range].value,
+          showPastReleases,
+          showFutureReleases,
+          sort,
+        ]
+      : [
+          "fresh-release-user",
+          currentUser.name,
+          showPastReleases,
+          showFutureReleases,
+          sort,
+        ];
+
+  const { data: loaderData, isLoading } = useQuery({
+    queryKey,
+    queryFn: async () => {
       try {
+        let freshReleases: Array<FreshReleaseItem>;
         if (pageType === PAGE_TYPE_SITEWIDE) {
           const allFreshReleases = await APIService.fetchSitewideFreshReleases(
             filterRangeOptions[range].value,
@@ -143,7 +192,6 @@ export default function FreshReleases() {
           );
           freshReleases = userFreshReleases.payload.releases;
         }
-
         const cleanReleases = uniqBy(freshReleases, (datum) => {
           return (
             /*
@@ -180,45 +228,78 @@ export default function FreshReleases() {
         const releaseTags = Array.from(uniqueReleaseTagsSet);
         releaseTags.sort();
 
-        setReleases(cleanReleases);
-        setFilteredList(cleanReleases);
-        setAllFilters({
-          releaseTypes,
-          releaseTags,
-        });
-        setIsLoading(false);
+        return {
+          data: {
+            releases: cleanReleases,
+            releaseTypes,
+            releaseTags,
+          } as FreshReleasesData,
+          hasError: false,
+          errorMessage: "",
+        };
       } catch (error) {
         toast.error(
           <ToastMsg
             title="Couldn't fetch fresh releases"
-            message={
-              typeof error === "object" ? error.message : error.toString()
-            }
+            message={error.message}
           />,
           { toastId: "fetch-error" }
         );
+        return {
+          data: {
+            releases: [],
+            releaseTypes: [],
+            releaseTags: [],
+          } as FreshReleasesData,
+          hasError: true,
+          errorMessage: error.message,
+        };
       }
-    };
-    // Call the async function defined above (useEffect can't return a Promise)
-    fetchReleases();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageType, range, showPastReleases, showFutureReleases, sort]);
+    },
+  });
+
+  const {
+    data: rawData = {
+      releases: [],
+      releaseTypes: [],
+      releaseTags: [],
+    } as FreshReleasesData,
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
+
+  const { releases, releaseTypes, releaseTags } = rawData;
+
+  const [filteredList, setFilteredList] = React.useState<
+    Array<FreshReleaseItem>
+  >(releases);
+
+  let alt;
+  let message;
+  if (hasError) {
+    alt = "Error fetching releases";
+    message = `Error fetching releases: ${errorMessage}`;
+  } else if (releases.length === 0) {
+    alt = "No releases";
+    message = "No releases";
+  } else {
+    alt = "No filtered releases";
+    message = `0/${releases.length} releases match your filters.`;
+  }
 
   return (
     <>
       <Helmet>
         <title>Fresh releases</title>
       </Helmet>
-      <div className="releases-page-container">
+      <div className="releases-page-container" role="main">
         <div className="releases-page">
-          <div
-            className="fresh-releases-pill-row"
-            style={!isLoggedIn ? { justifyContent: "flex-end" } : {}}
-          >
+          <div className="fresh-releases-pill-row" style={pillRowStyle}>
             {isLoggedIn ? (
               <div className="fresh-releases-row">
                 <Pill
                   id="sitewide-releases"
+                  data-testid="sitewide-releases-pill"
                   onClick={() => {
                     setPageType(PAGE_TYPE_SITEWIDE);
                     setSort("release_date");
@@ -245,13 +326,36 @@ export default function FreshReleases() {
                   id="fresh-releases-sort-select"
                   className="form-control"
                   value={sort}
-                  onChange={(event) =>
-                    setSort(event.target.value as SortOption)
-                  }
+                  onChange={(event) => {
+                    setSort(event.target.value as SortOption);
+                    if (!hasSelectedSortDirection) {
+                      setSortDirection(
+                        DefaultSortDirections[event.target.value as SortOption]
+                      );
+                    }
+                  }}
                 >
                   {availableSortOptions.map((option) => (
                     <option value={option.value} key={option.value}>
                       {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <span>Direction:</span>{" "}
+              <div className="input-group">
+                <select
+                  id="fresh-releases-sort-direction-select"
+                  className="form-control"
+                  value={sortDirection}
+                  onChange={(event) => {
+                    setSortDirection(event.target.value as SortDirection);
+                    setHasSelectedSortDirection(true);
+                  }}
+                >
+                  {Object.entries(SortDirections).map(([_, direction]) => (
+                    <option value={direction.value} key={direction.value}>
+                      {direction.label}
                     </option>
                   ))}
                 </select>
@@ -262,7 +366,7 @@ export default function FreshReleases() {
             <div className="spinner-container">
               <Spinner
                 type="Grid"
-                color="#eb743b"
+                color={COLOR_LB_ORANGE}
                 height={100}
                 width={100}
                 visible
@@ -280,34 +384,33 @@ export default function FreshReleases() {
                 <div className="no-release">
                   <img
                     src="/static/img/recommendations/no-freshness.png"
-                    alt={
-                      releases.length === 0
-                        ? "No releases"
-                        : "No filtered releases"
-                    }
+                    alt={alt}
                   />
-                  <div className="text-muted">
-                    {releases.length === 0
-                      ? "No releases"
-                      : `0/${releases.length} releases match your filters.`}
-                  </div>
+                  <div className="text-muted">{message}</div>
                 </div>
               ) : (
                 <ReleaseCardsGrid
                   filteredList={filteredList}
                   displaySettings={displaySettings}
                   order={sort}
+                  direction={sortDirection}
                 />
               )}
             </div>
           )}
         </div>
-        {pageType === PAGE_TYPE_SITEWIDE && filteredList.length > 0 && (
-          <ReleaseTimeline releases={filteredList} order={sort} />
+        {filteredList.length > 0 && (
+          <ReleaseTimeline
+            releases={filteredList}
+            order={sort}
+            direction={sortDirection}
+          />
         )}
         <ReleaseFilters
-          allFilters={allFilters}
           releases={releases}
+          releaseTypes={releaseTypes}
+          releaseTags={releaseTags}
+          filteredList={filteredList}
           setFilteredList={setFilteredList}
           range={range}
           handleRangeChange={setRange}

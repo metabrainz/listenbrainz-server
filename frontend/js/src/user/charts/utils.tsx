@@ -1,63 +1,5 @@
 import type APIService from "../../utils/APIService";
 
-export const getInitData = async (
-  APIService: APIService,
-  entity: Entity,
-  range: UserStatsAPIRange,
-  rowsPerPage: number,
-  user: any
-): Promise<{
-  maxListens: number;
-  totalPages: number;
-  entityCount: number;
-  startDate: Date;
-  endDate: Date;
-}> => {
-  let data = await APIService.getUserEntity(
-    user?.name,
-    entity,
-    range,
-    undefined,
-    1
-  );
-
-  let maxListens = 0;
-  let totalPages = 0;
-  let entityCount = 0;
-
-  if (entity === "artist") {
-    data = data as UserArtistsResponse;
-    maxListens = data.payload.artists?.[0]?.listen_count;
-    totalPages = Math.ceil(data.payload.total_artist_count / rowsPerPage);
-    entityCount = data.payload.total_artist_count;
-  } else if (entity === "release") {
-    data = data as UserReleasesResponse;
-    maxListens = data.payload.releases?.[0]?.listen_count;
-    totalPages = Math.ceil(data.payload.total_release_count / rowsPerPage);
-    entityCount = data.payload.total_release_count;
-  } else if (entity === "recording") {
-    data = data as UserRecordingsResponse;
-    maxListens = data.payload.recordings?.[0]?.listen_count;
-    totalPages = Math.ceil(data.payload.total_recording_count / rowsPerPage);
-    entityCount = data.payload.total_recording_count;
-  } else if (entity === "release-group") {
-    data = data as UserReleaseGroupsResponse;
-    maxListens = data.payload.release_groups?.[0]?.listen_count;
-    totalPages = Math.ceil(
-      data.payload.total_release_group_count / rowsPerPage
-    );
-    entityCount = data.payload.total_release_group_count;
-  }
-
-  return {
-    maxListens,
-    totalPages,
-    entityCount,
-    startDate: new Date(data.payload.from_ts * 1000),
-    endDate: new Date(data.payload.to_ts * 1000),
-  };
-};
-
 export const getData = async (
   APIService: APIService,
   entity: Entity,
@@ -65,15 +7,62 @@ export const getData = async (
   range: UserStatsAPIRange,
   rowsPerPage: number,
   user: any
-): Promise<UserEntityResponse> => {
+): Promise<{
+  entityData: UserEntityResponse;
+  maxListens: number;
+  totalPages: number;
+  entityCount: number;
+  startDate: Date;
+  endDate: Date;
+}> => {
   const offset = (page - 1) * rowsPerPage;
-  return APIService.getUserEntity(
+  let entityData = await APIService.getUserEntity(
     user?.name,
     entity,
     range,
     offset,
     rowsPerPage
   );
+  let maxListens = 0;
+  let totalPages = 0;
+  let entityCount = 0;
+
+  if (entity === "artist") {
+    entityData = entityData as UserArtistsResponse;
+    maxListens = entityData.payload.artists?.[0]?.listen_count;
+    totalPages = Math.ceil(entityData.payload.total_artist_count / rowsPerPage);
+    entityCount = entityData.payload.total_artist_count;
+  } else if (entity === "release") {
+    entityData = entityData as UserReleasesResponse;
+    maxListens = entityData.payload.releases?.[0]?.listen_count;
+    totalPages = Math.ceil(
+      entityData.payload.total_release_count / rowsPerPage
+    );
+    entityCount = entityData.payload.total_release_count;
+  } else if (entity === "recording") {
+    entityData = entityData as UserRecordingsResponse;
+    maxListens = entityData.payload.recordings?.[0]?.listen_count;
+    totalPages = Math.ceil(
+      entityData.payload.total_recording_count / rowsPerPage
+    );
+    entityCount = entityData.payload.total_recording_count;
+  } else if (entity === "release-group") {
+    entityData = entityData as UserReleaseGroupsResponse;
+    maxListens = entityData.payload.release_groups?.[0]?.listen_count;
+    totalPages = Math.ceil(
+      entityData.payload.total_release_group_count / rowsPerPage
+    );
+    entityCount = entityData.payload.total_release_group_count;
+  }
+
+  return {
+    entityData,
+    maxListens,
+    totalPages,
+    entityCount,
+    startDate: new Date(entityData.payload.from_ts * 1000),
+    endDate: new Date(entityData.payload.to_ts * 1000),
+  };
 };
 
 export const processData = (

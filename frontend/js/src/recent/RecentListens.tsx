@@ -48,7 +48,9 @@ export default class RecentListens extends React.Component<
         <Helmet>
           <title>Recent listens</title>
         </Helmet>
-        <h3>Global listens</h3>
+        <div className="listen-header">
+          <h3 className="header-with-line">Global listens</h3>
+        </div>
         <div className="row">
           <div className="col-md-4 col-md-push-8">
             <Card id="listen-count-card">
@@ -104,18 +106,3 @@ export function RecentListensWrapper() {
   const data = useLoaderData() as RecentListensLoaderData;
   return <RecentListens {...data} />;
 }
-
-export const RecentListensLoader = async ({
-  request,
-}: {
-  request: Request;
-}) => {
-  const response = await fetch(request.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return { ...data };
-};

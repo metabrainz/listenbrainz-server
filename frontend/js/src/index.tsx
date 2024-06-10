@@ -1,16 +1,15 @@
 import * as React from "react";
-
-import NiceModal from "@ebay/nice-modal-react";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
 import { Helmet } from "react-helmet";
 import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
 import { getPageProps } from "./utils/utils";
 import getRoutes from "./routes/routes";
+import queryClient from "./utils/QueryClient";
+import ReactQueryDevtool from "./utils/ReactQueryDevTools";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const { domContainer, globalAppContext, sentryProps } = await getPageProps();
@@ -24,25 +23,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  const routes = getRoutes(globalAppContext?.currentUser?.name);
+  const { currentUser } = globalAppContext;
+
+  const routes = getRoutes(currentUser?.name);
   const router = createBrowserRouter(routes);
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
     <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
       <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <Helmet
-            defaultTitle="ListenBrainz"
-            titleTemplate="%s - ListenBrainz"
-          />
+        <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
+        <ReactQueryDevtool client={queryClient}>
           <RouterProvider router={router} />
-        </NiceModal.Provider>
+        </ReactQueryDevtool>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
   );

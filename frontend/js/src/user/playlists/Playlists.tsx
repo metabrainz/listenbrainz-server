@@ -5,7 +5,9 @@ import {
   faListAlt,
   faPlusCircle,
   faUsers,
+  faFileImport,
 } from "@fortawesome/free-solid-svg-icons";
+import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
 
 import NiceModal from "@ebay/nice-modal-react";
@@ -19,6 +21,8 @@ import Pill from "../../components/Pill";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
+import ImportPlaylistModal from "./components/ImportJSPFPlaylistModal";
+import ImportSpotifyPlaylistModal from "./components/ImportSpotifyPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import { getPlaylistId, PlaylistType } from "../../playlists/utils";
 
@@ -136,21 +140,89 @@ export default class UserPlaylists extends React.Component<
             user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
           } Playlists`}</title>
         </Helmet>
-        <div style={{ marginTop: "1em" }}>
-          <Pill
-            active={playlistType === PlaylistType.playlists}
-            type="secondary"
-            onClick={() => this.setPlaylistType(PlaylistType.playlists)}
-          >
-            <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
-          </Pill>
-          <Pill
-            active={playlistType === PlaylistType.collaborations}
-            type="secondary"
-            onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
-          >
-            <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
-          </Pill>
+        <div className="tertiary-nav">
+          <div>
+            <Pill
+              active={playlistType === PlaylistType.playlists}
+              type="secondary"
+              onClick={() => this.setPlaylistType(PlaylistType.playlists)}
+            >
+              <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
+            </Pill>
+            <Pill
+              active={playlistType === PlaylistType.collaborations}
+              type="secondary"
+              onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
+            >
+              <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
+            </Pill>
+          </div>
+          {this.isCurrentUserPage() && (
+            <div className="dropdown">
+              <button
+                className="btn btn-info dropdown-toggle"
+                type="button"
+                id="ImportPlaylistDropdown"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+              >
+                <FontAwesomeIcon icon={faPlusCircle} title="Import from" />
+                &nbsp;Import from...&nbsp;
+                <span className="caret" />
+              </button>
+              <ul
+                className="dropdown-menu dropdown-menu-right"
+                aria-labelledby="ImportPlaylistDropdown"
+              >
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                        ImportSpotifyPlaylistModal
+                      ).then((playlist) => {
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
+                      });
+                    }}
+                    data-toggle="modal"
+                    data-target="#ImportSpotifyPlaylistModal"
+                  >
+                    <FontAwesomeIcon icon={faSpotify} />
+                    &nbsp;Spotify
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                        ImportPlaylistModal
+                      ).then((playlist) => {
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
+                      });
+                    }}
+                    data-toggle="modal"
+                    data-target="#ImportPlaylistModal"
+                  >
+                    <FontAwesomeIcon icon={faFileImport} />
+                    &nbsp;Upload JSPF file
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
         <PlaylistsList
           onPaginatePlaylists={this.updatePlaylists}
@@ -162,25 +234,26 @@ export default class UserPlaylists extends React.Component<
           onPlaylistEdited={this.onPlaylistEdited}
           onPlaylistDeleted={this.onPlaylistDeleted}
         >
-          {this.isCurrentUserPage() && (
+          {this.isCurrentUserPage() && [
             <Card
+              key="new-playlist"
               className="new-playlist"
               data-toggle="modal"
               data-target="#CreateOrEditPlaylistModal"
               onClick={() => {
-                NiceModal.show(CreateOrEditPlaylistModal)
-                  // @ts-ignore
-                  .then((playlist: JSPFPlaylist) => {
-                    this.onPlaylistCreated(playlist);
-                  });
+                NiceModal.show<JSPFPlaylist, any>(
+                  CreateOrEditPlaylistModal
+                ).then((playlist) => {
+                  this.onPlaylistCreated(playlist);
+                });
               }}
             >
               <div>
                 <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
                 <span>Create new playlist</span>
               </div>
-            </Card>
-          )}
+            </Card>,
+          ]}
         </PlaylistsList>
       </div>
     );

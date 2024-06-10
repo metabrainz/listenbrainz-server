@@ -3,6 +3,7 @@ import * as React from "react";
 import { RenderOptions, render } from "@testing-library/react";
 import { ToastContainer } from "react-toastify";
 import { isString } from "lodash";
+import { BrowserRouter } from "react-router-dom";
 import APIService from "../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -50,13 +51,21 @@ export const renderWithProviders = (
     );
 
     return (
-      <GlobalAppContext.Provider value={globalProps}>
-        <ToastContainer />
-        {children}
-      </GlobalAppContext.Provider>
+      <BrowserRouter>
+        <GlobalAppContext.Provider value={globalProps}>
+          <ToastContainer />
+          {children}
+        </GlobalAppContext.Provider>
+      </BrowserRouter>
     );
   }
-  return render(ui, { wrapper: WithProviders, ...renderOptions });
+  const { wrapper: MyWrapper, ...otherRenderOptions } = renderOptions ?? {};
+  let wrapper = WithProviders;
+  if (MyWrapper) {
+    wrapper = ({ children }: { children: React.ReactElement }) =>
+      WithProviders({ children: <MyWrapper>{children}</MyWrapper> });
+  }
+  return render(ui, { wrapper, ...otherRenderOptions });
 };
 
 /**

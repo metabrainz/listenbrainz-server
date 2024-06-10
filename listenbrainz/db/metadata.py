@@ -2,9 +2,8 @@ import psycopg2
 import psycopg2.extras
 
 from listenbrainz.db.model.metadata import RecordingMetadata, ArtistMetadata, ReleaseGroupMetadata
+from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_GET
 from typing import List
-
-MAX_NUMBER_OF_ENTITIES_PER_CALL = 50
 
 
 def fixup_mbids_to_artists(row):
@@ -16,7 +15,7 @@ def fixup_mbids_to_artists(row):
 
 def get_metadata_for_recording(ts_conn, recording_mbid_list: List[str]) -> List[RecordingMetadata]:
     """ Get a list of recording Metadata objects for a given recording in descending order of their creation.
-        The list of recordings cannot exceed `~db.metadata.MAX_NUMBER_OF_ENTITIES_PER_CALL` per call.
+        The list of recordings cannot exceed `~db.metadata.MAX_ITEMS_PER_GET` per call.
         If the number of items exceeds this limit, ValueError will be raised. Data is sorted according
         to recording_mbid
 
@@ -29,7 +28,7 @@ def get_metadata_for_recording(ts_conn, recording_mbid_list: List[str]) -> List[
     """
 
     recording_mbid_list = tuple(recording_mbid_list)
-    if len(recording_mbid_list) > MAX_NUMBER_OF_ENTITIES_PER_CALL:
+    if len(recording_mbid_list) > MAX_ITEMS_PER_GET:
         raise ValueError("Too many recording mbids passed in.")
 
     query = """SELECT *
@@ -48,7 +47,7 @@ def get_metadata_for_recording(ts_conn, recording_mbid_list: List[str]) -> List[
 
 def get_metadata_for_release_group(ts_conn, release_group_mbid_list: List[str]) -> List[ReleaseGroupMetadata]:
     """ Get a list of release_group Metadata objects for a given release_group in descending order of their creation.
-        The list of release groups cannot exceed `~db.metadata.MAX_NUMBER_OF_ENTITIES_PER_CALL` per call.
+        The list of release groups cannot exceed `~db.metadata.MAX_ITEMS_PER_GET` per call.
         If the number of items exceeds this limit, ValueError will be raised. Data is sorted according
         to release_group_mbid
 
@@ -60,7 +59,7 @@ def get_metadata_for_release_group(ts_conn, release_group_mbid_list: List[str]) 
     """
 
     release_group_mbid_list = tuple(release_group_mbid_list)
-    if len(release_group_mbid_list) > MAX_NUMBER_OF_ENTITIES_PER_CALL:
+    if len(release_group_mbid_list) > MAX_ITEMS_PER_GET:
         raise ValueError("Too many recording mbids passed in.")
 
     query = """SELECT *
@@ -79,7 +78,7 @@ def get_metadata_for_release_group(ts_conn, release_group_mbid_list: List[str]) 
 
 def get_metadata_for_artist(ts_conn, artist_mbid_list: List[str]) -> List[ArtistMetadata]:
     """ Get a list of artist Metadata objects for a given recording in descending order of their creation.
-        The list of artists cannot exceed `~db.metadata.MAX_NUMBER_OF_ENTITIES_PER_CALL` per call.
+        The list of artists cannot exceed `~db.metadata.MAX_ITEMS_PER_GET` per call.
         If the number of items exceeds this limit, ValueError will be raised. Data is sorted according
         to recording_mbid
 
@@ -91,7 +90,7 @@ def get_metadata_for_artist(ts_conn, artist_mbid_list: List[str]) -> List[Artist
     """
 
     artist_mbid_list = tuple(artist_mbid_list)
-    if len(artist_mbid_list) > MAX_NUMBER_OF_ENTITIES_PER_CALL:
+    if len(artist_mbid_list) > MAX_ITEMS_PER_GET:
         raise ValueError("Too many artist mbids passed in.")
 
     query = """SELECT *

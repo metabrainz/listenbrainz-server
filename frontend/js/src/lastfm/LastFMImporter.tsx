@@ -6,9 +6,11 @@ import { faCheck, faSpinner, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { capitalize } from "lodash";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
+import Pill from "../components/Pill";
 
 export const LASTFM_RETRIES = 3;
 
@@ -298,8 +300,7 @@ export default class LastFmImporter extends React.Component<
     this.setState({ lastfmUsername: event.target.value });
   };
 
-  handleServiceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const service = event.target.value;
+  handleServiceChange = (service: ImportService) => {
     if (service === "librefm") {
       const { librefmApiUrl, librefmApiKey } = this.props;
       this.lastfmURL = librefmApiUrl;
@@ -309,7 +310,7 @@ export default class LastFmImporter extends React.Component<
       this.lastfmURL = lastfmApiUrl;
       this.lastfmKey = lastfmApiKey;
     }
-    this.setState({ service: event.target.value as ImportService });
+    this.setState({ service: service as ImportService });
   };
 
   handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -336,7 +337,7 @@ export default class LastFmImporter extends React.Component<
           Succesfully imported {inserted} out of {total} tracks feedback from{" "}
           {capitalize(service)}
           <br />
-          <a href="/my/taste">Click here to see your newly loved tracks</a>
+          <Link to="/my/taste">Click here to see your newly loved tracks</Link>
         </div>
       );
     } catch (error) {
@@ -464,7 +465,7 @@ export default class LastFmImporter extends React.Component<
           <br />
           <span style={{ fontSize: `${10}pt` }}>
             <a href={`${profileUrl}`}>
-              Close and go to your ListenBrainz profile
+              Close and go to your ListenBrainz settings
             </a>
           </span>
         </p>
@@ -527,7 +528,7 @@ export default class LastFmImporter extends React.Component<
         <br />
         <span style={{ fontSize: `${10}pt` }}>
           <a href={`${profileUrl}`}>
-            Close and go to your ListenBrainz profile
+            Close and go to your ListenBrainz settings
           </a>
         </span>
       </p>
@@ -553,7 +554,7 @@ export default class LastFmImporter extends React.Component<
           <br />
           <span style={{ fontSize: `${10}pt` }}>
             <a href={`${profileUrl}`}>
-              Close and go to your ListenBrainz profile
+              Close and go to your ListenBrainz settings
             </a>
           </span>
         </p>
@@ -582,38 +583,24 @@ export default class LastFmImporter extends React.Component<
           <dl>
             <dd>Choose a service:</dd>
             <dt className="btn-group" style={{ marginBottom: "1em" }}>
-              <label
-                className={`btn btn-default ${
-                  service === "lastfm" ? " btn-primary" : ""
-                }`}
+              <Pill
+                id="lastfm"
+                name="service"
+                value="lastfm"
+                active={service === "lastfm"}
+                onClick={() => this.handleServiceChange("lastfm")}
               >
-                <input
-                  type="radio"
-                  id="lastfm"
-                  name="service"
-                  value="lastfm"
-                  onChange={this.handleServiceChange}
-                  checked={service === "lastfm"}
-                  style={{ position: "absolute", clip: "rect(0,0,0,0)" }}
-                />
                 Last.fm
-              </label>
-              <label
-                className={`btn btn-default ${
-                  service === "librefm" ? " btn-primary" : ""
-                }`}
+              </Pill>
+              <Pill
+                id="librefm"
+                name="service"
+                value="librefm"
+                active={service === "librefm"}
+                onClick={() => this.handleServiceChange("librefm")}
               >
-                <input
-                  type="radio"
-                  id="librefm"
-                  name="service"
-                  value="librefm"
-                  checked={service === "librefm"}
-                  onChange={this.handleServiceChange}
-                  style={{ position: "absolute", clip: "rect(0,0,0,0)" }}
-                />
                 Libre.fm
-              </label>
+              </Pill>
             </dt>
             <dd>Your {service} username:</dd>
             <dt>

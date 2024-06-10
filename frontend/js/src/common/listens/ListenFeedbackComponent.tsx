@@ -26,18 +26,26 @@ export default function ListenFeedbackComponent(
   }
   return (
     <>
-      <FontAwesomeIcon
-        icon={faHeart}
+      <button
         title="Love"
         onClick={() => update(currentFeedback === 1 ? 0 : 1)}
-        className={`${currentFeedback === 1 ? " loved" : ""}`}
-      />
-      <FontAwesomeIcon
-        icon={faHeartCrack}
+        className={`btn btn-transparent love${
+          currentFeedback === 1 ? " loved" : ""
+        }`}
+        type="button"
+      >
+        <FontAwesomeIcon icon={faHeart} fixedWidth />
+      </button>
+      <button
         title="Hate"
         onClick={() => update(currentFeedback === -1 ? 0 : -1)}
-        className={`${currentFeedback === -1 ? " hated" : ""}`}
-      />
+        className={`btn btn-transparent hate${
+          currentFeedback === -1 ? " hated" : ""
+        }`}
+        type="button"
+      >
+        <FontAwesomeIcon icon={faHeartCrack} fixedWidth />
+      </button>
     </>
   );
 }

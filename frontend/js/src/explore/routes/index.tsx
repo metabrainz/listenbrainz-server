@@ -1,8 +1,9 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
-import RouteLoader from "../../utils/Loader";
+import type { RouteObject } from "react-router-dom";
+import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 
-const getExploreRoutes = () => {
+const getExploreRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/explore",
@@ -71,10 +72,10 @@ const getExploreRoutes = () => {
           },
         },
         {
-          path: "huesound/",
+          path: "huesound/:colorURLParam?",
           lazy: async () => {
-            const ColorPlay = await import("../huesound/ColorPlay");
-            return { Component: ColorPlay.default };
+            const HueSound = await import("../huesound/HueSound");
+            return { Component: HueSound.default };
           },
         },
         {
@@ -91,7 +92,7 @@ const getExploreRoutes = () => {
             const SimilarUsers = await import("../similar-users/SimilarUsers");
             return { Component: SimilarUsers.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("similar-users"),
         },
         {
           path: "music-neighborhood/",
@@ -101,7 +102,14 @@ const getExploreRoutes = () => {
             );
             return { Component: MusicNeighborhood.default };
           },
-          loader: RouteLoader,
+          loader: RouteQueryLoader("music-neighborhood"),
+        },
+        {
+          path: "ai-brainz/",
+          lazy: async () => {
+            const AIBrainzComponent = await import("../ai-brainz/AIBrainz");
+            return { Component: AIBrainzComponent.default };
+          },
         },
       ],
     },
