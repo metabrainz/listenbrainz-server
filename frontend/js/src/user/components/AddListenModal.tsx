@@ -96,7 +96,6 @@ export default NiceModal.create(() => {
   const [selectedRelease, setSelectedRelease] = useState<
     MusicBrainzRelease & WithReleaseGroup
   >();
-  // const [selectedListens, setSelectedListens] = useState<Listen[]>([]);
   const [customTimestamp, setCustomTimestamp] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -155,6 +154,8 @@ export default NiceModal.create(() => {
         });
       }
       if (selectedListens?.length) {
+        const listenOrListens =
+          selectedListens.length > 1 ? "listens" : "listen";
         try {
           const response = await APIService.submitListens(
             auth_token,
@@ -166,13 +167,16 @@ export default NiceModal.create(() => {
           toast.success(
             <ToastMsg
               title="Success"
-              message={`You added ${selectedListens.length} listens`}
+              message={`You added ${selectedListens.length} ${listenOrListens}`}
             />,
             { toastId: "added-listens-success" }
           );
           closeModal();
         } catch (error) {
-          handleError(error, "Error while submitting listens");
+          handleError(
+            error,
+            `Error while submitting ${selectedListens.length} ${listenOrListens}`
+          );
         }
       }
     } else {
