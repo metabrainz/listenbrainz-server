@@ -277,6 +277,9 @@ export default function SearchTrackOrMBID({
                 {`${track.recording_name} - ${track.artist_credit_name}`}
               </option>
             ))}
+            <option value="" style={{ textAlign: "center", color: "gray" }}>
+              — No more options —
+            </option>
           </select>
         )}
       </div>
