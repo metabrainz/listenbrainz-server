@@ -1,4 +1,4 @@
-.track-search-dropdown {
+.track-search-dropdown, .album-search-dropdown {
   display: none; // hidden by default
   position: absolute;
   width: calc(100% - 55px);
@@ -16,8 +16,7 @@
   cursor: pointer;
 
   // Options within the dropdown menu
-  > option, > button {
-    .track-search-dropdown>a,.track-search-dropdown>button {
+  > option {
     display: block;
     width: 100%;
     outline: inherit;
@@ -37,6 +36,6 @@
   }
 }
 .track-search:focus-within .track-search-dropdown,
-.album-search:focus-within .track-search-dropdown {
+.album-search:focus-within .album-search-dropdown {
   display: block; // show when parent container is focused
 }
