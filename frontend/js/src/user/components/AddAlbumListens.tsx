@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { padStart, sortBy, without } from "lodash";
+import { differenceBy, padStart, sortBy, uniqBy, without } from "lodash";
 import SearchAlbumOrMBID from "../../utils/SearchAlbumOrMBID";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { millisecondsToStr } from "../../playlists/utils";
@@ -105,6 +105,25 @@ export default function AddAlbumListens({
     []
   );
 
+  const toggleSelectionAllMediumTracks = React.useCallback(
+    (tracks: MBTrackWithAC[], isChecked: boolean) => {
+      setSelectedTracks((prevSelectedTracks) => {
+        let newSelection: MBTrackWithAC[];
+        if (isChecked) {
+          const dedupedSelection = uniqBy(
+            [...prevSelectedTracks, ...tracks],
+            "id"
+          );
+          newSelection = sortBy(dedupedSelection, "position");
+        } else {
+          newSelection = without(prevSelectedTracks, ...tracks);
+        }
+        return newSelection;
+      });
+    },
+    []
+  );
+
   return (
     <div>
       <SearchAlbumOrMBID
@@ -140,13 +159,29 @@ export default function AddAlbumListens({
               {selectedAlbum?.media.length &&
                 selectedAlbum.media
                   .map((medium, index) => {
+                    const allMediumTracksSelected =
+                      differenceBy(medium.tracks, selectedTracks, "id")
+                        .length === 0;
                     return (
                       <div key={medium.format + medium.position + medium.title}>
                         {selectedAlbum.media.length > 1 && (
-                          <div>
-                            {medium.format}&nbsp;
-                            {medium.position}
-                            {medium.title && ` - ${medium.title}`}
+                          <div className="add-album-track">
+                            <input
+                              type="checkbox"
+                              onChange={(e) => {
+                                toggleSelectionAllMediumTracks(
+                                  medium.tracks as MBTrackWithAC[],
+                                  e.target.checked
+                                );
+                              }}
+                              title="select/deselect all tracks from this medium"
+                              checked={allMediumTracksSelected}
+                            />
+                            <span className="badge badge-info">
+                              {medium.format}&nbsp;
+                              {medium.position}
+                              {medium.title && ` - ${medium.title}`}
+                            </span>
                           </div>
                         )}
                         {medium?.tracks?.map((track) => {
