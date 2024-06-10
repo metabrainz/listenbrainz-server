@@ -38,9 +38,15 @@ function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
         {padStart(track.position.toString(), 2, "0")}
       </strong>
       <span>{track.title}</span>
-      {track.length && (
-        <span className="duration">{millisecondsToStr(track.length)}</span>
-      )}
+      <span className="duration">
+        {track.length ? (
+          millisecondsToStr(track.length)
+        ) : (
+          <span title="No track duration available; listen will be submitted with a default duration of 4 minutes">
+            ?
+          </span>
+        )}
+      </span>
     </div>
   );
 }
