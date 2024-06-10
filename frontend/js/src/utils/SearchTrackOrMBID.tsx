@@ -251,7 +251,7 @@ export default function SearchTrackOrMBID({
         {Boolean(searchResults?.length) && (
           <select
             className="track-search-dropdown"
-            size={Math.min(searchResults.length, 8)}
+            size={Math.min(searchResults.length + 1, 8)}
             onChange={(e) => {
               const selectedTrack = searchResults.find(
                 (track) => track.recording_mbid === e.target.value

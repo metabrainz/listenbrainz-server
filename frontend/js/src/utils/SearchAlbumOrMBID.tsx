@@ -204,7 +204,7 @@ export default function SearchAlbumOrMBID({
               e.target.blur();
             }}
             onKeyDown={handleKeyDown}
-            size={Math.min(searchResults.length, 8)}
+            size={Math.min(searchResults.length + 1, 8)}
             tabIndex={-1}
             ref={dropdownRef}
           >
