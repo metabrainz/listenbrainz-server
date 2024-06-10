@@ -269,6 +269,14 @@ export default function AddData() {
       <ul>
         <li>
           <em>
+            <a href="https://add0n.com/lastfm-scrobbler.html">
+              Last.fm Scrobbler
+            </a>
+          </em>
+          , an extension for Firefox and Chrome
+        </li>
+        <li>
+          <em>
             <a href="https://web-scrobbler.com/">Web Scrobbler</a>
           </em>
           , an extension for Firefox and Chrome/Chromium-based browsers
