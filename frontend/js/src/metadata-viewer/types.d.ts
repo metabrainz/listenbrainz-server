@@ -72,7 +72,7 @@ declare type MusicBrainzRelease = {
   disambiguation: string;
   quality: string;
   country: string;
-  "label-info": MusicBrainzLabel[];
+  "label-info"?: MusicBrainzLabel[];
 };
 // With ?inc=media
 declare type WithMedia = {
