@@ -150,7 +150,13 @@ export default function AddAlbumListens({
         {selectedAlbum && (
           <>
             <div className="header-with-line">
-              <strong>{selectedAlbum.title}</strong>
+              <a
+                href={`https://musicbrainz.org/release/${selectedAlbum.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <strong>{selectedAlbum.title}</strong>
+              </a>
               {selectedAlbum.date && (
                 <span>
                   &nbsp;({new Date(selectedAlbum.date).getFullYear()})
