@@ -98,6 +98,7 @@ export default NiceModal.create(() => {
   >();
   const [customTimestamp, setCustomTimestamp] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [invertTimestamps, setInvertTimestamps] = useState(false);
 
   const closeModal = useCallback(() => {
     modal.hide();
@@ -123,61 +124,68 @@ export default NiceModal.create(() => {
 
   const submitListens = useCallback(async () => {
     if (auth_token) {
-      let selectedListens;
-      let listenType: ListenType;
-      // Use the user-selected date, or right now
+      let payload: Listen[] = [];
+      const isSingleListen = listenOption === SubmitListenType.track;
+      const listenType: ListenType = isSingleListen ? "single" : "import";
+      // Use the user-selected date, default to "now"
       const date = customTimestamp ? selectedDate : new Date();
-      if (listenOption === SubmitListenType.track) {
-        if (!selectedRecording) {
-          return;
+      if (isSingleListen) {
+        if (selectedRecording) {
+          const listen = getListenFromRecording(
+            selectedRecording,
+            date,
+            selectedRelease
+          );
+          payload.push(listen);
         }
-        listenType = "single";
-        selectedListens = [
-          getListenFromRecording(selectedRecording, date, selectedRelease),
-        ];
       } else {
-        if (!selectedAlbumTracks.length) {
-          return;
+        let selectedTracks = [...selectedAlbumTracks];
+        if (invertTimestamps) {
+          selectedTracks = selectedTracks.reverse();
         }
-        listenType = "import";
         let cumulativeDateTime = date;
-        selectedListens = selectedAlbumTracks.reverse().map((track) => {
-          cumulativeDateTime = add(cumulativeDateTime, {
-            seconds: -(track.length / 1000 || DEFAULT_TRACK_LENGTH_SECONDS),
+        payload = selectedTracks.map((track) => {
+          const timeToAdd = track.length / 1000 || DEFAULT_TRACK_LENGTH_SECONDS;
+          // We either use the previous value of cumulativeDateTime,
+          // or if inverting listening order directly use the new value newTime
+          const newTime = add(cumulativeDateTime, {
+            seconds: invertTimestamps ? -timeToAdd : timeToAdd,
           });
           const listen = getListenFromTrack(
             track,
-            cumulativeDateTime,
+            invertTimestamps ? newTime : cumulativeDateTime,
             selectedRelease
           );
+          // Then we assign the new time value for the next iteration
+          cumulativeDateTime = newTime;
           return listen;
         });
       }
-      if (selectedListens?.length) {
-        const listenOrListens =
-          selectedListens.length > 1 ? "listens" : "listen";
-        try {
-          const response = await APIService.submitListens(
-            auth_token,
-            listenType,
-            selectedListens
-          );
-          await APIService.checkStatus(response);
+      if (!payload?.length) {
+        return;
+      }
+      const listenOrListens = payload.length > 1 ? "listens" : "listen";
+      try {
+        const response = await APIService.submitListens(
+          auth_token,
+          listenType,
+          payload
+        );
+        await APIService.checkStatus(response);
 
-          toast.success(
-            <ToastMsg
-              title="Success"
-              message={`You added ${selectedListens.length} ${listenOrListens}`}
-            />,
-            { toastId: "added-listens-success" }
-          );
-          closeModal();
-        } catch (error) {
-          handleError(
-            error,
-            `Error while submitting ${selectedListens.length} ${listenOrListens}`
-          );
-        }
+        toast.success(
+          <ToastMsg
+            title="Success"
+            message={`You added ${payload.length} ${listenOrListens}`}
+          />,
+          { toastId: "added-listens-success" }
+        );
+        closeModal();
+      } catch (error) {
+        handleError(
+          error,
+          `Error while submitting ${payload.length} ${listenOrListens}`
+        );
       }
     } else {
       toast.error(
@@ -196,6 +204,7 @@ export default NiceModal.create(() => {
     selectedDate,
     customTimestamp,
     selectedRelease,
+    invertTimestamps,
     APIService,
     closeModal,
     handleError,
@@ -290,6 +299,36 @@ export default NiceModal.create(() => {
                   Custom
                 </Pill>
                 <div className="timestamp-date-picker">
+                  <div>
+                    <label htmlFor="starts-at">
+                      <input
+                        name="invert-timestamp"
+                        type="radio"
+                        checked={invertTimestamps === false}
+                        disabled={!customTimestamp}
+                        id="starts-at"
+                        aria-label="Set the time of the beginning of the album"
+                        onChange={() => {
+                          setInvertTimestamps(false);
+                        }}
+                      />
+                      &nbsp;Starts at:
+                    </label>
+                    <label htmlFor="ends-at">
+                      <input
+                        name="invert-timestamp"
+                        type="radio"
+                        checked={invertTimestamps === true}
+                        disabled={!customTimestamp}
+                        id="ends-at"
+                        aria-label="Set the time of the end of the album"
+                        onChange={() => {
+                          setInvertTimestamps(true);
+                        }}
+                      />
+                      &nbsp;Finishes at:
+                    </label>
+                  </div>
                   <DateTimePicker
                     value={selectedDate}
                     onChange={(newDateTimePickerValue: Date) => {
