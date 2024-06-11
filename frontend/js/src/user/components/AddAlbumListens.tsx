@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { differenceBy, padStart, sortBy, uniqBy, without } from "lodash";
 import { formatDuration } from "date-fns";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faClock } from "@fortawesome/free-regular-svg-icons";
 import SearchAlbumOrMBID from "../../utils/SearchAlbumOrMBID";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { millisecondsToStr } from "../../playlists/utils";
@@ -203,7 +205,8 @@ export default function AddAlbumListens({
                             {medium.title && ` - ${medium.title}`}
                           </span>
                           <span className="small text-muted">
-                            Length: {millisecondsToStr(mediumTime)}
+                            <FontAwesomeIcon icon={faClock} />{" "}
+                            {millisecondsToStr(mediumTime)}
                           </span>
                         </div>
                         {medium?.tracks?.map((track) => {
