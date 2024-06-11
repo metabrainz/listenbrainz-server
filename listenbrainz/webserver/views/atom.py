@@ -44,6 +44,7 @@ def get_listens(user_name):
     listens, _, _ = timescale_connection._ts.fetch_listens(user, from_ts=from_ts)
 
     fg = FeedGenerator()
+    # TODO: use {base_url} instead of hardcoded url
     fg.id(f"https://listenbrainz.org/user/{user_name}")
     fg.title(f"Listens for {user_name}")
     fg.author({"name": "ListenBrainz"})
@@ -55,15 +56,27 @@ def get_listens(user_name):
     fg.logo("https://listenbrainz.org/static/img/listenbrainz_logo_icon.svg")
     fg.language("en")
 
-    for listen in listens:
+    # newer listen comes first
+    for listen in reversed(listens):
         fe = fg.add_entry()
         # according to spec, ids don't have to be deferencable.
         fe.id(
             f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens/{listen.ts_since_epoch}/{listen.data['track_name']}"
         )
         fe.title(f"{listen.data['track_name']} - {listen.data['artist_name']}")
+        
+        release_mbid = listen.data['additional_info'].get('release_mbid')
+        recording_mbid = listen.data['additional_info'].get('recording_mbid')
+        submission_client = listen.data['additional_info'].get('submission_client')
+
+
         fe.content(
-            f"{listen.user_name} listened to {listen.data['track_name']} - {listen.data['artist_name']} on {listen.timestamp}"
+            content=f"""<p>{listen.user_name} listened to {listen.data['track_name']} - {listen.data['artist_name']} on {listen.timestamp.strftime("%Y-%m-%d %H:%M:%S")}</p>
+{"<p>Release: <a href='https://musicbrainz.org/release/" + release_mbid + "'>" + release_mbid + "</a></p>" if release_mbid else ""}
+{"<p>Recording: <a href='https://musicbrainz.org/recording/" + recording_mbid + "'>" + recording_mbid + "</a></p>" if recording_mbid else ""}
+{"<p>Submission client: " + submission_client + "</p>" if submission_client else ""}
+""",
+            type="html",
         )
 
     atomfeed = fg.atom_str(pretty=True)
