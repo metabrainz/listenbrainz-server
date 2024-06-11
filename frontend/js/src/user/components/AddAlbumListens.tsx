@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { differenceBy, padStart, sortBy, uniqBy, without } from "lodash";
+import { formatDuration } from "date-fns";
 import SearchAlbumOrMBID from "../../utils/SearchAlbumOrMBID";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { millisecondsToStr } from "../../playlists/utils";
-import { MBTrackWithAC } from "./AddListenModal";
+import { DEFAULT_TRACK_LENGTH_SECONDS, MBTrackWithAC } from "./AddListenModal";
 
 interface AddAlbumListensProps {
   onPayloadChange: (
@@ -38,14 +39,8 @@ function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
         {padStart(track.position.toString(), 2, "0")}
       </strong>
       <span>{track.title}</span>
-      <span className="duration">
-        {track.length ? (
-          millisecondsToStr(track.length)
-        ) : (
-          <span title="No track duration available; listen will be submitted with a default duration of 4 minutes">
-            ?
-          </span>
-        )}
+      <span className={`duration ${!track.length ? "default-duration" : ""}`}>
+        {millisecondsToStr(track.length ?? DEFAULT_TRACK_LENGTH_SECONDS * 1000)}
       </span>
     </div>
   );
@@ -130,6 +125,18 @@ export default function AddAlbumListens({
     []
   );
 
+  const allDurations = selectedAlbum?.media.flatMap((medium) =>
+    medium.tracks.map((track) => track.length)
+  );
+  const showDefaultDuration = !allDurations?.every(Boolean);
+
+  const defaultDuration = formatDuration(
+    {
+      seconds: DEFAULT_TRACK_LENGTH_SECONDS,
+    },
+    { format: ["minutes", "seconds"] }
+  );
+
   return (
     <div>
       <SearchAlbumOrMBID
@@ -140,14 +147,7 @@ export default function AddAlbumListens({
       <div className="track-info">
         {selectedAlbum && (
           <>
-            <div
-              className="header-with-line"
-              style={{
-                gap: "5px",
-                marginBottom: "0.5em",
-                alignItems: "baseline",
-              }}
-            >
+            <div className="header-with-line">
               <strong>{selectedAlbum.title}</strong>
               {selectedAlbum.date && (
                 <span>
@@ -161,6 +161,14 @@ export default function AddAlbumListens({
                 </small>
               )}
             </div>
+            {showDefaultDuration && (
+              <div
+                className="default-duration small"
+                title={`When no duration is available a default of ${defaultDuration} will be used`}
+              >
+                default {defaultDuration}
+              </div>
+            )}
             <div className="content">
               {selectedAlbum?.media.length &&
                 selectedAlbum.media
@@ -168,6 +176,13 @@ export default function AddAlbumListens({
                     const allMediumTracksSelected =
                       differenceBy(medium.tracks, selectedTracks, "id")
                         .length === 0;
+                    const mediumTime = medium.tracks
+                      .map(
+                        (track) =>
+                          track.length ?? DEFAULT_TRACK_LENGTH_SECONDS * 1000
+                      )
+                      ?.reduce((total, duration) => total + duration, 0);
+
                     return (
                       <div key={medium.format + medium.position + medium.title}>
                         <div className="add-album-track">
@@ -186,6 +201,9 @@ export default function AddAlbumListens({
                             {medium.format}&nbsp;
                             {medium.position}
                             {medium.title && ` - ${medium.title}`}
+                          </span>
+                          <span className="small text-muted">
+                            Length: {millisecondsToStr(mediumTime)}
                           </span>
                         </div>
                         {medium?.tracks?.map((track) => {

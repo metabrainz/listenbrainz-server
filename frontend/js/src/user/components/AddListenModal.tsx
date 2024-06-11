@@ -77,8 +77,8 @@ const getListenFromTrack = (
   }
   return listen;
 };
-// Use a default of 4 minutes for the track length if not available in metadata
-const DEFAULT_TRACK_LENGTH_SECONDS = 60 * 4;
+// Use a default of 1 minute for the track length if not available in metadata
+export const DEFAULT_TRACK_LENGTH_SECONDS = 60;
 
 export default NiceModal.create(() => {
   const modal = useModal();

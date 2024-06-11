@@ -64,8 +64,13 @@
       &.content {
         max-height: 50vh;
         overflow-y: auto;
-        padding-right: 0.7em;
       }
+    }
+    .header-with-line {
+      gap: 5px;
+      margin-bottom: 0.5em;
+      align-items: baseline;
+      flex-wrap: wrap;
     }
   }
   .cross-details {
@@ -164,10 +169,18 @@
     }
     .duration {
       margin-left: auto;
+      padding: 0 0.4em;
     }
   }
   .release-cards-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, max-content));
+  }
+  .default-duration {
+    margin: 0;
+    position: absolute;
+    width: initial;
+    right: 1.4em;
+    background-color: oldlace;
   }
   // Chevron indicator
   #select-release {
