@@ -38,6 +38,10 @@ declare type MusicBrainzReleaseGroup = {
   "secondary-types": string[];
   "secondary-type-ids": string[];
 };
+declare type MusicBrainzLabel = {
+  "catalog-number": string;
+  label:{id:string;name:string};
+}
 
 declare type MusicBrainzTrack = {
   number: string;
@@ -68,6 +72,7 @@ declare type MusicBrainzRelease = {
   disambiguation: string;
   quality: string;
   country: string;
+  "label-info": MusicBrainzLabel[];
 };
 // With ?inc=media
 declare type WithMedia = {

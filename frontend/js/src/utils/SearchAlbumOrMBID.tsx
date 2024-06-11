@@ -234,10 +234,14 @@ export default function SearchAlbumOrMBID({
                           }`
                       )
                       .join("")}
-                  - {release.date && new Date(release.date).getFullYear()}{" "}
                   <small>
                     ({release.media?.map((medium) => medium.format).join(" + ")}
-                    )
+                    )&nbsp;
+                    {release.country === "XE" ? "Worldwide" : release.country}
+                    &nbsp;
+                    {release.date}
+                    {release["label-info"]?.[0] &&
+                      ` - ${release["label-info"]?.[0]?.label.name}`}
                   </small>
                 </option>
               );
