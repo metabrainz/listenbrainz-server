@@ -64,11 +64,10 @@ def get_listens(user_name):
             f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens/{listen.ts_since_epoch}/{listen.data['track_name']}"
         )
         fe.title(f"{listen.data['track_name']} - {listen.data['artist_name']}")
-        
-        release_mbid = listen.data['additional_info'].get('release_mbid')
-        recording_mbid = listen.data['additional_info'].get('recording_mbid')
-        submission_client = listen.data['additional_info'].get('submission_client')
 
+        release_mbid = listen.data["additional_info"].get("release_mbid")
+        recording_mbid = listen.data["additional_info"].get("recording_mbid")
+        submission_client = listen.data["additional_info"].get("submission_client")
 
         fe.content(
             content=f"""<p>{listen.user_name} listened to {listen.data['track_name']} - {listen.data['artist_name']} on {listen.timestamp.strftime("%Y-%m-%d %H:%M:%S")}</p>
