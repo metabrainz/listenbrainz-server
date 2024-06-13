@@ -209,10 +209,24 @@ export default function SearchAlbumOrMBID({
             ref={dropdownRef}
           >
             {searchResults.map((release, index) => {
+              let releaseInfoString = `(${release.media
+                ?.map((medium) => medium.format)
+                .join(" + ")}) 
+              ${
+                release.country === "XE" ? "Worldwide" : release.country ?? ""
+              } ${release.date ?? ""}`;
+              if (release["label-info"]?.length) {
+                const labelNames = release["label-info"]
+                  ?.map((li) => li.label?.name)
+                  .filter(Boolean)
+                  .join(", ");
+                releaseInfoString += ` - ${labelNames}`;
+              }
               return (
                 <option
                   key={release.id}
                   value={release.id}
+                  data-release-info={releaseInfoString}
                   style={
                     index === selectedIndex
                       ? { backgroundColor: "#353070", color: "white" }
@@ -234,15 +248,6 @@ export default function SearchAlbumOrMBID({
                           }`
                       )
                       .join("")}
-                  <small>
-                    ({release.media?.map((medium) => medium.format).join(" + ")}
-                    )&nbsp;
-                    {release.country === "XE" ? "Worldwide" : release.country}
-                    &nbsp;
-                    {release.date}
-                    {release["label-info"]?.[0] &&
-                      ` - ${release["label-info"]?.[0]?.label.name}`}
-                  </small>
                 </option>
               );
             })}

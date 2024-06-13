@@ -29,6 +29,14 @@
     border: none;
     cursor: pointer;
 
+    &::after {
+      content: attr(data-release-info);
+      display: inline-block;
+      margin-left: .5em;
+      color: @light-grey;
+      font-size: small;
+    }
+
     &:hover,
     &:focus {
       color: #fff;
