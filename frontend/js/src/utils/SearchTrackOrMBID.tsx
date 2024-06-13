@@ -253,6 +253,11 @@ export default function SearchTrackOrMBID({
             className="track-search-dropdown"
             size={Math.min(searchResults.length + 1, 8)}
             onChange={(e) => {
+              if (!e.currentTarget.value) {
+                // clicked on "no more options"
+                return;
+              }
+              e.target.blur();
               const selectedTrack = searchResults.find(
                 (track) => track.recording_mbid === e.target.value
               );
@@ -277,9 +282,11 @@ export default function SearchTrackOrMBID({
                 {`${track.recording_name} - ${track.artist_credit_name}`}
               </option>
             ))}
-            <option value="" style={{ textAlign: "center", color: "gray" }}>
-              — No more options —
-            </option>
+            {searchResults.length < 10 && (
+              <option value="" style={{ textAlign: "center", color: "gray" }}>
+                — No more options —
+              </option>
+            )}
           </select>
         )}
       </div>

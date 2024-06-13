@@ -40,7 +40,7 @@ declare type MusicBrainzReleaseGroup = {
 };
 declare type MusicBrainzLabel = {
   "catalog-number": string;
-  label:{id:string;name:string};
+  label?:{id:string;name:string};
 }
 
 declare type MusicBrainzTrack = {

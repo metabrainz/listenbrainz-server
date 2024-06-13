@@ -200,6 +200,10 @@ export default function SearchAlbumOrMBID({
           <select
             className="album-search-dropdown"
             onChange={(e) => {
+              if (!e.currentTarget.value) {
+                // clicked on "no more options"
+                return;
+              }
               selectSearchResult(e.currentTarget.value);
               e.target.blur();
             }}
@@ -251,6 +255,11 @@ export default function SearchAlbumOrMBID({
                 </option>
               );
             })}
+            {searchResults.length < 25 && (
+              <option value="" style={{ textAlign: "center", color: "gray" }}>
+                — No more options —
+              </option>
+            )}
           </select>
         )}
       </div>
