@@ -226,11 +226,26 @@ export default function SearchAlbumOrMBID({
                   .join(", ");
                 releaseInfoString += ` - ${labelNames}`;
               }
+              const releaseTitleAndArtist = `${release.title} ${
+                release.disambiguation ? `(${release.disambiguation})` : ""
+              }
+by ${
+                release["artist-credit"] &&
+                release["artist-credit"]
+                  .map(
+                    (artist) =>
+                      `${artist.name} ${
+                        artist.joinphrase ? artist.joinphrase : ""
+                      }`
+                  )
+                  .join("")
+              }`;
               return (
                 <option
                   key={release.id}
                   value={release.id}
                   data-release-info={releaseInfoString}
+                  title={releaseTitleAndArtist}
                   style={
                     index === selectedIndex
                       ? { backgroundColor: "#353070", color: "white" }
@@ -238,20 +253,7 @@ export default function SearchAlbumOrMBID({
                   }
                   aria-selected={index === selectedIndex}
                 >
-                  {release.title}
-                  {release.disambiguation && (
-                    <small> ({release.disambiguation})</small>
-                  )}{" "}
-                  -{" "}
-                  {release["artist-credit"] &&
-                    release["artist-credit"]
-                      .map(
-                        (artist) =>
-                          `${artist.name} ${
-                            artist.joinphrase ? artist.joinphrase : ""
-                          }`
-                      )
-                      .join("")}
+                  {releaseTitleAndArtist}
                 </option>
               );
             })}
