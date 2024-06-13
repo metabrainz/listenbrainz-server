@@ -229,7 +229,7 @@ export default function SearchAlbumOrMBID({
               const releaseTitleAndArtist = `${release.title} ${
                 release.disambiguation ? `(${release.disambiguation})` : ""
               }
-by ${
+- ${
                 release["artist-credit"] &&
                 release["artist-credit"]
                   .map(
