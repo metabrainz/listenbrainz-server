@@ -1,5 +1,8 @@
-import * as React from "react";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState, useContext } from "react";
+import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { ToastMsg } from "../notifications/Notifications";
 
 type ReportUserModalProps = {
   onSubmit: (optionalReason?: string) => void;
@@ -7,14 +10,26 @@ type ReportUserModalProps = {
 };
 
 function ReportUserModal(props: ReportUserModalProps) {
+  const { currentUser } = useContext(GlobalAppContext);
   const { reportedUserName, onSubmit } = props;
   const [optionalReason, setOptionalReason] = useState("");
   const submit = useCallback(
     (event: React.SyntheticEvent) => {
       event.preventDefault();
+      if (!currentUser?.auth_token) {
+        // user is not logged in, redirect to login page and back here afterwards
+        toast.error(
+          <ToastMsg
+            title="You need to be logged in to report a user"
+            message={<Link to={`/login/?next=${window.location.href}`}>Log in here</Link>}
+          />,
+          { toastId: "auth-error" }
+        );
+        return;
+      }
       onSubmit(optionalReason);
     },
-    [optionalReason]
+    [currentUser?.auth_token, onSubmit, optionalReason]
   );
 
   return (
