@@ -21,13 +21,19 @@ function ReportUserModal(props: ReportUserModalProps) {
         toast.error(
           <ToastMsg
             title="You need to be logged in to report a user"
-            message={<Link to={`/login/?next=${window.location.href}`}>Log in here</Link>}
+            message={
+              <Link to={`/login/?next=${window.location.href}`}>
+                Log in here
+              </Link>
+            }
           />,
           { toastId: "auth-error" }
         );
         return;
       }
-      onSubmit(optionalReason);
+      const optionalReasonTrimmed = optionalReason.trim();
+      setOptionalReason("");
+      onSubmit(optionalReasonTrimmed);
     },
     [currentUser?.auth_token, onSubmit, optionalReason]
   );
