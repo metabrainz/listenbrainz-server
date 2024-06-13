@@ -268,20 +268,24 @@ export default function SearchTrackOrMBID({
             tabIndex={-1}
             ref={dropdownRef}
           >
-            {searchResults.map((track, index) => (
-              <option
-                key={track.recording_mbid}
-                value={track.recording_mbid}
-                style={
-                  index === selectedIndex
-                    ? { backgroundColor: "#353070", color: "white" }
-                    : {}
-                }
-                aria-selected={index === selectedIndex}
-              >
-                {`${track.recording_name} - ${track.artist_credit_name}`}
-              </option>
-            ))}
+            {searchResults.map((track, index) => {
+              const trackNameAndArtistName = `${track.recording_name} - ${track.artist_credit_name}`;
+              return (
+                <option
+                  key={track.recording_mbid}
+                  value={track.recording_mbid}
+                  style={
+                    index === selectedIndex
+                      ? { backgroundColor: "#353070", color: "white" }
+                      : {}
+                  }
+                  aria-selected={index === selectedIndex}
+                  title={trackNameAndArtistName}
+                >
+                  {trackNameAndArtistName}
+                </option>
+              );
+            })}
             {searchResults.length < 10 && (
               <option value="" style={{ textAlign: "center", color: "gray" }}>
                 — No more options —
