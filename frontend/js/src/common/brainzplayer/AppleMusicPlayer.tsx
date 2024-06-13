@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, escapeRegExp, isString } from "lodash";
+import { get as _get, deburr, escapeRegExp, isString } from "lodash";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
 import { Link } from "react-router-dom";
 import fuzzysort from "fuzzysort";
@@ -191,10 +191,20 @@ export default class AppleMusicPlayer
         `/v1/catalog/{{storefrontId}}/search`,
         { term: searchTerm, types: "songs" }
       );
-      const candidateMatches = response?.data?.results?.songs?.data;
+      // Remove accents from both the search term and the API results
+      const trackNameWithoutAccents = deburr(trackName);
+      const candidateMatches = response?.data?.results?.songs?.data.map(
+        (candidate) => ({
+          ...candidate,
+          attributes: {
+            ...candidate.attributes,
+            name: deburr(candidate.attributes.name),
+          },
+        })
+      );
       // Check if the first API result is a match
       if (
-        new RegExp(escapeRegExp(`${trackName}`), "ig").test(
+        new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
           candidateMatches?.[0]?.attributes.name
         )
       ) {
@@ -203,10 +213,14 @@ export default class AppleMusicPlayer
         return;
       }
       // Fallback to best fuzzy match based on track title
-      const fruzzyMatches = fuzzysort.go(trackName, candidateMatches, {
-        key: "attributes.name",
-        limit: 1,
-      });
+      const fruzzyMatches = fuzzysort.go(
+        trackNameWithoutAccents,
+        candidateMatches,
+        {
+          key: "attributes.name",
+          limit: 1,
+        }
+      );
       if (fruzzyMatches[0]) {
         await this.playAppleMusicId(fruzzyMatches[0].obj.id);
         return;
