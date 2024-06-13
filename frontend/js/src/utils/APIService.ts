@@ -1189,9 +1189,26 @@ export default class APIService {
   };
 
   lookupMBRelease = async (
-    releaseMBID: string
-  ): Promise<MusicBrainzReleaseWithReleaseGroup> => {
-    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
+    releaseMBID: string,
+    inc = "release-groups"
+  ): Promise<
+    (MusicBrainzRelease & WithReleaseGroup) | (MusicBrainzRelease & WithMedia)
+  > => {
+    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=${inc}`;
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  lookupMBReleaseGroup = async (
+    releaseGroupMBID: string
+  ): Promise<
+    MusicBrainzReleaseGroup &
+      WithArtistCredits & {
+        releases: Array<MusicBrainzRelease & WithMedia>;
+      }
+  > => {
+    const url = `${this.MBBaseURI}/release-group/${releaseGroupMBID}?fmt=json&inc=releases+artists+media`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
@@ -1202,7 +1219,7 @@ export default class APIService {
   ): Promise<{
     "release-offset": number;
     "release-count": number;
-    releases: MusicBrainzReleaseWithMedia[];
+    releases: Array<MusicBrainzRelease & WithMedia>;
   }> => {
     const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
     const response = await fetch(encodeURI(url));
@@ -1640,6 +1657,21 @@ export default class APIService {
     count: number = 25
   ): Promise<TrackTypeSearchResult> => {
     const url = `${this.MBBaseURI}/recording?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchMBRelease = async (
+    searchQuery: string
+  ): Promise<{
+    count: number;
+    offset: number;
+    releases: Array<
+      MusicBrainzRelease & WithReleaseGroup & WithArtistCredits & WithMedia
+    >;
+  }> => {
+    const url = `${this.MBBaseURI}/release?query=${searchQuery}&fmt=json`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

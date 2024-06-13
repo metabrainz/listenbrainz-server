@@ -14,13 +14,31 @@ import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
 
 const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
+const THROTTLE_MILLISECONDS = 1500;
+
+type PayloadType = "trackmetadata" | "recording";
+// Allow for returning results of two different types while maintaining
+// type safety, depending on the value of expectedPayload
+type ConditionalReturnValue =
+  | {
+      onSelectRecording: (
+        selectedRecording: MusicBrainzRecordingWithReleasesAndRGs
+      ) => void;
+      expectedPayload: "recording";
+    }
+  | {
+      onSelectRecording: (selectedRecording: TrackMetadata) => void;
+      expectedPayload: "trackmetadata";
+    };
+
 type SearchTrackOrMBIDProps = {
-  onSelectRecording: (selectedRecordingMetadata: TrackMetadata) => void;
   defaultValue?: string;
-};
+  expectedPayload: PayloadType;
+} & ConditionalReturnValue;
 
 export default function SearchTrackOrMBID({
   onSelectRecording,
+  expectedPayload,
   defaultValue,
 }: SearchTrackOrMBIDProps) {
   const { APIService } = useContext(GlobalAppContext);
@@ -80,7 +98,7 @@ export default function SearchTrackOrMBID({
             handleError(error);
           }
         },
-        800,
+        THROTTLE_MILLISECONDS,
         { leading: false, trailing: true }
       ),
     [handleError, setSearchResults]
@@ -89,7 +107,7 @@ export default function SearchTrackOrMBID({
   const throttledHandleValidMBID = useMemo(
     () =>
       throttle(
-        async (input: string) => {
+        async (input: string, canonicalReleaseMBID?: string) => {
           const newRecordingMBID = RECORDING_MBID_REGEXP.exec(
             input
           )![2].toLowerCase();
@@ -97,27 +115,42 @@ export default function SearchTrackOrMBID({
           try {
             const recordingLookupResponse = (await lookupMBRecording(
               newRecordingMBID,
-              "artists+releases"
-            )) as MusicBrainzRecordingWithReleases;
+              "artists+releases+release-groups"
+            )) as MusicBrainzRecordingWithReleasesAndRGs;
 
-            const newMetadata: TrackMetadata = {
-              track_name: recordingLookupResponse.title,
-              artist_name: recordingLookupResponse["artist-credit"]
-                .map((ac) => ac.name + ac.joinphrase)
-                .join(""),
-              additional_info: {
-                duration_ms: recordingLookupResponse.length,
-                artist_mbids: recordingLookupResponse["artist-credit"].map(
-                  (ac) => ac.artist.id
-                ),
-                release_artist_names: recordingLookupResponse[
-                  "artist-credit"
-                ].map((ac) => ac.artist.name),
-                recording_mbid: recordingLookupResponse.id,
-                release_mbid: recordingLookupResponse.releases[0]?.id,
-              },
-            };
-            onSelectRecording(newMetadata);
+            const canonicalReleaseIndex = recordingLookupResponse.releases.findIndex(
+              (r) => r.id === canonicalReleaseMBID
+            );
+            if (canonicalReleaseIndex !== -1) {
+              // sort the canonical release as #1, for use in
+              const canonicalRelease = recordingLookupResponse.releases.splice(
+                canonicalReleaseIndex,
+                1
+              );
+              recordingLookupResponse.releases.unshift(canonicalRelease[0]);
+            }
+            if (expectedPayload === "recording") {
+              onSelectRecording(recordingLookupResponse);
+            } else {
+              const newMetadata: TrackMetadata = {
+                track_name: recordingLookupResponse.title,
+                artist_name: recordingLookupResponse["artist-credit"]
+                  .map((ac) => ac.name + ac.joinphrase)
+                  .join(""),
+                additional_info: {
+                  duration_ms: recordingLookupResponse.length,
+                  artist_mbids: recordingLookupResponse["artist-credit"].map(
+                    (ac) => ac.artist.id
+                  ),
+                  release_artist_names: recordingLookupResponse[
+                    "artist-credit"
+                  ].map((ac) => ac.artist.name),
+                  recording_mbid: recordingLookupResponse.id,
+                  release_mbid: recordingLookupResponse.releases[0]?.id,
+                },
+              };
+              onSelectRecording(newMetadata);
+            }
           } catch (error) {
             handleError(
               `We could not find a recording on MusicBrainz with the MBID ${newRecordingMBID} ('${error.message}')`,
@@ -127,24 +160,29 @@ export default function SearchTrackOrMBID({
           }
           setSearchResults([]);
         },
-        800,
+        THROTTLE_MILLISECONDS,
         { leading: false, trailing: true }
       ),
-    [lookupMBRecording, handleError, onSelectRecording]
+    [lookupMBRecording, expectedPayload, onSelectRecording, handleError]
   );
 
   const selectSearchResult = (track: ACRMSearchResult) => {
-    const metadata: TrackMetadata = {
-      additional_info: {
-        release_mbid: track.release_mbid,
-        recording_mbid: track.recording_mbid,
-      },
+    if (expectedPayload === "recording") {
+      // Expecting a recording, fetch it so we can return it
+      throttledHandleValidMBID(track.recording_mbid, track.release_mbid);
+    } else {
+      const metadata: TrackMetadata = {
+        additional_info: {
+          release_mbid: track.release_mbid,
+          recording_mbid: track.recording_mbid,
+        },
 
-      artist_name: track.artist_credit_name,
-      track_name: track.recording_name,
-      release_name: track.release_name,
-    };
-    onSelectRecording(metadata);
+        artist_name: track.artist_credit_name,
+        track_name: track.recording_name,
+        release_name: track.release_name,
+      };
+      onSelectRecording(metadata);
+    }
   };
 
   const reset = () => {
@@ -213,8 +251,13 @@ export default function SearchTrackOrMBID({
         {Boolean(searchResults?.length) && (
           <select
             className="track-search-dropdown"
-            size={Math.min(searchResults.length, 8)}
+            size={Math.min(searchResults.length + 1, 8)}
             onChange={(e) => {
+              if (!e.currentTarget.value) {
+                // clicked on "no more options"
+                return;
+              }
+              e.target.blur();
               const selectedTrack = searchResults.find(
                 (track) => track.recording_mbid === e.target.value
               );
@@ -225,20 +268,29 @@ export default function SearchTrackOrMBID({
             tabIndex={-1}
             ref={dropdownRef}
           >
-            {searchResults.map((track, index) => (
-              <option
-                key={track.recording_mbid}
-                value={track.recording_mbid}
-                style={
-                  index === selectedIndex
-                    ? { backgroundColor: "#353070", color: "white" }
-                    : {}
-                }
-                aria-selected={index === selectedIndex}
-              >
-                {`${track.recording_name} - ${track.artist_credit_name}`}
+            {searchResults.map((track, index) => {
+              const trackNameAndArtistName = `${track.recording_name} - ${track.artist_credit_name}`;
+              return (
+                <option
+                  key={track.recording_mbid}
+                  value={track.recording_mbid}
+                  style={
+                    index === selectedIndex
+                      ? { backgroundColor: "#353070", color: "white" }
+                      : {}
+                  }
+                  aria-selected={index === selectedIndex}
+                  title={trackNameAndArtistName}
+                >
+                  {trackNameAndArtistName}
+                </option>
+              );
+            })}
+            {searchResults.length < 10 && (
+              <option value="" style={{ textAlign: "center", color: "gray" }}>
+                — No more options —
               </option>
-            ))}
+            )}
           </select>
         )}
       </div>

@@ -64,6 +64,7 @@
     "d3-format": "^1.4.4",
     "d3-scale": "^3.2.1",
     "d3-scale-chromatic": "^3.0.0",
+    "date-fns": "^3.6.0",
     "debounce-async": "0.0.2",
     "dompurify": "^2.2.6",
     "external-svg-loader": "^1.7.1",
