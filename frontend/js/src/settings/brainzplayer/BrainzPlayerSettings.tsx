@@ -44,12 +44,15 @@ const dataSourcesInfo = {
   },
 } as const;
 
-const defaultDataSourcesPriority = [
+export type DataSourceKey = keyof typeof dataSourcesInfo;
+type DataSourceInfo = typeof dataSourcesInfo[keyof typeof dataSourcesInfo];
+
+export const defaultDataSourcesPriority = [
   "spotify",
   "appleMusic",
   "soundcloud",
   "youtube",
-] as (keyof typeof dataSourcesInfo)[];
+] as DataSourceKey[];
 
 function BrainzPlayerSettings() {
   const {
@@ -77,7 +80,7 @@ function BrainzPlayerSettings() {
   );
 
   const [dataSourcesPriority, setDataSourcesPriority] = React.useState<
-    (keyof typeof dataSourcesInfo)[]
+    DataSourceKey[]
   >(
     userPreferences?.brainzplayer?.dataSourcesPriority ??
       defaultDataSourcesPriority
@@ -98,8 +101,8 @@ function BrainzPlayerSettings() {
     }));
 
     return sortedList as {
-      id: keyof typeof dataSourcesInfo;
-      info: typeof dataSourcesInfo[keyof typeof dataSourcesInfo];
+      id: DataSourceKey;
+      info: DataSourceInfo;
     }[];
   }, [dataSourcesPriority]);
 
@@ -125,7 +128,6 @@ function BrainzPlayerSettings() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
       if (userPreferences) {
         userPreferences.brainzplayer = {
-          ...userPreferences?.brainzplayer,
           youtubeEnabled,
           spotifyEnabled,
           soundcloudEnabled,
