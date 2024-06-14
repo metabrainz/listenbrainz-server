@@ -10,12 +10,49 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
+import { ReactSortable } from "react-sortablejs";
+import { faGripLines } from "@fortawesome/free-solid-svg-icons";
+import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
+import Card from "../../components/Card";
+
+const dataSourcesNameMapping = {
+  youtube: "YouTube",
+  spotify: "Spotify",
+  soundcloud: "SoundCloud",
+  appleMusic: "Apple Music",
+} as const;
+
+const dataSourcesIconsMapping = {
+  youtube: {
+    icon: faYoutube,
+    color: "#FF0000",
+  },
+  spotify: {
+    icon: faSpotify,
+    color: "#1DB954",
+  },
+  soundcloud: {
+    icon: faSoundcloud,
+    color: "#FF8800",
+  },
+  appleMusic: {
+    icon: faApple,
+    color: "#000000",
+  },
+} as const;
+
+const defaultDataSourcesPriority = [
+  "spotify",
+  "appleMusic",
+  "soundcloud",
+  "youtube",
+] as (keyof typeof dataSourcesNameMapping)[];
 
 function BrainzPlayerSettings() {
   const {
@@ -42,6 +79,40 @@ function BrainzPlayerSettings() {
       AppleMusicPlayer.hasPermissions(appleAuth)
   );
 
+  const [dataSourcesPriority, setDataSourcesPriority] = React.useState<
+    (keyof typeof dataSourcesNameMapping)[]
+  >(
+    userPreferences?.brainzplayer?.dataSourcesPriority ??
+      defaultDataSourcesPriority
+  );
+
+  const moveDataSource = (evt: any) => {
+    const { newIndex, oldIndex } = evt;
+    const newPriority = [...dataSourcesPriority];
+    const [removed] = newPriority.splice(oldIndex, 1);
+    newPriority.splice(newIndex, 0, removed);
+    setDataSourcesPriority(newPriority);
+  };
+
+  const getDataSourcesPriorityList = React.useCallback(() => {
+    const sortedList = dataSourcesPriority.map((id) => ({
+      id,
+      name: dataSourcesNameMapping[id],
+      icon: dataSourcesIconsMapping[id],
+    }));
+
+    return sortedList as {
+      id: keyof typeof dataSourcesNameMapping;
+      name: string;
+      icon: {
+        icon: IconDefinition;
+        color: string;
+      };
+    }[];
+  }, [dataSourcesPriority]);
+
+  const sortedList = getDataSourcesPriorityList();
+
   const saveSettings = React.useCallback(async () => {
     if (!currentUser?.auth_token) {
       toast.error("You must be logged in to update your preferences");
@@ -54,6 +125,7 @@ function BrainzPlayerSettings() {
         spotifyEnabled,
         soundcloudEnabled,
         appleMusicEnabled,
+        dataSourcesPriority,
       });
       toast.success("Saved your preferences successfully");
       // Update the global context values
@@ -66,6 +138,7 @@ function BrainzPlayerSettings() {
           spotifyEnabled,
           soundcloudEnabled,
           appleMusicEnabled,
+          dataSourcesPriority,
         };
       }
     } catch (error) {
@@ -87,6 +160,7 @@ function BrainzPlayerSettings() {
     spotifyEnabled,
     soundcloudEnabled,
     appleMusicEnabled,
+    dataSourcesPriority,
     APIService,
     currentUser?.auth_token,
     userPreferences,
@@ -265,7 +339,37 @@ function BrainzPlayerSettings() {
           </ul>
         </small>
       </div>
-      <br />
+      <h3 className="mt-15">BrainzPlayer data source order</h3>
+      <p>
+        You can change the order of the data source for the BrainzPlayer. The
+        data source will be used in the order you set here.
+      </p>
+      <p>Drag and drop the data source to change the order.</p>
+      <ReactSortable
+        list={sortedList}
+        setList={(newState) => {
+          setDataSourcesPriority(newState.map((item) => item.id));
+        }}
+        onEnd={moveDataSource}
+        handle=".drag-handle"
+      >
+        {sortedList.map((item) => (
+          <Card key={item.id} className="listen-card playlist-item-card">
+            <div className="main-content text-brand">
+              <span className="drag-handle text-muted">
+                <FontAwesomeIcon icon={faGripLines as IconProp} />
+              </span>
+              <span>
+                <FontAwesomeIcon
+                  icon={item.icon.icon}
+                  color={item.icon.color}
+                />
+              </span>
+              <span>&nbsp;{item.name}</span>
+            </div>
+          </Card>
+        ))}
+      </ReactSortable>
       <button
         className="btn btn-lg btn-info"
         type="button"
