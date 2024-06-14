@@ -362,7 +362,11 @@ function BrainzPlayerSettings() {
         handle=".drag-handle"
       >
         {sortedList.map((item) => (
-          <Card key={item.id} className="listen-card playlist-item-card">
+          <Card
+            key={item.id}
+            className="listen-card playlist-item-card"
+            style={{ maxWidth: "900px" }}
+          >
             <div className="main-content text-brand">
               <span className="drag-handle text-muted">
                 <FontAwesomeIcon icon={faGripLines as IconProp} />
