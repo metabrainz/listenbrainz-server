@@ -53,6 +53,7 @@ function BrainzPlayerSettings() {
         youtubeEnabled,
         spotifyEnabled,
         soundcloudEnabled,
+        appleMusicEnabled,
       });
       toast.success("Saved your preferences successfully");
       // Update the global context values
