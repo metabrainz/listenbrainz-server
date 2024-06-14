@@ -21,27 +21,24 @@ import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 
-const dataSourcesNameMapping = {
-  youtube: "YouTube",
-  spotify: "Spotify",
-  soundcloud: "SoundCloud",
-  appleMusic: "Apple Music",
-} as const;
-
-const dataSourcesIconsMapping = {
+const dataSourcesInfo = {
   youtube: {
+    name: "YouTube",
     icon: faYoutube,
     color: "#FF0000",
   },
   spotify: {
+    name: "Spotify",
     icon: faSpotify,
     color: "#1DB954",
   },
   soundcloud: {
+    name: "SoundCloud",
     icon: faSoundcloud,
     color: "#FF8800",
   },
   appleMusic: {
+    name: "Apple Music",
     icon: faApple,
     color: "#000000",
   },
@@ -52,7 +49,7 @@ const defaultDataSourcesPriority = [
   "appleMusic",
   "soundcloud",
   "youtube",
-] as (keyof typeof dataSourcesNameMapping)[];
+] as (keyof typeof dataSourcesInfo)[];
 
 function BrainzPlayerSettings() {
   const {
@@ -80,7 +77,7 @@ function BrainzPlayerSettings() {
   );
 
   const [dataSourcesPriority, setDataSourcesPriority] = React.useState<
-    (keyof typeof dataSourcesNameMapping)[]
+    (keyof typeof dataSourcesInfo)[]
   >(
     userPreferences?.brainzplayer?.dataSourcesPriority ??
       defaultDataSourcesPriority
@@ -97,17 +94,12 @@ function BrainzPlayerSettings() {
   const getDataSourcesPriorityList = React.useCallback(() => {
     const sortedList = dataSourcesPriority.map((id) => ({
       id,
-      name: dataSourcesNameMapping[id],
-      icon: dataSourcesIconsMapping[id],
+      info: dataSourcesInfo[id],
     }));
 
     return sortedList as {
-      id: keyof typeof dataSourcesNameMapping;
-      name: string;
-      icon: {
-        icon: IconDefinition;
-        color: string;
-      };
+      id: keyof typeof dataSourcesInfo;
+      info: typeof dataSourcesInfo[keyof typeof dataSourcesInfo];
     }[];
   }, [dataSourcesPriority]);
 
@@ -201,9 +193,7 @@ function BrainzPlayerSettings() {
               <span>
                 <FontAwesomeIcon
                   icon={faSpotify}
-                  color={
-                    spotifyEnabled ? dataSourcesIconsMapping.spotify.color : ""
-                  }
+                  color={spotifyEnabled ? dataSourcesInfo.spotify.color : ""}
                 />
               </span>
               <span>&nbsp;Spotify</span>
@@ -245,9 +235,7 @@ function BrainzPlayerSettings() {
                 <FontAwesomeIcon
                   icon={faApple}
                   color={
-                    appleMusicEnabled
-                      ? dataSourcesIconsMapping.appleMusic.color
-                      : ""
+                    appleMusicEnabled ? dataSourcesInfo.appleMusic.color : ""
                   }
                 />
               </span>
@@ -292,9 +280,7 @@ function BrainzPlayerSettings() {
                 <FontAwesomeIcon
                   icon={faSoundcloud}
                   color={
-                    soundcloudEnabled
-                      ? dataSourcesIconsMapping.soundcloud.color
-                      : ""
+                    soundcloudEnabled ? dataSourcesInfo.soundcloud.color : ""
                   }
                 />
               </span>
@@ -325,9 +311,7 @@ function BrainzPlayerSettings() {
               <span className={youtubeEnabled ? "text-success" : ""}>
                 <FontAwesomeIcon
                   icon={faYoutube}
-                  color={
-                    youtubeEnabled ? dataSourcesIconsMapping.youtube.color : ""
-                  }
+                  color={youtubeEnabled ? dataSourcesInfo.youtube.color : ""}
                 />
               </span>
               <span>&nbsp;YouTube</span>
@@ -385,11 +369,11 @@ function BrainzPlayerSettings() {
               </span>
               <span>
                 <FontAwesomeIcon
-                  icon={item.icon.icon}
-                  color={item.icon.color}
+                  icon={item.info.icon}
+                  color={item.info.color}
                 />
               </span>
-              <span>&nbsp;{item.name}</span>
+              <span>&nbsp;{item.info.name}</span>
             </div>
           </Card>
         ))}
