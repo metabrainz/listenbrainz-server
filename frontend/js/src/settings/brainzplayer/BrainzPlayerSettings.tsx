@@ -198,8 +198,13 @@ function BrainzPlayerSettings() {
             <span
               className={`text-brand ${!spotifyEnabled ? "text-muted" : ""}`}
             >
-              <span className={spotifyEnabled ? "text-success" : ""}>
-                <FontAwesomeIcon icon={faSpotify} />
+              <span>
+                <FontAwesomeIcon
+                  icon={faSpotify}
+                  color={
+                    spotifyEnabled ? dataSourcesIconsMapping.spotify.color : ""
+                  }
+                />
               </span>
               <span>&nbsp;Spotify</span>
             </span>
@@ -236,8 +241,15 @@ function BrainzPlayerSettings() {
             <span
               className={`text-brand ${!appleMusicEnabled ? "text-muted" : ""}`}
             >
-              <span className={appleMusicEnabled ? "text-success" : ""}>
-                <FontAwesomeIcon icon={faApple} />
+              <span>
+                <FontAwesomeIcon
+                  icon={faApple}
+                  color={
+                    appleMusicEnabled
+                      ? dataSourcesIconsMapping.appleMusic.color
+                      : ""
+                  }
+                />
               </span>
               <span>&nbsp;Apple Music</span>
             </span>
@@ -277,7 +289,14 @@ function BrainzPlayerSettings() {
               className={`text-brand ${!soundcloudEnabled ? "text-muted" : ""}`}
             >
               <span className={soundcloudEnabled ? "text-success" : ""}>
-                <FontAwesomeIcon icon={faSoundcloud} />
+                <FontAwesomeIcon
+                  icon={faSoundcloud}
+                  color={
+                    soundcloudEnabled
+                      ? dataSourcesIconsMapping.soundcloud.color
+                      : ""
+                  }
+                />
               </span>
               <span>&nbsp;SoundCloud</span>
             </span>
@@ -304,7 +323,12 @@ function BrainzPlayerSettings() {
               className={`text-brand ${!youtubeEnabled ? "text-muted" : ""}`}
             >
               <span className={youtubeEnabled ? "text-success" : ""}>
-                <FontAwesomeIcon icon={faYoutube} />
+                <FontAwesomeIcon
+                  icon={faYoutube}
+                  color={
+                    youtubeEnabled ? dataSourcesIconsMapping.youtube.color : ""
+                  }
+                />
               </span>
               <span>&nbsp;YouTube</span>
             </span>
