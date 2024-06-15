@@ -33,6 +33,9 @@ type ReleaseCardProps = {
   releaseTags?: Array<string>;
   listenCount?: number;
   dateFormatOptions?: Intl.DateTimeFormatOptions;
+  onClick?:
+    | React.MouseEventHandler<HTMLElement>
+    | React.KeyboardEventHandler<HTMLElement>;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -50,6 +53,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     confidence,
     caaID,
     caaReleaseMBID,
+    onClick,
     showReleaseTitle,
     showArtist,
     showInformation,
@@ -138,8 +142,25 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   }, [releaseMBID, releaseGroupMBID, caaID, caaReleaseMBID, setCoverartSrc]);
 
   const linkToEntity = releaseGroupMBID
-    ? `/album/${releaseGroupMBID}`
-    : `/release/${releaseMBID}`;
+    ? `/album/${releaseGroupMBID}/`
+    : `/release/${releaseMBID}/`;
+
+  const coverArtElement = coverartSrc ? (
+    <>
+      {coverArtPlaceholder}
+      <LazyLoadImage
+        className={`release-coverart ${imageLoaded ? "" : "hide-image"}`}
+        src={coverartSrc}
+        alt={`${releaseName} by ${artistCreditName}`}
+        onLoad={handleImageLoad}
+      />
+      <div className="hover-backdrop">{releaseCoverArtIcon}</div>
+    </>
+  ) : (
+    <div className="release-coverart release-coverart-placeholder">
+      {releaseCoverArtIcon}
+    </div>
+  );
   return (
     <div className="release-card-container">
       <div className="release-item">
@@ -189,26 +210,21 @@ export default function ReleaseCard(props: ReleaseCardProps) {
             </div>
           )}
         </div>
-        <Link to={linkToEntity} className="release-coverart-container">
-          {coverartSrc ? (
-            <>
-              {coverArtPlaceholder}
-              <LazyLoadImage
-                className={`release-coverart ${
-                  imageLoaded ? "" : "hide-image"
-                }`}
-                src={coverartSrc}
-                alt={`${releaseName} by ${artistCreditName}`}
-                onLoad={handleImageLoad}
-              />
-              <div className="hover-backdrop">{releaseCoverArtIcon}</div>
-            </>
-          ) : (
-            <div className="release-coverart release-coverart-placeholder">
-              {releaseCoverArtIcon}
-            </div>
-          )}
-        </Link>
+        {onClick ? (
+          <div
+            className="release-coverart-container"
+            onClick={onClick as React.MouseEventHandler}
+            onKeyDown={onClick as React.KeyboardEventHandler}
+            role="button"
+            tabIndex={0}
+          >
+            {coverArtElement}
+          </div>
+        ) : (
+          <Link to={linkToEntity} className="release-coverart-container">
+            {coverArtElement}
+          </Link>
+        )}
       </div>
       {showReleaseTitle && (
         <div className="name-type-container">

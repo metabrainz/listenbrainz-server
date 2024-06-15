@@ -4,28 +4,29 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: initial;
+  display: flex;
   max-width: 400px;
-  width: 45%;
-  input {
-    padding-right: calc(45px + 10px + 0.5em);
+  align-items: stretch;
+  input,
+  button {
     background-color: @nav-tabs-border-color;
     color: @nav-link-color;
-    border-radius: 33px;
     border: none;
+  }
+  input {
+    border-radius: 33px 0 0 33px;
     &:focus {
-      -webkit-box-shadow: inset 1px 2px 4px darkgrey;
-      box-shadow: inset 1px 2px 4px darkgrey;
+      box-shadow: inset 3px 2px 4px darkgrey;
+      & ~ button {
+        // Adjacent sibling button
+        box-shadow: inset -3px 2px 4px darkgrey;
+      }
     }
   }
   button {
-    position: absolute;
-    right: 0.5em;
-    top: 0;
-    background: none;
-    border: none;
-    height: 100%;
     font-size: 1.2em;
+    border-radius: 0 33px 33px 0;
+    padding-right: 0.5em;
   }
 }
 

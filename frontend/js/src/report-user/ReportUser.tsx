@@ -17,6 +17,7 @@
  */
 
 import * as React from "react";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ReportUserModal from "./ReportUserModal";
 
@@ -52,6 +53,7 @@ class ReportUserButton extends React.Component<
         });
       })
       .catch((error: Error) => {
+        toast.error(error.message);
         this.setState({
           error: true,
         });

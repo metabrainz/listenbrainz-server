@@ -209,6 +209,7 @@ const getRecordingMBID = (listen: Listen): string | undefined =>
 
 const getReleaseMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.release_mbid") ??
+  _.get(listen, "track_metadata.release_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.release_mbid");
 
 const getReleaseGroupMBID = (listen: Listen): string | undefined =>
@@ -792,9 +793,9 @@ const getAlbumArtFromReleaseMBID = async (
     if (CAAResponse.status === 404 && useReleaseGroupFallback) {
       let releaseGroupMBID = useReleaseGroupFallback;
       if (!_.isString(useReleaseGroupFallback) && APIService) {
-        const releaseGroupResponse = await APIService.lookupMBRelease(
+        const releaseGroupResponse = (await APIService.lookupMBRelease(
           userSubmittedReleaseMBID
-        );
+        )) as MusicBrainzRelease & WithReleaseGroup;
         releaseGroupMBID = releaseGroupResponse["release-group"].id;
       }
       if (!_.isString(releaseGroupMBID)) {
@@ -860,6 +861,7 @@ const getAlbumArtFromListenMetadata = async (
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
   const userSubmittedReleaseMBID =
+    listen.track_metadata?.release_mbid ??
     listen.track_metadata?.additional_info?.release_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
