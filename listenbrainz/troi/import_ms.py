@@ -16,6 +16,7 @@ def import_from_spotify(token, user, playlist_id):
     result.update({"identifier": playlist.playlists[0].mbid})
     return result
 
+
 def import_from_apple_music(token, apple_user_token, user, playlist_id):
     args = {
         "ms_token": token,
