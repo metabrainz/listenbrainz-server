@@ -53,6 +53,7 @@ function BrainzPlayerSettings() {
         youtubeEnabled,
         spotifyEnabled,
         soundcloudEnabled,
+        appleMusicEnabled,
       });
       toast.success("Saved your preferences successfully");
       // Update the global context values
@@ -106,12 +107,16 @@ function BrainzPlayerSettings() {
       <div
         className="mb-15"
         data-tip
-        data-tip-disable={SpotifyPlayer.hasPermissions(spotifyAuth)}
+        data-tip-disable={
+          spotifyEnabled || SpotifyPlayer.hasPermissions(spotifyAuth)
+        }
         data-for="login-first"
       >
         <Switch
           id="enable-spotify"
-          disabled={!SpotifyPlayer.hasPermissions(spotifyAuth)}
+          disabled={
+            !spotifyEnabled && !SpotifyPlayer.hasPermissions(spotifyAuth)
+          }
           value="spotify"
           checked={spotifyEnabled}
           onChange={(e) => setSpotifyEnabled(!spotifyEnabled)}
@@ -140,13 +145,17 @@ function BrainzPlayerSettings() {
       <div
         className="mb-15"
         data-tip
-        data-tip-disable={AppleMusicPlayer.hasPermissions(appleAuth)}
+        data-tip-disable={
+          appleMusicEnabled || AppleMusicPlayer.hasPermissions(appleAuth)
+        }
         data-for="login-first"
       >
         <Switch
           id="enable-apple-music"
           value="apple-music"
-          disabled={!AppleMusicPlayer.hasPermissions(appleAuth)}
+          disabled={
+            !appleMusicEnabled && !AppleMusicPlayer.hasPermissions(appleAuth)
+          }
           checked={appleMusicEnabled}
           onChange={(e) => setAppleMusicEnabled(!appleMusicEnabled)}
           switchLabel={
@@ -175,13 +184,18 @@ function BrainzPlayerSettings() {
       <div
         className="mb-15"
         data-tip
-        data-tip-disable={SoundcloudPlayer.hasPermissions(soundcloudAuth)}
+        data-tip-disable={
+          soundcloudEnabled || SoundcloudPlayer.hasPermissions(soundcloudAuth)
+        }
         data-for="login-first"
       >
         <Switch
           id="enable-soundcloud"
           value="soundcloud"
-          disabled={!SoundcloudPlayer.hasPermissions(soundcloudAuth)}
+          disabled={
+            !soundcloudEnabled &&
+            !SoundcloudPlayer.hasPermissions(soundcloudAuth)
+          }
           checked={soundcloudEnabled}
           onChange={(e) => setSoundcloudEnabled(!soundcloudEnabled)}
           switchLabel={

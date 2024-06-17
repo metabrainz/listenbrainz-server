@@ -269,6 +269,14 @@ export default function AddData() {
       <ul>
         <li>
           <em>
+            <a href="https://add0n.com/lastfm-scrobbler.html">
+              Last.fm Scrobbler
+            </a>
+          </em>
+          , an extension for Firefox and Chrome
+        </li>
+        <li>
+          <em>
             <a href="https://web-scrobbler.com/">Web Scrobbler</a>
           </em>
           , an extension for Firefox and Chrome/Chromium-based browsers
@@ -330,9 +338,11 @@ export default function AddData() {
         </Link>
       </p>
 
-      <h3>Playlist submissions and tools</h3>
-      <p>Submit and store playlists.</p>
-      <h4>Tools</h4>
+      <h3>Playlist management</h3>
+      <p>
+        Submit and store playlists, or generate playlists locally using
+        ListenBrainz data
+      </p>
       <ul>
         <li>
           <em>
@@ -342,6 +352,54 @@ export default function AddData() {
           </em>
           , a CLI tool for submitting local M3U playlists to ListenBrainz, as
           well as submitting feedback on tracks
+        </li>
+        <li>
+          <em>
+            <a href="https://github.com/regorxxx/ListenBrainz-SMP">
+              ListenBrainz-SMP
+            </a>
+          </em>
+          , a{" "}
+          <em>
+            <a href="https://www.foobar2000.org/">Foobar2000</a>
+          </em>{" "}
+          plugin for submitting and retrieving playlists from ListenBrainz (+
+          Spotify), as well as retrieving recommendations or submitting feedback
+          on tracks.
+        </li>
+        <li>
+          <em>
+            <a href="https://github.com/regorxxx/Playlist-Manager-SMP">
+              Playlist-Manager-SMP
+            </a>
+          </em>
+          , a{" "}
+          <em>
+            <a href="https://www.foobar2000.org/">Foobar2000</a>
+          </em>{" "}
+          plugin for syncing local playlists (in multiple formats) with
+          ListenBrainz (+ Spotify). Tracks playlists changes and also allows to
+          resolve tracks with local content and YouTube links.
+        </li>
+      </ul>
+
+      <h3>Other tools</h3>
+      <p>
+        Other useful community-made tools to interact with your ListenBrainz
+        account
+      </p>
+      <ul>
+        <li>
+          <em>
+            <a href="https://github.com/regorxxx/Wrapped-SMP">Wrapped-SMP</a>
+          </em>
+          , a{" "}
+          <em>
+            <a href="https://www.foobar2000.org/">Foobar2000</a>
+          </em>{" "}
+          plugin for creating reports based on user listens similar to the one
+          found at Spotify. Suggested playlists use ListenBrainz recommendations
+          (without requiring listens upload to the server).
         </li>
       </ul>
 

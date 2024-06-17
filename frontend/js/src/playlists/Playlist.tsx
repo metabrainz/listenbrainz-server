@@ -472,7 +472,10 @@ export default class PlaylistPage extends React.Component<
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
                   </span>
-                  <SearchTrackOrMBID onSelectRecording={this.addTrack} />
+                  <SearchTrackOrMBID
+                    onSelectRecording={this.addTrack}
+                    expectedPayload="trackmetadata"
+                  />
                 </Card>
               )}
             </div>

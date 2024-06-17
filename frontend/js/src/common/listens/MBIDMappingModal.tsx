@@ -270,6 +270,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               ) : (
                 <div className="card listen-card">
                   <SearchTrackOrMBID
+                    expectedPayload="trackmetadata"
                     key={`${defaultValue}-${copyTextClickCounter}`}
                     onSelectRecording={(trackMetadata) => {
                       setSelectedRecording(trackMetadata);

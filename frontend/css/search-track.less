@@ -1,5 +1,6 @@
 .track-search-dropdown,
-.user-search-dropdown {
+.user-search-dropdown,
+.album-search-dropdown {
   display: none; // hidden by default
   position: absolute;
   width: calc(100% - 55px);
@@ -17,7 +18,10 @@
   cursor: pointer;
 
   // Options within the dropdown menu
-  option {
+  > option {
+    display: block;
+    width: 100%;
+    outline: inherit;
     padding: 5px 20px;
     font: inherit;
     text-align: left;
@@ -25,6 +29,14 @@
     color: inherit;
     border: none;
     cursor: pointer;
+
+    &::after {
+      content: attr(data-release-info);
+      display: inline-block;
+      margin-left: 0.5em;
+      color: @light-grey;
+      font-size: small;
+    }
 
     &:hover,
     &:focus {

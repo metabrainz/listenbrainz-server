@@ -419,7 +419,12 @@ export default class YearInMusic extends React.Component<
 
   render() {
     const { user, yearInMusicData } = this.props;
-    const { selectedMetric, selectedColor, followingList, followingListForLoggedInUser } = this.state;
+    const {
+      selectedMetric,
+      selectedColor,
+      followingList,
+      followingListForLoggedInUser,
+    } = this.state;
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
 
