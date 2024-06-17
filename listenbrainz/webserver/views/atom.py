@@ -85,6 +85,8 @@ def get_listens(user_name):
 """,
             type="html",
         )
+        fe.published(listen.timestamp)
+        fe.updated(listen.timestamp)
 
     atomfeed = fg.atom_str(pretty=True)
 
