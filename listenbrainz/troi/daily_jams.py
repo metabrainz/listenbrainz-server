@@ -131,8 +131,8 @@ def run_daily_jams(db_conn, user, existing_url, service):
                 spotify["existing_urls"] = [existing_url]
             args["spotify"] = spotify
 
-    playlist = PeriodicJamsPatch(args)
-    playlist.generate_playlist()
+    playlist_patch = PeriodicJamsPatch(args)
+    playlist = playlist_patch.generate_playlist()
 
     if playlist is not None and len(playlist.playlists) > 0:
         url = current_app.config["SERVER_ROOT_URL"] + "/playlist/" + playlist.playlists[0].mbid

@@ -22,14 +22,16 @@ from listenbrainz.webserver.decorators import crossdomain, api_listenstore_neede
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
-    _filter_description_html
+    _filter_description_html, get_non_negative_param
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording, \
     PLAYLIST_EXTENSION_URI, PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_TRACK_EXTENSION_URI, \
     PLAYLIST_ARTIST_URI_PREFIX, PLAYLIST_RELEASE_URI_PREFIX
+from listenbrainz.webserver.views.api import serialize_playlists
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
 MAX_RECORDINGS_PER_ADD = 100
+DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 
 def validate_create_playlist_required_items(jspf):
@@ -396,6 +398,34 @@ def create_playlist():
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
+
+
+@playlist_api_bp.route("/search", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def search_playlist():
+    """
+    Search for playlists by name or description. The search query must be at least 3 characters long.
+
+    :param q: The search query string.
+    :type q: ``str``
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: invalid query string, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+
+    query = request.args.get("query")
+    count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param("offset", 0)
+
+    if not query or len(query) < 3:
+        log_raise_400("Query string must be at least 3 characters long.")
+
+    playlists, playlist_count = db_playlist.search_playlist(db_conn, ts_conn, query, count, offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
 @playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])

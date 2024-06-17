@@ -1026,6 +1026,26 @@ export default class APIService {
     return response.json();
   };
 
+  updatePinRecordingBlurbContent = async (
+    userToken: string,
+    rowId: number,
+    blurbContent: string
+  ): Promise<{ status: string }> => {
+    const url = `${this.APIBaseURI}/pin/update/${rowId}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        blurb_content: blurbContent,
+      }),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   submitMBIDMapping = async (
     userToken: string,
     recordingMSID: string,
@@ -1198,9 +1218,26 @@ export default class APIService {
   };
 
   lookupMBRelease = async (
-    releaseMBID: string
-  ): Promise<MusicBrainzReleaseWithReleaseGroup> => {
-    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
+    releaseMBID: string,
+    inc = "release-groups"
+  ): Promise<
+    (MusicBrainzRelease & WithReleaseGroup) | (MusicBrainzRelease & WithMedia)
+  > => {
+    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=${inc}`;
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  lookupMBReleaseGroup = async (
+    releaseGroupMBID: string
+  ): Promise<
+    MusicBrainzReleaseGroup &
+      WithArtistCredits & {
+        releases: Array<MusicBrainzRelease & WithMedia>;
+      }
+  > => {
+    const url = `${this.MBBaseURI}/release-group/${releaseGroupMBID}?fmt=json&inc=releases+artists+media`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
@@ -1211,7 +1248,7 @@ export default class APIService {
   ): Promise<{
     "release-offset": number;
     "release-count": number;
-    releases: MusicBrainzReleaseWithMedia[];
+    releases: Array<MusicBrainzRelease & WithMedia>;
   }> => {
     const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
     const response = await fetch(encodeURI(url));
@@ -1621,8 +1658,49 @@ export default class APIService {
     }
   };
 
-  artistLookup = async (searchQuery: string): Promise<any> => {
-    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json`;
+  artistLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<ArtistTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  albumLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<AlbumTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/release-group?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  recordingLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<TrackTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/recording?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchMBRelease = async (
+    searchQuery: string
+  ): Promise<{
+    count: number;
+    offset: number;
+    releases: Array<
+      MusicBrainzRelease & WithReleaseGroup & WithArtistCredits & WithMedia
+    >;
+  }> => {
+    const url = `${this.MBBaseURI}/release?query=${searchQuery}&fmt=json`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1660,6 +1738,29 @@ export default class APIService {
     artistMBID: string
   ): Promise<ReleaseGroupType[]> => {
     const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist/${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchPlaylistsForUser = async (
+    searchQuery: string,
+    musicbrainzID: string,
+    count: number = 25,
+    offset: number = 0
+  ): Promise<PlaylistTypeSearchResult> => {
+    const url = `${this.APIBaseURI}/user/${musicbrainzID}/playlists/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchPlaylists = async (
+    searchQuery: string,
+    count: number = 25,
+    offset: number = 0
+  ): Promise<PlaylistTypeSearchResult> => {
+    const url = `${this.APIBaseURI}/playlist/search?query=${searchQuery}&count=${count}&offset=${offset}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
