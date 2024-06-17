@@ -439,7 +439,7 @@ export default function PlaylistPage() {
                   <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                   &nbsp;&nbsp;Add a track
                 </span>
-                <SearchTrackOrMBID 
+                <SearchTrackOrMBID
                   onSelectRecording={addTrack}
                   expectedPayload="trackmetadata"
                 />
