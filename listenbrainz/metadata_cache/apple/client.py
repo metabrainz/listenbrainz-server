@@ -51,7 +51,6 @@ class Apple:
                     return response.json()
 
                 if response.status_code == 403:
-                    print("hi")
-                    # tokens = AppleService().fetch_access_token()
-                    # self.developer_token = tokens["access_token"]
+                    tokens = AppleService().fetch_access_token()
+                    self.developer_token = tokens["access_token"]
             response.raise_for_status()
