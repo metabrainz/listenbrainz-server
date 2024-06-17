@@ -238,7 +238,7 @@ function valueReducer(
   return state;
 }
 
-const useReducerWithCallback = (
+export const useReducerWithCallback = (
   reducer: React.Reducer<BrainzPlayerContextT, BrainzPlayerActionType>,
   initialState: BrainzPlayerContextT
 ): [
@@ -282,10 +282,15 @@ export const BrainzPlayerDispatchContext = React.createContext<
 
 export function BrainzPlayerProvider({
   children,
+  additionalContextValues,
 }: {
   children: React.ReactNode;
+  additionalContextValues?: Partial<BrainzPlayerContextT>;
 }) {
-  const [value, dispatch] = useReducerWithCallback(valueReducer, initialValue);
+  const [value, dispatch] = useReducerWithCallback(valueReducer, {
+    ...initialValue,
+    ...additionalContextValues,
+  });
 
   const memoizedValue = React.useMemo(() => value, [value]);
   const memoizedDispatch = React.useMemo(() => dispatch, []);

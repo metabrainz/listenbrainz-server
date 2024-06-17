@@ -121,7 +121,7 @@ function Queue(props: BrainzPlayerQueueProps) {
       <div className="queue-headers">
         <h4>Next Up:</h4>
       </div>
-      <div className="queue-list">
+      <div className="queue-list" data-testid="queue">
         {queueNextUp.length > 0 ? (
           <ReactSortable
             handle=".drag-handle"
@@ -151,7 +151,7 @@ function Queue(props: BrainzPlayerQueueProps) {
       <div className="queue-headers">
         <h4>On this page:</h4>
       </div>
-      <div className="queue-list">
+      <div className="queue-list" data-testid="ambient-queue">
         {ambientQueue.length > 0
           ? ambientQueue
               .slice(0, MAX_AMBIENT_QUEUE_ITEMS)
