@@ -6,6 +6,8 @@ def import_from_spotify(token, user, playlist_id):
         "ms_token": token,
         "token": user,
         "playlist_id": playlist_id,
+        "music_service": 'spotify',
+        "apple_user_token": "",
         "upload": True,
         "created_for": None,
         "echo": False,
