@@ -149,7 +149,9 @@ def get_fresh_releases():
             content=f"""<p>{r.artist_credit_name} released {r.release_name} on {r.release_date.strftime('%Y-%m-%d')}</p>""",
             type="html",
         )
-        fe.updated(datetime.now(timezone.utc))
+        t = datetime.combine(r.release_date, datetime.min.time())
+        fe.published(t.replace(tzinfo=timezone.utc))
+        fe.updated(t.replace(tzinfo=timezone.utc))
 
     atomfeed = fg.atom_str(pretty=True)
 
