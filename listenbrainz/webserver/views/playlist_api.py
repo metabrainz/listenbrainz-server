@@ -860,7 +860,7 @@ def export_playlist(playlist_mbid, service):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    if service != "spotify":
+    if service != "":
         raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
 
     spotify_service = SpotifyService()
@@ -934,7 +934,7 @@ def import_playlist_from_music_service(service):
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
 
-@playlist_api_bp.route("/spotify/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
+@playlist_api_bp.route("/<service>/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
