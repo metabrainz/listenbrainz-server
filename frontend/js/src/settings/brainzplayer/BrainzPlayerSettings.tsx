@@ -349,12 +349,12 @@ function BrainzPlayerSettings() {
           </ul>
         </small>
       </div>
-      <h3 className="mt-15">BrainzPlayer data source order</h3>
+      <h3 className="mt-15">Music services priority</h3>
       <p>
-        You can change the order of the data source for the BrainzPlayer. The
-        data source will be used in the order you set here.
+        You have the option to adjust the priority of the music services. They
+        will be used in the order you set here.
       </p>
-      <p>Drag and drop the data source to change the order.</p>
+      <p>Drag and drop the services to reorder them:</p>
       <ReactSortable
         list={sortedList}
         setList={(newState) => {
