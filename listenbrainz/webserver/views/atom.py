@@ -13,6 +13,7 @@ from listenbrainz.webserver.views.explore_api import (
 )
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
+from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
 
 atom_bp = Blueprint("atom", __name__)
 
@@ -116,9 +117,7 @@ def get_fresh_releases():
     future = _parse_bool_arg("future", True)
 
     try:
-        db_releases, total_count = get_sitewide_fresh_releases(
-            ts_conn, date.today(), days, "release_date", past, future
-        )
+        db_releases, total_count = get_sitewide_fresh_releases(ts_conn, date.today(), days, "release_date", past, future)
     except Exception as e:
         current_app.logger.error("Server failed to get latest release: {}".format(e))
         raise Response(status=500)
@@ -135,21 +134,84 @@ def get_fresh_releases():
     fg.logo("https://listenbrainz.org/static/img/listenbrainz_logo_icon.svg")
     fg.language("en")
 
-    # newer listen comes first
     for r in db_releases:
         fe = fg.add_entry()
         # according to spec, ids don't have to be deferencable.
         fe.id(
             f"https://listenbrainz.org/syndication-feed/fresh_releases/{r.release_date.strftime('%Y-%m-%d')}/{r.artist_credit_name}/{r.release_name}"
         )
-        fe.title(
-            f"{r.release_name} - {r.artist_credit_name} on {r.release_date.strftime('%Y-%m-%d')}"
-        )
+        fe.title(f"{r.release_name} - {r.artist_credit_name} on {r.release_date.strftime('%Y-%m-%d')}")
         fe.content(
             content=f"""<p>{r.artist_credit_name} released {r.release_name} on {r.release_date.strftime('%Y-%m-%d')}</p>""",
             type="html",
         )
         t = datetime.combine(r.release_date, datetime.min.time())
+        fe.published(t.replace(tzinfo=timezone.utc))
+        fe.updated(t.replace(tzinfo=timezone.utc))
+
+    atomfeed = fg.atom_str(pretty=True)
+
+    return Response(atomfeed, mimetype="application/atom+xml")
+
+
+@atom_bp.route("/user/<user_name>/fresh_releases", methods=["GET"])
+@crossdomain
+def get_releases(user_name):
+    """
+    Get fresh releases for a user, sorted by release date.
+
+    :param past: Whether to show releases in the past. Default True.
+    :param future: Whether to show releases in the future. Default True.
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 400: Bad request.
+    :statuscode 404: The user does not exist.
+    :resheader Content-Type: *application/atom+xml*
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        return Response(status=404)
+
+    past = _parse_bool_arg("past", True)
+    future = _parse_bool_arg("future", True)
+
+    data = db_get_fresh_releases(user["id"])
+    releases = data["releases"] if data else []
+    releases = sorted(releases, key=lambda k: k.get("release_date", ""))
+
+    if not past:
+        releases = [
+            r for r in releases if "release_date" in r and datetime.strptime(r["release_date"], "%Y-%m-%d").date() >= date.today()
+        ]
+
+    if not future:
+        releases = [
+            r for r in releases if "release_date" in r and datetime.strptime(r["release_date"], "%Y-%m-%d").date() <= date.today()
+        ]
+
+    fg = FeedGenerator()
+    fg.id(f"https://listenbrainz.org/user/{user_name}/fresh_releases")
+    fg.title(f"Fresh Releases for {user_name}")
+    fg.author({"name": "ListenBrainz"})
+    fg.link(href=f"https://listenbrainz.org/explore/fresh-releases", rel="alternate")
+    fg.link(
+        href=f"https://listenbrainz.org/syndication-feed/user/{user_name}/fresh_releases",
+        rel="self",
+    )
+    fg.logo("https://listenbrainz.org/static/img/listenbrainz_logo_icon.svg")
+    fg.language("en")
+
+    for r in releases:
+        fe = fg.add_entry()
+        # according to spec, ids don't have to be deferencable.
+        fe.id(
+            f"https://listenbrainz.org/syndication-feed/user/{user_name}/fresh_releases/{r['release_date']}/{r['artist_credit_name']}/{r['release_name']}"
+        )
+        fe.title(f"{r['release_name']} - {r['artist_credit_name']} on {r['release_date']}")
+        fe.content(
+            content=f"""<p>{r['artist_credit_name']} released {r['release_name']} on {r['release_date']}</p>""",
+            type="html",
+        )
+        t = datetime.combine(datetime.strptime(r['release_date'], "%Y-%m-%d"), datetime.min.time())
         fe.published(t.replace(tzinfo=timezone.utc))
         fe.updated(t.replace(tzinfo=timezone.utc))
 
