@@ -29,7 +29,7 @@ export default function Footer() {
               <li className="color-a">
                 <span className="color-gray">Chat with us: </span>{" "}
                 <a
-                  href="https://wiki.musicbrainz.org/Communication/ChatBrainz"
+                  href="https://musicbrainz.org/doc/Communication/ChatBrainz"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
