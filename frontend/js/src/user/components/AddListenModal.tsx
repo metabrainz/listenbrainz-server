@@ -7,6 +7,7 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { add } from "date-fns";
+import { get } from "lodash";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { convertDateToUnixTimestamp } from "../../utils/utils";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -48,7 +49,7 @@ export function getListenFromRecording(
   return listen;
 }
 
-const getListenFromTrack = (
+export const getListenFromTrack = (
   track: MusicBrainzTrack & WithArtistCredits,
   date: Date,
   release?: MusicBrainzRelease
@@ -87,18 +88,10 @@ export default NiceModal.create(() => {
   const [listenOption, setListenOption] = useState<SubmitListenType>(
     SubmitListenType.track
   );
-  const [selectedRecording, setSelectedRecording] = useState<
-    MusicBrainzRecordingWithReleasesAndRGs
-  >();
-  const [selectedAlbumTracks, setSelectedAlbumTracks] = useState<
-    MBTrackWithAC[]
-  >([]);
-  const [selectedRelease, setSelectedRelease] = useState<
-    MusicBrainzRelease & WithReleaseGroup
-  >();
+  const [selectedListens, setSelectedListens] = useState<Listen[]>([]);
   const [customTimestamp, setCustomTimestamp] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [invertTimestamps, setInvertTimestamps] = useState(false);
+  const [invertOrder, setInvertOrder] = useState(false);
 
   const closeModal = useCallback(() => {
     modal.hide();
@@ -125,40 +118,42 @@ export default NiceModal.create(() => {
   const submitListens = useCallback(async () => {
     if (auth_token) {
       let payload: Listen[] = [];
-      const isSingleListen = listenOption === SubmitListenType.track;
-      const listenType: ListenType = isSingleListen ? "single" : "import";
+      const listenType: ListenType =
+        selectedListens?.length <= 1 ? "single" : "import";
       // Use the user-selected date, default to "now"
       const date = customTimestamp ? selectedDate : new Date();
-      if (isSingleListen) {
-        if (selectedRecording) {
-          const listen = getListenFromRecording(
-            selectedRecording,
-            date,
-            selectedRelease
-          );
-          payload.push(listen);
-        }
-      } else {
-        let selectedTracks = [...selectedAlbumTracks];
-        if (invertTimestamps) {
-          selectedTracks = selectedTracks.reverse();
+      if (selectedListens?.length) {
+        let orderedSelectedListens = [...selectedListens];
+        if (invertOrder) {
+          orderedSelectedListens = orderedSelectedListens.reverse();
         }
         let cumulativeDateTime = date;
-        payload = selectedTracks.map((track) => {
-          const timeToAdd = track.length / 1000 || DEFAULT_TRACK_LENGTH_SECONDS;
+        payload = orderedSelectedListens.map((listen) => {
+          // Now we need to set the listening time for each listen
+          const modifiedListen = { ...listen };
+          const durationMS = get(
+            modifiedListen,
+            "track_metadata.additional_info.duration_ms"
+          );
+          const timeToAdd =
+            (durationMS && durationMS / 1000) ??
+            modifiedListen.track_metadata.additional_info?.duration ??
+            DEFAULT_TRACK_LENGTH_SECONDS;
           // We either use the previous value of cumulativeDateTime,
           // or if inverting listening order directly use the new value newTime
           const newTime = add(cumulativeDateTime, {
-            seconds: invertTimestamps ? -timeToAdd : timeToAdd,
+            seconds: invertOrder ? -timeToAdd : timeToAdd,
           });
-          const listen = getListenFromTrack(
-            track,
-            invertTimestamps ? newTime : cumulativeDateTime,
-            selectedRelease
-          );
+          if (invertOrder) {
+            modifiedListen.listened_at = convertDateToUnixTimestamp(newTime);
+          } else {
+            modifiedListen.listened_at = convertDateToUnixTimestamp(
+              cumulativeDateTime
+            );
+          }
           // Then we assign the new time value for the next iteration
           cumulativeDateTime = newTime;
-          return listen;
+          return modifiedListen;
         });
       }
       if (!payload?.length) {
@@ -198,13 +193,10 @@ export default NiceModal.create(() => {
     }
   }, [
     auth_token,
-    listenOption,
-    selectedRecording,
-    selectedAlbumTracks,
-    selectedDate,
+    selectedListens,
     customTimestamp,
-    selectedRelease,
-    invertTimestamps,
+    selectedDate,
+    invertOrder,
     APIService,
     closeModal,
     handleError,
@@ -257,22 +249,10 @@ export default NiceModal.create(() => {
               </Pill>
             </div>
             {listenOption === SubmitListenType.track && (
-              <AddSingleListen
-                onPayloadChange={(recording, release) => {
-                  setSelectedRecording(recording);
-                  if (release) {
-                    setSelectedRelease(release);
-                  }
-                }}
-              />
+              <AddSingleListen onPayloadChange={setSelectedListens} />
             )}
             {listenOption === SubmitListenType.album && (
-              <AddAlbumListens
-                onPayloadChange={(tracks, release) => {
-                  setSelectedAlbumTracks(tracks);
-                  setSelectedRelease(release);
-                }}
-              />
+              <AddAlbumListens onPayloadChange={setSelectedListens} />
             )}
             <hr />
             <div className="timestamp">
@@ -304,12 +284,11 @@ export default NiceModal.create(() => {
                       <input
                         name="invert-timestamp"
                         type="radio"
-                        checked={invertTimestamps === false}
-                        disabled={!customTimestamp}
+                        checked={invertOrder === false}
                         id="starts-at"
                         aria-label="Set the time of the beginning of the album"
                         onChange={() => {
-                          setInvertTimestamps(false);
+                          setInvertOrder(false);
                         }}
                       />
                       &nbsp;Starts at:
@@ -318,12 +297,11 @@ export default NiceModal.create(() => {
                       <input
                         name="invert-timestamp"
                         type="radio"
-                        checked={invertTimestamps === true}
-                        disabled={!customTimestamp}
+                        checked={invertOrder === true}
                         id="ends-at"
                         aria-label="Set the time of the end of the album"
                         onChange={() => {
-                          setInvertTimestamps(true);
+                          setInvertOrder(true);
                         }}
                       />
                       &nbsp;Finishes at:
@@ -355,29 +333,16 @@ export default NiceModal.create(() => {
             >
               Close
             </button>
-            {listenOption === SubmitListenType.track && (
-              <button
-                type="submit"
-                className="btn btn-success"
-                data-dismiss="modal"
-                disabled={!selectedRecording}
-                onClick={submitListens}
-              >
-                Submit 1 listen
-              </button>
-            )}
-            {listenOption === SubmitListenType.album && (
-              <button
-                type="submit"
-                className="btn btn-success"
-                data-dismiss="modal"
-                disabled={!selectedAlbumTracks?.length}
-                onClick={submitListens}
-              >
-                Submit {selectedAlbumTracks.length} listen
-                {selectedAlbumTracks.length > 1 ? "s" : ""}
-              </button>
-            )}
+            <button
+              type="submit"
+              className="btn btn-success"
+              data-dismiss="modal"
+              disabled={!selectedListens?.length}
+              onClick={submitListens}
+            >
+              Submit {selectedListens.length ?? 0} listen
+              {selectedListens.length > 1 ? "s" : ""}
+            </button>
           </div>
         </form>
       </div>
