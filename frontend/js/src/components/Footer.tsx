@@ -27,14 +27,13 @@ export default function Footer() {
             </p>
             <ul className="list-unstyled">
               <li className="color-a">
-                <span className="color-gray">IRC: </span>{" "}
+                <span className="color-gray">Chat with us: </span>{" "}
                 <a
-                  href="https://kiwiirc.com/nextclient/irc.libera.chat/?#metabrainz"
+                  href="https://wiki.musicbrainz.org/Communication/ChatBrainz"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {" "}
-                  #metabrainz
+                  Matrix, IRC, Discord
                 </a>
               </li>
               <li className="color-a">
