@@ -58,7 +58,10 @@ export default function DropdownRef() {
         } else if (event.key === "Enter") {
           event.preventDefault();
           if (selectedOption) {
-            selectedOption.click();
+            const changeEvent = new Event("change", { bubbles: true });
+            dropdown.dispatchEvent(changeEvent);
+
+            (document?.activeElement as HTMLInputElement)?.blur();
           }
         }
       }
