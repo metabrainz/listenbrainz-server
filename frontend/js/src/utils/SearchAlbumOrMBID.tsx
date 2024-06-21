@@ -15,6 +15,7 @@ import GlobalAppContext from "./GlobalAppContext";
 
 const RELEASE_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const RELEASE_GROUP_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release-group\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
+const LB_ALBUM_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?listenbrainz\.org\/album\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const THROTTLE_MILLISECONDS = 1500;
 
 type SearchTrackOrMBIDProps = {
@@ -103,9 +104,9 @@ export default function SearchAlbumOrMBID({
           const newReleaseMBID = RELEASE_MBID_REGEXP.exec(
             input
           )?.[2].toLowerCase();
-          const newReleaseGroupMBID = RELEASE_GROUP_MBID_REGEXP.exec(
-            input
-          )?.[2].toLowerCase();
+          const newReleaseGroupMBID =
+            RELEASE_GROUP_MBID_REGEXP.exec(input)?.[2].toLowerCase() ||
+            LB_ALBUM_MBID_REGEXP.exec(input)?.[2].toLowerCase();
           try {
             if (newReleaseMBID) {
               onSelectAlbum(newReleaseMBID);
@@ -165,7 +166,8 @@ export default function SearchAlbumOrMBID({
     }
     const isValidUUID =
       RELEASE_MBID_REGEXP.test(inputValue) ||
-      RELEASE_GROUP_MBID_REGEXP.test(inputValue);
+      RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
+      LB_ALBUM_MBID_REGEXP.test(inputValue);
     if (isValidUUID) {
       throttledHandleValidMBID(inputValue);
     } else {
