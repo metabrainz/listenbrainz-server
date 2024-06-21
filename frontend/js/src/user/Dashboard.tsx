@@ -39,6 +39,7 @@ import {
 } from "../utils/utils";
 import FollowButton from "./components/follow/FollowButton";
 import { RouteQuery } from "../utils/Loader";
+import ReportUserButton from "../report-user/ReportUser";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -47,6 +48,7 @@ export type ListensProps = {
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
   playingNow?: Listen;
+  already_reported_user: boolean;
 };
 
 type ListenLoaderData = ListensProps;
@@ -77,6 +79,7 @@ export default function Listen() {
     playingNow = undefined,
     latestListenTs = 0,
     oldestListenTs = 0,
+    already_reported_user = false,
   } = data || {};
 
   const previousListenTs = listens[0]?.listened_at;
@@ -468,6 +471,12 @@ export default function Listen() {
               />{" "}
               MusicBrainz
             </Link>
+            {user && !isCurrentUsersPage && (
+              <ReportUserButton
+                user={user}
+                alreadyReported={already_reported_user}
+              />
+            )}
           </div>
           {playingNow && getListenCard(playingNow)}
           {userPinnedRecording && (
