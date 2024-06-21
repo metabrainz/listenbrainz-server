@@ -7,13 +7,14 @@ import { faClock } from "@fortawesome/free-regular-svg-icons";
 import SearchAlbumOrMBID from "../../utils/SearchAlbumOrMBID";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { millisecondsToStr } from "../../playlists/utils";
-import { DEFAULT_TRACK_LENGTH_SECONDS, MBTrackWithAC } from "./AddListenModal";
+import {
+  DEFAULT_TRACK_LENGTH_SECONDS,
+  MBTrackWithAC,
+  getListenFromTrack,
+} from "./AddListenModal";
 
 interface AddAlbumListensProps {
-  onPayloadChange: (
-    tracks: Array<MBTrackWithAC>,
-    release?: MusicBrainzRelease & WithReleaseGroup
-  ) => void;
+  onPayloadChange: (listens: Listen[]) => void;
 }
 
 type MBReleaseWithMetadata = MusicBrainzRelease &
@@ -61,7 +62,11 @@ export default function AddAlbumListens({
 
   useEffect(() => {
     // Update parent on selection change
-    onPayloadChange(selectedTracks, selectedAlbum);
+    const date = new Date();
+    const listensFromTracks: Listen[] = selectedTracks.map((track) =>
+      getListenFromTrack(track, date, selectedAlbum)
+    );
+    onPayloadChange(listensFromTracks);
   }, [selectedTracks, selectedAlbum, onPayloadChange]);
 
   const artistsName = selectedAlbum?.["artist-credit"]
