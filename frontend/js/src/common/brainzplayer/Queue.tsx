@@ -37,6 +37,17 @@ function Queue(props: BrainzPlayerQueueProps) {
     []
   );
 
+  const removeTrackFromAmbientQueue = React.useCallback(
+    (track: BrainzPlayerQueueItem) => {
+      dispatch({
+        type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
+        data: track,
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   const moveQueueItem = React.useCallback((evt: any) => {
     dispatch({
       type: "MOVE_QUEUE_ITEM",
@@ -161,7 +172,7 @@ function Queue(props: BrainzPlayerQueueProps) {
                   <QueueItemCard
                     key={`${queueItem?.id}-${index.toString()}`}
                     track={queueItem}
-                    removeTrackFromQueue={removeTrackFromQueue}
+                    removeTrackFromQueue={removeTrackFromAmbientQueue}
                     hideDragHandle
                   />
                 );
