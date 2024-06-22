@@ -215,7 +215,7 @@ describe("BrainzPlayer", () => {
     expect(queueList.innerHTML).toContain("Rick Astley");
   });
 
-  test("next track from queue is bring played correctly", async () => {
+  test("next track from queue is being played correctly", async () => {
     renderWithProviders(
       <BrainzPlayerWithWrapper
         additionalContextValues={{
@@ -244,7 +244,7 @@ describe("BrainzPlayer", () => {
     expect(queueList.innerHTML).toContain("Nothing in this queue yet");
   });
 
-  test("previous track from queue is bring played correctly", async () => {
+  test("previous track from queue is being played correctly", async () => {
     renderWithProviders(
       <BrainzPlayerWithWrapper
         additionalContextValues={{
