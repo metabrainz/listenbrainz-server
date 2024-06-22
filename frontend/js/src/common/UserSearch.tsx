@@ -28,7 +28,7 @@ export default function UserSearch(props: UserSearchProps) {
   // Refs
   const dropdownRef = DropdownRef();
 
-  const searchUsers = async () => {
+  const searchUsers = React.useCallback(async () => {
     try {
       const response = await APIService.searchUsers(newUser);
       setUserSearchResults(response.users);
@@ -37,11 +37,13 @@ export default function UserSearch(props: UserSearchProps) {
         toastId: "error",
       });
     }
-  };
+  }, [APIService, newUser]);
 
-  const throttledSearchUsers = _throttle(async () => {
-    await searchUsers();
-  }, 300);
+  const throttledSearchUsers = React.useCallback(() => {
+    _throttle(async () => {
+      await searchUsers();
+    }, 300)();
+  }, [searchUsers]);
 
   const handleResultClick = (user: string) => {
     onSelectUser(user);
@@ -54,8 +56,7 @@ export default function UserSearch(props: UserSearchProps) {
       return;
     }
     throttledSearchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [newUser]);
+  }, [newUser, throttledSearchUsers]);
 
   return (
     <div
