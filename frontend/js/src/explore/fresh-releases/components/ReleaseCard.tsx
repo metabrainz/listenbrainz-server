@@ -162,7 +162,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     </div>
   );
   return (
-    <div className="release-card-container">
+    <div className="release-card-container" key={releaseMBID}>
       <div className="release-item">
         {showListens && listenCount ? (
           <div className="listen-count">
@@ -236,12 +236,12 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       {showArtist && isArray(artistCredits) && (
         <div className="release-artist" title={artistCreditName}>
           {artistCredits.map((ac) => (
-            <>
+            <span key={ac.artist_mbid}>
               <Link to={`/artist/${ac.artist_mbid}/`}>
                 {ac.artist_credit_name}
               </Link>
               {ac.join_phrase}
-            </>
+            </span>
           ))}
         </div>
       )}

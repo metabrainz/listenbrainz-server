@@ -33,6 +33,10 @@ import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import AppleMusicPlayer from "./AppleMusicPlayer";
 import {
+  DataSourceKey,
+  defaultDataSourcesPriority,
+} from "../../settings/brainzplayer/BrainzPlayerSettings";
+import {
   QueueRepeatModes,
   useBrainzPlayerContext,
   useBrainzPlayerDispatch,
@@ -169,6 +173,29 @@ export default function BrainzPlayer() {
     null
   );
 
+  const {
+    spotifyEnabled = true,
+    appleMusicEnabled = true,
+    soundcloudEnabled = true,
+    youtubeEnabled = true,
+    dataSourcesPriority = defaultDataSourcesPriority,
+  } = userPreferences?.brainzplayer ?? {};
+
+  const enabledDataSources = [
+    spotifyEnabled && SpotifyPlayer.hasPermissions(spotifyAuth) && "spotify",
+    appleMusicEnabled &&
+      AppleMusicPlayer.hasPermissions(appleAuth) &&
+      "appleMusic",
+    soundcloudEnabled &&
+      SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
+      "soundcloud",
+    youtubeEnabled && "youtube",
+  ].filter(Boolean) as Array<DataSourceKey>;
+
+  const sortedDataSources = dataSourcesPriority.filter((key) =>
+    enabledDataSources.includes(key)
+  );
+
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);
   const youtubePlayerRef = React.useRef<YoutubePlayer>(null);
@@ -177,38 +204,27 @@ export default function BrainzPlayer() {
   const dataSourceRefs: Array<React.RefObject<
     DataSourceTypes
   >> = React.useMemo(() => {
-    const dataSources = [];
-    if (
-      userPreferences?.brainzplayer?.spotifyEnabled !== false &&
-      SpotifyPlayer.hasPermissions(spotifyAuth)
-    ) {
-      dataSources.push(spotifyPlayerRef);
-    }
-    if (
-      userPreferences?.brainzplayer?.appleMusicEnabled !== false &&
-      AppleMusicPlayer.hasPermissions(appleAuth)
-    ) {
-      dataSources.push(appleMusicPlayerRef);
-    }
-    if (
-      userPreferences?.brainzplayer?.soundcloudEnabled !== false &&
-      SoundcloudPlayer.hasPermissions(soundcloudAuth)
-    ) {
-      dataSources.push(soundcloudPlayerRef);
-    }
-    if (userPreferences?.brainzplayer?.youtubeEnabled !== false) {
-      dataSources.push(youtubePlayerRef);
-    }
+    const dataSources: Array<React.RefObject<DataSourceTypes>> = [];
+    sortedDataSources.forEach((key) => {
+      switch (key) {
+        case "spotify":
+          dataSources.push(spotifyPlayerRef);
+          break;
+        case "youtube":
+          dataSources.push(youtubePlayerRef);
+          break;
+        case "soundcloud":
+          dataSources.push(soundcloudPlayerRef);
+          break;
+        case "appleMusic":
+          dataSources.push(appleMusicPlayerRef);
+          break;
+        default:
+        // do nothing
+      }
+    });
     return dataSources;
-  }, [
-    userPreferences?.brainzplayer?.spotifyEnabled,
-    userPreferences?.brainzplayer?.appleMusicEnabled,
-    userPreferences?.brainzplayer?.soundcloudEnabled,
-    userPreferences?.brainzplayer?.youtubeEnabled,
-    spotifyAuth,
-    appleAuth,
-    soundcloudAuth,
-  ]);
+  }, [sortedDataSources]);
 
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
   const queueRef = React.useRef<BrainzPlayerQueue>(queue);
