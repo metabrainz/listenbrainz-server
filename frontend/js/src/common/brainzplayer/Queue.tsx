@@ -162,6 +162,7 @@ function Queue(props: BrainzPlayerQueueProps) {
                     key={`${queueItem?.id}-${index.toString()}`}
                     track={queueItem}
                     removeTrackFromQueue={removeTrackFromQueue}
+                    hideDragHandle
                   />
                 );
               })

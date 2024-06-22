@@ -10,10 +10,11 @@ import ListenControl from "../listens/ListenControl";
 type QueueItemCardProps = {
   track: BrainzPlayerQueueItem;
   removeTrackFromQueue?: (track: BrainzPlayerQueueItem) => void;
+  hideDragHandle?: boolean;
 };
 
 function QueueItemCard(props: QueueItemCardProps) {
-  const { track, removeTrackFromQueue } = props;
+  const { track, removeTrackFromQueue, hideDragHandle = false } = props;
 
   const removeTrack = () => {
     if (removeTrackFromQueue) {
@@ -45,7 +46,7 @@ function QueueItemCard(props: QueueItemCardProps) {
       listen={track}
       showTimestamp={false}
       showUsername={false}
-      beforeThumbnailContent={dragHandle}
+      beforeThumbnailContent={!hideDragHandle ? dragHandle : undefined}
       additionalMenuItems={additionalMenuItems}
     />
   );

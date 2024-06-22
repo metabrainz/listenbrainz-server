@@ -806,11 +806,6 @@ export default function BrainzPlayer() {
   };
 
   const clearQueue = async (): Promise<void> => {
-    // Stop the currently playing song
-    if (!playerPaused) {
-      await togglePlay();
-    }
-
     const currentQueue = queueRef.current;
 
     // Clear the queue by keeping only the currently playing song
