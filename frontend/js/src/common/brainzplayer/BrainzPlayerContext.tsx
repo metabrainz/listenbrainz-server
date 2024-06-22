@@ -149,7 +149,8 @@ function valueReducer(
     case "MOVE_QUEUE_ITEM": {
       const { queue } = state;
       const evt = action.data as any;
-      const currentListenIndex = queue.findIndex(isCurrentlyPlaying);
+      let currentListenIndex = queue.findIndex(isCurrentlyPlaying);
+      currentListenIndex = currentListenIndex === -1 ? 0 : currentListenIndex;
 
       const newQueue = [...queue];
       const newIndex = evt.newIndex + currentListenIndex;
