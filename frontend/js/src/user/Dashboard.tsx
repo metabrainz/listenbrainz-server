@@ -114,7 +114,7 @@ export default function Listen() {
       } catch (error) {
         toast.error(
           <ToastMsg
-            title="Coudn't parse the new listen as JSON: "
+            title="Couldn't parse the new listen as JSON: "
             message={error?.toString()}
           />,
           { toastId: "parse-listen-error" }
@@ -246,7 +246,7 @@ export default function Listen() {
   React.useEffect(() => {
     // On first load, run the function to load the metadata for the playing_now listen
     if (playingNow) updatePlayingNowMutation(playingNow);
-    // no exhaustive-deps because we only want ot run this on initial start
+    // no exhaustive-deps because we only want to run this on initial start
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
