@@ -493,8 +493,12 @@ export default function BrainzPlayer() {
       listenSubmitted: false,
       continuousPlaybackTime: 0,
     });
+    const listenCopy = cloneDeep(listen) as Partial<BrainzPlayerQueueItem>;
+    if (listenCopy.id) {
+      delete listenCopy.id;
+    }
     window.postMessage(
-      { brainzplayer_event: "current-listen-change", payload: listen },
+      { brainzplayer_event: "current-listen-change", payload: listenCopy },
       window.location.origin
     );
 
