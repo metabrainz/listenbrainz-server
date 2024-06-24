@@ -155,9 +155,9 @@ function valueReducer(
       const newIndex = evt.newIndex + currentListenIndex + 1;
       const oldIndex = evt.oldIndex + currentListenIndex + 1;
 
-      const toMove = newQueue[newIndex];
-      newQueue[newIndex] = newQueue[oldIndex];
-      newQueue[oldIndex] = toMove;
+      const toMove = newQueue[oldIndex];
+      newQueue.splice(oldIndex, 1);
+      newQueue.splice(newIndex, 0, toMove);
 
       return {
         ...state,
@@ -169,9 +169,9 @@ function valueReducer(
       const evt = action.data as any;
 
       const newQueue = [...ambientQueue];
-      const toMove = newQueue[evt.newIndex];
-      newQueue[evt.newIndex] = newQueue[evt.oldIndex];
-      newQueue[evt.oldIndex] = toMove;
+      const toMove = newQueue[evt.oldIndex];
+      newQueue.splice(evt.oldIndex, 1);
+      newQueue.splice(evt.newIndex, 0, toMove);
 
       return {
         ...state,
