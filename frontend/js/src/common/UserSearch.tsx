@@ -28,22 +28,28 @@ export default function UserSearch(props: UserSearchProps) {
   // Refs
   const dropdownRef = DropdownRef();
 
-  const searchUsers = React.useCallback(async () => {
-    try {
-      const response = await APIService.searchUsers(newUser);
-      setUserSearchResults(response.users);
-    } catch (error) {
-      toast.error(<ToastMsg title="Error" message={error.message} />, {
-        toastId: "error",
-      });
-    }
-  }, [APIService, newUser]);
+  const searchUsers = React.useCallback(
+    async (newUserName: string) => {
+      try {
+        const response = await APIService.searchUsers(newUserName);
+        setUserSearchResults(response.users);
+      } catch (error) {
+        toast.error(<ToastMsg title="Error" message={error.message} />, {
+          toastId: "error",
+        });
+      }
+    },
+    [APIService]
+  );
 
-  const throttledSearchUsers = React.useCallback(() => {
-    _throttle(async () => {
-      await searchUsers();
-    }, 300)();
-  }, [searchUsers]);
+  const throttledSearchUsers = React.useCallback(
+    (newUserName: string) => {
+      _throttle(async () => {
+        await searchUsers(newUserName);
+      }, 300)();
+    },
+    [searchUsers]
+  );
 
   const handleResultClick = (user: string) => {
     onSelectUser(user);
@@ -55,7 +61,7 @@ export default function UserSearch(props: UserSearchProps) {
     if (!newUser) {
       return;
     }
-    throttledSearchUsers();
+    throttledSearchUsers(newUser);
   }, [newUser, throttledSearchUsers]);
 
   return (
