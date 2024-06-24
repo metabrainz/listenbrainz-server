@@ -220,7 +220,9 @@ export default function Listen() {
           );
         });
     }
-  }, [APIService, user]);
+    // Navigated to another user's dashboard, reset WS listens
+    setWebSocketListens([]);
+  }, [APIService, user?.name]);
 
   React.useEffect(() => {
     getFollowing();
@@ -252,7 +254,7 @@ export default function Listen() {
     });
 
     const connectHandler = () => {
-      if (user) {
+      if (user?.name) {
         socket.emit("json", { user: user.name });
       }
     };
@@ -274,7 +276,7 @@ export default function Listen() {
       socket.off("playing_now", newPlayingNowHandler);
       socket.close();
     };
-  }, [updatePlayingNowMutation, user, websocketsUrl]);
+  }, [receiveNewListen, updatePlayingNowMutation, user?.name, websocketsUrl]);
 
   const updateFollowingList = (
     follower: ListenBrainzUser,
