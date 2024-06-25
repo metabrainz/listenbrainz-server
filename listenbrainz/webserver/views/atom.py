@@ -55,7 +55,7 @@ def get_listens(user_name):
     fg = FeedGenerator()
     # TODO: use {base_url} instead of hardcoded url
     fg.id(f"https://listenbrainz.org/user/{user_name}")
-    fg.title(f"Listens for {user_name}")
+    fg.title(f"Listens for {user_name} - ListenBrainz")
     fg.author({"name": "ListenBrainz"})
     fg.link(href=f"https://listenbrainz.org/user/{user_name}", rel="alternate")
     fg.link(
@@ -124,7 +124,7 @@ def get_fresh_releases():
 
     fg = FeedGenerator()
     fg.id(f"https://listenbrainz.org/explore/fresh-releases")
-    fg.title(f"Fresh Releases")
+    fg.title(f"Fresh Releases - ListenBrainz")
     fg.author({"name": "ListenBrainz"})
     fg.link(href=f"https://listenbrainz.org/explore/fresh-releases", rel="alternate")
     fg.link(
@@ -190,7 +190,7 @@ def get_releases(user_name):
 
     fg = FeedGenerator()
     fg.id(f"https://listenbrainz.org/user/{user_name}/fresh_releases")
-    fg.title(f"Fresh Releases for {user_name}")
+    fg.title(f"Fresh Releases for {user_name} - ListenBrainz")
     fg.author({"name": "ListenBrainz"})
     fg.link(href=f"https://listenbrainz.org/explore/fresh-releases", rel="alternate")
     fg.link(
