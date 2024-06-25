@@ -106,31 +106,34 @@ export default function Listen() {
 
   const queryClient = useQueryClient();
 
-  const receiveNewListen = (newListen: string): void => {
-    let json;
-    try {
-      json = JSON.parse(newListen);
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Coudn't parse the new listen as JSON: "
-          message={error?.toString()}
-        />,
-        { toastId: "parse-listen-error" }
-      );
-      return;
-    }
-    const listen = formatWSMessageToListen(json);
+  const receiveNewListen = React.useCallback(
+    (newListen: string): void => {
+      let json;
+      try {
+        json = JSON.parse(newListen);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="Couldn't parse the new listen as JSON: "
+            message={error?.toString()}
+          />,
+          { toastId: "parse-listen-error" }
+        );
+        return;
+      }
+      const listen = formatWSMessageToListen(json);
 
-    if (listen) {
-      setWebSocketListens((prevWebSocketListens) => {
-        return [
-          listen,
-          ..._.take(prevWebSocketListens, maxWebsocketListens - 1),
-        ];
-      });
-    }
-  };
+      if (listen) {
+        setWebSocketListens((prevWebSocketListens) => {
+          return [
+            listen,
+            ..._.take(prevWebSocketListens, maxWebsocketListens - 1),
+          ];
+        });
+      }
+    },
+    [setWebSocketListens]
+  );
 
   const receiveNewPlayingNow = React.useCallback(
     async (receivedPlayingNow: Listen): Promise<Listen> => {
@@ -220,7 +223,9 @@ export default function Listen() {
           );
         });
     }
-  }, [APIService, user]);
+    // Navigated to another user's dashboard, reset WS listens
+    setWebSocketListens([]);
+  }, [APIService, user?.name]);
 
   React.useEffect(() => {
     getFollowing();
@@ -241,6 +246,8 @@ export default function Listen() {
   React.useEffect(() => {
     // On first load, run the function to load the metadata for the playing_now listen
     if (playingNow) updatePlayingNowMutation(playingNow);
+    // no exhaustive-deps because we only want to run this on initial start
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   React.useEffect(() => {
@@ -252,7 +259,7 @@ export default function Listen() {
     });
 
     const connectHandler = () => {
-      if (user) {
+      if (user?.name) {
         socket.emit("json", { user: user.name });
       }
     };
@@ -274,7 +281,7 @@ export default function Listen() {
       socket.off("playing_now", newPlayingNowHandler);
       socket.close();
     };
-  }, [updatePlayingNowMutation, user, websocketsUrl]);
+  }, [receiveNewListen, updatePlayingNowMutation, user?.name, websocketsUrl]);
 
   const updateFollowingList = (
     follower: ListenBrainzUser,
