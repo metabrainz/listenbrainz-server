@@ -211,7 +211,8 @@ class SoundcloudCrawlerHandler(BaseHandler):
         if cache.get(user_urn):
             return set()
         user_tracks = self.fetch_tracks_from_user_urn(user_urn)
-        self.update_cache(user_tracks)
+        if user_tracks:
+            self.update_cache(user_tracks)
 
         artist_expires_at = datetime.now() + timedelta(days=USER_CACHE_TIME)
         artist_expires_at_ts = int(artist_expires_at.timestamp())
