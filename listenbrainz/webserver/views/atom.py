@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, date, timezone
 from feedgen.feed import FeedGenerator
-from flask import Blueprint, Response, current_app, jsonify, request
-import listenbrainz
+from flask import Blueprint, Response, current_app, request, render_template
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
@@ -74,16 +73,19 @@ def get_listens(user_name):
         )
         fe.title(f"{listen.data['track_name']} - {listen.data['artist_name']}")
 
-        release_mbid = listen.data["additional_info"].get("release_mbid")
-        recording_mbid = listen.data["additional_info"].get("recording_mbid")
-        submission_client = listen.data["additional_info"].get("submission_client")
+        _content = render_template("atom/listens.html",
+            user_name=listen.user_name,
+            track_name=listen.data["track_name"],
+            recording_mbid=listen.data["additional_info"].get("recording_mbid"),
+            artist_name=listen.data["artist_name"],
+            artist_mbid=listen.data['additional_info'].get('artist_mbid'),
+            time=listen.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            release_mbid=listen.data["additional_info"].get("release_mbid"),
+            release_name=listen.data["release_name"],
+        )
 
         fe.content(
-            content=f"""<p>{listen.user_name} listened to {listen.data['track_name']} - {listen.data['artist_name']} on {listen.timestamp.strftime("%Y-%m-%d %H:%M:%S")}</p>
-{"<p>Release: <a href='https://musicbrainz.org/release/" + release_mbid + "'>" + release_mbid + "</a></p>" if release_mbid else ""}
-{"<p>Recording: <a href='https://musicbrainz.org/recording/" + recording_mbid + "'>" + recording_mbid + "</a></p>" if recording_mbid else ""}
-{"<p>Submission client: " + submission_client + "</p>" if submission_client else ""}
-""",
+            content=_content,
             type="html",
         )
         fe.published(listen.timestamp)
