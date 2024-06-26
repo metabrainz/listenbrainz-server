@@ -117,7 +117,9 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
   const getGroupMBIDFromRelease = React.useCallback(
     async (mbid: string): Promise<string> => {
       try {
-        const response = await APIService.lookupMBRelease(mbid);
+        const response = (await APIService.lookupMBRelease(
+          mbid
+        )) as MusicBrainzRelease & WithReleaseGroup;
         return response["release-group"].id;
       } catch (error) {
         handleError(error, "Could not fetch release group MBID");
