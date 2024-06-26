@@ -2,8 +2,8 @@ import traceback
 
 import sentry_sdk
 
+from listenbrainz.metadata_cache.album_handler import AlbumHandler
 from listenbrainz.metadata_cache.apple.client import Apple
-from listenbrainz.metadata_cache.handler import BaseHandler
 from listenbrainz.metadata_cache.models import Album, Artist, Track, AlbumType
 from listenbrainz.metadata_cache.unique_queue import JobItem
 
@@ -17,7 +17,7 @@ INCOMING_ALBUM_PRIORITY = 0
 CACHE_KEY_PREFIX = "apple:album:"
 
 
-class AppleCrawlerHandler(BaseHandler):
+class AppleCrawlerHandler(AlbumHandler):
 
     def __init__(self, app):
         super().__init__(
@@ -31,7 +31,7 @@ class AppleCrawlerHandler(BaseHandler):
         self.discovered_artists = set()
         self.client = Apple()
 
-    def get_seed_albums(self) -> list[str]:
+    def get_seed_ids(self) -> list[str]:
         """ Retrieve apple album ids from new releases for all markets"""
         client = Apple()
         storefronts = client.get("https://api.music.apple.com/v1/storefronts")
