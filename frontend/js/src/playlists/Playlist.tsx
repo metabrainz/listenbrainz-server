@@ -389,8 +389,10 @@ export default class PlaylistPage extends React.Component<
               </h1>
               <div className="info">
                 <div>
-                  {playlist.track?.length} tracks&nbsp;-&nbsp;
-                  {totalDurationForDisplay}
+                  {playlist.track?.length} tracks
+                  {totalDurationForDisplay && (
+                    <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
+                  )}
                 </div>
                 <div>Created: {new Date(playlist.date).toLocaleString()}</div>
                 {customFields?.collaborators &&
