@@ -14,7 +14,6 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 export type UserDailyActivityProps = {
   range: UserStatsAPIRange;
   user: ListenBrainzUser;
-  apiUrl: string;
 };
 
 export type UserDailyActivityState = {
@@ -28,7 +27,7 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
 
   // Props
-  const { range, user, apiUrl } = props;
+  const { range, user } = props;
 
   // Load the Data
   const { data: loaderData, isLoading: loading } = useQuery({

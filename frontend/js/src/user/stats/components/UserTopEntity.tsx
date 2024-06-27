@@ -19,7 +19,6 @@ export type UserTopEntityProps = {
   range?: UserStatsAPIRange;
   entity: Entity;
   user?: ListenBrainzUser;
-  apiUrl: string;
   terminology: string;
 };
 
@@ -33,7 +32,7 @@ export type UserTopEntityState = {
 export default function UserTopEntity(props: UserTopEntityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
 
-  const { range, entity, user, terminology, apiUrl } = props;
+  const { range, entity, user, terminology } = props;
 
   // Loader Data
   const { data: loaderData, isLoading: loading } = useQuery({

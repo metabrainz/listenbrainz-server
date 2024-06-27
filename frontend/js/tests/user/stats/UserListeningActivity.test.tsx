@@ -24,12 +24,10 @@ const userProps: UserListeningActivityProps = {
     name: "foobar",
   },
   range: "week",
-  apiUrl: "barfoo",
 };
 
 const sitewideProps: UserListeningActivityProps = {
   range: "week",
-  apiUrl: "barfoo",
 };
 
 describe.each([

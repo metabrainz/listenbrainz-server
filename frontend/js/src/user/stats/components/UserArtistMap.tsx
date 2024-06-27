@@ -16,8 +16,6 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 export type UserArtistMapProps = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
-  // eslint-disable-next-line react/no-unused-prop-types
-  apiUrl: string;
 };
 
 export type UserArtistMapState = {

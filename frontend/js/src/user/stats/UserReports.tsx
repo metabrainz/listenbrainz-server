@@ -32,7 +32,7 @@ export default function UserReports(props: UserReportsProps) {
   const { user = undefined } = props;
 
   // Context
-  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { currentUser } = React.useContext(GlobalAppContext);
 
   // Router
   const navigate = useNavigate();
@@ -57,8 +57,6 @@ export default function UserReports(props: UserReportsProps) {
 
   const userStatsTitle =
     user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
-
-  const apiUrl = APIService.APIBaseURI;
 
   return (
     <div>
@@ -120,7 +118,7 @@ export default function UserReports(props: UserReportsProps) {
         </a>
       </small>
       <section id="listening-activity">
-        <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
+        <UserListeningActivity range={range} user={user} />
       </section>
       <section id="top-entity">
         <div className="row">
@@ -128,7 +126,6 @@ export default function UserReports(props: UserReportsProps) {
             <UserTopEntity
               range={range}
               entity="artist"
-              apiUrl={apiUrl}
               user={user}
               terminology="artist"
             />
@@ -137,7 +134,6 @@ export default function UserReports(props: UserReportsProps) {
             <UserTopEntity
               range={range}
               entity="release-group"
-              apiUrl={apiUrl}
               user={user}
               terminology="album"
             />
@@ -146,7 +142,6 @@ export default function UserReports(props: UserReportsProps) {
             <UserTopEntity
               range={range}
               entity="recording"
-              apiUrl={apiUrl}
               user={user}
               terminology="track"
             />
@@ -155,11 +150,11 @@ export default function UserReports(props: UserReportsProps) {
       </section>
       {user && (
         <section id="daily-activity">
-          <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
+          <UserDailyActivity range={range} user={user} />
         </section>
       )}
       <section id="artist-origin">
-        <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
+        <UserArtistMap range={range} user={user} />
       </section>
     </div>
   );

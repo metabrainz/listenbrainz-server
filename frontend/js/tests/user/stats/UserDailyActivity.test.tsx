@@ -17,7 +17,6 @@ const props: UserDailyActivityProps = {
     name: "foobar",
   },
   range: "week",
-  apiUrl: "barfoo",
 };
 
 // Set timeZone to UTC+5:30 because the testdata is in that format

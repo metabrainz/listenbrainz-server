@@ -18,12 +18,10 @@ const userProps: UserArtistMapProps = {
     name: "foobar",
   },
   range: "week",
-  apiUrl: "barfoo",
 };
 
 const sitewideProps: UserArtistMapProps = {
   range: "week",
-  apiUrl: "barfoo",
 };
 
 describe.each([

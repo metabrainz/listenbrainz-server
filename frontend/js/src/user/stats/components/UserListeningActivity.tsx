@@ -15,7 +15,6 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 export type UserListeningActivityProps = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
-  apiUrl: string;
 };
 
 export type UserListeningActivityState = {
@@ -41,7 +40,7 @@ export default function UserListeningActivity(
   const { APIService } = React.useContext(GlobalAppContext);
 
   // Props
-  const { range, user, apiUrl } = props;
+  const { range, user } = props;
 
   // Fetch data
   const { data: loaderData, isLoading: loading } = useQuery({
