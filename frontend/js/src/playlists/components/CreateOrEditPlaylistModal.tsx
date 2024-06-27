@@ -246,7 +246,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
       (isEdit
         ? playlist?.creator.toLowerCase() === user.toLowerCase()
         : currentUser.name.toLowerCase() === user.toLowerCase());
-    if (!disabled && collaborators.includes(user)) {
+    if (!disabled && !collaborators.includes(user)) {
       setCollaborators([...collaborators, user]);
     }
   };

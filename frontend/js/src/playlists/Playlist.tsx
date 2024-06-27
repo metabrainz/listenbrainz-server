@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
 import { Link, useLoaderData, useNavigate } from "react-router-dom";
+import { formatDuration, intervalToDuration } from "date-fns";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -292,6 +293,15 @@ export default function PlaylistPage() {
     }
   };
 
+  const totalDurationMs = tracks
+    .filter((t) => Boolean(t.duration))
+    .reduce((total, track) => total + track.duration!, 0);
+
+  const totalDurationForDisplay = formatDuration(
+    intervalToDuration({ start: 0, end: totalDurationMs }),
+    { format: ["days", "hours", "minutes"] }
+  );
+
   const userHasRightToEdit = hasRightToEdit();
   const customFields = getPlaylistExtension(playlist);
 
@@ -348,7 +358,12 @@ export default function PlaylistPage() {
               </small>
             </h1>
             <div className="info">
-              <div>{playlist.track?.length} tracks</div>
+              <div>
+                {playlist.track?.length} tracks
+                {totalDurationForDisplay && (
+                  <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
+                )}
+              </div>
               <div>Created: {new Date(playlist.date).toLocaleString()}</div>
               {customFields?.collaborators &&
                 Boolean(customFields.collaborators.length) && (

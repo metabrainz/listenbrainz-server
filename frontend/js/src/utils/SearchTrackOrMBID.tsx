@@ -12,6 +12,7 @@ import React, {
 import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
+import DropdownRef from "./Dropdown";
 
 const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const THROTTLE_MILLISECONDS = 1500;
@@ -43,22 +44,12 @@ export default function SearchTrackOrMBID({
 }: SearchTrackOrMBIDProps) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRecording } = APIService;
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLSelectElement>(null);
+  const dropdownRef = DropdownRef();
   const [inputValue, setInputValue] = useState(defaultValue ?? "");
   const [searchResults, setSearchResults] = useState<Array<ACRMSearchResult>>(
     []
   );
   const [selectedIndex, setSelectedIndex] = useState(-1);
-
-  useEffect(() => {
-    // autoFocus property on the input element does not work
-    // We need to wait for the modal animated transition to finish
-    // and trigger the focus manually.
-    setTimeout(() => {
-      inputRef?.current?.focus();
-    }, 600);
-  }, []);
 
   const handleError = useCallback(
     (error: string | Error, title?: string): void => {
@@ -204,31 +195,9 @@ export default function SearchTrackOrMBID({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputValue]);
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "ArrowDown") {
-      setSelectedIndex((prevIndex) =>
-        prevIndex < searchResults.length - 1 ? prevIndex + 1 : prevIndex
-      );
-    } else if (event.key === "ArrowUp") {
-      setSelectedIndex((prevIndex) =>
-        prevIndex > 0 ? prevIndex - 1 : prevIndex
-      );
-    } else if (event.key === "Enter" && selectedIndex >= 0) {
-      selectSearchResult(searchResults[selectedIndex]);
-      reset();
-    }
-  };
-
-  React.useEffect(() => {
-    if (selectedIndex >= 0 && dropdownRef.current) {
-      const option = dropdownRef.current.options[selectedIndex];
-      option.scrollIntoView({ block: "nearest" });
-    }
-  }, [selectedIndex]);
-
   return (
     <div>
-      <div className="input-group track-search">
+      <div className="input-group dropdown-search" ref={dropdownRef}>
         <input
           type="search"
           value={inputValue}
@@ -238,10 +207,8 @@ export default function SearchTrackOrMBID({
           onChange={(event) => {
             setInputValue(event.target.value);
           }}
-          onKeyDown={handleKeyDown}
           placeholder="Track name or MusicBrainz URL/MBID"
           required
-          ref={inputRef}
         />
         <span className="input-group-btn">
           <button className="btn btn-default" type="button" onClick={reset}>
@@ -250,7 +217,7 @@ export default function SearchTrackOrMBID({
         </span>
         {Boolean(searchResults?.length) && (
           <select
-            className="track-search-dropdown"
+            className="dropdown-search-suggestions"
             size={Math.min(searchResults.length + 1, 8)}
             onChange={(e) => {
               if (!e.currentTarget.value) {
@@ -264,9 +231,7 @@ export default function SearchTrackOrMBID({
               selectSearchResult(selectedTrack!);
               reset();
             }}
-            onKeyDown={handleKeyDown}
             tabIndex={-1}
-            ref={dropdownRef}
           >
             {searchResults.map((track, index) => {
               const trackNameAndArtistName = `${track.recording_name} - ${track.artist_credit_name}`;
