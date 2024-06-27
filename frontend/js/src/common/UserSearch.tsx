@@ -42,12 +42,8 @@ export default function UserSearch(props: UserSearchProps) {
     [APIService]
   );
 
-  const throttledSearchUsers = React.useCallback(
-    (newUserName: string) => {
-      _throttle(async () => {
-        await searchUsers(newUserName);
-      }, 300)();
-    },
+  const throttledSearchUsers = React.useMemo(
+    () => _throttle(searchUsers, 800),
     [searchUsers]
   );
 
