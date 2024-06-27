@@ -119,7 +119,7 @@ def get_fresh_releases():
     future = _parse_bool_arg("future", True)
 
     try:
-        db_releases, total_count = get_sitewide_fresh_releases(ts_conn, date.today(), days, "release_date", past, future)
+        db_releases, _ = get_sitewide_fresh_releases(ts_conn, date.today(), days, "release_date", past, future)
     except Exception as e:
         current_app.logger.error("Server failed to get latest release: {}".format(e))
         raise Response(status=500)
@@ -137,14 +137,24 @@ def get_fresh_releases():
     fg.language("en")
 
     for r in db_releases:
+        release_name = r.release_name
+        artist_credit_name = r.artist_credit_name
+        time = r.release_date.strftime("%Y-%m-%d")
+
         fe = fg.add_entry()
-        # according to spec, ids don't have to be deferencable.
         fe.id(
-            f"https://listenbrainz.org/syndication-feed/fresh_releases/{r.release_date.strftime('%Y-%m-%d')}/{r.artist_credit_name}/{r.release_name}"
+            f"https://listenbrainz.org/syndication-feed/fresh_releases/{time}/{artist_credit_name}/{release_name}"
         )
-        fe.title(f"{r.release_name} - {r.artist_credit_name} on {r.release_date.strftime('%Y-%m-%d')}")
+        fe.title(f"{release_name} by {artist_credit_name}")
+        
+        _content = render_template("atom/fresh_releases.html",
+                                   artist_credit_name=artist_credit_name,
+                                   release_name=release_name,
+                                   time=time
+        )
+
         fe.content(
-            content=f"""<p>{r.artist_credit_name} released {r.release_name} on {r.release_date.strftime('%Y-%m-%d')}</p>""",
+            content=_content,
             type="html",
         )
         t = datetime.combine(r.release_date, datetime.min.time())
@@ -203,17 +213,27 @@ def get_releases(user_name):
     fg.language("en")
 
     for r in releases:
+        release_name = r['release_name']
+        artist_credit_name = r['artist_credit_name']
+        time = r['release_date']
+
         fe = fg.add_entry()
-        # according to spec, ids don't have to be deferencable.
         fe.id(
-            f"https://listenbrainz.org/syndication-feed/user/{user_name}/fresh_releases/{r['release_date']}/{r['artist_credit_name']}/{r['release_name']}"
+            f"https://listenbrainz.org/syndication-feed/user/{user_name}/fresh_releases/{time}/{artist_credit_name}/{release_name}"
         )
-        fe.title(f"{r['release_name']} - {r['artist_credit_name']} on {r['release_date']}")
+        fe.title(f"{release_name} by {artist_credit_name}")
+
+        _content = render_template("atom/fresh_releases.html",
+                                   artist_credit_name=artist_credit_name,
+                                   release_name=release_name,
+                                   time=time
+        )
+
         fe.content(
-            content=f"""<p>{r['artist_credit_name']} released {r['release_name']} on {r['release_date']}</p>""",
+            content=_content,
             type="html",
         )
-        t = datetime.combine(datetime.strptime(r['release_date'], "%Y-%m-%d"), datetime.min.time())
+        t = datetime.combine(datetime.strptime(time, "%Y-%m-%d"), datetime.min.time())
         fe.published(t.replace(tzinfo=timezone.utc))
         fe.updated(t.replace(tzinfo=timezone.utc))
 
