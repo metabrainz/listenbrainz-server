@@ -84,8 +84,7 @@ def get_listening_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     return messages
 
 
-def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime) \
-        -> Iterator[Optional[Dict]]:
+def create_messages(data, stats_range: str, from_date: datetime, to_date: datetime):
     """
     Create messages to send the data to webserver via RabbitMQ
 
@@ -106,11 +105,5 @@ def create_messages(data, stats_range: str, from_date: datetime, to_date: dateti
 
     _dict = next(data).asDict(recursive=True)
     message["data"] = _dict["listening_activity"]
-    try:
-        model = StatMessage[ListeningActivityRecord](**message)
-        result = model.dict(exclude_none=True)
-        yield result
-    except ValidationError:
-        logger.error(f"""ValidationError while calculating {stats_range} listening_activity for user: 
-        Data: {json.dumps(_dict, indent=3)}""", exc_info=True)
-        yield None
+
+    return [message]

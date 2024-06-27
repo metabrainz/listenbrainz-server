@@ -349,7 +349,7 @@ export default class ListenCard extends React.Component<
           rel: "noopener noreferrer",
         };
       }
-      thumbnail = thumbnailLink && (
+      thumbnail = thumbnailLink ? (
         <div className="listen-thumbnail">
           <Link
             to={thumbnailLink}
@@ -361,6 +361,13 @@ export default class ListenCard extends React.Component<
               altText={thumbnailTitle}
             />
           </Link>
+        </div>
+      ) : (
+        <div className="listen-thumbnail">
+          <CoverArtWithFallback
+            imgSrc={thumbnailSrc}
+            altText={thumbnailTitle}
+          />
         </div>
       );
     } else if (releaseMBID) {

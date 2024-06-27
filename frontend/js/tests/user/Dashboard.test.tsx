@@ -47,6 +47,7 @@ const props: ListensProps = {
   oldestListenTs,
   user,
   userPinnedRecording,
+  already_reported_user: false,
 };
 
 const APIService = new APIServiceClass("foo");

@@ -1,7 +1,8 @@
 import * as React from "react";
-import { get as _get, isString } from "lodash";
+import { get as _get, deburr, escapeRegExp, isString } from "lodash";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
 import { Link } from "react-router-dom";
+import fuzzysort from "fuzzysort";
 import {
   getArtistName,
   getTrackName,
@@ -178,8 +179,9 @@ export default class AppleMusicPlayer
     const { onTrackNotFound } = this.props;
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
-    const releaseName = _get(listen, "track_metadata.release_name");
-    const searchTerm = `${trackName} ${artistName} ${releaseName}`;
+    // Album name can give worse results, re;oving it from search terms
+    // const releaseName = _get(listen, "track_metadata.release_name");
+    const searchTerm = `${trackName} ${artistName}`;
     if (!searchTerm) {
       onTrackNotFound();
       return;
@@ -189,11 +191,41 @@ export default class AppleMusicPlayer
         `/v1/catalog/{{storefrontId}}/search`,
         { term: searchTerm, types: "songs" }
       );
-      const apple_music_id = response?.data?.results?.songs?.data?.[0]?.id;
-      if (apple_music_id) {
-        await this.playAppleMusicId(apple_music_id);
+      // Remove accents from both the search term and the API results
+      const trackNameWithoutAccents = deburr(trackName);
+      const candidateMatches = response?.data?.results?.songs?.data.map(
+        (candidate) => ({
+          ...candidate,
+          attributes: {
+            ...candidate.attributes,
+            name: deburr(candidate.attributes.name),
+          },
+        })
+      );
+      // Check if the first API result is a match
+      if (
+        new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
+          candidateMatches?.[0]?.attributes.name
+        )
+      ) {
+        // First result matches track title, assume it's the correct result
+        await this.playAppleMusicId(candidateMatches[0].id);
         return;
       }
+      // Fallback to best fuzzy match based on track title
+      const fruzzyMatches = fuzzysort.go(
+        trackNameWithoutAccents,
+        candidateMatches,
+        {
+          key: "attributes.name",
+          limit: 1,
+        }
+      );
+      if (fruzzyMatches[0]) {
+        await this.playAppleMusicId(fruzzyMatches[0].obj.id);
+        return;
+      }
+      // No good match, onTrackNotFound will be called in the code block below
     } catch (error) {
       console.debug("Apple Music API request failed:", error);
     }

@@ -667,6 +667,36 @@ def user_recommendations(playlist_user_name):
     return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
 
 
+@api_bp.route("/user/<playlist_user_name>/playlists/search", methods=['GET', 'OPTIONS'])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def search_user_playlist(playlist_user_name):
+    """
+    Search for a playlist by name for a user.
+
+    :param playlist_user_name: the MusicBrainz ID of the user whose playlists are being searched.
+    :queryparam name: the name of the playlist to search for.
+    :queryparam count: the number of playlists to return. Default: 25.
+    :queryparam offset: the offset of the playlists to return. Default: 0.
+
+    :statuscode 200: success
+    :statuscode 404: user not found
+    :resheader Content-Type: *application/json*
+    """
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    query = request.args.get("query")
+    count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param("offset", 0)
+
+    playlists, playlist_count = db_playlist.search_playlists_for_user(db_conn, ts_conn, playlist_user.id, query, count, offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
 @api_bp.route("/user/<user_name>/services", methods=['GET', 'OPTIONS'])
 @crossdomain
 @ratelimit()

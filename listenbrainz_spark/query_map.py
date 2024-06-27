@@ -57,7 +57,6 @@ functions = {
     'cf.recommendations.recording.recommendations': listenbrainz_spark.recommendations.recording.recommend.main,
     'cf.recommendations.recording.discovery':
         listenbrainz_spark.recommendations.recording.discovery.get_recording_discovery,
-    'import.artist_relation': listenbrainz_spark.request_consumer.jobs.import_dump.import_artist_relation_to_hdfs,
     'import.musicbrainz_release_dump':
         listenbrainz_spark.request_consumer.jobs.import_dump.import_release_json_dump_to_hdfs,
     'similarity.similar_users': listenbrainz_spark.similarity.user.main,
