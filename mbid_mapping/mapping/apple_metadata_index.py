@@ -17,7 +17,7 @@ class AppleMusicMetadataIndex(BulkInsertTable):
 
     def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
         super().__init__("mapping.apple_metadata_index", select_conn, insert_conn, batch_size, unlogged)
-        self.row_id = 0 
+        self.row_id = 0
 
     def get_create_table_columns(self):
         return [("id",                               "SERIAL"),
@@ -44,7 +44,7 @@ class AppleMusicMetadataIndex(BulkInsertTable):
                  -- retrieve track artists in same order as they appear on the spotify track
                  , array_agg(ARRAY[artist.name, artist.artist_id] ORDER BY rta.position) AS artists
                  -- prefer albums over single over compilations.
-                 , CASE 
+                 , CASE
                     WHEN album.type = 'album' THEN 1
                     WHEN album.type = 'single' THEN 2
                     WHEN album.type = 'compilation' THEN 3
@@ -93,7 +93,7 @@ class AppleMusicMetadataIndex(BulkInsertTable):
                 row["track_id"],
                 combined_lookup_all,
                 combined_lookup_without_album,
-                -self.row_id 
+                -self.row_id
             )
         ]}
 
