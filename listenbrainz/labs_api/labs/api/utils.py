@@ -120,7 +120,7 @@ def lookup_using_metadata(params: list[dict], service):
             item["spotify_track_ids"] = []
         elif service == "apple_music" and "apple_track_ids" not in item:
             item["apple_track_ids"] = []
-    
+
     if service == "spotify":
         return [SpotifyIdFromMBIDOutput(**row) for row in metadata.values()]
     else:
