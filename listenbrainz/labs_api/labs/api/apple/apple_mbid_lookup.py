@@ -6,30 +6,30 @@ from datasethoster import Query
 from flask import current_app
 from pydantic import BaseModel
 
-from listenbrainz.labs_api.labs.api.spotify import SpotifyIdFromMBIDOutput
+from listenbrainz.labs_api.labs.api.apple import AppleMusicIdFromMBIDOutput
 from listenbrainz.labs_api.labs.api.utils import lookup_using_metadata
 from listenbrainz.db.recording import resolve_redirect_mbids, resolve_canonical_mbids
 
 
-class SpotifyIdFromMBIDInput(BaseModel):
+class AppleMusicIdFromMBIDInput(BaseModel):
     recording_mbid: uuid.UUID
 
 
-class SpotifyIdFromMBIDQuery(Query):
-    """ Query to lookup spotify track ids using recording mbids. """
+class AppleMusicIdFromMBIDQuery(Query):
+    """ Query to lookup Apple Music track ids using recording mbids. """
 
     def names(self):
-        return "spotify-id-from-mbid", "Spotify Track ID Lookup using recording mbid"
+        return "apple-id-from-mbid", "apple music track ID Lookup using recording mbid"
 
     def inputs(self):
-        return SpotifyIdFromMBIDInput
+        return AppleMusicIdFromMBIDInput
 
     def introduction(self):
         return """Given a recording mbid, lookup its metadata using canonical metadata
-        tables and using that attempt to find a suitable match in Spotify."""
+        tables and using that attempt to find a suitable match in apple music."""
 
     def outputs(self):
-        return SpotifyIdFromMBIDOutput
+        return AppleMusicIdFromMBIDOutput
 
     def fetch_metadata_from_mbids(self, curs, mbids):
         """ Retrieve metadata from canonical tables for given mbids. Note that all mbids should be canonical mbids
@@ -61,7 +61,7 @@ class SpotifyIdFromMBIDQuery(Query):
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, conn.cursor() as curs:
             redirected_mbids, redirect_index, _ = resolve_redirect_mbids(curs, "recording", mbids)
-        
+
         with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn, conn.cursor() as curs:
             canonical_mbids, canonical_index, _ = resolve_canonical_mbids(curs, redirected_mbids)
             metadata = self.fetch_metadata_from_mbids(curs, canonical_mbids)
@@ -77,4 +77,4 @@ class SpotifyIdFromMBIDQuery(Query):
             mbid_metadata["recording_mbid"] = mbid
             ordered_metadata.append(mbid_metadata)
 
-        return lookup_using_metadata(ordered_metadata, "spotify")
+        return lookup_using_metadata(ordered_metadata, "apple_music")
