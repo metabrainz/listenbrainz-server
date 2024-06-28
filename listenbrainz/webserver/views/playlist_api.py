@@ -11,27 +11,23 @@ from psycopg2.extras import DictCursor
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
-from listenbrainz.domain.apple import AppleService
 from listenbrainz.troi.export import export_to_spotify
-from listenbrainz.troi.import_ms import import_from_spotify, import_from_apple_music
+from listenbrainz.troi.import_ms import import_from_spotify
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.metadata_cache.apple.client import Apple
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
-    _filter_description_html, get_non_negative_param
+    _filter_description_html
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording, \
     PLAYLIST_EXTENSION_URI, PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_TRACK_EXTENSION_URI, \
     PLAYLIST_ARTIST_URI_PREFIX, PLAYLIST_RELEASE_URI_PREFIX
-from listenbrainz.webserver.views.api import serialize_playlists
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
 MAX_RECORDINGS_PER_ADD = 100
-DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 
 def validate_create_playlist_required_items(jspf):
@@ -398,34 +394,6 @@ def create_playlist():
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
-
-
-@playlist_api_bp.route("/search", methods=["GET", "OPTIONS"])
-@crossdomain
-@ratelimit()
-@api_listenstore_needed
-def search_playlist():
-    """
-    Search for playlists by name or description. The search query must be at least 3 characters long.
-
-    :param q: The search query string.
-    :type q: ``str``
-    :statuscode 200: Yay, you have data!
-    :statuscode 400: invalid query string, see error message for details.
-    :statuscode 401: invalid authorization. See error message for details.
-    :resheader Content-Type: *application/json*
-    """
-
-    query = request.args.get("query")
-    count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
-    offset = get_non_negative_param("offset", 0)
-
-    if not query or len(query) < 3:
-        log_raise_400("Query string must be at least 3 characters long.")
-
-    playlists, playlist_count = db_playlist.search_playlist(db_conn, ts_conn, query, count, offset)
-
-    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
 @playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])
@@ -860,7 +828,7 @@ def export_playlist(playlist_mbid, service):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    if service != "":
+    if service != "spotify":
         raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
 
     spotify_service = SpotifyService()
@@ -886,10 +854,10 @@ def export_playlist(playlist_mbid, service):
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
-def import_playlist_from_music_service(service):
+def import_playlist_from_spotify(service):
     """
 
-    Get playlists from chosen Music Service.
+    Get playlists from Spotify.
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlists are fetched.
@@ -899,36 +867,23 @@ def import_playlist_from_music_service(service):
     """
     user = validate_auth_header()
 
-    if service != "apple_music" and service != "spotify":
+    if service != "spotify":
         raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
 
-    if service == "spotify":
-        spotify_service = SpotifyService()
-        token = spotify_service.get_user(user["id"], refresh=True)
-    elif service == "apple_music":
-        apple_service = AppleService()
-        #TODO: implement refresh token for AppleMusic
-        token = apple_service.get_user(user["id"])
-
+    spotify_service = SpotifyService()
+    token = spotify_service.get_user(user["id"], refresh=True)
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
-    
-    if service == "apple_music" and not token["refresh_token"]:
-        raise APIBadRequest("Not authorized to Apple Music. Please link your account first.")
 
-    if service == "spotify" and not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
 
     try:
-        if service == "spotify":
-            sp = spotipy.Spotify(token["access_token"])
-            playlists = sp.current_user_playlists()
-            return jsonify(playlists["items"])
-        else:
-            apple = Apple().get_user_data("https://api.music.apple.com/v1/me/library/playlists/", token["refresh_token"])
-            return jsonify(apple["data"])
+        sp = spotipy.Spotify(token["access_token"])
+        playlists = sp.current_user_playlists()
+        return jsonify(playlists["items"])
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
@@ -938,7 +893,7 @@ def import_playlist_from_music_service(service):
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
-def import_tracks_from_spotify_playlist(service, playlist_id):
+def import_tracks_from_spotify_to_playlist(service, playlist_id):
     """
 
     Import a playlist tracks from a Spotify and convert them to JSPF.
@@ -953,7 +908,7 @@ def import_tracks_from_spotify_playlist(service, playlist_id):
     user = validate_auth_header()
 
     if service != "spotify":
-        raise APIBadRequest(f"Service {service} is not supported.")
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
 
     spotify_service = SpotifyService()
     token = spotify_service.get_user(user["id"], refresh=True)
@@ -967,42 +922,6 @@ def import_tracks_from_spotify_playlist(service, playlist_id):
 
     try:
         playlist = import_from_spotify(token["access_token"], user["auth_token"], playlist_id)
-        return playlist
-    except requests.exceptions.HTTPError as exc:
-        error = exc.response.json()
-        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
-
-
-@playlist_api_bp.route("/apple_music/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
-@crossdomain
-@ratelimit()
-@api_listenstore_needed
-def import_tracks_from_apple_music_playlist(playlist_id):
-    """
-
-    Import a playlist tracks from a Apple Music and convert them to JSPF.
-
-    :reqheader Authorization: Token <user token>
-    :param playlist_id: The Apple Music playlist id to get the tracks from
-    :statuscode 200: tracks are fetched and converted.
-    :statuscode 401: invalid authorization. See error message for details.
-    :statuscode 404: Playlist not found
-    :resheader Content-Type: *application/json*
-    """
-    user = validate_auth_header()
-
-    apple_service = AppleService()
-    #TODO: implement refresh token for AppleMusic
-    token = apple_service.get_user(user["id"])
-    
-    if not token["refresh_token"]:
-        raise APIBadRequest("Not authorized to Apple Music. Please link your account first.")
-    
-    if not token:
-        raise APIBadRequest(f"Service Apple Music is not linked. Please link your Apple Music account first.")
-
-    try:
-        playlist = import_from_apple_music(token["access_token"], token["refresh_token"], user["auth_token"], playlist_id)
         return playlist
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
