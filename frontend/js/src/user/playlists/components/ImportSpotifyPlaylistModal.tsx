@@ -28,7 +28,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
   React.useEffect(() => {
     async function getUserPlaylistsFromSpotify() {
       try {
-        const response = await APIService.importPlaylistFromSpotify(
+        const response = await APIService.importPlaylistToSpotify(
           currentUser?.auth_token
         );
 
