@@ -2,7 +2,7 @@ from datasethoster import Query
 from pydantic import BaseModel
 
 from listenbrainz.labs_api.labs.api.spotify import SpotifyIdFromMBIDOutput
-from listenbrainz.labs_api.labs.api.spotify.utils import lookup_using_metadata
+from listenbrainz.labs_api.labs.api.utils import lookup_using_metadata
 
 
 class SpotifyIdFromMetadataInput(BaseModel):
@@ -29,4 +29,4 @@ class SpotifyIdFromMetadataQuery(Query):
 
     def fetch(self, params, source, offset=-1, count=-1):
         data = [p.dict() for p in params]
-        return lookup_using_metadata(data)
+        return lookup_using_metadata(data, 'spotify')
