@@ -3,30 +3,26 @@
 import { saveAs } from "file-saver";
 import { findIndex } from "lodash";
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
 import { faCog, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { sanitizeUrl } from "@braintree/sanitize-url";
-import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
 import { sanitize } from "dompurify";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
+import { Helmet } from "react-helmet";
+import { Link, useLoaderData } from "react-router-dom";
+import { formatDuration, intervalToDuration } from "date-fns";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import { ToastMsg } from "../notifications/Notifications";
 import APIServiceClass from "../utils/APIService";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
-import { getPageProps } from "../utils/utils";
 import PlaylistItemCard from "./components/PlaylistItemCard";
 import PlaylistMenu from "./components/PlaylistMenu";
 import {
@@ -58,10 +54,12 @@ export default class PlaylistPage extends React.Component<
 
   static makeJSPFTrack(trackMetadata: TrackMetadata): JSPFTrack {
     return {
-      identifier: `${PLAYLIST_TRACK_URI_PREFIX}${
-        trackMetadata.recording_mbid ??
-        trackMetadata.additional_info?.recording_mbid
-      }`,
+      identifier: [
+        `${PLAYLIST_TRACK_URI_PREFIX}${
+          trackMetadata.recording_mbid ??
+          trackMetadata.additional_info?.recording_mbid
+        }`,
+      ],
       title: trackMetadata.track_name,
       creator: trackMetadata.artist_name,
     };
@@ -331,8 +329,20 @@ export default class PlaylistPage extends React.Component<
 
     const customFields = getPlaylistExtension(playlist);
 
+    const totalDurationMs = tracks
+      .filter((t) => Boolean(t.duration))
+      .reduce((total, track) => total + track.duration!, 0);
+
+    const totalDurationForDisplay = formatDuration(
+      intervalToDuration({ start: 0, end: totalDurationMs }),
+      { format: ["days", "hours", "minutes"] }
+    );
+
     return (
       <div role="main">
+        <Helmet>
+          <title>{playlist.title} - Playlist</title>
+        </Helmet>
         <Loader
           isLoading={loading}
           loaderText="Exporting playlist…"
@@ -370,13 +380,20 @@ export default class PlaylistPage extends React.Component<
                 <small>
                   {customFields?.public ? "Public " : "Private "}
                   playlist by{" "}
-                  <a href={sanitizeUrl(`/user/${playlist.creator}/playlists`)}>
+                  <Link
+                    to={sanitizeUrl(`/user/${playlist.creator}/playlists/`)}
+                  >
                     {playlist.creator}
-                  </a>
+                  </Link>
                 </small>
               </h1>
               <div className="info">
-                <div>{playlist.track?.length} tracks</div>
+                <div>
+                  {playlist.track?.length} tracks
+                  {totalDurationForDisplay && (
+                    <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
+                  )}
+                </div>
                 <div>Created: {new Date(playlist.date).toLocaleString()}</div>
                 {customFields?.collaborators &&
                   Boolean(customFields.collaborators.length) && (
@@ -384,9 +401,9 @@ export default class PlaylistPage extends React.Component<
                       With the help of:&ensp;
                       {customFields.collaborators.map((collaborator, index) => (
                         <React.Fragment key={collaborator}>
-                          <a href={sanitizeUrl(`/user/${collaborator}`)}>
+                          <Link to={sanitizeUrl(`/user/${collaborator}/`)}>
                             {collaborator}
-                          </a>
+                          </Link>
                           {index <
                           (customFields?.collaborators?.length ?? 0) - 1
                             ? ", "
@@ -470,7 +487,10 @@ export default class PlaylistPage extends React.Component<
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
                   </span>
-                  <SearchTrackOrMBID onSelectRecording={this.addTrack} />
+                  <SearchTrackOrMBID
+                    onSelectRecording={this.addTrack}
+                    expectedPayload="trackmetadata"
+                  />
                 </Card>
               )}
             </div>
@@ -488,36 +508,7 @@ export default class PlaylistPage extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { playlist } = reactProps;
-
-  const PlaylistPageWithAlertNotifications = withAlertNotifications(
-    PlaylistPage
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <PlaylistPageWithAlertNotifications playlist={playlist} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function PlaylistPageWrapper() {
+  const { playlist } = useLoaderData() as PlaylistPageProps;
+  return <PlaylistPage playlist={playlist} />;
+}

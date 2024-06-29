@@ -11,10 +11,12 @@ const userProps: UserReportsProps = {
     name: "test_user",
   },
   apiUrl: "foobar",
+  navigate: jest.fn(),
 };
 
 const sitewideProps: UserReportsProps = {
   apiUrl: "foobar",
+  navigate: jest.fn(),
 };
 
 describe.each([
@@ -22,7 +24,6 @@ describe.each([
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
   describe("UserReports", () => {
-
     describe("ComponentDidMount", () => {
       it('adds event listener for "popstate" event', () => {
         const wrapper = shallow<UserReports>(<UserReports {...props} />);

@@ -1,4 +1,3 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
@@ -26,19 +25,16 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import NiceModal from "@ebay/nice-modal-react";
 import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
-import ErrorBoundary from "../../../utils/ErrorBoundary";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
-
-import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
 
 import {
   generateAlbumArtThumbnailLink,
   getArtistLink,
-  getPageProps,
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
@@ -50,10 +46,12 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../components/follow/FollowButton";
+import SEO, { YIMYearMetaTags } from "../SEO";
+import { RouteQuery } from "../../../utils/Loader";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
-  yearInMusicData: {
+  yearInMusicData?: {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
@@ -118,6 +116,12 @@ export type YearInMusicProps = {
     }>;
   };
 };
+
+type YearInMusicLoaderData = {
+  user: YearInMusicProps["user"];
+  data: YearInMusicProps["yearInMusicData"];
+};
+
 enum YIM2023Color {
   green = "#4C6C52",
   red = "#BE4A55",
@@ -138,6 +142,7 @@ const buddiesImages = [
 
 export type YearInMusicState = {
   followingList: Array<string>;
+  followingListForLoggedInUser: Array<string>;
   selectedMetric: "artist" | "listen";
   selectedColor: YIM2023Color;
 };
@@ -154,6 +159,7 @@ export default class YearInMusic extends React.Component<
     super(props);
     this.state = {
       followingList: [],
+      followingListForLoggedInUser: [],
       selectedMetric: "listen",
       selectedColor: YIM2023Color.green,
     };
@@ -162,6 +168,14 @@ export default class YearInMusic extends React.Component<
 
   async componentDidMount() {
     await this.getFollowing();
+    await this.getFollowingForLoggedInUser();
+  }
+
+  async componentDidUpdate(prevProps: YearInMusicProps) {
+    const { user } = this.props;
+    if (user !== prevProps.user) {
+      await this.getFollowing();
+    }
   }
 
   private getPlaylistByName(
@@ -214,6 +228,28 @@ export default class YearInMusic extends React.Component<
     } catch (err) {
       toast.error(
         <ToastMsg
+          title={`Error while fetching the users ${user.name} follows`}
+          message={err.toString()}
+        />,
+        { toastId: "fetch-following-error" }
+      );
+    }
+  };
+
+  getFollowingForLoggedInUser = async () => {
+    const { APIService, currentUser } = this.context;
+    const { getFollowingForUser } = APIService;
+    if (!currentUser?.name) {
+      return;
+    }
+    try {
+      const response = await getFollowingForUser(currentUser.name);
+      const { following } = response;
+
+      this.setState({ followingListForLoggedInUser: following });
+    } catch (err) {
+      toast.error(
+        <ToastMsg
           title="Error while fetching the users you follow"
           message={err.toString()}
         />,
@@ -226,8 +262,8 @@ export default class YearInMusic extends React.Component<
     user: ListenBrainzUser,
     action: "follow" | "unfollow"
   ) => {
-    const { followingList } = this.state;
-    const newFollowingList = [...followingList];
+    const { followingListForLoggedInUser } = this.state;
+    const newFollowingList = [...followingListForLoggedInUser];
     const index = newFollowingList.findIndex(
       (following) => following === user.name
     );
@@ -237,18 +273,18 @@ export default class YearInMusic extends React.Component<
     if (action === "unfollow" && index !== -1) {
       newFollowingList.splice(index, 1);
     }
-    this.setState({ followingList: newFollowingList });
+    this.setState({ followingListForLoggedInUser: newFollowingList });
   };
 
   loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
     const { currentUser } = this.context;
-    const { followingList } = this.state;
+    const { followingListForLoggedInUser } = this.state;
 
     if (isNil(currentUser) || isEmpty(currentUser)) {
       return false;
     }
 
-    return followingList.includes(user.name);
+    return followingListForLoggedInUser.includes(user.name);
   };
 
   sharePage = () => {
@@ -383,7 +419,12 @@ export default class YearInMusic extends React.Component<
 
   render() {
     const { user, yearInMusicData } = this.props;
-    const { selectedMetric, selectedColor, followingList } = this.state;
+    const {
+      selectedMetric,
+      selectedColor,
+      followingList,
+      followingListForLoggedInUser,
+    } = this.state;
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
 
@@ -392,6 +433,7 @@ export default class YearInMusic extends React.Component<
     let missingSomeData = false;
     const hasSomeData = !!yearInMusicData && !isEmpty(yearInMusicData);
     if (
+      !yearInMusicData ||
       !yearInMusicData.top_release_groups ||
       !yearInMusicData.top_recordings ||
       !yearInMusicData.top_artists ||
@@ -421,7 +463,7 @@ export default class YearInMusic extends React.Component<
     /* Most listened years */
     let mostListenedYearDataForGraph;
     let mostListenedYearTicks;
-    if (!isEmpty(yearInMusicData.most_listened_year)) {
+    if (yearInMusicData && !isEmpty(yearInMusicData?.most_listened_year)) {
       const mostListenedYears = Object.keys(yearInMusicData.most_listened_year);
       // Ensure there are no holes between years
       const filledYears = range(
@@ -431,7 +473,7 @@ export default class YearInMusic extends React.Component<
       mostListenedYearDataForGraph = filledYears.map((year: number) => ({
         year,
         // Set to 0 for years without data
-        songs: String(yearInMusicData.most_listened_year[String(year)] ?? 0),
+        songs: String(yearInMusicData?.most_listened_year[String(year)] ?? 0),
       }));
       // Round to nearest 5 year mark but don't add dates that are out of the range of the listening history
       const mostListenedYearYears = uniq(
@@ -450,8 +492,8 @@ export default class YearInMusic extends React.Component<
 
     /* Users artist map */
     let artistMapDataForGraph;
-    if (!isEmpty(yearInMusicData.artist_map)) {
-      artistMapDataForGraph = yearInMusicData.artist_map.map((country) => ({
+    if (!isEmpty(yearInMusicData?.artist_map)) {
+      artistMapDataForGraph = yearInMusicData?.artist_map.map((country) => ({
         id: country.country,
         value:
           selectedMetric === "artist"
@@ -463,16 +505,16 @@ export default class YearInMusic extends React.Component<
 
     /* Similar users sorted by similarity score */
     let sortedSimilarUsers;
-    if (!isEmpty(yearInMusicData.similar_users)) {
-      sortedSimilarUsers = toPairs(yearInMusicData.similar_users).sort(
+    if (!isEmpty(yearInMusicData?.similar_users)) {
+      sortedSimilarUsers = toPairs(yearInMusicData?.similar_users).sort(
         (a, b) => b[1] - a[1]
       );
     }
 
     /* Listening history calendar graph */
     let listensPerDayForGraph;
-    if (!isEmpty(yearInMusicData.listens_per_day)) {
-      listensPerDayForGraph = yearInMusicData.listens_per_day
+    if (!isEmpty(yearInMusicData?.listens_per_day)) {
+      listensPerDayForGraph = yearInMusicData?.listens_per_day
         .map((datum) =>
           datum.listen_count > 0
             ? {
@@ -505,12 +547,15 @@ export default class YearInMusic extends React.Component<
     const statsImageCustomStyles = `.background, text {\nfill: ${selectedColor};\n}\n.outline {\nstroke: ${selectedColor};\n}\n`;
 
     let newArtistsDiscovered: number | string =
-      yearInMusicData.total_new_artists_discovered;
-    const newArtistsDiscoveredPercentage = Math.round(
-      (yearInMusicData.total_new_artists_discovered /
-        yearInMusicData.total_artists_count) *
-        100
-    );
+      yearInMusicData?.total_new_artists_discovered ?? 0;
+    let newArtistsDiscoveredPercentage;
+    if (yearInMusicData) {
+      newArtistsDiscoveredPercentage = Math.round(
+        (yearInMusicData.total_new_artists_discovered /
+          yearInMusicData.total_artists_count) *
+          100
+      );
+    }
     if (!Number.isNaN(newArtistsDiscoveredPercentage)) {
       newArtistsDiscovered = `${newArtistsDiscoveredPercentage}%`;
     }
@@ -524,9 +569,13 @@ export default class YearInMusic extends React.Component<
               loggedInUserFollowsUser={this.loggedInUserFollowsUser(user)}
             />
           )}
-          <a href={linkToUserProfile} role="button" className="btn btn-info">
+          <Link
+            to={`/user/${user.name}/`}
+            role="button"
+            className="btn btn-info"
+          >
             ListenBrainz Profile
-          </a>
+          </Link>
           <div className="input-group">
             <input
               type="text"
@@ -558,6 +607,8 @@ export default class YearInMusic extends React.Component<
         role="main"
         style={{ ["--selectedColor" as any]: selectedColor }}
       >
+        <SEO year={2023} userName={user?.name} />
+        <YIMYearMetaTags year={2023} />
         <div id="main-header">
           <div className="color-picker">
             <img
@@ -616,8 +667,8 @@ export default class YearInMusic extends React.Component<
                   We don&apos;t have enough 2023 statistics for {user.name}.
                 </p>
                 <p className="center-p">
-                  <a href="/settings/music-services/details/">Submit</a> enough
-                  listens before the end of December to generate your
+                  <Link to="/settings/music-services/details/">Submit</Link>{" "}
+                  enough listens before the end of December to generate your
                   #yearinmusic next year.
                 </p>
               </div>
@@ -1350,9 +1401,9 @@ export default class YearInMusic extends React.Component<
               >
                 {followingList.slice(0, 15).map((followedUser, index) => {
                   return (
-                    <a
+                    <Link
                       className="buddy content-card card"
-                      href={`/user/${followedUser}/year-in-music/2023`}
+                      to={`/user/${followedUser}/year-in-music/2023/`}
                     >
                       <div className="img-container">
                         <img
@@ -1363,7 +1414,7 @@ export default class YearInMusic extends React.Component<
                       <div className="small-stat">
                         <div className="value">{followedUser}</div>
                       </div>
-                    </a>
+                    </Link>
                   );
                 })}
               </div>
@@ -1389,7 +1440,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <a href="/explore/cover-art-collage/2023">
+            <Link to="/explore/cover-art-collage/2023/">
               <LazyLoadImage
                 src="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
                 placeholderSrc="https://staticbrainz.org/LB/year-in-music/2023/mosaic-2023-small.jpg"
@@ -1401,7 +1452,7 @@ export default class YearInMusic extends React.Component<
                 loading="lazy"
                 decoding="async"
               />
-            </a>
+            </Link>
           </div>
 
           <div className="section">
@@ -1466,7 +1517,7 @@ export default class YearInMusic extends React.Component<
               <br />
               <br />
               Feeling nostalgic? See your previous Year in Music:{" "}
-              <a href={`/user/${user.name}/year-in-music/2022`}>2022</a>
+              <Link to={`/user/${user.name}/year-in-music/2022/`}>2022</Link>
             </div>
           </div>
         </div>
@@ -1492,24 +1543,18 @@ export default class YearInMusic extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, reactProps, globalAppContext } = await getPageProps();
-
-  const { user, data: yearInMusicData } = reactProps;
-
-  const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <YearInMusicWithAlertNotifications
-            user={user}
-            yearInMusicData={yearInMusicData}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
+export function YearInMusicWrapper() {
+  const location = useLocation();
+  const params = useParams();
+  const { data } = useQuery<YearInMusicLoaderData>(
+    RouteQuery(["year-in-music-2023", params], location.pathname)
   );
-});
+  const { user, data: yearInMusicData } = data || {};
+  const fallbackUser = { name: "" };
+  return (
+    <YearInMusic
+      user={user ?? fallbackUser}
+      yearInMusicData={yearInMusicData}
+    />
+  );
+}

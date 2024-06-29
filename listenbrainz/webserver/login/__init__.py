@@ -50,6 +50,7 @@ def load_user(user_login_id):
     try:
         user = db_user.get_by_login_id(db_conn, user_login_id)
     except Exception as e:
+        db_conn.rollback()
         current_app.logger.error("Error while getting user by login ID: %s", str(e), exc_info=True)
         return None
     if user:
@@ -62,7 +63,7 @@ def login_forbidden(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not current_user.is_anonymous:
-            return redirect(url_for('index.index'))
+            return redirect(url_for('index.index_pages', path=''))
         return f(*args, **kwargs)
 
     return decorated

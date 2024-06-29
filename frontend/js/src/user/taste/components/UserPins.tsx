@@ -6,6 +6,7 @@ import * as React from "react";
 import * as _ from "lodash";
 
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import Loader from "../../../components/Loader";
 import PinnedRecordingCard from "../../components/PinnedRecordingCard";
@@ -133,13 +134,15 @@ export default class UserPins extends React.Component<
     });
 
     return (
-      <div role="main">
-        <h3>
-          {user.name === currentUser.name
-            ? "Your"
-            : `${_.startCase(user.name)}'s`}{" "}
-          Pins
-        </h3>
+      <div>
+        <div className="listen-header">
+          <h3 className="header-with-line">
+            {user.name === currentUser.name
+              ? "Your"
+              : `${_.startCase(user.name)}'s`}{" "}
+            Pins
+          </h3>
+        </div>
 
         {pins.length === 0 && (
           <>
@@ -148,7 +151,10 @@ export default class UserPins extends React.Component<
             {user.name === currentUser.name && (
               <>
                 Pin one of your
-                <a href={`${profileUrl ?? "/my/listens/"}`}> recent Listens!</a>
+                <Link to={`${profileUrl ?? "/my/listens/"}`}>
+                  {" "}
+                  recent Listens!
+                </Link>
               </>
             )}
           </>
@@ -181,7 +187,7 @@ export default class UserPins extends React.Component<
                 );
               })}
               <button
-                className={`btn btn-block ${
+                className={`mt-15 btn btn-block ${
                   noMorePins ? "btn-default" : "btn-info"
                 }`}
                 disabled={noMorePins}

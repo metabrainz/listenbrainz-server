@@ -37,6 +37,7 @@ class BaseBrainzService(ExternalService):
     def update_user(self, user_id: int, token: dict) -> bool:
         expires_at = int(time.time()) + token["expires_in"]
         external_service_oauth.update_token(
+            db_conn,
             user_id=user_id,
             service=self.service,
             access_token=token["access_token"],

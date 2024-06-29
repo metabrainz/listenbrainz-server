@@ -148,9 +148,9 @@ class CoverArtGenerator:
         y2 = int((y + 1) * self.tile_size)
 
         if x == self.dimension - 1:
-            x2 = self.image_size - 1
+            x2 = self.image_size
         if y == self.dimension - 1:
-            y2 = self.image_size - 1
+            y2 = self.image_size
 
         return (x1, y1, x2, y2)
 
@@ -322,9 +322,9 @@ class CoverArtGenerator:
         release_mbids = [r.release_mbid for r in releases]
         images = self.load_images(release_mbids, layout=layout)
         if images is None:
-            return None
+            return None, None
 
-        return images
+        return images, self.time_range_to_english[time_range]
 
     def create_artist_stats_cover(self, user_name, time_range):
         """ Given a user name and a stats time range, make an artist stats cover. Return

@@ -19,31 +19,258 @@
  */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import { getPageProps } from "../utils/utils";
-import Blog from "./Blog";
-import ErrorBoundary from "../utils/ErrorBoundary";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
+import { isNumber, throttle } from "lodash";
+import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
+import NumberCounter from "./NumberCounter";
+import Blob from "./Blob";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { RouteQuery } from "../utils/Loader";
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const domContainer = document.querySelector("#blogs");
-  const { globalAppContext, sentryProps } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+type HomePageProps = {
+  listenCount: number;
+  artistCount: number;
+};
 
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const apiURL = globalAppContext.APIService.APIBaseURI;
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <Blog apiUrl={apiURL} />
-    </ErrorBoundary>
+function HomePage() {
+  const location = useLocation();
+  const { data } = useQuery<HomePageProps>(
+    RouteQuery(["home"], location.pathname)
   );
-});
+  const { listenCount, artistCount } = data || {};
+  const homepageUpperRef = React.useRef<HTMLDivElement>(null);
+  const homepageLowerRef = React.useRef<HTMLDivElement>(null);
+
+  const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
+
+  React.useEffect(() => {
+    const handleResize = throttle(
+      () => {
+        setWindowHeight(window.innerHeight);
+      },
+      300,
+      { leading: true }
+    );
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const createAccountButton = (
+    <a
+      className="create-account-button"
+      href={`https://musicbrainz.org/register?returnto=${window.document.location.href}`}
+    >
+      Create Account
+    </a>
+  );
+  // Calculate available screen real estate
+  // This allows us to ensure that each page takes full height taking mobile browser toolbars into account
+  const styles = {
+    "--vh": windowHeight * 0.01,
+  } as React.CSSProperties;
+  return (
+    <div id="homepage-container" style={styles}>
+      <Helmet>
+        <style type="text/css">
+          {`.container-react {
+            padding-bottom: 0 !important;
+          }
+          .container-react-main, [role="main"] {
+            padding: 0;
+            max-width: none !important;
+          }
+          .footer {
+            display: none;
+          }`}
+        </style>
+      </Helmet>
+      <div className="homepage-upper" ref={homepageUpperRef}>
+        <Blob
+          width={200}
+          height={200}
+          randomness={1.5}
+          className="homepage-upper-vector-1"
+          style={{ animationDelay: "-10s" }}
+        />
+        <Blob
+          width={300}
+          height={300}
+          randomness={2.5}
+          className="homepage-upper-vector-2"
+          style={{ animationDelay: "-7s" }}
+        />
+        <Blob
+          width={100}
+          height={100}
+          randomness={2}
+          className="homepage-upper-vector-3"
+          style={{
+            animationDelay: "-3s",
+            animationDuration: "10s",
+          }}
+        />
+        <Blob
+          width={350}
+          height={350}
+          randomness={2}
+          className="homepage-upper-vector-4"
+          style={{
+            animationDuration: "30s",
+            width: "350px",
+            height: "200px",
+          }}
+        />
+        <img
+          className="homepage-upper-headphone"
+          src="/static/img/homepage/LB-Headphone.png"
+          alt="ListenBrainz Logo"
+        />
+        <div className="homepage-upper-grey-box" />
+
+        {isNumber(listenCount) && listenCount > 0 && (
+          <h1 className="listen-container">
+            <NumberCounter count={listenCount} />
+            global listens.
+          </h1>
+        )}
+        <div className="homepage-info">
+          <h1>
+            Listen together
+            <br />
+            with ListenBrainz
+          </h1>
+
+          {createAccountButton}
+
+          <div className="homepage-info-text">
+            <p>Track, explore, visualise and share the music you listen to.</p>
+            <p>Follow your favourites and discover great new music.</p>
+          </div>
+          <div className="homepage-info-links">
+            <Link to="/login/">Login</Link>
+            <span>|</span>
+            <Link to="/about/">About ListenBrainz</Link>
+          </div>
+        </div>
+        <FontAwesomeIcon
+          icon={faSortDown}
+          className="homepage-arrow"
+          size="3x"
+          onClick={() => {
+            homepageLowerRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+        />
+      </div>
+
+      <div className="homepage-lower" ref={homepageLowerRef}>
+        <FontAwesomeIcon
+          icon={faSortUp}
+          className="homepage-arrow"
+          size="3x"
+          onClick={() => {
+            homepageUpperRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+        />
+
+        <Blob
+          width={250}
+          height={250}
+          randomness={1.5}
+          className="homepage-lower-vector-1"
+        />
+        <Blob
+          width={300}
+          height={300}
+          randomness={2}
+          className="homepage-lower-vector-2"
+          style={{ animationDelay: "-7s" }}
+        />
+        <Blob
+          width={100}
+          height={100}
+          randomness={1.6}
+          className="homepage-lower-vector-3"
+          style={{
+            animationDelay: "-3s",
+            animationDuration: "10s",
+          }}
+        />
+        <Blob
+          width={250}
+          height={250}
+          randomness={1.5}
+          className="homepage-lower-vector-4"
+        />
+        <img
+          className="homepage-lower-speaker"
+          src="/static/img/homepage/LB-Speaker.png"
+          alt="ListenBrainz Logo"
+        />
+        <div className="homepage-lower-grey-box" />
+
+        {isNumber(artistCount) && artistCount > 0 && (
+          <h1 className="listen-container">
+            Dig deeper with
+            <div id="artist-count-container">
+              <NumberCounter count={artistCount} /> artists.
+            </div>
+          </h1>
+        )}
+        <div className="homepage-info">
+          <h1>
+            Connect your music
+            <br />
+            with ListenBrainz
+          </h1>
+
+          {createAccountButton}
+
+          <div className="homepage-info-text">
+            <p>
+              Discover your music by linking to the largest open source music
+              database.
+            </p>
+            <p>
+              Unlock accurate and detailed metadata for millions of songs,
+              albums and artists.
+            </p>
+          </div>
+          <div className="homepage-info-links">
+            <Link to="/login/">Login</Link>
+            <span>|</span>
+            <Link to="/about/">About ListenBrainz</Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function HomePageWrapper() {
+  const { currentUser } = React.useContext(GlobalAppContext);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const redirectParam = searchParams.get("redirect");
+
+  if (
+    currentUser?.name &&
+    (redirectParam === "true" || redirectParam === null)
+  ) {
+    return <Navigate to={`/user/${currentUser.name}/`} replace />;
+  }
+  return <HomePage />;
+}
+
+export default HomePage;

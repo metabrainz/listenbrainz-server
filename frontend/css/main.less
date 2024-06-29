@@ -1,5 +1,6 @@
 @import "theme/theme.less";
 @import "colors.less";
+@import "homepage.less";
 @import "listens-page.less";
 @import "pinned-recordings.less";
 @import "playlists.less";
@@ -21,6 +22,7 @@
 @import "fresh-releases.less";
 @import "rc-slider.less";
 @import "add-listen-modal.less";
+@import "import-playlist-modal.less";
 @import "DateTimePicker.less";
 @import "TimePicker.less";
 @import "explore.less";
@@ -34,6 +36,7 @@
 @import "stats-art-creator.less";
 @import "entity-pages.less";
 @import "release-card.less";
+@import "search.less";
 
 @icon-font-path: "/static/fonts/";
 
@@ -45,7 +48,7 @@
 
 pre code.hljs {
   max-height: 50vh;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .table {
@@ -61,6 +64,9 @@ pre code.hljs {
 .btn {
   .glyphicon {
     margin-right: 4px;
+  }
+  &.dropdown-toggle {
+    border-radius: 4px;
   }
 }
 
@@ -108,12 +114,15 @@ pre code.hljs {
 }
 
 // Content Wrapper
-.wrapper {
+.container-react-main {
   min-height: 70vh;
+  .container-fixed();
 }
 
 /* Footer */
 .footer {
+  padding-left: 25px;
+  width: 100%;
   background: #fff;
   color: #000000;
   padding-bottom: 10px;
@@ -141,7 +150,7 @@ pre code.hljs {
 
 .section-line {
   padding-top: 30px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid @gray-light;
 }
 
 .text-brand {
@@ -166,33 +175,6 @@ pre code.hljs {
 .color-gray {
   text-decoration: none;
   color: #000000;
-}
-
-#homepage {
-  #big-logo {
-    .pull-left;
-    .visible-lg;
-    height: 128px;
-    margin-top: 27px;
-    margin-bottom: 6px;
-    margin-right: 26px;
-  }
-
-  #twitter-block > iframe {
-    width: 100%;
-  }
-}
-
-#user-profile {
-  #player {
-    margin-top: 20px;
-    width: 100%;
-    height: 720px;
-
-    @media (max-width: @screen-sm-max) {
-      height: 80px;
-    }
-  }
 }
 
 .mt-5 {
@@ -343,16 +325,17 @@ pre code.hljs {
 .search-dropdown {
   display: block;
   position: absolute;
-  width: calc(100% - 40px);
+  right: 0;
+  max-width: 100%;
   z-index: 6;
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
   list-style: none;
-  border: 1px solid #ccc; // IE8 fallback
+  border: 1px solid @gray-light; // IE8 fallback
   border: 1px solid rgba(0, 0, 0, 0.15);
   background-color: @white-background;
   max-height: 102px;
   /*overflow: hidden;*/
-  overflow-y: scroll;
+  overflow-y: auto;
 
   // Links within the dropdown menu
   > a,
@@ -370,7 +353,7 @@ pre code.hljs {
 
     &:hover {
       color: @white-background;
-      background-color: #eb743b;
+      background-color: @orange;
     }
   }
 }
@@ -409,4 +392,10 @@ pre code.hljs {
 
 .btn-rounded {
   border-radius: 3em;
+}
+
+.Importer {
+  border: 2px solid #a0a0a0;
+  padding: 1rem;
+  border-radius: 5px;
 }

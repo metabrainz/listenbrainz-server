@@ -507,6 +507,7 @@ export default class ColorWheel extends React.Component<
 
     return dynamicCursor ? (
       <canvas
+        data-testid="colour-picker"
         id="colour-picker"
         ref={this.canvasEl}
         onClick={this.onCanvasClick}
@@ -517,6 +518,7 @@ export default class ColorWheel extends React.Component<
     ) : (
       <canvas
         id="colour-picker"
+        data-testid="colour-picker"
         ref={this.canvasEl}
         onClick={this.onCanvasClick}
         width={`${radius * 2}px`}

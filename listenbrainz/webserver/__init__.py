@@ -187,24 +187,8 @@ def create_app(debug=None):
     return app
 
 
-def create_web_app(debug=None):
-    """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
-    app = create_app(debug=debug)
-
-    # Static files
-    import listenbrainz.webserver.static_manager
-    static_manager.read_manifest()
-    app.static_folder = '/static'
-
-    from listenbrainz.webserver.utils import get_global_props
-    app.context_processor(lambda: dict(
-        get_static_path=static_manager.get_static_path,
-        global_props=get_global_props()
-    ))
-
-    _register_blueprints(app)
-
-    # Admin views
+def init_admin(app):
+    """Initialize admin interface."""
     from listenbrainz import model
     model.db.init_app(app)
 
@@ -227,8 +211,32 @@ def create_web_app(debug=None):
     admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
     admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
     admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
-    admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
-    admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))
+
+    # can be empty incase timescale listenstore is down
+    if app.config['SQLALCHEMY_TIMESCALE_URI']:
+        # playlist admin views require timescale database, only register if listenstore is available
+        admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
+        admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))
+
+
+def create_web_app(debug=None):
+    """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
+    app = create_app(debug=debug)
+
+    # Static files
+    import listenbrainz.webserver.static_manager
+    static_manager.read_manifest()
+    app.static_folder = '/static'
+
+    from listenbrainz.webserver.utils import get_global_props
+    app.context_processor(lambda: dict(
+        get_static_path=static_manager.get_static_path,
+        global_props=get_global_props()
+    ))
+
+    _register_blueprints(app)
+
+    init_admin(app)
 
     @app.before_request
     def before_request_gdpr_check():
@@ -238,7 +246,8 @@ def create_web_app(debug=None):
                 or request.path == url_for('settings.index', path='export') \
                 or request.path == url_for('login.logout') \
                 or request.path.startswith('/static') \
-                or request.path.startswith('/1'):
+                or request.path.startswith('/1') \
+                or request.method in ['OPTIONS', 'POST']:
             return
         # otherwise if user is logged in and hasn't agreed to gdpr,
         # redirect them to agree to terms page.
@@ -256,6 +265,16 @@ def create_api_compat_app(debug=None):
     """
 
     app = create_app(debug=debug)
+
+    import listenbrainz.webserver.static_manager as static_manager
+    static_manager.read_manifest()
+    app.static_folder = '/static'
+
+    from listenbrainz.webserver.utils import get_global_props
+    app.context_processor(lambda: dict(
+        get_static_path=static_manager.get_static_path,
+        global_props=get_global_props()
+    ))
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp
@@ -306,9 +325,10 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.playlist import playlist_bp
     app.register_blueprint(playlist_bp, url_prefix='/playlist')
 
-    from listenbrainz.webserver.views.settings import settings_bp, profile_bp
+    from listenbrainz.webserver.views.settings import settings_bp
     app.register_blueprint(settings_bp, url_prefix='/settings')
-    app.register_blueprint(profile_bp, url_prefix='/profile')
+    # Retro-compatible 'profile' endpoint
+    app.register_blueprint(settings_bp, url_prefix='/profile', name='profile')
 
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
     app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')

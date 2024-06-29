@@ -14,6 +14,7 @@ from listenbrainz_spark.hdfs.utils import upload_to_HDFS
 from listenbrainz_spark.hdfs.utils import rename
 from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader, TEMP_DIR_PATH as HDFS_TEMP_DIR
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
+from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
@@ -155,3 +156,26 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         # dump is uploaded to HDFS_TEMP_DIR/archive_name
         archive_name = Path(archive).stem
         return str(Path(HDFS_TEMP_DIR).joinpath(archive_name))
+
+    def process_full_listens_dump(self):
+        """ Partition the imported full listens parquet dump by year and month """
+        query = f"""
+            select extract(year from listened_at) as year
+                 , extract(month from listened_at) as month
+                 , listened_at
+                 , user_id
+                 , recording_msid
+                 , artist_name
+                 , artist_credit_id
+                 , release_name
+                 , release_mbid
+                 , recording_name
+                 , recording_mbid
+                 , artist_credit_mbids
+              from parquet.`{path.LISTENBRAINZ_NEW_DATA_DIRECTORY}`
+        """
+        run_query(query) \
+            .write \
+            .partitionBy("year", "month") \
+            .mode("overwrite") \
+            .parquet(path.LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)

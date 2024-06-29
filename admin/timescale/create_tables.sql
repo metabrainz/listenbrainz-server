@@ -256,6 +256,12 @@ CREATE TABLE similarity.artist_credit_mbids (
     score INT NOT NULL
 );
 
+CREATE TABLE similarity.overhyped_artists (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    artist_mbid             UUID NOT NULL,
+    factor                  FLOAT
+);
+
 CREATE TABLE tags.lb_tag_radio (
     tag                     TEXT NOT NULL,
     recording_mbid          UUID NOT NULL,

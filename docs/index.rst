@@ -43,6 +43,7 @@ Contents
    developers/spark-architecture
    developers/mapping
    developers/commands
+   developers/troubleshooting
 
 .. toctree::
    :maxdepth: 2
@@ -53,6 +54,7 @@ Contents
    maintainers/dumps
    maintainers/mapping
    maintainers/spotify-reader
+   maintainers/rabbitmq
    maintainers/updating-prod-db-schema
    maintainers/pull-requests
 

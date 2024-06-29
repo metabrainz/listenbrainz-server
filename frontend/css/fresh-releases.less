@@ -15,6 +15,7 @@
 
 .fresh-releases-pill-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
@@ -251,7 +252,7 @@
 .release-card-grid-title::after {
   content: "";
   flex: 1;
-  border-bottom: 1px solid #d9d9d9;
+  border-bottom: 1px solid @gray-light;
 }
 
 .release-card-grid-title:not(:empty)::before {
@@ -268,30 +269,6 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-}
-
-.toggle-sidebar-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 9999;
-  width: 64px;
-  height: 64px;
-  padding: 10px;
-  border-radius: 50%;
-  border-color: black;
-  cursor: pointer;
-  background-color: #fff;
-  color: #353070;
-
-  @media screen and (min-width: @screen-md) {
-    display: none;
-  }
-}
-
-.toggle-sidebar-button.open {
-  background-color: #353070;
-  color: #fff;
 }
 
 .no-release {
@@ -341,7 +318,7 @@
   border-radius: 10px;
   height: max-content;
   max-height: 100vh;
-  overflow-y: scroll;
+  overflow-y: auto;
   z-index: 9998;
   right: 0;
 

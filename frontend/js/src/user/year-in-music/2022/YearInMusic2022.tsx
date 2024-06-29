@@ -1,4 +1,3 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
@@ -24,19 +23,12 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import NiceModal from "@ebay/nice-modal-react";
-import ErrorBoundary from "../../../utils/ErrorBoundary";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../../utils/GlobalAppContext";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
 
-import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
-
-import {
-  generateAlbumArtThumbnailLink,
-  getPageProps,
-} from "../../../utils/utils";
+import { generateAlbumArtThumbnailLink } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
 import MagicShareButton from "./components/MagicShareButton";
 
@@ -46,10 +38,12 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
+import SEO, { YIMYearMetaTags } from "../SEO";
+import { RouteQuery } from "../../../utils/Loader";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
-  yearInMusicData: {
+  yearInMusicData?: {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
@@ -101,6 +95,11 @@ export type YearInMusicProps = {
   };
 };
 
+type YearInMusicLoaderData = {
+  user: YearInMusicProps["user"];
+  data: YearInMusicProps["yearInMusicData"];
+};
+
 export type YearInMusicState = {
   followingList: Array<string>;
   selectedMetric: "artist" | "listen";
@@ -125,6 +124,13 @@ export default class YearInMusic extends React.Component<
     await this.getFollowing();
   }
 
+  async componentDidUpdate(prevProps: YearInMusicProps) {
+    const { user } = this.props;
+    if (user !== prevProps.user) {
+      await this.getFollowing();
+    }
+  }
+
   private getPlaylistByName(
     playlistName: string,
     description?: string
@@ -145,7 +151,13 @@ export default class YearInMusic extends React.Component<
       /* Add a track image if it exists in the `{playlistName}-coverart` key */
       playlist.track = playlist.track.map((track: JSPFTrack) => {
         const newTrack = { ...track };
-        const track_id = track.identifier;
+        let track_id;
+        if (Array.isArray(track.identifier)) {
+          // eslint-disable-next-line prefer-destructuring
+          track_id = track.identifier[0];
+        } else {
+          track_id = track.identifier;
+        }
         const found = track_id.match(uuidMatch);
         if (found) {
           const recording_mbid = found[0];
@@ -331,6 +343,8 @@ export default class YearInMusic extends React.Component<
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
         <div id="year-in-music" className="yim-2022 container">
+          <SEO year={2022} userName={user?.name} />
+          <YIMYearMetaTags year={2022} />
           <div id="main-header" className="flex-center">
             <img
               className="img-responsive header-image"
@@ -345,12 +359,14 @@ export default class YearInMusic extends React.Component<
             </h3>
             <p className="center-p">
               Check out how you can submit listens by{" "}
-              <a href="/settings/music-services/details/">
+              <Link to="/settings/music-services/details/">
                 connecting a music service
-              </a>{" "}
+              </Link>{" "}
               or{" "}
-              <a href="/settings/import/">importing your listening history</a>,
-              and come back next year!
+              <Link to="/settings/import/">
+                importing your listening history
+              </Link>
+              , and come back next year!
             </p>
           </div>
         </div>
@@ -480,6 +496,8 @@ export default class YearInMusic extends React.Component<
     const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2022`;
     return (
       <div id="year-in-music" className="yim-2022">
+        <SEO year={2022} userName={user?.name} />
+        <YIMYearMetaTags year={2022} />
         <div id="main-header" className="flex-center">
           <img
             className="img-responsive header-image"
@@ -590,17 +608,13 @@ export default class YearInMusic extends React.Component<
                             />
                             <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                             <div title={release.release_name}>
-                              <a
-                                href={
-                                  release.release_mbid
-                                    ? `/release/${release.release_mbid}/`
-                                    : undefined
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {release.release_name}
-                              </a>
+                              {release.release_mbid ? (
+                                <Link to={`/release/${release.release_mbid}/`}>
+                                  {release.release_name}
+                                </Link>
+                              ) : (
+                                release.release_name
+                              )}
                               <div className="small text-muted">
                                 {release.artist_name}
                               </div>
@@ -1165,7 +1179,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <a href="/explore/cover-art-collage/2022">
+            <Link to="/explore/cover-art-collage/2022/">
               <LazyLoadImage
                 src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
                 placeholderSrc="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
@@ -1176,7 +1190,7 @@ export default class YearInMusic extends React.Component<
                 loading="lazy"
                 decoding="async"
               />
-            </a>
+            </Link>
           </div>
           <div className="container closing-remarks">
             <span className="bold">
@@ -1220,7 +1234,7 @@ export default class YearInMusic extends React.Component<
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <a href={`/user/${user.name}/year-in-music/2021`}>2021</a>
+            <Link to={`/user/${user.name}/year-in-music/2021/`}>2021</Link>
           </div>
           <div className="thanks-kc-green">
             With thanks to KC Green for the original &apos;this is fine&apos;
@@ -1239,24 +1253,18 @@ export default class YearInMusic extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, reactProps, globalAppContext } = await getPageProps();
-
-  const { user, data: yearInMusicData } = reactProps;
-
-  const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <YearInMusicWithAlertNotifications
-            user={user}
-            yearInMusicData={yearInMusicData}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
+export function YearInMusicWrapper() {
+  const location = useLocation();
+  const params = useParams();
+  const { data } = useQuery<YearInMusicLoaderData>(
+    RouteQuery(["year-in-music-2022", params], location.pathname)
   );
-});
+  const { user, data: yearInMusicData } = data || {};
+  const fallbackUser = { name: "" };
+  return (
+    <YearInMusic
+      user={user ?? fallbackUser}
+      yearInMusicData={yearInMusicData}
+    />
+  );
+}

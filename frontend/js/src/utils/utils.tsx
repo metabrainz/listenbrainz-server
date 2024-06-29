@@ -4,9 +4,10 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
-import SpotifyAPIService from "./SpotifyAPIService";
 import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
@@ -31,13 +32,13 @@ const searchForSpotifyTrack = async (
   }
   let queryString = `type=track&q=`;
   if (trackName) {
-    queryString += `track:${encodeURIComponent(trackName)}`;
+    queryString += encodeURIComponent(trackName);
   }
   if (artistName) {
-    queryString += ` artist:${encodeURIComponent(artistName)}`;
+    queryString += encodeURIComponent(` artist:${artistName}`);
   }
   if (releaseName) {
-    queryString += ` album:${encodeURIComponent(releaseName)}`;
+    queryString += encodeURIComponent(` album:${releaseName}`);
   }
 
   const response = await fetch(
@@ -208,6 +209,7 @@ const getRecordingMBID = (listen: Listen): string | undefined =>
 
 const getReleaseMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.release_mbid") ??
+  _.get(listen, "track_metadata.release_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.release_mbid");
 
 const getReleaseGroupMBID = (listen: Listen): string | undefined =>
@@ -229,7 +231,8 @@ const getTrackDurationInMs = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "duration", "");
 
 const getArtistName = (
-  listen?: Listen | JSPFTrack | PinnedRecording
+  listen?: Listen | JSPFTrack | PinnedRecording,
+  firstArtistOnly: boolean = false
 ): string => {
   const artists: MBIDMappingArtist[] = _.get(
     listen,
@@ -237,6 +240,9 @@ const getArtistName = (
     []
   );
   if (artists?.length) {
+    if (firstArtistOnly) {
+      return artists[0].artist_credit_name;
+    }
     return artists
       .map((artist) => `${artist.artist_credit_name}${artist.join_phrase}`)
       .join("");
@@ -252,14 +258,12 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
     <>
       {artists.map((artist) => (
         <>
-          <a
-            href={`/artist/${artist.artist_mbid}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to={`/artist/${artist.artist_mbid}/`}
             title={artist.artist_credit_name}
           >
             {artist.artist_credit_name}
-          </a>
+          </Link>
           {artist.join_phrase}
         </>
       ))}
@@ -277,15 +281,7 @@ const getStatsArtistLink = (
   }
   const firstArtist = _.first(artist_mbids);
   if (firstArtist) {
-    return (
-      <a
-        href={`/artist/${firstArtist}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {artist_name}
-      </a>
-    );
+    return <Link to={`/artist/${firstArtist}/`}>{artist_name}</Link>;
   }
   return artist_name;
 };
@@ -492,7 +488,7 @@ export async function fetchMusicBrainzGenres() {
     const genresList = await response.text();
     const fetchedGenres = Array.from(genresList.split("\n"));
     if (fetchedGenres.length) {
-      localStorage.setItem(
+      localStorage?.setItem(
         "musicbrainz-genres",
         JSON.stringify({
           creation_date: Date.now(),
@@ -510,8 +506,8 @@ export async function fetchMusicBrainzGenres() {
 
 async function getOrFetchMBGenres(forceExpiry = false) {
   // Try to load genres from local storage, fetch them otherwise
-  const localStorageString = localStorage.getItem("musicbrainz-genres");
-  if (localStorageString === null) {
+  const localStorageString = localStorage?.getItem("musicbrainz-genres");
+  if (!localStorageString) {
     // nothing saved, fetch the genres and save them
     const fetchedGenres = await fetchMusicBrainzGenres();
     return fetchedGenres;
@@ -543,6 +539,7 @@ type GlobalAppProps = {
   soundcloud?: SoundCloudUser;
   critiquebrainz?: MetaBrainzProjectUser;
   musicbrainz?: MetaBrainzProjectUser;
+  appleMusic?: AppleMusicUser;
   user_preferences?: UserPreferences;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
@@ -589,18 +586,21 @@ const getPageProps = async (): Promise<{
       soundcloud,
       critiquebrainz,
       musicbrainz,
+      appleMusic,
       sentry_traces_sample_rate,
       sentry_dsn,
+      user_preferences,
     } = globalReactProps;
 
-    let { user_preferences } = globalReactProps;
-
-    user_preferences = { ...user_preferences, saveData: false };
+    const userPreferences = {
+      ...user_preferences,
+      saveData: false,
+    };
 
     if ("connection" in navigator) {
       // @ts-ignore
       if (navigator.connection?.saveData === true) {
-        user_preferences.saveData = true;
+        userPreferences.saveData = true;
       }
     }
 
@@ -615,12 +615,14 @@ const getPageProps = async (): Promise<{
       youtubeAuth: youtube,
       soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
+      appleAuth: appleMusic,
       musicbrainzAuth: {
         ...musicbrainz,
         refreshMBToken: async function refreshMBToken() {
           try {
             const newToken = await apiService.refreshMusicbrainzToken();
             _.set(globalAppContext, "musicbrainzAuth.access_token", newToken);
+            return newToken;
           } catch (err) {
             // eslint-disable-next-line no-console
             console.error(
@@ -628,9 +630,10 @@ const getPageProps = async (): Promise<{
               err.toString()
             );
           }
+          return undefined;
         },
       },
-      userPreferences: user_preferences,
+      userPreferences,
       musicbrainzGenres: await getOrFetchMBGenres(),
       recordingFeedbackManager: new RecordingFeedbackManager(
         apiService,
@@ -642,6 +645,8 @@ const getPageProps = async (): Promise<{
       sentry_traces_sample_rate,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err);
     // Show error to the user and ask to reload page
     const errorMessage = `Please refresh the page.
 	If the problem persists, please contact us.
@@ -788,9 +793,9 @@ const getAlbumArtFromReleaseMBID = async (
     if (CAAResponse.status === 404 && useReleaseGroupFallback) {
       let releaseGroupMBID = useReleaseGroupFallback;
       if (!_.isString(useReleaseGroupFallback) && APIService) {
-        const releaseGroupResponse = await APIService.lookupMBRelease(
+        const releaseGroupResponse = (await APIService.lookupMBRelease(
           userSubmittedReleaseMBID
-        );
+        )) as MusicBrainzRelease & WithReleaseGroup;
         releaseGroupMBID = releaseGroupResponse["release-group"].id;
       }
       if (!_.isString(releaseGroupMBID)) {
@@ -809,6 +814,31 @@ const getAlbumArtFromReleaseMBID = async (
   return undefined;
 };
 
+const getAlbumArtFromSpotifyTrackID = async (
+  spotifyTrackID: string,
+  spotifyUser?: SpotifyUser
+): Promise<string | undefined> => {
+  const APIBaseURI = "https://api.spotify.com/v1";
+  if (!spotifyUser || !spotifyTrackID) {
+    return undefined;
+  }
+  try {
+    const response = await fetch(`${APIBaseURI}/tracks/${spotifyTrackID}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${spotifyUser?.access_token}`,
+      },
+    });
+    if (response.ok) {
+      const track: SpotifyTrack = await response.json();
+      return track.album?.images?.[0]?.url;
+    }
+  } catch (error) {
+    return undefined;
+  }
+  return undefined;
+};
+
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
   spotifyUser?: SpotifyUser,
@@ -820,9 +850,7 @@ const getAlbumArtFromListenMetadata = async (
     SpotifyPlayer.hasPermissions(spotifyUser)
   ) {
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
-    return new SpotifyAPIService(spotifyUser).getAlbumArtFromSpotifyTrackID(
-      trackID
-    );
+    return getAlbumArtFromSpotifyTrackID(trackID, spotifyUser);
   }
   if (YoutubePlayer.isListenFromThisService(listen)) {
     const videoId = YoutubePlayer.getVideoIDFromListen(listen);
@@ -833,6 +861,7 @@ const getAlbumArtFromListenMetadata = async (
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
   const userSubmittedReleaseMBID =
+    listen.track_metadata?.release_mbid ??
     listen.track_metadata?.additional_info?.release_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
@@ -989,7 +1018,14 @@ export function getReviewEventContent(
           />
         </div>
       )}
-      <div className="text">{additionalContent}</div>
+      <div className="text">
+        <ReactMarkdown
+          disallowedElements={["h1", "h2", "h3", "h4", "h5", "h6"]}
+          unwrapDisallowed
+        >
+          {additionalContent}
+        </ReactMarkdown>
+      </div>
       <div className="author read-more">
         by {userName}
         <a
@@ -1023,6 +1059,16 @@ export function getPersonalRecommendationEventContent(
       {additionalContent}
     </>
   );
+}
+
+export function getObjectForURLSearchParams(
+  urlSearchParams: URLSearchParams
+): Record<string, string> {
+  const object: Record<string, string> = {};
+  urlSearchParams.forEach((value, key) => {
+    object[key] = value;
+  });
+  return object;
 }
 
 export {

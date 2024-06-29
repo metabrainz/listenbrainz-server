@@ -11,7 +11,8 @@ callable = application
 chdir = /code/listenbrainz
 enable-threads = true
 processes = {{template "KEY" "processes"}}
-listen = 1024
+threads = {{template "KEY" "threads"}}
+listen = 2048
 log-x-forwarded-for=true
 disable-logging = true
 ; quit uwsgi if the python app fails to load

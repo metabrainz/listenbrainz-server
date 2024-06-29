@@ -19,7 +19,12 @@ Clone listenbrainz-server
 -------------------------
 
 ListenBrainz is hosted on GitHub at https://github.com/metabrainz/listenbrainz-server/.
-You can use ``git`` to clone it (or your own fork) to your computer
+You can use ``git`` to clone it (or your own fork) to your computer.
+
+.. note::
+    Windows users are advised to clone the repository in their WSL2 file system to avoid code watcher issues.
+    Please refer to :ref:`run docker inside WSL <Windows Docker Installation>` for more
+    information.
 
 .. code-block:: bash
 
@@ -81,6 +86,13 @@ text editor and look for this section.
 Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
+
+.. note:: 
+    Make sure the ``MUSICBRAINZ_CLIENT_ID`` and ``MUSICBRAINZ_CLIENT_SECRET`` parameters are set properly, 
+    failing to do so will result in a basic browser auth popup like the one below:
+.. image:: ../images/auth-popup.png
+    :width: 200
+    :alt: Screenshot showing the auth popup.
 
 To use the Last.fm importer you need an API account at Last.fm. You can
 register for one at the `Last.fm API page`_. Look for the following section in ``config.py``.
@@ -256,15 +268,15 @@ This builds and runs the containers needed for the tests. This script configures
 test-specific data volumes so that test data is isolated from your development
 data. Note that all tests are run: Unit tests and integration tests.
 
-To run tests faster, you can use some options to start up the test infrastructure
+To run tests faster, you can use some options to start up the test infrastructure 
 once so that subsequent running of the tests is faster:
 
 .. code-block:: bash
 
-   ./test.sh -u # build unit test containers, start up and initialise the database
-   ./test.sh    # run tests, do this as often as you need to
-   ./test.sh -s # stop test containers, but don't remove them
-   ./test.sh -d # stop and remove all test containers
+   ./test.sh -u                                 # build unit test containers, start up and initialise the database
+   ./test.sh [path-to-tests-file-or-directory]  # run specific tests, do this as often as you need to
+   ./test.sh -s                                 # stop test containers, but don't remove them
+   ./test.sh -d                                 # stop and remove all test containers
 
 If you made any changes to the frontend, you can run the tests for frontend using
 

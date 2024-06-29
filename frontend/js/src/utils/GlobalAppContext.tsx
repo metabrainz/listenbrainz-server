@@ -1,4 +1,4 @@
-import { createContext, createRef } from "react";
+import { createContext } from "react";
 import APIService from "./APIService";
 import RecordingFeedbackManager from "./RecordingFeedbackManager";
 
@@ -10,8 +10,9 @@ export type GlobalAppContextT = {
   youtubeAuth?: YoutubeUser;
   soundcloudAuth?: SoundCloudUser;
   critiquebrainzAuth?: MetaBrainzProjectUser;
+  appleAuth?: AppleMusicUser;
   musicbrainzAuth?: MetaBrainzProjectUser & {
-    refreshMBToken: () => Promise<void>;
+    refreshMBToken: () => Promise<string | undefined>;
   };
   userPreferences?: UserPreferences;
   musicbrainzGenres?: string[];
@@ -19,18 +20,25 @@ export type GlobalAppContextT = {
 };
 const apiService = new APIService(`${window.location.origin}/1`);
 
-const GlobalAppContext = createContext<GlobalAppContextT>({
+export const defaultGlobalContext: GlobalAppContextT = {
   APIService: apiService,
   websocketsUrl: "",
   currentUser: {} as ListenBrainzUser,
   spotifyAuth: {},
   youtubeAuth: {},
   soundcloudAuth: {},
+  appleAuth: {},
   critiquebrainzAuth: {},
-  musicbrainzAuth: { refreshMBToken: async () => {} },
+  musicbrainzAuth: {
+    refreshMBToken: async () => {
+      return undefined;
+    },
+  },
   userPreferences: {},
   musicbrainzGenres: [],
   recordingFeedbackManager: new RecordingFeedbackManager(apiService),
-});
+};
+
+const GlobalAppContext = createContext<GlobalAppContextT>(defaultGlobalContext);
 
 export default GlobalAppContext;

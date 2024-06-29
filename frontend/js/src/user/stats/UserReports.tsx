@@ -1,35 +1,35 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
 import {
   faGlobe,
   faInfoCircle,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import ErrorBoundary from "../../utils/ErrorBoundary";
+import { useLoaderData, useNavigate } from "react-router-dom";
+import type { NavigateFunction } from "react-router-dom";
+import { Helmet } from "react-helmet";
+
 import Pill from "../../components/Pill";
 import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
 import UserDailyActivity from "./components/UserDailyActivity";
 import UserArtistMap from "./components/UserArtistMap";
-import { getPageProps } from "../../utils/utils";
 import { getAllStatRanges } from "./utils";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
   apiUrl: string;
+  navigate: NavigateFunction;
 };
 
 export type UserReportsState = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
 };
+
+type UserReportsLoaderData = UserReportsProps;
 
 export default class UserReports extends React.Component<
   UserReportsProps,
@@ -98,15 +98,23 @@ export default class UserReports extends React.Component<
 
   render() {
     const { range, user } = this.state;
-    const { apiUrl } = this.props;
+    const { apiUrl, user: initialUser, navigate } = this.props;
     const { currentUser } = this.context;
 
     const ranges = getAllStatRanges();
     const userOrLoggedInUser: string | undefined =
       user?.name ?? currentUser?.name;
 
+    const userStatsTitle =
+      user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
+
     return (
       <div>
+        <Helmet>
+          <title>
+            {userOrLoggedInUser ? userStatsTitle : "Sitewide"} Stats
+          </title>
+        </Helmet>
         <div className="tertiary-nav dragscroll">
           <div>
             {Array.from(ranges, ([stat_type, stat_name]) => {
@@ -126,18 +134,22 @@ export default class UserReports extends React.Component<
               <button
                 type="button"
                 onClick={() => {
-                  this.setUser(user?.name ?? currentUser?.name);
+                  navigate(
+                    `/user/${
+                      initialUser?.name ?? currentUser?.name
+                    }/stats/?range=${range}`
+                  );
                 }}
                 className={`pill secondary ${user ? "active" : ""}`}
               >
                 <FontAwesomeIcon icon={faUser} />{" "}
-                {user?.name ?? currentUser?.name}
+                {initialUser?.name ?? currentUser?.name}
               </button>
             )}
             <button
               type="button"
               onClick={() => {
-                this.setUser();
+                navigate(`/statistics/?range=${range}`);
               }}
               className={`pill secondary ${!user ? "active" : ""}`}
             >
@@ -157,96 +169,63 @@ export default class UserReports extends React.Component<
           </a>
         </small>
         <section id="listening-activity">
-          <ErrorBoundary>
-            <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
-          </ErrorBoundary>
+          <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
         </section>
         <section id="top-entity">
           <div className="row">
             <div className="col-md-4">
-              <ErrorBoundary>
-                <UserTopEntity
-                  range={range}
-                  entity="artist"
-                  apiUrl={apiUrl}
-                  user={user}
-                  terminology="artist"
-                />
-              </ErrorBoundary>
+              <UserTopEntity
+                range={range}
+                entity="artist"
+                apiUrl={apiUrl}
+                user={user}
+                terminology="artist"
+              />
             </div>
             <div className="col-md-4">
-              <ErrorBoundary>
-                <UserTopEntity
-                  range={range}
-                  entity="release-group"
-                  apiUrl={apiUrl}
-                  user={user}
-                  terminology="album"
-                />
-              </ErrorBoundary>
+              <UserTopEntity
+                range={range}
+                entity="release-group"
+                apiUrl={apiUrl}
+                user={user}
+                terminology="album"
+              />
             </div>
             <div className="col-md-4">
-              <ErrorBoundary>
-                <UserTopEntity
-                  range={range}
-                  entity="recording"
-                  apiUrl={apiUrl}
-                  user={user}
-                  terminology="track"
-                />
-              </ErrorBoundary>
+              <UserTopEntity
+                range={range}
+                entity="recording"
+                apiUrl={apiUrl}
+                user={user}
+                terminology="track"
+              />
             </div>
           </div>
         </section>
         {user && (
           <section id="daily-activity">
-            <ErrorBoundary>
-              <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
-            </ErrorBoundary>
+            <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
           </section>
         )}
         <section id="artist-origin">
-          <ErrorBoundary>
-            <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
-          </ErrorBoundary>
+          <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
         </section>
       </div>
     );
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { user } = reactProps;
-  const UserReportsPageWithAlertNotifications = withAlertNotifications(
-    UserReports
+export function UserReportsWrapper() {
+  const data = useLoaderData() as UserReportsLoaderData;
+  const { APIService } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
+  return (
+    <UserReports {...data} apiUrl={APIService.APIBaseURI} navigate={navigate} />
   );
+}
 
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserReportsPageWithAlertNotifications
-            apiUrl={globalAppContext.APIService.APIBaseURI}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function StatisticsPage() {
+  const { APIService } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
+  return <UserReports apiUrl={APIService.APIBaseURI} navigate={navigate} />;
+}

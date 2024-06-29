@@ -55,4 +55,6 @@ CREATE UNIQUE INDEX caa_id_ndx_release_color ON release_color (caa_id);
 
 CREATE UNIQUE INDEX user_id_ndx_user_setting ON user_setting (user_id);
 
+CREATE INDEX background_tasks_user_id_task_type_idx ON background_tasks (user_id, task);
+
 COMMIT;
