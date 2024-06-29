@@ -29,6 +29,7 @@ import {
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
 import Queue from "./Queue";
+import MusicPlayer from "./MusicPlayer";
 
 type BrainzPlayerUIProps = {
   currentDataSourceName?: string;
@@ -189,6 +190,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const playbackDisabledText = "Playback disabled in preferences";
 
   const [showQueue, setShowQueue] = React.useState(false);
+  const [showMusicPlayer, setShowMusicPlayer] = React.useState(false);
 
   const toggleRepeatMode = () => {
     dispatch({ type: "TOGGLE_REPEAT_MODE" });
@@ -199,10 +201,30 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       <div className={`queue ${showQueue ? "show" : ""}`}>
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
+      <div className={`music-player ${!showMusicPlayer ? "show" : ""}`}>
+        <MusicPlayer
+          onHide={() => setShowMusicPlayer(false)}
+          toggleQueue={() => setShowQueue((prevShowQueue) => !prevShowQueue)}
+          playPreviousTrack={playPreviousTrack}
+          playNextTrack={playNextTrack}
+          togglePlay={togglePlay}
+          seekToPositionMs={seekToPositionMs}
+          trackName="Track Name"
+          artistName="Artist Name"
+          queueRepeatMode={queueRepeatMode}
+          progressMs={6000}
+          durationMs={10000}
+          playerPaused={playerPaused}
+          disabled={disabled}
+        />
+      </div>
       <div
         id="brainz-player"
         aria-label="Playback control"
         data-testid="brainzplayer-ui"
+        style={{
+          display: !showMusicPlayer ? "none" : undefined,
+        }}
       >
         <ProgressBar
           progressMs={progressMs}
