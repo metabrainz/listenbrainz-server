@@ -209,12 +209,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           playNextTrack={playNextTrack}
           togglePlay={togglePlay}
           seekToPositionMs={seekToPositionMs}
-          trackName="Track Name"
-          artistName="Artist Name"
-          queueRepeatMode={queueRepeatMode}
-          progressMs={6000}
-          durationMs={10000}
-          playerPaused={playerPaused}
           disabled={disabled}
         />
       </div>

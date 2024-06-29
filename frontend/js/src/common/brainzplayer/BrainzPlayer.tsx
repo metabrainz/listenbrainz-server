@@ -778,6 +778,7 @@ export default function BrainzPlayer() {
         currentTrackArtist: artist!,
         currentTrackAlbum: album,
         currentTrackURL: trackURL,
+        currentTrackCoverURL: artwork?.[0]?.src,
       },
       () => {
         updateWindowTitleWithTrackName();

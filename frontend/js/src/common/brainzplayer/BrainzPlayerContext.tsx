@@ -37,6 +37,7 @@ export type BrainzPlayerContextT = {
   currentTrackArtist?: string;
   currentTrackAlbum?: string;
   currentTrackURL?: string;
+  currentTrackCoverURL?: string;
   playerPaused: boolean;
   isActivated: boolean;
   durationMs: number;

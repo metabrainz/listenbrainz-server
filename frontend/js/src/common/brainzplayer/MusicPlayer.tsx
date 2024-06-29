@@ -16,7 +16,7 @@ import { faHeart } from "@fortawesome/free-regular-svg-icons";
 import ProgressBar from "./ProgressBar";
 import { millisecondsToStr } from "../../playlists/utils";
 import {
-  QueueRepeatMode,
+  useBrainzPlayerContext,
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
 
@@ -39,7 +39,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
       onClick={disabled ? noop : action}
       type="button"
       tabIndex={0}
-      data-testid={`bp-${className}-button`}
+      data-testid={`bp-mp-${className}-button`}
     >
       <FontAwesomeIcon
         icon={icon as IconProp}
@@ -61,16 +61,10 @@ type MusicPlayerProps = {
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
   seekToPositionMs: (msTimeCode: number) => void;
-  trackName: string;
-  artistName: string;
-  progressMs: number;
-  queueRepeatMode: QueueRepeatMode;
-  durationMs: number;
-  playerPaused: boolean;
   disabled?: boolean;
 };
 
-export default function MusicPlayer(props: MusicPlayerProps) {
+function MusicPlayer(props: MusicPlayerProps) {
   const {
     onHide,
     toggleQueue,
@@ -78,16 +72,20 @@ export default function MusicPlayer(props: MusicPlayerProps) {
     playNextTrack,
     togglePlay,
     seekToPositionMs,
-    trackName,
-    artistName,
-    queueRepeatMode,
-    progressMs,
-    durationMs,
-    playerPaused,
     disabled,
   } = props;
 
   // BrainzPlayer Context
+  const {
+    currentTrackName,
+    currentTrackArtist,
+    currentTrackAlbum,
+    currentTrackCoverURL,
+    playerPaused,
+    durationMs,
+    progressMs,
+    queueRepeatMode,
+  } = useBrainzPlayerContext();
   const dispatch = useBrainzPlayerDispatch();
 
   const toggleRepeatMode = () => {
@@ -107,7 +105,7 @@ export default function MusicPlayer(props: MusicPlayerProps) {
           onClick={onHide}
         />
 
-        <span>Album Name / Playlist Name</span>
+        <span>{currentTrackAlbum}</span>
 
         <FontAwesomeIcon
           className="btn toggle-info"
@@ -122,24 +120,24 @@ export default function MusicPlayer(props: MusicPlayerProps) {
         <img
           alt="coverart"
           className="img-responsive"
-          src="https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/fe/c6/13/fec61345-4a34-8056-aff4-77d7ee71fabf/SameBeef_Inlay-_Itunes.jpg/600x600bb.jpg"
+          src={currentTrackCoverURL}
         />
       </div>
       <div className="info">
         <div className="info-text-wrapper">
           <span
             className="text-muted ellipsis"
-            title={trackName}
+            title={currentTrackName}
             style={{ fontSize: "1.5em" }}
           >
-            {trackName}
+            {currentTrackName}
           </span>
           <span
             className="text-muted ellipsis"
-            title={artistName}
+            title={currentTrackArtist}
             style={{ fontSize: "1em" }}
           >
-            {artistName}
+            {currentTrackArtist}
           </span>
         </div>
         <div
@@ -206,3 +204,5 @@ export default function MusicPlayer(props: MusicPlayerProps) {
     </>
   );
 }
+
+export default React.memo(MusicPlayer);
