@@ -15,10 +15,7 @@ import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeart } from "@fortawesome/free-regular-svg-icons";
 import ProgressBar from "./ProgressBar";
 import { millisecondsToStr } from "../../playlists/utils";
-import {
-  useBrainzPlayerContext,
-  useBrainzPlayerDispatch,
-} from "./BrainzPlayerContext";
+import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 
 type PlaybackControlButtonProps = {
   className: string;
@@ -61,6 +58,7 @@ type MusicPlayerProps = {
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
   seekToPositionMs: (msTimeCode: number) => void;
+  toggleRepeatMode: () => void;
   disabled?: boolean;
 };
 
@@ -72,6 +70,7 @@ function MusicPlayer(props: MusicPlayerProps) {
     playNextTrack,
     togglePlay,
     seekToPositionMs,
+    toggleRepeatMode,
     disabled,
   } = props;
 
@@ -86,11 +85,6 @@ function MusicPlayer(props: MusicPlayerProps) {
     progressMs,
     queueRepeatMode,
   } = useBrainzPlayerContext();
-  const dispatch = useBrainzPlayerDispatch();
-
-  const toggleRepeatMode = () => {
-    dispatch({ type: "TOGGLE_REPEAT_MODE" });
-  };
 
   return (
     <>
