@@ -10,12 +10,49 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
+import { ReactSortable } from "react-sortablejs";
+import { faGripLines } from "@fortawesome/free-solid-svg-icons";
+import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
+import Card from "../../components/Card";
+
+const dataSourcesInfo = {
+  youtube: {
+    name: "YouTube",
+    icon: faYoutube,
+    color: "#FF0000",
+  },
+  spotify: {
+    name: "Spotify",
+    icon: faSpotify,
+    color: "#1DB954",
+  },
+  soundcloud: {
+    name: "SoundCloud",
+    icon: faSoundcloud,
+    color: "#FF8800",
+  },
+  appleMusic: {
+    name: "Apple Music",
+    icon: faApple,
+    color: "#000000",
+  },
+} as const;
+
+export type DataSourceKey = keyof typeof dataSourcesInfo;
+type DataSourceInfo = typeof dataSourcesInfo[keyof typeof dataSourcesInfo];
+
+export const defaultDataSourcesPriority = [
+  "spotify",
+  "appleMusic",
+  "soundcloud",
+  "youtube",
+] as DataSourceKey[];
 
 function BrainzPlayerSettings() {
   const {
@@ -42,6 +79,35 @@ function BrainzPlayerSettings() {
       AppleMusicPlayer.hasPermissions(appleAuth)
   );
 
+  const [dataSourcesPriority, setDataSourcesPriority] = React.useState<
+    DataSourceKey[]
+  >(
+    userPreferences?.brainzplayer?.dataSourcesPriority ??
+      defaultDataSourcesPriority
+  );
+
+  const moveDataSource = (evt: any) => {
+    const { newIndex, oldIndex } = evt;
+    const newPriority = [...dataSourcesPriority];
+    const [removed] = newPriority.splice(oldIndex, 1);
+    newPriority.splice(newIndex, 0, removed);
+    setDataSourcesPriority(newPriority);
+  };
+
+  const getDataSourcesPriorityList = React.useCallback(() => {
+    const sortedList = dataSourcesPriority.map((id) => ({
+      id,
+      info: dataSourcesInfo[id],
+    }));
+
+    return sortedList as {
+      id: DataSourceKey;
+      info: DataSourceInfo;
+    }[];
+  }, [dataSourcesPriority]);
+
+  const sortedList = getDataSourcesPriorityList();
+
   const saveSettings = React.useCallback(async () => {
     if (!currentUser?.auth_token) {
       toast.error("You must be logged in to update your preferences");
@@ -54,6 +120,7 @@ function BrainzPlayerSettings() {
         spotifyEnabled,
         soundcloudEnabled,
         appleMusicEnabled,
+        dataSourcesPriority,
       });
       toast.success("Saved your preferences successfully");
       // Update the global context values
@@ -61,11 +128,11 @@ function BrainzPlayerSettings() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
       if (userPreferences) {
         userPreferences.brainzplayer = {
-          ...userPreferences?.brainzplayer,
           youtubeEnabled,
           spotifyEnabled,
           soundcloudEnabled,
           appleMusicEnabled,
+          dataSourcesPriority,
         };
       }
     } catch (error) {
@@ -87,6 +154,7 @@ function BrainzPlayerSettings() {
     spotifyEnabled,
     soundcloudEnabled,
     appleMusicEnabled,
+    dataSourcesPriority,
     APIService,
     currentUser?.auth_token,
     userPreferences,
@@ -124,8 +192,11 @@ function BrainzPlayerSettings() {
             <span
               className={`text-brand ${!spotifyEnabled ? "text-muted" : ""}`}
             >
-              <span className={spotifyEnabled ? "text-success" : ""}>
-                <FontAwesomeIcon icon={faSpotify} />
+              <span>
+                <FontAwesomeIcon
+                  icon={faSpotify}
+                  color={spotifyEnabled ? dataSourcesInfo.spotify.color : ""}
+                />
               </span>
               <span>&nbsp;Spotify</span>
             </span>
@@ -162,8 +233,13 @@ function BrainzPlayerSettings() {
             <span
               className={`text-brand ${!appleMusicEnabled ? "text-muted" : ""}`}
             >
-              <span className={appleMusicEnabled ? "text-success" : ""}>
-                <FontAwesomeIcon icon={faApple} />
+              <span>
+                <FontAwesomeIcon
+                  icon={faApple}
+                  color={
+                    appleMusicEnabled ? dataSourcesInfo.appleMusic.color : ""
+                  }
+                />
               </span>
               <span>&nbsp;Apple Music</span>
             </span>
@@ -203,7 +279,12 @@ function BrainzPlayerSettings() {
               className={`text-brand ${!soundcloudEnabled ? "text-muted" : ""}`}
             >
               <span className={soundcloudEnabled ? "text-success" : ""}>
-                <FontAwesomeIcon icon={faSoundcloud} />
+                <FontAwesomeIcon
+                  icon={faSoundcloud}
+                  color={
+                    soundcloudEnabled ? dataSourcesInfo.soundcloud.color : ""
+                  }
+                />
               </span>
               <span>&nbsp;SoundCloud</span>
             </span>
@@ -230,7 +311,10 @@ function BrainzPlayerSettings() {
               className={`text-brand ${!youtubeEnabled ? "text-muted" : ""}`}
             >
               <span className={youtubeEnabled ? "text-success" : ""}>
-                <FontAwesomeIcon icon={faYoutube} />
+                <FontAwesomeIcon
+                  icon={faYoutube}
+                  color={youtubeEnabled ? dataSourcesInfo.youtube.color : ""}
+                />
               </span>
               <span>&nbsp;YouTube</span>
             </span>
@@ -265,7 +349,41 @@ function BrainzPlayerSettings() {
           </ul>
         </small>
       </div>
-      <br />
+      <h3 className="mt-15">Music services priority</h3>
+      <p>
+        You have the option to adjust the priority of the music services. They
+        will be used in the order you set here.
+      </p>
+      <p>Drag and drop the services to reorder them:</p>
+      <ReactSortable
+        list={sortedList}
+        setList={(newState) => {
+          setDataSourcesPriority(newState.map((item) => item.id));
+        }}
+        onEnd={moveDataSource}
+        handle=".drag-handle"
+      >
+        {sortedList.map((item) => (
+          <Card
+            key={item.id}
+            className="listen-card playlist-item-card"
+            style={{ maxWidth: "900px" }}
+          >
+            <div className="main-content text-brand">
+              <span className="drag-handle text-muted">
+                <FontAwesomeIcon icon={faGripLines as IconProp} />
+              </span>
+              <span>
+                <FontAwesomeIcon
+                  icon={item.info.icon}
+                  color={item.info.color}
+                />
+              </span>
+              <span>&nbsp;{item.info.name}</span>
+            </div>
+          </Card>
+        ))}
+      </ReactSortable>
       <button
         className="btn btn-lg btn-info"
         type="button"

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import psycopg2.extras
 from datasethoster.main import create_app, init_sentry, register_query
+
+from listenbrainz.labs_api.labs.api.apple.apple_mbid_lookup import AppleMusicIdFromMBIDQuery
+from listenbrainz.labs_api.labs.api.apple.apple_metadata_lookup import AppleMusicIdFromMetadataQuery
 from listenbrainz.labs_api.labs.api.artist_country_from_artist_mbid import ArtistCountryFromArtistMBIDQuery
 from listenbrainz.labs_api.labs.api.artist_credit_from_artist_mbid import ArtistCreditIdFromArtistMBIDQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup import \
@@ -33,6 +36,8 @@ register_query(ArtistCreditRecordingLookupQuery())
 register_query(ArtistCreditRecordingReleaseLookupQuery())
 register_query(SpotifyIdFromMetadataQuery())
 register_query(SpotifyIdFromMBIDQuery())
+register_query(AppleMusicIdFromMBIDQuery())
+register_query(AppleMusicIdFromMetadataQuery())
 register_query(UserListensSessionQuery())
 register_query(SimilarRecordingsViewerQuery())
 register_query(SimilarArtistsViewerQuery())

@@ -14,6 +14,58 @@ declare namespace MusicKit {
    */
   function getInstance(): MusicKitInstance;
 
+  interface Song {
+    attributes: {
+      albumName: string;
+      artistName: string;
+      artwork: {
+        bgColor: string;
+        height: number;
+        textColor1: string;
+        textColor2: string;
+        textColor3: string;
+        textColor4: string;
+        url: string;
+        width: number;
+      };
+      composerName: string;
+      discNumber: number;
+      durationInMillis: number;
+      genreNames: string[];
+      hasCredits: boolean;
+      hasLyrics: boolean;
+      isAppleDigitalMaster: boolean;
+      isrc: string;
+      name: string;
+      playParams: {
+        id: string;
+        kind: string;
+      };
+      previews: [
+        {
+          url: string;
+        }
+      ];
+      releaseDate: string;
+      trackNumber: number;
+      url: string;
+    };
+    href: string;
+    id: string;
+    type: string;
+  }
+
+  interface APISearchResult {
+    meta: {};
+    results: {
+      songs: {
+        data: Song[];
+        href: string;
+        next: string;
+      };
+    };
+  }
+
   /**
    * This class represents the Apple Music API.
    */
@@ -26,7 +78,11 @@ declare namespace MusicKit {
      * @param options An object with additional options to control how requests are made
      * directly to the Apple Music API.
      */
-    music(path: string, parameters?: any, options?: any): Promise<any>;
+    music(
+      path: string,
+      parameters?: any,
+      options?: any
+    ): Promise<{ data: APISearchResult }>;
   }
 
   /**

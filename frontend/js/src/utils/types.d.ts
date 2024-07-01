@@ -867,6 +867,9 @@ declare type BrainzPlayerSettings = {
   spotifyEnabled?: boolean;
   soundcloudEnabled?: boolean;
   appleMusicEnabled?: boolean;
+  dataSourcesPriority?: Array<
+    "spotify" | "youtube" | "soundcloud" | "appleMusic"
+  >;
 };
 
 declare type UserPreferences = {

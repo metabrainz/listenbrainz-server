@@ -183,6 +183,12 @@ COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.service /etc/se
 COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.finish /etc/service/apple_metadata_cache/finish
 RUN touch /etc/service/apple_metadata_cache/down
 
+# Soundcloud Metadata Cache
+COPY ./docker/services/soundcloud_metadata_cache/consul-template-soundcloud-metadata-cache.conf /etc/consul-template-soundcloud-metadata-cache.conf
+COPY ./docker/services/soundcloud_metadata_cache/soundcloud_metadata_cache.service /etc/service/soundcloud_metadata_cache/run
+COPY ./docker/services/soundcloud_metadata_cache/soundcloud_metadata_cache.finish /etc/service/soundcloud_metadata_cache/finish
+RUN touch /etc/service/soundcloud_metadata_cache/down
+
 # uwsgi (website)
 COPY ./docker/services/uwsgi/uwsgi.ini.ctmpl /etc/uwsgi/uwsgi.ini.ctmpl
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf

@@ -174,4 +174,8 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                  , artist_credit_mbids
               from parquet.`{path.LISTENBRAINZ_NEW_DATA_DIRECTORY}`
         """
-        run_query(query).write.partitionBy("year", "month").parquet(path.LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)
+        run_query(query) \
+            .write \
+            .partitionBy("year", "month") \
+            .mode("overwrite") \
+            .parquet(path.LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)

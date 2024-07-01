@@ -6,7 +6,7 @@ def import_from_spotify(token, user, playlist_id):
         "ms_token": token,
         "token": user,
         "playlist_id": playlist_id,
-        "music_service": 'spotify',
+        "music_service": "spotify",
         "apple_user_token": "",
         "upload": True,
         "created_for": None,
@@ -16,7 +16,7 @@ def import_from_spotify(token, user, playlist_id):
     patch = ImportPlaylistPatch(args)
     playlist = patch.generate_playlist()
     result = playlist.get_jspf()
-    result.update({'identifier': playlist.playlists[0].mbid})
+    result.update({"identifier": playlist.playlists[0].mbid})
 
     return result
 
@@ -25,7 +25,7 @@ def import_from_apple_music(token, apple_user_token, user, playlist_id):
     args = {
         "ms_token": token,
         "token": user,
-        "music_service": 'apple_music',
+        "music_service": "apple_music",
         "apple_user_token": apple_user_token,
         "playlist_id": playlist_id,
         "upload": True,
@@ -36,6 +36,6 @@ def import_from_apple_music(token, apple_user_token, user, playlist_id):
     patch = ImportPlaylistPatch(args)
     playlist = patch.generate_playlist()
     result = playlist.get_jspf()
-    result.update({'identifier': playlist.playlists[0].mbid})
+    result.update({"identifier": playlist.playlists[0].mbid})
 
     return result

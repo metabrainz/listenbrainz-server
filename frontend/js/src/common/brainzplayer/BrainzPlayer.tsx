@@ -31,6 +31,10 @@ import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import AppleMusicPlayer from "./AppleMusicPlayer";
+import {
+  DataSourceKey,
+  defaultDataSourcesPriority,
+} from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type DataSourceType = {
   name: string;
@@ -192,27 +196,47 @@ export default class BrainzPlayer extends React.Component<
       userPreferences,
     } = this.context;
 
-    if (
-      userPreferences?.brainzplayer?.spotifyEnabled !== false &&
-      SpotifyPlayer.hasPermissions(spotifyAuth)
-    ) {
-      this.dataSources.push(this.spotifyPlayer);
-    }
-    if (
-      userPreferences?.brainzplayer?.appleMusicEnabled !== false &&
-      AppleMusicPlayer.hasPermissions(appleAuth)
-    ) {
-      this.dataSources.push(this.appleMusicPlayer);
-    }
-    if (
-      userPreferences?.brainzplayer?.soundcloudEnabled !== false &&
-      SoundcloudPlayer.hasPermissions(soundcloudAuth)
-    ) {
-      this.dataSources.push(this.soundcloudPlayer);
-    }
-    if (userPreferences?.brainzplayer?.youtubeEnabled !== false) {
-      this.dataSources.push(this.youtubePlayer);
-    }
+    const {
+      spotifyEnabled = true,
+      appleMusicEnabled = true,
+      soundcloudEnabled = true,
+      youtubeEnabled = true,
+      dataSourcesPriority = defaultDataSourcesPriority,
+    } = userPreferences?.brainzplayer ?? {};
+
+    const enabledDataSources = [
+      spotifyEnabled && SpotifyPlayer.hasPermissions(spotifyAuth) && "spotify",
+      appleMusicEnabled &&
+        AppleMusicPlayer.hasPermissions(appleAuth) &&
+        "appleMusic",
+      soundcloudEnabled &&
+        SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
+        "soundcloud",
+      youtubeEnabled && "youtube",
+    ].filter(Boolean) as Array<DataSourceKey>;
+
+    const sortedDataSources = dataSourcesPriority.filter((key) =>
+      enabledDataSources.includes(key)
+    );
+
+    sortedDataSources.forEach((key) => {
+      switch (key) {
+        case "spotify":
+          this.dataSources.push(this.spotifyPlayer);
+          break;
+        case "youtube":
+          this.dataSources.push(this.youtubePlayer);
+          break;
+        case "soundcloud":
+          this.dataSources.push(this.soundcloudPlayer);
+          break;
+        case "appleMusic":
+          this.dataSources.push(this.appleMusicPlayer);
+          break;
+        default:
+        // do nothing
+      }
+    });
   }
 
   componentWillUnMount = () => {

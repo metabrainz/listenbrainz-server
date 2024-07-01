@@ -77,3 +77,8 @@ then
     rm -f /etc/service/apple_metadata_cache/down
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-soundcloud-metadata-cache-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/soundcloud_metadata_cache/down
+fi
+

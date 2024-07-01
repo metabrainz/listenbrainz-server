@@ -56,7 +56,7 @@ class Crawler(threading.Thread):
                         continue
 
                 try:
-                    items = self.handler.process_albums(item_ids)
+                    items = self.handler.process(item_ids)
                     for item in items:
                         self.put(item)
                 except Exception as e:

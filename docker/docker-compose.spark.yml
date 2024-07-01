@@ -30,3 +30,4 @@ services:
       - ..:/rec
     environment:
       PYTHONDONTWRITEBYTECODE: 1
+      USER: root
