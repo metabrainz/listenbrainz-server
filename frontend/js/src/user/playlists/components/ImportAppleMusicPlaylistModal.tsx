@@ -19,16 +19,18 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
   }, [modal]);
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
-  const [playlists, setPlaylists] = React.useState<SpotifyPlaylistObject[]>([]);
+  const [playlists, setPlaylists] = React.useState<AppleMusicPlaylistObject[]>(
+    []
+  );
   const [newPlaylists, setNewPlaylists] = React.useState<JSPFPlaylist[]>([]);
   const [playlistLoading, setPlaylistLoading] = React.useState<string | null>(
     null
   );
 
   React.useEffect(() => {
-    async function getUserPlaylistsFromSpotify() {
+    async function getUserPlaylistsFromAppleMusic() {
       try {
-        const response = await APIService.importPlaylistFromSpotify(
+        const response = await APIService.importPlaylistFromAppleMusic(
           currentUser?.auth_token
         );
 
@@ -49,7 +51,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
     }
 
     if (currentUser?.auth_token) {
-      getUserPlaylistsFromSpotify();
+      getUserPlaylistsFromAppleMusic();
     }
   }, [APIService, currentUser]);
 
@@ -78,13 +80,13 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
     }
     setPlaylistLoading(playlistName);
     try {
-      const newPlaylist: JSPFPlaylist = await APIService.importSpotifyPlaylistTracks(
+      const newPlaylist: JSPFPlaylist = await APIService.importAppleMusicPlaylistTracks(
         currentUser?.auth_token,
         playlistID
       );
       toast.success(
         <ToastMsg
-          title="Successfully imported playlist from Spotify"
+          title="Successfully imported playlist from Apple Music"
           message={
             <>
               Imported
@@ -133,18 +135,18 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
               id="ImportSpotifyPlaylistLabel"
               style={{ textAlign: "center" }}
             >
-              Import playlist from Spotify
+              Import playlist from Apple Music
             </h4>
           </div>
           <div className="modal-body">
             <p className="text-muted">
-              Add one or more of your Spotify playlists below:
+              Add one or more of your Apple Music playlists below:
             </p>
             <div
               className="list-group"
               style={{ maxHeight: "50vh", overflow: "scroll" }}
             >
-              {playlists?.map((playlist: SpotifyPlaylistObject) => (
+              {playlists?.map((playlist: AppleMusicPlaylistObject) => (
                 <button
                   type="button"
                   key={playlist.id}
@@ -154,12 +156,15 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
                     justifyContent: "space-between",
                   }}
                   disabled={!!playlistLoading}
-                  name={playlist.name}
+                  name={playlist.attributes.name}
                   onClick={() =>
-                    importTracksToPlaylist(playlist.id, playlist.name)
+                    importTracksToPlaylist(
+                      playlist.id,
+                      playlist.attributes.name
+                    )
                   }
                 >
-                  <span>{playlist.name}</span>
+                  <span>{playlist.attributes.name}</span>
                 </button>
               ))}
             </div>

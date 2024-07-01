@@ -6,6 +6,7 @@ import {
   faPlusCircle,
   faUsers,
   faFileImport,
+  faMusic,
 } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
@@ -23,6 +24,7 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
 import ImportPlaylistModal from "./components/ImportJSPFPlaylistModal";
 import ImportSpotifyPlaylistModal from "./components/ImportSpotifyPlaylistModal";
+import ImportAppleMusicPlaylistModal from "./components/ImportAppleMusicPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import { getPlaylistId, PlaylistType } from "../../playlists/utils";
 
@@ -195,6 +197,29 @@ export default class UserPlaylists extends React.Component<
                   >
                     <FontAwesomeIcon icon={faSpotify} />
                     &nbsp;Spotify
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                        ImportAppleMusicPlaylistModal
+                      ).then((playlist) => {
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
+                      });
+                    }}
+                    data-toggle="modal"
+                    data-target="#ImportSpotifyPlaylistModal"
+                  >
+                    <FontAwesomeIcon icon={faMusic} />
+                    &nbsp;Apple Music
                   </button>
                 </li>
                 <li>
