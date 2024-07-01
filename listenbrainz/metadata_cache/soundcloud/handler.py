@@ -78,12 +78,14 @@ class SoundcloudCrawlerHandler(BaseHandler):
         return tracks
 
     def get_items_from_listen(self, listen) -> list[JobItem]:
+        """ Extract soundcloud ids from incoming listen """
         track_id = listen["track_metadata"]["additional_info"].get("soundcloud_track_id")
         if track_id:
             return [JobItem(INCOMING_TRACK_PRIORITY, track_id)]
         return []
 
     def get_items_from_seeder(self, message) -> list[JobItem]:
+        """ Extract soundcloud ids from messages enqueued by seeder """
         return [JobItem(INCOMING_TRACK_PRIORITY, track_id) for track_id in message["soundcloud_track_ids"]]
 
     @staticmethod
