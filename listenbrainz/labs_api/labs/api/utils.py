@@ -53,7 +53,7 @@ def query_combined_lookup(column: LookupType, lookups: list[tuple], service):
 
 
 def perform_lookup(column, metadata, generate_lookup, service):
-    """ Given the lookup type and a function to generate to the lookup text, query database for spotify track ids """
+    """ Given the lookup type and a function to generate to the lookup text, query database for external service track ids """
     if not metadata:
         return metadata, {}
 
@@ -72,7 +72,7 @@ def perform_lookup(column, metadata, generate_lookup, service):
             if service == 'spotify':
                 metadata[idx]["spotify_track_ids"] = track_ids
             else:
-                metadata[idx]["apple_track_ids"] = track_ids
+                metadata[idx]["apple_music_track_ids"] = track_ids
         else:
             remaining_items[idx] = item
 
@@ -118,8 +118,8 @@ def lookup_using_metadata(params: list[dict], service):
     for item in all_metadata.values():
         if service == "spotify" and "spotify_track_ids" not in item:
             item["spotify_track_ids"] = []
-        elif service == "apple_music" and "apple_track_ids" not in item:
-            item["apple_track_ids"] = []
+        elif service == "apple_music" and "apple_music_track_ids" not in item:
+            item["apple_music_track_ids"] = []
 
     if service == "spotify":
         return [SpotifyIdFromMBIDOutput(**row) for row in metadata.values()]
