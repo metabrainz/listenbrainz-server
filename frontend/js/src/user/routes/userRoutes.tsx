@@ -110,7 +110,7 @@ const getUserRoutes = (): RouteObject[] => {
               "../recommendations/RecommendationsPage"
             );
             return {
-              Component: RecommendationsPage.RecommendationsPageWrapper,
+              Component: RecommendationsPage.default,
             };
           },
           loader: RouteLoader,

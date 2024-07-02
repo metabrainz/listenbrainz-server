@@ -8,6 +8,7 @@ import { BrowserRouter, Link } from "react-router-dom";
 import ListenCard, {
   ListenCardProps,
   ListenCardState,
+  ListenCard as ListenCardClass,
 } from "../../../src/common/listens/ListenCard";
 import * as utils from "../../../src/utils/utils";
 import APIServiceClass from "../../../src/utils/APIService";
@@ -89,7 +90,7 @@ describe("ListenCard", () => {
       },
       user_name: "test",
     };
-    const wrapper = mount<ListenCard>(
+    const wrapper = mount<ListenCardClass>(
       <GlobalAppContext.Provider value={globalProps}>
         <BrowserRouter>
           <ListenCard {...{ ...props, listen: playingNowListen }} />
@@ -161,7 +162,9 @@ describe("ListenCard", () => {
         <ListenCard {...props} />
       </BrowserRouter>
     );
-    const instance = wrapper.find(ListenCard).instance() as ListenCard;
+    const instance = wrapper
+      .find(ListenCardClass)
+      .instance() as ListenCardClass;
     const playButton = wrapper.find(".play-button");
     expect(playButton).toHaveLength(1);
     expect(playButton.props().onClick).toEqual(instance.playListen);
@@ -173,7 +176,9 @@ describe("ListenCard", () => {
         <ListenCard {...props} />
       </BrowserRouter>
     );
-    const instance = wrapper.find(ListenCard).instance() as ListenCard;
+    const instance = wrapper
+      .find(ListenCardClass)
+      .instance() as ListenCardClass;
     const postMessageSpy = jest.spyOn(window, "postMessage");
     expect(postMessageSpy).not.toHaveBeenCalled();
 
@@ -194,7 +199,9 @@ describe("ListenCard", () => {
         <ListenCard {...props} />
       </BrowserRouter>
     );
-    const instance = wrapper.find(ListenCard).instance() as ListenCard;
+    const instance = wrapper
+      .find(ListenCardClass)
+      .instance() as ListenCardClass;
     await act(() => {
       instance.setState({ isCurrentlyPlaying: true });
     });
@@ -241,7 +248,9 @@ describe("ListenCard", () => {
           </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.find(ListenCard).instance() as ListenCard;
+      const instance = wrapper
+        .find(ListenCardClass)
+        .instance() as ListenCardClass;
 
       const spy = jest.spyOn(
         instance.context.APIService,
@@ -275,7 +284,9 @@ describe("ListenCard", () => {
           </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.find(ListenCard).instance() as ListenCard;
+      const instance = wrapper
+        .find(ListenCardClass)
+        .instance() as ListenCardClass;
 
       const spy = jest.spyOn(
         instance.context.APIService,
@@ -289,14 +300,16 @@ describe("ListenCard", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      const wrapper = mount<ListenCard>(
+      const wrapper = mount<ListenCardClass>(
         <GlobalAppContext.Provider value={globalProps}>
           <BrowserRouter>
             <ListenCard {...props} />
           </BrowserRouter>
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.find(ListenCard).instance() as ListenCard;
+      const instance = wrapper
+        .find(ListenCardClass)
+        .instance() as ListenCardClass;
       instance.handleError = jest.fn();
 
       const error = new Error("error");

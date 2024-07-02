@@ -391,7 +391,10 @@ export default class YoutubePlayer
           bottom: -draggableBoundPadding,
         }}
       >
-        <div className={`youtube-wrapper${!show ? " hidden" : ""}`}>
+        <div
+          className={`youtube-wrapper${!show ? " hidden" : ""}`}
+          data-testid={`youtube-wrapper${!show ? " hidden" : ""}`}
+        >
           <button className="btn btn-sm youtube-drag-handle" type="button">
             <FontAwesomeIcon icon={faArrowsAlt} />
           </button>

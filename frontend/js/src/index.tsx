@@ -10,6 +10,7 @@ import { getPageProps } from "./utils/utils";
 import getRoutes from "./routes/routes";
 import queryClient from "./utils/QueryClient";
 import ReactQueryDevtool from "./utils/ReactQueryDevTools";
+import { BrainzPlayerProvider } from "./common/brainzplayer/BrainzPlayerContext";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const { domContainer, globalAppContext, sentryProps } = await getPageProps();
@@ -34,7 +35,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
         <ReactQueryDevtool client={queryClient}>
-          <RouterProvider router={router} />
+          <BrainzPlayerProvider>
+            <RouterProvider router={router} />
+          </BrainzPlayerProvider>
         </ReactQueryDevtool>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

@@ -32,7 +32,6 @@ import {
   InfiniteData,
 } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import ListenCard from "../common/listens/ListenCard";
 import {
   preciseTimestamp,
@@ -624,13 +623,6 @@ export default function UserFeedPage() {
           <UserSocialNetwork user={currentUser} />
         </div>
       </div>
-      <BrainzPlayer
-        listens={listens}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </>
   );
 }

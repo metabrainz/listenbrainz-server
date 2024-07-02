@@ -604,6 +604,6 @@ export default class SpotifyPlayer
     if (!show) {
       return null;
     }
-    return <div>{this.getAlbumArt()}</div>;
+    return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
   }
 }
