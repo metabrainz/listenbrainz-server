@@ -1,11 +1,9 @@
 import * as React from "react";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { throttle as _throttle } from "lodash";
 import { toast } from "react-toastify";
-import debounceAsync from "debounce-async";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import ListenControl from "./listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
+import DropdownRef from "../utils/Dropdown";
 
 export type UserSearchProps = {
   onSelectUser: (userName: string) => void;
@@ -14,97 +12,92 @@ export type UserSearchProps = {
   initialValue?: string;
 };
 
-export type UserSearchState = {
-  newUser: string;
-  userSearchResults: Array<SearchUser>;
-};
+export default function UserSearch(props: UserSearchProps) {
+  // Context
+  const { APIService } = React.useContext(GlobalAppContext);
 
-export default class UserSearch extends React.Component<
-  UserSearchProps,
-  UserSearchState
-> {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
+  // Props
+  const { onSelectUser, placeholder, clearOnSelect, initialValue } = props;
 
-  // eslint-disable-next-line react/sort-comp
-  constructor(props: UserSearchProps) {
-    super(props);
-    this.state = {
-      newUser: props.initialValue ?? "",
-      userSearchResults: [],
-    };
-  }
+  // States
+  const [newUser, setNewUser] = React.useState(initialValue ?? "");
+  const [userSearchResults, setUserSearchResults] = React.useState<
+    Array<SearchUser>
+  >([]);
 
-  throttledSearchUsers = _throttle(async () => {
-    await this.searchUsers();
-  }, 300);
+  // Refs
+  const dropdownRef = DropdownRef();
 
-  searchUsers = async () => {
-    const { APIService } = this.context;
-    const { newUser } = this.state;
-    try {
-      const response = await APIService.searchUsers(newUser);
-      this.setState({
-        userSearchResults: response.users,
-      });
-    } catch (error) {
-      this.handleError(error);
-    }
-  };
+  const searchUsers = React.useCallback(
+    async (newUserName: string) => {
+      try {
+        const response = await APIService.searchUsers(newUserName);
+        setUserSearchResults(response.users);
+      } catch (error) {
+        toast.error(<ToastMsg title="Error" message={error.message} />, {
+          toastId: "error",
+        });
+      }
+    },
+    [APIService]
+  );
 
-  handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState(
-      {
-        newUser: event.target.value,
-      },
-      this.throttledSearchUsers
-    );
-  };
+  const throttledSearchUsers = React.useMemo(
+    () => _throttle(searchUsers, 800),
+    [searchUsers]
+  );
 
-  handleResultClick = (user: string) => {
-    const { onSelectUser, clearOnSelect } = this.props;
+  const handleResultClick = (user: string) => {
     onSelectUser(user);
-    this.setState({
-      newUser: clearOnSelect ? "" : user,
-      userSearchResults: [],
-    });
+    setNewUser(clearOnSelect ? "" : user);
+    setUserSearchResults([]);
   };
 
-  handleError = (error: any) => {
-    toast.error(<ToastMsg title="Error" message={error.message} />, {
-      toastId: "error",
-    });
-  };
+  React.useEffect(() => {
+    if (!newUser) {
+      return;
+    }
+    throttledSearchUsers(newUser);
+  }, [newUser, throttledSearchUsers]);
 
-  render() {
-    const { newUser, userSearchResults } = this.state;
-    const { placeholder } = this.props;
-    return (
-      <>
-        <input
-          id="user-name-search"
-          type="text"
-          className="form-control"
-          name="newUser"
-          onChange={this.handleInputChange}
-          placeholder={placeholder}
-          value={newUser}
-          aria-haspopup={Boolean(userSearchResults?.length)}
-        />
-        <div className="search-dropdown">
-          {userSearchResults?.map((user) => {
+  return (
+    <div
+      className="input-group input-group-flex dropdown-search"
+      ref={dropdownRef}
+    >
+      <input
+        id="user-name-search"
+        type="text"
+        className="form-control"
+        name="newUser"
+        onChange={(event) => {
+          setNewUser(event.target.value);
+        }}
+        placeholder={placeholder}
+        value={newUser}
+        aria-haspopup={Boolean(userSearchResults?.length)}
+      />
+      {Boolean(userSearchResults?.length) && (
+        <select
+          className="dropdown-search-suggestions"
+          size={Math.min(userSearchResults.length, 8)}
+          onChange={(e) => {
+            handleResultClick(e.target.value);
+          }}
+          tabIndex={-1}
+          style={{
+            width: "100%",
+          }}
+        >
+          {userSearchResults?.map((user, index) => {
             return (
-              <ListenControl
-                key={user.user_name}
-                text={user.user_name}
-                icon={faUser}
-                // eslint-disable-next-line react/jsx-no-bind
-                action={this.handleResultClick.bind(this, user.user_name)}
-              />
+              <option key={user.user_name} value={user.user_name}>
+                {user.user_name}
+              </option>
             );
           })}
-        </div>
-      </>
-    );
-  }
+        </select>
+      )}
+    </div>
+  );
 }

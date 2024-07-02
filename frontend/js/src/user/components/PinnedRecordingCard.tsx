@@ -1,8 +1,9 @@
 import * as React from "react";
-import { faThumbtack } from "@fortawesome/free-solid-svg-icons";
+import { faPencilAlt, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
+import NiceModal from "@ebay/nice-modal-react";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -12,6 +13,7 @@ import {
   getTrackName,
   pinnedRecordingToListen,
 } from "../../utils/utils";
+import PinRecordingModal from "../../pins/PinRecordingModal";
 
 export type PinnedRecordingCardProps = {
   pinnedRecording: PinnedRecording;
@@ -22,6 +24,7 @@ export type PinnedRecordingCardProps = {
 export type PinnedRecordingCardState = {
   currentlyPinned?: Boolean;
   isDeleted: Boolean;
+  updatedBlurb?: string;
 };
 
 export default class PinnedRecordingCard extends React.Component<
@@ -121,7 +124,7 @@ export default class PinnedRecordingCard extends React.Component<
 
   render() {
     const { pinnedRecording } = this.props;
-    const { currentlyPinned, isDeleted } = this.state;
+    const { currentlyPinned, isDeleted, updatedBlurb } = this.state;
 
     const thumbnail = currentlyPinned ? (
       <div className="pinned-recording-icon">
@@ -131,14 +134,15 @@ export default class PinnedRecordingCard extends React.Component<
         <span className="small">Pinned</span>
       </div>
     ) : undefined;
-
-    const blurb = pinnedRecording.blurb_content ? (
-      <div className="blurb-content" title={pinnedRecording.blurb_content}>
-        &quot;{pinnedRecording.blurb_content}&quot;
+    const blurbContent = updatedBlurb ?? pinnedRecording.blurb_content;
+    const blurb = blurbContent ? (
+      <div className="blurb-content" title={blurbContent}>
+        &quot;{blurbContent}&quot;
       </div>
     ) : undefined;
 
     const additionalMenuItems = [];
+    const listen = pinnedRecordingToListen(pinnedRecording);
     if (currentlyPinned) {
       additionalMenuItems.push(
         <ListenControl
@@ -146,6 +150,28 @@ export default class PinnedRecordingCard extends React.Component<
           title="Unpin"
           text="Unpin"
           action={() => this.unpinRecording()}
+        />
+      );
+      additionalMenuItems.push(
+        <ListenControl
+          text="Edit Comment"
+          key="Edit Comment"
+          icon={faPencilAlt}
+          action={() => {
+            NiceModal.show<string, any>(PinRecordingModal, {
+              recordingToPin: listen,
+              rowId: pinnedRecording.row_id,
+              initialBlurbContent:
+                updatedBlurb ?? pinnedRecording.blurb_content,
+            }).then((newBlurb: string) => {
+              if (!newBlurb) {
+                return;
+              }
+              this.setState({ updatedBlurb: newBlurb });
+            });
+          }}
+          dataToggle="modal"
+          dataTarget="#PinRecordingModal"
         />
       );
     }
@@ -168,7 +194,7 @@ export default class PinnedRecordingCard extends React.Component<
     return (
       <ListenCard
         className={cssClasses.join(" ")}
-        listen={pinnedRecordingToListen(pinnedRecording)}
+        listen={listen}
         showTimestamp
         showUsername={false}
         additionalMenuItems={additionalMenuItems}

@@ -37,7 +37,9 @@ def import_full_dump_to_hdfs(dump_id: int = None, local: bool = False) -> str:
             dump_type=DumpType.FULL,
             listens_dump_id=dump_id
         )
-        ListenbrainzDataUploader().upload_new_listens_full_dump(src)
+        uploader = ListenbrainzDataUploader()
+        uploader.upload_new_listens_full_dump(src)
+        uploader.process_full_listens_dump()
     utils.insert_dump_data(dump_id, DumpType.FULL, datetime.utcnow())
     return dump_name
 
@@ -152,21 +154,6 @@ def import_incremental_dump_by_id_handler(dump_id: int, local: bool = False):
         'imported_dump': dumps,
         'errors': errors,
         'time': str(datetime.utcnow()),
-    }]
-
-
-def import_artist_relation_to_hdfs():
-    ts = time.monotonic()
-    temp_dir = tempfile.mkdtemp()
-    src, artist_relation_name = ListenbrainzDataDownloader().download_artist_relation(directory=temp_dir)
-    ListenbrainzDataUploader().upload_artist_relation(archive=src)
-    shutil.rmtree(temp_dir)
-
-    return [{
-        'type': 'import_artist_relation',
-        'imported_artist_relation': artist_relation_name,
-        'import_time': str(datetime.utcnow()),
-        'time_taken_to_import': '{:.2f}'.format(time.monotonic() - ts)
     }]
 
 

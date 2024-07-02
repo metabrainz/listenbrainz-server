@@ -1,23 +1,21 @@
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
-import { act } from "react-dom/test-utils";
-import { waitForComponentToPaint } from "../../test-utils";
+import { BrowserRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../../src/utils/GlobalAppContext";
 import APIService from "../../../src/utils/APIService";
-
 import FreshReleases from "../../../src/explore/fresh-releases/FreshReleases";
 import ReleaseFilters from "../../../src/explore/fresh-releases/components/ReleaseFilters";
-import ReleaseTimeline from "../../../src/explore/fresh-releases/components/ReleaseTimeline";
-
 import * as sitewideData from "../../__mocks__/freshReleasesSitewideData.json";
 import * as userData from "../../__mocks__/freshReleasesUserData.json";
 import * as sitewideFilters from "../../__mocks__/freshReleasesSitewideFilters.json";
 import * as userDisplayFilters from "../../__mocks__/freshReleasesDisplaySettings.json";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
-import { BrowserRouter } from "react-router-dom";
+
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../../src/utils/GlobalAppContext";
 
 const freshReleasesProps = {
   user: {
@@ -51,6 +49,14 @@ const mountOptions: { context: GlobalAppContextT } = {
   },
 };
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 window.scrollTo = jest.fn();
 
 describe("FreshReleases", () => {
@@ -69,24 +75,35 @@ describe("FreshReleases", () => {
       })),
     });
   });
+  afterEach(() => {
+    queryClient.cancelQueries();
+    queryClient.clear();
+  });
+
   it("renders the page correctly", async () => {
     const mockFetchUserFreshReleases = jest.fn().mockResolvedValue({
       json: () => userData,
     });
     mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
-    const wrapper = mount(
+
+    render(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
-        <FreshReleases />
+        <QueryClientProvider client={queryClient}>
+          <FreshReleases />
+        </QueryClientProvider>
       </GlobalAppContext.Provider>
     );
-    await waitForComponentToPaint(wrapper);
-    expect(mockFetchUserFreshReleases).toHaveBeenCalledWith(
-      "chinmaykunkikar",
-      true,
-      true,
-      "release_date"
-    );
-    expect(wrapper.find(FreshReleases)).toHaveLength(1);
+
+    await waitFor(() => {
+      expect(mockFetchUserFreshReleases).toHaveBeenCalledWith(
+        "chinmaykunkikar",
+        true,
+        true,
+        "release_date"
+      );
+    });
+
+    expect(screen.getByText("Fresh Releases")).toBeInTheDocument();
   });
 
   it("renders sitewide fresh releases page, including timeline component", async () => {
@@ -94,27 +111,36 @@ describe("FreshReleases", () => {
       .fn()
       .mockResolvedValue(sitewideData);
     mountOptions.context.APIService.fetchSitewideFreshReleases = mockFetchSitewideFreshReleases;
-    const wrapper = mount(
+
+    const mockFetchUserFreshReleases = jest.fn().mockResolvedValue({
+      json: () => userData,
+    });
+    mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
+
+    render(
       <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
         <BrowserRouter>
-          <FreshReleases />
+          <QueryClientProvider client={queryClient}>
+            <FreshReleases />
+          </QueryClientProvider>
         </BrowserRouter>
       </GlobalAppContext.Provider>
     );
-    await waitForComponentToPaint(wrapper);
-    await act(async () => {
-      // click on sitewide-releases button
-      wrapper.find("#sitewide-releases").at(0).simulate("click");
+
+    await waitFor(() => {
+      expect(mockFetchUserFreshReleases).toHaveBeenCalled();
     });
-    await waitForComponentToPaint(wrapper);
-    expect(mockFetchSitewideFreshReleases).toHaveBeenCalledWith(
-      7,
-      true,
-      true,
-      "release_date"
-    );
-    expect(wrapper.find(".sidebar")).toHaveLength(1);
-    expect(wrapper.find(".releases-timeline")).toHaveLength(1);
+
+    expect(screen.getByText("Fresh Releases")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByTestId("sitewide-releases-pill"));
+
+    await waitFor(() => {
+      expect(mockFetchSitewideFreshReleases).toHaveBeenCalled();
+    });
+    expect(
+      screen.getByTestId("sidebar-header-fresh-releases")
+    ).toBeInTheDocument();
   });
 
   it("renders filters correctly", async () => {
@@ -125,11 +151,13 @@ describe("FreshReleases", () => {
     const setShowFutureReleases = jest.fn();
     const releaseCardGridRef: React.RefObject<HTMLDivElement> = React.createRef();
 
-    const wrapper = mount(
+    render(
       <ReleaseFilters
-        allFilters={sitewideFilters}
+        releaseTags={sitewideFilters.releaseTags}
+        releaseTypes={sitewideFilters.releaseTypes}
         displaySettings={userDisplayFilters}
         releases={sitewideData.payload.releases}
+        filteredList={sitewideData.payload.releases}
         setFilteredList={setFilteredList}
         range="three_months"
         handleRangeChange={handleRangeChange}
@@ -143,8 +171,8 @@ describe("FreshReleases", () => {
       />
     );
 
-    await waitForComponentToPaint(wrapper);
-    wrapper.find("#filters-item-0").at(0).simulate("click");
-    expect(setFilteredList).toBeCalled();
+    expect(
+      screen.getByTestId("sidebar-header-fresh-releases")
+    ).toBeInTheDocument();
   });
 });

@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
 import { Link, useLoaderData } from "react-router-dom";
+import { formatDuration, intervalToDuration } from "date-fns";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
@@ -53,10 +54,12 @@ export default class PlaylistPage extends React.Component<
 
   static makeJSPFTrack(trackMetadata: TrackMetadata): JSPFTrack {
     return {
-      identifier: `${PLAYLIST_TRACK_URI_PREFIX}${
-        trackMetadata.recording_mbid ??
-        trackMetadata.additional_info?.recording_mbid
-      }`,
+      identifier: [
+        `${PLAYLIST_TRACK_URI_PREFIX}${
+          trackMetadata.recording_mbid ??
+          trackMetadata.additional_info?.recording_mbid
+        }`,
+      ],
       title: trackMetadata.track_name,
       creator: trackMetadata.artist_name,
     };
@@ -326,6 +329,15 @@ export default class PlaylistPage extends React.Component<
 
     const customFields = getPlaylistExtension(playlist);
 
+    const totalDurationMs = tracks
+      .filter((t) => Boolean(t.duration))
+      .reduce((total, track) => total + track.duration!, 0);
+
+    const totalDurationForDisplay = formatDuration(
+      intervalToDuration({ start: 0, end: totalDurationMs }),
+      { format: ["days", "hours", "minutes"] }
+    );
+
     return (
       <div role="main">
         <Helmet>
@@ -376,7 +388,12 @@ export default class PlaylistPage extends React.Component<
                 </small>
               </h1>
               <div className="info">
-                <div>{playlist.track?.length} tracks</div>
+                <div>
+                  {playlist.track?.length} tracks
+                  {totalDurationForDisplay && (
+                    <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
+                  )}
+                </div>
                 <div>Created: {new Date(playlist.date).toLocaleString()}</div>
                 {customFields?.collaborators &&
                   Boolean(customFields.collaborators.length) && (
@@ -470,7 +487,10 @@ export default class PlaylistPage extends React.Component<
                     <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                     &nbsp;&nbsp;Add a track
                   </span>
-                  <SearchTrackOrMBID onSelectRecording={this.addTrack} />
+                  <SearchTrackOrMBID
+                    onSelectRecording={this.addTrack}
+                    expectedPayload="trackmetadata"
+                  />
                 </Card>
               )}
             </div>

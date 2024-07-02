@@ -255,3 +255,26 @@ def get_pin_count_for_user(db_conn, user_id: int) -> int:
     })
     count = int(result.fetchone().value)
     return count
+
+
+def update_comment(db_conn, row_id: int, blurb_content: str) -> bool:
+    """ Updates the comment of the user of the current pinned recording
+
+        Args:
+            db_conn: Database connection
+            user_id: The user for which the comment of pinned record has to be updated
+            blurb_content: The new comment of the user
+        Returns:
+            True if the update was successful, False otherwise
+    """
+    args = {
+        "blurb_content": blurb_content,
+        "row_id": row_id
+    }
+    result = db_conn.execute(sqlalchemy.text("""
+        UPDATE pinned_recording
+           SET blurb_content = :blurb_content
+         WHERE (id = :row_id)
+    """), args)
+    db_conn.commit()
+    return result.rowcount == 1
