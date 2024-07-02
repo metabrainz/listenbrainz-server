@@ -58,3 +58,4 @@ orjson==3.9.15
 dnspython==2.6.1
 pyjwt[crypto]==2.7.0
 packaging~=23.1
+feedgen==1.0.0
