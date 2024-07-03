@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import {
   differenceBy,
   identity,
+  isFinite,
   padStart,
   sortBy,
   uniq,
@@ -76,7 +77,11 @@ function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
         }}
         checked={isChecked}
       />
-      <strong className="small track-number">{track.number}</strong>
+      <strong className="small track-number">
+        {isFinite(Number(track.number))
+          ? padStart(track.position.toString(), 2, "0")
+          : track.number}
+      </strong>
       <span>{track.title}</span>
       <span className={`duration ${!track.length ? "default-duration" : ""}`}>
         {millisecondsToStr(track.length ?? DEFAULT_TRACK_LENGTH_SECONDS * 1000)}
