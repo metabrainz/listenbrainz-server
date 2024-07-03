@@ -211,6 +211,10 @@ export default NiceModal.create(() => {
     handleError,
   ]);
 
+  const userLocale = navigator.languages?.length
+    ? navigator.languages[0]
+    : navigator.language;
+
   return (
     <div
       className={`modal fade ${modal.visible ? "in" : ""}`}
@@ -326,7 +330,8 @@ export default NiceModal.create(() => {
                     }
                     maxDate={new Date()}
                     clearIcon={null}
-                    format="yyyy-MM-dd hh:mm:ss"
+                    format={userLocale ? undefined : "yyyy-MM-dd hh:mm:ss"}
+                    locale={userLocale}
                     maxDetail="second"
                     disabled={!customTimestamp}
                   />
