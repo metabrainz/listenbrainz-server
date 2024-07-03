@@ -43,7 +43,16 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
         toast.error(
           <ToastMsg
             title="Error loading playlists"
-            message={error?.message ?? error}
+            message={
+              error?.message === "Forbidden" ? (
+                <>
+                  Session has expired. Please reconnect to{" "}
+                  <a href="/settings/music-services/details/">Apple Music</a>.
+                </>
+              ) : (
+                error?.message ?? error
+              )
+            }
           />,
           { toastId: "load-playlists-error" }
         );
