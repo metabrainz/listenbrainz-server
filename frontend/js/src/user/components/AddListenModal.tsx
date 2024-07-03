@@ -77,6 +77,9 @@ export const getListenFromTrack = (
   if (track.length) {
     // Cannot send a `null` duration
     listen.track_metadata.additional_info!.duration_ms = track.length;
+  } else if (track.recording.length) {
+    // Cannot send a `null` duration
+    listen.track_metadata.additional_info!.duration_ms = track.recording.length;
   }
   if (release) {
     listen.track_metadata.release_mbid = release.id;
