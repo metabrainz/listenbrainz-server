@@ -69,7 +69,7 @@ export const getListenFromTrack = (
         recording_mbid: track.recording.id,
         submission_client: "listenbrainz web",
         track_mbid: track.id,
-        tracknumber: parseInt(track.number, 10),
+        tracknumber: track.number,
         artist_mbids: track["artist-credit"].map((ac) => ac.artist.id),
       },
     },
