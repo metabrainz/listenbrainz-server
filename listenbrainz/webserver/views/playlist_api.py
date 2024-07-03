@@ -860,7 +860,7 @@ def export_playlist(playlist_mbid, service):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    if service != "":
+    if service != "spotify":
         raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
 
     spotify_service = SpotifyService()
