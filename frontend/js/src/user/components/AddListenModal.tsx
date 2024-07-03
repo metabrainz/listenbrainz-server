@@ -82,7 +82,7 @@ export const getListenFromTrack = (
     listen.track_metadata.additional_info!.duration_ms = track.recording.length;
   }
   if (release) {
-    listen.track_metadata.release_mbid = release.id;
+    listen.track_metadata.additional_info!.release_mbid = release.id;
     listen.track_metadata.release_name = release.title;
   }
   return listen;
