@@ -4,7 +4,7 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from listenbrainz.domain.apple import AppleService
-
+from listenbrainz.webserver.errors import APIForbidden
 
 class Apple:
 
@@ -51,6 +51,5 @@ class Apple:
                     return response.json()
 
                 if response.status_code == 403:
-                    tokens = AppleService().fetch_access_token()
-                    self.developer_token = tokens["access_token"]
+                    raise APIForbidden(f"Token is expired. Please reconnect to Apple Music")
             response.raise_for_status()
