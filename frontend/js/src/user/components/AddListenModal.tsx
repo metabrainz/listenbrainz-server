@@ -41,11 +41,14 @@ export function getListenFromRecording(
         release_group_mbid: releaseOrCanonical["release-group"].id,
         recording_mbid: recording.id,
         submission_client: "listenbrainz web",
-        duration_ms: recording.length,
         artist_mbids: recording["artist-credit"].map((ac) => ac.artist.id),
       },
     },
   };
+  if (recording.length) {
+    // Cannot send a `null` duration
+    listen.track_metadata.additional_info!.duration_ms = recording.length;
+  }
   return listen;
 }
 
@@ -65,13 +68,16 @@ export const getListenFromTrack = (
       additional_info: {
         recording_mbid: track.recording.id,
         submission_client: "listenbrainz web",
-        duration_ms: track.length,
         track_mbid: track.id,
         tracknumber: parseInt(track.number, 10),
         artist_mbids: track["artist-credit"].map((ac) => ac.artist.id),
       },
     },
   };
+  if (track.length) {
+    // Cannot send a `null` duration
+    listen.track_metadata.additional_info!.duration_ms = track.length;
+  }
   if (release) {
     listen.track_metadata.release_mbid = release.id;
     listen.track_metadata.release_name = release.title;
