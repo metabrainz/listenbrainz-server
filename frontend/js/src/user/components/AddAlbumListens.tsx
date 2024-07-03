@@ -174,7 +174,7 @@ export default function AddAlbumListens({
             </div>
             {showDefaultDuration && (
               <div
-                className="default-duration small"
+                className="default-duration heading small"
                 title={`When no duration is available a default of ${defaultDuration} will be used`}
               >
                 default {defaultDuration}
