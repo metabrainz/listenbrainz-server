@@ -126,7 +126,7 @@ def get_fresh_releases():
         )
     except Exception as e:
         current_app.logger.error("Server failed to get latest release: {}".format(e))
-        raise Response(status=500)
+        return Response(status=500)
 
     fg = FeedGenerator()
     fg.id(f"https://listenbrainz.org/explore/fresh-releases")
