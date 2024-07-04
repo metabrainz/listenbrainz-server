@@ -934,11 +934,11 @@ def import_playlist_from_music_service(service):
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
 
-@playlist_api_bp.route("/<service>/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
+@playlist_api_bp.route("/spotify/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
-def import_tracks_from_spotify_playlist(service, playlist_id):
+def import_tracks_from_spotify_playlist(playlist_id):
     """
 
     Import a playlist tracks from a Spotify and convert them to JSPF.
@@ -952,17 +952,14 @@ def import_tracks_from_spotify_playlist(service, playlist_id):
     """
     user = validate_auth_header()
 
-    if service != "spotify":
-        raise APIBadRequest(f"Service {service} is not supported.")
-
     spotify_service = SpotifyService()
     token = spotify_service.get_user(user["id"], refresh=True)
     if not token:
-        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
+        raise APIBadRequest(f"Service Spotify is not linked. Please link your Spotify account first.")
 
     if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
-                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
+                            f" Please relink your Spotify account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
 
     try:
@@ -977,7 +974,7 @@ def import_tracks_from_spotify_playlist(service, playlist_id):
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
-def import_tracks_from_apple_music_playlist(playlist_id):
+def import_tracks_from_apple_playlist(playlist_id):
     """
 
     Import a playlist tracks from a Apple Music and convert them to JSPF.
