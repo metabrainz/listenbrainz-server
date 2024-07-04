@@ -19,11 +19,11 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         # invalid user
         invalid_user_url = self.custom_url_for("atom.get_listens", user_name="invalid")
         response = self.client.get(
-                invalid_user_url,
+            invalid_user_url,
             query_string={"interval": 1},
         )
         self.assert404(response)
-        
+
         ## Fresh releases feed
         fresh_releases_url = self.custom_url_for("atom.get_fresh_releases")
         response = self.client.get(fresh_releases_url, query_string={"days": "0"})
@@ -56,7 +56,8 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         if element is None:
             self.fail("No id element found in feed")
         self.assertEqual(
-            element.text, f"{self.app.config['SERVER_ROOT_URL']}/user/{self.user['musicbrainz_id']}"
+            element.text,
+            f"{self.app.config['SERVER_ROOT_URL']}/user/{self.user['musicbrainz_id']}",
         )
 
     def test_user_listens_feed_entry_id(self):
@@ -101,7 +102,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
-        
+
         # Second listen
         ts2 = int(time.time())
         payload["payload"][0]["listened_at"] = ts2
