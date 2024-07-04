@@ -76,7 +76,7 @@ def get_listens(user_name):
             track_name=listen.data["track_name"],
             recording_mbid=listen.data["additional_info"].get("recording_mbid"),
             artist_name=listen.data["artist_name"],
-            artist_mbid=listen.data['additional_info'].get('artist_mbid'),
+            artist_mbid=listen.data['additional_info'].get('artist_mbids')[0] if listen.data['additional_info'].get('artist_mbids') else None, # needs mbid mapping
             release_mbid=listen.data["additional_info"].get("release_mbid"),
             release_name=listen.data["release_name"],
         )
