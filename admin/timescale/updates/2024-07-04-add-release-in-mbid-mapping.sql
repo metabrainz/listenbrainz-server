@@ -1,5 +1,11 @@
 BEGIN;
 
+ALTER TABLE mbid_manual_mapping ADD COLUMN release_mbid UUID NOT NULL;
+
+
+
+DROP MATERIALIZED VIEW mbid_manual_mapping_top;
+
 -- create a materialized view of the top mappings of a recording msid. top mappings are chosen
 -- by the highest number of users that have added it. if multiple mappings have same count, break
 -- ties by preferring the mapping that was created most recently. to avoid abuse, mappings are only
@@ -18,5 +24,6 @@ CREATE MATERIALIZED VIEW mbid_manual_mapping_top AS (
          , count(*) DESC
          , max(created) DESC
 );
+
 
 COMMIT;

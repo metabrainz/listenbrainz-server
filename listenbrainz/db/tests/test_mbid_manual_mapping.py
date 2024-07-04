@@ -22,6 +22,22 @@ class MbidManualMappingDatabaseTestCase(TimescaleTestCase):
         assert new_mapping.recording_msid == mapping.recording_msid
         assert new_mapping.user_id == mapping.user_id
 
+    def test_optional_release_mbid(self):
+        """Add and get a mapping with release_mbid"""
+        msid = "597fa2f2-8cf4-4566-a307-dbfb5aa35ec4"
+        mbid = "c8d63620-ced3-4abf-84f8-85457ce798c6"
+        release_mbid = "cb24f4bb-3ecf-44c7-bba9-5241faac3cef"
+        user_id = 1
+
+        mapping = MbidManualMapping(recording_msid=msid, recording_mbid=mbid, release_mbid=release_mbid, user_id=user_id)
+        db_mbid_manual_mapping.create_mbid_manual_mapping(self.ts_conn, mapping)
+        
+        new_mapping = db_mbid_manual_mapping.get_mbid_manual_mapping(self.ts_conn, msid, user_id)
+        assert new_mapping.recording_mbid == mapping.recording_mbid
+        assert new_mapping.recording_msid == mapping.recording_msid
+        assert new_mapping.release_mbid == mapping.release_mbid
+        assert new_mapping.user_id == mapping.user_id
+
     def test_cant_add_same_mapping_twice(self):
         """Try and add the same mapping by the same user twice, it gets updated"""
         msid = "597fa2f2-8cf4-4566-a307-dbfb5aa35ec4"

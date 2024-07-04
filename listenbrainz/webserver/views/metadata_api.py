@@ -464,6 +464,7 @@ def submit_manual_mapping():
 
     recording_msid = request.json.get("recording_msid")
     recording_mbid = request.json.get("recording_mbid")
+    release_mbid = request.json.get("release_mbid")
     if not recording_msid or not is_valid_uuid(recording_msid):
         raise APIBadRequest("recording_msid is invalid or not present in arguments")
     if not recording_mbid or not is_valid_uuid(recording_mbid):
@@ -472,6 +473,7 @@ def submit_manual_mapping():
     mapping = MbidManualMapping(
         recording_msid=recording_msid,
         recording_mbid=recording_mbid,
+        release_mbid=release_mbid,
         user_id=user["id"]
     )
 

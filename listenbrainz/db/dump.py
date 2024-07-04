@@ -113,6 +113,7 @@ PUBLIC_TABLES_TIMESCALE_DUMP = {
         'id',
         'recording_msid',
         'recording_mbid',
+        'release_mbid',
         'user_id',
         'created',
     ),

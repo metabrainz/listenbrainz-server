@@ -8,6 +8,7 @@ class MbidManualMapping(BaseModel):
     """An instance of a msid-mbid mapping manually created by a user"""
     recording_msid: str
     recording_mbid: str
+    release_mbid: Optional[str]
     user_id: int
     created: Optional[datetime.datetime]
 
@@ -15,6 +16,7 @@ class MbidManualMapping(BaseModel):
         return {
             "recording_msid": self.recording_msid,
             "recording_mbid": self.recording_mbid,
+            "recording_mbid": self.release_mbid,
             "user_id": self.user_id,
             "created": self.created
         }

@@ -11,16 +11,18 @@ from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 def create_mbid_manual_mapping(ts_conn, mapping: MbidManualMapping):
     """Save a user mapping to the database. """
     query = """
-        INSERT INTO mbid_manual_mapping(recording_msid, recording_mbid, user_id)
-             VALUES (:recording_msid, :recording_mbid, :user_id)
+        INSERT INTO mbid_manual_mapping(recording_msid, recording_mbid, release_mbid, user_id)
+             VALUES (:recording_msid, :recording_mbid, :release_mbid, :user_id)
         ON CONFLICT (user_id, recording_msid)
       DO UPDATE SET recording_mbid = EXCLUDED.recording_mbid
+                SET release_mbid = EXCLUDED.release_mbid
     """
     ts_conn.execute(
         text(query),
         {
             "recording_msid": mapping.recording_msid,
             "recording_mbid": mapping.recording_mbid,
+            "release_mbid": mapping.release_mbid,
             "user_id": mapping.user_id
         }
     )
@@ -41,6 +43,7 @@ def get_mbid_manual_mapping(ts_conn, recording_msid: uuid.UUID, user_id: int) ->
     query = """
         SELECT recording_msid::text
              , recording_mbid::text
+             , release_mbid::text
              , user_id
              , created
           FROM mbid_manual_mapping
@@ -59,6 +62,7 @@ def get_mbid_manual_mapping(ts_conn, recording_msid: uuid.UUID, user_id: int) ->
         return MbidManualMapping(
             recording_msid=row.recording_msid,
             recording_mbid=row.recording_mbid,
+            release_mbid=row.release_mbid,
             user_id=row.user_id,
             created=row.created
         )
@@ -79,6 +83,7 @@ def get_mbid_manual_mappings(ts_conn, recording_msid: uuid.UUID) -> List[MbidMan
     query = """
         SELECT recording_msid::text
              , recording_mbid::text
+             , release_mbid::text
              , user_id
              , created
           FROM mbid_manual_mapping

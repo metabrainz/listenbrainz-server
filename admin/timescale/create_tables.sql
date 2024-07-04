@@ -62,6 +62,7 @@ CREATE TABLE mbid_manual_mapping(
     id             INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
     recording_msid UUID NOT NULL,
     recording_mbid UUID NOT NULL,
+    release_mbid UUID NOT NULL,
     user_id        INTEGER NOT NULL,
     created        TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );

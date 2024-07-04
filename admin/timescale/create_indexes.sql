@@ -81,7 +81,7 @@ CREATE UNIQUE INDEX similar_artist_credit_mbids_reverse_uniq_idx ON similarity.a
 
 CREATE INDEX similarity_overhyped_artists_artist_mbid_idx ON similarity.overhyped_artists(artist_mbid) INCLUDE (factor);
 
-CREATE INDEX mbid_manual_mapping_top_idx ON mbid_manual_mapping_top (recording_msid) INCLUDE (recording_mbid);
+CREATE INDEX mbid_manual_mapping_top_idx ON mbid_manual_mapping_top (recording_msid) INCLUDE (recording_mbid, release_mbid);
 
 CREATE INDEX popularity_recording_listen_count_idx ON popularity.recording (total_listen_count) INCLUDE (recording_mbid);
 CREATE INDEX popularity_recording_user_count_idx ON popularity.recording (total_user_count) INCLUDE (recording_mbid);
