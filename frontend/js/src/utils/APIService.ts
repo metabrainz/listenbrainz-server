@@ -1049,19 +1049,26 @@ export default class APIService {
   submitMBIDMapping = async (
     userToken: string,
     recordingMSID: string,
-    recordingMBID: string
+    recordingMBID: string,
+    releaseMBID?: string
   ): Promise<{ status: string }> => {
     const url = `${this.APIBaseURI}/metadata/submit_manual_mapping/`;
+    const optional: { release_mbid?: string } = {};
+    if (releaseMBID) {
+      optional.release_mbid = releaseMBID;
+    }
+    const body = {
+      recording_msid: recordingMSID,
+      recording_mbid: recordingMBID,
+      ...optional,
+    };
     const response = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({
-        recording_msid: recordingMSID,
-        recording_mbid: recordingMBID,
-      }),
+      body: JSON.stringify(body),
     });
     await this.checkStatus(response);
     return response.json();

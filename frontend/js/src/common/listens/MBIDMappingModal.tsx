@@ -3,6 +3,7 @@
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 import {
+  faChevronDown,
   faExchangeAlt,
   faInfoCircle,
   faQuestionCircle,
@@ -23,29 +24,22 @@ import {
   getRecordingMSID,
   getTrackName,
 } from "../../utils/utils";
+import { getListenFromRecording } from "../../user/components/AddListenModal";
+import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 
 export type MBIDMappingModalProps = {
   listenToMap?: Listen;
 };
-
-function getListenFromSelectedRecording(
-  selectedRecordingMetadata?: TrackMetadata
-): Listen | undefined {
-  if (!selectedRecordingMetadata) {
-    return undefined;
-  }
-  return {
-    listened_at: 0,
-    track_metadata: selectedRecordingMetadata,
-  };
-}
 
 export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   const modal = useModal();
   const { resolve, visible } = modal;
   const [copyTextClickCounter, setCopyTextClickCounter] = React.useState(0);
   const [selectedRecording, setSelectedRecording] = React.useState<
-    TrackMetadata
+    MusicBrainzRecordingWithReleasesAndRGs
+  >();
+  const [selectedRelease, setSelectedRelease] = React.useState<
+    MusicBrainzRelease & WithReleaseGroup
   >();
 
   const closeModal = React.useCallback(() => {
@@ -92,7 +86,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
       if (!listenToMap || !selectedRecording || !auth_token) {
         return;
       }
-      const selectedRecordingToListen = getListenFromSelectedRecording(
+      const selectedRecordingToListen = getListenFromRecording(
         selectedRecording
       );
       const recordingMBID =
@@ -104,7 +98,8 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
           await APIService.submitMBIDMapping(
             auth_token,
             recordingMSID,
-            recordingMBID
+            recordingMBID,
+            selectedRelease?.id
           );
         } catch (error) {
           handleError(error, "Error while linking listen");
@@ -133,6 +128,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
       APIService,
       selectedRecording,
       handleError,
+      selectedRelease,
     ]
   );
 
@@ -143,9 +139,9 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     );
   }, [listenToMap]);
 
-  const listenFromSelectedRecording = getListenFromSelectedRecording(
-    selectedRecording
-  );
+  const listenFromSelectedRecording = selectedRecording
+    ? getListenFromRecording(selectedRecording)
+    : undefined;
 
   if (!listenToMap) {
     return null;
@@ -251,7 +247,10 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                         title="Reset"
                         icon={faTimesCircle}
                         iconSize="lg"
-                        action={() => setSelectedRecording(undefined)}
+                        action={() => {
+                          setSelectedRecording(undefined);
+                          setSelectedRelease(undefined);
+                        }}
                       />
                     }
                   />
@@ -270,14 +269,114 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               ) : (
                 <div className="card listen-card">
                   <SearchTrackOrMBID
-                    expectedPayload="trackmetadata"
+                    expectedPayload="recording"
                     key={`${defaultValue}-${copyTextClickCounter}`}
-                    onSelectRecording={(trackMetadata) => {
-                      setSelectedRecording(trackMetadata);
+                    onSelectRecording={(newSelectedRecording) => {
+                      setSelectedRecording(newSelectedRecording);
+                      if (newSelectedRecording.releases?.length === 1) {
+                        setSelectedRelease(newSelectedRecording.releases[0]);
+                      } else {
+                        setSelectedRelease(undefined);
+                      }
                     }}
                     defaultValue={defaultValue}
                   />
                 </div>
+              )}
+              {selectedRecording && selectedRecording?.releases?.length > 1 && (
+                <>
+                  <h5
+                    data-toggle="collapse"
+                    data-target={`#collapsible-${selectedRecording.id}`}
+                    aria-controls={`collapsible-${selectedRecording.id}`}
+                    className="header-with-line collapsed"
+                    style={{
+                      gap: "5px",
+                      marginBottom: "0.5em",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                    id="select-release"
+                  >
+                    Choose from {selectedRecording?.releases?.length}{" "}
+                    releases&nbsp;
+                    <small>(optional)</small>&nbsp;
+                    <FontAwesomeIcon icon={faChevronDown} size="xs" />
+                  </h5>
+                  <div
+                    className="collapse"
+                    id={`collapsible-${selectedRecording.id}`}
+                  >
+                    <div className="help-block">
+                      Too many choices? See more details{" "}
+                      <a
+                        href={`https://musicbrainz.org/recording/${selectedRecording.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        on MusicBrainz
+                      </a>
+                      .
+                    </div>
+                    <div className="release-cards-grid">
+                      {selectedRecording.releases.map((release) => {
+                        const releaseGroup = release["release-group"];
+                        return (
+                          <span
+                            data-toggle="collapse"
+                            data-target={`#collapsible-${selectedRecording.id}`}
+                            key={release.id}
+                          >
+                            <ReleaseCard
+                              key={release.id}
+                              onClick={() => {
+                                setSelectedRelease(release);
+                              }}
+                              releaseName={release.title}
+                              releaseDate={release.date}
+                              dateFormatOptions={{
+                                year: "numeric",
+                                month: "short",
+                              }}
+                              releaseMBID={release.id}
+                              releaseGroupMBID={releaseGroup?.id}
+                              artistCreditName={selectedRecording[
+                                "artist-credit"
+                              ]
+                                ?.map(
+                                  (artist) =>
+                                    `${artist.name}${artist.joinphrase}`
+                                )
+                                .join("")}
+                              artistCredits={selectedRecording[
+                                "artist-credit"
+                              ].map((ac) => ({
+                                artist_credit_name: ac.name,
+                                artist_mbid: ac.artist.id,
+                                join_phrase: ac.joinphrase,
+                              }))}
+                              artistMBIDs={selectedRecording[
+                                "artist-credit"
+                              ]?.map((ac) => ac.artist.id)}
+                              releaseTypePrimary={
+                                releaseGroup?.["primary-type"]
+                              }
+                              releaseTypeSecondary={releaseGroup?.[
+                                "secondary-types"
+                              ].join("+")}
+                              caaID={null}
+                              caaReleaseMBID={release.id}
+                              showTags={false}
+                              showArtist
+                              showReleaseTitle
+                              showInformation
+                            />
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
             <div className="modal-footer">
