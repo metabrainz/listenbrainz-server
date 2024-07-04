@@ -5,6 +5,32 @@ from lxml import etree
 
 
 class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
+    def test_atom_feeds_invalid_params(self):
+        """
+        Check server sends 400 for invalid params.
+        """
+        ## Listens feed
+        listens_feed_url = self.custom_url_for(
+            "atom.get_listens", user_name=self.user["musicbrainz_id"]
+        )
+        # invalid param
+        response = self.client.get(listens_feed_url, query_string={"minutes": "-1"})
+        self.assert400(response)
+        # invalid user
+        invalid_user_url = self.custom_url_for("atom.get_listens", user_name="invalid")
+        response = self.client.get(
+                invalid_user_url,
+            query_string={"interval": 1},
+        )
+        self.assert404(response)
+        
+        ## Fresh releases feed
+        fresh_releases_url = self.custom_url_for("atom.get_fresh_releases")
+        response = self.client.get(fresh_releases_url, query_string={"days": "0"})
+        self.assert400(response)
+        response = self.client.get(fresh_releases_url, query_string={"days": "91"})
+        self.assert400(response)
+
     def test_user_listens_feed(self):
         """
         Check server sends valid listens feed.
@@ -30,18 +56,8 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         if element is None:
             self.fail("No id element found in feed")
         self.assertEqual(
-            element.text, f"https://listenbrainz.org/user/{self.user['musicbrainz_id']}"
+            element.text, f"{self.app.config['SERVER_ROOT_URL']}/user/{self.user['musicbrainz_id']}"
         )
-
-    def test_user_listens_feed_invalid_interval(self):
-        """
-        Check server sends 400 for invalid interval.
-        """
-        url = self.custom_url_for(
-            "atom.get_listens", user_name=self.user["musicbrainz_id"]
-        )
-        response = self.client.get(url, query_string={"interval": "invalid"})
-        self.assert400(response)
 
     def test_user_listens_feed_entry_id(self):
         """
@@ -69,7 +85,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
             self.fail("No id element found in feed")
         self.assertEqual(
             element.text,
-            f"https://listenbrainz.org/syndication-feed/user/{self.user['musicbrainz_id']}/listens/{ts}/{payload['payload'][0]['track_metadata']['track_name']}",
+            f"{self.app.config['SERVER_ROOT_URL']}/syndication-feed/user/{self.user['musicbrainz_id']}/listens/{ts}/{payload['payload'][0]['track_metadata']['track_name']}",
         )
 
     def test_user_listens_feed_entry_order(self):
@@ -107,9 +123,9 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(len(element), 2)
         self.assertEqual(
             element[0].text,
-            f"https://listenbrainz.org/syndication-feed/user/{self.user['musicbrainz_id']}/listens/{ts2}/{payload['payload'][0]['track_metadata']['track_name']}",
+            f"{self.app.config['SERVER_ROOT_URL']}/syndication-feed/user/{self.user['musicbrainz_id']}/listens/{ts2}/{payload['payload'][0]['track_metadata']['track_name']}",
         )
         self.assertEqual(
             element[1].text,
-            f"https://listenbrainz.org/syndication-feed/user/{self.user['musicbrainz_id']}/listens/{ts1}/{payload['payload'][0]['track_metadata']['track_name']}",
+            f"{self.app.config['SERVER_ROOT_URL']}/syndication-feed/user/{self.user['musicbrainz_id']}/listens/{ts1}/{payload['payload'][0]['track_metadata']['track_name']}",
         )
