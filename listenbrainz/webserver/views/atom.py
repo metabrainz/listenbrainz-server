@@ -35,33 +35,30 @@ def get_listens(user_name):
     if user is None:
         return Response(status=404)
 
-    # Get and validate interval
     interval = request.args.get("interval", 60)
     if interval:
         try:
             interval = int(interval)
         except ValueError:
             return Response(status=400)
-
     if interval < 1:
         return Response(status=400)
 
-    # Construct UTC timestamp for interval
     from_ts = datetime.now() - timedelta(minutes=interval)
-
     listens, _, _ = timescale_connection._ts.fetch_listens(user, from_ts=from_ts)
+    
+    server_root_url = current_app.config['SERVER_ROOT_URL']
 
     fg = FeedGenerator()
-    # TODO: use {base_url} instead of hardcoded url
-    fg.id(f"https://listenbrainz.org/user/{user_name}")
+    fg.id(f"{server_root_url}/user/{user_name}")
     fg.title(f"Listens for {user_name} - ListenBrainz")
     fg.author({"name": "ListenBrainz"})
-    fg.link(href=f"https://listenbrainz.org/user/{user_name}", rel="alternate")
+    fg.link(href=f"{server_root_url}/user/{user_name}", rel="alternate")
     fg.link(
-        href=f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens",
+        href=f"{server_root_url}/syndication-feed/user/{user_name}/listens",
         rel="self",
     )
-    fg.logo("https://listenbrainz.org/static/img/listenbrainz_logo_icon.svg")
+    fg.logo(f"{server_root_url}/static/img/listenbrainz_logo_icon.svg")
     fg.language("en")
 
     # newer listen comes first
@@ -69,11 +66,12 @@ def get_listens(user_name):
         fe = fg.add_entry()
         # according to spec, ids don't have to be deferencable.
         fe.id(
-            f"https://listenbrainz.org/syndication-feed/user/{user_name}/listens/{listen.ts_since_epoch}/{listen.data['track_name']}"
+            f"{server_root_url}/syndication-feed/user/{user_name}/listens/{listen.ts_since_epoch}/{listen.data['track_name']}"
         )
         fe.title(f"{listen.data['track_name']} - {listen.data['artist_name']}")
 
         _content = render_template("atom/listens.html",
+            server_root_url=server_root_url,
             user_name=listen.user_name,
             track_name=listen.data["track_name"],
             recording_mbid=listen.data["additional_info"].get("recording_mbid"),
@@ -83,11 +81,11 @@ def get_listens(user_name):
             release_mbid=listen.data["additional_info"].get("release_mbid"),
             release_name=listen.data["release_name"],
         )
-
         fe.content(
             content=_content,
             type="html",
         )
+
         fe.published(listen.timestamp)
         fe.updated(listen.timestamp)
 
