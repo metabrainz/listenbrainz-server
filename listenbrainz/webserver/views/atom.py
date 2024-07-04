@@ -77,7 +77,6 @@ def get_listens(user_name):
             recording_mbid=listen.data["additional_info"].get("recording_mbid"),
             artist_name=listen.data["artist_name"],
             artist_mbid=listen.data['additional_info'].get('artist_mbid'),
-            time=listen.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
             release_mbid=listen.data["additional_info"].get("release_mbid"),
             release_name=listen.data["release_name"],
         )

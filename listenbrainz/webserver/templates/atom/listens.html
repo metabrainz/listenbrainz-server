@@ -10,7 +10,6 @@
     {% if artist_mbid -%}
         <a href="{{ server_root_url }}/artist/{{ artist_mbid }}">{{ artist_name }}</a>
     {%- else -%}
-        {{ artist_name }}
+        {{ artist_name }}.
     {%- endif %}
-    on {{ time }}.
 </p>
