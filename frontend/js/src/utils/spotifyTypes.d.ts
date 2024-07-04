@@ -1,6 +1,6 @@
 declare type SpotifyUser = {
-    access_token?: string;
-    permission?: Array<SpotifyPermission>;
+  access_token?: string;
+  permission?: Array<SpotifyPermission>;
 };
 
 declare type SpotifyPermission =
