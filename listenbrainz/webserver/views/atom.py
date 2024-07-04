@@ -106,8 +106,6 @@ def get_fresh_releases():
     Get site-wide fresh releases.
 
     :param days: The number of days of fresh releases to show. Max 90 days.
-    :param past: Whether to show releases in the past. Default True.
-    :param future: Whether to show releases in the future. Default True.
     :statuscode 200: The feed was successfully generated.
     :statuscode 400: Bad request.
     :statuscode 500: Server failed to get latest release.
@@ -117,12 +115,10 @@ def get_fresh_releases():
     if days < 1 or days > MAX_NUMBER_OF_FRESH_RELEASE_DAYS:
         return Response(status=400)
 
-    past = _parse_bool_arg("past", True)
-    future = _parse_bool_arg("future", True)
-
     try:
+        # Get past fresh releases sorted by release date
         db_releases, _ = get_sitewide_fresh_releases(
-            ts_conn, date.today(), days, "release_date", past, future
+            ts_conn, date.today(), days, "release_date", True, False
         )
     except Exception as e:
         current_app.logger.error("Server failed to get latest release: {}".format(e))
