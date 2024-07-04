@@ -124,43 +124,53 @@ def get_fresh_releases():
         current_app.logger.error("Server failed to get latest release: {}".format(e))
         return Response(status=500)
 
+    server_root_url = current_app.config["SERVER_ROOT_URL"]
+
     fg = FeedGenerator()
-    fg.id(f"https://listenbrainz.org/explore/fresh-releases")
+    fg.id(f"{server_root_url}/explore/fresh-releases")
     fg.title(f"Fresh Releases - ListenBrainz")
     fg.author({"name": "ListenBrainz"})
-    fg.link(href=f"https://listenbrainz.org/explore/fresh-releases", rel="alternate")
+    fg.link(href=f"{server_root_url}/explore/fresh-releases", rel="alternate")
     fg.link(
-        href=f"https://listenbrainz.org/syndication-feed/fresh_releases",
+        href=f"{server_root_url}/syndication-feed/fresh_releases",
         rel="self",
     )
-    fg.logo("https://listenbrainz.org/static/img/listenbrainz_logo_icon.svg")
+    fg.logo(f"{server_root_url}/static/img/listenbrainz_logo_icon.svg")
     fg.language("en")
 
     for r in db_releases:
         release_name = r.release_name
         artist_credit_name = r.artist_credit_name
-        time = r.release_date.strftime("%Y-%m-%d")
+        release_date = r.release_date
+        release_mbid = r.release_mbid
+        artist_mbid = r.artist_mbids[0] if r.artist_mbids else None
+        
+        _t = datetime.combine(release_date, datetime.min.time())
+        _t_with_tz = _t.replace(tzinfo=timezone.utc)
+        _uts = int(_t.timestamp())
 
         fe = fg.add_entry()
         fe.id(
-            f"https://listenbrainz.org/syndication-feed/fresh_releases/{time}/{artist_credit_name}/{release_name}"
+            f"{server_root_url}/syndication-feed/fresh_releases/{_uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
         _content = render_template(
             "atom/fresh_releases.html",
+            server_root_url=server_root_url,
             artist_credit_name=artist_credit_name,
+            artist_mbid=artist_mbid,
             release_name=release_name,
-            time=time,
+            release_mbid=release_mbid,
         )
-
         fe.content(
             content=_content,
             type="html",
         )
-        t = datetime.combine(r.release_date, datetime.min.time())
-        fe.published(t.replace(tzinfo=timezone.utc))
-        fe.updated(t.replace(tzinfo=timezone.utc))
+        
+        # TODO: release on user's timezone midnight
+        fe.published(_t_with_tz)
+        fe.updated(_t_with_tz)
 
     atomfeed = fg.atom_str(pretty=True)
 
