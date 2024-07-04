@@ -46,8 +46,8 @@ def get_listens(user_name):
 
     from_ts = datetime.now() - timedelta(minutes=interval)
     listens, _, _ = timescale_connection._ts.fetch_listens(user, from_ts=from_ts)
-    
-    server_root_url = current_app.config['SERVER_ROOT_URL']
+
+    server_root_url = current_app.config["SERVER_ROOT_URL"]
 
     fg = FeedGenerator()
     fg.id(f"{server_root_url}/user/{user_name}")
@@ -70,13 +70,18 @@ def get_listens(user_name):
         )
         fe.title(f"{listen.data['track_name']} - {listen.data['artist_name']}")
 
-        _content = render_template("atom/listens.html",
+        _content = render_template(
+            "atom/listens.html",
             server_root_url=server_root_url,
             user_name=listen.user_name,
             track_name=listen.data["track_name"],
             recording_mbid=listen.data["additional_info"].get("recording_mbid"),
             artist_name=listen.data["artist_name"],
-            artist_mbid=listen.data['additional_info'].get('artist_mbids')[0] if listen.data['additional_info'].get('artist_mbids') else None, # needs mbid mapping
+            artist_mbid=(
+                listen.data["additional_info"].get("artist_mbids")[0]
+                if listen.data["additional_info"].get("artist_mbids")
+                else None
+            ),  # needs mbid mapping
             release_mbid=listen.data["additional_info"].get("release_mbid"),
             release_name=listen.data["release_name"],
         )
@@ -116,7 +121,9 @@ def get_fresh_releases():
     future = _parse_bool_arg("future", True)
 
     try:
-        db_releases, _ = get_sitewide_fresh_releases(ts_conn, date.today(), days, "release_date", past, future)
+        db_releases, _ = get_sitewide_fresh_releases(
+            ts_conn, date.today(), days, "release_date", past, future
+        )
     except Exception as e:
         current_app.logger.error("Server failed to get latest release: {}".format(e))
         raise Response(status=500)
@@ -143,11 +150,12 @@ def get_fresh_releases():
             f"https://listenbrainz.org/syndication-feed/fresh_releases/{time}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
-        
-        _content = render_template("atom/fresh_releases.html",
-                                   artist_credit_name=artist_credit_name,
-                                   release_name=release_name,
-                                   time=time
+
+        _content = render_template(
+            "atom/fresh_releases.html",
+            artist_credit_name=artist_credit_name,
+            release_name=release_name,
+            time=time,
         )
 
         fe.content(
@@ -189,12 +197,18 @@ def get_releases(user_name):
 
     if not past:
         releases = [
-            r for r in releases if "release_date" in r and datetime.strptime(r["release_date"], "%Y-%m-%d").date() >= date.today()
+            r
+            for r in releases
+            if "release_date" in r
+            and datetime.strptime(r["release_date"], "%Y-%m-%d").date() >= date.today()
         ]
 
     if not future:
         releases = [
-            r for r in releases if "release_date" in r and datetime.strptime(r["release_date"], "%Y-%m-%d").date() <= date.today()
+            r
+            for r in releases
+            if "release_date" in r
+            and datetime.strptime(r["release_date"], "%Y-%m-%d").date() <= date.today()
         ]
 
     fg = FeedGenerator()
@@ -210,9 +224,9 @@ def get_releases(user_name):
     fg.language("en")
 
     for r in releases:
-        release_name = r['release_name']
-        artist_credit_name = r['artist_credit_name']
-        time = r['release_date']
+        release_name = r["release_name"]
+        artist_credit_name = r["artist_credit_name"]
+        time = r["release_date"]
 
         fe = fg.add_entry()
         fe.id(
@@ -220,10 +234,11 @@ def get_releases(user_name):
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
-        _content = render_template("atom/fresh_releases.html",
-                                   artist_credit_name=artist_credit_name,
-                                   release_name=release_name,
-                                   time=time
+        _content = render_template(
+            "atom/fresh_releases.html",
+            artist_credit_name=artist_credit_name,
+            release_name=release_name,
+            time=time,
         )
 
         fe.content(
