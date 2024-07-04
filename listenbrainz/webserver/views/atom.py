@@ -25,7 +25,7 @@ def get_listens(user_name):
     """
     Get listens feed for a user.
 
-    :param interval: The time interval in minutes from current time to fetch listens for. For example, if interval=60, listens from the last hour will be fetched. Default is 60.
+    :param minutes: The time interval in minutes from current time to fetch listens for. For example, if minutes=60, listens from the last hour will be fetched. Default is 60.
     :statuscode 200: The feed was successfully generated.
     :statuscode 400: Bad request.
     :statuscode 404: The user does not exist.
@@ -35,16 +35,16 @@ def get_listens(user_name):
     if user is None:
         return Response(status=404)
 
-    interval = request.args.get("interval", 60)
-    if interval:
+    minutes = request.args.get("minutes", 60)
+    if minutes:
         try:
-            interval = int(interval)
+            minutes = int(minutes)
         except ValueError:
             return Response(status=400)
-    if interval < 1:
+    if minutes < 1:
         return Response(status=400)
 
-    from_ts = datetime.now() - timedelta(minutes=interval)
+    from_ts = datetime.now() - timedelta(minutes=minutes)
     listens, _, _ = timescale_connection._ts.fetch_listens(user, from_ts=from_ts)
 
     server_root_url = current_app.config["SERVER_ROOT_URL"]
