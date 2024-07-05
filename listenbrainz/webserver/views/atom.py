@@ -144,7 +144,7 @@ def get_fresh_releases():
         release_date = r.release_date
         release_mbid = r.release_mbid
         artist_mbid = r.artist_mbids[0] if r.artist_mbids else None
-        
+
         _t = datetime.combine(release_date, datetime.min.time())
         _t_with_tz = _t.replace(tzinfo=timezone.utc)
         _uts = int(_t.timestamp())
@@ -167,8 +167,7 @@ def get_fresh_releases():
             content=_content,
             type="html",
         )
-        
-        # TODO: release on user's timezone midnight
+
         fe.published(_t_with_tz)
         fe.updated(_t_with_tz)
 
@@ -183,8 +182,6 @@ def get_releases(user_name):
     """
     Get fresh releases for a user, sorted by release date.
 
-    :param past: Whether to show releases in the past. Default True.
-    :param future: Whether to show releases in the future. Default True.
     :statuscode 200: The feed was successfully generated.
     :statuscode 400: Bad request.
     :statuscode 404: The user does not exist.
@@ -194,66 +191,66 @@ def get_releases(user_name):
     if user is None:
         return Response(status=404)
 
-    past = _parse_bool_arg("past", True)
-    future = _parse_bool_arg("future", True)
-
     data = db_get_fresh_releases(user["id"])
-    releases = data["releases"] if data else []
-    releases = sorted(releases, key=lambda k: k.get("release_date", ""))
-
-    if not past:
-        releases = [
+    releases = sorted(
+        [
             r
-            for r in releases
+            for r in data["releases"]
             if "release_date" in r
-            and datetime.strptime(r["release_date"], "%Y-%m-%d").date() >= date.today()
-        ]
+            and datetime.strptime(r["release_date"], "%Y-%m-%d").date()
+            <= date.today()  # only include past releases
+        ],
+        key=lambda k: k.get("release_date", ""),  # sort by release date
+    )
 
-    if not future:
-        releases = [
-            r
-            for r in releases
-            if "release_date" in r
-            and datetime.strptime(r["release_date"], "%Y-%m-%d").date() <= date.today()
-        ]
+    server_root_url = current_app.config["SERVER_ROOT_URL"]
 
     fg = FeedGenerator()
-    fg.id(f"https://listenbrainz.org/user/{user_name}/fresh_releases")
+    fg.id(f"{server_root_url}/user/{user_name}/fresh_releases")
     fg.title(f"Fresh Releases for {user_name} - ListenBrainz")
     fg.author({"name": "ListenBrainz"})
-    fg.link(href=f"https://listenbrainz.org/explore/fresh-releases", rel="alternate")
+    fg.link(href=f"{server_root_url}/explore/fresh-releases", rel="alternate")
     fg.link(
-        href=f"https://listenbrainz.org/syndication-feed/user/{user_name}/fresh_releases",
+        href=f"{server_root_url}/syndication-feed/user/{user_name}/fresh_releases",
         rel="self",
     )
-    fg.logo("https://listenbrainz.org/static/img/listenbrainz_logo_icon.svg")
+    fg.logo(f"{server_root_url}/static/img/listenbrainz_logo_icon.svg")
     fg.language("en")
 
     for r in releases:
         release_name = r["release_name"]
         artist_credit_name = r["artist_credit_name"]
-        time = r["release_date"]
+        release_date = r["release_date"]
+        release_mbid = r["release_mbid"]
+        artist_mbid = r["artist_mbids"][0] if r["artist_mbids"] else None
+
+        _t = datetime.combine(
+            datetime.strptime(release_date, "%Y-%m-%d"), datetime.min.time()
+        )
+        _t_with_tz = _t.replace(tzinfo=timezone.utc)
+        _uts = int(_t.timestamp())
 
         fe = fg.add_entry()
         fe.id(
-            f"https://listenbrainz.org/syndication-feed/user/{user_name}/fresh_releases/{time}/{artist_credit_name}/{release_name}"
+            f"{server_root_url}/syndication-feed/user/{user_name}/fresh_releases/{_uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
         _content = render_template(
             "atom/fresh_releases.html",
+            server_root_url=server_root_url,
             artist_credit_name=artist_credit_name,
+            artist_mbid=artist_mbid,
             release_name=release_name,
-            time=time,
+            release_mbid=release_mbid,
         )
-
         fe.content(
             content=_content,
             type="html",
         )
-        t = datetime.combine(datetime.strptime(time, "%Y-%m-%d"), datetime.min.time())
-        fe.published(t.replace(tzinfo=timezone.utc))
-        fe.updated(t.replace(tzinfo=timezone.utc))
+
+        fe.published(_t_with_tz)
+        fe.updated(_t_with_tz)
 
     atomfeed = fg.atom_str(pretty=True)
 
