@@ -130,6 +130,9 @@ class SoundcloudCrawlerHandler(BaseHandler):
         return SoundcloudTrack(
             id=str(track["id"]),
             name=track["title"],
+            release_year=track.get("release_year"),
+            release_month=track.get("release_month"),
+            release_day=track.get("release_day"),
             artist=artist,
             data=track
         )
@@ -206,7 +209,7 @@ class SoundcloudCrawlerHandler(BaseHandler):
         execute_values(curs, query, values)
 
         query = SQL("""
-            INSERT INTO soundcloud_cache.track (track_id, name, artist_id, data)
+            INSERT INTO soundcloud_cache.track (track_id, name, artist_id, release_year, release_month, release_day, data)
                  VALUES %s
             ON CONFLICT (track_id)
               DO UPDATE
@@ -214,7 +217,7 @@ class SoundcloudCrawlerHandler(BaseHandler):
                       , artist_id = EXCLUDED.artist_id
                       , data = EXCLUDED.data
         """)
-        values = [(t.id, t.name, t.artist.id, orjson.dumps(t.data).decode("utf-8")) for t in tracks]
+        values = [(t.id, t.name, t.artist.id, t.release_year, t.release_month, t.release_day, orjson.dumps(t.data).decode("utf-8")) for t in tracks]
         execute_values(curs, query, values)
 
     def update_cache(self, tracks: list[SoundcloudTrack]):

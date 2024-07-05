@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -9,5 +11,8 @@ class SoundcloudArtist(BaseModel):
 class SoundcloudTrack(BaseModel):
     id: str
     name: str
+    release_year: Optional[int]
+    release_month: Optional[int]
+    release_day: Optional[int]
     artist: SoundcloudArtist
     data: dict
