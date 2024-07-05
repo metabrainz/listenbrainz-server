@@ -1,13 +1,13 @@
 <p>
-    {% if artist_mbid -%}
-        <a href="{{ server_root_url }}/artist/{{ artist_mbid }}">{{ artist_credit_name }}</a>
+    {% if artist.href -%}
+        <a href="{{ artist.href }}">{{ artist.artist_name }}</a>
     {%- else -%}
-        {{ artist_name }}
+        {{ artist.artist_name }}
     {%- endif %}
     released
-    {% if release_mbid -%}
-        <a href="https://musicbrainz.org/release/{{ release_mbid }}">{{ release_name }}</a>.
+    {% if release.href -%}
+        <a href="{{ release.href }}">{{ release.release_name }}</a>.
     {%- else -%}
-        {{ release_name }}.
+        {{ release.release_name }}.
     {%- endif %}
 </p>

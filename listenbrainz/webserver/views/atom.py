@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, date, timezone
 from feedgen.feed import FeedGenerator
-from flask import Blueprint, Response, current_app, request, render_template
+from flask import Blueprint, Response, current_app, request, render_template, url_for
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
@@ -15,6 +15,9 @@ from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
 
 atom_bp = Blueprint("atom", __name__)
+
+def _external_url_for(endpoint, **values):
+    return url_for(endpoint, _external=True, **values)
 
 
 @atom_bp.route("/user/<user_name>/listens", methods=["GET"])
@@ -47,43 +50,55 @@ def get_listens(user_name):
     from_ts = datetime.now() - timedelta(minutes=minutes)
     listens, _, _ = timescale_connection._ts.fetch_listens(user, from_ts=from_ts)
 
-    server_root_url = current_app.config["SERVER_ROOT_URL"]
-
     fg = FeedGenerator()
-    fg.id(f"{server_root_url}/user/{user_name}")
+    fg.id(_external_url_for("atom.get_listens", user_name=user_name))
     fg.title(f"Listens for {user_name} - ListenBrainz")
     fg.author({"name": "ListenBrainz"})
-    fg.link(href=f"{server_root_url}/user/{user_name}", rel="alternate")
     fg.link(
-        href=f"{server_root_url}/syndication-feed/user/{user_name}/listens",
+        href=_external_url_for("user.index", path="", user_name=user_name),
+        rel="alternate",
+    )
+    fg.link(
+        href=_external_url_for("atom.get_listens", user_name=user_name),
         rel="self",
     )
-    fg.logo(f"{server_root_url}/static/img/listenbrainz_logo_icon.svg")
+    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
     fg.language("en")
 
     # newer listen comes first
     for listen in reversed(listens):
+        current_app.logger.info(listen)
+        track_name = listen.data["track_name"]
+        current_app.logger.info(track_name)
+        recording_mbid = listen.data["additional_info"].get("recording_mbid")
+        artist_name = listen.data["artist_name"]
+        artist_mbid = (
+            listen.data["additional_info"].get("artist_mbids")[0]
+            if listen.data["additional_info"].get("artist_mbids")
+            else None
+        )
+
         fe = fg.add_entry()
         # according to spec, ids don't have to be deferencable.
         fe.id(
-            f"{server_root_url}/syndication-feed/user/{user_name}/listens/{listen.ts_since_epoch}/{listen.data['track_name']}"
+            f"{_external_url_for('atom.get_listens', user_name=user_name)}/{listen.ts_since_epoch}/{track_name}"
         )
-        fe.title(f"{listen.data['track_name']} - {listen.data['artist_name']}")
+        fe.title(f"{track_name} - {artist_name}")
 
         _content = render_template(
             "atom/listens.html",
-            server_root_url=server_root_url,
-            user_name=listen.user_name,
-            track_name=listen.data["track_name"],
-            recording_mbid=listen.data["additional_info"].get("recording_mbid"),
-            artist_name=listen.data["artist_name"],
-            artist_mbid=(
-                listen.data["additional_info"].get("artist_mbids")[0]
-                if listen.data["additional_info"].get("artist_mbids")
-                else None
-            ),  # needs mbid mapping
-            release_mbid=listen.data["additional_info"].get("release_mbid"),
-            release_name=listen.data["release_name"],
+            user={
+                "href": _external_url_for("user.index", path="", user_name=user_name),
+                "user_name": user_name,
+            },
+            track={
+                "href": f"https://musicbrainz.org/recording/{recording_mbid}",
+                "track_name": track_name,
+            },
+            artist={
+                "href": _external_url_for("artist.artist_page", path=artist_mbid),
+                "artist_name": artist_name,
+            },
         )
         fe.content(
             content=_content,
@@ -124,18 +139,18 @@ def get_fresh_releases():
         current_app.logger.error("Server failed to get latest release: {}".format(e))
         return Response(status=500)
 
-    server_root_url = current_app.config["SERVER_ROOT_URL"]
-
     fg = FeedGenerator()
-    fg.id(f"{server_root_url}/explore/fresh-releases")
+    fg.id(_external_url_for("atom.get_fresh_releases"))
     fg.title(f"Fresh Releases - ListenBrainz")
     fg.author({"name": "ListenBrainz"})
-    fg.link(href=f"{server_root_url}/explore/fresh-releases", rel="alternate")
     fg.link(
-        href=f"{server_root_url}/syndication-feed/fresh_releases",
+        href=_external_url_for("explore.index", path="fresh-releases"), rel="alternate"
+    )
+    fg.link(
+        href=_external_url_for("atom.get_fresh_releases"),
         rel="self",
     )
-    fg.logo(f"{server_root_url}/static/img/listenbrainz_logo_icon.svg")
+    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
     fg.language("en")
 
     for r in db_releases:
@@ -151,17 +166,20 @@ def get_fresh_releases():
 
         fe = fg.add_entry()
         fe.id(
-            f"{server_root_url}/syndication-feed/fresh_releases/{_uts}/{artist_credit_name}/{release_name}"
+            f"{_external_url_for('atom.get_fresh_releases')}/{_uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
         _content = render_template(
             "atom/fresh_releases.html",
-            server_root_url=server_root_url,
-            artist_credit_name=artist_credit_name,
-            artist_mbid=artist_mbid,
-            release_name=release_name,
-            release_mbid=release_mbid,
+            artist={
+                "href": _external_url_for("artist.artist_page", path=artist_mbid),
+                "artist_name": artist_credit_name,
+            },
+            release={
+                "href": f"https://musicbrainz.org/release/{release_mbid}",
+                "release_name": release_name,
+            },
         )
         fe.content(
             content=_content,
@@ -203,18 +221,18 @@ def get_releases(user_name):
         key=lambda k: k.get("release_date", ""),  # sort by release date
     )
 
-    server_root_url = current_app.config["SERVER_ROOT_URL"]
-
     fg = FeedGenerator()
-    fg.id(f"{server_root_url}/user/{user_name}/fresh_releases")
+    fg.id(_external_url_for("atom.get_releases", user_name=user_name))
     fg.title(f"Fresh Releases for {user_name} - ListenBrainz")
     fg.author({"name": "ListenBrainz"})
-    fg.link(href=f"{server_root_url}/explore/fresh-releases", rel="alternate")
     fg.link(
-        href=f"{server_root_url}/syndication-feed/user/{user_name}/fresh_releases",
+        href=_external_url_for("explore.index", path="fresh-releases"), rel="alternate"
+    )
+    fg.link(
+        href=_external_url_for("atom.get_releases", user_name=user_name),
         rel="self",
     )
-    fg.logo(f"{server_root_url}/static/img/listenbrainz_logo_icon.svg")
+    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
     fg.language("en")
 
     for r in releases:
@@ -232,17 +250,20 @@ def get_releases(user_name):
 
         fe = fg.add_entry()
         fe.id(
-            f"{server_root_url}/syndication-feed/user/{user_name}/fresh_releases/{_uts}/{artist_credit_name}/{release_name}"
+            f"{_external_url_for('atom.get_releases', user_name=user_name)}/{_uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
         _content = render_template(
             "atom/fresh_releases.html",
-            server_root_url=server_root_url,
-            artist_credit_name=artist_credit_name,
-            artist_mbid=artist_mbid,
-            release_name=release_name,
-            release_mbid=release_mbid,
+            artist={
+                "href": _external_url_for("artist.artist_page", path=artist_mbid),
+                "artist_name": artist_credit_name,
+            },
+            release={
+                "href": f"https://musicbrainz.org/release/{release_mbid}",
+                "release_name": release_name,
+            },
         )
         fe.content(
             content=_content,
