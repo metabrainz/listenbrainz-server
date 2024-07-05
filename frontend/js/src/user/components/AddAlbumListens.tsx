@@ -68,6 +68,7 @@ type TrackRowProps = {
 };
 
 function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
+  const trackDuration = track.length ?? track.recording.length;
   return (
     <div className="add-album-track">
       <input
@@ -83,8 +84,10 @@ function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
           : track.number}
       </strong>
       <span>{track.title}</span>
-      <span className={`duration ${!track.length ? "default-duration" : ""}`}>
-        {millisecondsToStr(track.length ?? DEFAULT_TRACK_LENGTH_SECONDS * 1000)}
+      <span className={`duration ${!trackDuration ? "default-duration" : ""}`}>
+        {millisecondsToStr(
+          trackDuration ?? DEFAULT_TRACK_LENGTH_SECONDS * 1000
+        )}
       </span>
     </div>
   );
