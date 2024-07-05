@@ -1,6 +1,7 @@
-import React, { useCallback, useContext, useState } from "react";
+import React from "react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { ToastMsg } from "../../../notifications/Notifications";
 import Loader from "../../../components/Loader";
@@ -47,7 +48,10 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
               error?.message === "Forbidden" ? (
                 <>
                   Session has expired. Please reconnect to{" "}
-                  <a href="/settings/music-services/details/">Apple Music</a>.
+                  <Link to="/settings/music-services/details/">
+                    Apple Music
+                  </Link>
+                  .
                 </>
               ) : (
                 error?.message ?? error
@@ -121,10 +125,10 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
   return (
     <div
       className={`modal fade ${modal.visible ? "in" : ""}`}
-      id="ImportSpotifyPlaylistModal"
+      id="ImportMusicServicePlaylistModal"
       tabIndex={-1}
       role="dialog"
-      aria-labelledby="ImportSpotifyPlaylistLabel"
+      aria-labelledby="ImportMusicServicePlaylistLabel"
       data-backdrop="static"
     >
       <div className="modal-dialog" role="document">
@@ -141,7 +145,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
             </button>
             <h4
               className="modal-title"
-              id="ImportSpotifyPlaylistLabel"
+              id="ImportMusicServicePlaylistLabel"
               style={{ textAlign: "center" }}
             >
               Import playlist from Apple Music
