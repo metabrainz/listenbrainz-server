@@ -8,7 +8,7 @@ import {
   faFileImport,
   faMusic,
 } from "@fortawesome/free-solid-svg-icons";
-import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { faSpotify, faItunesNote } from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
 
 import NiceModal from "@ebay/nice-modal-react";
@@ -193,7 +193,7 @@ export default class UserPlaylists extends React.Component<
                       });
                     }}
                     data-toggle="modal"
-                    data-target="#ImportSpotifyPlaylistModal"
+                    data-target="#ImportMusicServicePlaylistModal"
                   >
                     <FontAwesomeIcon icon={faSpotify} />
                     &nbsp;Spotify
@@ -216,9 +216,9 @@ export default class UserPlaylists extends React.Component<
                       });
                     }}
                     data-toggle="modal"
-                    data-target="#ImportSpotifyPlaylistModal"
+                    data-target="#ImportMusicServicePlaylistModal"
                   >
-                    <FontAwesomeIcon icon={faMusic} />
+                    <FontAwesomeIcon icon={faItunesNote} />
                     &nbsp;Apple Music
                   </button>
                 </li>
