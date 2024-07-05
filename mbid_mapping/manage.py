@@ -9,6 +9,7 @@ import click
 from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
 from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
+from mapping.soundcloud_metadata_index import create_soundcloud_metadata_index
 from mapping.typesense_index import build_all as action_build_index
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
@@ -211,6 +212,14 @@ def build_apple_metadata_index(use_lb_conn):
     """
     create_apple_metadata_index(use_lb_conn)
 
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_apple_metadata_index(use_lb_conn):
+    """
+        Build the Soundcloud Music metadata index that LB uses
+    """
+    create_soundcloud_metadata_index(use_lb_conn)
 
 @cli.command()
 def build_tag_similarity():
