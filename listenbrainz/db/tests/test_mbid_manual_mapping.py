@@ -31,7 +31,7 @@ class MbidManualMappingDatabaseTestCase(TimescaleTestCase):
 
         mapping = MbidManualMapping(recording_msid=msid, recording_mbid=mbid, release_mbid=release_mbid, user_id=user_id)
         db_mbid_manual_mapping.create_mbid_manual_mapping(self.ts_conn, mapping)
-        
+
         new_mapping = db_mbid_manual_mapping.get_mbid_manual_mapping(self.ts_conn, msid, user_id)
         assert new_mapping.recording_mbid == mapping.recording_mbid
         assert new_mapping.recording_msid == mapping.recording_msid
