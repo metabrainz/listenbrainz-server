@@ -84,13 +84,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     trackUrl,
   } = props;
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
+  const [isMobile, setIsMobile] = React.useState(false);
   const { currentUser } = React.useContext(GlobalAppContext);
 
   // BrainzPlayerContext
   const { queueRepeatMode } = useBrainzPlayerContext();
   const dispatch = useBrainzPlayerDispatch();
 
-  // const { currentListenFeedback } = this.state;
   React.useEffect(() => {
     async function getFeedback() {
       // Get feedback for currentListen
@@ -129,43 +129,56 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     getFeedback();
   }, [currentListen]);
 
-  async function submitFeedback(score: ListenFeedBack) {
-    if (currentUser?.auth_token) {
-      setCurrentListenFeedback(score);
+  React.useEffect(() => {
+    // Also check the width on first render
+    setIsMobile(window.innerWidth <= 768);
 
-      const recordingMSID = getRecordingMSID(currentListen as Listen);
-      const recordingMBID = getRecordingMBID(currentListen as Listen);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener("resize", handleResize);
+  }, []);
 
-      try {
-        const url = `${listenBrainzAPIBaseURI}/feedback/recording-feedback`;
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${currentUser.auth_token}`,
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify({
-            recording_msid: recordingMSID,
-            recording_mbid: recordingMBID,
-            score,
-          }),
-        });
-        if (!response.ok) {
-          // Revert the feedback UI in case of failure
-          setCurrentListenFeedback(0);
-          throw response.statusText;
+  const submitFeedback = React.useCallback(
+    async (score: ListenFeedBack) => {
+      if (currentUser?.auth_token) {
+        setCurrentListenFeedback(score);
+
+        const recordingMSID = getRecordingMSID(currentListen as Listen);
+        const recordingMBID = getRecordingMBID(currentListen as Listen);
+
+        try {
+          const url = `${listenBrainzAPIBaseURI}/feedback/recording-feedback`;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${currentUser.auth_token}`,
+              "Content-Type": "application/json;charset=UTF-8",
+            },
+            body: JSON.stringify({
+              recording_msid: recordingMSID,
+              recording_mbid: recordingMBID,
+              score,
+            }),
+          });
+          if (!response.ok) {
+            // Revert the feedback UI in case of failure
+            setCurrentListenFeedback(0);
+            throw response.statusText;
+          }
+        } catch (error) {
+          toast.error(
+            <ToastMsg
+              title="Error while submitting feedback"
+              message={error?.message ?? error.toString()}
+            />,
+            { toastId: "submit-feedback-error" }
+          );
         }
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="Error while submitting feedback"
-            message={error?.message ?? error.toString()}
-          />,
-          { toastId: "submit-feedback-error" }
-        );
       }
-    }
-  }
+    },
+    [currentListen, currentUser.auth_token, listenBrainzAPIBaseURI]
+  );
 
   const {
     children: dataSources,
@@ -192,24 +205,35 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const [showQueue, setShowQueue] = React.useState(false);
   const [showMusicPlayer, setShowMusicPlayer] = React.useState(false);
 
-  const toggleRepeatMode = () => {
+  const toggleQueue = React.useCallback(() => {
+    setShowQueue((prevShowQueue) => !prevShowQueue);
+  }, []);
+
+  const toggleMusicPlayer = React.useCallback(() => {
+    setShowMusicPlayer((prevShow) => !prevShow);
+  }, []);
+
+  const toggleRepeatMode = React.useCallback(() => {
     dispatch({ type: "TOGGLE_REPEAT_MODE" });
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
       <div className={`queue ${showQueue ? "show" : ""}`}>
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
-      <div className={`music-player ${!showMusicPlayer ? "show" : ""}`}>
+      <div className={`music-player ${showMusicPlayer ? "show" : ""}`}>
         <MusicPlayer
-          onHide={() => setShowMusicPlayer(false)}
-          toggleQueue={() => setShowQueue((prevShowQueue) => !prevShowQueue)}
+          onHide={toggleMusicPlayer}
+          toggleQueue={toggleQueue}
           playPreviousTrack={playPreviousTrack}
           playNextTrack={playNextTrack}
           togglePlay={togglePlay}
           seekToPositionMs={seekToPositionMs}
           toggleRepeatMode={toggleRepeatMode}
+          submitFeedback={submitFeedback}
+          currentListenFeedback={currentListenFeedback}
           disabled={disabled}
         />
       </div>
@@ -217,9 +241,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         id="brainz-player"
         aria-label="Playback control"
         data-testid="brainzplayer-ui"
-        style={{
-          display: !showMusicPlayer ? "none" : undefined,
-        }}
       >
         <ProgressBar
           progressMs={progressMs}
@@ -254,13 +275,15 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           className="controls"
           title={disabled ? playbackDisabledText : undefined}
         >
-          <PlaybackControlButton
-            className="previous"
-            title="Previous"
-            action={playPreviousTrack}
-            icon={faFastBackward}
-            disabled={disabled}
-          />
+          {!isMobile && (
+            <PlaybackControlButton
+              className="previous"
+              title="Previous"
+              action={playPreviousTrack}
+              icon={faFastBackward}
+              disabled={disabled}
+            />
+          )}
           <PlaybackControlButton
             className="play"
             action={togglePlay}
@@ -291,16 +314,18 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           )}
           <FontAwesomeIcon
             icon={faBarsStaggered}
-            style={{ color: showQueue ? "green" : "" }}
-            onClick={() => setShowQueue((prevShowQueue) => !prevShowQueue)}
+            style={{ color: showMusicPlayer ? "green" : "" }}
+            onClick={isMobile ? toggleMusicPlayer : toggleQueue}
           />
-          <FontAwesomeIcon
-            icon={queueRepeatMode.icon}
-            title={queueRepeatMode.title}
-            style={{ color: queueRepeatMode.color }}
-            onClick={toggleRepeatMode}
-          />
-          {showFeedback && (
+          {!isMobile && (
+            <FontAwesomeIcon
+              icon={queueRepeatMode.icon}
+              title={queueRepeatMode.title}
+              style={{ color: queueRepeatMode.color }}
+              onClick={toggleRepeatMode}
+            />
+          )}
+          {showFeedback && !isMobile && (
             <>
               <FontAwesomeIcon
                 icon={faHeart}
@@ -337,9 +362,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           ) : (
             <MenuOptions currentListen={currentListen} />
           )}
-          <Link to="/settings/brainzplayer/">
-            <FontAwesomeIcon icon={faCog} title="Player preferences" />
-          </Link>
+          {!isMobile && (
+            <Link to="/settings/brainzplayer/">
+              <FontAwesomeIcon icon={faCog} title="Player preferences" />
+            </Link>
+          )}
         </div>
       </div>
     </>

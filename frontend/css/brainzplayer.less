@@ -451,10 +451,38 @@
     padding: 20px;
     color: white;
 
+    .love,
+    .hate {
+      color: transparent;
+      stroke: white;
+      stroke-width: 50px;
+    }
+
+    .love {
+      &:hover {
+        stroke: @love-color;
+      }
+      &.loved {
+        stroke: transparent;
+        color: @love-color;
+      }
+    }
+
+    .hate {
+      &:hover {
+        stroke: @hate-color;
+      }
+      &.hated {
+        stroke: transparent;
+        color: @hate-color;
+      }
+    }
+
     .info-text-wrapper {
       flex: 1;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     span {

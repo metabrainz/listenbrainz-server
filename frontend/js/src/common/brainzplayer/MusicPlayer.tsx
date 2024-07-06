@@ -1,6 +1,7 @@
 import {
   faChevronDown,
   faBackward,
+  faHeart,
   faHeartCrack,
   faForward,
   faPlay,
@@ -12,7 +13,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { noop } from "lodash";
 import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faHeart } from "@fortawesome/free-regular-svg-icons";
 import ProgressBar from "./ProgressBar";
 import { millisecondsToStr } from "../../playlists/utils";
 import { useBrainzPlayerContext } from "./BrainzPlayerContext";
@@ -22,13 +22,12 @@ type PlaybackControlButtonProps = {
   action: () => void;
   icon: IconDefinition;
   title: string;
-  size?: "2x";
   disabled?: boolean;
   color?: string;
 };
 
 function PlaybackControlButton(props: PlaybackControlButtonProps) {
-  const { className, action, icon, title, size, disabled, color } = props;
+  const { className, action, icon, title, disabled, color } = props;
   return (
     <button
       className={`btn-transparent ${className} ${disabled ? "disabled" : ""}`}
@@ -59,6 +58,8 @@ type MusicPlayerProps = {
   togglePlay: (invert?: boolean) => void;
   seekToPositionMs: (msTimeCode: number) => void;
   toggleRepeatMode: () => void;
+  submitFeedback: (score: ListenFeedBack) => Promise<void>;
+  currentListenFeedback: number;
   disabled?: boolean;
 };
 
@@ -71,11 +72,14 @@ function MusicPlayer(props: MusicPlayerProps) {
     togglePlay,
     seekToPositionMs,
     toggleRepeatMode,
+    submitFeedback,
+    currentListenFeedback,
     disabled,
   } = props;
 
   // BrainzPlayer Context
   const {
+    currentListen,
     currentTrackName,
     currentTrackArtist,
     currentTrackAlbum,
@@ -85,6 +89,20 @@ function MusicPlayer(props: MusicPlayerProps) {
     progressMs,
     queueRepeatMode,
   } = useBrainzPlayerContext();
+
+  const isPlayingATrack = React.useMemo(() => !!currentListen, [currentListen]);
+
+  const submitLikeFeedback = React.useCallback(() => {
+    if (isPlayingATrack) {
+      submitFeedback(currentListenFeedback === 1 ? 0 : 1);
+    }
+  }, [currentListenFeedback, isPlayingATrack, submitFeedback]);
+
+  const submitDislikeFeedback = React.useCallback(() => {
+    if (isPlayingATrack) {
+      submitFeedback(currentListenFeedback === -1 ? 0 : -1);
+    }
+  }, [currentListenFeedback, isPlayingATrack, submitFeedback]);
 
   return (
     <>
@@ -143,8 +161,22 @@ function MusicPlayer(props: MusicPlayerProps) {
             gap: "1em",
           }}
         >
-          <FontAwesomeIcon icon={faHeart} title="Love" className="love" />
-          <FontAwesomeIcon icon={faHeartCrack} title="Hate" className="hate" />
+          <FontAwesomeIcon
+            icon={faHeart}
+            title="Love"
+            className={`love ${currentListenFeedback === 1 ? " loved" : ""}${
+              !isPlayingATrack ? " disabled" : ""
+            }`}
+            onClick={submitLikeFeedback}
+          />
+          <FontAwesomeIcon
+            icon={faHeartCrack}
+            title="Hate"
+            className={`hate ${currentListenFeedback === -1 ? " hated" : ""}${
+              !isPlayingATrack ? " disabled" : ""
+            }`}
+            onClick={submitDislikeFeedback}
+          />
         </div>
       </div>
       <div className="progress-bar-wrapper">
@@ -177,7 +209,6 @@ function MusicPlayer(props: MusicPlayerProps) {
           action={togglePlay}
           title={`${playerPaused ? "Play" : "Pause"}`}
           icon={playerPaused ? faPlay : faPause}
-          size="2x"
           disabled={disabled}
         />
         <PlaybackControlButton
