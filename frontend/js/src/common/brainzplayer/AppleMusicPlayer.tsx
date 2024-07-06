@@ -9,10 +9,9 @@ import {
   loadScriptAsync,
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
-export type AppleMusicPlayerProps = DataSourceProps & {
-  appleMusicUser?: AppleMusicUser;
-};
+export type AppleMusicPlayerProps = DataSourceProps;
 
 export type AppleMusicPlayerState = {
   currentAppleMusicTrack?: MusicKit.MediaItem;
@@ -79,6 +78,7 @@ export async function authorizeWithAppleMusic(
 export default class AppleMusicPlayer
   extends React.Component<AppleMusicPlayerProps, AppleMusicPlayerState>
   implements DataSourceType {
+  static contextType = GlobalAppContext;
   static hasPermissions = (appleMusicUser?: AppleMusicUser) => {
     return Boolean(appleMusicUser?.music_user_token);
   };
@@ -111,6 +111,7 @@ export default class AppleMusicPlayer
   public icon = faApple;
 
   appleMusicPlayer?: AppleMusicPlayerType;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: AppleMusicPlayerProps) {
     super(props);
@@ -118,9 +119,13 @@ export default class AppleMusicPlayer
       durationMs: 0,
       progressMs: 0,
     };
+  }
+
+  componentDidMount(): void {
+    const { appleAuth: appleMusicUser = undefined } = this.context;
 
     // Do an initial check of whether the user wants to link Apple Music before loading the SDK library
-    if (AppleMusicPlayer.hasPermissions(props.appleMusicUser)) {
+    if (AppleMusicPlayer.hasPermissions(appleMusicUser)) {
       loadAppleMusicKit().then(() => {
         this.connectAppleMusicPlayer();
       });
@@ -166,7 +171,7 @@ export default class AppleMusicPlayer
   };
 
   canSearchAndPlayTracks = (): boolean => {
-    const { appleMusicUser } = this.props;
+    const { appleAuth: appleMusicUser = undefined } = this.context;
     return AppleMusicPlayer.hasPermissions(appleMusicUser);
   };
 
@@ -315,7 +320,7 @@ export default class AppleMusicPlayer
 
   connectAppleMusicPlayer = async (retryCount = 0): Promise<void> => {
     this.disconnectAppleMusicPlayer();
-    const { appleMusicUser } = this.props;
+    const { appleAuth: appleMusicUser = undefined } = this.context;
     try {
       this.appleMusicPlayer = await setupAppleMusicKit(
         appleMusicUser?.developer_token
@@ -338,7 +343,9 @@ export default class AppleMusicPlayer
       if (userToken === null) {
         throw new Error("Could not retrieve Apple Music authorization token");
       }
-      // this.appleMusicPlayer.musicUserToken = userToken;
+      if (appleMusicUser) {
+        appleMusicUser.music_user_token = userToken;
+      }
     } catch (error) {
       console.debug(error);
       this.handleAccountError();
