@@ -14,7 +14,12 @@ from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
 
+DEFAULT_MINUTES_OF_LISTENS = 60
+MAX_MINUTES_OF_LISTENS = 7 * 24 * 60  # a week
+
+
 atom_bp = Blueprint("atom", __name__)
+
 
 def _external_url_for(endpoint, **values):
     return url_for(endpoint, _external=True, **values)
@@ -28,7 +33,8 @@ def get_listens(user_name):
     """
     Get listens feed for a user.
 
-    :param minutes: The time interval in minutes from current time to fetch listens for. For example, if minutes=60, listens from the last hour will be fetched. Default is 60.
+    :param minutes: The time interval in minutes from current time to fetch listens for.
+                    For example, if minutes=60, listens from the last hour will be fetched. Default is 60.
     :statuscode 200: The feed was successfully generated.
     :statuscode 400: Bad request.
     :statuscode 404: The user does not exist.
@@ -38,17 +44,22 @@ def get_listens(user_name):
     if user is None:
         return Response(status=404)
 
-    minutes = request.args.get("minutes", 60)
+    minutes = request.args.get("minutes", DEFAULT_MINUTES_OF_LISTENS)
     if minutes:
         try:
             minutes = int(minutes)
         except ValueError:
             return Response(status=400)
-    if minutes < 1:
+    if minutes < 1 or minutes > MAX_MINUTES_OF_LISTENS:
         return Response(status=400)
 
-    from_ts = datetime.now() - timedelta(minutes=minutes)
-    listens, _, _ = timescale_connection._ts.fetch_listens(user, from_ts=from_ts)
+    # estimate limit from minutes, assuming 1 listen per minute.
+    # mostly likely there won't be that much listens, but with such padding
+    # it's less likely for feed readers to miss listens.
+    limit = minutes
+
+    to_ts = datetime.now()
+    listens, _, _ = timescale_connection._ts.fetch_listens(user, to_ts=to_ts, limit=limit)
 
     fg = FeedGenerator()
     fg.id(_external_url_for("atom.get_listens", user_name=user_name))
@@ -67,9 +78,7 @@ def get_listens(user_name):
 
     # newer listen comes first
     for listen in reversed(listens):
-        current_app.logger.info(listen)
         track_name = listen.data["track_name"]
-        current_app.logger.info(track_name)
         recording_mbid = listen.data["additional_info"].get("recording_mbid")
         artist_name = listen.data["artist_name"]
         artist_mbid = (
