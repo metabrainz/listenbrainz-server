@@ -6,16 +6,14 @@ from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver import db_conn, timescale_connection
 from listenbrainz.webserver.views.api_tools import _parse_bool_arg, _parse_int_arg
-from listenbrainz.webserver.views.explore_api import (
-    DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS,
-    MAX_NUMBER_OF_FRESH_RELEASE_DAYS,
-)
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
 
 DEFAULT_MINUTES_OF_LISTENS = 60
 MAX_MINUTES_OF_LISTENS = 7 * 24 * 60  # a week
+DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
+MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
 
 
 atom_bp = Blueprint("atom", __name__)
@@ -129,7 +127,8 @@ def get_fresh_releases():
     """
     Get site-wide fresh releases.
 
-    :param days: The number of days of fresh releases to show. Max 90 days.
+    :param days: The number of days of fresh releases to show.
+                 Default `DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS` days. Max `MAX_NUMBER_OF_FRESH_RELEASE_DAYS` days.
     :statuscode 200: The feed was successfully generated.
     :statuscode 400: Bad request.
     :statuscode 500: Server failed to get latest release.
