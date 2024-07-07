@@ -116,8 +116,9 @@ function MusicPlayer(props: MusicPlayerProps) {
           }}
           onClick={onHide}
         />
-
-        <span>{currentTrackAlbum}</span>
+        <div className="text-scroll-wrapper">
+          <span>{currentTrackAlbum}</span>
+        </div>
 
         <FontAwesomeIcon
           className="btn toggle-info"
@@ -137,13 +138,15 @@ function MusicPlayer(props: MusicPlayerProps) {
       </div>
       <div className="info">
         <div className="info-text-wrapper">
-          <span
-            className="text-muted ellipsis"
-            title={currentTrackName}
-            style={{ fontSize: "1.5em" }}
-          >
-            {currentTrackName}
-          </span>
+          <div className="text-scroll-wrapper">
+            <span
+              className="text-muted"
+              title={currentTrackName}
+              style={{ fontSize: "1.5em" }}
+            >
+              {currentTrackName}
+            </span>
+          </div>
           <span
             className="text-muted ellipsis"
             title={currentTrackArtist}
@@ -152,15 +155,7 @@ function MusicPlayer(props: MusicPlayerProps) {
             {currentTrackArtist}
           </span>
         </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "2.3em",
-            gap: "1em",
-          }}
-        >
+        <div className="feedback-buttons-wrapper">
           <FontAwesomeIcon
             icon={faHeart}
             title="Love"
