@@ -9,6 +9,7 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 
 from listenbrainz.db import timescale
+from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.metadata_cache.handler import BaseHandler
 from listenbrainz.metadata_cache.soundcloud.models import SoundcloudTrack, SoundcloudArtist
 from listenbrainz.metadata_cache.unique_queue import JobItem
@@ -17,11 +18,18 @@ DISCOVERED_USER_PRIORITY = 3
 INCOMING_TRACK_PRIORITY = 0
 
 PARTNER_API_URL = "https://api-partners.soundcloud.com"
+PUBLIC_API_URL = "https://api.soundcloud.com"
 TRACK_CACHE_TIME = 30 # days
 USER_CACHE_TIME = 30 # days
 
 SOUNDCLOUD_TRACK_PREFIX = "soundcloud:tracks:"
 SOUNDCLOUD_USER_PREFIX = "soundcloud:users:"
+
+# LB user authenticated to soundcloud whose soundcloud auth tokens should be used
+# by the metadata cache to access the public API. One time manual linking to SoundCloud
+# using ListenBrainz website needs to be performed for this user before it can be used
+# by the cache.
+LISTENBRAINZ_PROD_USER_ID = 15753
 
 
 class SoundcloudCrawlerHandler(BaseHandler):
@@ -47,30 +55,53 @@ class SoundcloudCrawlerHandler(BaseHandler):
         self.adapter = HTTPAdapter(max_retries=self.retry)
         self.session.mount("http://", self.adapter)
         self.session.mount("https://", self.adapter)
+        self.soundcloud_service = SoundCloudService()
+        self.access_token = None
 
-    def make_request(self, endpoint, **kwargs):
-        """ Make an API request to a soundcloud partner api endpoint"""
-        response = self.session.get(
-            PARTNER_API_URL + endpoint,
-            params={**kwargs, "client_id": self.app.config["SOUNDCLOUD_CLIENT_ID"]}
-        )
+    def refresh_access_token(self):
+        soundcloud_user = self.soundcloud_service.get_user(LISTENBRAINZ_PROD_USER_ID)
+        token = self.soundcloud_service.refresh_access_token(LISTENBRAINZ_PROD_USER_ID, soundcloud_user["refresh_token"])
+        self.access_token = token["access_token"]
+
+    def make_request(self, url, params=None, headers=None, retry=True):
+        """ Make an authenticated request to SoundCloud API by adding the OAuth2 token to headers """
+        if self.access_token is None:
+            self.refresh_access_token()
+
+        if headers is None:
+            headers = {}
+        headers["Authorization"] = f"OAuth {self.access_token}"
+
+        response = self.session.get(url, params=params, headers=headers)
+        if response.status_code == 401 and retry:
+            self.refresh_access_token()
+            return self.make_request(url, params, headers, retry=False)
         response.raise_for_status()
         return response.json()
 
-    def make_paginated_request(self, endpoint, **kwargs):
-        """ Make an API request to a soundcloud partner api endpoint that supports pagination and retrieve all
+    def make_partner_request(self, endpoint, **kwargs):
+        """ Make an API request to a soundcloud partner api endpoint """
+        url = PARTNER_API_URL + endpoint
+        kwargs["client_id"] = self.app.config["SOUNDCLOUD_CLIENT_ID"]
+        return self.make_request(url, params=kwargs)
+
+    def make_public_request(self, endpoint, **kwargs):
+        """ Make an API request to a soundcloud public api endpoint """
+        url = PUBLIC_API_URL + endpoint
+        return self.make_request(url, params=kwargs)
+
+    def make_public_paginated_request(self, endpoint, **kwargs):
+        """ Make an API request to a soundcloud public api endpoint that supports pagination and retrieve all
          items in the collection.
         """
         tracks = []
-        data = self.make_request(endpoint, limit=100, **kwargs)
+        data = self.make_public_request(endpoint, limit=100, linked_partitioning=True, **kwargs)
         tracks.extend(data["collection"])
 
         while True:
-            if len(data["collection"]) > 0 and "next_href" in data:
+            if len(data["collection"]) > 0 and "next_href" in data and data["next_href"]:
                 url = data["next_href"]
-                response = self.session.get(url)
-                response.raise_for_status()
-                data = response.json()
+                data = self.make_request(url)
                 tracks.extend(data["collection"])
             else:
                 break
@@ -99,53 +130,59 @@ class SoundcloudCrawlerHandler(BaseHandler):
         return SoundcloudTrack(
             id=str(track["id"]),
             name=track["title"],
+            release_year=track.get("release_year"),
+            release_month=track.get("release_month"),
+            release_day=track.get("release_day"),
             artist=artist,
             data=track
         )
 
-    def fetch_track_from_track_urn(self, track_urn: str) -> SoundcloudTrack:
+    def fetch_track_from_track_id(self, track_id: int) -> SoundcloudTrack:
         """ retrieve track data from soundcloud to store in the soundcloud metadata cache """
-        data = self.make_request("/tracks/" + track_urn)
+        data = self.make_public_request(f"/tracks/{track_id}")
         track = self.transform_track(data)
         return track
 
-    def fetch_tracks_from_user_urn(self, user_urn: str) -> list[SoundcloudTrack]:
+    def fetch_tracks_from_user_id(self, user_id: int) -> list[SoundcloudTrack]:
         """ lookup tracks uploaded by the given user """
-        if user_urn not in self.discovered_artists:
-            self.discovered_artists.add(user_urn)
+        if user_id not in self.discovered_artists:
+            self.discovered_artists.add(user_id)
             self.metrics["discovered_artists_count"] += 1
 
-        user_uploads = self.make_paginated_request("/users/" + user_urn + "/tracks/uploads")
+        user_uploads = self.make_public_paginated_request(f"/users/{user_id}/tracks")
         tracks = []
         for item in user_uploads:
             track = self.transform_track(item)
-            if track.data["urn"] not in self.discovered_tracks:
-                self.discovered_tracks.add(track.data["urn"])
+            if track.data["id"] not in self.discovered_tracks:
+                self.discovered_tracks.add(track.data["id"])
                 self.metrics["discovered_tracks_count"] += 1
             tracks.append(track)
 
         return tracks
 
-    def discover_users_from_user_urn(self, user_urn: str) -> set[str]:
+    def discover_users_from_user_id(self, user_id: int) -> set[str]:
         """ search for new users to crawl in the given user's liked tracks and followings """
-        new_user_urns = set()
-        user_likes = self.make_paginated_request("/users/" + user_urn + "/likes/tracks")
+        new_user_ids = set()
+        user_likes = self.make_public_paginated_request(f"/users/{user_id}/likes/tracks")
         for track in user_likes:
-            new_user_urns.add(track["user"]["urn"])
-        followings = self.make_paginated_request("/users/" + user_urn + "/followings")
+            new_user_ids.add(track["user"]["id"])
+        followings = self.make_public_paginated_request(f"/users/{user_id}/followings")
         for user in followings:
-            new_user_urns.add(user["urn"])
+            new_user_ids.add(user["id"])
+        followers = self.make_public_paginated_request(f"/users/{user_id}/followers")
+        for user in followers:
+            new_user_ids.add(user["id"])
+        new_user_urns = {SOUNDCLOUD_USER_PREFIX + str(user_id) for user_id in new_user_ids}
         return new_user_urns
-
 
     def get_seed_ids(self) -> list[str]:
         """ Retrieve soundcloud track ids from new releases for all markets"""
-        data = self.make_request("/trending")
+        data = self.make_partner_request("/trending")
         genres = data["categories"]["music"]
 
         track_urns = set()
         for genre in genres:
-            response = self.make_request("/trending/music", anonymous_id=self.name, genres=genre, limit=100)
+            response = self.make_partner_request("/trending/music", anonymous_id=self.name, genres=genre, limit=100)
             for track in response["collection"]:
                 track_urns.add(track["urn"])
 
@@ -172,7 +209,7 @@ class SoundcloudCrawlerHandler(BaseHandler):
         execute_values(curs, query, values)
 
         query = SQL("""
-            INSERT INTO soundcloud_cache.track (track_id, name, artist_id, data)
+            INSERT INTO soundcloud_cache.track (track_id, name, artist_id, release_year, release_month, release_day, data)
                  VALUES %s
             ON CONFLICT (track_id)
               DO UPDATE
@@ -180,7 +217,7 @@ class SoundcloudCrawlerHandler(BaseHandler):
                       , artist_id = EXCLUDED.artist_id
                       , data = EXCLUDED.data
         """)
-        values = [(t.id, t.name, t.artist.id, orjson.dumps(t.data).decode("utf-8")) for t in tracks]
+        values = [(t.id, t.name, t.artist.id, t.release_year, t.release_month, t.release_day, orjson.dumps(t.data).decode("utf-8")) for t in tracks]
         execute_values(curs, query, values)
 
     def update_cache(self, tracks: list[SoundcloudTrack]):
@@ -193,8 +230,9 @@ class SoundcloudCrawlerHandler(BaseHandler):
             with conn.cursor() as curs:
                 self.insert(curs, tracks)
                 for track in tracks:
-                    cache.set(track.data["urn"], 1, expirein=0)
-                    cache.expireat(track.data["urn"], track_expires_at_ts)
+                    track_urn = SOUNDCLOUD_TRACK_PREFIX + str(track.data["id"])
+                    cache.set(track_urn, 1, expirein=0)
+                    cache.expireat(track_urn, track_expires_at_ts)
                     self.metrics["tracks_inserted_count"] += 1
                 conn.commit()
         finally:
@@ -204,15 +242,17 @@ class SoundcloudCrawlerHandler(BaseHandler):
         """ Process a track_urn received from the crawler """
         if cache.get(track_urn):
             return set()
-        track = self.fetch_track_from_track_urn(track_urn)
+        track_id = int(track_urn.split(":")[-1])
+        track = self.fetch_track_from_track_id(track_id)
         self.update_cache([track])
-        return {track.artist.data["urn"]}
+        return {SOUNDCLOUD_USER_PREFIX + str(track.artist.data["id"])}
 
     def process_user(self, user_urn) -> set[str]:
         """ Process a user_urn received from the crawler """
         if cache.get(user_urn):
             return set()
-        user_tracks = self.fetch_tracks_from_user_urn(user_urn)
+        user_id = int(user_urn.split(":")[-1])
+        user_tracks = self.fetch_tracks_from_user_id(user_id)
         if user_tracks:
             self.update_cache(user_tracks)
 
@@ -221,19 +261,19 @@ class SoundcloudCrawlerHandler(BaseHandler):
         cache.set(user_urn, 1, expirein=0)
         cache.expireat(user_urn, artist_expires_at_ts)
 
-        return self.discover_users_from_user_urn(user_urn)
+        return self.discover_users_from_user_id(user_id)
 
     def process(self, item_ids: list[str]) -> list[JobItem]:
         """ Processes the list of items (example: track ids) received from the crawler. """
         all_items = set()
-        for item_id in item_ids:
-            if item_id.startswith(SOUNDCLOUD_TRACK_PREFIX):
-                items = self.process_track(item_id)
-            elif item_id.startswith(SOUNDCLOUD_USER_PREFIX):
-                items = self.process_user(item_id)
+        for item_urn in item_ids:
+            if item_urn.startswith(SOUNDCLOUD_TRACK_PREFIX):
+                items = self.process_track(item_urn)
+            elif item_urn.startswith(SOUNDCLOUD_USER_PREFIX):
+                items = self.process_user(item_urn)
             else:
                 items = set()
-                self.app.logger.info("Invalid soundcloud urn: %s, skipping.", item_id)
+                self.app.logger.error("Invalid soundcloud urn: %s, skipping.", item_urn)
             all_items |= items
 
         items = []

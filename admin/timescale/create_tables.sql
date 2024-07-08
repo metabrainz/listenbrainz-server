@@ -236,6 +236,9 @@ CREATE TABLE soundcloud_cache.track (
     track_id                TEXT NOT NULL,
     name                    TEXT NOT NULL,
     artist_id               TEXT NOT NULL,
+    release_year            INTEGER,
+    release_month           INTEGER,
+    release_day             INTEGER,
     data                    JSONB NOT NULL
 );
 
