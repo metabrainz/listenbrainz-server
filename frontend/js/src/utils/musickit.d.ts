@@ -185,6 +185,8 @@ declare namespace MusicKit {
      */
     readonly storefrontId: string;
     readonly playbackState: PlaybackStates;
+
+    restrictedEnabled: boolean;
     /**
      * Add an event listener for a MusicKit instance by name.
      *

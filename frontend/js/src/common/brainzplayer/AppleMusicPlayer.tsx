@@ -50,8 +50,11 @@ export async function setupAppleMusicKit(developerToken?: string) {
       build: "latest",
       icon: "https://listenbrainz.org/static/img/ListenBrainz_logo_no_text.png",
     },
+    suppressErrorDialog: true,
   });
-  return MusicKit.getInstance();
+  const musicKitInstance = MusicKit.getInstance();
+  musicKitInstance.restrictedEnabled = false;
+  return musicKitInstance;
 }
 export async function authorizeWithAppleMusic(
   musicKit: MusicKit.MusicKitInstance,
@@ -121,13 +124,21 @@ export default class AppleMusicPlayer
     };
   }
 
-  componentDidMount(): void {
+  async componentDidMount(): Promise<void> {
     const { appleAuth: appleMusicUser = undefined } = this.context;
 
     // Do an initial check of whether the user wants to link Apple Music before loading the SDK library
     if (AppleMusicPlayer.hasPermissions(appleMusicUser)) {
-      loadAppleMusicKit().then(() => {
+      loadAppleMusicKit().then(async () => {
         this.connectAppleMusicPlayer();
+
+        try {
+          // @ts-ignore
+          // eslint-disable-next-line no-underscore-dangle
+          await this.appleMusicPlayer?._services.apiManager.store.storekit.me();
+        } catch (error) {
+          this.handleAccountError();
+        }
       });
     } else {
       this.handleAccountError();
