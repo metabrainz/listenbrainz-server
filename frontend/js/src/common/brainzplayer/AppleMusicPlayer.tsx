@@ -310,7 +310,7 @@ export default class AppleMusicPlayer
     if (!this.appleMusicPlayer) {
       return;
     }
-    this.appleMusicPlayer?.removeEventListener(
+    this.appleMusicPlayer.removeEventListener(
       "playbackStateDidChange",
       this.onPlaybackStateChange.bind(this)
     );
@@ -360,6 +360,10 @@ export default class AppleMusicPlayer
     } catch (error) {
       console.debug(error);
       this.handleAccountError();
+    }
+
+    if (!this.appleMusicPlayer) {
+      return;
     }
 
     this.appleMusicPlayer.addEventListener(
