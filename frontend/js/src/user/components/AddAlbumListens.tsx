@@ -213,7 +213,7 @@ export default function AddAlbumListens({
   );
 
   const allDurations = selectedAlbum?.media.flatMap((medium) =>
-    medium.tracks.map((track) => track.length)
+    medium.tracks.map((track) => track.length ?? track.recording.length)
   );
   const showDefaultDuration = !allDurations?.every(Boolean);
 
@@ -272,7 +272,9 @@ export default function AddAlbumListens({
                     const mediumTime = medium.tracks
                       .map(
                         (track) =>
-                          track.length ?? DEFAULT_TRACK_LENGTH_SECONDS * 1000
+                          track.length ??
+                          track.recording.length ??
+                          DEFAULT_TRACK_LENGTH_SECONDS * 1000
                       )
                       ?.reduce((total, duration) => total + duration, 0);
 
