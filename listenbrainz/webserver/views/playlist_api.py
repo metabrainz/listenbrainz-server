@@ -406,8 +406,8 @@ def search_playlist():
     """
     Search for playlists by name or description. The search query must be at least 3 characters long.
 
-    :param q: The search query string.
-    :type q: ``str``
+    :param query: The search query string.
+    :type query: ``str``
     :statuscode 200: Yay, you have data!
     :statuscode 400: invalid query string, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
