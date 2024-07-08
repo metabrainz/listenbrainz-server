@@ -16,6 +16,8 @@ from listenbrainz.labs_api.labs.api.recording_search import RecordingSearchQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.labs_api.labs.api.similar_artists import SimilarArtistsViewerQuery
 from listenbrainz.labs_api.labs.api.similar_recordings import SimilarRecordingsViewerQuery
+from listenbrainz.labs_api.labs.api.soundcloud.soundcloud_from_mbid_lookup import SoundCloudIdFromMBIDQuery
+from listenbrainz.labs_api.labs.api.soundcloud.soundcloud_from_metadata_lookup import SoundCloudIdFromMetadataQuery
 from listenbrainz.labs_api.labs.api.spotify.spotify_mbid_lookup import SpotifyIdFromMBIDQuery
 from listenbrainz.labs_api.labs.api.spotify.spotify_metadata_lookup import SpotifyIdFromMetadataQuery
 from listenbrainz.labs_api.labs.api.user_listen_sessions import UserListensSessionQuery
@@ -38,6 +40,8 @@ register_query(SpotifyIdFromMetadataQuery())
 register_query(SpotifyIdFromMBIDQuery())
 register_query(AppleMusicIdFromMBIDQuery())
 register_query(AppleMusicIdFromMetadataQuery())
+register_query(SoundCloudIdFromMBIDQuery())
+register_query(SoundCloudIdFromMetadataQuery())
 register_query(UserListensSessionQuery())
 register_query(SimilarRecordingsViewerQuery())
 register_query(SimilarArtistsViewerQuery())
