@@ -262,7 +262,9 @@ def dump_database(prefix: str, fp: BinaryIO):
     # get the older database for this stat type because it will likely be the complete one
     # the newer one is probably incomplete and that's why the old one has not been cleaned up yet.
     database = databases[-1]
-    lock_database(database)
+    # check if the database is already locked from a previous failed dump attempt
+    if not check_database_lock(database):
+        lock_database(database)
 
     try:
         with _get_requests_session() as http:
