@@ -357,11 +357,11 @@ def get_artist_stats(user_name):
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``week``
     :type range: ``str``
-    :statuscode 200: Successful query, you have data!
-    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 204: Statistics for the user haven't been calculated.
     :statuscode 400: Bad request
     :statuscode 404: User not found
-    :resheader Content-Type: *application/json*
+    :resheader Content-Type: *application/atom+xml*
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
@@ -433,10 +433,11 @@ def get_release_group_stats(user_name):
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
-    :statuscode 200: Successful query, you have data!
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 204: Statistics for the user haven't been calculated.
     :statuscode 400: Bad request
     :statuscode 404: User not found
-    :resheader Content-Type: *application/json*
+    :resheader Content-Type: *application/atom+xml*
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
@@ -507,10 +508,11 @@ def get_recording_stats(user_name):
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
-    :statuscode 200: Successful query, you have data!
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 204: Statistics for the user haven't been calculated.
     :statuscode 400: Bad request
     :statuscode 404: User not found
-    :resheader Content-Type: *application/json*
+    :resheader Content-Type: *application/atom+xml*
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
