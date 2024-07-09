@@ -79,6 +79,18 @@ def _get_stats_entry_title(stats_range: str, timestamp: int) -> str:
     return ""
 
 
+def _init_feed(id, title, self_url, alternate_url):
+    fg = FeedGenerator()
+    fg.id(id)
+    fg.title(title)
+    fg.author({"name": "ListenBrainz"})
+    fg.link(href=alternate_url, rel="alternate")
+    fg.link(href=self_url, rel="self")
+    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
+    fg.language("en")
+    return fg
+
+
 @atom_bp.route("/user/<user_name>/listens", methods=["GET"])
 @crossdomain
 @ratelimit()
@@ -117,20 +129,12 @@ def get_listens(user_name):
         user, to_ts=to_ts, limit=limit
     )
 
-    fg = FeedGenerator()
-    fg.id(_external_url_for("atom.get_listens", user_name=user_name))
-    fg.title(f"Listens for {user_name} - ListenBrainz")
-    fg.author({"name": "ListenBrainz"})
-    fg.link(
-        href=_external_url_for("user.index", path="", user_name=user_name),
-        rel="alternate",
+    fg = _init_feed(
+        _external_url_for(".get_listens", user_name=user_name),
+        f"Listens for {user_name} - ListenBrainz",
+        _external_url_for("user.index", path="", user_name=user_name),
+        _external_url_for(".get_listens", user_name=user_name),
     )
-    fg.link(
-        href=_external_url_for("atom.get_listens", user_name=user_name),
-        rel="self",
-    )
-    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
-    fg.language("en")
 
     # newer listen comes first
     for listen in reversed(listens):
@@ -146,7 +150,7 @@ def get_listens(user_name):
         fe = fg.add_entry()
         # according to spec, ids don't have to be deferencable.
         fe.id(
-            f"{_external_url_for('atom.get_listens', user_name=user_name)}/{listen.ts_since_epoch}/{track_name}"
+            f"{_external_url_for('.get_listens', user_name=user_name)}/{listen.ts_since_epoch}/{track_name}"
         )
         fe.title(f"{track_name} - {artist_name}")
 
@@ -205,19 +209,12 @@ def get_fresh_releases():
         current_app.logger.error("Server failed to get latest release: {}".format(e))
         return Response(status=500)
 
-    fg = FeedGenerator()
-    fg.id(_external_url_for("atom.get_fresh_releases"))
-    fg.title(f"Fresh Releases - ListenBrainz")
-    fg.author({"name": "ListenBrainz"})
-    fg.link(
-        href=_external_url_for("explore.index", path="fresh-releases"), rel="alternate"
+    fg = _init_feed(
+        _external_url_for(".get_fresh_releases"),
+        "Fresh Releases - ListenBrainz",
+        _external_url_for("explore.index", path="fresh-releases"),
+        _external_url_for(".get_fresh_releases"),
     )
-    fg.link(
-        href=_external_url_for("atom.get_fresh_releases"),
-        rel="self",
-    )
-    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
-    fg.language("en")
 
     for r in db_releases:
         release_name = r.release_name
@@ -232,7 +229,7 @@ def get_fresh_releases():
 
         fe = fg.add_entry()
         fe.id(
-            f"{_external_url_for('atom.get_fresh_releases')}/{_uts}/{artist_credit_name}/{release_name}"
+            f"{_external_url_for('.get_fresh_releases')}/{_uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
@@ -287,19 +284,12 @@ def get_releases(user_name):
         key=lambda k: k.get("release_date", ""),  # sort by release date
     )
 
-    fg = FeedGenerator()
-    fg.id(_external_url_for("atom.get_releases", user_name=user_name))
-    fg.title(f"Fresh Releases for {user_name} - ListenBrainz")
-    fg.author({"name": "ListenBrainz"})
-    fg.link(
-        href=_external_url_for("explore.index", path="fresh-releases"), rel="alternate"
+    fg = _init_feed(
+        _external_url_for(".get_releases", user_name=user_name),
+        f"Fresh Releases for {user_name} - ListenBrainz",
+        _external_url_for("explore.index", path="fresh-releases"),
+        _external_url_for(".get_releases", user_name=user_name),
     )
-    fg.link(
-        href=_external_url_for("atom.get_releases", user_name=user_name),
-        rel="self",
-    )
-    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
-    fg.language("en")
 
     for r in releases:
         release_name = r["release_name"]
@@ -316,7 +306,7 @@ def get_releases(user_name):
 
         fe = fg.add_entry()
         fe.id(
-            f"{_external_url_for('atom.get_releases', user_name=user_name)}/{_uts}/{artist_credit_name}/{release_name}"
+            f"{_external_url_for('.get_releases', user_name=user_name)}/{_uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
@@ -389,17 +379,12 @@ def get_artist_stats(user_name):
     if entity_list is None:
         return Response(status=204)
 
-    fg = FeedGenerator()
-    fg.id(_external_url_for(".get_artist_stats", user_name=user_name))
-    fg.title(_get_stats_feed_title(user_name, "artists", range))
-    fg.author({"name": "ListenBrainz"})
-    fg.link(href=_external_url_for("user.stats", user_name=user_name), rel="alternate")
-    fg.link(
-        href=_external_url_for(".get_artist_stats", user_name=user_name),
-        rel="self",
+    fg = _init_feed(
+        _external_url_for(".get_artist_stats", user_name=user_name),
+        _get_stats_feed_title(user_name, "artists", range),
+        _external_url_for("user.stats", user_name=user_name),
+        _external_url_for(".get_artist_stats", user_name=user_name),
     )
-    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
-    fg.language("en")
 
     # this_* stats are updated daily, so we can use the timestamp of the last updated stats,
     # and they will be a new entry for each day, different entry id each day.
@@ -469,17 +454,12 @@ def get_release_group_stats(user_name):
     if entity_list is None:
         return Response(status=204)
 
-    fg = FeedGenerator()
-    fg.id(_external_url_for(".get_release_group_stats", user_name=user_name))
-    fg.title(_get_stats_feed_title(user_name, "release_groups", range))
-    fg.author({"name": "ListenBrainz"})
-    fg.link(href=_external_url_for("user.stats", user_name=user_name), rel="alternate")
-    fg.link(
-        href=_external_url_for(".get_release_group_stats", user_name=user_name),
-        rel="self",
+    fg = _init_feed(
+        _external_url_for(".get_release_group_stats", user_name=user_name),
+        _get_stats_feed_title(user_name, "release_groups", range),
+        _external_url_for("user.stats", user_name=user_name),
+        _external_url_for(".get_release_group_stats", user_name=user_name),
     )
-    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
-    fg.language("en")
 
     if _is_daily_updated_stats(range):
         _t = to_ts
@@ -548,17 +528,12 @@ def get_recording_stats(user_name):
     if entity_list is None:
         return Response(status=204)
 
-    fg = FeedGenerator()
-    fg.id(_external_url_for(".get_recording_stats", user_name=user_name))
-    fg.title(_get_stats_feed_title(user_name, "recordings", range))
-    fg.author({"name": "ListenBrainz"})
-    fg.link(href=_external_url_for("user.stats", user_name=user_name), rel="alternate")
-    fg.link(
-        href=_external_url_for(".get_recording_stats", user_name=user_name),
-        rel="self",
+    fg = _init_feed(
+        _external_url_for(".get_recording_stats", user_name=user_name),
+        _get_stats_feed_title(user_name, "recordings", range),
+        _external_url_for("user.stats", user_name=user_name),
+        _external_url_for(".get_recording_stats", user_name=user_name),
     )
-    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
-    fg.language("en")
 
     if _is_daily_updated_stats(range):
         _t = to_ts
