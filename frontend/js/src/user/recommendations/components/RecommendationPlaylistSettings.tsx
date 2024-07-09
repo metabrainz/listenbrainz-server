@@ -104,9 +104,9 @@ export default function RecommendationPlaylistSettings({
           >
             <FontAwesomeIcon icon={faCode} title="Inspect playlist" />
           </button>
-          <div className="dropdown playlist-card-action-dropdown">
+          <span className="dropdown">
             <button
-              className="dropdown-toggle playlist-card-action-button"
+              className="dropdown-toggle btn btn-icon btn-info"
               type="button"
               id="playlistOptionsDropdown"
               data-toggle="dropdown"
@@ -114,10 +114,9 @@ export default function RecommendationPlaylistSettings({
               aria-expanded="true"
             >
               <FontAwesomeIcon icon={faCog} title="More options" />
-              &nbsp;Options
             </button>
             <PlaylistMenu playlist={playlist} />
-          </div>
+          </span>
         </div>
         <div>
           {extension?.public ? "Public" : "Private"} playlist by&nbsp;
