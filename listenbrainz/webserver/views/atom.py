@@ -259,7 +259,7 @@ def get_fresh_releases():
 
 @atom_bp.route("/user/<user_name>/fresh_releases", methods=["GET"])
 @crossdomain
-def get_releases(user_name):
+def get_user_fresh_releases(user_name):
     """
     Get fresh releases for a user, sorted by release date.
 
@@ -285,10 +285,10 @@ def get_releases(user_name):
     )
 
     fg = _init_feed(
-        _external_url_for(".get_releases", user_name=user_name),
+        _external_url_for(".get_user_fresh_releases", user_name=user_name),
         f"Fresh Releases for {user_name} - ListenBrainz",
         _external_url_for("explore.index", path="fresh-releases"),
-        _external_url_for(".get_releases", user_name=user_name),
+        _external_url_for(".get_user_fresh_releases", user_name=user_name),
     )
 
     for r in releases:
@@ -306,7 +306,7 @@ def get_releases(user_name):
 
         fe = fg.add_entry()
         fe.id(
-            f"{_external_url_for('.get_releases', user_name=user_name)}/{_uts}/{artist_credit_name}/{release_name}"
+            f"{_external_url_for('.get_user_fresh_releases', user_name=user_name)}/{_uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
