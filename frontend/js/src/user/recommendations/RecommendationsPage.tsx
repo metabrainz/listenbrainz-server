@@ -127,7 +127,7 @@ export default class RecommendationsPage extends React.Component<
     }
   }
 
-  fetchPlaylist = async (playlistId: string) => {
+  fetchPlaylist = async (playlistId: string, reloadOnError = false) => {
     const { APIService, currentUser } = this.context;
     try {
       const response = await APIService.getPlaylist(
@@ -145,6 +145,9 @@ export default class RecommendationsPage extends React.Component<
       });
     } catch (error) {
       toast.error(error.message);
+      if (reloadOnError) {
+        window.location.reload();
+      }
     }
   };
 
@@ -166,7 +169,7 @@ export default class RecommendationsPage extends React.Component<
       toast.error("No playlist to select");
       return;
     }
-    await this.fetchPlaylist(playlistId);
+    await this.fetchPlaylist(playlistId, true);
   };
 
   copyPlaylist: React.ReactEventHandler<HTMLElement> = async (event) => {
