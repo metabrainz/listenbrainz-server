@@ -5,7 +5,10 @@ from listenbrainz.webserver.decorators import crossdomain, api_listenstore_neede
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver import db_conn, timescale_connection
-from listenbrainz.webserver.views.api_tools import _parse_int_arg, get_non_negative_param
+from listenbrainz.webserver.views.api_tools import (
+    _parse_int_arg,
+    get_non_negative_param,
+)
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
@@ -36,7 +39,7 @@ def _is_daily_updated_stats(stats_range: str) -> bool:
         StatisticsRange.this_year.value,
         StatisticsRange.all_time.value,
     ]
-    
+
 
 def _get_stats_feed_title(user_name: str, entity: str, stats_range: str) -> str:
     _entity_descriptions = {
@@ -60,7 +63,7 @@ def _get_stats_feed_title(user_name: str, entity: str, stats_range: str) -> str:
 
 def _get_stats_entry_title(stats_range: str, timestamp: int) -> str:
     dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
-    
+
     if stats_range in [StatisticsRange.this_week.value, StatisticsRange.week.value]:
         return f"Week {dt.isocalendar()[1]}"
     elif stats_range in [StatisticsRange.this_month.value, StatisticsRange.month.value]:
@@ -110,7 +113,9 @@ def get_listens(user_name):
     limit = minutes
 
     to_ts = datetime.now()
-    listens, _, _ = timescale_connection._ts.fetch_listens(user, to_ts=to_ts, limit=limit)
+    listens, _, _ = timescale_connection._ts.fetch_listens(
+        user, to_ts=to_ts, limit=limit
+    )
 
     fg = FeedGenerator()
     fg.id(_external_url_for("atom.get_listens", user_name=user_name))
@@ -378,7 +383,9 @@ def get_artist_stats(user_name):
 
     count = get_non_negative_param("count", default=DEFAULT_STATS_ITEMS_PER_GET)
 
-    entity_list, to_ts, last_updated = _get_entity_stats(user['id'], "artists", range, count)
+    entity_list, to_ts, last_updated = _get_entity_stats(
+        user["id"], "artists", range, count
+    )
     if entity_list is None:
         return Response(status=204)
 
@@ -386,16 +393,13 @@ def get_artist_stats(user_name):
     fg.id(_external_url_for(".get_artist_stats", user_name=user_name))
     fg.title(_get_stats_feed_title(user_name, "artists", range))
     fg.author({"name": "ListenBrainz"})
-    fg.link(
-        href=_external_url_for("user.stats", user_name=user_name), rel="alternate"
-    )
+    fg.link(href=_external_url_for("user.stats", user_name=user_name), rel="alternate")
     fg.link(
         href=_external_url_for(".get_artist_stats", user_name=user_name),
         rel="self",
     )
     fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
     fg.language("en")
-
 
     # this_* stats are updated daily, so we can use the timestamp of the last updated stats,
     # and they will be a new entry for each day, different entry id each day.
@@ -408,10 +412,10 @@ def get_artist_stats(user_name):
     _t_with_tz = _dt.replace(tzinfo=timezone.utc)
 
     fe = fg.add_entry()
-    fe.id(
-        f"{_external_url_for('.get_artist_stats', user_name=user_name)}/{range}/{_t}"
-    )
-    fe.title(_get_stats_entry_title(range, to_ts-60)) # minus 1 minute to situate the entry in the right range
+    fe.id(f"{_external_url_for('.get_artist_stats', user_name=user_name)}/{range}/{_t}")
+    fe.title(
+        _get_stats_entry_title(range, to_ts - 60)
+    )  # minus 1 minute to situate the entry in the right range
 
     _content = render_template(
         "atom/top_artists.html",
@@ -459,7 +463,9 @@ def get_release_group_stats(user_name):
 
     count = get_non_negative_param("count", default=DEFAULT_STATS_ITEMS_PER_GET)
 
-    entity_list, to_ts, last_updated = _get_entity_stats(user['id'], "release_groups", range, count)
+    entity_list, to_ts, last_updated = _get_entity_stats(
+        user["id"], "release_groups", range, count
+    )
     if entity_list is None:
         return Response(status=204)
 
@@ -467,16 +473,13 @@ def get_release_group_stats(user_name):
     fg.id(_external_url_for(".get_release_group_stats", user_name=user_name))
     fg.title(_get_stats_feed_title(user_name, "release_groups", range))
     fg.author({"name": "ListenBrainz"})
-    fg.link(
-        href=_external_url_for("user.stats", user_name=user_name), rel="alternate"
-    )
+    fg.link(href=_external_url_for("user.stats", user_name=user_name), rel="alternate")
     fg.link(
         href=_external_url_for(".get_release_group_stats", user_name=user_name),
         rel="self",
     )
     fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
     fg.language("en")
-
 
     if _is_daily_updated_stats(range):
         _t = to_ts
@@ -489,7 +492,9 @@ def get_release_group_stats(user_name):
     fe.id(
         f"{_external_url_for('.get_release_group_stats', user_name=user_name)}/{range}/{_t}"
     )
-    fe.title(_get_stats_entry_title(range, to_ts-60)) # minus 1 minute to situate the entry in the right range
+    fe.title(
+        _get_stats_entry_title(range, to_ts - 60)
+    )  # minus 1 minute to situate the entry in the right range
 
     _content = render_template(
         "atom/top_albums.html",
@@ -537,7 +542,9 @@ def get_recording_stats(user_name):
 
     count = get_non_negative_param("count", default=DEFAULT_STATS_ITEMS_PER_GET)
 
-    entity_list, to_ts, last_updated = _get_entity_stats(user['id'], "recordings", range, count)
+    entity_list, to_ts, last_updated = _get_entity_stats(
+        user["id"], "recordings", range, count
+    )
     if entity_list is None:
         return Response(status=204)
 
@@ -545,16 +552,13 @@ def get_recording_stats(user_name):
     fg.id(_external_url_for(".get_recording_stats", user_name=user_name))
     fg.title(_get_stats_feed_title(user_name, "recordings", range))
     fg.author({"name": "ListenBrainz"})
-    fg.link(
-        href=_external_url_for("user.stats", user_name=user_name), rel="alternate"
-    )
+    fg.link(href=_external_url_for("user.stats", user_name=user_name), rel="alternate")
     fg.link(
         href=_external_url_for(".get_recording_stats", user_name=user_name),
         rel="self",
     )
     fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
     fg.language("en")
-
 
     if _is_daily_updated_stats(range):
         _t = to_ts
@@ -567,7 +571,9 @@ def get_recording_stats(user_name):
     fe.id(
         f"{_external_url_for('.get_recording_stats', user_name=user_name)}/{range}/{_t}"
     )
-    fe.title(_get_stats_entry_title(range, to_ts-60)) # minus 1 minute to situate the entry in the right range
+    fe.title(
+        _get_stats_entry_title(range, to_ts - 60)
+    )  # minus 1 minute to situate the entry in the right range
 
     _content = render_template(
         "atom/top_tracks.html",
