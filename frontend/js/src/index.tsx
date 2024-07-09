@@ -32,7 +32,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderRoot.render(
     <ErrorBoundary>
       <GlobalAppContext.Provider value={globalAppContext}>
-        <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
+        <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz">
+          <meta property="og:type" content="website" />
+          <meta
+            property="og:image"
+            content="https://listenbrainz.org/static/img/share-header.png"
+          />
+          <meta property="og:image:width" content="1280" />
+          <meta property="og:image:height" content="640" />
+
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta property="twitter:domain" content="listenbrainz.org" />
+          <meta name="twitter:title" content="ListenBrainz" />
+          <meta
+            name="twitter:image"
+            content="https://listenbrainz.org/static/img/share-header.png"
+          />
+        </Helmet>
         <ReactQueryDevtool client={queryClient}>
           <RouterProvider router={router} />
         </ReactQueryDevtool>
