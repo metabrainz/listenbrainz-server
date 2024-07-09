@@ -24,3 +24,22 @@
     position: relative;
   }
 }
+
+.bar-chart {
+  position: relative;
+  width: 100%;
+  > * {
+    position: absolute;
+    width: 100%;
+    > div {
+      svg + div {
+        // Target the tooltip shown when hovering over graphs
+        // See https://github.com/plouc/nivo/pull/2438
+        z-index: 100 !important;    
+      }
+    }
+  }
+  .graph-tooltip {
+    z-index: 100;
+  }
+}

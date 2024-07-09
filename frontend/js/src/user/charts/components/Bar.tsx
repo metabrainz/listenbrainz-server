@@ -1,11 +1,10 @@
 import * as React from "react";
 import {
   ResponsiveBar,
-  LabelFormatter,
   BarDatum,
   BarTooltipProps,
+  BarSvgProps,
 } from "@nivo/bar";
-import type { AxisTickProps } from "@nivo/axes";
 import { omit } from "lodash";
 import { BasicTooltip } from "@nivo/tooltip";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
@@ -13,37 +12,21 @@ import { COLOR_LB_ORANGE } from "../../../utils/constants";
 export type BarProps = {
   data: UserEntityData;
   maxValue: number;
-};
+} & Partial<BarSvgProps<any>>;
 
 export default function Bar(props: BarProps) {
-  const { data, maxValue } = props;
-
-  const renderTickValue = (tick: AxisTickProps<any>): JSX.Element => {
-    const datum: UserEntityDatum = data?.[tick.tickIndex];
-    const { idx } = datum;
-    return (
-      <g transform={`translate(${tick.x - 10}, ${tick.y + 7})`}>
-        <text textAnchor="end">{idx}.</text>
-      </g>
-    );
-  };
-
-  const labelFormatter = (((label: string) => {
-    return (
-      <tspan x={5} textAnchor="start">
-        {label}
-      </tspan>
-    );
-  }) as unknown) as LabelFormatter;
+  const { data, maxValue, ...barProps } = props;
 
   const customTooltip = (tooltipProps: BarTooltipProps<BarDatum>) => {
     const { data: datum, value, color } = tooltipProps;
     return (
-      <BasicTooltip
-        id={datum.entity}
-        value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
-        color={color}
-      />
+      <div className="graph-tooltip" style={{ zIndex: 150 }}>
+        <BasicTooltip
+          id={datum.entity}
+          value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
+          color={color}
+        />
+      </div>
     );
   };
 
@@ -51,6 +34,8 @@ export default function Bar(props: BarProps) {
     labels: {
       text: {
         fontSize: "14px",
+        fontWeight: "bold",
+        fill: "white",
       },
     },
   };
@@ -72,23 +57,28 @@ export default function Bar(props: BarProps) {
       colors={COLOR_LB_ORANGE}
       indexBy="id"
       enableGridY={false}
-      padding={0.1}
-      labelFormat={labelFormatter}
+      padding={0.2}
+      label={(x) => x.data.entity}
       labelSkipWidth={0}
       tooltip={customTooltip}
       margin={{
-        top: -12,
-        left: 35,
+        bottom: 40,
+        left: 15,
+        right: 15,
       }}
-      axisLeft={{
+      axisBottom={{
         tickSize: 0,
         tickValues: data?.length,
         tickPadding: 5,
-        renderTick: renderTickValue,
+        legend: "Number of listens",
+        legendOffset: 30,
+        legendPosition: "middle",
       }}
+      axisLeft={null}
       theme={theme}
       keys={["count"]}
       animate={false}
+      {...barProps}
     />
   );
 }

@@ -78,8 +78,8 @@ export const processData = (
     return result;
   }
   if (entity === "artist") {
-    result = (data as UserArtistsResponse).payload.artists
-      ?.map((elem, idx: number) => {
+    result = (data as UserArtistsResponse).payload.artists?.map(
+      (elem, idx: number) => {
         const entityMBID = elem.artist_mbid ?? undefined;
         return {
           id: idx.toString(),
@@ -89,11 +89,11 @@ export const processData = (
           count: elem.listen_count,
           entityMBID,
         };
-      })
-      .reverse();
+      }
+    );
   } else if (entity === "release") {
-    result = (data as UserReleasesResponse).payload.releases
-      ?.map((elem, idx: number) => {
+    result = (data as UserReleasesResponse).payload.releases?.map(
+      (elem, idx: number) => {
         return {
           id: idx.toString(),
           entity: elem.release_name,
@@ -107,11 +107,11 @@ export const processData = (
           caaReleaseMBID: elem.caa_release_mbid,
           artists: elem.artists,
         };
-      })
-      .reverse();
+      }
+    );
   } else if (entity === "recording") {
-    result = (data as UserRecordingsResponse).payload.recordings
-      ?.map((elem, idx: number) => {
+    result = (data as UserRecordingsResponse).payload.recordings?.map(
+      (elem, idx: number) => {
         return {
           id: idx.toString(),
           entity: elem.track_name,
@@ -127,11 +127,11 @@ export const processData = (
           caaReleaseMBID: elem.caa_release_mbid,
           artists: elem.artists,
         };
-      })
-      .reverse();
+      }
+    );
   } else if (entity === "release-group") {
-    result = (data as UserReleaseGroupsResponse).payload.release_groups
-      ?.map((elem, idx: number) => {
+    result = (data as UserReleaseGroupsResponse).payload.release_groups?.map(
+      (elem, idx: number) => {
         return {
           id: idx.toString(),
           entity: elem.release_group_name,
@@ -145,8 +145,8 @@ export const processData = (
           caaReleaseMBID: elem.caa_release_mbid,
           artists: elem.artists,
         };
-      })
-      .reverse();
+      }
+    );
   }
 
   return result;

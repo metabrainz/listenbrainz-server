@@ -1,6 +1,9 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
-import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faExclamationCircle,
+  faHeadphones,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
@@ -48,9 +51,6 @@ export default function UserEntityChart() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = React.useState(true);
-  const [listenContainerHeight, setListenContainerHeight] = React.useState<
-    number | undefined
-  >(undefined);
   const [hasError, setHasError] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState("");
 
@@ -107,17 +107,8 @@ export default function UserEntityChart() {
 
   const listenContainer = React.useRef<HTMLDivElement>(null);
 
-  const handleResize = () => {
-    setListenContainerHeight(listenContainer.current?.offsetHeight);
-  };
-
-  React.useEffect(() => {
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  });
-
   const listenableItems: BaseListenFormat[] =
-    data?.map(userChartEntityToListen).reverse() ?? [];
+    data?.map(userChartEntityToListen) ?? [];
 
   const userOrLoggedInUser: string | undefined =
     user?.name ?? currentUser?.name;
@@ -232,40 +223,55 @@ export default function UserEntityChart() {
               <div className="row">
                 <div className="col-xs-12">
                   <h4 style={{ textTransform: "capitalize" }}>
-                    {terminology} count - <b>{entityCount}</b>
+                    {terminology} count - <b>{entityCount}</b> / Page {currPage}
                   </h4>
                 </div>
               </div>
-              <div className="row">
-                <div className="col-xs-6" ref={listenContainer}>
-                  {data
-                    ?.slice()
-                    .reverse()
-                    .map((datum, index) => {
-                      const listen = listenableItems[index];
-                      const listenDetails = getChartEntityDetails(datum);
-                      return (
-                        <ListenCard
-                          key={`${datum.idx + 1}`}
-                          listenDetails={listenDetails}
-                          listen={listen}
-                          showTimestamp={false}
-                          showUsername={false}
-                        />
-                      );
-                    })}
-                </div>
-                <div
-                  className="col-xs-6"
-                  style={{
-                    height:
-                      listenContainerHeight ?? `${65 * (data?.length ?? 1)}px`,
-                    paddingLeft: 0,
-                  }}
-                >
-                  <Bar data={data} maxValue={maxListens} />
-                </div>
+              <div
+                className="row bar-chart"
+                style={{
+                  marginBottom: "1em",
+                  minHeight: 600,
+                }}
+              >
+                <Bar
+                  data={[...data].reverse()}
+                  maxValue={maxListens}
+                  layout="horizontal"
+                  enableGridX
+                />
               </div>
+              <div
+                ref={listenContainer}
+                style={{
+                  display: "grid",
+                  gridAutoFlow: "row",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+                }}
+              >
+                {data?.slice().map((datum, index) => {
+                  const listen = listenableItems[index];
+                  const listenDetails = getChartEntityDetails(datum);
+                  const listenCountComponent = (
+                    <span className="badge badge-info">
+                      {datum.count}
+                      &nbsp;
+                      <FontAwesomeIcon icon={faHeadphones} />
+                    </span>
+                  );
+                  return (
+                    <ListenCard
+                      key={`${datum.idx + 1}`}
+                      listenDetails={listenDetails}
+                      listen={listen}
+                      showTimestamp={false}
+                      showUsername={false}
+                      additionalActions={listenCountComponent}
+                    />
+                  );
+                })}
+              </div>
+
               {terminology === "album" && (
                 <div className="row">
                   <div className="col-xs-12">
