@@ -28,6 +28,8 @@
 .bar-chart {
   position: relative;
   width: 100%;
+  margin-bottom: 1em;
+  min-height: calc(25 * 26px);
   > * {
     position: absolute;
     width: 100%;
@@ -41,5 +43,14 @@
   }
   .graph-tooltip {
     z-index: 100;
+  }
+}
+
+.top-entity-listencards {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  .listen-card .main-content .right-section {
+    flex: 0;
   }
 }

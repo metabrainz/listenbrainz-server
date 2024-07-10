@@ -33,7 +33,7 @@ export default function Bar(props: BarProps) {
   const theme = {
     labels: {
       text: {
-        fontSize: "14px",
+        fontSize: "16px",
         fontWeight: "bold",
         fill: "white",
       },
@@ -57,8 +57,8 @@ export default function Bar(props: BarProps) {
       colors={COLOR_LB_ORANGE}
       indexBy="id"
       enableGridY={false}
-      padding={0.2}
-      label={(x) => x.data.entity}
+      padding={0.1}
+      label={(x: any) => x.data.entity}
       labelSkipWidth={0}
       tooltip={customTooltip}
       margin={{

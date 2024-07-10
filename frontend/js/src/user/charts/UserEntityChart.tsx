@@ -8,6 +8,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import {
+  interpolateOranges,
+  interpolateSpectral,
+  schemeOranges,
+} from "d3-scale-chromatic";
+import { scaleLinear } from "d3-scale";
+import { clone } from "lodash";
+import tinycolor from "tinycolor2";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getData, processData } from "./utils";
@@ -22,6 +30,7 @@ import {
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
+import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -116,6 +125,9 @@ export default function UserEntityChart() {
   const userStatsTitle =
     user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
 
+  const colorsSequence = scaleLinear<string, string>()
+    .domain([1, data.length])
+    .range([COLOR_LB_ORANGE, COLOR_LB_BLUE]);
   return (
     <div role="main">
       <Helmet>
@@ -227,28 +239,17 @@ export default function UserEntityChart() {
                   </h4>
                 </div>
               </div>
-              <div
-                className="row bar-chart"
-                style={{
-                  marginBottom: "1em",
-                  minHeight: 600,
-                }}
-              >
+              <div className="row bar-chart">
                 <Bar
                   data={[...data].reverse()}
                   maxValue={maxListens}
                   layout="horizontal"
                   enableGridX
+                  colors={(i) => colorsSequence(i.index)}
+                  // labelPosition="start" // Upcoming nivo release, see https://github.com/plouc/nivo/pull/2585
                 />
               </div>
-              <div
-                ref={listenContainer}
-                style={{
-                  display: "grid",
-                  gridAutoFlow: "row",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-                }}
-              >
+              <div ref={listenContainer} className="top-entity-listencards">
                 {data?.slice().map((datum, index) => {
                   const listen = listenableItems[index];
                   const listenDetails = getChartEntityDetails(datum);
