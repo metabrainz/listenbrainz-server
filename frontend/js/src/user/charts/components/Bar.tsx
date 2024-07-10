@@ -6,7 +6,6 @@ import {
   BarSvgProps,
 } from "@nivo/bar";
 import { omit } from "lodash";
-import { BasicTooltip } from "@nivo/tooltip";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 
 export type BarProps = {
@@ -20,12 +19,11 @@ export default function Bar(props: BarProps) {
   const customTooltip = (tooltipProps: BarTooltipProps<BarDatum>) => {
     const { data: datum, value, color } = tooltipProps;
     return (
-      <div className="graph-tooltip" style={{ zIndex: 150 }}>
-        <BasicTooltip
-          id={datum.entity}
-          value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
-          color={color}
-        />
+      <div className="graph-tooltip" id={datum.entity.toString()}>
+        {datum.entity}:&nbsp;
+        <b>
+          {value} {Number(value) === 1 ? "listen" : "listens"}
+        </b>
       </div>
     );
   };
