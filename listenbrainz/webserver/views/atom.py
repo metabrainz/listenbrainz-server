@@ -390,9 +390,9 @@ def get_artist_stats(user_name):
     # and they will be a new entry for each day, different entry id each day.
     # otherwise, we use the timestamp of the end of the range, and it will be a new entry for each range.
     if _is_daily_updated_stats(range):
-        _t = to_ts
-    else:
         _t = last_updated
+    else:
+        _t = to_ts
     _dt = datetime.fromtimestamp(_t)
     _t_with_tz = _dt.replace(tzinfo=timezone.utc)
 
@@ -463,9 +463,9 @@ def get_release_group_stats(user_name):
     )
 
     if _is_daily_updated_stats(range):
-        _t = to_ts
-    else:
         _t = last_updated
+    else:
+        _t = to_ts
     _dt = datetime.fromtimestamp(_t)
     _t_with_tz = _dt.replace(tzinfo=timezone.utc)
 
@@ -538,9 +538,9 @@ def get_recording_stats(user_name):
     )
 
     if _is_daily_updated_stats(range):
-        _t = to_ts
-    else:
         _t = last_updated
+    else:
+        _t = to_ts
     _dt = datetime.fromtimestamp(_t)
     _t_with_tz = _dt.replace(tzinfo=timezone.utc)
 
