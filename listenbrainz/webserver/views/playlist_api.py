@@ -907,12 +907,12 @@ def import_playlist_from_music_service(service):
         token = spotify_service.get_user(user["id"], refresh=True)
     elif service == "apple_music":
         apple_service = AppleService()
-        #TODO: implement refresh token for AppleMusic
+        # TODO: implement refresh token for AppleMusic
         token = apple_service.get_user(user["id"])
 
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
-    
+
     if service == "apple_music" and not token["refresh_token"]:
         raise APIBadRequest("Not authorized to Apple Music. Please link your account first.")
 
@@ -989,12 +989,12 @@ def import_tracks_from_apple_playlist(playlist_id):
     user = validate_auth_header()
 
     apple_service = AppleService()
-    #TODO: implement refresh token for AppleMusic
+    # TODO: implement refresh token for AppleMusic
     token = apple_service.get_user(user["id"])
-    
+
     if not token["refresh_token"]:
         raise APIBadRequest("Not authorized to Apple Music. Please link your account first.")
-    
+
     if not token:
         raise APIBadRequest(f"Service Apple Music is not linked. Please link your Apple Music account first.")
 
