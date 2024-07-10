@@ -5,18 +5,64 @@ from listenbrainz.db import couchdb
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from lxml import etree
 from listenbrainz.db import fresh_releases as db_fresh
+from data.model.common_stat import ALLOWED_STATISTICS_RANGE
+import listenbrainz.db.stats as db_stats
 
 
 class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
     @classmethod
     def setUpClass(cls):
         super(AtomFeedsTestCase, cls).setUpClass()
-        couchdb.create_database("fresh_releases_20240720")
+
+        couchdb.create_database("fresh_releases_20240710")
+
+        stats = ["artists", "recordings", "release_groups"]
+        for stat in stats:
+            for range in ALLOWED_STATISTICS_RANGE:
+                couchdb.create_database(f"{stat}_{range}_20240710")
 
     def setUp(self):
         super(AtomFeedsTestCase, self).setUp()
         self.nsAtom = "{http://www.w3.org/2005/Atom}"
-        self.fresh_releases_database = "fresh_releases_20240720"
+        self.fresh_releases_database = "fresh_releases_20240710"
+
+        # Mon Jul 01 2024 00:00:00 GMT+0000 - Mon Jul 08 2024 00:00:00 GMT+0000
+        self.stats_from_ts = 1719792000
+        self.stats_to_ts = 1720396800
+
+        with open(
+            self.path_to_data_file("user_top_artists_db_data_for_api_test.json"), "r"
+        ) as f:
+            self.user_artist_payload = json.load(f)
+            self.user_artist_payload[0]["user_id"] = self.user["id"]
+        database = "artists_week_20240710"
+        db_stats.insert(
+            database, self.stats_from_ts, self.stats_to_ts, self.user_artist_payload
+        )
+
+        with open(
+            self.path_to_data_file("user_top_release_groups_db_data_for_api_test.json"),
+            "r",
+        ) as f:
+            self.user_release_group_payload = json.load(f)
+            self.user_release_group_payload[0]["user_id"] = self.user["id"]
+        database = "release_groups_week_20240710"
+        db_stats.insert(
+            database,
+            self.stats_from_ts,
+            self.stats_to_ts,
+            self.user_release_group_payload,
+        )
+
+        with open(
+            self.path_to_data_file("user_top_recordings_db_data_for_api_test.json"), "r"
+        ) as f:
+            self.recording_payload = json.load(f)
+            self.recording_payload[0]["user_id"] = self.user["id"]
+        database = "recordings_week_20240710"
+        db_stats.insert(
+            database, self.stats_from_ts, self.stats_to_ts, self.recording_payload
+        )
 
     def test_get_listens_invalid_params(self):
         """
@@ -50,6 +96,18 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         response = self.client.get(fresh_releases_url, query_string={"days": "0"})
         self.assert400(response)
         response = self.client.get(fresh_releases_url, query_string={"days": "91"})
+        self.assert400(response)
+
+    def test_get_stats_invalid_params(self):
+        """
+        Check server sends 400 for invalid params.
+        """
+        stats_url = self.custom_url_for(
+            "atom.get_artist_stats", user_name=self.user["musicbrainz_id"]
+        )
+        response = self.client.get(stats_url, query_string={"range": "invalid"})
+        self.assert400(response)
+        response = self.client.get(stats_url, query_string={"count": "-1"})
         self.assert400(response)
 
     def test_get_listens_feed_elements(self):
@@ -215,3 +273,34 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         if entryIds is None:
             self.fail("No id element found in feed")
         self.assertEqual(len(entryIds), release_count - 1)
+
+    def test_get_stats_elements(self):
+        """
+        Check server sends valid stats feed.
+        """
+        url = self.custom_url_for(
+            "atom.get_artist_stats", user_name=self.user["musicbrainz_id"]
+        )
+        response = self.client.get(url, query_string={"range": "week"})
+        self.assert200(response)
+
+        nsAtom = self.nsAtom
+        xml_tree = etree.fromstring(response.data)
+
+        # Check feed id
+        feedId = xml_tree.find(f"{nsAtom}id")
+        if feedId is None:
+            self.fail("No id element found in feed")
+        self.assertEqual(
+            feedId.text,
+            f"{self.custom_url_for('atom.get_artist_stats', user_name=self.user['musicbrainz_id'], force_external=True)}",
+        )
+
+        # Check entries
+        entryIds = xml_tree.find(f"{nsAtom}entry/{nsAtom}id")
+        if entryIds is None:
+            self.fail("No id element found in feed")
+        self.assertEqual(
+            entryIds.text,
+            f"{self.custom_url_for('atom.get_artist_stats', user_name=self.user['musicbrainz_id'], force_external=True)}/week/{self.stats_to_ts}",
+        )

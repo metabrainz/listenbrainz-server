@@ -568,4 +568,3 @@ def get_recording_stats(user_name):
     atomfeed = fg.atom_str(pretty=True)
 
     return Response(atomfeed, mimetype="application/atom+xml")
-
