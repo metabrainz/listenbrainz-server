@@ -23,7 +23,7 @@
   <!--  OpenGraph image meta tags -->
   <meta
     property="og:image"
-    content="{{ url_for('static', filename='img/share-header.png') }}"
+    content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
   />
   <meta property="og:image:width" content="1280" />
   <meta property="og:image:height" content="640" />
@@ -38,7 +38,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta
     name="twitter:image"
-    content="{{ url_for('static', filename='img/share-header.png') }}"
+    content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
   />
 
   <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
