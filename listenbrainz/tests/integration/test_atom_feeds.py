@@ -65,6 +65,8 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
 
         nsAtom = self.nsAtom
         xml_tree = etree.fromstring(response.data)
+
+        # Check feed id
         feedId = xml_tree.find(f"{nsAtom}id")
         if feedId is None:
             self.fail("No id element found in feed")
@@ -73,6 +75,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
             f"{self.custom_url_for('atom.get_listens', user_name=self.user['musicbrainz_id'], force_external=True)}",
         )
 
+        # Check entry id
         entryId = xml_tree.find(f"{nsAtom}entry/{nsAtom}id")
         if entryId is None:
             self.fail("No id element found in feed")
@@ -110,6 +113,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
 
         nsAtom = self.nsAtom
         xml_tree = etree.fromstring(response.data)
+
         element = xml_tree.findall(f"{nsAtom}entry/{nsAtom}id")
         if element is None:
             self.fail("No id element found in feed")
