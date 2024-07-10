@@ -134,13 +134,15 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         xml_tree = etree.fromstring(response.data)
 
         # Check feed id
+        _path = self.custom_url_for(
+            "atom.get_listens",
+            user_name=self.user["musicbrainz_id"],
+            force_external=True,
+        )
         feedId = xml_tree.find(f"{nsAtom}id")
         if feedId is None:
             self.fail("No id element found in feed")
-        self.assertEqual(
-            feedId.text,
-            f"{self.custom_url_for('atom.get_listens', user_name=self.user['musicbrainz_id'], force_external=True)}",
-        )
+        self.assertEqual(feedId.text, _path)
 
         # Check entry id
         entryId = xml_tree.find(f"{nsAtom}entry/{nsAtom}id")
@@ -148,7 +150,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
             self.fail("No id element found in feed")
         self.assertEqual(
             entryId.text,
-            f"{self.custom_url_for('atom.get_listens', user_name=self.user['musicbrainz_id'], force_external=True)}/{ts}/{payload['payload'][0]['track_metadata']['track_name']}",
+            f"{_path}/{ts}/{payload['payload'][0]['track_metadata']['track_name']}",
         )
 
     def test_get_listens_entry_order(self):
@@ -181,17 +183,22 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         nsAtom = self.nsAtom
         xml_tree = etree.fromstring(response.data)
 
+        _path = self.custom_url_for(
+            "atom.get_listens",
+            user_name=self.user["musicbrainz_id"],
+            force_external=True,
+        )
         element = xml_tree.findall(f"{nsAtom}entry/{nsAtom}id")
         if element is None:
             self.fail("No id element found in feed")
         self.assertEqual(len(element), 2)
         self.assertEqual(
             element[0].text,
-            f"{self.custom_url_for('atom.get_listens', user_name=self.user['musicbrainz_id'], force_external=True)}/{ts2}/{payload['payload'][0]['track_metadata']['track_name']}",
+            f"{_path}/{ts2}/{payload['payload'][0]['track_metadata']['track_name']}",
         )
         self.assertEqual(
             element[1].text,
-            f"{self.custom_url_for('atom.get_listens', user_name=self.user['musicbrainz_id'], force_external=True)}/{ts1}/{payload['payload'][0]['track_metadata']['track_name']}",
+            f"{_path}/{ts1}/{payload['payload'][0]['track_metadata']['track_name']}",
         )
 
     def test_get_user_fresh_releases_elements(self):
@@ -223,15 +230,17 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
 
         nsAtom = self.nsAtom
         xml_tree = etree.fromstring(response.data)
+        _path = self.custom_url_for(
+            "atom.get_user_fresh_releases",
+            user_name=self.user["musicbrainz_id"],
+            force_external=True,
+        )
 
         # Check feed id
         feedId = xml_tree.find(f"{nsAtom}id")
         if feedId is None:
             self.fail("No id element found in feed")
-        self.assertEqual(
-            feedId.text,
-            f"{self.custom_url_for('atom.get_user_fresh_releases', user_name=self.user['musicbrainz_id'],force_external=True)}",
-        )
+        self.assertEqual(feedId.text, _path)
 
         # Check entries
         entryIds = xml_tree.findall(f"{nsAtom}entry/{nsAtom}id")
@@ -240,7 +249,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(len(entryIds), release_count)
         self.assertEqual(
             entryIds[0].text,
-            f"{self.custom_url_for('atom.get_user_fresh_releases', user_name=self.user['musicbrainz_id'], force_external=True)}/{_uts}/{artist_credit_name}/{release_name}",
+            f"{_path}/{_uts}/{artist_credit_name}/{release_name}",
         )
 
     def test_get_user_fresh_releases_exclude_future_releases(self):
@@ -278,29 +287,34 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         """
         Check server sends valid stats feed.
         """
-        url = self.custom_url_for(
-            "atom.get_artist_stats", user_name=self.user["musicbrainz_id"]
-        )
-        response = self.client.get(url, query_string={"range": "week"})
-        self.assert200(response)
+        for endpoint in ["artist", "release_group", "recording"]:
+            _method_name = f"get_{endpoint}_stats"
 
-        nsAtom = self.nsAtom
-        xml_tree = etree.fromstring(response.data)
+            url = self.custom_url_for(
+                f"atom.{_method_name}", user_name=self.user["musicbrainz_id"]
+            )
+            response = self.client.get(url, query_string={"range": "week"})
+            self.assert200(response)
 
-        # Check feed id
-        feedId = xml_tree.find(f"{nsAtom}id")
-        if feedId is None:
-            self.fail("No id element found in feed")
-        self.assertEqual(
-            feedId.text,
-            f"{self.custom_url_for('atom.get_artist_stats', user_name=self.user['musicbrainz_id'], force_external=True)}",
-        )
+            nsAtom = self.nsAtom
+            xml_tree = etree.fromstring(response.data)
+            _path = self.custom_url_for(
+                f"atom.{_method_name}",
+                user_name=self.user["musicbrainz_id"],
+                force_external=True,
+            )
 
-        # Check entries
-        entryIds = xml_tree.find(f"{nsAtom}entry/{nsAtom}id")
-        if entryIds is None:
-            self.fail("No id element found in feed")
-        self.assertEqual(
-            entryIds.text,
-            f"{self.custom_url_for('atom.get_artist_stats', user_name=self.user['musicbrainz_id'], force_external=True)}/week/{self.stats_to_ts}",
-        )
+            # Check feed id
+            feedId = xml_tree.find(f"{nsAtom}id")
+            if feedId is None:
+                self.fail("No id element found in feed")
+            self.assertEqual(feedId.text, _path)
+
+            # Check entries
+            entryIds = xml_tree.find(f"{nsAtom}entry/{nsAtom}id")
+            if entryIds is None:
+                self.fail("No id element found in feed")
+            self.assertEqual(
+                entryIds.text,
+                f"{_path}/week/{self.stats_to_ts}",
+            )
