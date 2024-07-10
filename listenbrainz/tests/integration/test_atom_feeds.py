@@ -1,13 +1,22 @@
+from datetime import datetime
 import json
 import time
+from listenbrainz.db import couchdb
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from lxml import etree
+from listenbrainz.db import fresh_releases as db_fresh
 
 
 class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(AtomFeedsTestCase, cls).setUpClass()
+        couchdb.create_database("fresh_releases_20240720")
+
     def setUp(self):
         super(AtomFeedsTestCase, self).setUp()
         self.nsAtom = "{http://www.w3.org/2005/Atom}"
+        self.fresh_releases_database = "fresh_releases_20240720"
 
     def test_get_listens_invalid_params(self):
         """
@@ -108,7 +117,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         url = self.custom_url_for(
             "atom.get_listens", user_name=self.user["musicbrainz_id"]
         )
-        response = self.client.get(url, query_string={"interval": 1})
+        response = self.client.get(url)
         self.assert200(response)
 
         nsAtom = self.nsAtom
@@ -126,3 +135,83 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
             element[1].text,
             f"{self.custom_url_for('atom.get_listens', user_name=self.user['musicbrainz_id'], force_external=True)}/{ts1}/{payload['payload'][0]['track_metadata']['track_name']}",
         )
+
+    def test_get_user_fresh_releases_elements(self):
+        """
+        Check server sends valid user fresh releases feed.
+        """
+        with open(self.path_to_data_file("user_fresh_releases.json")) as f:
+            releases = json.load(f)
+
+        release_count = len(releases)
+        release_name = releases[0]["release_name"]
+        artist_credit_name = releases[0]["artist_credit_name"]
+        release_date_str = releases[0]["release_date"]
+        _t = datetime.combine(
+            datetime.strptime(release_date_str, "%Y-%m-%d"), datetime.min.time()
+        )
+        _uts = int(_t.timestamp())
+
+        db_fresh.insert_fresh_releases(
+            self.fresh_releases_database,
+            [{"user_id": self.user["id"], "releases": releases}],
+        )
+
+        url = self.custom_url_for(
+            "atom.get_user_fresh_releases", user_name=self.user["musicbrainz_id"]
+        )
+        response = self.client.get(url)
+        self.assert200(response)
+
+        nsAtom = self.nsAtom
+        xml_tree = etree.fromstring(response.data)
+
+        # Check feed id
+        feedId = xml_tree.find(f"{nsAtom}id")
+        if feedId is None:
+            self.fail("No id element found in feed")
+        self.assertEqual(
+            feedId.text,
+            f"{self.custom_url_for('atom.get_user_fresh_releases', user_name=self.user['musicbrainz_id'],force_external=True)}",
+        )
+
+        # Check entries
+        entryIds = xml_tree.findall(f"{nsAtom}entry/{nsAtom}id")
+        if entryIds is None:
+            self.fail("No id element found in feed")
+        self.assertEqual(len(entryIds), release_count)
+        self.assertEqual(
+            entryIds[0].text,
+            f"{self.custom_url_for('atom.get_user_fresh_releases', user_name=self.user['musicbrainz_id'], force_external=True)}/{_uts}/{artist_credit_name}/{release_name}",
+        )
+
+    def test_get_user_fresh_releases_exclude_future_releases(self):
+        """
+        Check server sends only past releases.
+        """
+        with open(self.path_to_data_file("user_fresh_releases.json")) as f:
+            releases = json.load(f)
+
+        release_count = len(releases)
+        for r in releases:
+            r["release_date"] = "2023-01-01"
+        releases[0]["release_date"] = "2049-01-01"
+
+        db_fresh.insert_fresh_releases(
+            self.fresh_releases_database,
+            [{"user_id": self.user["id"], "releases": releases}],
+        )
+
+        url = self.custom_url_for(
+            "atom.get_user_fresh_releases", user_name=self.user["musicbrainz_id"]
+        )
+        response = self.client.get(url)
+        self.assert200(response)
+
+        nsAtom = self.nsAtom
+        xml_tree = etree.fromstring(response.data)
+
+        entryIds = xml_tree.findall(f"{nsAtom}entry/{nsAtom}id")
+        if entryIds is None:
+            self.fail("No id element found in feed")
+        self.assertEqual(len(entryIds), release_count - 1)
