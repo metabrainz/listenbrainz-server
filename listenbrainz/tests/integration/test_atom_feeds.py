@@ -101,14 +101,14 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         # First listen
-        ts1 = int(time.time())
+        ts1 = int(time.time()) - 100
         payload["payload"][0]["listened_at"] = ts1
         response = self.send_data(payload, recalculate=True)
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
         # Second listen
-        ts2 = int(time.time())
+        ts2 = int(time.time()) - 50
         payload["payload"][0]["listened_at"] = ts2
         response = self.send_data(payload, recalculate=True)
         self.assert200(response)
