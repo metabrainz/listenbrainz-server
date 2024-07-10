@@ -248,7 +248,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
             self.fail("No id element found in feed")
         self.assertEqual(len(entryIds), release_count)
         self.assertEqual(
-            entryIds[0].text,
+            entryIds[release_count - 1].text,
             f"{_path}/{_uts}/{artist_credit_name}/{release_name}",
         )
 
