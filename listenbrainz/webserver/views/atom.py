@@ -196,7 +196,7 @@ def get_listens(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/fresh_releases", methods=["GET"])
+@atom_bp.route("/fresh-releases", methods=["GET"])
 @crossdomain
 @ratelimit()
 def get_fresh_releases():
@@ -272,7 +272,7 @@ def get_fresh_releases():
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/user/<user_name>/fresh_releases", methods=["GET"])
+@atom_bp.route("/user/<user_name>/fresh-releases", methods=["GET"])
 @crossdomain
 def get_user_fresh_releases(user_name):
     """
