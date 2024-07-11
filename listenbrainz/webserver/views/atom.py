@@ -29,10 +29,17 @@ atom_bp = Blueprint("atom", __name__)
 
 
 def _external_url_for(endpoint, **values):
+    """
+    A simple wrapper around Flask's url_for that generates an absolute URL.
+    """
     return url_for(endpoint, _external=True, **values)
 
 
 def _is_daily_updated_stats(stats_range: str) -> bool:
+    """
+    Determine if the stats are updated daily.
+    If so, we can use the timestamp of the last updated stats to generate a new entry for each day.
+    """
     return stats_range in [
         StatisticsRange.this_week.value,
         StatisticsRange.this_month.value,
@@ -42,6 +49,9 @@ def _is_daily_updated_stats(stats_range: str) -> bool:
 
 
 def _get_stats_feed_title(user_name: str, entity: str, stats_range: str) -> str:
+    """
+    A central place to generate feed titles for stats feeds.
+    """
     _entity_descriptions = {
         "artists": "Top Artists",
         "release_groups": "Top Albums",
@@ -62,6 +72,9 @@ def _get_stats_feed_title(user_name: str, entity: str, stats_range: str) -> str:
 
 
 def _get_stats_entry_title(stats_range: str, timestamp: int) -> str:
+    """
+    A central place to generate feed entry titles for stats feeds.
+    """
     dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
     if stats_range in [StatisticsRange.this_week.value, StatisticsRange.week.value]:
@@ -80,6 +93,9 @@ def _get_stats_entry_title(stats_range: str, timestamp: int) -> str:
 
 
 def _init_feed(id, title, self_url, alternate_url):
+    """
+    Initialize a feed with common attributes.
+    """
     fg = FeedGenerator()
     fg.id(id)
     fg.title(title)
@@ -237,7 +253,9 @@ def get_fresh_releases():
             artist_page_base_url=_external_url_for("artist.artist_page", path=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
-            expore_fresh_releases_url=_external_url_for("explore.index", path="fresh-releases"),
+            expore_fresh_releases_url=_external_url_for(
+                "explore.index", path="fresh-releases"
+            ),
         )
         fe.content(
             content=_content,
@@ -313,7 +331,9 @@ def get_user_fresh_releases(user_name):
             artist_page_base_url=_external_url_for("artist.artist_page", path=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
-            explore_fresh_releases_url=_external_url_for("explore.index", path="fresh-releases"),
+            explore_fresh_releases_url=_external_url_for(
+                "explore.index", path="fresh-releases"
+            ),
         )
         fe.content(
             content=_content,
