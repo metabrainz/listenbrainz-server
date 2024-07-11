@@ -6,6 +6,7 @@ import {
   BarSvgProps,
 } from "@nivo/bar";
 import { omit } from "lodash";
+import { TooltipWrapper } from "@nivo/tooltip";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 
 export type BarProps = {
@@ -17,14 +18,17 @@ export default function Bar(props: BarProps) {
   const { data, maxValue, ...barProps } = props;
 
   const customTooltip = (tooltipProps: BarTooltipProps<BarDatum>) => {
-    const { data: datum, value, color } = tooltipProps;
+    const { data: datum, value } = tooltipProps;
     return (
-      <div className="graph-tooltip" id={datum.entity.toString()}>
-        {datum.entity}:&nbsp;
-        <b>
-          {value} {Number(value) === 1 ? "listen" : "listens"}
-        </b>
-      </div>
+      <TooltipWrapper anchor="center" position={[0, 0]}>
+        <div className="graph-tooltip" id={datum.entity.toString()}>
+          <span className="badge badge-info">#{datum.idx}</span> {datum.entity}
+          :&nbsp;
+          <b>
+            {value} {Number(value) === 1 ? "listen" : "listens"}
+          </b>
+        </div>
+      </TooltipWrapper>
     );
   };
 
@@ -65,8 +69,8 @@ export default function Bar(props: BarProps) {
         right: 15,
       }}
       axisBottom={{
-        tickSize: 0,
-        tickValues: data?.length,
+        tickSize: 5,
+        tickValues: 11,
         tickPadding: 5,
         legend: "Number of listens",
         legendOffset: 30,
