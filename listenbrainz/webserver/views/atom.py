@@ -20,6 +20,7 @@ from listenbrainz.webserver.views.api_tools import (
     DEFAULT_ITEMS_PER_GET,
     MAX_ITEMS_PER_GET,
 )
+from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 
 DEFAULT_MINUTES_OF_LISTENS = 60
 MAX_MINUTES_OF_LISTENS = 7 * 24 * 60  # a week
@@ -126,16 +127,16 @@ def get_listens(user_name):
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
-        return Response(status=404)
+        return NotFound("User not found")
 
     minutes = request.args.get("minutes", DEFAULT_MINUTES_OF_LISTENS)
     if minutes:
         try:
             minutes = int(minutes)
         except ValueError:
-            return Response(status=400)
+            return BadRequest("Invalid value for minutes")
     if minutes < 1 or minutes > MAX_MINUTES_OF_LISTENS:
-        return Response(status=400)
+        return BadRequest("Value of minutes is out of range")
 
     # estimate limit from minutes, assuming 1 listen per minute.
     # mostly likely there won't be that much listens, but with such padding
@@ -212,7 +213,7 @@ def get_fresh_releases():
     """
     days = _parse_int_arg("days", DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS)
     if days < 1 or days > MAX_NUMBER_OF_FRESH_RELEASE_DAYS:
-        return Response(status=400)
+        return BadRequest("Value of days is out of range")
 
     try:
         # Get past fresh releases sorted by release date
@@ -221,7 +222,7 @@ def get_fresh_releases():
         )
     except Exception as e:
         current_app.logger.error("Server failed to get latest release: {}".format(e))
-        return Response(status=500)
+        return InternalServerError("Server failed to get latest release")
 
     fg = _init_feed(
         _external_url_for(".get_fresh_releases"),
@@ -279,13 +280,12 @@ def get_user_fresh_releases(user_name):
     Get fresh releases for a user, sorted by release date.
 
     :statuscode 200: The feed was successfully generated.
-    :statuscode 400: Bad request.
     :statuscode 404: The user does not exist.
     :resheader Content-Type: *application/atom+xml*
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
-        return Response(status=404)
+        return NotFound("User not found")
 
     data = db_get_fresh_releases(user["id"])
     releases = sorted(
@@ -381,11 +381,11 @@ def get_artist_stats(user_name):
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
-        raise Response(status=404)
+        raise NotFound("User not found")
 
     range = request.args.get("range", default="week")
     if not _is_valid_range(range):
-        return Response(status=400)
+        return BadRequest("Invalid range")
 
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
@@ -393,7 +393,9 @@ def get_artist_stats(user_name):
         user["id"], "artists", range, count
     )
     if entity_list is None:
-        return Response(status=204)
+        return Response(
+            status=204, response="Statistics for the user haven't been calculated."
+        )
 
     fg = _init_feed(
         _external_url_for(".get_artist_stats", user_name=user_name),
@@ -457,11 +459,11 @@ def get_release_group_stats(user_name):
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
-        raise Response(status=404)
+        raise NotFound("User not found")
 
     range = request.args.get("range", default="week")
     if not _is_valid_range(range):
-        return Response(status=400)
+        return BadRequest("Invalid range")
 
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
@@ -469,7 +471,9 @@ def get_release_group_stats(user_name):
         user["id"], "release_groups", range, count
     )
     if entity_list is None:
-        return Response(status=204)
+        return Response(
+            status=204, response="Statistics for the user haven't been calculated."
+        )
 
     fg = _init_feed(
         _external_url_for(".get_release_group_stats", user_name=user_name),
@@ -532,11 +536,11 @@ def get_recording_stats(user_name):
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
-        raise Response(status=404)
+        raise NotFound("User not found")
 
     range = request.args.get("range", default="week")
     if not _is_valid_range(range):
-        return Response(status=400)
+        return BadRequest("Invalid range")
 
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
@@ -544,7 +548,9 @@ def get_recording_stats(user_name):
         user["id"], "recordings", range, count
     )
     if entity_list is None:
-        return Response(status=204)
+        return Response(
+            status=204, response="Statistics for the user haven't been calculated."
+        )
 
     fg = _init_feed(
         _external_url_for(".get_recording_stats", user_name=user_name),
