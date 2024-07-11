@@ -16,13 +16,15 @@ from data.model.common_stat import StatisticsRange
 from listenbrainz.webserver.views.stats_api import _is_valid_range
 import listenbrainz.db.stats as db_stats
 from data.model.user_entity import EntityRecord
+from listenbrainz.webserver.views.api_tools import (
+    DEFAULT_ITEMS_PER_GET,
+    MAX_ITEMS_PER_GET,
+)
 
 DEFAULT_MINUTES_OF_LISTENS = 60
 MAX_MINUTES_OF_LISTENS = 7 * 24 * 60  # a week
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 3
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 30
-DEFAULT_STATS_ITEMS_PER_GET = 10
-MAX_STATS_ITEMS_PER_GET = 1000
 
 
 atom_bp = Blueprint("atom", __name__)
@@ -353,7 +355,7 @@ def _get_entity_stats(user_id: str, entity: str, range: str, count: int):
     if stats is None:
         return None, None, None
 
-    count = min(count, MAX_STATS_ITEMS_PER_GET)
+    count = min(count, MAX_ITEMS_PER_GET)
     entity_list = [x.dict() for x in stats.data.__root__[:count]]
     return entity_list, stats.to_ts, stats.last_updated
 
@@ -385,7 +387,7 @@ def get_artist_stats(user_name):
     if not _is_valid_range(range):
         return Response(status=400)
 
-    count = get_non_negative_param("count", default=DEFAULT_STATS_ITEMS_PER_GET)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
     entity_list, to_ts, last_updated = _get_entity_stats(
         user["id"], "artists", range, count
@@ -461,7 +463,7 @@ def get_release_group_stats(user_name):
     if not _is_valid_range(range):
         return Response(status=400)
 
-    count = get_non_negative_param("count", default=DEFAULT_STATS_ITEMS_PER_GET)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
     entity_list, to_ts, last_updated = _get_entity_stats(
         user["id"], "release_groups", range, count
@@ -536,7 +538,7 @@ def get_recording_stats(user_name):
     if not _is_valid_range(range):
         return Response(status=400)
 
-    count = get_non_negative_param("count", default=DEFAULT_STATS_ITEMS_PER_GET)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
     entity_list, to_ts, last_updated = _get_entity_stats(
         user["id"], "recordings", range, count
