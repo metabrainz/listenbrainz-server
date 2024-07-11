@@ -91,7 +91,7 @@ def _get_stats_entry_title(stats_range: str, timestamp: int) -> str:
         return f"H{int((dt.month - 1) / 6) + 1} {dt.year}"
     elif stats_range in [StatisticsRange.all_time.value]:
         return "All Time"
-    return ""
+    assert False, f"Invalid stats_range: {stats_range}"
 
 
 def _init_feed(id, title, self_url, alternate_url):
