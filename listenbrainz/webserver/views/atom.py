@@ -170,7 +170,7 @@ def get_listens(user_name):
         )
         fe.title(f"{track_name} - {artist_name}")
 
-        _content = render_template(
+        content = render_template(
             "atom/listens.html",
             user_page_url=_external_url_for("user.index", path="", user_name=user_name),
             user_name=user_name,
@@ -182,7 +182,7 @@ def get_listens(user_name):
             artist_name=artist_name,
         )
         fe.content(
-            content=_content,
+            content=content,
             type="html",
         )
 
@@ -235,17 +235,17 @@ def get_fresh_releases():
         release_mbid = r.release_mbid
         artist_mbid = r.artist_mbids[0] if r.artist_mbids else None
 
-        _t = datetime.combine(release_date, datetime.min.time())
-        _t_with_tz = _t.replace(tzinfo=timezone.utc)
-        _uts = int(_t.timestamp())
+        t = datetime.combine(release_date, datetime.min.time())
+        t_with_tz = t.replace(tzinfo=timezone.utc)
+        uts = int(t.timestamp())
 
         fe = fg.add_entry()
         fe.id(
-            f"{_external_url_for('.get_fresh_releases')}/{_uts}/{artist_credit_name}/{release_name}"
+            f"{_external_url_for('.get_fresh_releases')}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
-        _content = render_template(
+        content = render_template(
             "atom/fresh_releases.html",
             release_mb_page_base_url="https://musicbrainz.org/release/",
             release_name=release_name,
@@ -258,12 +258,12 @@ def get_fresh_releases():
             ),
         )
         fe.content(
-            content=_content,
+            content=content,
             type="html",
         )
 
-        fe.published(_t_with_tz)
-        fe.updated(_t_with_tz)
+        fe.published(t_with_tz)
+        fe.updated(t_with_tz)
 
     atomfeed = fg.atom_str(pretty=True)
 
@@ -311,19 +311,19 @@ def get_user_fresh_releases(user_name):
         release_mbid = r["release_mbid"]
         artist_mbid = r["artist_mbids"][0] if r["artist_mbids"] else None
 
-        _t = datetime.combine(
+        t = datetime.combine(
             datetime.strptime(release_date, "%Y-%m-%d"), datetime.min.time()
         )
-        _t_with_tz = _t.replace(tzinfo=timezone.utc)
-        _uts = int(_t.timestamp())
+        t_with_tz = t.replace(tzinfo=timezone.utc)
+        uts = int(t.timestamp())
 
         fe = fg.add_entry()
         fe.id(
-            f"{_external_url_for('.get_user_fresh_releases', user_name=user_name)}/{_uts}/{artist_credit_name}/{release_name}"
+            f"{_external_url_for('.get_user_fresh_releases', user_name=user_name)}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
 
-        _content = render_template(
+        content = render_template(
             "atom/fresh_releases.html",
             release_mb_page_base_url="https://musicbrainz.org/release/",
             release_name=release_name,
@@ -336,12 +336,12 @@ def get_user_fresh_releases(user_name):
             ),
         )
         fe.content(
-            content=_content,
+            content=content,
             type="html",
         )
 
-        fe.published(_t_with_tz)
-        fe.updated(_t_with_tz)
+        fe.published(t_with_tz)
+        fe.updated(t_with_tz)
 
     atomfeed = fg.atom_str(pretty=True)
 
@@ -404,30 +404,30 @@ def get_artist_stats(user_name):
     # and they will be a new entry for each day, different entry id each day.
     # otherwise, we use the timestamp of the end of the range, and it will be a new entry for each range.
     if _is_daily_updated_stats(range):
-        _t = last_updated
+        t = last_updated
     else:
-        _t = to_ts
-    _dt = datetime.fromtimestamp(_t)
-    _t_with_tz = _dt.replace(tzinfo=timezone.utc)
+        t = to_ts
+    dt = datetime.fromtimestamp(t)
+    t_with_tz = dt.replace(tzinfo=timezone.utc)
 
     fe = fg.add_entry()
-    fe.id(f"{_external_url_for('.get_artist_stats', user_name=user_name)}/{range}/{_t}")
+    fe.id(f"{_external_url_for('.get_artist_stats', user_name=user_name)}/{range}/{t}")
     fe.title(
         _get_stats_entry_title(range, to_ts - 60)
     )  # minus 1 minute to situate the entry in the right range
 
-    _content = render_template(
+    content = render_template(
         "atom/top_artists.html",
         artists=entity_list,
         artist_page_base_url=_external_url_for("artist.artist_page", path=""),
     )
     fe.content(
-        content=_content,
+        content=content,
         type="html",
     )
 
-    fe.published(_t_with_tz)
-    fe.updated(_t_with_tz)
+    fe.published(t_with_tz)
+    fe.updated(t_with_tz)
 
     atomfeed = fg.atom_str(pretty=True)
 
@@ -477,32 +477,32 @@ def get_release_group_stats(user_name):
     )
 
     if _is_daily_updated_stats(range):
-        _t = last_updated
+        t = last_updated
     else:
-        _t = to_ts
-    _dt = datetime.fromtimestamp(_t)
-    _t_with_tz = _dt.replace(tzinfo=timezone.utc)
+        t = to_ts
+    dt = datetime.fromtimestamp(t)
+    t_with_tz = dt.replace(tzinfo=timezone.utc)
 
     fe = fg.add_entry()
     fe.id(
-        f"{_external_url_for('.get_release_group_stats', user_name=user_name)}/{range}/{_t}"
+        f"{_external_url_for('.get_release_group_stats', user_name=user_name)}/{range}/{t}"
     )
     fe.title(
         _get_stats_entry_title(range, to_ts - 60)
     )  # minus 1 minute to situate the entry in the right range
 
-    _content = render_template(
+    content = render_template(
         "atom/top_albums.html",
         releases=entity_list,
         artist_page_base_url=_external_url_for("artist.artist_page", path=""),
     )
     fe.content(
-        content=_content,
+        content=content,
         type="html",
     )
 
-    fe.published(_t_with_tz)
-    fe.updated(_t_with_tz)
+    fe.published(t_with_tz)
+    fe.updated(t_with_tz)
 
     atomfeed = fg.atom_str(pretty=True)
 
@@ -552,32 +552,32 @@ def get_recording_stats(user_name):
     )
 
     if _is_daily_updated_stats(range):
-        _t = last_updated
+        t = last_updated
     else:
-        _t = to_ts
-    _dt = datetime.fromtimestamp(_t)
-    _t_with_tz = _dt.replace(tzinfo=timezone.utc)
+        t = to_ts
+    dt = datetime.fromtimestamp(t)
+    t_with_tz = dt.replace(tzinfo=timezone.utc)
 
     fe = fg.add_entry()
     fe.id(
-        f"{_external_url_for('.get_recording_stats', user_name=user_name)}/{range}/{_t}"
+        f"{_external_url_for('.get_recording_stats', user_name=user_name)}/{range}/{t}"
     )
     fe.title(
         _get_stats_entry_title(range, to_ts - 60)
     )  # minus 1 minute to situate the entry in the right range
 
-    _content = render_template(
+    content = render_template(
         "atom/top_tracks.html",
         tracks=entity_list,
         artist_page_base_url=_external_url_for("artist.artist_page", path=""),
     )
     fe.content(
-        content=_content,
+        content=content,
         type="html",
     )
 
-    fe.published(_t_with_tz)
-    fe.updated(_t_with_tz)
+    fe.published(t_with_tz)
+    fe.updated(t_with_tz)
 
     atomfeed = fg.atom_str(pretty=True)
 
