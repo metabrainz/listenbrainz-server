@@ -237,6 +237,7 @@ def get_fresh_releases():
             artist_page_base_url=_external_url_for("artist.artist_page", path=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
+            expore_fresh_releases_url=_external_url_for("explore.index", path="fresh-releases"),
         )
         fe.content(
             content=_content,
@@ -312,6 +313,7 @@ def get_user_fresh_releases(user_name):
             artist_page_base_url=_external_url_for("artist.artist_page", path=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
+            explore_fresh_releases_url=_external_url_for("explore.index", path="fresh-releases"),
         )
         fe.content(
             content=_content,
