@@ -156,18 +156,14 @@ def get_listens(user_name):
 
         _content = render_template(
             "atom/listens.html",
-            user={
-                "href": _external_url_for("user.index", path="", user_name=user_name),
-                "user_name": user_name,
-            },
-            track={
-                "href": f"https://musicbrainz.org/recording/{recording_mbid}",
-                "track_name": track_name,
-            },
-            artist={
-                "href": _external_url_for("artist.artist_page", path=artist_mbid),
-                "artist_name": artist_name,
-            },
+            user_page_url=_external_url_for("user.index", path="", user_name=user_name),
+            user_name=user_name,
+            recording_mb_page_base_url="https://musicbrainz.org/recording/",
+            track_name=track_name,
+            recording_mbid=recording_mbid,
+            artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+            artist_mbid=artist_mbid,
+            artist_name=artist_name,
         )
         fe.content(
             content=_content,
@@ -235,14 +231,12 @@ def get_fresh_releases():
 
         _content = render_template(
             "atom/fresh_releases.html",
-            artist={
-                "href": _external_url_for("artist.artist_page", path=artist_mbid),
-                "artist_name": artist_credit_name,
-            },
-            release={
-                "href": f"https://musicbrainz.org/release/{release_mbid}",
-                "release_name": release_name,
-            },
+            release_mb_page_base_url="https://musicbrainz.org/release/",
+            release_name=release_name,
+            release_mbid=release_mbid,
+            artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+            artist_mbid=artist_mbid,
+            artist_name=artist_credit_name,
         )
         fe.content(
             content=_content,
@@ -312,14 +306,12 @@ def get_user_fresh_releases(user_name):
 
         _content = render_template(
             "atom/fresh_releases.html",
-            artist={
-                "href": _external_url_for("artist.artist_page", path=artist_mbid),
-                "artist_name": artist_credit_name,
-            },
-            release={
-                "href": f"https://musicbrainz.org/release/{release_mbid}",
-                "release_name": release_name,
-            },
+            release_mb_page_base_url="https://musicbrainz.org/release/",
+            release_name=release_name,
+            release_mbid=release_mbid,
+            artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+            artist_mbid=artist_mbid,
+            artist_name=artist_credit_name,
         )
         fe.content(
             content=_content,

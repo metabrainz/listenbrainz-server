@@ -1,13 +1,13 @@
 <p>
-    {% if artist.href -%}
-        <a href="{{ artist.href }}">{{ artist.artist_name }}</a>
+    {% if artist_mbid -%}
+        <a href="{{ artist_page_base_url }}{{ artist_mbid }}">{{ artist_name }}</a>
     {%- else -%}
-        {{ artist.artist_name }}
+        {{ artist_name }}
     {%- endif %}
     released
-    {% if release.href -%}
-        <a href="{{ release.href }}">{{ release.release_name }}</a>.
+    {% if release_mbid -%}
+        <a href="{{ release_mb_page_base_url }}{{ release_mbid }}">{{ release_name }}</a>.
     {%- else -%}
-        {{ release.release_name }}.
+        {{ release_name }}.
     {%- endif %}
 </p>

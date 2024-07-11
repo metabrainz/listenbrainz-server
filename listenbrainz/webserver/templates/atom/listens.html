@@ -1,15 +1,15 @@
 <p>
-    <a href="{{ user.href }}">{{ user.user_name }}</a>
+    <a href="{{ user_page_url }}">{{ user_name }}</a>
     listened to
-    {% if track.href -%}
-        <a href="{{ track.href }}">{{ track.track_name }}</a>
+    {% if recording_mbid -%}
+        <a href="{{ recording_mb_page_base_url }}{{ recording_mbid }}">{{ track_name }}</a>
     {%- else -%}
-        {{ track.track_name }}
+        {{ track_name }}
     {%- endif %}
     by
-    {% if artist.href -%}
-        <a href="{{ artist.href }}">{{ artist.artist_name }}</a>
+    {% if artist_mbid -%}
+        <a href="{{ artist_page_base_url }}{{ artist_mbid }}">{{ artist_name }}</a>
     {%- else -%}
-        {{ artist.artist_name }}.
+        {{ artist_name }}.
     {%- endif %}
 </p>
