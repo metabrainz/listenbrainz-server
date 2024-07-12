@@ -33,6 +33,20 @@ PARQUET_APPROX_COMPRESSION_RATIO = .57
 PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
 
 
+SPARK_LISTENS_SCHEMA = pa.schema([
+    pa.field("listened_at", pa.timestamp("ms"), False),
+    pa.field("user_id", pa.int64(), False),
+    pa.field("recording_msid", pa.string(), False),
+    pa.field("artist_name", pa.string(), False),
+    pa.field("artist_credit_id", pa.int64(), True),
+    pa.field("release_name", pa.string(), True),
+    pa.field("release_mbid", pa.string(), True),
+    pa.field("recording_name", pa.string(), False),
+    pa.field("recording_mbid", pa.string(), True),
+    pa.field('artist_credit_mbids', pa.list_(pa.string()), True),
+])
+
+
 class DumpListenStore:
 
     def __init__(self, app):
@@ -441,8 +455,8 @@ class DumpListenStore:
 
                 # Create a pandas dataframe, then write that to a parquet files
                 df = pd.DataFrame(data, dtype=object)
-                table = pa.Table.from_pandas(df, preserve_index=False)
-                pq.write_table(table, filename)
+                table = pa.Table.from_pandas(df, schema=SPARK_LISTENS_SCHEMA, preserve_index=False)
+                pq.write_table(table, filename, flavor="spark")
                 file_size = os.path.getsize(filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
                 os.unlink(filename)

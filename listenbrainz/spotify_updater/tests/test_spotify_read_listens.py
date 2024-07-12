@@ -21,10 +21,10 @@ class ConvertListensTestCase(DatabaseTestCase):
 
     def setUp(self):
         super(ConvertListensTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'testuserpleaseignore')
 
         self.DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-        db_oauth.save_token(user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
+        db_oauth.save_token(self.db_conn, user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
                             access_token='token', refresh_token='refresh',
                             token_expires_ts=int(time.time()) + 1000, record_listens=True,
                             scopes=['user-read-recently-played'])
@@ -99,7 +99,7 @@ class ConvertListensTestCase(DatabaseTestCase):
 
     @patch('listenbrainz.spotify_updater.spotify_read_listens.send_mail')
     def test_notify_user(self, mock_send_mail):
-        db_user.create(2, "two", "one@two.one")
+        db_user.create(self.db_conn, 2, "two", "one@two.one")
         app = listenbrainz.webserver.create_app()
         app.config['SERVER_NAME'] = "test"
         with app.app_context():

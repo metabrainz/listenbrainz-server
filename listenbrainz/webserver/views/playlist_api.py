@@ -2,7 +2,8 @@ import datetime
 from uuid import UUID
 
 import psycopg2
-from flask import Blueprint, current_app, jsonify, request
+import spotipy
+from flask import Blueprint, current_app, jsonify, request, make_response
 from xml.etree import ElementTree as ET
 import requests
 from psycopg2.extras import DictCursor
@@ -11,20 +12,24 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.troi.export import export_to_spotify
+from listenbrainz.troi.import_ms import import_from_spotify
+from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
-    _filter_description_html
+    _filter_description_html, get_non_negative_param
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording, \
     PLAYLIST_EXTENSION_URI, PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_TRACK_EXTENSION_URI, \
     PLAYLIST_ARTIST_URI_PREFIX, PLAYLIST_RELEASE_URI_PREFIX
+from listenbrainz.webserver.views.api import serialize_playlists
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
 MAX_RECORDINGS_PER_ADD = 100
+DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 
 def validate_create_playlist_required_items(jspf):
@@ -39,6 +44,22 @@ def validate_create_playlist_required_items(jspf):
 
     if "public" not in jspf["playlist"].get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}):
         log_raise_400("JSPF playlist.extension.https://musicbrainz.org/doc/jspf#playlist.public field must be given.")
+
+
+def get_track_recording_mbid(track):
+    recording_uris = track.get("identifier", [])
+    # This allows identifier to be a list, tuple or string. The string support is a leftover and should
+    # be removed after 2025-06, which marks a year or backward compatibility.
+    if isinstance(recording_uris, str):
+        recording_uris = [recording_uris]
+
+    for recording_uri in recording_uris:
+        if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
+            recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
+            if is_valid_uuid(recording_mbid):
+                return recording_mbid
+
+    return None
 
 
 def validate_playlist(jspf):
@@ -71,19 +92,15 @@ def validate_playlist(jspf):
     if "track" not in jspf["playlist"]:
         return
 
+    recording_uri_error = (
+        "JSPF playlist track %d must contain a identifier field having a fully qualified URI to a recording_mbid. "
+        "(e.g. https://musicbrainz.org/recording/8f3471b5-7e6a-48da-86a9-c1c07a0f47ae)"
+    )
+
     for i, track in enumerate(jspf["playlist"].get("track", [])):
-        recording_uri = track.get("identifier")
-        if not recording_uri:
-            log_raise_400("JSPF playlist track %d must contain an identifier element with recording MBID." % i)
-
-        if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
-            recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
-        else:
-            log_raise_400("JSPF playlist track %d identifier must have the namespace '%s' prepended to it." %
-                          (i, PLAYLIST_TRACK_URI_PREFIX))
-
-        if not is_valid_uuid(recording_mbid):
-            log_raise_400("JSPF playlist track %d does not contain a valid track identifier field." % i)
+        recording_mbid = get_track_recording_mbid(track)
+        if not recording_mbid:
+            log_raise_400(recording_uri_error % i)
 
 
 def serialize_xspf(playlist: Playlist):
@@ -145,9 +162,17 @@ def serialize_xspf(playlist: Playlist):
 
     if playlist.additional_metadata:
         playlist_extension_additional_metadata = ET.SubElement(playlist_extension, "additional_metadata")
-        for meta_key, meta_value in playlist.additional_metadata:
-            additional_metadata_item = ET.SubElement(playlist_extension_additional_metadata, "item", key=meta_key)
-            additional_metadata_item.text = meta_value
+        for key, value in playlist.additional_metadata.items():
+            if isinstance(value, dict):
+                # Handle dictionary-type metadata
+                dict_metadata_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                for nested_key, nested_value in value.items():
+                    nested_item = ET.SubElement(dict_metadata_item, nested_key)
+                    nested_item.text = str(nested_value)
+            else:
+                # Handle simple scalar values
+                simple_item = ET.SubElement(playlist_extension_additional_metadata, key)
+                simple_item.text = str(value)
 
     track_list = ET.SubElement(playlist_root, "trackList")
     for rec in playlist.recordings:
@@ -241,9 +266,8 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
 
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
                 mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+                ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
             db_playlist.get_playlist_recordings_metadata(mb_curs, ts_curs, playlist)
     except Exception:
         current_app.logger.error("Error while fetching metadata for a playlist: ", exc_info=True)
@@ -301,13 +325,18 @@ def create_playlist():
         collaborators.remove(user["musicbrainz_id"])
 
     username_lookup = collaborators
-    created_for = data["playlist"].get("created_for", None)
+    created_for = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None)
     if created_for:
         username_lookup.append(created_for)
+    # The else: clause below can be removed as of 2025-06.
+    else:
+        created_for = data["playlist"].get("created_for", None)
+        if created_for:
+            username_lookup.append(created_for)
 
     users = {}
     if username_lookup:
-        users = db_user.get_many_users_by_mb_id(username_lookup)
+        users = db_user.get_many_users_by_mb_id(db_conn, username_lookup)
 
     collaborator_ids = []
     for collaborator in collaborators:
@@ -337,10 +366,10 @@ def create_playlist():
                                 public=public,
                                 additional_metadata=additional_metadata)
 
-    if data["playlist"].get("created_for", None):
+    if data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
             raise APIForbidden("Playlist contains a created_for field, but submitting user is not an approved playlist bot.")
-        created_for_user = users.get(data["playlist"]["created_for"].lower())
+        created_for_user = users.get(data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["created_for"].lower())
         if not created_for_user:
             log_raise_400("created_for user does not exist.")
         playlist.created_for_id = created_for_user["id"]
@@ -348,19 +377,53 @@ def create_playlist():
     if "track" in data["playlist"]:
         for track in data["playlist"]["track"]:
             try:
-                playlist.recordings.append(
-                    WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
-                                              added_by_id=user["id"]))
+                # This if statement can be replaced with the first option (is list) as of 2025-06.
+                if isinstance(track['identifier'], list) or isinstance(track['identifier'], tuple):
+                    playlist.recordings.append(
+                        WritablePlaylistRecording(mbid=UUID(track['identifier'][0][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                                  added_by_id=user["id"]))
+                else:
+                    playlist.recordings.append(
+                        WritablePlaylistRecording(mbid=UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):]),
+                                                  added_by_id=user["id"]))
             except ValueError:
                 log_raise_400("Invalid recording MBID found in submitted recordings")
 
     try:
-        playlist = db_playlist.create(playlist)
+        playlist = db_playlist.create(db_conn, ts_conn, playlist)
     except Exception as e:
         current_app.logger.error("Error while creating new playlist: {}".format(e))
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
+
+
+@playlist_api_bp.route("/search", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def search_playlist():
+    """
+    Search for playlists by name or description. The search query must be at least 3 characters long.
+
+    :param query: The search query string.
+    :type query: ``str``
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: invalid query string, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+
+    query = request.args.get("query")
+    count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param("offset", 0)
+
+    if not query or len(query) < 3:
+        log_raise_400("Query string must be at least 3 characters long.")
+
+    playlists, playlist_count = db_playlist.search_playlist(db_conn, ts_conn, query, count, offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
 @playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST", "OPTIONS"])
@@ -389,7 +452,7 @@ def edit_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, False)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, False)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -427,7 +490,7 @@ def edit_playlist(playlist_mbid):
         collaborators.remove(user["musicbrainz_id"])
 
     if collaborators:
-        users = db_user.get_many_users_by_mb_id(collaborators)
+        users = db_user.get_many_users_by_mb_id(db_conn, collaborators)
 
     collaborator_ids = []
     for collaborator in collaborators:
@@ -438,7 +501,7 @@ def edit_playlist(playlist_mbid):
     playlist.collaborators = collaborators
     playlist.collaborator_ids = collaborator_ids
 
-    db_playlist.update_playlist(playlist)
+    db_playlist.update_playlist(db_conn, ts_conn, playlist)
 
     return jsonify({'status': 'ok'})
 
@@ -466,7 +529,7 @@ def get_playlist(playlist_mbid):
 
     fetch_metadata = parse_boolean_arg("fetch_metadata", True)
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
     if playlist is None:
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -502,25 +565,38 @@ def get_playlist_xspf(playlist_mbid):
     """
 
     if not is_valid_uuid(playlist_mbid):
-        log_raise_400("Provided playlist ID is invalid.")
+        raise PlaylistAPIXMLError("Provided playlist ID is invalid.", status_code=400)
 
     fetch_metadata = parse_boolean_arg("fetch_metadata", True)
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+
     if playlist is None:
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+        raise PlaylistAPIXMLError("Cannot find playlist: %s" % playlist_mbid, status_code=404)
 
-    user = validate_auth_header(optional=True)
-    user_id = None
-    if user:
-        user_id = user["id"]
+    try:
+        user = validate_auth_header(optional=True)
+    except APIUnauthorized as e:
+        raise PlaylistAPIXMLError(str(e), status_code=401)
+
+    user_id = user['id'] if user else None
+
     if not playlist.is_visible_by(user_id):
-        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+        raise PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401)
 
-    if fetch_metadata:
-        fetch_playlist_recording_metadata(playlist)
+    try:
+        if fetch_metadata:
+            fetch_playlist_recording_metadata(playlist)
 
-    return serialize_xspf(playlist)
+        xspf_data = serialize_xspf(playlist)
+        serialized_xspf_response = make_response(xspf_data)
+        serialized_xspf_response.content_type = 'text/xml'
+        return serialized_xspf_response
+
+    except Exception as e:
+        # Catch any other exceptions like database connectivity issues etc.
+        current_app.logger.error("Failed to export playlist XSPF:", exc_info=True)
+        raise PlaylistAPIXMLError("Internal server error occurred.", status_code=500)
 
 
 @playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST", "OPTIONS"])
@@ -555,7 +631,7 @@ def add_playlist_item(playlist_mbid, offset):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -571,14 +647,13 @@ def add_playlist_item(playlist_mbid, offset):
     precordings = []
     if "track" in data["playlist"]:
         for track in data["playlist"]["track"]:
-            try:
-                mbid = UUID(track['identifier'][len(PLAYLIST_TRACK_URI_PREFIX):])
-            except (KeyError, ValueError):
+            recording_mbid = get_track_recording_mbid(track)
+            if not recording_mbid:
                 log_raise_400("Track %d has an invalid identifier field, it must be a complete URI.")
-            precordings.append(WritablePlaylistRecording(mbid=mbid, added_by_id=user["id"]))
+            precordings.append(WritablePlaylistRecording(mbid=UUID(recording_mbid), added_by_id=user["id"]))
 
     try:
-        db_playlist.add_recordings_to_playlist(playlist, precordings, offset)
+        db_playlist.add_recordings_to_playlist(db_conn, ts_conn, playlist, precordings, offset)
     except Exception as e:
         current_app.logger.error("Error while adding recordings to playlist: {}".format(e))
         raise APIInternalServerError("Failed to add recordings to the playlist. Please try again.")
@@ -619,7 +694,7 @@ def move_playlist_item(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -630,7 +705,7 @@ def move_playlist_item(playlist_mbid):
     validate_move_data(data)
 
     try:
-        db_playlist.move_recordings(playlist, data['from'], data['to'], data['count'])
+        db_playlist.move_recordings(db_conn, ts_conn, playlist, data['from'], data['to'], data['count'])
     except Exception as e:
         current_app.logger.error("Error while moving recordings in the playlist: {}".format(e))
         raise APIInternalServerError("Failed to move recordings in the playlist. Please try again.")
@@ -669,7 +744,7 @@ def delete_playlist_item(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -680,7 +755,7 @@ def delete_playlist_item(playlist_mbid):
     validate_delete_data(data)
 
     try:
-        db_playlist.delete_recordings_from_playlist(playlist, data['index'], data['count'])
+        db_playlist.delete_recordings_from_playlist(ts_conn, playlist, data['index'], data['count'])
     except Exception as e:
         current_app.logger.error("Error while deleting recordings from playlist: {}".format(e))
         raise APIInternalServerError("Failed to deleting recordings from the playlist. Please try again.")
@@ -710,7 +785,7 @@ def delete_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -718,7 +793,7 @@ def delete_playlist(playlist_mbid):
         raise APIForbidden("You are not allowed to delete this playlist.")
 
     try:
-        db_playlist.delete_playlist(playlist)
+        db_playlist.delete_playlist(ts_conn, playlist)
     except Exception as e:
         current_app.logger.error("Error deleting playlist: {}".format(e))
         raise APIInternalServerError("Failed to delete the playlist. Please try again.")
@@ -748,12 +823,12 @@ def copy_playlist(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
     try:
-        new_playlist = db_playlist.copy_playlist(playlist, user["id"])
+        new_playlist = db_playlist.copy_playlist(db_conn, ts_conn, playlist, user["id"])
     except Exception as e:
         current_app.logger.error("Error copying playlist: {}".format(e))
         raise APIInternalServerError("Failed to copy the playlist. Please try again.")
@@ -800,6 +875,84 @@ def export_playlist(playlist_mbid, service):
     try:
         url = export_to_spotify(user["auth_token"], token["access_token"], is_public, playlist_mbid=playlist_mbid)
         return jsonify({"external_url": url})
+    except requests.exceptions.HTTPError as exc:
+        error = exc.response.json()
+        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+
+
+@playlist_api_bp.route("/import/<service>", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_playlist_from_spotify(service):
+    """
+
+    Get playlists from Spotify.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlists are fetched.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: Playlists not found
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    if service != "spotify":
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+
+    spotify_service = SpotifyService()
+    token = spotify_service.get_user(user["id"], refresh=True)
+    if not token:
+        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
+
+    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+        raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
+                            f" to use this feature.")
+
+    try:
+        sp = spotipy.Spotify(token["access_token"])
+        playlists = sp.current_user_playlists()
+        return jsonify(playlists["items"])
+    except requests.exceptions.HTTPError as exc:
+        error = exc.response.json()
+        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+
+
+@playlist_api_bp.route("/<service>/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_tracks_from_spotify_to_playlist(service, playlist_id):
+    """
+
+    Import a playlist tracks from a Spotify and convert them to JSPF.
+
+    :reqheader Authorization: Token <user token>
+    :param playlist_id: The Spotify playlist id to get the tracks from
+    :statuscode 200: tracks are fetched and converted.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 404: Playlist not found
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    if service != "spotify":
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+
+    spotify_service = SpotifyService()
+    token = spotify_service.get_user(user["id"], refresh=True)
+    if not token:
+        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
+
+    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+        raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
+                            f" to use this feature.")
+
+    try:
+        playlist = import_from_spotify(token["access_token"], user["auth_token"], playlist_id)
+        return playlist
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)

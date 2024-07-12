@@ -64,6 +64,9 @@ CREATE UNIQUE INDEX apple_cache_track_apple_id_idx ON apple_cache.track (track_i
 CREATE INDEX apple_cache_rel_album_artist_track_id_idx ON apple_cache.rel_album_artist (album_id);
 CREATE INDEX apple_cache_rel_track_artist_track_id_idx ON apple_cache.rel_track_artist (track_id);
 
+CREATE UNIQUE INDEX soundcloud_cache_track_soundcloud_id_idx ON soundcloud_cache.track (track_id);
+CREATE UNIQUE INDEX soundcloud_cache_artist_soundcloud_id_idx ON soundcloud_cache.artist (artist_id);
+
 CREATE UNIQUE INDEX similar_recordings_dev_uniq_idx ON similarity.recording_dev (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_recordings_dev_reverse_uniq_idx ON similarity.recording_dev (mbid1, mbid0);
 CREATE INDEX similar_recordings_algorithm_dev_idx ON similarity.recording_dev USING gin (metadata);
@@ -78,6 +81,8 @@ CREATE UNIQUE INDEX similar_recordings_reverse_uniq_idx ON similarity.recording 
 
 CREATE UNIQUE INDEX similar_artist_credit_mbids_uniq_idx ON similarity.artist_credit_mbids (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_artist_credit_mbids_reverse_uniq_idx ON similarity.artist_credit_mbids (mbid1, mbid0);
+
+CREATE INDEX similarity_overhyped_artists_artist_mbid_idx ON similarity.overhyped_artists(artist_mbid) INCLUDE (factor);
 
 CREATE INDEX mbid_manual_mapping_top_idx ON mbid_manual_mapping_top (recording_msid) INCLUDE (recording_mbid);
 

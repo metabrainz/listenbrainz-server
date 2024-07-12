@@ -70,7 +70,23 @@ PUBLIC_TABLES_DUMP = {
         'id',
         'user_id',
         'recording_msid',
+        'recording_mbid',
         'score',
+        'created'
+    ),
+    'pinned_recording': (
+        'id',
+        'user_id',
+        'recording_msid',
+        'recording_mbid',
+        'blurb_content',
+        'pinned_until',
+        'created'
+    ),
+    'user_relationship': (
+        'user_0',
+        'user_1',
+        'relationship_type',
         'created'
     ),
 }
@@ -139,6 +155,13 @@ PRIVATE_TABLES = {
         'gdpr_agreed',
         'email',
     ),
+    'reported_users': (
+        'id',
+        'reporter_user_id',
+        'reported_user_id',
+        'reported_at',
+        'reason'
+    ),
     'external_service_oauth': (
         'id',
         'user_id',
@@ -157,6 +180,27 @@ PRIVATE_TABLES = {
         'last_updated',
         'latest_listened_at',
         'error_message'
+    ),
+    'user_setting': (
+        'id',
+        'user_id',
+        'timezone_name',
+        'troi',
+        'brainzplayer',
+    ),
+    'user_timeline_event': (
+        'id',
+        'user_id',
+        'event_type',
+        'metadata',
+        'created',
+    ),
+    'hide_user_timeline_event': (
+        'id',
+        'user_id',
+        'event_type',
+        'event_id',
+        'created',
     ),
     'api_compat.token': (
         'id',
@@ -318,9 +362,13 @@ def dump_statistics(location: str):
     ]
     full_path = os.path.join(location, "statistics")
     for stat in stats:
-        os.makedirs(full_path, exist_ok=True)
-        with open(os.path.join(full_path, f"{stat}.jsonl"), "wb+") as fp:
-            couchdb.dump_database(stat, fp)
+        try:
+            current_app.logger.info(f"Dumping statistics for {stat}...")
+            os.makedirs(full_path, exist_ok=True)
+            with open(os.path.join(full_path, f"{stat}.jsonl"), "wb+") as fp:
+                couchdb.dump_database(stat, fp)
+        except Exception:
+            current_app.logger.info(f"Failed to create dump for {stat}:", exc_info=True)
 
 
 def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], dump_type: str, tables: Optional[dict],

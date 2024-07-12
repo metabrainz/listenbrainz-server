@@ -1,17 +1,16 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
-import * as Sentry from "@sentry/react";
-import { faSpinner, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { Integrations } from "@sentry/tracing";
-import { capitalize } from "lodash";
-import { ToastContainer, toast } from "react-toastify";
 import { faHeart } from "@fortawesome/free-regular-svg-icons";
+import { faCheck, faSpinner, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { capitalize } from "lodash";
+import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
 import LastFMImporterModal from "./LastFMImporterModal";
-import { getPageProps } from "../utils/utils";
+import Pill from "../components/Pill";
 
 export const LASTFM_RETRIES = 3;
 
@@ -301,8 +300,7 @@ export default class LastFmImporter extends React.Component<
     this.setState({ lastfmUsername: event.target.value });
   };
 
-  handleServiceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const service = event.target.value;
+  handleServiceChange = (service: ImportService) => {
     if (service === "librefm") {
       const { librefmApiUrl, librefmApiKey } = this.props;
       this.lastfmURL = librefmApiUrl;
@@ -312,7 +310,7 @@ export default class LastFmImporter extends React.Component<
       this.lastfmURL = lastfmApiUrl;
       this.lastfmKey = lastfmApiKey;
     }
-    this.setState({ service: event.target.value as ImportService });
+    this.setState({ service: service as ImportService });
   };
 
   handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -364,7 +362,7 @@ export default class LastFmImporter extends React.Component<
           Succesfully imported {inserted} out of {total} tracks feedback from{" "}
           {capitalize(service)}
           <br />
-          <a href="/my/taste">Click here to see your newly loved tracks</a>
+          <Link to="/my/taste">Click here to see your newly loved tracks</Link>
         </div>
       );
     } catch (error) {
@@ -489,7 +487,7 @@ export default class LastFmImporter extends React.Component<
           <br />
           <span style={{ fontSize: `${10}pt` }}>
             <a href={`${profileUrl}`}>
-              Close and go to your ListenBrainz profile
+              Close and go to your ListenBrainz settings
             </a>
           </span>
         </p>
@@ -552,7 +550,7 @@ export default class LastFmImporter extends React.Component<
         <br />
         <span style={{ fontSize: `${10}pt` }}>
           <a href={`${profileUrl}`}>
-            Close and go to your ListenBrainz profile
+            Close and go to your ListenBrainz settings
           </a>
         </span>
       </p>
@@ -578,7 +576,7 @@ export default class LastFmImporter extends React.Component<
           <br />
           <span style={{ fontSize: `${10}pt` }}>
             <a href={`${profileUrl}`}>
-              Close and go to your ListenBrainz profile
+              Close and go to your ListenBrainz settings
             </a>
           </span>
         </p>
@@ -628,38 +626,24 @@ export default class LastFmImporter extends React.Component<
           <dl>
             <dd>Choose a service:</dd>
             <dt className="btn-group" style={{ marginBottom: "1em" }}>
-              <label
-                className={`btn btn-default ${
-                  service === "lastfm" ? " btn-primary" : ""
-                }`}
+              <Pill
+                id="lastfm"
+                name="service"
+                value="lastfm"
+                active={service === "lastfm"}
+                onClick={() => this.handleServiceChange("lastfm")}
               >
-                <input
-                  type="radio"
-                  id="lastfm"
-                  name="service"
-                  value="lastfm"
-                  onChange={this.handleServiceChange}
-                  checked={service === "lastfm"}
-                  style={{ position: "absolute", clip: "rect(0,0,0,0)" }}
-                />
                 Last.fm
-              </label>
-              <label
-                className={`btn btn-default ${
-                  service === "librefm" ? " btn-primary" : ""
-                }`}
+              </Pill>
+              <Pill
+                id="librefm"
+                name="service"
+                value="librefm"
+                active={service === "librefm"}
+                onClick={() => this.handleServiceChange("librefm")}
               >
-                <input
-                  type="radio"
-                  id="librefm"
-                  name="service"
-                  value="librefm"
-                  checked={service === "librefm"}
-                  onChange={this.handleServiceChange}
-                  style={{ position: "absolute", clip: "rect(0,0,0,0)" }}
-                />
                 Libre.fm
-              </label>
+              </Pill>
             </dt>
             <dd>Your {service} username:</dd>
             <dt>
@@ -724,55 +708,3 @@ export default class LastFmImporter extends React.Component<
     );
   }
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const {
-    user,
-    profile_url,
-    lastfm_api_url,
-    lastfm_api_key,
-    librefm_api_url,
-    librefm_api_key,
-  } = reactProps;
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnHover
-        theme="light"
-      />
-      <LastFmImporter
-        user={user}
-        profileUrl={profile_url}
-        apiUrl={globalAppContext.APIService.APIBaseURI}
-        lastfmApiKey={lastfm_api_key}
-        lastfmApiUrl={lastfm_api_url}
-        librefmApiKey={librefm_api_key}
-        librefmApiUrl={librefm_api_url}
-      />
-    </>
-  );
-});

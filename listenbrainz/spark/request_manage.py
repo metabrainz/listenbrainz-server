@@ -253,25 +253,27 @@ def request_yim_top_genres(year: int):
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
-def request_import_new_full_dump(id_: int):
+@click.option("--use-local", "local", is_flag=True, help="Use local dump instead of FTP")
+def request_import_new_full_dump(id_: int, local: bool):
     """ Send the cluster a request to import a new full data dump
     """
     if id_:
-        send_request_to_spark_cluster('import.dump.full_id', dump_id=id_)
+        send_request_to_spark_cluster('import.dump.full_id', dump_id=id_, local=local)
     else:
-        send_request_to_spark_cluster('import.dump.full_newest')
+        send_request_to_spark_cluster('import.dump.full_newest', local=local)
 
 
 @cli.command(name="request_import_incremental")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the incremental dump to import, defaults to latest dump available on FTP server")
-def request_import_new_incremental_dump(id_: int):
+@click.option("--use-local", "local", is_flag=True, help="Use local dump instead of FTP")
+def request_import_new_incremental_dump(id_: int, local: bool):
     """ Send the cluster a request to import a new incremental data dump
     """
     if id_:
-        send_request_to_spark_cluster('import.dump.incremental_id', dump_id=id_)
+        send_request_to_spark_cluster('import.dump.incremental_id', dump_id=id_, local=local)
     else:
-        send_request_to_spark_cluster('import.dump.incremental_newest')
+        send_request_to_spark_cluster('import.dump.incremental_newest', local=local)
 
 
 @cli.command(name="request_dataframes")
@@ -349,11 +351,13 @@ def request_recording_discovery():
 @cli.command(name='request_fresh_releases')
 @click.option("--days", type=int, required=False, help="Number of days of listens to consider for artist listening data")
 @click.option("--database", type=str, help="Name of the couchdb database to store data in")
-def request_fresh_releases(database, days):
+@click.option("--threshold", type=int, default=0, required=False,
+              help="Number of days of listens to consider for artist listening data")
+def request_fresh_releases(database, days, threshold):
     """ Send the cluster a request to generate release radar data. """
     if not database:
         database = "fresh_releases_" + date.today().strftime("%Y%m%d")
-    send_request_to_spark_cluster('releases.fresh', database=database, days=days)
+    send_request_to_spark_cluster('releases.fresh', database=database, days=days, threshold=threshold)
 
 
 @cli.command(name='request_import_artist_relation')
@@ -465,10 +469,11 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip,
     )
 
 
-@cli.command(name='request_mlhd_popularity')
-def request_mlhd_popularity():
-    """ Request mlhd popularity data. """
-    send_request_to_spark_cluster("mlhd.popularity.all")
+@cli.command(name='request_popularity')
+@click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
+def request_popularity(mlhd):
+    """ Request mlhd popularity data using the specified dataset. """
+    send_request_to_spark_cluster("popularity.all", mlhd=mlhd)
 
 
 @cli.command(name="request_yim_similar_users")

@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { kebabCase, lowerCase } from "lodash";
+import { Link, useNavigate } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
@@ -40,10 +41,12 @@ const allLanguagesKeyValue = Object.entries(iso.getNames("en"));
 
 export default NiceModal.create(({ listen }: CBReviewModalProps) => {
   const modal = useModal();
+  const navigate = useNavigate();
 
   const closeModal = React.useCallback(() => {
     modal.hide();
-    setTimeout(modal.remove, 3000);
+    document?.body?.classList?.remove("modal-open");
+    setTimeout(modal.remove, 200);
   }, [modal]);
 
   const { APIService, currentUser, critiquebrainzAuth } = React.useContext(
@@ -114,7 +117,9 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
   const getGroupMBIDFromRelease = React.useCallback(
     async (mbid: string): Promise<string> => {
       try {
-        const response = await APIService.lookupMBRelease(mbid);
+        const response = (await APIService.lookupMBRelease(
+          mbid
+        )) as MusicBrainzRelease & WithReleaseGroup;
         return response["release-group"].id;
       } catch (error) {
         handleError(error, "Could not fetch release group MBID");
@@ -388,10 +393,16 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           <br />
           <br />
           You can connect to your CritiqueBrainz account by visiting the
-          <a href={`${window.location.origin}/profile/music-services/details/`}>
+          <Link
+            to={`${window.location.origin}/settings/music-services/details/`}
+            onClick={() => {
+              navigate("/settings/music-services/details/");
+            }}
+            data-dismiss="modal"
+          >
             {" "}
             music services page.
-          </a>
+          </Link>
         </div>
       );
     }
@@ -567,20 +578,25 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
     acceptLicense,
     handleLicenseChange,
     setEntityToReview,
+    navigate,
   ]);
 
   const modalFooter = React.useMemo(() => {
     /* User hasn't logged into CB yet: prompt them to authenticate */
     if (!hasPermissions)
       return (
-        <a
-          href={`${window.location.origin}/profile/music-services/details/`}
+        <Link
+          to={`${window.location.origin}/settings/music-services/details/`}
           className="btn btn-success"
           role="button"
+          onClick={() => {
+            navigate("/settings/music-services/details/");
+          }}
+          data-dismiss="modal"
         >
           {" "}
           Connect To CritiqueBrainz{" "}
-        </a>
+        </Link>
       );
 
     /* Submit review button */
@@ -608,7 +624,14 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
         Cancel
       </button>
     );
-  }, [hasPermissions, entityToReview, reviewValid, acceptLicense, closeModal]);
+  }, [
+    hasPermissions,
+    entityToReview,
+    reviewValid,
+    acceptLicense,
+    closeModal,
+    navigate,
+  ]);
 
   return (
     <div
@@ -617,7 +640,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="CBReviewModalLabel"
-      data-backdrop="static"
+      data-backdrop="true"
     >
       <div className="modal-dialog" role="document">
         <form className="modal-content" onSubmit={submitReviewToCB}>

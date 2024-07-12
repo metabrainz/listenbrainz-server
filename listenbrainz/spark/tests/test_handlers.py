@@ -33,8 +33,8 @@ class HandlersTestCase(DatabaseTestCase):
     def setUp(self):
         super(HandlersTestCase, self).setUp()
         self.app = create_app()
-        self.user1 = db_user.get_or_create(1, 'iliekcomputers')
-        self.user2 = db_user.get_or_create(2, 'lucifer')
+        self.user1 = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        self.user2 = db_user.get_or_create(self.db_conn, 2, 'lucifer')
 
     def tearDown(self):
         super(HandlersTestCase, self).tearDown()
@@ -351,6 +351,7 @@ class HandlersTestCase(DatabaseTestCase):
             handle_recommendations(data)
 
         mock_db_insert.assert_called_with(
+            mock.ANY,
             1,
             UserRecommendationsJson(
                 top_artist=[
@@ -368,9 +369,9 @@ class HandlersTestCase(DatabaseTestCase):
         )
 
     @mock.patch('listenbrainz.troi.daily_jams.get_followers_of_user')
-    @mock.patch('listenbrainz.troi.daily_jams.generate_playlist')
+    @mock.patch('listenbrainz.troi.daily_jams.RecommendationsToPlaylistPatch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_gen_playlist, mock_get_followers):
+    def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_recs_patch, mock_get_followers):
         with self.app.app_context():
             active_user_count = 10
             top_artist_user_count = 5
@@ -381,7 +382,7 @@ class HandlersTestCase(DatabaseTestCase):
             self.app.config['TESTING'] = True
             self.app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token0", "fake_token1"]
 
-            mock_gen_playlist.return_value = "https://listenbrainz.org/playlist/97889d4d-1474-4a9b-925a-851148356f9d/"
+            mock_recs_patch.generate_playlist.return_value = "https://listenbrainz.org/playlist/97889d4d-1474-4a9b-925a-851148356f9d/"
             mock_get_followers.return_value = [{"musicbrainz_id": "lucifer"}]
 
             cf_recording_recommendations_complete({
@@ -393,10 +394,10 @@ class HandlersTestCase(DatabaseTestCase):
             mock_send_mail.assert_not_called()
 
             calls = [
-                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'top'}),
-                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'similar'}),
+                call({'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'top'}),
+                call({'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'similar'}),
             ]
-            mock_gen_playlist.assert_has_calls(calls)
+            mock_recs_patch.assert_has_calls(calls, any_order=True)
 
             # in prod now, should send it
             self.app.config['TESTING'] = False
@@ -580,6 +581,7 @@ class HandlersTestCase(DatabaseTestCase):
             handle_missing_musicbrainz_data(data)
 
         mock_db_insert.assert_called_with(
+            mock.ANY,
             1,
             UserMissingMusicBrainzDataJson(
                 missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(

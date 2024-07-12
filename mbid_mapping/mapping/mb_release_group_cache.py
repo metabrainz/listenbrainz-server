@@ -212,6 +212,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                     ON l.link_type = lt.id
                                   {values_join}
                                  WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
+                                 -- do not show outdated urls to users
                                    AND NOT l.ended
                               GROUP BY a.gid
                    ), release_group_rels AS (
@@ -232,7 +233,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                     ON la.attribute_type = lat.id
                                   {values_join}
                                  WHERE lt.gid IN ({RELEASE_GROUP_LINK_GIDS_SQL})
-                                   AND NOT l.ended
+                                 -- the release group rels we use make sense to be shown to the user even if they have been marked as ended
                                GROUP BY rg.gid
                    ), artist_data AS (
                             SELECT rg.gid

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { get as _get, isString, throttle as _throttle } from "lodash";
 import { faSoundcloud } from "@fortawesome/free-brands-svg-icons";
+import { Link } from "react-router-dom";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import {
   getArtistName,
@@ -288,9 +289,9 @@ export default class SoundcloudPlayer
         account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
-        <a href="/profile/music-services/details/" target="_blank">
+        <Link to="/settings/music-services/details/">
           link for &quot;playing music&quot; feature
-        </a>{" "}
+        </Link>{" "}
         and refresh this page
       </p>
     );

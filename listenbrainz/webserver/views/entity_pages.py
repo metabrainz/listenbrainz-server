@@ -1,16 +1,16 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, current_app, redirect, url_for
+from flask import Blueprint, render_template, current_app, jsonify
+from werkzeug.exceptions import BadRequest
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
-from werkzeug.exceptions import BadRequest, NotFound
-import orjson
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -75,11 +75,17 @@ def get_cover_art_for_artist(release_groups):
     )
 
 
-@release_bp.route("/<release_mbid>/", methods=["GET"])
+@release_bp.route("/",  defaults={'path': ''})
+@release_bp.route('/<path:path>/')
+def release_page(path):
+    return render_template("index.html")
+
+
+@release_bp.route("/<release_mbid>/", methods=["POST"])
 @web_listenstore_needed
 def release_redirect(release_mbid):
     if not is_valid_uuid(release_mbid):
-        raise BadRequest("Provided release mbid is invalid: %s" % release_mbid)
+        return jsonify({"error": "Provided release mbid is invalid: %s" % release_mbid}), 400
 
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn,\
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
@@ -92,22 +98,32 @@ def release_redirect(release_mbid):
         """, (release_mbid,))
         result = mb_curs.fetchone()
         if result is None:
-            raise NotFound(f"Release {release_mbid} not found in the metadata cache")
-        return redirect(url_for("album.album_entity", release_group_mbid=result["release_group_mbid"]))
+            return jsonify({"error": f"Release {release_mbid} not found in the MusicBrainz database"}), 404
+
+        return jsonify({"releaseGroupMBID": result["release_group_mbid"]})
 
 
-@artist_bp.route("/<artist_mbid>/", methods=["GET"])
+@artist_bp.route("/",  defaults={'path': ''})
+@artist_bp.route('/<path:path>/')
+def artist_page(path):
+    return render_template("index.html")
+
+
+@artist_bp.route("/<artist_mbid>/", methods=["POST"])
 @web_listenstore_needed
 def artist_entity(artist_mbid):
     """ Show a artist page with all their relevant information """
+    # VA artist mbid
+    if artist_mbid in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
+        return jsonify({"error": "Provided artist mbid is disabled for viewing on ListenBrainz"}), 400
 
     if not is_valid_uuid(artist_mbid):
-        raise BadRequest("Provided artist mbid is invalid: %s" % artist_mbid)
+        return jsonify({"error": "Provided artist mbid is invalid: %s" % artist_mbid}), 400
 
     # Fetch the artist cached data
-    artist_data = get_metadata_for_artist([artist_mbid])
+    artist_data = get_metadata_for_artist(ts_conn, [artist_mbid])
     if len(artist_data) == 0:
-        raise NotFound(f"artist {artist_mbid} not found in the metadata cache")
+        return jsonify({"error": f"artist {artist_mbid} not found in the metadata cache"}), 404
 
     artist = {
         "artist_mbid": str(artist_data[0].artist_mbid),
@@ -115,13 +131,12 @@ def artist_entity(artist_mbid):
         "tag": artist_data[0].tag_data,
     }
 
-    popular_recordings = popularity.get_top_recordings_for_artist(artist_mbid, 10)
+    popular_recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, 10)
 
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
                 mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+                ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
 
             similar_artists = similarity.get_artists(
                 mb_curs,
@@ -135,7 +150,7 @@ def artist_entity(artist_mbid):
 
     release_group_data = artist_data[0].release_group_data
     release_group_mbids = [rg["mbid"] for rg in release_group_data]
-    popularity_data, _ = popularity.get_counts("release_group", release_group_mbids)
+    popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
 
     release_groups = []
     for release_group, pop in zip(release_group_data, popularity_data):
@@ -145,7 +160,7 @@ def artist_entity(artist_mbid):
 
     release_groups.sort(key=get_release_group_sort_key, reverse=True)
 
-    listening_stats = get_entity_listener("artists", artist_mbid, "all_time")
+    listening_stats = get_entity_listener(db_conn, "artists", artist_mbid, "all_time")
     if listening_stats is None:
         listening_stats = {
             "total_listen_count": 0,
@@ -158,27 +173,31 @@ def artist_entity(artist_mbid):
         current_app.logger.error("Error generating cover art for artist:", exc_info=True)
         cover_art = None
 
-    props = {
-        "artist_data": artist,
-        "popular_recordings": popular_recordings,
-        "similar_artists": similar_artists,
-        "listening_stats": listening_stats,
-        "release_groups": release_groups,
-        "cover_art": cover_art
+    data = {
+        "artist": artist,
+        "popularRecordings": popular_recordings,
+        "similarArtists": similar_artists,
+        "listeningStats": listening_stats,
+        "releaseGroups": release_groups,
+        "coverArt": cover_art
     }
 
-    return render_template("entities/artist.html",
-                           props=orjson.dumps(props).decode("utf-8"),
-                           title=artist_data[0].artist_data["name"])
+    return jsonify(data)
 
 
-@album_bp.route("/<release_group_mbid>/", methods=["GET"])
+@album_bp.route("/",  defaults={'path': ''})
+@album_bp.route('/<path:path>/')
+def album_page(path):
+    return render_template("index.html")
+
+
+@album_bp.route("/<release_group_mbid>/", methods=["POST"])
 @web_listenstore_needed
 def album_entity(release_group_mbid):
     """ Show an album page with all their relevant information """
 
     if not is_valid_uuid(release_group_mbid):
-        raise BadRequest("Provided release group ID is invalid: %s" % release_group_mbid)
+        return jsonify({"error": "Provided release group ID is invalid: %s" % release_group_mbid}), 400
 
     # Fetch the release group cached data
     metadata = fetch_release_group_metadata(
@@ -186,7 +205,7 @@ def album_entity(release_group_mbid):
         ["artist", "tag", "release", "recording"]
     )
     if len(metadata) == 0:
-        raise NotFound(f"Release group mbid {release_group_mbid} not found in the metadata cache")
+        return jsonify({"error": f"Release group mbid {release_group_mbid} not found in the metadata cache"}), 404
     release_group = metadata[release_group_mbid]
 
     recording_data = release_group.pop("recording")
@@ -195,7 +214,7 @@ def album_entity(release_group_mbid):
     for medium in mediums:
         for track in medium["tracks"]:
             recording_mbids.append(track["recording_mbid"])
-    popularity_data, popularity_index = popularity.get_counts("recording", recording_mbids)
+    popularity_data, popularity_index = popularity.get_counts(ts_conn, "recording", recording_mbids)
 
     for medium in mediums:
         for track in medium["tracks"]:
@@ -204,14 +223,14 @@ def album_entity(release_group_mbid):
                 (None, None)
             )
 
-    listening_stats = get_entity_listener("release_groups", release_group_mbid, "all_time")
+    listening_stats = get_entity_listener(db_conn, "release_groups", release_group_mbid, "all_time")
     if listening_stats is None:
         listening_stats = {
             "total_listen_count": 0,
             "listeners": []
         }
 
-    props = {
+    data = {
         "release_group_mbid": release_group_mbid,
         "release_group_metadata": release_group,
         "recordings_release_mbid": recording_data.get("release_mbid"),
@@ -222,12 +241,10 @@ def album_entity(release_group_mbid):
         "listening_stats": listening_stats
     }
 
-    return render_template("entities/album.html",
-                           props=orjson.dumps(props).decode("utf-8"),
-                           title=release_group["release_group"]["name"])
+    return jsonify(data)
 
 
-@release_group_bp.route("/<release_group_mbid>/", methods=["GET"])
-def release_group_redirect(release_group_mbid):
-    """ Redirect to the /album/… page. Intended for better interplay with MusicBrainz URLs """
-    return redirect(url_for("album.album_entity", release_group_mbid=release_group_mbid))
+@release_group_bp.route("/",  defaults={'path': ''})
+@release_group_bp.route('/<path:path>/')
+def release_group_redirect(path):
+    return render_template("index.html")

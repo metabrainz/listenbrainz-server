@@ -133,16 +133,11 @@ export default class UserListeningActivity extends React.Component<
     try {
       return await this.APIService.getUserListeningActivity(user?.name, range);
     } catch (error) {
-      if (error.response && error.response.status === 204) {
-        this.setState({
-          loading: false,
-          hasError: true,
-          errorMessage:
-            "There are no statistics available for this user for this period",
-        });
-      } else {
-        throw error;
-      }
+      this.setState({
+        loading: false,
+        hasError: true,
+        errorMessage: error.message,
+      });
     }
     return {} as UserListeningActivityResponse;
   };
@@ -335,22 +330,31 @@ export default class UserListeningActivity extends React.Component<
     const { dateFormat } = this.rangeMap.all_time;
     let totalListens = 0;
     let totalYears = 0;
-
     const allTimeData = [];
     const currYear = new Date().getFullYear();
+    let encounteredNonEmptyYear: boolean = false;
+
     for (let i = 2002; i <= currYear; i += 1) {
       const yearData = data.payload.listening_activity.filter(
         (year) => year.time_range === String(i)
       )[0];
-
       totalYears += 1;
+
       if (yearData) {
+        if (encounteredNonEmptyYear === false) {
+          if (yearData.listen_count > 0) {
+            encounteredNonEmptyYear = true;
+          }
+        }
         const date = new Date(yearData.from_ts * 1000);
-        allTimeData.push({
-          id: date.toLocaleString("en-us", dateFormat),
-          thisRangeCount: yearData.listen_count,
-          thisRangeTs: yearData.from_ts,
-        });
+        if (encounteredNonEmptyYear) {
+          allTimeData.push({
+            id: date.toLocaleString("en-us", dateFormat),
+            thisRangeCount: yearData.listen_count,
+            thisRangeTs: yearData.from_ts,
+          });
+        }
+
         totalListens += yearData.listen_count;
       } else {
         const date = new Date(`${i}-01-01T00:00:00.000+00:00`);

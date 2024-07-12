@@ -44,6 +44,7 @@ describe("LastFMImporter", () => {
 
   describe("getNumberOfPages", () => {
     beforeAll(()=>{
+      fetchMock.enableMocks();
       // Mock function for fetch
       fetchMock.mockResponse(JSON.stringify(page));
     })

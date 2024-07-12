@@ -27,8 +27,9 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
     success = False
     while not success and attempts < 3:
         try:
-            data = insert_all_in_transaction(recordings)
-            success = True
+            with timescale.engine.connect() as connection:
+                data = insert_all_in_transaction(connection, recordings)
+                success = True
         except sqlalchemy.exc.IntegrityError:
             # If we get an IntegrityError then our transaction failed.
             # We should try again
@@ -42,26 +43,27 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
         raise exceptions.ErrorAddingException("Failed to add data")
 
 
-def insert_all_in_transaction(submissions: list[dict]):
+def insert_all_in_transaction(ts_conn, submissions: list[dict]):
     """ Inserts a list of recordings into MessyBrainz.
 
     Args:
+        ts_conn: timescale database connection
         submissions: a list of recordings to be inserted
     Returns:
         A list of dicts containing the recording data for each inserted recording
     """
     ret = []
-    with timescale.engine.begin() as ts_conn:
-        for submission in submissions:
-            result = submit_recording(
-                ts_conn,
-                submission["title"],
-                submission["artist"],
-                submission.get("release"),
-                submission.get("track_number"),
-                submission.get("duration")
-            )
-            ret.append(result)
+    for submission in submissions:
+        result = submit_recording(
+            ts_conn,
+            submission["title"],
+            submission["artist"],
+            submission.get("release"),
+            submission.get("track_number"),
+            submission.get("duration")
+        )
+        ret.append(result)
+    ts_conn.commit()
     return ret
 
 

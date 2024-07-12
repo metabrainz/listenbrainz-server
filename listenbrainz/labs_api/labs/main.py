@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import psycopg2.extras
 from datasethoster.main import create_app, init_sentry, register_query
+
+from listenbrainz.labs_api.labs.api.apple.apple_mbid_lookup import AppleMusicIdFromMBIDQuery
+from listenbrainz.labs_api.labs.api.apple.apple_metadata_lookup import AppleMusicIdFromMetadataQuery
 from listenbrainz.labs_api.labs.api.artist_country_from_artist_mbid import ArtistCountryFromArtistMBIDQuery
 from listenbrainz.labs_api.labs.api.artist_credit_from_artist_mbid import ArtistCreditIdFromArtistMBIDQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup import \
@@ -13,6 +16,8 @@ from listenbrainz.labs_api.labs.api.recording_search import RecordingSearchQuery
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
 from listenbrainz.labs_api.labs.api.similar_artists import SimilarArtistsViewerQuery
 from listenbrainz.labs_api.labs.api.similar_recordings import SimilarRecordingsViewerQuery
+from listenbrainz.labs_api.labs.api.soundcloud.soundcloud_from_mbid_lookup import SoundCloudIdFromMBIDQuery
+from listenbrainz.labs_api.labs.api.soundcloud.soundcloud_from_metadata_lookup import SoundCloudIdFromMetadataQuery
 from listenbrainz.labs_api.labs.api.spotify.spotify_mbid_lookup import SpotifyIdFromMBIDQuery
 from listenbrainz.labs_api.labs.api.spotify.spotify_metadata_lookup import SpotifyIdFromMetadataQuery
 from listenbrainz.labs_api.labs.api.user_listen_sessions import UserListensSessionQuery
@@ -33,6 +38,10 @@ register_query(ArtistCreditRecordingLookupQuery())
 register_query(ArtistCreditRecordingReleaseLookupQuery())
 register_query(SpotifyIdFromMetadataQuery())
 register_query(SpotifyIdFromMBIDQuery())
+register_query(AppleMusicIdFromMBIDQuery())
+register_query(AppleMusicIdFromMetadataQuery())
+register_query(SoundCloudIdFromMBIDQuery())
+register_query(SoundCloudIdFromMetadataQuery())
 register_query(UserListensSessionQuery())
 register_query(SimilarRecordingsViewerQuery())
 register_query(SimilarArtistsViewerQuery())

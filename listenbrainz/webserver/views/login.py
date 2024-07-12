@@ -4,7 +4,7 @@ from markupsafe import Markup
 
 from listenbrainz.webserver.decorators import web_listenstore_needed, web_musicbrainz_needed
 from listenbrainz.webserver.login import login_forbidden, provider, User
-from listenbrainz.webserver import flash
+from listenbrainz.webserver import flash, db_conn
 import listenbrainz.db.user as db_user
 import datetime
 
@@ -18,7 +18,7 @@ login_bp = Blueprint('login', __name__)
 @web_listenstore_needed
 @login_forbidden
 def index():
-    return render_template('login/login.html')
+    return render_template('index.html')
 
 
 @login_bp.route('/musicbrainz/')
@@ -51,7 +51,7 @@ def musicbrainz_post():
                 # existing user without email, show a warning
                 flash.warning(no_email_warning + 'to submit listens. ' + blog_link)
 
-            db_user.update_last_login(user["musicbrainz_id"])
+            db_user.update_last_login(db_conn, user["musicbrainz_id"])
             login_user(User.from_dbrow(user),
                        remember=True,
                        duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))
@@ -65,7 +65,7 @@ def musicbrainz_post():
             flash.error(no_email_warning + 'before creating a ListenBrainz account. ' + blog_link)
     else:
         flash.error("Login failed.")
-    return redirect(url_for('index.index'))
+    return redirect(url_for('index.index_pages', path=''))
 
 
 @login_bp.route('/logout/')
@@ -73,4 +73,4 @@ def musicbrainz_post():
 def logout():
     session.clear()
     logout_user()
-    return redirect(url_for('index.index'))
+    return redirect(url_for('index.index_pages', path=''))

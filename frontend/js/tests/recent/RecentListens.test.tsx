@@ -5,6 +5,7 @@ import { mount, ReactWrapper } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
 import { act } from "react-dom/test-utils";
+import { BrowserRouter } from "react-router-dom";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
@@ -77,24 +78,28 @@ const propsOneListen = {
   ...recentListensPropsOneListen,
 };
 
-fetchMock.mockIf(
-  (input) => input.url.endsWith("/listen-count"),
-  () => {
-    return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
-  }
-);
-fetchMock.mockIf(
-  (input) => input.url.startsWith("https://api.spotify.com"),
-  () => {
-    return Promise.resolve(JSON.stringify({}));
-  }
-);
-
 describe("Recentlistens", () => {
+  beforeAll(() => {
+    fetchMock.enableMocks();
+    fetchMock.mockIf(
+      (input) => input.url.endsWith("/listen-count"),
+      () => {
+        return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
+      }
+    );
+    fetchMock.mockIf(
+      (input) => input.url.startsWith("https://api.spotify.com"),
+      () => {
+        return Promise.resolve(JSON.stringify({}));
+      }
+    );
+  });
   it("renders the page correctly", () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
-        <RecentListens {...props} />
+        <BrowserRouter>
+          <RecentListens {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     // We only expect two Card elements, but the Card component

@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import bleach
 from kombu import Producer
 from kombu.entity import PERSISTENT_DELIVERY_MODE
+from more_itertools import chunked
 
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
@@ -13,10 +14,12 @@ import orjson
 import uuid
 import sentry_sdk
 
+from typing import NoReturn
+
 from flask import current_app, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
-from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
+from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
 
@@ -50,6 +53,8 @@ MAX_DURATION_LIMIT = 24 * 24 * 60 * 60
 MAX_DURATION_MS_LIMIT = MAX_DURATION_LIMIT * 1000
 
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
+
+MAX_LISTENS_PER_RMQ_MESSAGE = 100  # internal limit on number of listens per RMQ message to avoid timeouts in TS writer
 
 
 # Define the values for types of listens
@@ -115,7 +120,8 @@ def _send_listens_to_queue(listen_type, listens):
         else:
             exchange = rabbitmq_connection.INCOMING_EXCHANGE
 
-        publish_data_to_queue(submit, exchange)
+        for chunk in chunked(submit, MAX_LISTENS_PER_RMQ_MESSAGE):
+            publish_data_to_queue(chunk, exchange)
 
 
 def _raise_error_if_has_unicode_null(value, listen):
@@ -248,7 +254,7 @@ def _get_augmented_listens(payload, user: SubmitListenUserMetadata):
     return payload
 
 
-def log_raise_400(msg, data=""):
+def log_raise_400(msg, data="") -> NoReturn:
     """ Helper function for logging issues with request data and showing error page.
         Logs the message and data, raises BadRequest exception which shows 400 Bad
         Request to the user.
@@ -477,7 +483,7 @@ def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
     except IndexError:
         raise APIUnauthorized("Provided Authorization header is invalid.")
 
-    user = db_user.get_by_token(auth_token, fetch_email=fetch_email)
+    user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
     if user is None:
         raise APIUnauthorized("Invalid authorization token.")
 

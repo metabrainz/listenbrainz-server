@@ -3,15 +3,18 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCode,
+  faCog,
   faPlayCircle,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
 import { sanitize } from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
+import { Link } from "react-router-dom";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 import { preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import ListenPayloadModal from "../../../common/listens/ListenPayloadModal";
+import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
 
 export type RecommendationPlaylistSettingsProps = {
   playlist: JSPFPlaylist;
@@ -44,7 +47,7 @@ export default function RecommendationPlaylistSettings({
       toast.success(
         <>
           Saved as playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+          <Link to={`/playlist/${newPlaylistId}/`}>{newPlaylistId}</Link>
         </>
       );
     } catch (error) {
@@ -101,13 +104,26 @@ export default function RecommendationPlaylistSettings({
           >
             <FontAwesomeIcon icon={faCode} title="Inspect playlist" />
           </button>
+          <span className="dropdown">
+            <button
+              className="dropdown-toggle btn btn-icon btn-info"
+              type="button"
+              id="playlistOptionsDropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="true"
+            >
+              <FontAwesomeIcon icon={faCog} title="More options" />
+            </button>
+            <PlaylistMenu playlist={playlist} />
+          </span>
         </div>
         <div>
           {extension?.public ? "Public" : "Private"} playlist by&nbsp;
           {playlist.creator} |{" "}
           {extension?.created_for && `For ${extension?.created_for}`}
           <br />
-          <a href={playlist.identifier}>Link to this playlist</a>
+          <Link to={`/playlist/${playlistId}/`}>Link to this playlist</Link>
         </div>
         <hr />
         {playlist.annotation && (

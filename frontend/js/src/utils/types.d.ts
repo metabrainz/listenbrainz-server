@@ -2,6 +2,8 @@
 
 declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
+declare module "musickit-typescript";
+
 declare module "time-ago";
 declare module "debounce-async";
 // declaration typescript file doesn't exist for react-datetime-picker/dist/entry.nostyle.js so had to declare a dummy declaration.
@@ -110,6 +112,11 @@ declare type SubmitListensPayload = {
 declare type SpotifyUser = {
   access_token?: string;
   permission?: Array<SpotifyPermission>;
+};
+
+declare type AppleMusicUser = {
+  developer_token?: string;
+  music_user_token?: string;
 };
 
 declare type YoutubeUser = {
@@ -246,6 +253,8 @@ declare type SoundCloudTrack = {
     username: string;
   };
 };
+
+declare type AppleMusicPlayerType = MusicKit.MusicKitInstance;
 
 // Expect either a string or an Error or an html Response object
 declare type BrainzPlayerError =
@@ -564,7 +573,7 @@ declare type JSPFPlaylist = {
 declare type JSPFTrack = {
   id?: string; // React-sortable library expects an id attribute, this is not part of JSPF specification
   location?: string[];
-  identifier: string;
+  identifier: string | string[];
   title: string;
   creator: string;
   annotation?: string;
@@ -795,8 +804,19 @@ declare type SearchUser = {
   user_name: string;
 };
 
+declare type BrainzPlayerSettings = {
+  youtubeEnabled?: boolean;
+  spotifyEnabled?: boolean;
+  soundcloudEnabled?: boolean;
+  appleMusicEnabled?: boolean;
+  dataSourcesPriority?: Array<
+    "spotify" | "youtube" | "soundcloud" | "appleMusic"
+  >;
+};
+
 declare type UserPreferences = {
   saveData?: boolean;
+  brainzplayer?: BrainzPlayerSettings;
 };
 
 declare type FeedbackForUserForRecordingsRequestBody = {

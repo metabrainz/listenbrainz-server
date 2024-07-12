@@ -9,6 +9,7 @@ from data.model.common_stat import StatisticsRange
 from data.model.user_entity import EntityRecord
 
 from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
+from listenbrainz.webserver import db_conn
 
 #: Minimum image size
 MIN_IMAGE_SIZE = 128
@@ -147,9 +148,9 @@ class CoverArtGenerator:
         y2 = int((y + 1) * self.tile_size)
 
         if x == self.dimension - 1:
-            x2 = self.image_size - 1
+            x2 = self.image_size
         if y == self.dimension - 1:
-            y2 = self.image_size - 1
+            y2 = self.image_size
 
         return (x1, y1, x2, y2)
 
@@ -287,7 +288,7 @@ class CoverArtGenerator:
         if entity not in ("artists", "releases", "recordings"):
             raise ValueError("Stats entity must be one of artist, release or recording.")
 
-        user = db_user.get_by_mb_id(user_name)
+        user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise ValueError(f"User {user_name} not found")
 
@@ -305,9 +306,9 @@ class CoverArtGenerator:
         release_mbids = [r.release_mbid for r in releases]
         images = self.load_images(release_mbids, layout=layout)
         if images is None:
-            return None
+            return None, None
 
-        return images
+        return images, self.time_range_to_english[time_range]
 
     def create_artist_stats_cover(self, user_name, time_range):
         """ Given a user name and a stats time range, make an artist stats cover. Return

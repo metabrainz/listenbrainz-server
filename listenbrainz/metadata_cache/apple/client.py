@@ -3,13 +3,14 @@ from requests import RequestException
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
-from listenbrainz.domain.apple import generate_developer_token
+from listenbrainz.domain.apple import AppleService
 
 
 class Apple:
 
     def __init__(self):
-        self.developer_token = generate_developer_token()
+        tokens = AppleService().fetch_access_token()
+        self.developer_token = tokens["access_token"]
         self.retries = 5
 
     def _get_requests_session(self):
@@ -37,5 +38,6 @@ class Apple:
                     return response.json()
 
                 if response.status_code == 403:
-                    self.developer_token = generate_developer_token()
+                    tokens = AppleService().fetch_access_token()
+                    self.developer_token = tokens["access_token"]
             response.raise_for_status()

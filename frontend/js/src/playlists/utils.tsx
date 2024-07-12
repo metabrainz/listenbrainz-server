@@ -46,7 +46,18 @@ export function getPlaylistId(playlist?: JSPFPlaylist): string {
 }
 
 export function getRecordingMBIDFromJSPFTrack(track: JSPFTrack): string {
-  return track.identifier?.replace(PLAYLIST_TRACK_URI_PREFIX, "") ?? "";
+  const { identifier } = track;
+  let identifiers: string[];
+  if (typeof identifier === "string") {
+    identifiers = [identifier];
+  } else {
+    identifiers = identifier;
+  }
+  return (
+    identifiers
+      ?.find((iden) => iden.startsWith(PLAYLIST_TRACK_URI_PREFIX))
+      ?.replace(PLAYLIST_TRACK_URI_PREFIX, "") ?? ""
+  );
 }
 export function getArtistMBIDFromURI(URI: string): string {
   return URI?.replace(PLAYLIST_ARTIST_URI_PREFIX, "") ?? "";

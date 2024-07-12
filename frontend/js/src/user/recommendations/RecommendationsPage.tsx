@@ -2,40 +2,37 @@
 /* eslint-disable camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import { toast, ToastContainer } from "react-toastify";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
   faChevronRight,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
-import { get, isUndefined, set, throttle } from "lodash";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { isUndefined, set, throttle } from "lodash";
+import { Link, useLoaderData } from "react-router-dom";
 import { ReactSortable } from "react-sortablejs";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../../utils/GlobalAppContext";
+import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
+import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
-import ErrorBoundary from "../../utils/ErrorBoundary";
-import { getPageProps, preciseTimestamp } from "../../utils/utils";
+import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
 import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../../playlists/utils";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { preciseTimestamp } from "../../utils/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
-import { ToastMsg } from "../../notifications/Notifications";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
   user: ListenBrainzUser;
 };
+
+type RecommendationsPageLoaderData = RecommendationsPageProps;
 
 export type RecommendationsPageState = {
   playlists: JSPFPlaylist[];
@@ -130,7 +127,7 @@ export default class RecommendationsPage extends React.Component<
     }
   }
 
-  fetchPlaylist = async (playlistId: string) => {
+  fetchPlaylist = async (playlistId: string, reloadOnError = false) => {
     const { APIService, currentUser } = this.context;
     try {
       const response = await APIService.getPlaylist(
@@ -148,6 +145,9 @@ export default class RecommendationsPage extends React.Component<
       });
     } catch (error) {
       toast.error(error.message);
+      if (reloadOnError) {
+        window.location.reload();
+      }
     }
   };
 
@@ -169,7 +169,7 @@ export default class RecommendationsPage extends React.Component<
       toast.error("No playlist to select");
       return;
     }
-    await this.fetchPlaylist(playlistId);
+    await this.fetchPlaylist(playlistId, true);
   };
 
   copyPlaylist: React.ReactEventHandler<HTMLElement> = async (event) => {
@@ -204,7 +204,7 @@ export default class RecommendationsPage extends React.Component<
       toast.success(
         <>
           Duplicated to playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{newPlaylistId}</a>
+          <Link to={`/playlist/${newPlaylistId}/`}>{newPlaylistId}</Link>
         </>
       );
     } catch (error) {
@@ -271,7 +271,7 @@ export default class RecommendationsPage extends React.Component<
     const playlistId = getPlaylistId(playlist);
     const extension = getPlaylistExtension(playlist);
     const expiryDate = extension?.additional_metadata?.expires_at;
-    let percentTimeLeft;
+    let percentElapsed;
     if (expiryDate) {
       const start = new Date(playlist.date).getTime();
       const end = new Date(expiryDate).getTime();
@@ -279,7 +279,7 @@ export default class RecommendationsPage extends React.Component<
 
       const elapsed = Math.abs(today - start);
       const total = Math.abs(end - start);
-      percentTimeLeft = Math.round((elapsed / total) * 100);
+      percentElapsed = Math.round((elapsed / total) * 100);
     }
     return (
       <div
@@ -295,15 +295,15 @@ export default class RecommendationsPage extends React.Component<
         role="button"
         tabIndex={0}
       >
-        {!isUndefined(percentTimeLeft) && (
+        {!isUndefined(percentElapsed) && (
           <div
             className={`playlist-timer ${
-              percentTimeLeft > 75 ? "pressing" : ""
+              percentElapsed > 75 ? "pressing" : ""
             }`}
             title={`Deleted in ${preciseTimestamp(expiryDate!, "timeAgo")}`}
             style={{
               ["--degrees-progress" as any]: `${
-                (percentTimeLeft / 100) * 360
+                (percentElapsed / 100) * 360
               }deg`,
             }}
           />
@@ -375,7 +375,12 @@ export default class RecommendationsPage extends React.Component<
     const listensFromJSPFTracks =
       selectedPlaylist?.track.map(JSPFTrackToListen) ?? [];
     return (
-      <div id="recommendations">
+      <div id="recommendations" role="main">
+        <Helmet>
+          <title>{`Created for ${
+            user?.name === currentUser?.name ? "you" : `${user?.name}`
+          }`}</title>
+        </Helmet>
         <h3>Created for {user.name}</h3>
 
         <Loader isLoading={loading} />
@@ -488,44 +493,7 @@ export default class RecommendationsPage extends React.Component<
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { playlists, user } = reactProps;
-
-  const RecommendationsPageWithAlertNotifications = withAlertNotifications(
-    RecommendationsPage
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <RecommendationsPageWithAlertNotifications
-            playlists={playlists}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function RecommendationsPageWrapper() {
+  const data = useLoaderData() as RecommendationsPageLoaderData;
+  return <RecommendationsPage {...data} />;
+}

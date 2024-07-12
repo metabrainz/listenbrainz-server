@@ -3,15 +3,20 @@ import { mount } from "enzyme";
 
 import { act } from "react-dom/test-utils";
 import * as missingDataProps from "../../__mocks__/missingMBDataProps.json";
-import { youtube, spotify, user } from "../../__mocks__/missingMBDataProps.json";
+import {
+  youtube,
+  spotify,
+  user,
+} from "../../__mocks__/missingMBDataProps.json";
 
-import MissingMBDataPage from "../../../src/user/missing-data/MissingMBData";
+import MissingMBDataPage from "../../../src/settings/missing-data/MissingMBData";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../src/utils/GlobalAppContext";
 import APIService from "../../../src/utils/APIService";
 import { waitForComponentToPaint } from "../../test-utils";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import { BrowserRouter } from "react-router-dom";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // // Mocking Math.random() fixes this
@@ -43,7 +48,9 @@ describe("MissingMBDataPage", () => {
       <GlobalAppContext.Provider
         value={{ ...mountOptions.context, currentUser: props.user }}
       >
-        <MissingMBDataPage {...props} />
+        <BrowserRouter>
+          <MissingMBDataPage {...props} />
+        </BrowserRouter>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find("#missingMBData")).toHaveLength(1);

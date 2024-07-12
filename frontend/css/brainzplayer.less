@@ -30,7 +30,7 @@
   box-shadow: 0px -4px 12px fade(black, 20%);
 
   padding: @brainzplayer-padding;
-  border-top: 1px solid #dbccc6;
+  border-top: 1px solid @gray-light;
   z-index: 5;
 
   > * {
@@ -134,6 +134,10 @@
       &:hover {
         color: darken(@primary-color, 10%);
       }
+      &.disabled {
+        color: #8d8d8d;
+        pointer-events: none;
+      }
     }
   }
 
@@ -198,7 +202,7 @@
       stroke-width: 40px;
       font-size: 1.3em;
       margin: 0 0.7em;
-      width: 1em;
+      max-width: 1em;
       cursor: pointer;
       color: #8d8d8d;
       &:hover {
@@ -211,37 +215,35 @@
       }
     }
 
-    .fa-heart,
-    .fa-heart-crack {
+    .love,
+    .hate {
       color: transparent;
       stroke: #8d8d8d;
     }
 
-    .fa-ellipsis-vertical {
-      //Thin down ellipsis icon
-      stroke: @white-background;
-    }
-
-    .fa-heart {
+    .love {
       &:hover {
         stroke: @love-color;
       }
-
       &.loved {
         stroke: transparent;
         color: @love-color;
       }
     }
 
-    .fa-heart-crack {
+    .hate {
       &:hover {
         stroke: @hate-color;
       }
-
       &.hated {
         stroke: transparent;
         color: @hate-color;
       }
+    }
+
+    .fa-ellipsis-vertical {
+      //Thin down ellipsis icon
+      stroke: @white-background;
     }
   }
 
@@ -313,7 +315,7 @@
     list-style: none; // In case the elements are <li> items inside a <ul>
     font-size: 14px;
     background-color: @white-background;
-    border: 1px solid #ccc; // IE8 fallback
+    border: 1px solid @gray-light; // IE8 fallback
     border: 1px solid rgba(0, 0, 0, 0.15);
     background-clip: padding-box;
 
@@ -333,7 +335,7 @@
 
       &:hover {
         color: @white-background;
-        background-color: #eb743b;
+        background-color: @orange;
       }
     }
   }

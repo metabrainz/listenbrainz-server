@@ -56,3 +56,7 @@ RUN /apache-download.sh spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-
 ENV SPARK_HOME /usr/local/spark
 ENV PATH $SPARK_HOME/bin:$PATH
 ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:$SPARK_HOME/python:$PYTHONPATH
+
+ENV POSTGRESQL_DRIVER_VERSION 42.7.0
+RUN wget -O postgresql-${POSTGRESQL_DRIVER_VERSION}.jar https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_DRIVER_VERSION}.jar \
+    && mv postgresql-${POSTGRESQL_DRIVER_VERSION}.jar ${SPARK_HOME}/jars

@@ -47,7 +47,9 @@ describe("UserDailyActivity", () => {
     });
     await waitForComponentToPaint(wrapper);
 
-    expect(wrapper.getDOMNode()).toHaveTextContent("Invalid range: invalid_range");
+    expect(wrapper.getDOMNode()).toHaveTextContent(
+      "Invalid range: invalid_range"
+    );
     expect(wrapper.find(Heatmap)).toHaveLength(0);
   });
 
@@ -121,24 +123,8 @@ describe("UserDailyActivity", () => {
       expect(wrapper.state()).toMatchObject({
         loading: false,
         hasError: true,
-        errorMessage: "There are no statistics available for this user for this period",
+        errorMessage: "NO CONTENT",
       });
-    });
-
-    it("throws error", async () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
-      const notFoundError = new APIError("NOT FOUND");
-      notFoundError.response = {
-        status: 404,
-      } as Response;
-      spy.mockImplementation(() => Promise.reject(notFoundError));
-
-      await expect(instance.getData()).rejects.toThrow("NOT FOUND");
     });
   });
 

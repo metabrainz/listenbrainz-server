@@ -6,7 +6,7 @@ import {
   textContentMatcher,
 } from "../test-utils/rtl-test-utils";
 import APIServiceClass from "../../src/utils/APIService";
-import SelectTimezone from "../../src/user-settings/SelectTimezone";
+import SelectTimezone from "../../src/settings/select_timezone/SelectTimezone";
 
 const user_timezone = "America/New_York";
 const pg_timezones: Array<[string, string]> = [
@@ -27,7 +27,7 @@ describe("User settings", () => {
     it("renders correctly", async () => {
       render(<SelectTimezone {...props} />);
 
-      await screen.findByRole("heading", { name: /select timezone/i });
+      await screen.findByRole("heading", { name: /select your timezone/i });
       await screen.findByRole("button", { name: /save timezone/i });
       const defaultOption = await screen.findByRole<HTMLOptionElement>(
         "option",

@@ -6,11 +6,13 @@ from time import sleep
 
 from brainzutils import cache, metrics, sentry
 from brainzutils.flask import CustomFlask
-from flask import request, url_for, redirect
+from flask import request, url_for, redirect, g
 from flask_login import current_user
-from listenbrainz.db import create_test_database_connect_strings
+from werkzeug.local import LocalProxy
+
+from listenbrainz import db
+from listenbrainz.db import create_test_database_connect_strings, timescale
 from listenbrainz.db.timescale import create_test_timescale_connect_strings
-from listenbrainz.webserver.utils import get_global_props
 
 API_PREFIX = '/1'
 
@@ -20,7 +22,25 @@ deploy_env = os.environ.get('DEPLOY_ENV', '')
 
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60  # allow a skew of 1 hour in listened_at submissions
-RATELIMIT_PER_TOKEN = 100000 # a very high limit so that troi can make virtually unlimited requests
+RATELIMIT_PER_TOKEN = 100000  # a very high limit so that troi can make virtually unlimited requests
+
+
+def _get_db_conn():
+    _db_conn = getattr(g, "_db_conn", None)
+    if _db_conn is None:
+        _db_conn = g._db_conn = db.engine.connect()
+    return _db_conn
+
+
+def _get_ts_conn():
+    _ts_conn = getattr(g, "_ts_conn", None)
+    if _ts_conn is None:
+        _ts_conn = g._ts_conn = timescale.engine.connect()
+    return _ts_conn
+
+
+db_conn = LocalProxy(_get_db_conn)
+ts_conn = LocalProxy(_get_ts_conn)
 
 
 def load_config(app):
@@ -93,19 +113,28 @@ def create_app(debug=None):
     metrics.init("listenbrainz")
 
     # Database connections
-    from listenbrainz import db
-    from listenbrainz.db import timescale as ts
-
     # If we're running tests, overwrite the given DB configuration from the config and disregard the
     # configuration, since that configuration could possibly point a different (production) DB.
     if "PYTHON_TESTS_RUNNING" in os.environ:
         db_connect = create_test_database_connect_strings()
         ts_connect = create_test_timescale_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
-        ts.init_db_connection(ts_connect["DB_CONNECT"])
+        timescale.init_db_connection(ts_connect["DB_CONNECT"])
     else:
-        db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
-        ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
+        db.init_db_connection(app.config["SQLALCHEMY_DATABASE_URI"])
+        timescale.init_db_connection(app.config["SQLALCHEMY_TIMESCALE_URI"])
+
+    @app.teardown_request
+    def close_connection(exception):
+        _db_conn = getattr(g, "_db_conn", None)
+        if _db_conn is not None:
+            _db_conn.close()
+            del g._db_conn
+
+        _ts_conn = getattr(g, "_ts_conn", None)
+        if _ts_conn is not None:
+            _ts_conn.close()
+            del g._ts_conn
 
     # Redis connection
     from listenbrainz.webserver.redis_connection import init_redis_connection
@@ -158,23 +187,8 @@ def create_app(debug=None):
     return app
 
 
-def create_web_app(debug=None):
-    """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
-    app = create_app(debug=debug)
-
-    # Static files
-    import listenbrainz.webserver.static_manager
-    static_manager.read_manifest()
-    app.static_folder = '/static'
-
-    app.context_processor(lambda: dict(
-        get_static_path=static_manager.get_static_path,
-        global_props=get_global_props()
-    ))
-
-    _register_blueprints(app)
-
-    # Admin views
+def init_admin(app):
+    """Initialize admin interface."""
     from listenbrainz import model
     model.db.init_app(app)
 
@@ -197,18 +211,43 @@ def create_web_app(debug=None):
     admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
     admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
     admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
-    admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
-    admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))
+
+    # can be empty incase timescale listenstore is down
+    if app.config['SQLALCHEMY_TIMESCALE_URI']:
+        # playlist admin views require timescale database, only register if listenstore is available
+        admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
+        admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))
+
+
+def create_web_app(debug=None):
+    """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
+    app = create_app(debug=debug)
+
+    # Static files
+    import listenbrainz.webserver.static_manager
+    static_manager.read_manifest()
+    app.static_folder = '/static'
+
+    from listenbrainz.webserver.utils import get_global_props
+    app.context_processor(lambda: dict(
+        get_static_path=static_manager.get_static_path,
+        global_props=get_global_props()
+    ))
+
+    _register_blueprints(app)
+
+    init_admin(app)
 
     @app.before_request
     def before_request_gdpr_check():
         # skip certain pages, static content and the API
         if request.path == url_for('index.gdpr_notice') \
-                or request.path == url_for('profile.delete') \
-                or request.path == url_for('profile.export_data') \
+                or request.path == url_for('settings.index', path='delete') \
+                or request.path == url_for('settings.index', path='export') \
                 or request.path == url_for('login.logout') \
                 or request.path.startswith('/static') \
-                or request.path.startswith('/1'):
+                or request.path.startswith('/1') \
+                or request.method in ['OPTIONS', 'POST']:
             return
         # otherwise if user is logged in and hasn't agreed to gdpr,
         # redirect them to agree to terms page.
@@ -226,6 +265,16 @@ def create_api_compat_app(debug=None):
     """
 
     app = create_app(debug=debug)
+
+    import listenbrainz.webserver.static_manager as static_manager
+    static_manager.read_manifest()
+    app.static_folder = '/static'
+
+    from listenbrainz.webserver.utils import get_global_props
+    app.context_processor(lambda: dict(
+        get_static_path=static_manager.get_static_path,
+        global_props=get_global_props()
+    ))
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp
@@ -276,8 +325,10 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.playlist import playlist_bp
     app.register_blueprint(playlist_bp, url_prefix='/playlist')
 
-    from listenbrainz.webserver.views.profile import profile_bp
-    app.register_blueprint(profile_bp, url_prefix='/profile')
+    from listenbrainz.webserver.views.settings import settings_bp
+    app.register_blueprint(settings_bp, url_prefix='/settings')
+    # Retro-compatible 'profile' endpoint
+    app.register_blueprint(settings_bp, url_prefix='/profile', name='profile')
 
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
     app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
