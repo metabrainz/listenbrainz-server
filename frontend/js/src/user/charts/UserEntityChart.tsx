@@ -8,13 +8,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import {
-  interpolateOranges,
-  interpolateSpectral,
-  schemeOranges,
-} from "d3-scale-chromatic";
-import { scaleLinear } from "d3-scale";
-import { clone } from "lodash";
 import tinycolor from "tinycolor2";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
@@ -30,7 +23,12 @@ import {
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
-import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
+import {
+  COLOR_BLACK,
+  COLOR_LB_ASPHALT,
+  COLOR_LB_ORANGE,
+  COLOR_WHITE,
+} from "../../utils/constants";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -125,9 +123,6 @@ export default function UserEntityChart() {
   const userStatsTitle =
     user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
 
-  const colorsSequence = scaleLinear<string, string>()
-    .domain([1, data.length])
-    .range([COLOR_LB_ORANGE, COLOR_LB_BLUE]);
   return (
     <div role="main">
       <Helmet>
@@ -245,7 +240,40 @@ export default function UserEntityChart() {
                   maxValue={maxListens}
                   layout="horizontal"
                   enableGridX
-                  colors={(i) => colorsSequence(i.index)}
+                  labelTextColor={(datum) => {
+                    return tinycolor
+                      .mostReadable(
+                        datum.color,
+                        [COLOR_BLACK, COLOR_WHITE, COLOR_LB_ASPHALT],
+                        { includeFallbackColors: true }
+                      )
+                      .toHexString();
+                  }}
+                  defs={[
+                    {
+                      id: "barGradient",
+                      type: "linearGradient",
+                      colors: [
+                        {
+                          offset: 0,
+                          color: tinycolor(COLOR_LB_ORANGE)
+                            .desaturate(30)
+                            .lighten(30)
+                            .toString(),
+                        },
+                        {
+                          offset: 100,
+                          color: tinycolor(COLOR_LB_ORANGE)
+                            .saturate(30)
+                            .toString(),
+                        },
+                      ],
+                      y2: "100%",
+                      gradientTransform: "rotate(-90 0.5 0.5)",
+                      gradientUnits: "userSpaceOnUse",
+                    },
+                  ]}
+                  fill={[{ match: "*", id: "barGradient" }]}
                   // labelPosition="start" // Upcoming nivo release, see https://github.com/plouc/nivo/pull/2585
                 />
               </div>
