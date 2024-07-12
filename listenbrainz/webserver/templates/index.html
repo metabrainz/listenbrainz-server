@@ -7,6 +7,40 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densityDpi=device-dpi, minimal-ui' />
 
+  <meta
+    name="description"
+    content="Track, explore, visualise and share the music you listen to.
+  Follow your favourites and discover great new music."
+  />
+  <!-- OpenGraph meta tags -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="ListenBrainz" />
+  <meta
+    property="og:description"
+    content="Track, explore, visualise and share the music you listen to.
+  Follow your favourites and discover great new music."
+  />
+  <!--  OpenGraph image meta tags -->
+  <meta
+    property="og:image"
+    content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
+  />
+  <meta property="og:image:width" content="1280" />
+  <meta property="og:image:height" content="640" />
+  <!--  Twitter meta tags -->
+  <meta name="twitter:title" content="ListenBrainz" />
+  <meta
+    property="twitter:description"
+    content="Track, explore, visualise and share the music you listen to.
+  Follow your favourites and discover great new music."
+  />
+  <!--  Twitter image meta tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta
+    name="twitter:image"
+    content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
+  />
+
   <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
   <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
   <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
