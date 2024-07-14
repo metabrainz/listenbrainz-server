@@ -67,7 +67,7 @@ class ArtViewsTestCase(IntegrationTestCase):
     @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
     @patch.object(CoverArtGenerator, "load_release_caa_ids")
     @patch.object(CoverArtGenerator, "download_user_stats")
-    def test_cover_art_custom_release_stats(self, mock_download_user_stats, 
+    def test_cover_art_custom_release_stats(self, mock_download_user_stats,
                                             mock_get_release_caa_ids, mock_get_release_group_caa_ids):
         mock_download_user_stats.return_value = [
             ReleaseRecord(

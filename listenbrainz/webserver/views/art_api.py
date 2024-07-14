@@ -64,7 +64,7 @@ def cover_art_grid_post():
     :type tiles: ``list``
     :param release_mbids: An ordered list of release_mbids. The images will be loaded and processed
                           in the order that this list is in. The cover art for the release_mbids will be placed
-                          on the tiles defined by the tiles parameter. If release_group_mbids are supplied as well, 
+                          on the tiles defined by the tiles parameter. If release_group_mbids are supplied as well,
                           ONLY cover arts for release_group_mbids will be processed.
     :type release_mbids: ``list``
     :param release_group_mbids: An ordered list of release_group_mbids. The images will be loaded and processed
