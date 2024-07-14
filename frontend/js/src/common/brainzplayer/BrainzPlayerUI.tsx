@@ -266,7 +266,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
       <div
-        className={`music-player ${showMusicPlayer ? "show" : ""}`}
+        className={`music-player ${
+          isPlayingATrack && showMusicPlayer ? "show" : ""
+        }`}
         style={{ ["background" as string]: musicPlayerBackgroundColor }}
       >
         <MusicPlayer
@@ -361,7 +363,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           <FontAwesomeIcon
             icon={faBarsStaggered}
             style={{ color: showMusicPlayer ? "green" : "" }}
-            onClick={isMobile ? toggleMusicPlayer : toggleQueue}
+            onClick={
+              isMobile && isPlayingATrack ? toggleMusicPlayer : toggleQueue
+            }
           />
           {!isMobile && (
             <FontAwesomeIcon
